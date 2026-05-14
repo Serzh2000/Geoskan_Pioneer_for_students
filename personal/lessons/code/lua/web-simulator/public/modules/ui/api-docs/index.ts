@@ -5,7 +5,6 @@
  */
 import { apiDocs, pythonApiDocs } from '../../docs/api-docs.js';
 import { ApiMethodPreview, type ApiPreviewScenario } from './preview/index.js';
-import { renderLuaMissionGuide } from './mission-guide.js';
 import {
     buildSections,
     getPreviewScenario,
@@ -223,11 +222,26 @@ export function renderApiDocs(
     destroyPreviews();
     container.innerHTML = `
         ${renderToolbar(language, totalEntries)}
-        ${language === 'lua' ? renderLuaMissionGuide() : ''}
         ${renderSections(sections)}
     `;
 
     attachInteractions(container);
     restoreSearchSelection(container, options.searchSelection ?? null);
     mountOpenPreview(container);
+}
+
+export function openApiDocsCatalog(options: {
+    language?: ScriptLanguage;
+    query?: string;
+    previewKey?: string | null;
+} = {}) {
+    const language = options.language ?? uiState.language;
+    uiState.language = language;
+    if (typeof options.query === 'string') {
+        uiState.query = options.query;
+    }
+    uiState.openPreviewKey = options.previewKey ?? null;
+
+    (window as any).openPanel?.('docs-panel');
+    renderApiDocs(language);
 }

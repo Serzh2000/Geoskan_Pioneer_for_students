@@ -2,8 +2,6 @@
  * HUD-оверлеи и блоки настроек.
  * Файл выделен из `public/style.css` при декомпозиции общего CSS.
  */
-@import url('/styles/overlays/mission-guide.css');
-
 /* OVERLAYS */
 .hud-side-column {
     position: absolute;

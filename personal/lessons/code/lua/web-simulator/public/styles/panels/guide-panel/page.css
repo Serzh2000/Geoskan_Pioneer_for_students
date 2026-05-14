@@ -1,0 +1,271 @@
+/*
+ * Mission guide page layout.
+ */
+
+.guide-modal-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.guide-hero,
+.guide-lesson-page,
+.guide-panel-card {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.84));
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    border-radius: 18px;
+    box-shadow: 0 12px 32px rgba(2, 6, 23, 0.24);
+}
+
+.guide-hero {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 22px;
+}
+
+.guide-hero__eyebrow {
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.guide-hero__title {
+    color: #f8fafc;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.2;
+    max-width: 1080px;
+}
+
+.guide-hero__text {
+    color: #cbd5e1;
+    font-size: 15px;
+    line-height: 1.7;
+    max-width: 1080px;
+}
+
+.guide-hero__flow,
+.guide-hero__progress {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(2, 6, 23, 0.64);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.guide-page-tabs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.guide-page-tab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    background: rgba(15, 23, 42, 0.72);
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.guide-page-tab:hover {
+    transform: translateY(-1px);
+    border-color: rgba(56, 189, 248, 0.38);
+    background: rgba(15, 23, 42, 0.92);
+}
+
+.guide-page-tab.is-active {
+    border-color: rgba(125, 211, 252, 0.72);
+    background: rgba(14, 165, 233, 0.14);
+}
+
+.guide-page-tab.is-solved {
+    box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.34);
+}
+
+.guide-page-tab__step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.16);
+    color: #7dd3fc;
+    font-size: 12px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.guide-page-tab__text {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.45;
+    text-align: left;
+}
+
+.guide-lesson-page {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+}
+
+.guide-lesson-page__header,
+.guide-panel-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.guide-lesson-page__badge {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.guide-lesson-page__title {
+    color: #f8fafc;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.guide-lesson-page__summary,
+.guide-lesson-page__goal,
+.guide-panel-card__text,
+.guide-workspace__hint,
+.guide-library__empty {
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.guide-lesson-page__nav,
+.guide-actions,
+.guide-methods,
+.guide-target-route {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.guide-target-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.18);
+    border: 1px solid rgba(96, 165, 250, 0.24);
+    color: #eff6ff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.guide-page-layout {
+    display: grid;
+    grid-template-columns: minmax(360px, 0.95fr) minmax(480px, 1.05fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.guide-page-column {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.guide-panel-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+}
+
+.guide-panel-card__title {
+    color: #f8fafc;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+.guide-scene-preview-host {
+    position: relative;
+    min-height: 320px;
+    border-radius: 16px;
+    border: 1px dashed rgba(56, 189, 248, 0.24);
+    background:
+        radial-gradient(circle at top, rgba(14, 165, 233, 0.14), transparent 48%),
+        rgba(2, 6, 23, 0.62);
+    overflow: hidden;
+}
+
+.guide-scene-preview-host.is-active {
+    border-style: solid;
+    border-color: rgba(125, 211, 252, 0.3);
+}
+
+.guide-scene-preview-host > .scene-container {
+    min-height: 320px;
+}
+
+.guide-scene-preview__placeholder {
+    display: grid;
+    place-items: center;
+    min-height: 320px;
+    padding: 20px;
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.7;
+    text-align: center;
+}
+
+@media (max-width: 1380px) {
+    .guide-page-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1100px) {
+    .guide-page-tabs {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 860px) {
+    .guide-hero__title,
+    .guide-lesson-page__title {
+        font-size: 24px;
+    }
+
+    .guide-lesson-page__header,
+    .guide-panel-card__top {
+        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

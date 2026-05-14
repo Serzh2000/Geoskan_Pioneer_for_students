@@ -21,8 +21,9 @@ import { initUI } from './modules/ui/index.js';
 import { log } from './modules/shared/logging/logger.js';
 import { updateStats } from './modules/ui/panels/stats.js';
 import { renderApiDocs } from './modules/ui/api-docs/index.js';
+import { renderMissionGuidePanel } from './modules/ui/mission-guide/panel.js';
 import type { MarkerMapOptions } from './modules/environment/obstacles.js';
-import { scriptHasVisibleDelay, warnAboutInstantExecution } from './modules/app/script-execution-notice.js';
+import { showScenarioValidationNotice } from './modules/app/script-execution-notice.js';
 
 // Global assignments for legacy/Lua support
 (window as any).THREE = THREE;
@@ -94,6 +95,7 @@ function init() {
             const initialCode = currentScriptLanguage === 'lua' ? drone.script : drone.pythonScript;
             setEditorValue(initialCode);
             renderApiDocs(currentScriptLanguage);
+            renderMissionGuidePanel(currentScriptLanguage);
         }
 
         langSelect.addEventListener('change', () => {
@@ -105,6 +107,7 @@ function init() {
             const code = lang === 'lua' ? selectedDrone.script : selectedDrone.pythonScript;
             setEditorValue(code);
             renderApiDocs(lang);
+            renderMissionGuidePanel(lang);
             log(`Язык скрипта: ${lang.toUpperCase()}`, 'info');
         });
     }
@@ -147,9 +150,7 @@ function startSimulation() {
             log('Python: пустой скрипт. Нечего запускать.', 'warn');
             return;
         }
-        if (!scriptHasVisibleDelay('python', code)) {
-            warnAboutInstantExecution('python');
-        }
+        showScenarioValidationNotice('python', code);
 
         // Остановим любые активные Lua/py run для этого дрона.
         stopLuaScript(id);
@@ -185,8 +186,8 @@ function startSimulation() {
         const code = drone.script;
         log(`[DEBUG] Drone ${id} script length: ${code ? code.length : 0}`, 'info');
         if (!code || !code.trim()) continue;
-        if (!scriptHasVisibleDelay('lua', code)) {
-            warnAboutInstantExecution('lua');
+        if (id === currentDroneId) {
+            showScenarioValidationNotice('lua', code);
         }
 
         stopLuaScript(id);

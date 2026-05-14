@@ -1,0 +1,79 @@
+/*
+ * Mission guide modal shell.
+ */
+
+.guide-modal-overlay {
+    z-index: 2200;
+    padding: 12px;
+    background: rgba(2, 6, 23, 0.86);
+    backdrop-filter: blur(10px);
+}
+
+.guide-modal {
+    width: min(1680px, calc(100vw - 24px));
+    height: calc(100vh - 24px);
+    display: flex;
+    flex-direction: column;
+    background:
+        radial-gradient(circle at top right, rgba(14, 165, 233, 0.2), transparent 30%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.98));
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.guide-modal__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.7);
+}
+
+.guide-modal__title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.guide-modal__title {
+    color: #f8fafc;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.guide-modal__subtitle {
+    color: #94a3b8;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.guide-modal__close {
+    flex-shrink: 0;
+}
+
+.guide-modal__body {
+    flex: 1;
+    overflow: auto;
+    padding: 24px;
+}
+
+@media (max-width: 860px) {
+    .guide-modal-overlay {
+        padding: 0;
+    }
+
+    .guide-modal {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .guide-modal__header,
+    .guide-modal__body {
+        padding: 16px;
+    }
+}

@@ -1,0 +1,104 @@
+/*
+ * Mission guide diagnostics and code-preview styles.
+ */
+
+.guide-diagnostics {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.guide-diagnostic {
+    padding: 14px 15px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+}
+
+.guide-diagnostic--error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(248, 113, 113, 0.22);
+}
+
+.guide-diagnostic--warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(251, 191, 36, 0.22);
+}
+
+.guide-diagnostic--success {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(74, 222, 128, 0.22);
+}
+
+.guide-diagnostic--info {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(96, 165, 250, 0.22);
+}
+
+.guide-diagnostic__title {
+    color: #f8fafc;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+
+.guide-diagnostic__reason,
+.guide-diagnostic__fix {
+    color: #dbeafe;
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.guide-lesson__code {
+    margin: 0;
+    padding: 14px;
+    border-radius: 14px;
+    background: rgba(2, 6, 23, 0.76);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #d4d4d4;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.65;
+    white-space: pre;
+    overflow: auto;
+}
+
+.guide-methods {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.guide-method-chip {
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.guide-run-banner {
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.6;
+}
+
+.guide-run-banner--success {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.24);
+    color: #bbf7d0;
+}
+
+.guide-run-banner--warning {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.24);
+    color: #fde68a;
+}
+
+.guide-run-banner--info {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(96, 165, 250, 0.24);
+    color: #bfdbfe;
+}

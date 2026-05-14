@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Style entrypoint for the web simulator.
  * Keeps the legacy `public/style.css` include path while
  * actual style modules live under `public/styles`.
@@ -14,6 +14,7 @@
 @import url('./styles/layout/resizer.css');
 @import url('./styles/layout/scene-host.css');
 @import url('./styles/panels/api-docs.css');
+@import url('./styles/panels/guide-panel.css');
 @import url('./styles/overlays/hud-and-settings.css');
 @import url('./styles/scene/camera-controls.css');
 @import url('./styles/scene/manager-panel.css');

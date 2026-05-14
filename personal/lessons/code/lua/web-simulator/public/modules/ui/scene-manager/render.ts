@@ -13,6 +13,16 @@ import {
 
 type SceneManagerEntry = ReturnType<NonNullable<UICallbacks['sceneManager']>['list']>[number];
 
+function formatSceneLabel(value: string, objectName = ''): string {
+    const normalized = String(value || '').trim();
+    const name = String(objectName || '').trim();
+
+    if (normalized === 'Ground' || name === 'Ground') return 'Земля';
+    if (normalized === 'Group' || name === 'Group') return 'Группа';
+
+    return normalized || name || 'Объект';
+}
+
 function renderObjectList(
     callbacks: UICallbacks,
     elements: SceneManagerDomRefs,
@@ -27,7 +37,7 @@ function renderObjectList(
         const row = document.createElement('button');
         row.type = 'button';
         row.className = 'scene-manager-item' + (obj.id === selectedId ? ' active' : '');
-        row.textContent = `${obj.sceneType}${obj.isDrone ? ' (дрон)' : ''}`;
+        row.textContent = `${formatSceneLabel(obj.sceneType, obj.name)}${obj.isDrone ? ' (дрон)' : ''}`;
         row.onclick = () => {
             callbacks.sceneManager && callbacks.sceneManager.select(obj.id);
             rerender();
@@ -53,8 +63,8 @@ function renderSelectedDetails(elements: SceneManagerDomRefs, selected: SceneMan
     if (!elements.detailsEl) return;
 
     const detailLines = [
-        `Тип: ${selected.sceneType}`,
-        `Имя: ${selected.name}`,
+        `Тип: ${formatSceneLabel(selected.sceneType, selected.name)}`,
+        `Имя: ${formatSceneLabel(selected.name, selected.sceneType)}`,
         `Перемещаемый: ${selected.draggable ? 'да' : 'нет'}`,
         `Позиция: ${formatSceneNumber(selected.position.x)}, ${formatSceneNumber(selected.position.y)}, ${formatSceneNumber(selected.position.z)}`,
         `Поворот: ${formatSceneNumber(selected.rotation.x)}, ${formatSceneNumber(selected.rotation.y)}, ${formatSceneNumber(selected.rotation.z)}`,
