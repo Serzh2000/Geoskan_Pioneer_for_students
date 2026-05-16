@@ -114,9 +114,9 @@ describe('Editor Blockly UI', () => {
     });
 
     test('вычисляет ширину распахивания панели Blockly в разумных пределах', () => {
-        expect(computeExpandedSidebarWidth(1600, 450)).toBe(928);
-        expect(computeExpandedSidebarWidth(1100, 700)).toBe(700);
-        expect(computeExpandedSidebarWidth(800, 300)).toBe(560);
+        expect(computeExpandedSidebarWidth(1600, 450)).toBe(620);
+        expect(computeExpandedSidebarWidth(1100, 700)).toBe(462);
+        expect(computeExpandedSidebarWidth(800, 300)).toBe(336);
     });
 
     test('подгоняет canvas Blockly под размеры родительского контейнера', () => {

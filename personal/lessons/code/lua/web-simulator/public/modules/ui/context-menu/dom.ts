@@ -101,123 +101,155 @@ const CONTEXT_MENU_STYLES = `
     }
     #transform-toolbar {
         position: fixed;
-        left: 50%;
-        bottom: 24px;
-        transform: translateX(-50%) translateY(12px);
-        min-width: 320px;
-        max-width: min(92vw, 560px);
-        padding: 10px 12px;
-        border: 1px solid rgba(56, 189, 248, 0.2);
-        border-radius: 16px;
-        background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
-        box-shadow: 0 18px 40px rgba(2, 6, 23, 0.45);
-        backdrop-filter: blur(14px);
+        left: 20px;
+        top: 20px;
+        width: auto;
+        min-width: 0;
+        padding: 8px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.75);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        backdrop-filter: blur(12px);
         display: none;
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
         z-index: 2100;
         opacity: 0;
-        transition: opacity 0.18s ease, transform 0.18s ease;
+        transition: opacity 0.2s ease, transform 0.2s ease;
     }
     #transform-toolbar.visible {
         display: flex;
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
     }
     #transform-toolbar .transform-toolbar-top {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+        padding: 2px 4px;
     }
     #transform-toolbar .transform-toolbar-title {
-        font-size: 13px;
-        font-weight: 600;
-        color: #e2e8f0;
+        font-size: 11px;
+        font-weight: 700;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        max-width: 120px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
     #transform-toolbar .transform-toolbar-hint {
-        font-size: 11px;
-        color: #94a3b8;
-        white-space: nowrap;
+        display: none;
     }
     #transform-toolbar .transform-toolbar-actions {
         display: flex;
         align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
+        gap: 6px;
     }
     #transform-toolbar .transform-btn {
-        border: 1px solid rgba(148, 163, 184, 0.28);
-        background: rgba(30, 41, 59, 0.9);
-        color: #cbd5e1;
-        border-radius: 12px;
-        padding: 9px 12px;
-        font-size: 13px;
-        font-weight: 600;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #64748b;
+        border-radius: 8px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
-        transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+        transition: all 0.15s ease;
+        padding: 0;
     }
-    #transform-toolbar .transform-btn:hover,
-    #transform-toolbar .transform-btn:focus {
-        outline: none;
-        border-color: rgba(56, 189, 248, 0.55);
-        color: #f8fafc;
-        background: rgba(30, 41, 59, 1);
-        transform: translateY(-1px);
+    #transform-toolbar .transform-mode-btn {
+        flex: 0 0 36px;
+    }
+    #transform-toolbar .transform-btn:hover {
+        border-color: #FF8C00;
+        color: #FF8C00;
+        background: #fffaf5;
     }
     #transform-toolbar .transform-btn.active {
-        border-color: rgba(56, 189, 248, 0.65);
-        background: rgba(56, 189, 248, 0.16);
-        color: #38bdf8;
-        box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.12);
+        border-color: #FF8C00;
+        background: #FF8C00;
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(255, 140, 0, 0.25);
     }
     #transform-toolbar .transform-btn.exit {
-        margin-left: auto;
-        color: #fca5a5;
-        border-color: rgba(248, 113, 113, 0.28);
-        background: rgba(69, 10, 10, 0.22);
+        width: 20px;
+        height: 20px;
+        border: none;
+        background: transparent;
+        color: #94a3b8;
+        font-size: 16px;
+        min-width: 0;
+        min-height: 0;
+        position: absolute;
+        right: 6px;
+        top: 6px;
+    }
+    #transform-toolbar .transform-btn.exit:hover {
+        color: #ef4444;
     }
     #transform-toolbar .transform-toolbar-subtitle {
-        width: 100%;
-        font-size: 11px;
+        font-size: 10px;
         color: #94a3b8;
-        margin-top: 2px;
+        margin: 2px 0;
+        text-align: left;
+        padding: 0 4px;
     }
     #transform-toolbar .transform-toolbar-separator {
         width: 1px;
-        align-self: stretch;
-        background: rgba(148, 163, 184, 0.2);
-        margin: 0 2px;
+        height: 24px;
+        background: #e2e8f0;
+        margin: 0 4px;
     }
     #transform-toolbar .transform-step-group {
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        gap: 6px;
-        padding: 4px 6px;
-        border-radius: 12px;
-        background: rgba(15, 23, 42, 0.42);
-        border: 1px solid rgba(148, 163, 184, 0.18);
+        gap: 4px;
+        padding: 2px;
+        background: #f1f5f9;
+        border-radius: 8px;
     }
     #transform-toolbar .transform-step-label {
-        font-size: 11px;
-        color: #94a3b8;
-        margin-right: 2px;
+        font-size: 10px;
+        font-weight: 600;
+        color: #64748b;
+        margin: 0 4px;
+        text-transform: uppercase;
     }
     #transform-toolbar .transform-step-btn {
-        min-width: 44px;
-        padding: 7px 9px;
-        font-size: 12px;
+        width: auto;
+        height: 28px;
+        min-width: 38px;
+        padding: 0 6px;
+        font-size: 11px;
+        border: none;
+        background: transparent;
+    }
+    #transform-toolbar .transform-step-btn.active {
+        background: #ffffff;
+        color: #FF8C00;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     #transform-toolbar .transform-axis-btn {
-        min-width: 58px;
-        padding: 8px 10px;
+        width: 32px;
+        height: 32px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+    #transform-toolbar .transform-axis-group {
+        flex-wrap: wrap;
+        max-width: 120px;
+        gap: 4px;
     }
     #transform-toolbar .transform-reset-btn {
         width: 100%;
-        justify-content: center;
+        height: 28px;
+        font-size: 11px;
+        margin-top: 4px;
     }
 `;
 

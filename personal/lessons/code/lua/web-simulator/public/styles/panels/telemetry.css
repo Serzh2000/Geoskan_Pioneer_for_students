@@ -3,58 +3,59 @@
  * Файл выделен из `public/style.css` при декомпозиции общего CSS.
  */
 /* TELEMETRY */
-.stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-.stat-item {
-    background: #ffffff;
-    border: 1px solid rgba(9, 9, 11, 0.08);
-    border-radius: 18px;
-    padding: 14px;
+.metrics-list {
     display: flex;
     flex-direction: column;
-    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+    width: 100%;
 }
-.stat-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.09em;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-    font-weight: 800;
+
+.metric-row {
+    display: grid;
+    grid-template-columns: minmax(84px, 40%) minmax(0, 60%);
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    min-height: 40px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
 }
-.stat-value {
-    font-family: var(--font-mono);
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--text-strong);
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
+
+.metric-row:last-child {
+    border-bottom: none;
 }
-.stat-value span:first-child {
-    color: var(--text-strong);
-}
-.stat-value span:last-child {
+
+.metric-row__label {
     font-size: 11px;
-    color: var(--text-muted);
     font-weight: 600;
+    color: #6b7280;
+    letter-spacing: 0.02em;
 }
 
-.stat-item--primary {
-    background: linear-gradient(180deg, #ffffff 0%, #fcfcfc 100%);
+.metric-row__value {
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 4px;
+    min-width: 0;
+    max-width: 100%;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    text-align: left;
 }
 
-.stat-item--status {
-    grid-column: span 2;
-    background: linear-gradient(180deg, rgba(255, 107, 0, 0.1), rgba(255, 107, 0, 0.04));
-    border-color: rgba(255, 107, 0, 0.16);
+.metric-row__value span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.stat-item--status .stat-value span:first-child {
-    color: var(--accent-color);
+.metric-row__unit {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
 }
 
 

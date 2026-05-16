@@ -31,6 +31,7 @@ export let multiSelectedObjects: THREE.Object3D[] = [];
 export let pointerDownPos = new THREE.Vector2();
 export let isHittingGizmo = false;
 let canvasResizeObserver: ResizeObserver | null = null;
+let resizeAnimationFrame = 0;
 
 const orbitTargetBounds = new THREE.Box3();
 const orbitTargetCenter = new THREE.Vector3();
@@ -116,6 +117,7 @@ export function syncViewportDependentSceneVisuals() {
 export function initScene(container: HTMLElement) {
     canvasContainer = container;
     canvasResizeObserver?.disconnect();
+    window.cancelAnimationFrame(resizeAnimationFrame);
     
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf5f6f8);
@@ -139,6 +141,9 @@ export function initScene(container: HTMLElement) {
     renderer.toneMappingExposure = 1.18;
     
     canvasContainer.innerHTML = '';
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    renderer.domElement.style.display = 'block';
     canvasContainer.appendChild(renderer.domElement);
 
     controls = new DroneOrbitControls(camera, renderer.domElement);
@@ -188,20 +193,31 @@ export function initScene(container: HTMLElement) {
 
     is3DActive = true;
 
-    if (typeof ResizeObserver !== 'undefined') {
-        canvasResizeObserver = new ResizeObserver(() => {
+    const scheduleResize = () => {
+        window.cancelAnimationFrame(resizeAnimationFrame);
+        resizeAnimationFrame = window.requestAnimationFrame(() => {
             onWindowResize();
         });
+    };
+
+    if (typeof ResizeObserver !== 'undefined') {
+        canvasResizeObserver = new ResizeObserver(() => {
+            scheduleResize();
+        });
         canvasResizeObserver.observe(canvasContainer);
+        if (canvasContainer.parentElement) {
+            canvasResizeObserver.observe(canvasContainer.parentElement);
+        }
     }
 }
 
 export function onWindowResize() {
     if (!canvasContainer || !camera || !renderer) return;
-    const width = Math.max(1, canvasContainer.clientWidth);
-    const height = Math.max(1, canvasContainer.clientHeight);
+    const parentElement = canvasContainer.parentElement;
+    const width = Math.max(1, canvasContainer.clientWidth || parentElement?.clientWidth || 0);
+    const height = Math.max(1, canvasContainer.clientHeight || parentElement?.clientHeight || 0);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
-    renderer.setSize(width, height);
+    renderer.setSize(width, height, false);
     syncViewportDependentSceneVisuals();
 }

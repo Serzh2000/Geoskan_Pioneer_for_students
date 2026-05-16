@@ -1,25 +1,36 @@
-﻿/*
+/*
  * Основная раскладка контейнера.
  * Файл выделен из `public/style.css` при декомпозиции общего CSS.
  */
 /* LAYOUT GRID */
 .container {
-    display: flex;
-    gap: 18px;
+    --sidebar-width: 400px;
+    --sidebar-min-width: 280px;
+    --sidebar-current-min-width: var(--sidebar-min-width);
+    --sidebar-max-width: 1000px;
+    --sidebar-tabs-width: 56px;
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    gap: 16px;
     flex: 1;
+    height: 100vh;
     min-height: 0;
     position: relative;
     overflow: hidden;
-    padding: 18px;
+    padding: 16px;
+    align-items: stretch;
 }
 
 .workspace-sidebar {
     display: flex;
-    min-width: 0;
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-current-min-width);
+    max-width: var(--sidebar-max-width);
+    height: 100%;
     min-height: 0;
     border: 1px solid rgba(9, 9, 11, 0.08);
-    border-radius: 28px;
-    background: rgba(255, 255, 255, 0.92);
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.95);
     box-shadow: var(--shadow-card);
     overflow: hidden;
 }

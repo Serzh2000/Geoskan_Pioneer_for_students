@@ -4,6 +4,7 @@
                     <button class="panel-close-btn" onclick="closePanel()">✕</button>
                 </div>
                 <div class="panel-content settings-panel-content">
+                    <div class="settings-shell">
                     <div class="settings-stack">
                         <div class="settings-group">
                             <div class="settings-label">Трассер полета</div>
@@ -12,15 +13,15 @@
                                 <span class="checkmark"></span>
                                 Показывать траекторию
                             </label>
-                            <label class="scene-field">
+                            <label class="scene-field settings-field">
                                 <span>Цвет линии</span>
                                 <input type="color" id="setting-tracer-color" value="#38bdf8">
                             </label>
-                            <label class="scene-field">
+                            <label class="scene-field settings-field">
                                 <span>Толщина</span>
                                 <input type="range" id="setting-tracer-width" min="1" max="12" step="1" value="2">
                             </label>
-                            <label class="scene-field">
+                            <label class="scene-field settings-field settings-field--compact">
                                 <span>Форма</span>
                                 <select id="setting-tracer-shape">
                                     <option value="line">Линия</option>
@@ -39,14 +40,17 @@
                         </div>
                         <div class="settings-group">
                             <div class="settings-label">Скорость симуляции</div>
-                            <label class="scene-field">
+                            <label class="scene-field settings-field">
                                 <span>Множитель времени: <strong id="sim-speed-val">1.0x</strong></span>
                                 <input type="range" id="setting-sim-speed" min="0.25" max="3" step="0.25" value="1">
                             </label>
                         </div>
                         <div class="settings-group">
                             <div class="settings-label">Внешнее управление (USB Пульт)</div>
-                            <div id="gamepad-status" class="status-indicator">Пульт не подключен</div>
+                            <div id="gamepad-status" class="status-indicator status-indicator--warning">
+                                <span class="status-indicator__icon">!</span>
+                                <span class="status-indicator__text">Пульт не подключен</span>
+                            </div>
                             <div id="gamepad-info" class="gamepad-panel" style="display: none;">
                                 <div class="gamepad-panel-header">
                                     <div class="gamepad-panel-copy">
@@ -218,6 +222,7 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
             </div>

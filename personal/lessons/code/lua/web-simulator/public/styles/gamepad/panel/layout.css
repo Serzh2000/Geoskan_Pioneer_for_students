@@ -1,15 +1,10 @@
 .gamepad-panel {
     margin-top: 12px;
     padding: 20px;
-    border: 1px solid rgba(125, 211, 252, 0.18);
-    border-radius: 24px;
-    background:
-        radial-gradient(circle at top, rgba(56, 189, 248, 0.12), transparent 42%),
-        linear-gradient(180deg, rgba(56, 189, 248, 0.08), rgba(15, 23, 42, 0.22)),
-        rgba(2, 6, 23, 0.45);
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.05),
-        0 18px 40px rgba(2, 6, 23, 0.28);
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 .gamepad-panel-header {
@@ -27,14 +22,14 @@
 .gamepad-panel-title {
     font-size: 14px;
     font-weight: 800;
-    color: #e0f2fe;
+    color: #1A202C;
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
 
 .gamepad-panel-subtitle {
     max-width: 780px;
-    color: var(--text-muted);
+    color: #4A5568;
     font-size: 12px;
     line-height: 1.5;
 }
@@ -48,9 +43,9 @@
     margin-bottom: 12px;
     padding: 8px 10px;
     border-radius: 12px;
-    background: rgba(15, 23, 42, 0.55);
-    border: 1px solid rgba(255,255,255,0.08);
-    color: var(--text-muted);
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    color: #4A5568;
     font-size: 10px;
     line-height: 1.4;
 }
@@ -59,9 +54,9 @@
     margin-bottom: 16px;
     padding: 10px 12px;
     border-radius: 14px;
-    background: rgba(15, 23, 42, 0.55);
-    border: 1px solid rgba(255,255,255,0.08);
-    color: var(--text-muted);
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    color: #4A5568;
     font-size: 11px;
     line-height: 1.45;
 }
@@ -103,8 +98,8 @@
 .gp-aux-card {
     padding: 14px;
     border-radius: 18px;
-    background: rgba(15, 23, 42, 0.46);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
     display: grid;
     gap: 10px;
 }
@@ -116,7 +111,7 @@
 .gp-aux-subfield span,
 .gp-aux-hint {
     font-size: 9px;
-    color: var(--text-muted);
+    color: #718096;
 }
 
 .gp-aux-hint {

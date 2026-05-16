@@ -10,172 +10,170 @@
                         <div id="scene-object-details" class="scene-manager-details">Выберите объект в списке</div>
                         
                         <div class="scene-manager-actions">
-                            <div class="action-group">
+                            <div class="action-group action-group--card action-group--add">
                                 <div class="action-group-title">Добавление объекта</div>
-                                <select id="scene-add-type">
-                                    <option value="gate">Ворота</option>
-                                    <option value="pylon">Пилон</option>
-                                    <option value="flag">Флаг</option>
-                                    <option value="building">Многоэтажка</option>
-                                    <option value="aruco">ArUco маркер</option>
-                                    <option value="aruco-map">ArUco карта</option>
-                                    <option value="apriltag">AprilTag маркер</option>
-                                    <option value="apriltag-map">AprilTag карта</option>
-                                    <option value="road">Автомобильная дорога</option>
-                                    <option value="rail">Железнодорожные пути</option>
-                                    <option value="hill">Холм</option>
-                                    <option value="arena-hills">Группа холмов</option>
-                                    <option value="tree">Ель</option>
-                                    <option value="forest-patch">Лесной массив</option>
-                                    <option value="settlement">Макет поселения</option>
-                                    <option value="transport">Транспорт</option>
-                                    <option value="cargo">Грузик</option>
-                                    <option value="start-position">Стартовая позиция</option>
-                                    <option value="heliport">Хелипорт</option>
-                                    <option value="charge-station">Станция заряда</option>
-                                    <option value="locus-beacon">Локус-маяк</option>
-                                    <option value="light-tower">Световая мачта</option>
-                                    <option value="video-tower">Видеомачта</option>
-                                    <option value="control-station">Пульт полигона</option>
-                                    <option value="arena-space">Арена с сеткой</option>
-                                    <option value="pad-h">Площадка H</option>
-                                    <option value="pad-charge">Площадка ⚡</option>
-                                </select>
-                                <select id="scene-add-dictionary">
-                                    <option value="">Выберите словарь</option>
-                                </select>
-                                <input id="scene-add-value" type="text" placeholder="Значение маркера">
-                                <label id="scene-add-floors-wrap" class="scene-field" style="display: none;">
-                                    <span>Этажей</span>
-                                    <input id="scene-add-floors" type="number" min="5" max="20" step="1" value="9">
-                                </label>
-                                <div id="scene-add-building-settings" class="scene-building-settings">
-                                    <div class="scene-building-settings-header">
-                                        <div class="scene-building-settings-title">Сценарии по окнам</div>
+                                <div class="scene-add-lead">Выберите тип и заполните только нужные параметры.</div>
+                                <div class="scene-add-stack">
+                                    <select id="scene-add-type">
+                                        <option value="gate">Ворота</option>
+                                        <option value="pylon">Пилон</option>
+                                        <option value="flag">Флаг</option>
+                                        <option value="building">Многоэтажка</option>
+                                        <option value="aruco">ArUco маркер</option>
+                                        <option value="aruco-map">ArUco карта</option>
+                                        <option value="apriltag">AprilTag маркер</option>
+                                        <option value="apriltag-map">AprilTag карта</option>
+                                        <option value="road">Автомобильная дорога</option>
+                                        <option value="rail">Железнодорожные пути</option>
+                                        <option value="hill">Холм</option>
+                                        <option value="arena-hills">Группа холмов</option>
+                                        <option value="tree">Ель</option>
+                                        <option value="forest-patch">Лесной массив</option>
+                                        <option value="settlement">Макет поселения</option>
+                                        <option value="transport">Транспорт</option>
+                                        <option value="cargo">Грузик</option>
+                                        <option value="start-position">Стартовая позиция</option>
+                                        <option value="heliport">Хелипорт</option>
+                                        <option value="charge-station">Станция заряда</option>
+                                        <option value="locus-beacon">Локус-маяк</option>
+                                        <option value="light-tower">Световая мачта</option>
+                                        <option value="video-tower">Видеомачта</option>
+                                        <option value="control-station">Пульт полигона</option>
+                                        <option value="arena-space">Арена с сеткой</option>
+                                        <option value="pad-h">Площадка H</option>
+                                        <option value="pad-charge">Площадка ⚡</option>
+                                    </select>
+                                    <select id="scene-add-dictionary">
+                                        <option value="">Выберите словарь</option>
+                                    </select>
+                                    <input id="scene-add-value" type="text" placeholder="Значение маркера">
+                                    <label id="scene-add-floors-wrap" class="scene-field" style="display: none;">
+                                        <span>Этажей</span>
+                                        <input id="scene-add-floors" type="number" min="5" max="20" step="1" value="9">
+                                    </label>
+                                    <div id="scene-add-building-settings" class="scene-building-settings">
+                                        <div class="scene-building-settings-header">
+                                            <div class="scene-building-settings-title">Сценарии по окнам</div>
+                                        </div>
+                                        <div class="scene-building-controls-row">
+                                            <div class="scene-building-settings-grid">
+                                                <label class="scene-field">
+                                                    <span>Этаж</span>
+                                                    <input id="scene-add-building-floor" type="number" min="1" max="20" step="1" value="3">
+                                                </label>
+                                                <label class="scene-field">
+                                                    <span>Сторона</span>
+                                                    <select id="scene-add-building-face">
+                                                        <option value="front">Перед</option>
+                                                        <option value="back">Зад</option>
+                                                    </select>
+                                                </label>
+                                                <label class="scene-field">
+                                                    <span>Окно</span>
+                                                    <select id="scene-add-building-window">
+                                                        <option value="1">1</option>
+                                                        <option value="2">2</option>
+                                                        <option value="3">3</option>
+                                                    </select>
+                                                </label>
+                                                <label class="scene-field">
+                                                    <span>Событие</span>
+                                                    <select id="scene-add-building-kind">
+                                                        <option value="smoke">Дым</option>
+                                                        <option value="fire">Пожар</option>
+                                                        <option value="thief">Вор</option>
+                                                    </select>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="scene-building-settings-note">Подберите этажность и добавляйте события по окнам.</div>
+                                        <div class="action-row" style="margin-top: 4px;">
+                                            <button id="scene-add-building-append-btn" type="button" class="btn-secondary">+ Сценарий</button>
+                                            <button id="scene-add-building-clear-btn" type="button" class="btn-secondary">Очистить</button>
+                                        </div>
+                                        <div class="scene-building-list-label">Активные сценарии</div>
+                                        <textarea id="scene-add-building-incidents" rows="4" placeholder="Список сценариев для окон"></textarea>
                                     </div>
-                                    <div class="scene-building-controls-row">
-                                        <div class="scene-building-settings-grid">
+                                    <div id="scene-add-map-settings" class="scene-map-settings">
+                                        <div class="scene-map-settings-title">Настройки карты маркеров</div>
+                                        <div id="scene-add-map-summary" class="scene-map-summary">5 x 5, старт ID 0, по строкам</div>
+                                        <div class="scene-map-settings-grid">
                                             <label class="scene-field">
-                                                <span>Этаж</span>
-                                                <input id="scene-add-building-floor" type="number" min="1" max="20" step="1" value="3">
+                                                <span>Строки</span>
+                                                <input id="scene-add-map-rows" type="number" min="1" max="20" value="5">
                                             </label>
                                             <label class="scene-field">
-                                                <span>Сторона</span>
-                                                <select id="scene-add-building-face">
-                                                    <option value="front">Перед</option>
-                                                    <option value="back">Зад</option>
+                                                <span>Столбцы</span>
+                                                <input id="scene-add-map-columns" type="number" min="1" max="20" value="5">
+                                            </label>
+                                            <label class="scene-field">
+                                                <span>Стартовый ID</span>
+                                                <input id="scene-add-map-start-id" type="number" min="0" step="1" value="0">
+                                            </label>
+                                            <label class="scene-field">
+                                                <span>Шаг ID</span>
+                                                <input id="scene-add-map-id-step" type="number" min="1" step="1" value="1">
+                                            </label>
+                                            <label class="scene-field">
+                                                <span>Размер маркера, м</span>
+                                                <input id="scene-add-map-marker-size" type="number" min="0.2" max="5" step="0.05" value="1.05">
+                                            </label>
+                                            <label class="scene-field">
+                                                <span>Поворот, °</span>
+                                                <input id="scene-add-map-rotation" type="number" min="-180" max="180" step="1" value="0">
+                                            </label>
+                                            <label class="scene-field">
+                                                <span>Зазор X, м</span>
+                                                <input id="scene-add-map-gap-x" type="number" min="0" max="10" step="0.05" value="0.2">
+                                            </label>
+                                            <label class="scene-field">
+                                                <span>Зазор Y, м</span>
+                                                <input id="scene-add-map-gap-y" type="number" min="0" max="10" step="0.05" value="0.2">
+                                            </label>
+                                            <label class="scene-field">
+                                                <span>Порядок обхода</span>
+                                                <select id="scene-add-map-traversal">
+                                                    <option value="row-major">По строкам</option>
+                                                    <option value="column-major">По столбцам</option>
                                                 </select>
                                             </label>
                                             <label class="scene-field">
-                                                <span>Окно</span>
-                                                <select id="scene-add-building-window">
-                                                    <option value="1">1</option>
-                                                    <option value="2">2</option>
-                                                    <option value="3">3</option>
+                                                <span>Старт нумерации</span>
+                                                <select id="scene-add-map-start-corner">
+                                                    <option value="top-left">Сверху слева</option>
+                                                    <option value="top-right">Сверху справа</option>
+                                                    <option value="bottom-left">Снизу слева</option>
+                                                    <option value="bottom-right">Снизу справа</option>
                                                 </select>
                                             </label>
                                             <label class="scene-field">
-                                                <span>Событие</span>
-                                                <select id="scene-add-building-kind">
-                                                    <option value="smoke">Дым</option>
-                                                    <option value="fire">Пожар</option>
-                                                    <option value="thief">Вор</option>
+                                                <span>Точка привязки</span>
+                                                <select id="scene-add-map-anchor">
+                                                    <option value="center">Центр карты</option>
+                                                    <option value="start">Стартовая ячейка</option>
+                                                    <option value="top-left">Верхний левый угол</option>
+                                                    <option value="top-right">Верхний правый угол</option>
+                                                    <option value="bottom-left">Нижний левый угол</option>
+                                                    <option value="bottom-right">Нижний правый угол</option>
                                                 </select>
+                                            </label>
+                                            <label class="scene-check">
+                                                <input id="scene-add-map-snake" type="checkbox">
+                                                <span>Нумерация змейкой</span>
                                             </label>
                                         </div>
                                     </div>
-                                    <div class="scene-building-settings-note">Подберите этажность и добавляйте события по окнам.</div>
-                                    <div class="action-row" style="margin-top: 4px;">
-                                        <button id="scene-add-building-append-btn" type="button" class="btn-secondary">+ Сценарий</button>
-                                        <button id="scene-add-building-clear-btn" type="button" class="btn-secondary">Очистить</button>
-                                    </div>
-                                    <div class="scene-building-list-label">Активные сценарии</div>
-                                    <textarea id="scene-add-building-incidents" rows="4" placeholder="Список сценариев для окон"></textarea>
+                                    <div id="scene-add-path-hint" class="scene-add-hint">Маршрут доступен только для дорог и путей.</div>
+                                    <textarea id="scene-add-points" rows="3" placeholder="Точки маршрута: X, Y, Z" style="display: none;"></textarea>
                                 </div>
-                                <div id="scene-add-map-settings" class="scene-map-settings">
-                                    <div class="scene-map-settings-title">Настройки карты маркеров</div>
-                                    <div id="scene-add-map-summary" class="scene-map-summary">5 x 5, старт ID 0, по строкам</div>
-                                    <div class="scene-map-settings-grid">
-                                        <label class="scene-field">
-                                            <span>Строки</span>
-                                            <input id="scene-add-map-rows" type="number" min="1" max="20" value="5">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Столбцы</span>
-                                            <input id="scene-add-map-columns" type="number" min="1" max="20" value="5">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Стартовый ID</span>
-                                            <input id="scene-add-map-start-id" type="number" min="0" step="1" value="0">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Шаг ID</span>
-                                            <input id="scene-add-map-id-step" type="number" min="1" step="1" value="1">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Размер маркера, м</span>
-                                            <input id="scene-add-map-marker-size" type="number" min="0.2" max="5" step="0.05" value="1.05">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Поворот, °</span>
-                                            <input id="scene-add-map-rotation" type="number" min="-180" max="180" step="1" value="0">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Зазор X, м</span>
-                                            <input id="scene-add-map-gap-x" type="number" min="0" max="10" step="0.05" value="0.2">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Зазор Y, м</span>
-                                            <input id="scene-add-map-gap-y" type="number" min="0" max="10" step="0.05" value="0.2">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Порядок обхода</span>
-                                            <select id="scene-add-map-traversal">
-                                                <option value="row-major">По строкам</option>
-                                                <option value="column-major">По столбцам</option>
-                                            </select>
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Старт нумерации</span>
-                                            <select id="scene-add-map-start-corner">
-                                                <option value="top-left">Сверху слева</option>
-                                                <option value="top-right">Сверху справа</option>
-                                                <option value="bottom-left">Снизу слева</option>
-                                                <option value="bottom-right">Снизу справа</option>
-                                            </select>
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Точка привязки</span>
-                                            <select id="scene-add-map-anchor">
-                                                <option value="center">Центр карты</option>
-                                                <option value="start">Стартовая ячейка</option>
-                                                <option value="top-left">Верхний левый угол</option>
-                                                <option value="top-right">Верхний правый угол</option>
-                                                <option value="bottom-left">Нижний левый угол</option>
-                                                <option value="bottom-right">Нижний правый угол</option>
-                                            </select>
-                                        </label>
-                                        <label class="scene-check">
-                                            <input id="scene-add-map-snake" type="checkbox">
-                                            <span>Нумерация змейкой</span>
-                                        </label>
-                                    </div>
+                                <div class="scene-add-footer">
+                                    <button id="scene-add-btn" class="btn-primary btn-primary-action">Добавить объект</button>
                                 </div>
-                                <textarea id="scene-add-points" rows="2" placeholder="Точки маршрута: X, Y, Z"></textarea>
-                                <button id="scene-add-btn" class="btn-primary">Добавить объект</button>
                             </div>
 
-                            <div class="action-group">
-                                <div class="action-group-title">Пресеты сцены</div>
-                                <select id="scene-preset-type">
-                                    <option value="preset-race-track">Гоночная трасса</option>
-                                    <option value="preset-residential">Спальный район</option>
-                                    <option value="preset-geoskan-arena">Геоскан Арена</option>
-                                </select>
-                                <button id="scene-preset-btn" class="btn-secondary" style="color: var(--success); border-color: rgba(16,185,129,0.3);">Загрузить пресет</button>
-                            </div>
+                            <div class="action-divider"></div>
 
-                            <div class="action-group">
+                            <div class="action-group action-group--card">
                                 <div class="action-group-title">Редактирование выбранного</div>
                                 <select id="scene-selected-dictionary">
                                     <option value="">Словарь маркера</option>
@@ -230,32 +228,50 @@
                                 </div>
                                 <textarea id="scene-selected-points" rows="2" placeholder="Точки маршрута (для дорог)"></textarea>
                                 <div class="action-row">
-                                    <button id="scene-apply-meta-btn" class="btn-secondary">Применить</button>
-                                    <button id="scene-append-point-btn" class="btn-secondary">+ Точка</button>
+                                    <button id="scene-apply-meta-btn" class="btn-primary btn-primary-action">Применить</button>
+                                    <button id="scene-append-point-btn" class="btn-secondary btn-secondary-action">+ Точка</button>
                                 </div>
                                 <div class="action-row">
-                                    <button id="scene-visual-edit-btn" class="btn-secondary">Проложить</button>
+                                    <button id="scene-visual-edit-btn" class="btn-secondary btn-secondary-action">Проложить</button>
                                 </div>
                             </div>
 
-                            <div class="action-group">
-                                <div class="action-group-title">Трансформация</div>
-                                <div class="action-row">
-                                    <button id="scene-mode-translate" class="btn-secondary">Позиция</button>
-                                    <button id="scene-mode-rotate" class="btn-secondary">Вращение</button>
-                                </div>
-                                <div class="action-row">
-                                    <button id="scene-mode-scale" class="btn-secondary">Масштаб</button>
-                                    <button id="scene-drone-origin-btn" class="btn-secondary">Дрон в (0,0)</button>
-                                </div>
-                            </div>
+                            <div class="action-divider"></div>
 
-                            <div class="action-row" style="margin-bottom: 8px; gap: 8px;">
-                                <button id="scene-group-btn" class="btn-secondary" title="Сгруппировать выбранные объекты (Ctrl+Click)" style="flex: 1;">ГРУППА</button>
-                                <button id="scene-ungroup-btn" class="btn-secondary" title="Разгруппировать выбранную группу" style="flex: 1;">РАЗГРУППИРОВАТЬ</button>
-                            </div>
-                            
-                            <button id="scene-delete-btn" class="btn-secondary" style="color: var(--danger); border-color: rgba(239,68,68,0.3); width: 100%;">УДАЛИТЬ</button>
+                            <details class="scene-manager-more">
+                                <summary class="scene-manager-more__summary">
+                                    <span class="action-group-title" style="margin-bottom: 0;">Еще</span>
+                                    <span class="scene-manager-more__chevron">+</span>
+                                </summary>
+                                <div class="scene-manager-more__content">
+                                    <div class="action-group">
+                                        <div class="action-group-title">Пресеты сцены</div>
+                                        <div class="action-row">
+                                            <select id="scene-preset-type">
+                                                <option value="preset-race-track">Гоночная трасса</option>
+                                                <option value="preset-residential">Спальный район</option>
+                                                <option value="preset-geoskan-arena">Геоскан Арена</option>
+                                            </select>
+                                            <button id="scene-preset-btn" class="btn-secondary btn-icon-only" title="Загрузить пресет">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="action-row">
+                                        <button id="scene-group-btn" class="btn-secondary btn-secondary-action" title="Сгруппировать выбранные объекты (Ctrl+Click)">ГРУППА</button>
+                                        <button id="scene-ungroup-btn" class="btn-secondary btn-secondary-action" title="Разгруппировать выбранную группу">РАЗГРУППИРОВАТЬ</button>
+                                    </div>
+
+                                    <div class="action-row">
+                                        <button id="scene-drone-origin-btn" class="btn-secondary btn-secondary-action">Дрон в (0,0)</button>
+                                        <button id="scene-delete-btn" class="btn-secondary btn-danger-action">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+                                            Удалить
+                                        </button>
+                                    </div>
+                                </div>
+                            </details>
                         </div>
                     </div>
                 </div>

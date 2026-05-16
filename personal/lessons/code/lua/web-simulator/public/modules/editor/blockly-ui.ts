@@ -15,11 +15,18 @@ export type BlocklyViewportDimensions = {
     height: number;
 };
 
+const COMPACT_VIEWPORT_BREAKPOINT = 1500;
+const MAX_SIDEBAR_RATIO_COMPACT = 0.42;
+const MIN_EXPANDED_SIDEBAR_WIDTH = 336;
+const MIN_MAIN_SCENE_WIDTH_WIDE = 980;
+
 export function computeExpandedSidebarWidth(viewportWidth: number, currentWidth: number): number {
     const safeViewportWidth = Math.max(0, Math.floor(viewportWidth));
-    const preferredWidth = Math.round(safeViewportWidth * 0.58);
-    const minimumWidth = Math.min(560, Math.max(0, safeViewportWidth - 80));
-    const maximumWidth = Math.max(minimumWidth, Math.floor(safeViewportWidth * 0.78));
+    const preferredWidth = Math.round(safeViewportWidth * 0.4);
+    const maximumWidth = safeViewportWidth >= COMPACT_VIEWPORT_BREAKPOINT
+        ? Math.max(MIN_EXPANDED_SIDEBAR_WIDTH, safeViewportWidth - MIN_MAIN_SCENE_WIDTH_WIDE)
+        : Math.max(MIN_EXPANDED_SIDEBAR_WIDTH, Math.floor(safeViewportWidth * MAX_SIDEBAR_RATIO_COMPACT));
+    const minimumWidth = Math.min(Math.max(MIN_EXPANDED_SIDEBAR_WIDTH, preferredWidth), maximumWidth);
     return Math.max(minimumWidth, Math.min(maximumWidth, Math.max(currentWidth, preferredWidth)));
 }
 

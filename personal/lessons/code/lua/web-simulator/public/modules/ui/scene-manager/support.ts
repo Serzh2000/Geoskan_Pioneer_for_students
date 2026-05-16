@@ -35,6 +35,7 @@ export interface SceneManagerDomRefs {
     addMapStartCornerEl: HTMLSelectElement | null;
     addMapAnchorEl: HTMLSelectElement | null;
     addMapSnakeEl: HTMLInputElement | null;
+    addPathHintEl: HTMLDivElement | null;
     addPointsEl: HTMLTextAreaElement | null;
     addBtn: HTMLElement | null;
     presetTypeEl: HTMLSelectElement | null;
@@ -305,6 +306,10 @@ export function updateAddControlsState(elements: SceneManagerDomRefs) {
     elements.addPointsEl.placeholder = isPath
         ? 'Каждая строка: X, Y, Z\n0, 0, 0\n6, 0, 0\n10, 4, 0'
         : 'Только для дорог и путей';
+    elements.addPointsEl.style.display = isPath ? 'block' : 'none';
+    if (elements.addPathHintEl) {
+        elements.addPathHintEl.style.display = isPath ? 'none' : 'block';
+    }
     setBuildingControlsVisible(isBuilding, elements.addFloorsWrapEl, elements.addFloorsEl, elements.addBuildingSettingsEl);
     if (elements.addMapSettingsEl) elements.addMapSettingsEl.classList.toggle('visible', isMarkerMap);
     getMapInputs(elements).forEach((input) => {

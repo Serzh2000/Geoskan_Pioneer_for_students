@@ -8,10 +8,10 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding: 12px;
+    padding: 16px;
     border-radius: 12px;
-    border: 1px solid rgba(56, 189, 248, 0.22);
-    background: radial-gradient(circle at top, rgba(14, 165, 233, 0.08), rgba(2, 6, 23, 0.92));
+    border: 1px solid #E2E8F0;
+    background: #f8fafc;
 }
 
 .api-preview__stage {
@@ -19,14 +19,12 @@
     min-height: 230px;
     border-radius: 10px;
     overflow: hidden;
-    background: radial-gradient(circle at top, rgba(30, 41, 59, 0.88), rgba(2, 6, 23, 0.96));
-    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: #ffffff;
+    border: 1px solid #E2E8F0;
 }
 
 .api-preview[data-api-preview-view='topdown'] .api-preview__stage {
-    background:
-        radial-gradient(circle at center, rgba(14, 165, 233, 0.08), rgba(2, 6, 23, 0.96)),
-        linear-gradient(180deg, rgba(8, 47, 73, 0.3), rgba(2, 6, 23, 0.98));
+    background: #ffffff;
 }
 
 .api-preview__canvas {
@@ -58,13 +56,14 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 8px;
+    padding: 4px 10px;
     border-radius: 999px;
-    background: rgba(2, 6, 23, 0.78);
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    color: #dbeafe;
+    background: #ffffff;
+    border: 1px solid #E2E8F0;
+    color: #475569;
     font-size: 11px;
     font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .api-preview__swatch {
@@ -90,14 +89,15 @@
 .api-preview__phase {
     left: 10px;
     bottom: 10px;
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 999px;
-    background: rgba(2, 6, 23, 0.82);
-    border: 1px solid rgba(56, 189, 248, 0.24);
-    color: #bae6fd;
+    background: #ffffff;
+    border: 1px solid #FF8C00;
+    color: #FF8C00;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.02em;
+    box-shadow: 0 2px 4px rgba(255, 140, 0, 0.1);
 }
 
 .api-preview[data-api-preview-view='topdown'] .api-preview__phase {
@@ -113,22 +113,22 @@
 }
 
 .api-preview__title {
-    color: #bae6fd;
-    font-size: 12px;
+    color: #64748b;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
 
 .api-preview__status {
-    color: #f8fafc;
+    color: #1A202C;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     line-height: 1.4;
 }
 
 .api-preview__hint {
-    color: #cbd5e1;
+    color: #94a3b8;
     font-size: 12px;
     line-height: 1.6;
 }

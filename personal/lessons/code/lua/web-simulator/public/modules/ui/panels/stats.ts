@@ -7,6 +7,7 @@ const stateStatus = document.getElementById('state-status') as HTMLElement | nul
 const stateTime = document.getElementById('state-time') as HTMLElement | null;
 const stateMode = document.getElementById('state-mode') as HTMLElement | null;
 const hudStatMode = document.getElementById('hud-stat-mode') as HTMLElement | null;
+const flightStatusBadge = document.getElementById('flight-status-badge') as HTMLElement | null;
 const camParams = document.getElementById('cam-params') as HTMLElement | null;
 const runBtn = document.getElementById('run-btn') as HTMLButtonElement | null;
 const stopBtn = document.getElementById('stop-btn') as HTMLButtonElement | null;
@@ -16,24 +17,23 @@ export function updateStats() {
 
     // Update Telemetry Panel
     if (stateAlt) stateAlt.textContent = simState.pos.z.toFixed(2);
-    if (stateSpd) stateSpd.textContent = speed.toFixed(1);
+    if (stateSpd) stateSpd.textContent = speed.toFixed(2);
     if (stateBat) stateBat.textContent = Math.floor(simState.battery).toString();
     if (stateStatus) {
         stateStatus.textContent = simState.status;
-        // Color coding for status
         if (
             simState.fsmState === 'TAKEOFF_PROCESS'
             || simState.fsmState === 'FLYING_HOVER'
             || simState.fsmState === 'FLYING_MOVING'
             || simState.fsmState === 'LANDING_PROCESS'
         ) {
-            stateStatus.style.color = '#4ade80'; // Green
+            flightStatusBadge?.setAttribute('data-state', 'success');
         } else if (simState.fsmState === 'PREFLIGHT') {
-            stateStatus.style.color = '#facc15'; // Yellow
+            flightStatusBadge?.setAttribute('data-state', 'warn');
         } else if (simState.status === 'ОШИБКА' || simState.status === 'CRASHED') {
-            stateStatus.style.color = '#f87171'; // Red
+            flightStatusBadge?.setAttribute('data-state', 'error');
         } else {
-            stateStatus.style.color = '#151515';
+            flightStatusBadge?.setAttribute('data-state', 'neutral');
         }
     }
     if (stateTime) stateTime.textContent = simState.current_time.toFixed(1);

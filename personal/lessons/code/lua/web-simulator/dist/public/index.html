@@ -7,8 +7,8 @@
     <!-- Three.js and modules loaded via Vite -->
     <!-- Fengari for Lua in browser -->
     <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
-  <script type="module" crossorigin src="/assets/index-CdU1R_6j.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-BAFfQ0xx.css">
+  <script type="module" crossorigin src="/assets/index-CECjnEM4.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-ZLKVvu9m.css">
 </head>
 <body>
     <div class="container">
@@ -68,7 +68,7 @@
                     <div class="card">
                         <div class="swarm-manager">
                             <div class="swarm-list">
-                                <select id="drone-list" size="10"></select>
+                                <ul id="drone-list" class="drone-list" role="listbox" aria-label="Список дронов"></ul>
                             </div>
                             <div class="swarm-actions">
                                 <button id="add-drone-btn" class="btn-add-drone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Добавить</button>
@@ -635,10 +635,10 @@
                                 <div class="scene-viewport-eyebrow">ПОЛЕТНАЯ ЗОНА</div>
                                 <div class="scene-viewport-title">Полетная зона</div>
                             </div>
-                            <div class="scene-viewport-subtitle">Светлая испытательная сцена с точной координатной сеткой, посадочной площадкой и живым управлением камерой.</div>
                         </div>
                         <div class="scene-container">
                             <div id="canvas-container"></div>
+                            <div class="scene-viewport-subtitle scene-viewport-subtitle--overlay">Светлая испытательная сцена с точной координатной сеткой, посадочной площадкой и живым управлением камерой.</div>
                             <div id="fpv-overlay">
                                 <div class="fpv-header">
                                     <div class="fpv-cam-info">
@@ -658,9 +658,9 @@
                     </div>
                 </section>
 
-                <aside class="hud-side-column">
-                    <div class="dashboard-toolbar">
-                        <div>
+                <aside class="hud-side-column hud-side-column--compact">
+                    <div class="dashboard-toolbar dashboard-toolbar--compact">
+                        <div class="dashboard-title-group">
                             <div class="dashboard-toolbar__eyebrow">ПАНЕЛЬ ПОЛЕТА</div>
                             <div class="dashboard-title">Панель полета</div>
                         </div>
@@ -670,53 +670,56 @@
                         </div>
                     </div>
 
-                    <div id="telemetry-overlay" class="telemetry-overlay dashboard-panel">
+                    <div id="flight-status-badge" class="flight-status-badge">
+                        <span class="flight-status-badge__label">Статус</span>
+                        <span id="state-status" class="flight-status-badge__value">ОЖИДАНИЕ</span>
+                    </div>
+
+                    <div id="telemetry-overlay" class="telemetry-overlay dashboard-panel dashboard-panel--compact">
                         <div class="dashboard-panel__header">
                             <span>Полетные метрики</span>
                             <span class="dashboard-panel__badge">Онлайн</span>
                         </div>
-                        <div class="stats-grid">
-                            <div class="stat-item stat-item--primary">
-                                <div class="stat-label">ВЫСОТА</div>
-                                <div class="stat-value"><span id="state-alt">0.00</span><span>м</span></div>
+                        <div class="metrics-list">
+                            <div class="metric-row">
+                                <div class="metric-row__label">Высота</div>
+                                <div class="metric-row__value"><span id="state-alt">0.00</span><span class="metric-row__unit">м</span></div>
                             </div>
-                            <div class="stat-item stat-item--primary">
-                                <div class="stat-label">СКОРОСТЬ</div>
-                                <div class="stat-value"><span id="state-spd">0.0</span><span>м/с</span></div>
+                            <div class="metric-row">
+                                <div class="metric-row__label">Скорость</div>
+                                <div class="metric-row__value"><span id="state-spd">0.00</span><span class="metric-row__unit">м/с</span></div>
                             </div>
-                            <div class="stat-item stat-item--primary">
-                                <div class="stat-label">БАТАРЕЯ</div>
-                                <div class="stat-value"><span id="state-bat">100</span><span>%</span></div>
+                            <div class="metric-row">
+                                <div class="metric-row__label">Батарея</div>
+                                <div class="metric-row__value"><span id="state-bat">100</span><span class="metric-row__unit">%</span></div>
                             </div>
-                            <div class="stat-item">
-                                <div class="stat-label">ВРЕМЯ ПОЛЕТА</div>
-                                <div class="stat-value"><span id="state-time">0.0</span><span>с</span></div>
+                            <div class="metric-row">
+                                <div class="metric-row__label">Время</div>
+                                <div class="metric-row__value"><span id="state-time">0.0</span><span class="metric-row__unit">с</span></div>
                             </div>
-                            <div class="stat-item" id="hud-stat-mode" style="display: none;">
-                                <div class="stat-label">РЕЖИМ</div>
-                                <div class="stat-value"><span id="state-mode">АВТО</span></div>
-                            </div>
-                            <div class="stat-item stat-item--status">
-                                <div class="stat-label">СТАТУС</div>
-                                <div class="stat-value"><span id="state-status">ОЖИДАНИЕ</span></div>
+                            <div class="metric-row" id="hud-stat-mode" style="display: none;">
+                                <div class="metric-row__label">Режим</div>
+                                <div class="metric-row__value"><span id="state-mode">АВТО</span></div>
                             </div>
                         </div>
                     </div>
 
-                    <div id="matrix-overlay" class="matrix-overlay dashboard-panel">
+                    <div id="matrix-overlay" class="matrix-overlay dashboard-panel dashboard-panel--compact dashboard-panel--matrix">
                         <div class="dashboard-panel__header">
                             <span>LED-матрица</span>
                             <span class="dashboard-panel__badge">5 x 5</span>
                         </div>
-                        <div class="led-section-label">БОРТОВЫЕ ИНДИКАТОРЫ</div>
-                        <div class="led-base-grid">
-                            <div id="led-base-0" class="led-pixel-base" title="Базовый светодиод 0"></div>
-                            <div id="led-base-1" class="led-pixel-base" title="Базовый светодиод 1"></div>
-                            <div id="led-base-2" class="led-pixel-base" title="Базовый светодиод 2"></div>
-                            <div id="led-base-3" class="led-pixel-base" title="Базовый светодиод 3"></div>
+                        <div class="led-cluster">
+                            <div class="led-section-label">БОРТОВЫЕ ИНДИКАТОРЫ</div>
+                            <div class="led-base-grid">
+                                <div id="led-base-0" class="led-pixel-base" title="Базовый светодиод 0"></div>
+                                <div id="led-base-1" class="led-pixel-base" title="Базовый светодиод 1"></div>
+                                <div id="led-base-2" class="led-pixel-base" title="Базовый светодиод 2"></div>
+                                <div id="led-base-3" class="led-pixel-base" title="Базовый светодиод 3"></div>
+                            </div>
+                            <div class="led-section-label">МАТРИЦА 5x5</div>
+                            <div class="led-matrix-grid" id="led-matrix-grid"></div>
                         </div>
-                        <div class="led-section-label">МАТРИЦА 5x5</div>
-                        <div class="led-matrix-grid" id="led-matrix-grid"></div>
                     </div>
                 </aside>
             </div>

@@ -50,6 +50,7 @@ export function initSceneManager(callbacks: UICallbacks) {
         addMapStartCornerEl: document.getElementById('scene-add-map-start-corner') as HTMLSelectElement | null,
         addMapAnchorEl: document.getElementById('scene-add-map-anchor') as HTMLSelectElement | null,
         addMapSnakeEl: document.getElementById('scene-add-map-snake') as HTMLInputElement | null,
+        addPathHintEl: document.getElementById('scene-add-path-hint') as HTMLDivElement | null,
         addPointsEl: document.getElementById('scene-add-points') as HTMLTextAreaElement | null,
         addBtn: document.getElementById('scene-add-btn'),
         presetTypeEl: document.getElementById('scene-preset-type') as HTMLSelectElement | null,

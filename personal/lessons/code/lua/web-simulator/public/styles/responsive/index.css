@@ -3,44 +3,12 @@
  * Файл выделен из `public/style.css` при декомпозиции общего CSS.
  */
 @media (max-width: 1200px) {
-    .header {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-    .header-actions {
-        width: 100%;
-        justify-content: flex-start;
-    }
-
-    .workspace-shell {
-        grid-template-columns: 1fr;
-    }
 }
 
 @media (max-width: 820px) {
     .container {
         padding: 12px;
         gap: 12px;
-    }
-
-    .workspace-sidebar {
-        display: none;
-    }
-
-    .header-controls-group {
-        width: 100%;
-        flex-wrap: wrap;
-    }
-
-    .header-group-label {
-        width: 100%;
-    }
-
-    .header-select,
-    .header-lang-select {
-        min-width: 0;
-        flex: 1 1 180px;
     }
 
     .settings-panel-content {
@@ -51,6 +19,88 @@
     .dashboard-toolbar {
         flex-direction: column;
     }
+}
+
+@container main-scene (max-width: 1420px) {
+}
+
+@container main-scene (max-width: 1180px) {
+    .header-brand {
+        width: 32px;
+        flex: 0 0 32px;
+        gap: 0;
+    }
+
+    .header-brand-copy {
+        display: none;
+    }
+
+    #file-selector {
+        width: 40px;
+        min-width: 40px;
+        max-width: 40px;
+        padding-left: 0;
+        padding-right: 20px;
+        color: transparent;
+        font-size: 0;
+        text-indent: -9999px;
+        background-position: center center;
+        overflow: hidden;
+        position: relative;
+        z-index: 140;
+        transition:
+            width 0.18s ease,
+            min-width 0.18s ease,
+            max-width 0.18s ease,
+            margin-right 0.18s ease;
+    }
+
+    #file-selector:focus,
+    #file-selector:active,
+    #file-selector:focus-visible {
+        width: 220px;
+        min-width: 220px;
+        max-width: 220px;
+        margin-right: -180px;
+        padding-left: 12px;
+        padding-right: 32px;
+        color: var(--text-color);
+        font-size: 12px;
+        text-indent: 0;
+        background-position: right 8px center;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+    }
+
+    .scene-viewport-header,
+    .dashboard-toolbar {
+        flex-direction: column;
+    }
+
+    .scene-viewport-title,
+    .dashboard-title {
+        font-size: 26px;
+    }
+
+    .dashboard-toolbar--compact .dashboard-title {
+        font-size: 18px;
+    }
+
+    .scene-viewport-subtitle--overlay {
+        position: static;
+        max-width: none;
+        padding: 0;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        backdrop-filter: none;
+    }
+
+    .camera-controls button {
+        min-height: 42px;
+    }
+}
+
+@container main-scene (max-width: 860px) {
 }
 
 @media (max-width: 1100px) {
@@ -80,4 +130,3 @@
 .log-success { border-left-color: var(--success); background: rgba(16, 185, 129, 0.05); }
 .log-warn { border-left-color: #f59e0b; background: rgba(245, 158, 11, 0.05); }
 .log-error { border-left-color: var(--danger); background: rgba(239, 68, 68, 0.05); }
-

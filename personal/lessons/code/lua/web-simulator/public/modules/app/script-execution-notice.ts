@@ -74,6 +74,7 @@ function collectPythonIssues(code: string): string[] {
 }
 
 function renderIssuesHtml(language: ScriptLanguage, issues: string[]): string {
+    const isCriticalIssue = (issue: string) => /preflight|takeoff|ошибка|сначала|невозмож|crashed/i.test(issue);
     const example = language === 'python'
         ? `if pioneer.arm():
     time.sleep(1)
@@ -102,7 +103,7 @@ end`;
 
     return `
         <div class="simulation-notice__list">
-            ${issues.map((issue) => `<div>${issue}</div>`).join('')}
+            ${issues.map((issue) => `<div class="${isCriticalIssue(issue) ? 'is-critical' : ''}">${issue}</div>`).join('')}
         </div>
         <button type="button" class="simulation-notice__action" data-simulation-action="open-mission-guide">Открыть 5 учебных заданий</button>
         <div class="simulation-notice__code">${example}</div>

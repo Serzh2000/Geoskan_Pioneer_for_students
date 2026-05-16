@@ -5,34 +5,46 @@
 /* CAMERA CONTROLS POLISH */
 .camera-controls {
     position: absolute;
-    bottom: 18px;
-    left: 18px;
+    left: 50%;
+    bottom: 16px;
+    right: auto;
     display: flex;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.92);
-    padding: 6px;
-    border-radius: 16px;
-    border: 1px solid rgba(9, 9, 11, 0.08);
-    box-shadow: var(--shadow-soft);
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(30, 30, 36, 0.72);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
     z-index: 10;
+    width: max-content;
+    max-width: calc(100% - 32px);
+    transform: translateX(-50%);
 }
 
 .camera-controls button {
     background: transparent;
-    border: 1px solid transparent;
-    color: var(--text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.82);
     padding: 8px 12px;
-    border-radius: 12px;
-    font-size: 10px;
+    border-radius: 10px;
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-weight: 700;
+    min-width: 0;
+    width: auto;
+    min-height: 38px;
+    text-align: center;
+    backdrop-filter: blur(8px);
 }
 
 .camera-controls button:hover {
-    background: rgba(255, 107, 0, 0.1);
-    border-color: rgba(255, 107, 0, 0.16);
-    color: var(--text-strong);
+    background: rgba(255, 107, 0, 0.18);
+    border-color: rgba(255, 107, 0, 0.28);
+    color: #ffffff;
 }
 
 

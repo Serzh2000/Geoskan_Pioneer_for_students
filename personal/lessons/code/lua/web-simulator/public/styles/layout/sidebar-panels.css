@@ -5,7 +5,9 @@
 /* SIDEBAR PANELS */
 .sidebar-panels {
     height: 100%;
-    width: 450px;
+    width: calc(var(--sidebar-width) - var(--sidebar-tabs-width));
+    min-width: 0;
+    flex: 1 1 auto;
     background: linear-gradient(180deg, #fcfcfd 0%, #f6f7f8 100%);
     border-right: 1px solid rgba(9, 9, 11, 0.04);
     display: flex;
@@ -14,7 +16,6 @@
     overflow: hidden;
     position: relative;
     z-index: 90;
-    min-width: 0;
 }
 
 .sidebar-panels.is-collapsed {
