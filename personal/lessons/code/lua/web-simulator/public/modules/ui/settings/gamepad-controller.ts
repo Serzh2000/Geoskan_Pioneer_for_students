@@ -12,19 +12,24 @@ import {
     ensureMappingsForGamepad,
     findActiveGamepad as findActiveMappedGamepad,
     getDefaultChannelValue,
+    getDefaultRawChannelValues,
     getGamepadName,
+    getRawPwmChannels,
     getMappingRef,
     isAllowedForChannel,
     setMappingRef
 } from './mapping.js';
 import {
     renderAuxRangeEditors,
+    renderAuxSwitchPreview,
     renderCalibrationState,
     renderChannelDataState,
     renderChannelDefaults,
     renderChannelValue,
     renderMappingControlsState,
     renderModeMeta,
+    renderRawMonitor,
+    renderStickPreview,
     setAutoStatus,
     syncSelectWithMapping,
     updateBar
@@ -45,8 +50,22 @@ export function createGamepadSettingsController(dom: SettingsDomRefs, state: Set
     const renderModeMetaState = (liveValue: number): void => {
         renderModeMeta(dom, state, liveValue, getModePositions);
     };
+    const renderAuxSwitchPreviewState = (values?: { mode: number; arm: number; magnet: number }): void => {
+        renderAuxSwitchPreview({
+            dom,
+            state,
+            values: values ?? {
+                mode: Number(dom.valueEls.mode?.textContent ?? getDefaultChannelValue('mode')),
+                arm: Number(dom.valueEls.arm?.textContent ?? getDefaultChannelValue('arm')),
+                magnet: Number(dom.valueEls.magnet?.textContent ?? getDefaultChannelValue('magnet'))
+            },
+            getModePositions,
+            getAuxRange
+        });
+    };
     const renderModeMetaFromDomValue = (): void => {
         renderModeMetaState(Number(dom.valueEls.mode?.textContent ?? getDefaultChannelValue('mode')));
+        renderAuxSwitchPreviewState();
     };
     const renderAuxRangeEditorsState = (): void => {
         renderAuxRangeEditors({
@@ -82,6 +101,40 @@ export function createGamepadSettingsController(dom: SettingsDomRefs, state: Set
         syncSelectWithMapping(dom, key, getMappingRef);
     };
 
+    const toggleRawMonitor = (show: boolean): void => {
+        if (!dom.rawMonitorEl) return;
+        state.isRawMonitorOpen = show;
+        dom.rawMonitorEl.classList.toggle('is-open', show);
+        if (show) {
+            updateChannelsMonitor(state.rawMonitorValues);
+        }
+    };
+
+    const updateChannelsMonitor = (data: number[] | undefined): void => {
+        const nextValues = getDefaultRawChannelValues();
+        data?.slice(0, nextValues.length).forEach((value, index) => {
+            if (Number.isFinite(value)) {
+                nextValues[index] = value;
+            }
+        });
+        state.rawMonitorValues = nextValues;
+        renderRawMonitor(dom, nextValues);
+    };
+
+    if (dom.btnMonitorEl) {
+        dom.btnMonitorEl.onclick = () => toggleRawMonitor(true);
+    }
+    if (dom.rawMonitorEl) {
+        dom.rawMonitorEl.onclick = (event) => {
+            if (event.target === dom.rawMonitorEl) {
+                toggleRawMonitor(false);
+            }
+        };
+    }
+    if (dom.rawMonitorCloseEl) {
+        dom.rawMonitorCloseEl.onclick = () => toggleRawMonitor(false);
+    }
+
     let lastModePositionsCount = 0;
 
     const resetModePositionsTracking = (): void => {
@@ -99,9 +152,10 @@ export function createGamepadSettingsController(dom: SettingsDomRefs, state: Set
 
     const applyStickMode = (): void => {
         const gp = findCurrentActiveGamepad();
-        if (!gp) return;
-        applyPrimaryAxisMappingForCurrentMode(gp);
-        initMappingSelects(gp);
+        if (gp) {
+            applyPrimaryAxisMappingForCurrentMode(gp);
+            initMappingSelects(gp);
+        }
         renderChannelDefaultsState();
     };
 
@@ -159,15 +213,19 @@ export function createGamepadSettingsController(dom: SettingsDomRefs, state: Set
                 const buttons = gamepad.buttons.length > 0 ? `BTN1-BTN${gamepad.buttons.length}` : 'без кнопок';
                 dom.gamepadStatusEl.textContent =
                     `Пульт: ${getGamepadName(gamepad)} | ${axisChannels} | ${buttons} | Stick Mode ${simSettings.gamepadStickMode}`;
-                dom.gamepadStatusEl.style.color = '#4ade80';
+                dom.gamepadStatusEl.style.color = '#15803d';
             } else {
                 dom.gamepadStatusEl.textContent = 'Пульт не подключен';
-                dom.gamepadStatusEl.style.color = 'var(--text-muted)';
+                dom.gamepadStatusEl.style.color = '#64748b';
             }
         }
 
         if (dom.gamepadInfoEl) {
-            dom.gamepadInfoEl.style.display = gamepad ? 'block' : 'none';
+            dom.gamepadInfoEl.classList.toggle('is-disconnected', !gamepad);
+        }
+
+        if (dom.gamepadOverlayEl) {
+            dom.gamepadOverlayEl.style.display = gamepad ? 'none' : 'flex';
         }
 
         if (gamepad && (!wasConnected || controllerChanged)) {
@@ -190,11 +248,49 @@ export function createGamepadSettingsController(dom: SettingsDomRefs, state: Set
         return readRefRcValue(gp, inputRef, key);
     };
 
+    const applyPwmFrame = (frame: {
+        rawChannels: number[];
+        roll: number;
+        pitch: number;
+        throttle: number;
+        yaw: number;
+        mode: number;
+        arm: number;
+        magnet: number;
+    }): void => {
+        updateChannelsMonitor(frame.rawChannels);
+        updateBar(dom, 'roll', frame.roll);
+        updateBar(dom, 'pitch', frame.pitch);
+        updateBar(dom, 'throttle', frame.throttle);
+        updateBar(dom, 'yaw', frame.yaw);
+        renderStickPreview(dom, {
+            roll: frame.roll,
+            pitch: frame.pitch,
+            throttle: frame.throttle,
+            yaw: frame.yaw
+        });
+
+        renderChannelValue(dom, 'roll', frame.roll);
+        renderChannelValue(dom, 'pitch', frame.pitch);
+        renderChannelValue(dom, 'throttle', frame.throttle);
+        renderChannelValue(dom, 'yaw', frame.yaw);
+        renderChannelValue(dom, 'mode', frame.mode);
+        renderChannelValue(dom, 'arm', frame.arm);
+        renderChannelValue(dom, 'magnet', frame.magnet);
+        renderModeMetaState(frame.mode);
+        renderAuxSwitchPreviewState({
+            mode: frame.mode,
+            arm: frame.arm,
+            magnet: frame.magnet
+        });
+    };
+
     const updateDroneChannels = (gp: Gamepad): void => {
         const drone = drones[currentDroneId];
         if (!drone) return;
 
         calibration.sampleObservedInputs(gp);
+        const rawChannels = getRawPwmChannels(gp);
 
         const modeRef = getMappingRef('mode');
         const modePositions = getModePositions();
@@ -225,19 +321,16 @@ export function createGamepadSettingsController(dom: SettingsDomRefs, state: Set
         drone.rcChannels[6] = magnet;
         drone.rcChannels[7] = magnet;
 
-        updateBar(dom, 'roll', roll);
-        updateBar(dom, 'pitch', pitch);
-        updateBar(dom, 'throttle', throttle);
-        updateBar(dom, 'yaw', yaw);
-
-        renderChannelValue(dom, 'roll', roll);
-        renderChannelValue(dom, 'pitch', pitch);
-        renderChannelValue(dom, 'throttle', throttle);
-        renderChannelValue(dom, 'yaw', yaw);
-        renderChannelValue(dom, 'mode', mode);
-        renderChannelValue(dom, 'arm', arm);
-        renderChannelValue(dom, 'magnet', magnet);
-        renderModeMetaState(mode);
+        applyPwmFrame({
+            rawChannels,
+            roll,
+            pitch,
+            throttle,
+            yaw,
+            mode,
+            arm,
+            magnet
+        });
         renderAuxRangeEditorsState();
         renderChannelDataStateView();
         renderMappingControlsStateView();
@@ -262,6 +355,7 @@ export function createGamepadSettingsController(dom: SettingsDomRefs, state: Set
         drone.rcChannels[6] = 1000;
         drone.rcChannels[7] = 1000;
         drone.magnetGripper.active = false;
+        updateChannelsMonitor([]);
         renderAuxRangeEditorsState();
     };
 
@@ -285,6 +379,7 @@ export function createGamepadSettingsController(dom: SettingsDomRefs, state: Set
         syncAuxRangeFromControls: calibration.syncAuxRangeFromControls,
         syncConnectionState,
         syncSelectWithMappingState,
+        updateChannelsMonitor,
         updateCalibrationProgress: calibration.updateCalibrationProgress,
         updateDroneChannels
     };

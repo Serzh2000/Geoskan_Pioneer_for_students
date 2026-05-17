@@ -15,7 +15,6 @@
 - [`public/modules/ui/settings/rendering.ts`](#public-modules-ui-settings-rendering-ts)
 - [`public/modules/ui/settings/runtime-state.ts`](#public-modules-ui-settings-runtime-state-ts)
 - [`public/modules/ui/settings/types.ts`](#public-modules-ui-settings-types-ts)
-- [`public/modules/ui/settings/wizard.ts`](#public-modules-ui-settings-wizard-ts)
 
 ## Файлы
 
@@ -105,11 +104,4 @@
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
 - Обнаружено функций/методов: 0
 
-<a id="public-modules-ui-settings-wizard-ts"></a>
-### `public/modules/ui/settings/wizard.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/wizard.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 32
-- Ключевые символы: `applyAuxResults`, `buildSummaryHtml`, `detectAuxInput`, `detectPrimaryAxis`, `finishWizard`, `formatAuxRange`, `formatModeRanges`, `formatRefLabel`, `getAuxCandidate`, `getBestAuxCandidate`, `getCurrentStep`, `getDetectedRef`, `getFirstConnectedGamepad`, `getMappingRefForChannel`, `getNormalizedRefValue`, `getStepStatusText`, `getStepTargetStick`, `getUsedRefs`, `getVisualChannelValue`, `initWizard`, `isBetterAuxCandidate`, `isCurrentStepResolved`, `prepareCurrentStep`, `rememberSwitchTransition`, `renderWizardState`, `resetWizardBindings`, `sampleCurrentStep`, `setMappingRefForChannel`, `startWizard`, `stopWizard`, `updateStickVisuals`, `wizardLoop`
 

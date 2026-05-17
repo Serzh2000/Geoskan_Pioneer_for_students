@@ -21,8 +21,13 @@ export function initSceneManager(callbacks: UICallbacks) {
     if (!callbacks.sceneManager) return;
 
     const elements: SceneManagerDomRefs = {
+        clickCoordsEl: document.getElementById('scene-click-coords'),
         listEl: document.getElementById('scene-object-list'),
         detailsEl: document.getElementById('scene-object-details'),
+        selectedObjectChipEl: document.getElementById('scene-selected-object-chip'),
+        addModalEl: document.getElementById('scene-add-modal') as HTMLDivElement | null,
+        openAddModalBtn: document.getElementById('scene-open-add-modal-btn'),
+        closeAddModalBtn: document.getElementById('scene-close-add-modal-btn'),
         addTypeEl: document.getElementById('scene-add-type') as HTMLSelectElement | null,
         addDictionaryEl: document.getElementById('scene-add-dictionary') as HTMLSelectElement | null,
         addValueEl: document.getElementById('scene-add-value') as HTMLInputElement | null,
@@ -84,11 +89,38 @@ export function initSceneManager(callbacks: UICallbacks) {
     const render = () => {
         lastSelectedId = renderSceneManager(callbacks, elements, lastSelectedId, render);
     };
+    const setAddModalOpen = (open: boolean) => {
+        if (!elements.addModalEl) return;
+        elements.addModalEl.style.display = open ? 'flex' : 'none';
+        elements.addModalEl.setAttribute('aria-hidden', open ? 'false' : 'true');
+        if (open) {
+            elements.addTypeEl?.focus();
+        } else {
+            (elements.openAddModalBtn as HTMLElement | null)?.focus();
+        }
+    };
 
     if (elements.addTypeEl) {
         elements.addTypeEl.addEventListener('change', () => updateAddControlsState(elements));
         updateAddControlsState(elements);
     }
+    if (elements.openAddModalBtn) {
+        elements.openAddModalBtn.addEventListener('click', () => setAddModalOpen(true));
+    }
+    if (elements.closeAddModalBtn) {
+        elements.closeAddModalBtn.addEventListener('click', () => setAddModalOpen(false));
+    }
+    elements.addModalEl?.addEventListener('click', (event) => {
+        const target = event.target as HTMLElement | null;
+        if (target?.dataset.sceneAddClose === 'true') {
+            setAddModalOpen(false);
+        }
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && elements.addModalEl?.style.display === 'flex') {
+            setAddModalOpen(false);
+        }
+    });
     getMapInputs(elements).forEach((input) => {
         input.addEventListener('input', () => updateMapSummary(elements));
         input.addEventListener('change', () => updateMapSummary(elements));
@@ -153,6 +185,7 @@ export function initSceneManager(callbacks: UICallbacks) {
                 floors: isBuildingType(type) ? clampFloors(elements.addFloorsEl?.value, 9) : undefined,
                 markerMap: isMarkerMapType(type) ? readAddMarkerMapOptions(elements) : undefined
             });
+            setAddModalOpen(false);
             render();
         });
     }
@@ -227,10 +260,9 @@ export function initSceneManager(callbacks: UICallbacks) {
     }
 
     (window as any).updateSceneObjectClickCoords = (point: { x: number, y: number, z: number }) => {
-        const coordsEl = document.getElementById('scene-click-coords');
-        if (coordsEl) {
-            coordsEl.textContent = `Клик: ${point.x.toFixed(2)}, ${point.y.toFixed(2)}, ${point.z.toFixed(2)}`;
-            coordsEl.style.display = 'block';
+        if (elements.clickCoordsEl) {
+            elements.clickCoordsEl.textContent = `Клик: ${point.x.toFixed(2)}, ${point.y.toFixed(2)}, ${point.z.toFixed(2)}`;
+            elements.clickCoordsEl.style.display = 'block';
         }
     };
     if (elements.resetDroneBtn) {

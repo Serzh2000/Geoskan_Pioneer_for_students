@@ -130,6 +130,11 @@ export function setSceneObjectTransformMode(mode: TransformMode, id?: string) {
     return activateTransformMode(mode, target);
 }
 
+export function getSceneObjectTransformMode(): TransformMode | null {
+    if (!transformControl?.object) return null;
+    return transformControl.getMode() as TransformMode;
+}
+
 export function deleteSceneObjectById(id: string) {
     const obj = findSceneObjectById(id);
     let isDrone = false;

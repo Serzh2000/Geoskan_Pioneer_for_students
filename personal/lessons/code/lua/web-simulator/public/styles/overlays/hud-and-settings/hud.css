@@ -1,0 +1,233 @@
+/*
+ * HUD-РѕРІРµСЂР»РµРё Рё Р±Р»РѕРєРё РЅР°СЃС‚СЂРѕРµРє.
+ * Р¤Р°Р№Р» РІС‹РґРµР»РµРЅ РёР· `public/style.css` РїСЂРё РґРµРєРѕРјРїРѕР·РёС†РёРё РѕР±С‰РµРіРѕ CSS.
+ */
+/* OVERLAYS */
+.hud-side-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
+    align-self: stretch;
+    justify-content: flex-start;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.hud-side-column--compact {
+    width: 240px;
+    max-width: 240px;
+    min-width: 240px;
+    flex-shrink: 0;
+    justify-self: end;
+    align-self: stretch;
+    padding: 14px;
+    border-radius: 24px;
+    border: 1px solid rgba(9, 9, 11, 0.08);
+    background: #ffffff;
+    box-shadow: var(--shadow-card);
+}
+
+.dashboard-toolbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 0;
+    border-radius: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.dashboard-toolbar--compact {
+    width: 100%;
+}
+
+.dashboard-title-group {
+    min-width: 0;
+}
+
+.dashboard-toolbar__eyebrow {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-color);
+}
+
+.dashboard-title {
+    margin-top: 4px;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-strong);
+}
+
+.telemetry-overlay,
+.matrix-overlay {
+    position: relative;
+    width: 100%;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.dashboard-panel {
+    padding: 0;
+    border-radius: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: hidden;
+    min-width: 0;
+    width: 100%;
+}
+
+.dashboard-panel--compact {
+    padding: 0;
+}
+
+.dashboard-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-strong);
+}
+
+.dashboard-panel__badge {
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: rgba(255, 107, 0, 0.1);
+    color: var(--accent-color);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.telemetry-overlay.is-hidden,
+.matrix-overlay.is-hidden {
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    max-height: 0;
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+    border-width: 0;
+    box-shadow: none;
+}
+
+.hud-visibility-controls {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.hud-visibility-btn {
+    border: 1px solid rgba(9, 9, 11, 0.1);
+    background: #f7f7f8;
+    color: var(--text-muted);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.hud-visibility-btn:hover,
+.hud-visibility-btn.active {
+    color: var(--text-strong);
+    border-color: rgba(255, 107, 0, 0.24);
+    background: rgba(255, 107, 0, 0.12);
+}
+
+.flight-status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 30px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(99, 102, 241, 0.14);
+    background: rgba(99, 102, 241, 0.08);
+    color: #3949ab;
+    font-size: 11px;
+    font-weight: 700;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.flight-status-badge__label {
+    color: #6b7280;
+}
+
+.flight-status-badge__value {
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.58);
+    color: currentColor;
+}
+
+.flight-status-badge[data-state='neutral'] {
+    background: rgba(99, 102, 241, 0.08);
+    color: #3f4c9b;
+    border-color: rgba(99, 102, 241, 0.14);
+}
+
+.flight-status-badge[data-state='warn'] {
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+.flight-status-badge[data-state='success'] {
+    background: rgba(34, 197, 94, 0.12);
+    color: #15803d;
+    border-color: rgba(34, 197, 94, 0.2);
+}
+
+.flight-status-badge[data-state='error'] {
+    background: rgba(239, 68, 68, 0.12);
+    color: #b91c1c;
+    border-color: rgba(239, 68, 68, 0.22);
+}
+
+.dashboard-panel--matrix .led-cluster {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+}
+
+.dashboard-panel--matrix .led-section-label {
+    margin-bottom: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #6b7280;
+    letter-spacing: 0.08em;
+}
+
+.dashboard-panel--matrix .led-base-grid {
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.dashboard-panel--matrix .led-matrix-grid {
+    padding: 10px;
+    gap: 6px;
+    border-radius: 12px;
+}

@@ -210,6 +210,31 @@ export function readInputRcValue(
     return clampRc(1000 + buttonValue * 1000);
 }
 
+export function getDefaultRawChannelValues(count = 16): number[] {
+    const defaults = [1500, 1500, 1000, 1500];
+    while (defaults.length < count) {
+        defaults.push(1000);
+    }
+    return defaults.slice(0, count);
+}
+
+export function getRawPwmChannels(gp: Gamepad, count = 16): number[] {
+    const channels = getDefaultRawChannelValues(count);
+    let nextChannelIndex = 0;
+
+    for (let index = 0; index < gp.axes.length && nextChannelIndex < count; index += 1) {
+        channels[nextChannelIndex] = clampRc(1500 + (gp.axes[index] ?? 0) * 500);
+        nextChannelIndex += 1;
+    }
+
+    for (let index = 0; index < gp.buttons.length && nextChannelIndex < count; index += 1) {
+        channels[nextChannelIndex] = clampRc(1000 + (gp.buttons[index]?.value ?? 0) * 1000);
+        nextChannelIndex += 1;
+    }
+
+    return channels;
+}
+
 export function getConnectedGamepads(): Gamepad[] {
     if (typeof navigator.getGamepads !== 'function') return [];
     return Array.from(navigator.getGamepads()).filter((gp): gp is Gamepad => gp !== null);

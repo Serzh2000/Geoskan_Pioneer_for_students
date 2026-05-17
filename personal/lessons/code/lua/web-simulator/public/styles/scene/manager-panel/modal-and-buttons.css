@@ -1,0 +1,155 @@
+.scene-manager-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2400;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.scene-manager-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.52);
+    backdrop-filter: blur(2px);
+}
+
+.scene-manager-modal__dialog {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: min(720px, calc(100vw - 32px));
+    max-height: calc(100vh - 48px);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.26);
+    overflow: hidden;
+}
+
+.scene-manager-modal__header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 18px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.scene-manager-modal__body {
+    padding: 18px;
+    overflow-y: auto;
+}
+
+.btn-primary-action {
+    background: linear-gradient(180deg, #ff9f1c, #f97316) !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 600 !important;
+    box-shadow: 0 8px 18px rgba(249, 115, 22, 0.22);
+}
+
+.btn-primary-action:hover {
+    background: linear-gradient(180deg, #ffb13a, #ea580c) !important;
+}
+
+.btn-secondary-action {
+    background: #ffffff !important;
+    color: #334155 !important;
+    border: 1px solid #cbd5e1 !important;
+}
+
+.btn-secondary-action:hover {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+}
+
+.btn-danger-action {
+    background: #fef2f2 !important;
+    color: #dc2626 !important;
+    border: 1px solid #fecaca !important;
+}
+
+.btn-danger-action:hover {
+    background: #fee2e2 !important;
+    border-color: #f87171 !important;
+}
+
+.btn-link-action {
+    background: transparent !important;
+    border: none !important;
+    color: #475569 !important;
+    text-decoration: underline;
+    font-size: 11px !important;
+    padding: 4px !important;
+    cursor: pointer;
+}
+
+.btn-link-action:hover {
+    color: #ea580c !important;
+}
+
+.scene-delete-btn {
+    width: 100%;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-quick-action {
+    background: #ffffff !important;
+    color: #334155 !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+}
+
+.btn-quick-action:hover {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+}
+
+@media (max-width: 720px) {
+    .scene-pane-header {
+        grid-template-columns: 1fr;
+    }
+
+    .scene-selected-object-chip,
+    .scene-add-trigger {
+        justify-self: start;
+    }
+
+    .scene-pane-actions {
+        justify-content: flex-start;
+    }
+
+    .scene-pane-actions--tree > button {
+        flex-basis: 100%;
+    }
+
+    .action-row {
+        grid-template-columns: 1fr;
+    }
+
+    .action-row--three,
+    .scene-preset-row {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-row,
+    .object-info-row,
+    .object-info-panel p,
+    [class*="info-row"] {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .scene-manager-modal {
+        padding: 12px;
+    }
+
+    .scene-manager-modal__dialog {
+        width: 100%;
+        max-height: calc(100vh - 24px);
+    }
+}

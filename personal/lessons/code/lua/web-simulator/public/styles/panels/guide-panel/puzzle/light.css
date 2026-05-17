@@ -1,0 +1,142 @@
+/*
+ * High-contrast light redesign overrides.
+ */
+
+.guide-library__grid {
+    --guide-notch-bg: #ffffff;
+}
+
+.guide-workspace {
+    min-height: 240px;
+    background: var(--guide-bg-muted);
+    border: 1px dashed var(--guide-border-strong);
+    --guide-notch-bg: var(--guide-bg-muted);
+}
+
+.guide-workspace__hint {
+    color: var(--guide-text-muted);
+}
+
+.guide-drop-zone {
+    min-height: 38px;
+    border: 1px dashed var(--guide-border-strong);
+    background: #ffffff;
+    color: var(--guide-text-muted);
+}
+
+.guide-drop-zone.is-hovered {
+    border-color: rgba(255, 107, 0, 0.62);
+    background: rgba(255, 107, 0, 0.08);
+}
+
+.guide-puzzle {
+    border: 1px solid var(--guide-border-strong);
+    color: var(--guide-text);
+    box-shadow: 0 10px 24px rgba(17, 24, 39, 0.08);
+}
+
+.guide-puzzle::before,
+.guide-puzzle::after {
+    border-color: var(--guide-border-strong);
+}
+
+.guide-puzzle:hover {
+    border-color: rgba(255, 107, 0, 0.4);
+    box-shadow: 0 16px 30px rgba(17, 24, 39, 0.12);
+    filter: none;
+}
+
+.guide-puzzle--setup {
+    background: #fff4eb;
+}
+
+.guide-puzzle--action {
+    background: #fff8f1;
+}
+
+.guide-puzzle--wait {
+    background: #fff2e8;
+}
+
+.guide-puzzle--check {
+    background: #f6f7f9;
+}
+
+.guide-puzzle__label {
+    color: var(--guide-text);
+}
+
+.guide-puzzle__code {
+    color: var(--guide-text-muted);
+}
+
+.guide-puzzle:hover::before,
+.guide-puzzle:hover::after {
+    border-color: rgba(255, 107, 0, 0.3);
+}
+
+.guide-puzzle:hover .guide-puzzle__label {
+    color: var(--guide-text);
+}
+
+.guide-puzzle:hover .guide-puzzle__code {
+    color: var(--guide-accent);
+}
+
+.guide-puzzle__tooltip {
+    border: 1px solid rgba(255, 107, 0, 0.18);
+    background: #ffffff;
+    color: var(--guide-text);
+    box-shadow: 0 18px 32px rgba(17, 24, 39, 0.12);
+}
+
+.guide-workspace__remove,
+.guide-lesson__action,
+.guide-method-chip,
+.guide-primary-action {
+    border: 1px solid var(--guide-border-strong);
+    background: #ffffff;
+    color: var(--guide-text);
+}
+
+.guide-workspace__remove,
+.guide-lesson__action,
+.guide-primary-action {
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.guide-primary-action {
+    background: var(--guide-accent);
+    color: #ffffff;
+    border-color: var(--guide-accent);
+    box-shadow: 0 10px 20px rgba(255, 107, 0, 0.16);
+}
+
+.guide-workspace__remove:hover,
+.guide-lesson__action:hover,
+.guide-method-chip:hover {
+    background: var(--guide-bg-muted);
+    border-color: rgba(255, 107, 0, 0.34);
+}
+
+.guide-primary-action:hover {
+    background: var(--guide-accent-strong);
+    border-color: var(--guide-accent-strong);
+}
+
+.guide-workspace__remove:hover,
+.guide-lesson__action:hover,
+.guide-method-chip:hover,
+.guide-primary-action:hover {
+    transform: translateY(-1px);
+}
+
+.guide-workspace__remove:focus-visible,
+.guide-lesson__action:focus-visible,
+.guide-method-chip:focus-visible,
+.guide-primary-action:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.18);
+}

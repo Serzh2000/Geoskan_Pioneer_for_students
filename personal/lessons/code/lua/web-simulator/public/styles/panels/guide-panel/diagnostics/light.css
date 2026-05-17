@@ -1,0 +1,155 @@
+/*
+ * High-contrast light redesign overrides.
+ */
+
+.guide-diagnostics {
+    gap: 8px;
+}
+
+.guide-check-status,
+.guide-empty-state,
+.guide-run-banner {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--guide-border);
+    border-left-width: 4px;
+    background: var(--guide-bg);
+    color: var(--guide-text);
+}
+
+.guide-check-status--info,
+.guide-empty-state,
+.guide-run-banner--info {
+    border-left-color: var(--guide-info);
+    color: var(--guide-text-muted);
+}
+
+.guide-check-status--success,
+.guide-run-banner--success {
+    border-left-color: var(--guide-success);
+    color: var(--guide-text);
+}
+
+.guide-check-status--warning,
+.guide-run-banner--warning {
+    border-left-color: var(--guide-accent);
+    color: var(--guide-text);
+}
+
+.guide-result-hero {
+    gap: 6px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    border: 1px solid var(--guide-border);
+    background: var(--guide-bg-muted);
+    box-shadow: none;
+}
+
+.guide-result-hero::before {
+    display: none;
+}
+
+.guide-result-hero--idle,
+.guide-result-hero--success,
+.guide-result-hero--warning {
+    box-shadow: none;
+}
+
+.guide-result-hero--idle {
+    border-left: 4px solid var(--guide-info);
+}
+
+.guide-result-hero--success {
+    border-left: 4px solid var(--guide-success);
+}
+
+.guide-result-hero--warning {
+    border-left: 4px solid var(--guide-accent);
+}
+
+.guide-result-hero__title {
+    color: var(--guide-text);
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.guide-result-hero__text {
+    color: var(--guide-text-muted);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: none;
+}
+
+.guide-diagnostic {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--guide-border);
+    background: var(--guide-bg);
+}
+
+.guide-diagnostic--error {
+    border-left: 4px solid #d92d20;
+}
+
+.guide-diagnostic--warning {
+    border-left: 4px solid var(--guide-accent);
+}
+
+.guide-diagnostic--success {
+    border-left: 4px solid var(--guide-success);
+}
+
+.guide-diagnostic--info {
+    border-left: 4px solid var(--guide-info);
+}
+
+.guide-diagnostic__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.guide-diagnostic__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: var(--guide-bg-muted);
+    border: 1px solid var(--guide-border);
+    color: var(--guide-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.guide-diagnostic__title {
+    margin-bottom: 0;
+    color: var(--guide-text);
+}
+
+.guide-diagnostic__reason,
+.guide-diagnostic__fix {
+    color: var(--guide-text-muted);
+}
+
+.guide-lesson__code {
+    background: #fffaf5;
+    border: 1px solid rgba(255, 107, 0, 0.18);
+    color: var(--guide-text);
+}
+
+.guide-collapsible-section__title {
+    color: var(--guide-text);
+}
+
+.guide-method-chip {
+    background: var(--guide-bg);
+    border: 1px solid var(--guide-border);
+    color: var(--guide-text);
+}

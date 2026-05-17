@@ -1,0 +1,255 @@
+.guide-page-tab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    background: rgba(15, 23, 42, 0.72);
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.guide-page-tab:hover {
+    transform: translateY(-1px);
+    border-color: rgba(56, 189, 248, 0.38);
+    background: rgba(15, 23, 42, 0.92);
+}
+
+.guide-page-tab.is-active {
+    border-color: rgba(125, 211, 252, 0.72);
+    background: rgba(14, 165, 233, 0.14);
+}
+
+.guide-page-tab.is-solved {
+    box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.34);
+}
+
+.guide-page-tab__step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.16);
+    color: #7dd3fc;
+    font-size: 12px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.guide-page-tab__text {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.45;
+    text-align: left;
+}
+
+.guide-lesson-page {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 22px;
+}
+
+.guide-lesson-page__header,
+.guide-panel-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.guide-lesson-page__badge {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.guide-lesson-page__title {
+    color: #f8fafc;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.guide-lesson-page__summary,
+.guide-lesson-page__goal,
+.guide-panel-card__text,
+.guide-workspace__hint,
+.guide-library__empty {
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.guide-lesson-page__meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.guide-lesson-page__meta-item {
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(56, 189, 248, 0.14);
+    background: rgba(2, 6, 23, 0.4);
+}
+
+.guide-lesson-page__meta-item--wide {
+    grid-column: 1 / -1;
+}
+
+.guide-lesson-page__meta-label {
+    margin-bottom: 10px;
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.guide-lesson-page__nav,
+.guide-actions,
+.guide-methods,
+.guide-target-route {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.guide-target-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.18);
+    border: 1px solid rgba(96, 165, 250, 0.24);
+    color: #eff6ff;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.guide-panel-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+}
+
+.guide-panel-card--lesson {
+    gap: 16px;
+}
+
+.guide-panel-card--trainer-intro {
+    gap: 18px;
+}
+
+.guide-selector-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.guide-selector-summary__item {
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(56, 189, 248, 0.14);
+    background: rgba(2, 6, 23, 0.4);
+}
+
+.guide-selector-summary__item--wide {
+    grid-column: 1 / -1;
+}
+
+.guide-panel-card__title {
+    color: #f8fafc;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+.guide-panel-card__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.guide-panel-note {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(15, 23, 42, 0.54);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.guide-api-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.guide-api-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(56, 189, 248, 0.14);
+    background: rgba(2, 6, 23, 0.44);
+}
+
+.guide-api-card__title {
+    color: #f8fafc;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.45;
+    font-family: var(--font-mono);
+}
+
+.guide-api-card__summary {
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.guide-api-card__example {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #d4d4d4;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.guide-actions--primary {
+    justify-content: flex-start;
+}
+

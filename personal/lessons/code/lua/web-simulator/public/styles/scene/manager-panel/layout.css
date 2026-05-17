@@ -1,0 +1,167 @@
+/*
+ * РџРѕР»РёСЂРѕРІРєР° РјРµРЅРµРґР¶РµСЂР° СЃС†РµРЅС‹.
+ * Р¤Р°Р№Р» РІС‹РґРµР»РµРЅ РёР· `public/style.css` РїСЂРё РґРµРєРѕРјРїРѕР·РёС†РёРё РѕР±С‰РµРіРѕ CSS.
+ */
+
+.scene-manager {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding: 16px;
+    gap: 12px;
+    background: #ffffff;
+}
+
+.scene-click-coords {
+    display: none;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--accent-color);
+    padding: 4px 8px;
+    background: rgba(56, 189, 248, 0.1);
+    border-radius: 6px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.scene-manager-global {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.scene-manager-global__header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.scene-manager-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+}
+
+.scene-manager-pane {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.scene-manager-pane--hierarchy {
+    flex: 0 0 min(38%, 320px);
+}
+
+.scene-manager-pane--inspector {
+    flex: 1 1 auto;
+}
+
+.scene-pane-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: start;
+    padding: 14px 14px 12px;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.scene-pane-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+}
+
+.scene-pane-subtitle {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.45;
+}
+
+.scene-selected-object-chip {
+    align-self: center;
+    max-width: 100%;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #fff7ed;
+    border: 1px solid #fdba74;
+    color: #9a3412;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.scene-add-trigger {
+    min-height: 36px;
+    padding-inline: 12px !important;
+    white-space: nowrap;
+}
+
+.scene-pane-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+.scene-pane-actions--tree {
+    padding: 0 14px 12px;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.scene-pane-actions--tree > button {
+    flex: 1 1 0;
+    width: 100%;
+}
+
+.scene-tree-action-btn {
+    min-height: 36px !important;
+    padding-inline: 12px !important;
+}
+
+.scene-manager button,
+.scene-manager-modal button {
+    min-height: 40px;
+    border-radius: 8px !important;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.scene-manager-list,
+.scene-objects-list,
+[class*="tree-view"],
+[class*="objectsContainer"] {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    padding: 10px !important;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    align-self: stretch;
+    border-radius: 0 0 12px 12px !important;
+}
+
+.scene-manager-pane-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 14px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+

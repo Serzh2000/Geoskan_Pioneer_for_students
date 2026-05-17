@@ -1,8 +1,0 @@
-﻿/*
- * Entry point for gamepad wizard styles.
- * Keeps the legacy `public/styles/gamepad/wizard.css` path intact.
- */
-@import url('./wizard/layout.css');
-@import url('./wizard/sticks.css');
-@import url('./wizard/summary.css');
-@import url('./wizard/overlay.css');

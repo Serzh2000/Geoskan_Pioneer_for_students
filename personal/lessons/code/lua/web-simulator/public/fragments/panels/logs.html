@@ -5,6 +5,13 @@
                 </div>
                 <div class="panel-content">
                     <div class="logs-panel-content">
+                        <div class="logs-filter-bar" id="logs-filter-bar" role="toolbar" aria-label="Фильтр журнала">
+                            <button type="button" class="logs-filter-tag is-active" data-log-filter="all" aria-pressed="true">Все</button>
+                            <button type="button" class="logs-filter-tag" data-log-filter="click" aria-pressed="false">Клики (3D-CLICK)</button>
+                            <button type="button" class="logs-filter-tag" data-log-filter="zoom" aria-pressed="false">Зум (ZOOM)</button>
+                            <button type="button" class="logs-filter-tag" data-log-filter="guide" aria-pressed="false">Уроки (GUIDE)</button>
+                            <button type="button" class="logs-filter-tag" data-log-filter="system" aria-pressed="false">Система</button>
+                        </div>
                         <div id="logs"></div>
                     </div>
                 </div>

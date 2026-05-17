@@ -11,6 +11,9 @@ const EXCLUDE_NAMES = new Set([
     '.git',
     'dist',
     'node_modules',
+    'imported',
+    'playwright',
+    'scratch',
     'Python_files',
     'Описание методов API — документация Pioneer February update 2026_files'
 ]);

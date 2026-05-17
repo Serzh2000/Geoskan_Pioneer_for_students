@@ -1,9 +1,16 @@
 import { simSettings, type GamepadInputRef } from '../../core/state.js';
-import { clamp, clampRc, getChannelInversionIndex } from './constants.js';
+import { clamp, clampRc, getChannelInversionIndex, toRcValue } from './constants.js';
 import { normalizeCenteredAxis, normalizeThrottleAxis } from './calibration.js';
 import type { ChannelKey, PrimaryChannelKey, StickMode } from './types.js';
 
 export type PrimaryStickSlot = 'left-x' | 'left-y' | 'right-x' | 'right-y';
+
+const PRIMARY_SLOT_AXIS_INDEXES: Record<PrimaryStickSlot, number> = {
+    'left-x': 0,
+    'left-y': 1,
+    'right-x': 2,
+    'right-y': 3
+};
 
 const MODE_PRIMARY_STICK_SLOTS: Record<StickMode, Record<PrimaryChannelKey, PrimaryStickSlot>> = {
     1: { yaw: 'left-x', pitch: 'left-y', roll: 'right-x', throttle: 'right-y' },
@@ -51,10 +58,7 @@ export function readRefRcValue(
     isInverted: boolean = isChannelInverted(channel)
 ): number {
     const normalizedValue = readRefNormalizedValue(gp, ref, channel, isInverted);
-    if (channel === 'throttle') {
-        return clampRc(1000 + normalizedValue * 1000);
-    }
-    return clampRc(1500 + normalizedValue * 500);
+    return toRcValue(normalizedValue, channel !== 'throttle');
 }
 
 export function rcToCenteredNormalized(value: number): number {
@@ -71,4 +75,20 @@ export function getPrimaryStickSlot(_ref: GamepadInputRef | null): PrimaryStickS
 
 export function getPrimaryChannelStickSlot(channel: PrimaryChannelKey, _ref: GamepadInputRef | null = null): PrimaryStickSlot {
     return MODE_PRIMARY_STICK_SLOTS[simSettings.gamepadStickMode][channel];
+}
+
+export function getPrimaryChannelAxisIndex(channel: PrimaryChannelKey, axisCount: number): number | null {
+    const slot = getPrimaryChannelStickSlot(channel);
+    const axisIndex = PRIMARY_SLOT_AXIS_INDEXES[slot];
+    return axisIndex < axisCount ? axisIndex : null;
+}
+
+export function getPrimaryChannelAxisCandidateIndexes(channel: PrimaryChannelKey, axisCount: number): number[] {
+    const slot = getPrimaryChannelStickSlot(channel);
+    const isLeftStick = slot.startsWith('left');
+    const pair = isLeftStick ? [0, 1] : [2, 3];
+    const preferred = getPrimaryChannelAxisIndex(channel, axisCount);
+    const indexes = pair.filter((index) => index < axisCount);
+    if (preferred === null || !indexes.includes(preferred)) return indexes;
+    return [preferred, ...indexes.filter((index) => index !== preferred)];
 }

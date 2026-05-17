@@ -1,0 +1,223 @@
+/*
+ * Mission guide page layout.
+ */
+
+.guide-modal-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.guide-hero,
+.guide-lesson-page,
+.guide-panel-card {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.84));
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    border-radius: 18px;
+    box-shadow: 0 12px 32px rgba(2, 6, 23, 0.24);
+}
+
+.guide-hero {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 22px;
+}
+
+.guide-hero__eyebrow {
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.guide-hero__title {
+    color: #f8fafc;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.2;
+    max-width: 1080px;
+}
+
+.guide-hero__text {
+    color: #cbd5e1;
+    font-size: 15px;
+    line-height: 1.7;
+    max-width: 1080px;
+}
+
+.guide-hero__flow,
+.guide-hero__progress {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(2, 6, 23, 0.64);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.guide-top-tabs {
+    display: inline-flex;
+    gap: 10px;
+    padding: 8px;
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    align-self: flex-start;
+}
+
+.guide-top-tab {
+    min-width: 140px;
+    padding: 12px 18px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.guide-top-tab.is-active {
+    background: rgba(14, 165, 233, 0.14);
+    border-color: rgba(125, 211, 252, 0.42);
+    color: #f8fafc;
+}
+
+.guide-selector-bar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding: 16px;
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(56, 189, 248, 0.16);
+}
+
+.guide-selector-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.guide-selector-field__label {
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.guide-selector {
+    width: 100%;
+    min-height: 46px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    background: rgba(2, 6, 23, 0.82);
+    color: #f8fafc;
+    font-size: 14px;
+    font-weight: 600;
+    outline: none;
+}
+
+.guide-selector:focus {
+    border-color: rgba(125, 211, 252, 0.72);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.16);
+}
+
+.guide-selector-meta {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.guide-selector-meta__item {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(2, 6, 23, 0.64);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.guide-chapter-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.guide-chapter-tab {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    background: rgba(15, 23, 42, 0.72);
+    color: #cbd5e1;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.guide-chapter-tab:hover {
+    transform: translateY(-1px);
+    border-color: rgba(56, 189, 248, 0.38);
+}
+
+.guide-chapter-tab.is-active {
+    background: rgba(14, 165, 233, 0.12);
+    border-color: rgba(125, 211, 252, 0.52);
+}
+
+.guide-chapter-tab__step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.16);
+    color: #7dd3fc;
+    font-size: 12px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.guide-chapter-tab__body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.guide-chapter-tab__badge {
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.guide-chapter-tab__title {
+    color: #f8fafc;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.guide-page-tabs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+}

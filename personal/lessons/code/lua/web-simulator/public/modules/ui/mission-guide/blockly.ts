@@ -1,2 +1,2 @@
-export { Blockly, compileMissionGuideWorkspace, extractMissionGuideSequence } from './blockly-compiler.js';
-export { getBlocklyGenerator, initBlocklyDefinitions } from './blockly-definitions.js';
+export { Blockly, compileMissionGuideWorkspace, extractMissionGuideSequence } from './blockly-core/compiler.js';
+export { getBlocklyGenerator, initBlocklyDefinitions } from './blockly-core/definitions.js';

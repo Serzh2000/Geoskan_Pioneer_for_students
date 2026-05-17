@@ -1,0 +1,5 @@
+/* Entry point for advanced gamepad configuration panel styles. */
+@import url('./gamepad-config/dashboard.css');
+@import url('./gamepad-config/sticks-and-switches.css');
+@import url('./gamepad-config/channels-and-ranges.css');
+@import url('./gamepad-config/responsive.css');

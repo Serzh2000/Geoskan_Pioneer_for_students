@@ -27,7 +27,14 @@ export function renderContextToolbar(
     toolbarTitle.textContent = callbacks.title || 'Инструменты';
     toolbarActions.innerHTML = '';
 
-    const addToolbarButton = (content: string, mode: string | null, action: () => void, extraClass = '', title = '') => {
+    const addToolbarButton = (
+        container: HTMLElement,
+        content: string,
+        mode: string | null,
+        action: () => void,
+        extraClass = '',
+        title = ''
+    ) => {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = `transform-btn ${extraClass}`.trim();
@@ -39,19 +46,19 @@ export function renderContextToolbar(
             event.stopPropagation();
             action();
         });
-        toolbarActions.appendChild(button);
+        container.appendChild(button);
     };
 
-    addToolbarButton(TRANSFORM_ICONS.translate, 'translate', () => callbacks.onTransform('translate'), 'transform-mode-btn', 'Перемещение');
-    addToolbarButton(TRANSFORM_ICONS.rotate, 'rotate', () => callbacks.onTransform('rotate'), 'transform-mode-btn', 'Поворот');
-    addToolbarButton(TRANSFORM_ICONS.scale, 'scale', () => callbacks.onTransform('scale'), 'transform-mode-btn', 'Масштаб');
+    const modeRow = document.createElement('div');
+    modeRow.className = 'transform-toolbar-row transform-toolbar-mode-row';
+    toolbarActions.appendChild(modeRow);
 
-    const separator = document.createElement('div');
-    separator.className = 'transform-toolbar-separator';
-    toolbarActions.appendChild(separator);
+    addToolbarButton(modeRow, TRANSFORM_ICONS.translate, 'translate', () => callbacks.onTransform('translate'), 'transform-mode-btn', 'Перемещение');
+    addToolbarButton(modeRow, TRANSFORM_ICONS.rotate, 'rotate', () => callbacks.onTransform('rotate'), 'transform-mode-btn', 'Поворот');
+    addToolbarButton(modeRow, TRANSFORM_ICONS.scale, 'scale', () => callbacks.onTransform('scale'), 'transform-mode-btn', 'Масштаб');
 
     const stepGroup = document.createElement('div');
-    stepGroup.className = 'transform-step-group';
+    stepGroup.className = 'transform-toolbar-row transform-step-group';
     stepGroup.setAttribute('data-rotate-only', 'true');
 
     const stepLabel = document.createElement('span');
@@ -75,14 +82,17 @@ export function renderContextToolbar(
     toolbarActions.appendChild(stepGroup);
 
     const axisGroup = document.createElement('div');
-    axisGroup.className = 'transform-toolbar-actions transform-axis-group';
+    axisGroup.className = 'transform-toolbar-row transform-axis-group';
     axisGroup.setAttribute('data-rotate-only', 'true');
-    axisGroup.style.display = 'flex';
 
     const subtitle = document.createElement('div');
     subtitle.className = 'transform-toolbar-subtitle';
     subtitle.textContent = 'Поворот X/Y/Z';
     axisGroup.appendChild(subtitle);
+
+    const axisButtonsGrid = document.createElement('div');
+    axisButtonsGrid.className = 'transform-axis-buttons';
+    axisGroup.appendChild(axisButtonsGrid);
 
     const axisButtons = [
         { label: 'X-', axis: 'x', direction: -1 },
@@ -103,7 +113,7 @@ export function renderContextToolbar(
             event.stopPropagation();
             callbacks.onRotateStep(axis, direction);
         });
-        axisGroup.appendChild(button);
+        axisButtonsGrid.appendChild(button);
     });
 
     const resetButton = document.createElement('button');
@@ -119,7 +129,7 @@ export function renderContextToolbar(
     toolbarActions.appendChild(axisGroup);
 
     // Close button as a small cross in the corner
-    addToolbarButton(TRANSFORM_ICONS.exit, null, () => callbacks.onExit(), 'exit', 'Закрыть');
+    addToolbarButton(toolbar, TRANSFORM_ICONS.exit, null, () => callbacks.onExit(), 'exit', 'Закрыть');
 
     api.setToolbarMode(callbacks.activeMode);
     api.setRotationStep(callbacks.rotationStepDeg);

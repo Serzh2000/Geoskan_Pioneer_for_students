@@ -3,6 +3,7 @@ import { controls, selectedObject, transformControl, transformHelper } from '../
 import { simState, simSettings } from '../../core/state.js';
 import { updateTransformModeDecorations } from '../interaction/transform.js';
 import { isTransformableObject } from './object-catalog.js';
+import { refreshTransformControlsUxTheme } from '../core/transform-controls-style.js';
 
 export type TransformMode = 'translate' | 'rotate' | 'scale';
 export type RotationAxis = 'x' | 'y' | 'z';
@@ -81,7 +82,6 @@ export function activateTransformMode(mode: TransformMode, target: THREE.Object3
     transformControl.attach(target);
     transformControl.setMode(mode);
     transformControl.enabled = true;
-    transformControl.size = mode === 'rotate' ? 1.3 : 1.15;
     transformControl.showX = true;
     transformControl.showY = true;
     transformControl.showZ = true;
@@ -98,6 +98,7 @@ export function activateTransformMode(mode: TransformMode, target: THREE.Object3
     if ((window as any).setTransformToolbarRotationStep) {
         (window as any).setTransformToolbarRotationStep(rotationStepDegrees);
     }
+    refreshTransformControlsUxTheme(transformControl);
     updateTransformModeDecorations(mode, target);
     if (controls) controls.enabled = (window as any).cameraMode === 'free' && !(window as any).isTransforming;
     return true;

@@ -1,13 +1,13 @@
             <div id="settings-panel" class="sidebar-panel">
                 <div class="panel-header">
-                    <span class="panel-title">Настройки</span>
+                    <span class="panel-title">Общие настройки</span>
                     <button class="panel-close-btn" onclick="closePanel()">✕</button>
                 </div>
                 <div class="panel-content settings-panel-content">
                     <div class="settings-shell">
                     <div class="settings-stack">
                         <div class="settings-group">
-                            <div class="settings-label">Трассер полета</div>
+                            <div class="settings-label">Графика</div>
                             <label class="checkbox-container">
                                 <input type="checkbox" id="setting-show-tracer" checked>
                                 <span class="checkmark"></span>
@@ -31,7 +31,6 @@
                             </label>
                         </div>
                         <div class="settings-group">
-                            <div class="settings-label">Редактирование сцены</div>
                             <label class="checkbox-container">
                                 <input type="checkbox" id="setting-show-gizmo" checked>
                                 <span class="checkmark"></span>
@@ -44,183 +43,6 @@
                                 <span>Множитель времени: <strong id="sim-speed-val">1.0x</strong></span>
                                 <input type="range" id="setting-sim-speed" min="0.25" max="3" step="0.25" value="1">
                             </label>
-                        </div>
-                        <div class="settings-group">
-                            <div class="settings-label">Внешнее управление (USB Пульт)</div>
-                            <div id="gamepad-status" class="status-indicator status-indicator--warning">
-                                <span class="status-indicator__icon">!</span>
-                                <span class="status-indicator__text">Пульт не подключен</span>
-                            </div>
-                            <div id="gamepad-info" class="gamepad-panel" style="display: none;">
-                                <div class="gamepad-panel-header">
-                                    <div class="gamepad-panel-copy">
-                                        <div class="gamepad-panel-title">Настройка каналов пульта</div>
-                                        <div class="gamepad-panel-subtitle">Назначения и диапазоны становятся доступны только после получения живых значений от текущего пульта.</div>
-                                    </div>
-                                </div>
-                                <div class="gamepad-actions">
-                                    <label class="scene-field gamepad-config-field">
-                                        <span>Режим стиков</span>
-                                        <select id="gp-stick-mode" class="gp-axis-select">
-                                            <option value="1">Mode 1</option>
-                                            <option value="2">Mode 2</option>
-                                            <option value="3">Mode 3</option>
-                                            <option value="4">Mode 4</option>
-                                        </select>
-                                    </label>
-                                    <button id="gp-btn-wizard" class="btn-primary gamepad-action-btn">МАСТЕР НАСТРОЙКИ</button>
-                                    <button id="gp-btn-calibrate" class="btn-secondary gamepad-action-btn">КАЛИБРОВКА</button>
-                                    <button id="gp-btn-reset-cal" class="btn-secondary gamepad-action-btn">СБРОС</button>
-                                </div>
-                                <div id="gp-auto-status" class="gamepad-auto-status">Нажмите AUTO и подвигайте нужный стик или тумблер.</div>
-                                <div id="gp-channel-data-status" class="gamepad-channel-status">Ожидание данных каналов текущего пульта.</div>
-                                <div class="gamepad-mapping-grid">
-                                    <!-- Roll -->
-                                    <div class="gp-channel-row">
-                                        <label class="scene-field gp-channel-field">
-                                            <span>Крен (CH1)</span>
-                                            <select id="gp-map-roll" class="gp-axis-select"></select>
-                                        </label>
-                                        <div class="gp-channel-meter">
-                                            <div class="gp-bar-bg">
-                                                <div id="gp-bar-roll" class="gp-bar gp-bar-centered"></div>
-                                            </div>
-                                        </div>
-                                        <button id="gp-auto-roll" class="btn-secondary gp-auto-btn" type="button">AUTO</button>
-                                        <label class="checkbox-container gp-invert-checkbox">
-                                            <input type="checkbox" id="gp-inv-roll">
-                                            <span class="checkmark gp-checkmark"></span>
-                                            Инв.
-                                        </label>
-                                        <div id="gp-val-roll" class="gp-channel-value">1500</div>
-                                    </div>
-                                    <!-- Pitch -->
-                                    <div class="gp-channel-row">
-                                        <label class="scene-field gp-channel-field">
-                                            <span>Тангаж (CH2)</span>
-                                            <select id="gp-map-pitch" class="gp-axis-select"></select>
-                                        </label>
-                                        <div class="gp-channel-meter">
-                                            <div class="gp-bar-bg">
-                                                <div id="gp-bar-pitch" class="gp-bar gp-bar-centered"></div>
-                                            </div>
-                                        </div>
-                                        <button id="gp-auto-pitch" class="btn-secondary gp-auto-btn" type="button">AUTO</button>
-                                        <label class="checkbox-container gp-invert-checkbox">
-                                            <input type="checkbox" id="gp-inv-pitch">
-                                            <span class="checkmark gp-checkmark"></span>
-                                            Инв.
-                                        </label>
-                                        <div id="gp-val-pitch" class="gp-channel-value">1500</div>
-                                    </div>
-                                    <!-- Throttle -->
-                                    <div class="gp-channel-row">
-                                        <label class="scene-field gp-channel-field">
-                                            <span>Газ (CH3)</span>
-                                            <select id="gp-map-throttle" class="gp-axis-select"></select>
-                                        </label>
-                                        <div class="gp-channel-meter">
-                                            <div class="gp-bar-bg">
-                                                <div id="gp-bar-throttle" class="gp-bar gp-bar-throttle"></div>
-                                            </div>
-                                        </div>
-                                        <button id="gp-auto-throttle" class="btn-secondary gp-auto-btn" type="button">AUTO</button>
-                                        <label class="checkbox-container gp-invert-checkbox">
-                                            <input type="checkbox" id="gp-inv-throttle">
-                                            <span class="checkmark gp-checkmark"></span>
-                                            Инв.
-                                        </label>
-                                        <div id="gp-val-throttle" class="gp-channel-value">1000</div>
-                                    </div>
-                                    <!-- Yaw -->
-                                    <div class="gp-channel-row">
-                                        <label class="scene-field gp-channel-field">
-                                            <span>Рыскание (CH4)</span>
-                                            <select id="gp-map-yaw" class="gp-axis-select"></select>
-                                        </label>
-                                        <div class="gp-channel-meter">
-                                            <div class="gp-bar-bg">
-                                                <div id="gp-bar-yaw" class="gp-bar gp-bar-centered"></div>
-                                            </div>
-                                        </div>
-                                        <button id="gp-auto-yaw" class="btn-secondary gp-auto-btn" type="button">AUTO</button>
-                                        <label class="checkbox-container gp-invert-checkbox">
-                                            <input type="checkbox" id="gp-inv-yaw">
-                                            <span class="checkmark gp-checkmark"></span>
-                                            Инв.
-                                        </label>
-                                        <div id="gp-val-yaw" class="gp-channel-value">1500</div>
-                                    </div>
-                                    <!-- Switches -->
-                                    <div class="gp-aux-grid">
-                                        <div class="gp-aux-card">
-                                            <label class="scene-field gp-aux-field">
-                                                <span>Mode</span>
-                                                <select id="gp-map-mode" class="gp-axis-select"></select>
-                                            </label>
-                                            <div id="gp-mode-meta" class="gp-range-meta">Во время калибровки запишите все положения тумблера режима.</div>
-                                            <button id="gp-auto-mode" class="btn-secondary gp-auto-btn gp-auto-btn-wide" type="button">AUTO</button>
-                                            <div id="gp-val-mode" class="gp-aux-value">1000</div>
-                                        </div>
-                                        <div class="gp-aux-card">
-                                            <label class="scene-field gp-aux-field">
-                                                <span>Arm</span>
-                                                <select id="gp-map-arm" class="gp-axis-select"></select>
-                                            </label>
-                                            <div id="gp-range-arm-card" class="gp-range-editor">
-                                                <label class="scene-field gp-aux-subfield">
-                                                    <span>Позиция</span>
-                                                    <select id="gp-range-arm-preset"></select>
-                                                </label>
-                                                <div class="gp-range-track">
-                                                    <div id="gp-range-fill-arm" class="gp-range-fill"></div>
-                                                    <div id="gp-range-marker-arm" class="gp-range-marker"></div>
-                                                </div>
-                                                <div class="gp-range-dual-slider">
-                                                    <input id="gp-range-arm-min" type="range" min="1000" max="2000" step="1" value="1700">
-                                                    <input id="gp-range-arm-max" type="range" min="1000" max="2000" step="1" value="2000">
-                                                </div>
-                                                <div class="gp-range-values">
-                                                    <span id="gp-range-arm-min-val">1700</span>
-                                                    <span id="gp-range-arm-live">LIVE 1000</span>
-                                                    <span id="gp-range-arm-max-val">2000</span>
-                                                </div>
-                                                <div id="gp-range-arm-meta" class="gp-range-meta">Нет данных назначенного канала.</div>
-                                            </div>
-                                            <button id="gp-auto-arm" class="btn-secondary gp-auto-btn gp-auto-btn-wide" type="button">AUTO</button>
-                                            <div id="gp-val-arm" class="gp-aux-value">1000</div>
-                                        </div>
-                                        <div class="gp-aux-card">
-                                            <label class="scene-field gp-aux-field">
-                                                <span>Magnet</span>
-                                                <select id="gp-map-magnet" class="gp-axis-select"></select>
-                                            </label>
-                                            <div id="gp-range-magnet-card" class="gp-range-editor">
-                                                <label class="scene-field gp-aux-subfield">
-                                                    <span>Позиция</span>
-                                                    <select id="gp-range-magnet-preset"></select>
-                                                </label>
-                                                <div class="gp-range-track">
-                                                    <div id="gp-range-fill-magnet" class="gp-range-fill"></div>
-                                                    <div id="gp-range-marker-magnet" class="gp-range-marker"></div>
-                                                </div>
-                                                <div class="gp-range-dual-slider">
-                                                    <input id="gp-range-magnet-min" type="range" min="1000" max="2000" step="1" value="1700">
-                                                    <input id="gp-range-magnet-max" type="range" min="1000" max="2000" step="1" value="2000">
-                                                </div>
-                                                <div class="gp-range-values">
-                                                    <span id="gp-range-magnet-min-val">1700</span>
-                                                    <span id="gp-range-magnet-live">LIVE 1000</span>
-                                                    <span id="gp-range-magnet-max-val">2000</span>
-                                                </div>
-                                                <div id="gp-range-magnet-meta" class="gp-range-meta">Нет данных назначенного канала.</div>
-                                            </div>
-                                            <button id="gp-auto-magnet" class="btn-secondary gp-auto-btn gp-auto-btn-wide" type="button">AUTO</button>
-                                            <div id="gp-val-magnet" class="gp-aux-value">1000</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     </div>

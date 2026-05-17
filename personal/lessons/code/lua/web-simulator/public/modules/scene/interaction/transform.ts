@@ -9,23 +9,23 @@ let rotationGuideHost: THREE.Object3D | null = null;
 
 function createAxisLabel(text: string, color: string) {
     const canvas = document.createElement('canvas');
-    canvas.width = 128;
-    canvas.height = 128;
+    canvas.width = 96;
+    canvas.height = 96;
     const ctx = canvas.getContext('2d');
     if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.beginPath();
-        ctx.arc(64, 64, 38, 0, Math.PI * 2);
+        ctx.arc(48, 48, 24, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
         ctx.fill();
-        ctx.lineWidth = 6;
+        ctx.lineWidth = 4;
         ctx.strokeStyle = color;
         ctx.stroke();
-        ctx.font = 'bold 56px Arial';
+        ctx.font = 'bold 34px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = color;
-        ctx.fillText(text, 64, 68);
+        ctx.fillText(text, 48, 51);
     }
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -37,7 +37,7 @@ function createAxisLabel(text: string, color: string) {
         depthWrite: false
     });
     const sprite = new THREE.Sprite(material);
-    sprite.scale.setScalar(0.65);
+    sprite.scale.setScalar(0.34);
     sprite.renderOrder = 10020;
     return sprite;
 }
@@ -106,7 +106,7 @@ function showRotationGuide(target: THREE.Object3D) {
         guide.add(arrow);
 
         const text = createAxisLabel(label, `#${color.toString(16).padStart(6, '0')}`);
-        text.position.copy(axis.clone().multiplyScalar(length + 0.35));
+        text.position.copy(axis.clone().multiplyScalar(length + 0.18));
         guide.add(text);
     });
 

@@ -51,6 +51,8 @@ function renderObjectList(
         const row = document.createElement('button');
         row.type = 'button';
         row.className = 'scene-manager-item' + (obj.id === selectedId ? ' active' : '');
+        row.setAttribute('role', 'option');
+        row.setAttribute('aria-selected', obj.id === selectedId ? 'true' : 'false');
         
         const label = formatSceneLabel(obj.sceneType, obj.name);
         const icon = getObjectIcon(obj.sceneType, obj.isDrone);
@@ -67,6 +69,7 @@ function renderObjectList(
 
 function renderEmptyState(elements: SceneManagerDomRefs) {
     if (elements.detailsEl) elements.detailsEl.textContent = 'Объекты сцены не найдены';
+    if (elements.selectedObjectChipEl) elements.selectedObjectChipEl.textContent = 'Ничего не выбрано';
     if (elements.selectedDictionaryEl) elements.selectedDictionaryEl.value = '';
     if (elements.selectedValueEl) elements.selectedValueEl.value = '';
     if (elements.selectedFloorsEl) elements.selectedFloorsEl.value = '9';
@@ -81,19 +84,19 @@ function renderEmptyState(elements: SceneManagerDomRefs) {
 function renderSelectedDetails(elements: SceneManagerDomRefs, selected: SceneManagerEntry) {
     if (!elements.detailsEl) return;
 
+    const selectedLabel = formatSceneLabel(selected.sceneType, selected.name);
+    if (elements.selectedObjectChipEl) {
+        elements.selectedObjectChipEl.textContent = selected.isDrone ? `${selectedLabel} (дрон)` : selectedLabel;
+        elements.selectedObjectChipEl.title = elements.selectedObjectChipEl.textContent;
+    }
+
     const labels = {
-        type: 'Тип',
-        name: 'Имя',
-        draggable: 'Перемещаемый',
         position: 'Позиция',
         rotation: 'Поворот',
         scale: 'Масштаб'
     };
 
     const details = [
-        { label: labels.type, value: formatSceneLabel(selected.sceneType, selected.name) },
-        { label: labels.name, value: formatSceneLabel(selected.name, selected.sceneType) },
-        { label: labels.draggable, value: selected.draggable ? 'да' : 'нет' },
         { label: labels.position, value: `${formatSceneNumber(selected.position.x)}, ${formatSceneNumber(selected.position.y)}, ${formatSceneNumber(selected.position.z)}` },
         { label: labels.rotation, value: `${formatSceneNumber(selected.rotation.x)}, ${formatSceneNumber(selected.rotation.y)}, ${formatSceneNumber(selected.rotation.z)}` },
         { label: labels.scale, value: `${formatSceneNumber(selected.scale.x)}, ${formatSceneNumber(selected.scale.y)}, ${formatSceneNumber(selected.scale.z)}` }
@@ -102,15 +105,6 @@ function renderSelectedDetails(elements: SceneManagerDomRefs, selected: SceneMan
     elements.detailsEl.innerHTML = details
         .map(d => `<div class="detail-row"><span class="detail-label">${d.label}:</span> <span class="detail-value">${d.value}</span></div>`)
         .join('');
-    
-    if (selected.metaLines?.length) {
-        const metaDiv = document.createElement('div');
-        metaDiv.className = 'detail-meta-section';
-        metaDiv.innerHTML = selected.metaLines
-            .map(line => `<div class="detail-row"><span class="detail-value detail-value--meta">${line}</span></div>`)
-            .join('');
-        elements.detailsEl.appendChild(metaDiv);
-    }
 }
 
 function syncSelectedInputs(
@@ -185,7 +179,7 @@ function updateSelectedControls(callbacks: UICallbacks, elements: SceneManagerDo
 
     // Update transform mode buttons
     if (callbacks.sceneManager) {
-        const mode = callbacks.sceneManager.getMode();
+        const mode = callbacks.sceneManager.getMode?.() ?? null;
         elements.modeTranslateBtn?.classList.toggle('active', mode === 'translate');
         elements.modeRotateBtn?.classList.toggle('active', mode === 'rotate');
         elements.modeScaleBtn?.classList.toggle('active', mode === 'scale');

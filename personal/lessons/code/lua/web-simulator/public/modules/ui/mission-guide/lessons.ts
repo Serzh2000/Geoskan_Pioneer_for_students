@@ -1,6 +1,6 @@
 import type { ScriptLanguage } from '../api-docs/sections.js';
-import { getLuaLessonState } from './lua-lessons.js';
-import { getPythonLessonState } from './python-lessons.js';
+import { getLuaLessonState } from './lessons/catalog/lua.js';
+import { getPythonLessonState } from './lessons/catalog/python.js';
 
 export { evaluateLesson, getLessonCode } from './lesson-evaluation.js';
 export type {

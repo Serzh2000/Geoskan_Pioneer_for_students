@@ -11,14 +11,12 @@ import { collectSettingsDomRefs } from './dom.js';
 import { createGamepadSettingsController } from './gamepad-controller.js';
 import { setMappingRef } from './mapping.js';
 import { createSettingsRuntimeState } from './runtime-state.js';
-import { initWizard } from './wizard.js';
 
 export function initSettingsUI() {
     const dom = collectSettingsDomRefs();
     const state = createSettingsRuntimeState();
     const controller = createGamepadSettingsController(dom, state);
 
-    initWizard();
     bindGeneralSettingsControls(dom);
     bindGamepadSettingsControls({
         dom,
@@ -101,6 +99,7 @@ export function initSettingsUI() {
     controller.renderChannelDataStateView();
     controller.renderMappingControlsStateView();
     controller.renderCalibrationStateView();
+    controller.updateChannelsMonitor(state.rawMonitorValues);
     controller.syncConnectionState(controller.findCurrentActiveGamepad());
     updateGamepadState();
 }

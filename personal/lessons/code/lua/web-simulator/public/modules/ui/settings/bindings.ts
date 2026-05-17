@@ -5,6 +5,14 @@ import { setMappingRef } from './mapping.js';
 import type { SettingsRuntimeState } from './runtime-state.js';
 import type { ActionAuxChannelKey, ChannelKey, StickMode } from './types.js';
 
+function syncStickModeButtons(dom: SettingsDomRefs, activeMode: StickMode): void {
+    dom.gpStickModeButtons.forEach((button) => {
+        const isActive = Number(button.dataset.gpStickMode ?? '0') === activeMode;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-checked', String(isActive));
+    });
+}
+
 export function syncInversionCheckboxes(dom: SettingsDomRefs): void {
     for (const key of PRIMARY_CHANNELS) {
         const checkbox = dom.invCheckboxes[key];
@@ -103,12 +111,22 @@ export function bindGamepadSettingsControls(params: {
 
     if (dom.gpStickModeSelect) {
         dom.gpStickModeSelect.value = String(simSettings.gamepadStickMode);
-        dom.gpStickModeSelect.onchange = () => {
+        syncStickModeButtons(dom, simSettings.gamepadStickMode);
+        const applyStickModeValue = () => {
             const nextMode = Number(dom.gpStickModeSelect?.value ?? simSettings.gamepadStickMode) as StickMode;
             simSettings.gamepadStickMode = [1, 2, 3, 4].includes(nextMode) ? nextMode : 2;
+            syncStickModeButtons(dom, simSettings.gamepadStickMode);
             applyStickMode();
             saveGamepadSettings();
         };
+        dom.gpStickModeSelect.onchange = applyStickModeValue;
+        dom.gpStickModeButtons.forEach((button) => {
+            button.onclick = () => {
+                if (!dom.gpStickModeSelect) return;
+                dom.gpStickModeSelect.value = button.dataset.gpStickMode ?? dom.gpStickModeSelect.value;
+                applyStickModeValue();
+            };
+        });
     }
 
     for (const key of ALL_CHANNELS) {

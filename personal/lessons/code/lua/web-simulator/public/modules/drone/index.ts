@@ -29,7 +29,7 @@ export {
     addObject, deleteSelectedObject, duplicateObject, resetDroneToOrigin,
     listSceneObjects, selectSceneObjectById, deleteSceneObjectById,
     appendPointToSelectedLinearObject, updateSelectedSceneObject,
-    setSceneObjectTransformMode, getSelectedSceneObjectId,
+    setSceneObjectTransformMode, getSceneObjectTransformMode, getSelectedSceneObjectId,
     startSelectedLinearObjectEditing, finishSelectedLinearObjectEditing,
     isSelectedLinearObjectEditingActive, getSelectedLinearObjectEditingTargetId
 } from '../scene/objects/object-manager.js';

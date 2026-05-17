@@ -62,12 +62,14 @@ export interface UICallbacks {
         finishLinearEditing: (commit?: boolean) => boolean;
         isLinearEditingActive: (id?: string) => boolean;
         setMode: (mode: 'translate' | 'rotate' | 'scale', id?: string) => boolean;
+        getMode?: () => 'translate' | 'rotate' | 'scale' | null;
         resetDroneOrigin: () => boolean;
         getSelectedId: () => string | null;
     };
 }
 
 export function initUI(callbacks: UICallbacks) {
+    initSidebar(callbacks);
     initContextMenu();
     initSceneManager(callbacks);
     initDroneManager(callbacks.onSceneUpdate);
@@ -101,7 +103,6 @@ export function initUI(callbacks: UICallbacks) {
         }
     };
 
-    initSidebar(callbacks);
     initCameraModeUI();
 
     const runBtn = document.getElementById('run-btn');

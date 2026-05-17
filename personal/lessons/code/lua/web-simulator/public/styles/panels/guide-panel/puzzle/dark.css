@@ -1,0 +1,278 @@
+/*
+ * Mission guide puzzle, workspace, and action styles.
+ */
+
+.guide-library__grid {
+    display: grid;
+    gap: 22px;
+    --guide-notch-bg: rgba(2, 6, 23, 0.92);
+}
+
+.guide-workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 280px;
+    padding: 14px;
+    border-radius: 16px;
+    background: rgba(2, 6, 23, 0.54);
+    border: 1px dashed rgba(148, 163, 184, 0.24);
+    --guide-notch-bg: rgba(2, 6, 23, 0.58);
+}
+
+.guide-workspace__stack {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.guide-workspace-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.guide-drop-zone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    border-radius: 14px;
+    border: 1px dashed rgba(56, 189, 248, 0.22);
+    background: rgba(15, 23, 42, 0.46);
+    color: #7dd3fc;
+    font-size: 12px;
+    font-weight: 700;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.guide-drop-zone.is-hovered {
+    border-color: rgba(125, 211, 252, 0.84);
+    background: rgba(14, 165, 233, 0.12);
+    transform: scale(1.01);
+}
+
+.guide-puzzle {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    padding: 18px 18px 22px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 18px;
+    color: #eff6ff;
+    cursor: grab;
+    user-select: none;
+    overflow: visible;
+    box-shadow: 0 12px 24px rgba(2, 6, 23, 0.16);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.guide-puzzle::before,
+.guide-puzzle::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+}
+
+.guide-puzzle::before {
+    top: -1px;
+    width: 112px;
+    height: 16px;
+    background: var(--guide-notch-bg, rgba(2, 6, 23, 0.9));
+    border-left: 1px solid rgba(255, 255, 255, 0.16);
+    border-right: 1px solid rgba(255, 255, 255, 0.16);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.guide-puzzle::after {
+    bottom: -18px;
+    width: 98px;
+    height: 18px;
+    background: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-top: 0;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    box-shadow: 0 8px 18px rgba(2, 6, 23, 0.14);
+}
+
+.guide-puzzle:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 18px 36px rgba(2, 6, 23, 0.28);
+    filter: saturate(1.08);
+}
+
+.guide-puzzle--library {
+    cursor: pointer;
+}
+
+.guide-puzzle--setup {
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.32), rgba(37, 99, 235, 0.22));
+}
+
+.guide-puzzle--action {
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.28), rgba(8, 145, 178, 0.22));
+}
+
+.guide-puzzle--wait {
+    background: linear-gradient(180deg, rgba(245, 158, 11, 0.26), rgba(217, 119, 6, 0.22));
+}
+
+.guide-puzzle--check {
+    background: linear-gradient(180deg, rgba(168, 85, 247, 0.26), rgba(126, 34, 206, 0.22));
+}
+
+.guide-puzzle__main {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.guide-puzzle__label {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.guide-puzzle__code {
+    color: #f8fafc;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.5;
+    text-align: right;
+}
+
+.guide-puzzle:hover::before,
+.guide-puzzle:hover::after {
+    border-color: rgba(255, 255, 255, 0.24);
+}
+
+.guide-puzzle:hover .guide-puzzle__label {
+    color: #ffffff;
+}
+
+.guide-puzzle:hover .guide-puzzle__code {
+    color: #e0f2fe;
+}
+
+.guide-puzzle__main {
+    position: relative;
+    z-index: 3;
+}
+
+.guide-puzzle__tooltip {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 14px);
+    width: min(320px, calc(100vw - 64px));
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(125, 211, 252, 0.28);
+    background: rgba(15, 23, 42, 0.96);
+    color: #dbeafe;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.55;
+    text-align: left;
+    box-shadow: 0 16px 32px rgba(2, 6, 23, 0.34);
+    pointer-events: none;
+    white-space: normal;
+    z-index: 6;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.guide-puzzle:hover .guide-puzzle__tooltip {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.guide-workspace__remove,
+.guide-lesson__action,
+.guide-method-chip,
+.guide-primary-action {
+    border: 1px solid rgba(56, 189, 248, 0.24);
+    background: rgba(14, 165, 233, 0.1);
+    color: #bae6fd;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.guide-workspace__remove,
+.guide-lesson__action,
+.guide-primary-action {
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.guide-primary-action {
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.34), rgba(2, 132, 199, 0.28));
+    color: #eff6ff;
+    border-color: rgba(125, 211, 252, 0.42);
+}
+
+.guide-workspace__remove:hover,
+.guide-lesson__action:hover,
+.guide-method-chip:hover,
+.guide-primary-action:hover {
+    background: rgba(14, 165, 233, 0.18);
+    border-color: rgba(56, 189, 248, 0.46);
+    transform: translateY(-1px);
+}
+
+.guide-primary-action:hover {
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.44), rgba(2, 132, 199, 0.36));
+}
+
+.guide-lesson__action:disabled,
+.guide-primary-action:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+    transform: none;
+}
+
+@media (max-width: 860px) {
+    .guide-workspace-row {
+        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .guide-lesson-page__nav .guide-lesson__action,
+    .guide-actions .guide-lesson__action,
+    .guide-primary-action,
+    .guide-workspace__remove {
+        width: 100%;
+    }
+
+    .guide-puzzle__main {
+        flex-direction: column;
+    }
+
+    .guide-puzzle__code {
+        text-align: left;
+    }
+
+    .guide-puzzle::before,
+    .guide-puzzle::after {
+        width: 84px;
+    }
+
+    .guide-puzzle::before {
+        width: 94px;
+    }
+}

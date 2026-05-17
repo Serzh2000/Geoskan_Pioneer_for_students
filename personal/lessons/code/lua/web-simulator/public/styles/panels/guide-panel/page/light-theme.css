@@ -1,0 +1,170 @@
+/*
+ * High-contrast light redesign overrides.
+ */
+
+.guide-modal-layout {
+    --guide-bg: #ffffff;
+    --guide-bg-muted: #f8f9fa;
+    --guide-bg-emphasis: #f3f4f6;
+    --guide-text: #1a1a1a;
+    --guide-text-muted: #5c6370;
+    --guide-border: #e5e7eb;
+    --guide-border-strong: #d0d5dd;
+    --guide-accent: #ff6b00;
+    --guide-accent-strong: #e65f00;
+    --guide-accent-soft: rgba(255, 107, 0, 0.12);
+    --guide-success: #0f9d58;
+    --guide-info: #2563eb;
+    --guide-shadow: 0 16px 40px rgba(17, 24, 39, 0.08);
+    color: var(--guide-text);
+}
+
+.guide-hero,
+.guide-lesson-page,
+.guide-panel-card,
+.guide-theory-page__hero {
+    background: var(--guide-bg);
+    border: 1px solid var(--guide-border);
+    box-shadow: var(--guide-shadow);
+}
+
+.guide-hero {
+    background: var(--guide-bg);
+    border-left: 4px solid var(--guide-accent);
+}
+
+.guide-hero__eyebrow,
+.guide-selector-field__label,
+.guide-chapter-tab__badge,
+.guide-lesson-page__meta-label,
+.guide-result-hero__label {
+    color: var(--guide-accent);
+}
+
+.guide-hero__title,
+.guide-lesson-page__title,
+.guide-panel-card__title,
+.guide-practice-card__title,
+.guide-chapter-tab__title,
+.guide-theory-page__title,
+.guide-theory-card__content,
+.guide-api-card__title,
+.guide-api-card__summary,
+.guide-lesson-page__goal,
+.guide-panel-card__text,
+.guide-workspace__hint,
+.guide-library__empty {
+    color: var(--guide-text);
+}
+
+.guide-hero__text,
+.guide-hero__flow,
+.guide-hero__progress,
+.guide-lesson-page__summary,
+.guide-panel-note,
+.guide-theory-card__content,
+.guide-api-card__summary,
+.guide-selector-meta__item {
+    color: var(--guide-text-muted);
+}
+
+.guide-hero__flow,
+.guide-hero__progress,
+.guide-selector-meta__item {
+    background: var(--guide-bg-muted);
+    border: 1px solid var(--guide-border);
+}
+
+.guide-top-tabs,
+.guide-selector-bar {
+    background: var(--guide-bg);
+    border: 1px solid var(--guide-border);
+    box-shadow: 0 10px 30px rgba(17, 24, 39, 0.05);
+}
+
+.guide-top-tab {
+    color: var(--guide-text-muted);
+}
+
+.guide-top-tab.is-active {
+    background: var(--guide-accent-soft);
+    border-color: rgba(255, 107, 0, 0.28);
+    color: var(--guide-text);
+}
+
+.guide-selector {
+    border: 1px solid var(--guide-border-strong);
+    background: var(--guide-bg);
+    color: var(--guide-text);
+}
+
+.guide-selector:focus {
+    border-color: rgba(255, 107, 0, 0.65);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.16);
+}
+
+.guide-chapter-tab,
+.guide-page-tab,
+.guide-lesson-page__meta-item,
+.guide-selector-summary__item,
+.guide-theory-card,
+.guide-practice-card,
+.guide-api-card {
+    background: var(--guide-bg);
+    border: 1px solid var(--guide-border);
+    color: var(--guide-text);
+    box-shadow: 0 10px 24px rgba(17, 24, 39, 0.04);
+}
+
+.guide-chapter-tab:hover,
+.guide-page-tab:hover,
+.guide-practice-card--selectable:hover {
+    border-color: rgba(255, 107, 0, 0.32);
+    box-shadow: 0 14px 28px rgba(17, 24, 39, 0.08);
+}
+
+.guide-chapter-tab.is-active,
+.guide-page-tab.is-active,
+.guide-practice-card--selectable.is-active {
+    background: #fffaf5;
+    border-color: rgba(255, 107, 0, 0.32);
+}
+
+.guide-page-tab.is-solved,
+.guide-practice-card--selectable.is-solved {
+    box-shadow: inset 0 0 0 1px rgba(15, 157, 88, 0.22);
+}
+
+.guide-chapter-tab__step,
+.guide-page-tab__step,
+.guide-lesson-page__badge,
+.guide-panel-card__badge,
+.guide-practice-card__difficulty {
+    background: var(--guide-accent-soft);
+    border: 1px solid rgba(255, 107, 0, 0.18);
+    color: var(--guide-accent);
+}
+
+.guide-target-chip {
+    background: var(--guide-bg-muted);
+    border: 1px solid var(--guide-border);
+    color: var(--guide-text);
+}
+
+.guide-panel-note {
+    background: var(--guide-bg-muted);
+    border: 1px solid var(--guide-border);
+    border-left: 4px solid var(--guide-accent);
+}
+
+.guide-api-card__example {
+    background: #fffaf5;
+    border: 1px solid rgba(255, 107, 0, 0.18);
+    color: var(--guide-text);
+}
+
+.guide-theory-page__hero {
+    background: var(--guide-bg);
+    border-left: 4px solid var(--guide-accent);
+}
+

@@ -3,6 +3,7 @@ import { DroneOrbitControls } from './DroneOrbitControls.js';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { log } from '../../shared/logging/logger.js';
 import { setupEnvironment, envGroup } from '../../environment/index.js';
+import { applyTransformControlsUxTheme } from './transform-controls-style.js';
 
 export let scene: THREE.Scene;
 export let camera: THREE.PerspectiveCamera;
@@ -160,13 +161,13 @@ export function initScene(container: HTMLElement) {
     });
 
     transformControl = new TransformControls(camera, renderer.domElement);
-    transformControl.size = 1.15;
     transformControl.visible = false;
     transformControl.enabled = true;
     transformControl.setSpace('world');
     
     transformHelper = (transformControl as any).getHelper ? (transformControl as any).getHelper() : (transformControl as unknown as THREE.Object3D);
     configureTransformHelperVisuals(transformHelper);
+    applyTransformControlsUxTheme(transformControl, transformHelper);
     scene.add(transformHelper);
     transformHelper.visible = false;
     (window as any).transformControl = transformControl;

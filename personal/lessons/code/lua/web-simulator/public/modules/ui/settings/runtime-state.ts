@@ -1,4 +1,5 @@
 import type { GamepadInputRef } from '../../core/state.js';
+import { getDefaultRawChannelValues } from './mapping.js';
 import type { ChannelKey, ObservedInputStats } from './types.js';
 
 export type AutoStatusMode = 'idle' | 'listening' | 'success';
@@ -19,6 +20,8 @@ export type SettingsRuntimeState = {
     activeGamepadIndex: number | null;
     activeGamepadId: string | null;
     activeGamepadHasChannelData: boolean;
+    isRawMonitorOpen: boolean;
+    rawMonitorValues: number[];
     observedInputStats: Map<GamepadInputRef, ObservedInputStats>;
     autoStatusMode: AutoStatusMode;
     autoStatusText: string;
@@ -32,6 +35,8 @@ export function createSettingsRuntimeState(): SettingsRuntimeState {
         activeGamepadIndex: null,
         activeGamepadId: null,
         activeGamepadHasChannelData: false,
+        isRawMonitorOpen: false,
+        rawMonitorValues: getDefaultRawChannelValues(),
         observedInputStats: new Map<GamepadInputRef, ObservedInputStats>(),
         autoStatusMode: 'idle',
         autoStatusText: 'Нажмите AUTO и подвигайте нужный стик или тумблер.',

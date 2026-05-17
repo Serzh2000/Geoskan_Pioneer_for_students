@@ -4,10 +4,28 @@ import {
     MARKER_DICTIONARY_OPTIONS
 } from '../../environment/obstacles/marker-dictionaries.js';
 import type { MarkerMapOptions } from '../../environment/obstacles.js';
+import {
+    appendIncidentEntry as appendIncidentEntryBase,
+    clearIncidentEntries as clearIncidentEntriesBase,
+    setBuildingControlsVisible,
+    syncFloorLimit as syncFloorLimitBase,
+    syncIncidentValue
+} from './support/building.js';
+import {
+    getMapInputs,
+    readAddMarkerMapOptions as readAddMarkerMapOptionsBase,
+    updateAddControlsState as updateAddControlsStateBase,
+    updateMapSummary as updateMapSummaryBase
+} from './support/maps.js';
 
 export interface SceneManagerDomRefs {
+    clickCoordsEl: HTMLElement | null;
     listEl: HTMLElement | null;
     detailsEl: HTMLElement | null;
+    selectedObjectChipEl: HTMLElement | null;
+    addModalEl: HTMLDivElement | null;
+    openAddModalBtn: HTMLElement | null;
+    closeAddModalBtn: HTMLElement | null;
     addTypeEl: HTMLSelectElement | null;
     addDictionaryEl: HTMLSelectElement | null;
     addValueEl: HTMLInputElement | null;
@@ -71,23 +89,6 @@ export function formatSceneNumber(value: number) {
 
 export function getMarkerMode(type: string | undefined | null): 'aruco' | 'apriltag' {
     return (type || '').toLowerCase().includes('april') ? 'apriltag' : 'aruco';
-}
-
-export function getMapInputs(elements: SceneManagerDomRefs) {
-    return [
-        elements.addMapRowsEl,
-        elements.addMapColumnsEl,
-        elements.addMapStartIdEl,
-        elements.addMapIdStepEl,
-        elements.addMapMarkerSizeEl,
-        elements.addMapRotationEl,
-        elements.addMapGapXEl,
-        elements.addMapGapYEl,
-        elements.addMapTraversalEl,
-        elements.addMapStartCornerEl,
-        elements.addMapAnchorEl,
-        elements.addMapSnakeEl
-    ].filter(Boolean) as Array<HTMLInputElement | HTMLSelectElement>;
 }
 
 export function clampInt(value: string | undefined, fallback: number, min: number, max: number) {
@@ -163,36 +164,26 @@ export function isValueInputType(type: string) {
     return isSingleMarkerType(type) || type === 'start-position' || type === 'building';
 }
 
-function normalizeIncidentEntries(value: string | undefined) {
-    return (value || '')
-        .split(/\r?\n|;/)
-        .map((entry) => entry.trim())
-        .filter(Boolean);
+export function readAddMarkerMapOptions(elements: SceneManagerDomRefs): MarkerMapOptions {
+    return readAddMarkerMapOptionsBase(elements, clampInt, clampNumber);
 }
 
-function serializeIncidentEntries(entries: string[]) {
-    return entries.join('\n');
+export function updateMapSummary(elements: SceneManagerDomRefs) {
+    updateMapSummaryBase(elements, clampInt, clampNumber);
 }
 
-function getIncidentKey(entry: string) {
-    const match = entry.match(/^(\d+)\s*:\s*(front|back|перед|зад)\s*:\s*(\d+)/i);
-    if (!match) return entry.trim().toLowerCase();
-    const faceRaw = match[2].toLowerCase();
-    const face = faceRaw === 'перед' ? 'front' : faceRaw === 'зад' ? 'back' : faceRaw;
-    return `${match[1]}:${face}:${match[3]}`;
+export function updateAddControlsState(elements: SceneManagerDomRefs) {
+    updateAddControlsStateBase(elements, clampFloors, clampWindowFloor, clampInt, clampNumber);
 }
 
-export function syncIncidentValue(targetEl: HTMLInputElement | null, sourceEl: HTMLTextAreaElement | null) {
-    if (!targetEl || !sourceEl) return;
-    targetEl.value = serializeIncidentEntries(normalizeIncidentEntries(sourceEl.value));
-}
+export { getMapInputs, setBuildingControlsVisible, syncIncidentValue };
 
 export function syncFloorLimit(floorsEl: HTMLInputElement | null, floorEl: HTMLInputElement | null) {
-    if (!floorsEl || !floorEl) return;
-    const maxFloor = clampFloors(floorsEl.value, 9);
-    floorsEl.value = String(maxFloor);
-    floorEl.max = String(maxFloor);
-    floorEl.value = String(clampWindowFloor(floorEl.value, maxFloor));
+    syncFloorLimitBase(floorsEl, floorEl, clampFloors, clampWindowFloor);
+}
+
+export function clearIncidentEntries(incidentsEl: HTMLTextAreaElement | null, valueEl: HTMLInputElement | null) {
+    clearIncidentEntriesBase(incidentsEl, valueEl);
 }
 
 export function appendIncidentEntry(
@@ -204,118 +195,16 @@ export function appendIncidentEntry(
     kindEl: HTMLSelectElement | null,
     valueEl: HTMLInputElement | null
 ) {
-    if (!incidentsEl || !floorEl || !faceEl || !windowEl || !kindEl) return;
-    const maxFloor = clampFloors(floorsEl?.value, 9);
-    const floor = clampWindowFloor(floorEl.value, maxFloor);
-    const face = faceEl.value === 'back' ? 'back' : 'front';
-    const windowIndex = clampInt(windowEl.value, 1, 1, 3);
-    const kind = kindEl.value === 'fire' || kindEl.value === 'thief' ? kindEl.value : 'smoke';
-    floorEl.value = String(floor);
-    const entry = `${floor}:${face}:${windowIndex}=${kind}`;
-    const entries = normalizeIncidentEntries(incidentsEl.value).filter((item) => getIncidentKey(item) !== getIncidentKey(entry));
-    entries.push(entry);
-    incidentsEl.value = serializeIncidentEntries(entries);
-    syncIncidentValue(valueEl, incidentsEl);
-}
-
-export function clearIncidentEntries(incidentsEl: HTMLTextAreaElement | null, valueEl: HTMLInputElement | null) {
-    if (!incidentsEl) return;
-    incidentsEl.value = '';
-    syncIncidentValue(valueEl, incidentsEl);
-}
-
-export function setBuildingControlsVisible(
-    visible: boolean,
-    floorsWrapEl: HTMLLabelElement | null,
-    floorsEl: HTMLInputElement | null,
-    settingsEl: HTMLDivElement | null
-) {
-    if (floorsWrapEl) floorsWrapEl.style.display = visible ? 'flex' : 'none';
-    if (floorsEl) floorsEl.disabled = !visible;
-    if (settingsEl) settingsEl.classList.toggle('visible', visible);
-}
-
-export function readAddMarkerMapOptions(elements: SceneManagerDomRefs): MarkerMapOptions {
-    return {
-        rows: clampInt(elements.addMapRowsEl?.value, 5, 1, 20),
-        columns: clampInt(elements.addMapColumnsEl?.value, 5, 1, 20),
-        startId: clampInt(elements.addMapStartIdEl?.value, 0, 0, 100000),
-        idStep: clampInt(elements.addMapIdStepEl?.value, 1, 1, 1000),
-        markerSize: clampNumber(elements.addMapMarkerSizeEl?.value, 1.05, 0.2, 5),
-        rotationDeg: clampNumber(elements.addMapRotationEl?.value, 0, -180, 180),
-        gapX: clampNumber(elements.addMapGapXEl?.value, 0.2, 0, 10),
-        gapY: clampNumber(elements.addMapGapYEl?.value, 0.2, 0, 10),
-        traversal: elements.addMapTraversalEl?.value === 'column-major' ? 'column-major' : 'row-major',
-        startCorner: (
-            elements.addMapStartCornerEl?.value === 'top-right'
-            || elements.addMapStartCornerEl?.value === 'bottom-left'
-            || elements.addMapStartCornerEl?.value === 'bottom-right'
-        ) ? elements.addMapStartCornerEl.value : 'top-left',
-        anchor: (
-            elements.addMapAnchorEl?.value === 'top-left'
-            || elements.addMapAnchorEl?.value === 'top-right'
-            || elements.addMapAnchorEl?.value === 'bottom-left'
-            || elements.addMapAnchorEl?.value === 'bottom-right'
-            || elements.addMapAnchorEl?.value === 'start'
-        ) ? elements.addMapAnchorEl.value : 'center',
-        snake: !!elements.addMapSnakeEl?.checked
-    };
-}
-
-export function updateMapSummary(elements: SceneManagerDomRefs) {
-    if (!elements.addMapSummaryEl) return;
-    const options = readAddMarkerMapOptions(elements);
-    const total = options.rows! * options.columns!;
-    const firstId = options.startId!;
-    const lastId = firstId + Math.max(0, total - 1) * options.idStep!;
-    const traversalLabel = options.traversal === 'column-major' ? 'по столбцам' : 'по строкам';
-    const cornerLabelMap = {
-        'top-left': 'сверху слева',
-        'top-right': 'сверху справа',
-        'bottom-left': 'снизу слева',
-        'bottom-right': 'снизу справа'
-    } as const;
-    elements.addMapSummaryEl.textContent =
-        `${options.rows} x ${options.columns}, ID ${firstId}-${lastId}, ${traversalLabel}, `
-        + `старт ${cornerLabelMap[options.startCorner as keyof typeof cornerLabelMap]}`
-        + `${options.snake ? ', змейкой' : ''}`;
-}
-
-export function updateAddControlsState(elements: SceneManagerDomRefs) {
-    if (!elements.addTypeEl || !elements.addValueEl || !elements.addPointsEl || !elements.addDictionaryEl) return;
-    const type = elements.addTypeEl.value;
-    const isSingleMarker = isSingleMarkerType(type);
-    const needsValueInput = isValueInputType(type);
-    const isMarkerMap = isMarkerMapType(type);
-    const isBuilding = isBuildingType(type);
-    const isMarker = isSingleMarker || isMarkerMap;
-    const isPath = type === 'road' || type === 'rail';
-    if (isMarker) fillDictionarySelect(elements.addDictionaryEl, getMarkerMode(type), elements.addDictionaryEl.value);
-    elements.addDictionaryEl.disabled = !isMarker;
-    elements.addDictionaryEl.style.display = isMarker ? 'block' : 'none';
-    elements.addValueEl.disabled = !(needsValueInput && !isBuilding);
-    elements.addValueEl.style.display = needsValueInput && !isBuilding ? 'block' : 'none';
-    elements.addPointsEl.disabled = !isPath;
-    elements.addValueEl.placeholder = isSingleMarker
-        ? 'ID маркера'
-        : type === 'building'
-            ? 'Окна: 3:front:2=smoke; 5:back:1=fire; 7:front:3=thief'
-            : type === 'start-position'
-                ? 'Номер стартовой позиции'
-                : 'Только для объектов с номером';
-    elements.addPointsEl.placeholder = isPath
-        ? 'Каждая строка: X, Y, Z\n0, 0, 0\n6, 0, 0\n10, 4, 0'
-        : 'Только для дорог и путей';
-    elements.addPointsEl.style.display = isPath ? 'block' : 'none';
-    if (elements.addPathHintEl) {
-        elements.addPathHintEl.style.display = isPath ? 'none' : 'block';
-    }
-    setBuildingControlsVisible(isBuilding, elements.addFloorsWrapEl, elements.addFloorsEl, elements.addBuildingSettingsEl);
-    if (elements.addMapSettingsEl) elements.addMapSettingsEl.classList.toggle('visible', isMarkerMap);
-    getMapInputs(elements).forEach((input) => {
-        input.disabled = !isMarkerMap;
-    });
-    syncFloorLimit(elements.addFloorsEl, elements.addBuildingFloorEl);
-    syncIncidentValue(elements.addValueEl, elements.addBuildingIncidentsEl);
-    updateMapSummary(elements);
+    appendIncidentEntryBase(
+        incidentsEl,
+        floorsEl,
+        floorEl,
+        faceEl,
+        windowEl,
+        kindEl,
+        valueEl,
+        clampFloors,
+        clampWindowFloor,
+        clampInt
+    );
 }
