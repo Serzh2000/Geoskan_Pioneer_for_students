@@ -7,7 +7,7 @@ const MIN_SIDEBAR_WIDTH = 280;
 const MAX_SIDEBAR_WIDTH = 1000;
 const SIDEBAR_TABS_WIDTH = 56;
 const MIN_MAIN_SCENE_WIDTH_WIDE = 980;
-const FULLSCREEN_PANEL_IDS = new Set(['settings-panel', 'gamepad-panel']);
+const FULLSCREEN_PANEL_IDS = new Set(['settings-panel', 'rc-settings-panel']);
 
 export function initSidebar(callbacks: UICallbacks) {
     const container = document.querySelector('.container') as HTMLElement | null;

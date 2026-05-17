@@ -103,20 +103,6 @@
 @container main-scene (max-width: 860px) {
 }
 
-@media (max-width: 1100px) {
-    .gp-aux-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .gp-channel-row {
-        grid-template-columns: 1fr;
-    }
-
-    .gp-range-sliders {
-        grid-template-columns: 1fr;
-    }
-}
-
 .logs-panel-content .log-line {
     margin-bottom: 4px;
 }

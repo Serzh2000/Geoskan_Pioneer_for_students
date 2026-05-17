@@ -9,12 +9,10 @@
 @import url('/styles/layout/sidebar-tabs.css');
 @import url('/styles/layout/sidebar-panels.css');
 @import url('/styles/layout/panel-shell.css');
-@import url('/styles/gamepad/panel.css');
 @import url('/styles/layout/resizer.css');
 @import url('/styles/layout/scene-host.css');
 @import url('/styles/panels/api-docs.css');
 @import url('/styles/panels/guide-panel.css');
-@import url('/styles/panels/gamepad-config.css');
 @import url('/styles/overlays/hud-and-settings.css');
 @import url('/styles/scene/camera-controls.css');
 @import url('/styles/scene/manager-panel.css');

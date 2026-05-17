@@ -1,4 +1,12 @@
 
+export {
+    loadGamepadSettings,
+    matchesAuxRange,
+    saveGamepadSettings,
+    simSettings
+} from './gamepad-settings.js';
+export type { AuxChannelRange, GamepadInputRef, GamepadModeRanges } from './gamepad-settings.js';
+
 export interface Vector3 { x: number; y: number; z: number; }
 export interface Orientation { roll: number; pitch: number; yaw: number; }
 export interface LedColor { r: number; g: number; b: number; w: number; }
@@ -35,19 +43,6 @@ export interface TimerTask {
     sourceState?: DroneFsmState;
 }
 
-export type GamepadInputRef = `a${number}` | `b${number}`;
-export interface AuxChannelRange {
-    min: number;
-    max: number;
-    center?: number;
-}
-
-export interface GamepadModeRanges {
-    loiter: AuxChannelRange;
-    althold: AuxChannelRange;
-    stabilize: AuxChannelRange;
-}
-
 /**
  * Модуль глобального состояния симулятора.
  * Хранит данные обо всех дронах (позиции, скорости, логика автопилота),
@@ -70,7 +65,7 @@ export interface DroneState {
     status: string;
     fsmState: DroneFsmState;
     flightMode: FlightMode;
-    rcChannels: number[]; // 0: Roll, 1: Pitch, 2: Throttle, 3: Yaw, 4..7: Switches
+    rcChannels: number[]; // 0..15: CH1..CH16 in PWM-like units
     magnetGripper: {
         active: boolean;
         attachedObjectId: string | null;
@@ -102,88 +97,19 @@ export interface DroneState {
 export const drones: Record<string, DroneState> = {};
 export let currentDroneId: string = 'drone_1';
 
+function createDefaultRcChannels(channelCount: number = 16): number[] {
+    return Array.from({ length: channelCount }, (_, index) => {
+        if (index === 2) return 1000;
+        if (index >= 4) return 1000;
+        return 1500;
+    });
+}
+
 export type ScriptLanguage = 'lua' | 'python';
 export let currentScriptLanguage: ScriptLanguage = 'lua';
 
 export function setCurrentScriptLanguage(language: ScriptLanguage) {
     currentScriptLanguage = language;
-}
-
-export const simSettings = {
-    showTracer: true,
-    tracerColor: '#38bdf8',
-    tracerWidth: 2,
-    tracerShape: 'line', // 'line', 'points', 'both'
-    showGizmo: true,
-    simSpeed: 1.0,
-    gamepadConnected: false,
-    gamepadStickMode: 2 as 1 | 2 | 3 | 4,
-    gamepadMapping: {
-        roll: 'a2' as GamepadInputRef,
-        pitch: 'a1' as GamepadInputRef,
-        throttle: 'a3' as GamepadInputRef,
-        yaw: 'a0' as GamepadInputRef,
-        modeSwitch: 'b4' as GamepadInputRef,
-        armSwitch: 'b5' as GamepadInputRef,
-        magnetBtn: 'b6' as GamepadInputRef
-    },
-    gamepadCalibration: {
-        min: Array.from({ length: 16 }, () => -1),
-        max: Array.from({ length: 16 }, () => 1),
-        center: Array.from({ length: 16 }, () => 0),
-        isCalibrated: false
-    },
-    gamepadInversion: [false, false, false, true, false, false, false, false], // R, P, T, Y, Mode, Arm, Magnet
-    gamepadAuxRanges: {
-        arm: { min: 1800, max: 2100, center: 2000 } as AuxChannelRange,
-        magnet: { min: 1800, max: 2100, center: 2000 } as AuxChannelRange
-    },
-    gamepadModeRanges: {
-        // Standard 3-position switch values for RadioMaster TX12/TX15/TX16 (1000, 1500, 2000)
-        loiter: { min: 900, max: 1250, center: 1000 } as AuxChannelRange,
-        althold: { min: 1251, max: 1750, center: 1500 } as AuxChannelRange,
-        stabilize: { min: 1751, max: 2100, center: 2000 } as AuxChannelRange
-    }
-};
-
-const STORAGE_KEY = 'geoskan_sim_gamepad_settings';
-
-export function saveGamepadSettings() {
-    if (typeof localStorage === 'undefined') return;
-    const data = {
-        mapping: simSettings.gamepadMapping,
-        inversion: simSettings.gamepadInversion,
-        auxRanges: simSettings.gamepadAuxRanges,
-        modeRanges: simSettings.gamepadModeRanges,
-        stickMode: simSettings.gamepadStickMode
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
-export function loadGamepadSettings() {
-    if (typeof localStorage === 'undefined') return;
-    try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            const data = JSON.parse(saved);
-            if (data.mapping) Object.assign(simSettings.gamepadMapping, data.mapping);
-            if (data.inversion) simSettings.gamepadInversion = data.inversion;
-            if (data.auxRanges) Object.assign(simSettings.gamepadAuxRanges, data.auxRanges);
-            if (data.modeRanges) Object.assign(simSettings.gamepadModeRanges, data.modeRanges);
-            if (data.stickMode) simSettings.gamepadStickMode = data.stickMode;
-        }
-    } catch (e) {
-        console.warn('[State] Failed to load gamepad settings:', e);
-    }
-}
-
-// Load on init
-loadGamepadSettings();
-
-export function matchesAuxRange(value: number, range: AuxChannelRange): boolean {
-    const min = Math.max(1000, Math.min(range.min, range.max));
-    const max = Math.min(2000, Math.max(range.min, range.max));
-    return value >= min && value <= max;
 }
 
 export function createDroneState(id: string, name: string, x: number = 0, y: number = 0, z: number = 0): DroneState {
@@ -200,7 +126,7 @@ export function createDroneState(id: string, name: string, x: number = 0, y: num
         status: 'IDLE',
         fsmState: 'IDLE',
         flightMode: 'AUTO',
-        rcChannels: [1500, 1500, 1000, 1500, 1000, 1000, 1000, 1000],
+        rcChannels: createDefaultRcChannels(),
         magnetGripper: {
             active: false,
             attachedObjectId: null
@@ -308,7 +234,7 @@ export function resetState(id: string = currentDroneId) {
     drone.tickCommandSignature = null;
     drone.timers = [];
     drone.leds = Array.from({ length: 29 }, () => ({ r: 0, g: 0, b: 0, w: 0 }));
-    drone.rcChannels = [1500, 1500, 1000, 1500, 1000, 1000, 1000, 1000];
+    drone.rcChannels = createDefaultRcChannels();
     drone.magnetGripper.active = false;
     drone.magnetGripper.attachedObjectId = null;
     drone.pendingLocalPoint = false;

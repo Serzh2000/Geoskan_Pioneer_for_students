@@ -1,106 +1,122 @@
-import { CENTER_DEADBAND, THROTTLE_IDLE_DEADBAND, clamp } from './constants.js';
+import { DEFAULT_PWM_CENTER, DEFAULT_PWM_MAX, DEFAULT_PWM_MIN } from './constants.js';
+import type { CalibrationData, InputControlType, InputSignalType } from './types.js';
 
-type CalibrationState = {
-    min: number[];
-    max: number[];
-    center: number[];
-    isCalibrated: boolean;
-};
+const EPSILON = 1e-6;
 
-export function resetCalibration(calibration: CalibrationState): void {
-    calibration.min.fill(-1);
-    calibration.max.fill(1);
-    calibration.center.fill(0);
-    calibration.isCalibrated = false;
+function clamp(value: number, min: number, max: number): number {
+    return Math.max(min, Math.min(max, value));
 }
 
-export function beginCalibration(calibration: CalibrationState, gp: Gamepad): number {
-    calibration.min.fill(Number.POSITIVE_INFINITY);
-    calibration.max.fill(Number.NEGATIVE_INFINITY);
-    calibration.center.fill(0);
-    const axisCount = Math.min(calibration.center.length, gp.axes.length);
-    for (let i = 0; i < axisCount; i += 1) {
-        const axisValue = Number.isFinite(gp.axes[i]) ? gp.axes[i] : 0;
-        calibration.center[i] = axisValue;
-        calibration.min[i] = axisValue;
-        calibration.max[i] = axisValue;
-    }
-    calibration.isCalibrated = false;
-    return Date.now();
+export function sanitizeCalibration(input?: Partial<CalibrationData> | null): CalibrationData {
+    const min = Number.isFinite(input?.min) ? Number(input?.min) : -1;
+    const max = Number.isFinite(input?.max) ? Number(input?.max) : 1;
+    const center = Number.isFinite(input?.center) ? Number(input?.center) : 0;
+    return {
+        min: Math.min(min, max - EPSILON),
+        max: Math.max(max, min + EPSILON),
+        center: clamp(center, min, max),
+        deadzone: clamp(Number.isFinite(input?.deadzone) ? Number(input?.deadzone) : 0.04, 0, 0.4),
+        trim: clamp(Number.isFinite(input?.trim) ? Number(input?.trim) : 0, -0.3, 0.3),
+        invert: Boolean(input?.invert)
+    };
 }
 
-export function finishCalibration(calibration: CalibrationState): void {
-    let calibratedAxes = 0;
-    for (let i = 0; i < calibration.min.length; i += 1) {
-        const min = calibration.min[i];
-        const max = calibration.max[i];
-        const center = calibration.center[i];
-        if (!Number.isFinite(min) || !Number.isFinite(max) || max - min < 0.05) {
-            calibration.min[i] = -1;
-            calibration.max[i] = 1;
-            calibration.center[i] = Number.isFinite(center) ? clamp(center, -1, 1) : 0;
-            continue;
-        }
-        calibration.min[i] = clamp(min, -1, 1);
-        calibration.max[i] = clamp(max, -1, 1);
-        calibration.center[i] = clamp(center, calibration.min[i], calibration.max[i]);
-        calibratedAxes += 1;
-    }
-    calibration.isCalibrated = calibratedAxes > 0;
+export function sampleCalibration(current: CalibrationData, rawValue: number): CalibrationData {
+    const next = sanitizeCalibration(current);
+    next.min = Math.min(next.min, rawValue);
+    next.max = Math.max(next.max, rawValue);
+    return sanitizeCalibration(next);
 }
 
-export function sampleCalibration(calibration: CalibrationState, gp: Gamepad): void {
-    const axisCount = Math.min(calibration.min.length, gp.axes.length);
-    for (let i = 0; i < axisCount; i += 1) {
-        const axisValue = gp.axes[i];
-        if (!Number.isFinite(axisValue)) continue;
-        calibration.min[i] = Math.min(calibration.min[i], axisValue);
-        calibration.max[i] = Math.max(calibration.max[i], axisValue);
-    }
+export function captureCalibrationCenter(current: CalibrationData, rawValue: number): CalibrationData {
+    return sanitizeCalibration({ ...current, center: rawValue });
 }
 
-export function normalizeCenteredAxis(calibration: CalibrationState, rawValue: number, axisIndex: number): number {
-    if (!calibration.isCalibrated) {
-        const unclamped = clamp(rawValue, -1, 1);
-        return Math.abs(unclamped) < CENTER_DEADBAND ? 0 : unclamped;
-    }
-
-    const min = calibration.min[axisIndex];
-    const max = calibration.max[axisIndex];
-    let center = calibration.center[axisIndex];
-
-    if (!Number.isFinite(min) || !Number.isFinite(max) || max - min < 0.05) {
-        const fallback = clamp(rawValue, -1, 1);
-        return Math.abs(fallback) < CENTER_DEADBAND ? 0 : fallback;
-    }
-
-    if (!(center > min && center < max)) {
-        center = (min + max) / 2;
-    }
-
-    const denominator = rawValue >= center ? max - center : center - min;
-    if (denominator < 0.0001) return 0;
-
-    const normalized = clamp((rawValue - center) / denominator, -1, 1);
-    return Math.abs(normalized) < CENTER_DEADBAND ? 0 : normalized;
+export function normalizeCenteredInput(rawValue: number, calibration: CalibrationData): number {
+    const safe = sanitizeCalibration(calibration);
+    const lowSpan = Math.max(EPSILON, safe.center - safe.min);
+    const highSpan = Math.max(EPSILON, safe.max - safe.center);
+    const normalized = rawValue >= safe.center
+        ? (rawValue - safe.center) / highSpan
+        : -((safe.center - rawValue) / lowSpan);
+    const trimmed = clamp(normalized + safe.trim, -1, 1);
+    const withDeadzone = Math.abs(trimmed) <= safe.deadzone ? 0 : trimmed;
+    return safe.invert ? -withDeadzone : withDeadzone;
 }
 
-export function normalizeThrottleAxis(calibration: CalibrationState, rawValue: number, axisIndex: number): number {
-    if (!calibration.isCalibrated) {
-        const fallback = clamp((clamp(rawValue, -1, 1) + 1) / 2, 0, 1);
-        if (fallback < THROTTLE_IDLE_DEADBAND) return 0;
-        if (fallback > 1 - THROTTLE_IDLE_DEADBAND) return 1;
-        return fallback;
+export function normalizeUnsignedInput(rawValue: number, calibration: CalibrationData): number {
+    const safe = sanitizeCalibration(calibration);
+    const span = Math.max(EPSILON, safe.max - safe.min);
+    const normalized = clamp((rawValue - safe.min) / span, 0, 1);
+    const centered = (normalized * 2) - 1;
+    const adjusted = safe.invert ? -centered : centered;
+    return clamp((adjusted + 1) / 2, 0, 1);
+}
+
+export function quantizeDiscreteLevel(normalizedValue: number, positions: number): number {
+    if (positions <= 1) return 0;
+    const clamped = clamp(normalizedValue, 0, 1);
+    const level = Math.round(clamped * (positions - 1));
+    return clamp(level, 0, positions - 1);
+}
+
+export function discreteLevelToPwm(level: number, positions: number): number {
+    if (positions <= 1) return DEFAULT_PWM_CENTER;
+    const clampedLevel = clamp(level, 0, positions - 1);
+    const ratio = clampedLevel / (positions - 1);
+    return Math.round(DEFAULT_PWM_MIN + ratio * (DEFAULT_PWM_MAX - DEFAULT_PWM_MIN));
+}
+
+export function normalizedToPwm(
+    normalizedValue: number,
+    controlType: InputControlType,
+    signalType: InputSignalType
+): number {
+    if (signalType === 'button' || controlType === 'switch-2pos' || controlType === 'momentary' || controlType === 'button') {
+        return normalizedValue >= 0.5 ? DEFAULT_PWM_MAX : DEFAULT_PWM_MIN;
+    }
+    if (controlType === 'switch-3pos') {
+        return discreteLevelToPwm(quantizeDiscreteLevel(normalizedValue, 3), 3);
+    }
+    if (controlType === 'selector-6pos') {
+        return discreteLevelToPwm(quantizeDiscreteLevel(normalizedValue, 6), 6);
+    }
+    if (controlType === 'throttle' || controlType === 'knob') {
+        return Math.round(DEFAULT_PWM_MIN + clamp(normalizedValue, 0, 1) * (DEFAULT_PWM_MAX - DEFAULT_PWM_MIN));
+    }
+    const centered = clamp(normalizedValue, -1, 1);
+    return Math.round(DEFAULT_PWM_CENTER + centered * 500);
+}
+
+export function normalizeInputValue(
+    rawValue: number,
+    calibration: CalibrationData,
+    controlType: InputControlType,
+    signalType: InputSignalType
+): { normalizedValue: number; pwmValue: number; discreteLevel: number | null } {
+    if (signalType === 'button' || controlType === 'switch-2pos' || controlType === 'momentary' || controlType === 'button') {
+        const normalizedValue = rawValue >= 0.5 ? 1 : 0;
+        return {
+            normalizedValue,
+            pwmValue: normalizedToPwm(normalizedValue, controlType, signalType),
+            discreteLevel: normalizedValue >= 0.5 ? 1 : 0
+        };
     }
 
-    const min = calibration.min[axisIndex];
-    const max = calibration.max[axisIndex];
-    if (!Number.isFinite(min) || !Number.isFinite(max) || max - min < 0.05) {
-        return clamp((clamp(rawValue, -1, 1) + 1) / 2, 0, 1);
+    if (controlType === 'throttle' || controlType === 'knob' || controlType === 'selector-6pos' || controlType === 'switch-3pos') {
+        const normalizedValue = normalizeUnsignedInput(rawValue, calibration);
+        const positions = controlType === 'selector-6pos' ? 6 : controlType === 'switch-3pos' ? 3 : 0;
+        return {
+            normalizedValue,
+            pwmValue: normalizedToPwm(normalizedValue, controlType, signalType),
+            discreteLevel: positions ? quantizeDiscreteLevel(normalizedValue, positions) : null
+        };
     }
 
-    const normalized = clamp((rawValue - min) / (max - min), 0, 1);
-    if (normalized < THROTTLE_IDLE_DEADBAND) return 0;
-    if (normalized > 1 - THROTTLE_IDLE_DEADBAND) return 1;
-    return normalized;
+    const normalizedValue = normalizeCenteredInput(rawValue, calibration);
+    return {
+        normalizedValue,
+        pwmValue: normalizedToPwm(normalizedValue, controlType, signalType),
+        discreteLevel: null
+    };
 }

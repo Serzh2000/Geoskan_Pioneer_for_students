@@ -59,6 +59,21 @@ const bubbleWorldPosition = new THREE.Vector3();
 const bubbleScreenPosition = new THREE.Vector3();
 let printBubbleOverlay: HTMLDivElement | null = null;
 const printBubbleElements: Record<string, HTMLDivElement> = {};
+type RcPreviewOverrideState = {
+    active: boolean;
+    droneId: string;
+    rotation: { x: number; y: number; z: number };
+    rotorSpeed: number;
+};
+let rcPreviewOverrideState: RcPreviewOverrideState | null = null;
+
+export function setRcPreviewOverride(state: RcPreviewOverrideState | null): void {
+    rcPreviewOverrideState = state;
+}
+
+export function clearRcPreviewOverride(): void {
+    rcPreviewOverrideState = null;
+}
 
 function ensurePrintBubbleOverlay(): HTMLDivElement | null {
     if (printBubbleOverlay?.isConnected) return printBubbleOverlay;
@@ -241,10 +256,28 @@ export function updateDrone3D(dt: number) {
         } else {
             resetDroneVisuals(id, mesh);
             updateLEDs(mesh, drone);
-            animateRotors(mesh, dt, drone);
-            
             mesh.position.set(drone.pos.x, drone.pos.y, drone.pos.z);
-            mesh.rotation.set(drone.orientation.pitch, drone.orientation.roll, drone.orientation.yaw, 'ZYX');
+
+            const previewOverride = rcPreviewOverrideState?.active && rcPreviewOverrideState.droneId === id && !drone.running
+                ? rcPreviewOverrideState
+                : null;
+
+            if (previewOverride) {
+                const easing = Math.min(1, dt * 8);
+                mesh.rotation.x = THREE.MathUtils.lerp(mesh.rotation.x, previewOverride.rotation.x, easing);
+                mesh.rotation.y = THREE.MathUtils.lerp(mesh.rotation.y, previewOverride.rotation.y, easing);
+                mesh.rotation.z = THREE.MathUtils.lerp(mesh.rotation.z, previewOverride.rotation.z, easing);
+
+                for (let rotorIndex = 0; rotorIndex < 4; rotorIndex += 1) {
+                    const rotor = mesh.getObjectByName(`rotor_${rotorIndex}`);
+                    if (!rotor) continue;
+                    const direction = rotorIndex < 2 ? 1 : -1;
+                    rotor.rotation.z += previewOverride.rotorSpeed * direction * dt;
+                }
+            } else {
+                animateRotors(mesh, dt, drone);
+                mesh.rotation.set(drone.orientation.pitch, drone.orientation.roll, drone.orientation.yaw, 'ZYX');
+            }
         }
 
         updateTrailForDrone(id);

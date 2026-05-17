@@ -1,278 +1,252 @@
-import { simSettings, type GamepadInputRef } from '../../core/state.js';
-import { AUXILIARY_CHANNELS, PRIMARY_CHANNELS, axisRef, buttonRef, clampRc, clamp } from './constants.js';
-import type { ChannelKey, PrimaryChannelKey, StickMode } from './types.js';
+import { BINDING_ACTIONS, INPUT_ACTIVITY_THRESHOLD, PRIMARY_ROLE_LABELS, RC_CHANNEL_COUNT, VIRTUAL_DEVICE_ID, createDefaultCalibration, createDefaultProfile } from './constants.js';
+import type {
+    ChannelMapping,
+    DeviceProfile,
+    DeviceSummary,
+    InputControlType,
+    InputSource,
+    RcDeviceKind,
+    StickMode,
+    WizardSessionState
+} from './types.js';
 
-const RC_TRANSMITTER_KEYWORDS = [
-    'radiomaster',
-    'jumper',
-    'frsky',
-    'futaba',
-    'spektrum',
-    'flysky',
-    'taranis',
-    'transmitter',
-    'edgetx',
-    'opentx',
-    'elrs',
-    'crossfire',
-    'radio'
-];
-
-export function getDefaultChannelValue(key: ChannelKey): number {
-    return key === 'throttle' || AUXILIARY_CHANNELS.includes(key as any) ? 1000 : 1500;
+function slugify(value: string): string {
+    return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'device';
 }
 
-export function getMappingRef(key: ChannelKey): GamepadInputRef {
-    switch (key) {
-        case 'roll':
-            return simSettings.gamepadMapping.roll;
-        case 'pitch':
-            return simSettings.gamepadMapping.pitch;
-        case 'throttle':
-            return simSettings.gamepadMapping.throttle;
-        case 'yaw':
-            return simSettings.gamepadMapping.yaw;
-        case 'mode':
-            return simSettings.gamepadMapping.modeSwitch;
-        case 'arm':
-            return simSettings.gamepadMapping.armSwitch;
-        case 'magnet':
-            return simSettings.gamepadMapping.magnetBtn;
+export function inferDeviceKind(deviceName: string): RcDeviceKind {
+    const value = deviceName.toLowerCase();
+    if (value.includes('virtual')) return 'virtual';
+    if (value.includes('radio') || value.includes('tx') || value.includes('elrs') || value.includes('opentx') || value.includes('edgetx')) {
+        return 'rc-transmitter';
     }
+    return 'gamepad';
 }
 
-export function setMappingRef(key: ChannelKey, ref: GamepadInputRef): void {
-    switch (key) {
-        case 'roll':
-            simSettings.gamepadMapping.roll = ref;
-            break;
-        case 'pitch':
-            simSettings.gamepadMapping.pitch = ref;
-            break;
-        case 'throttle':
-            simSettings.gamepadMapping.throttle = ref;
-            break;
-        case 'yaw':
-            simSettings.gamepadMapping.yaw = ref;
-            break;
-        case 'mode':
-            simSettings.gamepadMapping.modeSwitch = ref;
-            break;
-        case 'arm':
-            simSettings.gamepadMapping.armSwitch = ref;
-            break;
-        case 'magnet':
-            simSettings.gamepadMapping.magnetBtn = ref;
-            break;
+export function isLikelyRadioSummary(summary: DeviceSummary): boolean {
+    return summary.kind === 'rc-transmitter' || summary.name.toLowerCase().includes('radio') || summary.name.toLowerCase().includes('tx');
+}
+
+export function createVirtualInputSources(): InputSource[] {
+    const base = [
+        { id: 'va0', signalType: 'axis', controlType: 'stick', label: 'Virtual Left X', group: 'Left Stick', index: 0 },
+        { id: 'va1', signalType: 'axis', controlType: 'throttle', label: 'Virtual Left Y', group: 'Left Stick', index: 1 },
+        { id: 'va2', signalType: 'axis', controlType: 'stick', label: 'Virtual Right X', group: 'Right Stick', index: 2 },
+        { id: 'va3', signalType: 'axis', controlType: 'stick', label: 'Virtual Right Y', group: 'Right Stick', index: 3 },
+        { id: 'va4', signalType: 'axis', controlType: 'knob', label: 'Virtual Knob 1', group: 'Knobs', index: 4 },
+        { id: 'va5', signalType: 'axis', controlType: 'knob', label: 'Virtual Knob 2', group: 'Knobs', index: 5 },
+        { id: 'va6', signalType: 'axis', controlType: 'selector-6pos', label: 'Virtual 6-Pos', group: 'Switches', index: 6 },
+        { id: 'vb0', signalType: 'button', controlType: 'switch-2pos', label: 'Virtual SA', group: 'Switches', index: 0 },
+        { id: 'vb1', signalType: 'button', controlType: 'switch-2pos', label: 'Virtual SB', group: 'Switches', index: 1 },
+        { id: 'vb2', signalType: 'button', controlType: 'switch-3pos', label: 'Virtual SC', group: 'Switches', index: 2 },
+        { id: 'vb3', signalType: 'button', controlType: 'momentary', label: 'Virtual SH', group: 'Buttons', index: 3 },
+        { id: 'vb4', signalType: 'button', controlType: 'button', label: 'Virtual Button 1', group: 'Buttons', index: 4 },
+        { id: 'vb5', signalType: 'button', controlType: 'button', label: 'Virtual Button 2', group: 'Buttons', index: 5 }
+    ] as const;
+
+    return base.map((item) => ({
+        id: item.id,
+        deviceId: VIRTUAL_DEVICE_ID,
+        deviceKind: 'virtual',
+        transport: 'virtual',
+        signalType: item.signalType,
+        controlType: item.controlType,
+        label: item.label,
+        group: item.group,
+        index: item.index
+    }));
+}
+
+export function createInputSourcesFromGamepad(deviceId: string, deviceName: string, axes: number, buttons: number): InputSource[] {
+    const deviceKind = inferDeviceKind(deviceName);
+    const sources: InputSource[] = [];
+    for (let index = 0; index < axes; index += 1) {
+        sources.push({
+            id: `a${index}`,
+            deviceId,
+            deviceKind,
+            transport: 'gamepad-api',
+            signalType: 'axis',
+            controlType: index >= 4 ? 'knob' : 'stick',
+            index,
+            label: `Axis ${index}`,
+            group: 'Axes'
+        });
     }
-}
-
-export function hasInputRef(gp: Gamepad, ref: GamepadInputRef): boolean {
-    const inputIndex = Number(ref.slice(1));
-    return ref.startsWith('a') ? inputIndex < gp.axes.length : inputIndex < gp.buttons.length;
-}
-
-export function isAllowedForChannel(key: ChannelKey, ref: GamepadInputRef): boolean {
-    if (PRIMARY_CHANNELS.includes(key as PrimaryChannelKey)) return ref.startsWith('a');
-    return true;
-}
-
-function isLikelyRcTransmitter(gp: Gamepad): boolean {
-    const id = gp.id.toLowerCase();
-    return RC_TRANSMITTER_KEYWORDS.some((keyword) => id.includes(keyword));
-}
-
-function hasLegacyPrimaryMapping(): boolean {
-    return simSettings.gamepadMapping.roll === 'a0'
-        && simSettings.gamepadMapping.pitch === 'a1'
-        && simSettings.gamepadMapping.throttle === 'a2'
-        && simSettings.gamepadMapping.yaw === 'a3';
-}
-
-function getModePrimaryAxisIndexes(mode: StickMode): Record<PrimaryChannelKey, number> {
-    switch (mode) {
-        case 1:
-            return { roll: 2, pitch: 1, throttle: 3, yaw: 0 };
-        case 2:
-            return { roll: 2, pitch: 3, throttle: 1, yaw: 0 };
-        case 3:
-            return { roll: 0, pitch: 1, throttle: 3, yaw: 2 };
-        case 4:
-            return { roll: 0, pitch: 3, throttle: 1, yaw: 2 };
+    for (let index = 0; index < buttons; index += 1) {
+        sources.push({
+            id: `b${index}`,
+            deviceId,
+            deviceKind,
+            transport: 'gamepad-api',
+            signalType: 'button',
+            controlType: index < 2 ? 'switch-2pos' : 'button',
+            index,
+            label: `Button ${index}`,
+            group: index < 8 ? 'Switches' : 'Buttons'
+        });
     }
+    return sources;
 }
 
-function getRcPrimaryAxisMapping(gp: Gamepad): Record<PrimaryChannelKey, GamepadInputRef> | null {
-    if (gp.axes.length === 0) return null;
+export function createProfileForDevice(summary: DeviceSummary): DeviceProfile {
+    return createDefaultProfile({
+        id: `${slugify(summary.name)}-${Date.now()}`,
+        name: summary.kind === 'rc-transmitter' ? `${summary.name} Profile` : `${summary.name || 'Controller'} Profile`,
+        deviceId: summary.id,
+        deviceKind: summary.kind,
+        transport: summary.transport,
+        detectedModel: summary.name,
+        inputSources: summary.id === VIRTUAL_DEVICE_ID
+            ? createVirtualInputSources()
+            : createInputSourcesFromGamepad(summary.id, summary.name, summary.axes, summary.buttons)
+    });
+}
 
-    const hasFourAxes = gp.axes.length >= 4;
-    if (hasFourAxes) {
-        const indexes = getModePrimaryAxisIndexes(simSettings.gamepadStickMode);
-        return {
-            roll: axisRef(indexes.roll),
-            pitch: axisRef(indexes.pitch),
-            throttle: axisRef(indexes.throttle),
-            yaw: axisRef(indexes.yaw)
-        };
+export function ensureProfileShape(profile: DeviceProfile): DeviceProfile {
+    const base = createDefaultProfile(profile);
+    const mergedMappings: ChannelMapping[] = Array.from({ length: RC_CHANNEL_COUNT }, (_, index) => {
+        const existing = profile.channelMappings.find((mapping) => mapping.channel === index + 1);
+        return existing ?? base.channelMappings[index];
+    });
+    const calibration = { ...profile.calibration };
+    for (const source of profile.inputSources) {
+        calibration[source.id] = calibration[source.id] ?? createDefaultCalibration();
     }
-
     return {
-        roll: gp.axes.length > 0 ? axisRef(0) : axisRef(0),
-        pitch: gp.axes.length > 1 ? axisRef(1) : axisRef(0),
-        throttle: gp.axes.length > 2 ? axisRef(2) : gp.axes.length > 0 ? axisRef(gp.axes.length - 1) : axisRef(0),
-        yaw: gp.axes.length > 3 ? axisRef(3) : gp.axes.length > 0 ? axisRef(Math.min(1, gp.axes.length - 1)) : axisRef(0)
+        ...base,
+        ...profile,
+        channelMappings: mergedMappings,
+        controlBindings: BINDING_ACTIONS.map((action) => profile.controlBindings.find((binding) => binding.action === action) ?? {
+            action,
+            channel: null,
+            sourceId: null,
+            label: action
+        }),
+        calibration
     };
 }
 
-function getPreferredAuxRefs(gp: Gamepad): GamepadInputRef[] {
-    const primaryMapping = getRcPrimaryAxisMapping(gp);
-    const usedPrimaryRefs = new Set<GamepadInputRef>(primaryMapping ? Object.values(primaryMapping) : []);
-    const refs: GamepadInputRef[] = [];
-
-    const pushIfUnused = (ref: GamepadInputRef) => {
-        if (usedPrimaryRefs.has(ref) || refs.includes(ref) || !hasInputRef(gp, ref)) return;
-        refs.push(ref);
+export function applyAutoAssignments(profile: DeviceProfile): DeviceProfile {
+    const next = ensureProfileShape(profile);
+    const axisSources = next.inputSources.filter((source) => source.signalType === 'axis');
+    const buttonSources = next.inputSources.filter((source) => source.signalType === 'button');
+    const assign = (channel: number, sourceId: string | null, controlType: InputControlType) => {
+        const mapping = next.channelMappings.find((item) => item.channel === channel);
+        if (!mapping || mapping.sourceId) return;
+        mapping.sourceId = sourceId;
+        mapping.controlType = controlType;
     };
 
-    if (isLikelyRcTransmitter(gp)) {
-        for (let axisIndex = 4; axisIndex < gp.axes.length; axisIndex += 1) {
-            pushIfUnused(axisRef(axisIndex));
+    assign(1, axisSources[0]?.id ?? null, 'stick');
+    assign(2, axisSources[1]?.id ?? null, 'stick');
+    assign(3, axisSources[1]?.id ?? axisSources[2]?.id ?? null, 'throttle');
+    assign(4, axisSources[2]?.id ?? axisSources[3]?.id ?? null, 'stick');
+    assign(5, buttonSources[0]?.id ?? axisSources[4]?.id ?? null, 'switch-3pos');
+    assign(6, buttonSources[1]?.id ?? buttonSources[0]?.id ?? null, 'switch-2pos');
+    assign(7, buttonSources[2]?.id ?? null, 'button');
+    assign(8, buttonSources[3]?.id ?? null, 'switch-2pos');
+
+    next.updatedAt = new Date().toISOString();
+    return next;
+}
+
+export function updateWizardProgress(wizard: WizardSessionState, profile: DeviceProfile): WizardSessionState {
+    const requiredChannels = [1, 2, 3, 4];
+    const switchChannels = [5, 6, 7, 8];
+    const completed = {
+        device: Boolean(profile.deviceId),
+        sticks: requiredChannels.every((channel) => Boolean(profile.channelMappings.find((item) => item.channel === channel)?.sourceId)),
+        switches: switchChannels.some((channel) => Boolean(profile.channelMappings.find((item) => item.channel === channel)?.sourceId)),
+        calibration: requiredChannels.every((channel) => {
+            const sourceId = profile.channelMappings.find((item) => item.channel === channel)?.sourceId;
+            return !sourceId || Boolean(profile.calibration[sourceId]);
+        }),
+        bindings: profile.controlBindings.some((binding) => binding.channel !== null),
+        review: false
+    };
+
+    const orderedIds = ['device', 'sticks', 'switches', 'calibration', 'bindings', 'review'] as const;
+    let nextStep = orderedIds.find((stepId) => !completed[stepId] && !wizard.skippedSteps.includes(stepId)) ?? 'review';
+    if (wizard.currentStepId === 'review') {
+        nextStep = 'review';
+    }
+    return {
+        ...wizard,
+        currentStepId: nextStep
+    };
+}
+
+export function detectStickMode(profile: DeviceProfile): StickMode | null {
+    const mappingByRole = new Map(profile.channelMappings.map((mapping) => [mapping.role, mapping]));
+    const roll = mappingByRole.get('roll')?.sourceId;
+    const pitch = mappingByRole.get('pitch')?.sourceId;
+    const throttle = mappingByRole.get('throttle')?.sourceId;
+    const yaw = mappingByRole.get('yaw')?.sourceId;
+    const signature = [roll, pitch, throttle, yaw].join('|');
+    const modes = new Map<string, StickMode>([
+        ['a2|a3|a1|a0', 2],
+        ['a2|a1|a3|a0', 1],
+        ['a0|a3|a1|a2', 3],
+        ['a0|a1|a3|a2', 4],
+        ['va2|va3|va1|va0', 2],
+        ['va2|va1|va3|va0', 1],
+        ['va0|va3|va1|va2', 3],
+        ['va0|va1|va3|va2', 4]
+    ]);
+    return modes.get(signature) ?? null;
+}
+
+export type DuplicateSourceConflict = {
+    sourceId: string;
+    channels: number[];
+};
+
+export function getDuplicateSourceConflicts(profile: DeviceProfile): DuplicateSourceConflict[] {
+    const used = new Map<string, number[]>();
+    for (const mapping of profile.channelMappings) {
+        if (!mapping.sourceId) continue;
+        const channels = used.get(mapping.sourceId) ?? [];
+        channels.push(mapping.channel);
+        used.set(mapping.sourceId, channels);
+    }
+
+    return Array.from(used.entries())
+        .filter(([, channels]) => channels.length > 1)
+        .map(([sourceId, channels]) => ({
+            sourceId,
+            channels: [...channels].sort((left, right) => left - right)
+        }));
+}
+
+export function detectMappingConflicts(profile: DeviceProfile): string[] {
+    const warnings: string[] = [];
+    for (const conflict of getDuplicateSourceConflicts(profile)) {
+        warnings.push(`Источник ${conflict.sourceId} назначен сразу на каналы ${conflict.channels.map((value) => `CH${value}`).join(', ')}.`);
+    }
+    for (const binding of profile.controlBindings) {
+        if (binding.channel === null) continue;
+        const mapping = profile.channelMappings.find((item) => item.channel === binding.channel);
+        if (!mapping?.sourceId) {
+            warnings.push(`Привязка ${binding.action} указывает на CH${binding.channel}, но у канала нет источника.`);
         }
     }
-
-    for (let buttonIndex = 0; buttonIndex < gp.buttons.length; buttonIndex += 1) {
-        pushIfUnused(buttonRef(buttonIndex));
-    }
-
-    for (let axisIndex = 0; axisIndex < gp.axes.length; axisIndex += 1) {
-        pushIfUnused(axisRef(axisIndex));
-    }
-
-    return refs;
+    return warnings;
 }
 
-export function applyPrimaryAxisMappingForCurrentMode(gp: Gamepad): void {
-    const primaryMapping = getRcPrimaryAxisMapping(gp);
-    if (!primaryMapping) return;
-    simSettings.gamepadMapping.roll = primaryMapping.roll;
-    simSettings.gamepadMapping.pitch = primaryMapping.pitch;
-    simSettings.gamepadMapping.throttle = primaryMapping.throttle;
-    simSettings.gamepadMapping.yaw = primaryMapping.yaw;
+export function getChannelTitle(mapping: ChannelMapping): string {
+    return mapping.label || PRIMARY_ROLE_LABELS[mapping.role] || `CH${mapping.channel}`;
 }
 
-export function getFallbackMapping(gp: Gamepad, key: ChannelKey): GamepadInputRef | null {
-    const primaryMapping = getRcPrimaryAxisMapping(gp);
-    const auxRefs = getPreferredAuxRefs(gp);
-    switch (key) {
-        case 'roll':
-            return primaryMapping?.roll ?? null;
-        case 'pitch':
-            return primaryMapping?.pitch ?? null;
-        case 'throttle':
-            return primaryMapping?.throttle ?? null;
-        case 'yaw':
-            return primaryMapping?.yaw ?? null;
-        case 'mode':
-            return auxRefs[0] ?? null;
-        case 'arm':
-            return auxRefs[1] ?? auxRefs[0] ?? null;
-        case 'magnet':
-            return auxRefs[2] ?? auxRefs[1] ?? auxRefs[0] ?? null;
+export function findMostActiveSource(activity: Record<string, number>, profile: DeviceProfile): InputSource | null {
+    let bestSource: InputSource | null = null;
+    let bestScore = INPUT_ACTIVITY_THRESHOLD;
+    for (const source of profile.inputSources) {
+        const score = activity[source.id] ?? 0;
+        if (score > bestScore) {
+            bestScore = score;
+            bestSource = source;
+        }
     }
-}
-
-export function ensureMappingsForGamepad(gp: Gamepad, channels: ChannelKey[]): void {
-    if (hasLegacyPrimaryMapping()) {
-        applyPrimaryAxisMappingForCurrentMode(gp);
-    }
-
-    for (const key of channels) {
-        const currentRef = getMappingRef(key);
-        if (isAllowedForChannel(key, currentRef) && hasInputRef(gp, currentRef)) continue;
-        const fallback = getFallbackMapping(gp, key);
-        if (fallback) setMappingRef(key, fallback);
-    }
-}
-
-export function readInputRcValue(
-    gp: Gamepad,
-    ref: GamepadInputRef,
-    normalizeCenteredAxis: (rawValue: number, axisIndex: number) => number
-): number {
-    const inputIndex = Number(ref.slice(1));
-    if (ref.startsWith('a')) {
-        const rawValue = gp.axes[inputIndex] ?? 0;
-        const normalized = normalizeCenteredAxis(rawValue, inputIndex);
-        return clampRc(1500 + normalized * 500);
-    }
-
-    const buttonValue = clamp(gp.buttons[inputIndex]?.value ?? 0, 0, 1);
-    return clampRc(1000 + buttonValue * 1000);
-}
-
-export function getDefaultRawChannelValues(count = 16): number[] {
-    const defaults = [1500, 1500, 1000, 1500];
-    while (defaults.length < count) {
-        defaults.push(1000);
-    }
-    return defaults.slice(0, count);
-}
-
-export function getRawPwmChannels(gp: Gamepad, count = 16): number[] {
-    const channels = getDefaultRawChannelValues(count);
-    let nextChannelIndex = 0;
-
-    for (let index = 0; index < gp.axes.length && nextChannelIndex < count; index += 1) {
-        channels[nextChannelIndex] = clampRc(1500 + (gp.axes[index] ?? 0) * 500);
-        nextChannelIndex += 1;
-    }
-
-    for (let index = 0; index < gp.buttons.length && nextChannelIndex < count; index += 1) {
-        channels[nextChannelIndex] = clampRc(1000 + (gp.buttons[index]?.value ?? 0) * 1000);
-        nextChannelIndex += 1;
-    }
-
-    return channels;
-}
-
-export function getConnectedGamepads(): Gamepad[] {
-    if (typeof navigator.getGamepads !== 'function') return [];
-    return Array.from(navigator.getGamepads()).filter((gp): gp is Gamepad => gp !== null);
-}
-
-export function findActiveGamepad(activeGamepadIndex: number | null, activeGamepadId: string | null): Gamepad | null {
-    const connected = getConnectedGamepads();
-    if (connected.length === 0) return null;
-    if (activeGamepadIndex !== null) {
-        const byIndex = connected.find((gp) => gp.index === activeGamepadIndex);
-        if (byIndex) return byIndex;
-    }
-    if (activeGamepadId) {
-        const byId = connected.find((gp) => gp.id === activeGamepadId);
-        if (byId) return byId;
-    }
-    return connected[0];
-}
-
-export function getGamepadName(gp: Gamepad): string {
-    const trimmed = gp.id.split('(')[0].trim();
-    return trimmed || `Gamepad ${gp.index + 1}`;
-}
-
-export function createAxisOptions(gp: Gamepad): string {
-    return gp.axes
-        .map((_, index) => `<option value="${axisRef(index)}">A${index}: Axis ${index}</option>`)
-        .join('');
-}
-
-export function createAuxOptions(gp: Gamepad): string {
-    const options: string[] = [];
-    gp.axes.forEach((_, index) => {
-        const channelLabel = isLikelyRcTransmitter(gp) ? ` / CH${index + 1}` : '';
-        options.push(`<option value="${axisRef(index)}">A${index}: Axis ${index}${channelLabel}</option>`);
-    });
-    gp.buttons.forEach((_, index) => {
-        options.push(`<option value="${buttonRef(index)}">B${index}: Button ${index + 1}</option>`);
-    });
-    return options.join('');
+    return bestSource;
 }

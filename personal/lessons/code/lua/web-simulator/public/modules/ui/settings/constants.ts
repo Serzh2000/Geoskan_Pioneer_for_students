@@ -1,45 +1,183 @@
-import type { GamepadInputRef } from '../../core/state.js';
-import type { ActionAuxChannelKey, AuxiliaryChannelKey, ChannelKey, PrimaryChannelKey } from './types.js';
+import type {
+    BindingAction,
+    CalibrationData,
+    ChannelMapping,
+    ChannelRole,
+    DeviceProfile,
+    RcWizardModalState,
+    StickMode,
+    WizardSessionState,
+    WizardStepState
+} from './types.js';
 
-export const PRIMARY_CHANNELS: PrimaryChannelKey[] = ['roll', 'pitch', 'throttle', 'yaw'];
-export const AUXILIARY_CHANNELS: AuxiliaryChannelKey[] = ['mode', 'arm', 'magnet'];
-export const ACTION_AUX_CHANNELS: ActionAuxChannelKey[] = ['arm', 'magnet'];
-export const ALL_CHANNELS: ChannelKey[] = [...PRIMARY_CHANNELS, ...AUXILIARY_CHANNELS];
-export const INVERTIBLE_CHANNELS: ChannelKey[] = [...ALL_CHANNELS];
+export const RC_STORAGE_KEY = 'geoskan_sim_rc_profiles_v1';
+export const RC_CHANNEL_COUNT = 16;
+export const RC_VISIBLE_CHANNELS_DEFAULT = 8;
+export const VIRTUAL_DEVICE_ID = 'virtual-tx15';
+export const DEFAULT_PWM_CENTER = 1500;
+export const DEFAULT_PWM_MIN = 1000;
+export const DEFAULT_PWM_MAX = 2000;
+export const INPUT_ACTIVITY_THRESHOLD = 0.18;
 
-export const CENTER_DEADBAND = 0.01; // 5 units (5/500)
-export const THROTTLE_IDLE_DEADBAND = 0.01;
-export const CALIBRATION_DURATION_MS = 10000;
-export const AUTO_DETECT_AXIS_THRESHOLD = 0.3; // 300 units (300/1000)
-export const AUTO_DETECT_AUX_AXIS_THRESHOLD = 0.3;
-export const AUTO_DETECT_BUTTON_THRESHOLD = 0.45;
-export const AUTO_DETECT_TIMEOUT_MS = 10000;
-export const AUTO_DETECT_INPUT_SETTLE_MS = 250;
-export const AUTO_DETECT_CONFIRM_MS = 120;
-export const POSITION_CLUSTER_THRESHOLD = 200; // Updated for better 1000-1500-2000 separation
-export const MIN_POSITION_SAMPLES = 6;
-export const MAX_PRESET_POSITIONS = 5;
+export const BINDING_ACTIONS: BindingAction[] = [
+    'Arm',
+    'Flight Mode',
+    'Camera',
+    'Magnet',
+    'Gear',
+    'Return Home',
+    'Pit Mode'
+];
 
-export const RC_MIN = 1000;
-export const RC_CENTER = 1500;
-export const RC_MAX = 2000;
-export const RC_RANGE = 500;
+export const PRIMARY_ROLE_LABELS: Record<ChannelRole, string> = {
+    roll: 'Roll',
+    pitch: 'Pitch',
+    throttle: 'Throttle',
+    yaw: 'Yaw',
+    flightMode: 'Flight Mode',
+    arm: 'Arm',
+    camera: 'Camera',
+    magnet: 'Magnet',
+    gear: 'Gear',
+    returnHome: 'Return Home',
+    pitMode: 'Pit Mode',
+    aux: 'AUX'
+};
 
-export const axisRef = (index: number): GamepadInputRef => `a${index}` as GamepadInputRef;
-export const buttonRef = (index: number): GamepadInputRef => `b${index}` as GamepadInputRef;
-export const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
-export const clampRc = (value: number): number => Math.round(clamp(value, RC_MIN, RC_MAX));
-
-/**
- * Converts normalized value (-1.0 to 1.0 or 0.0 to 1.0) to RC microseconds (1000-2000)
- */
-export function toRcValue(normalized: number, centered = true): number {
-    if (centered) {
-        return Math.round(RC_CENTER + normalized * RC_RANGE);
+export const DEFAULT_WIZARD_STEPS: WizardStepState[] = [
+    {
+        id: 'device',
+        title: '1. Device',
+        description: 'Выберите активное устройство и профиль для передатчика, gamepad или виртуального пульта.',
+        status: 'active',
+        optional: false
+    },
+    {
+        id: 'sticks',
+        title: '2. Sticks',
+        description: 'Назначьте оси Roll, Pitch, Throttle и Yaw или используйте автоопределение.',
+        status: 'pending',
+        optional: false
+    },
+    {
+        id: 'switches',
+        title: '3. Switches',
+        description: 'Назначьте AUX, переключатели режимов, кнопки и 6-позиционный селектор.',
+        status: 'pending',
+        optional: true
+    },
+    {
+        id: 'calibration',
+        title: '4. Calibration',
+        description: 'Снимите center, min/max, deadzone, trim и invert для основных каналов.',
+        status: 'pending',
+        optional: false
+    },
+    {
+        id: 'bindings',
+        title: '5. Bindings',
+        description: 'Привяжите Arm, Flight Mode, Camera, Magnet, Gear, Return Home и Pit Mode.',
+        status: 'pending',
+        optional: true
+    },
+    {
+        id: 'review',
+        title: '6. Review',
+        description: 'Проверьте конфликты, live monitor и сохраните профиль.',
+        status: 'pending',
+        optional: false
     }
-    return Math.round(RC_MIN + normalized * (RC_MAX - RC_MIN));
+];
+
+export const DEFAULT_WIZARD_SESSION: WizardSessionState = {
+    currentStepId: 'device',
+    autoDetectChannel: null,
+    awaitingStepInput: null,
+    calibrationActive: false,
+    calibrationSourceId: null,
+    skippedSteps: []
+};
+
+export const DEFAULT_WIZARD_MODAL_STATE: RcWizardModalState = {
+    isOpen: false,
+    stepId: 'mode',
+    mode: null,
+    primaryAssignments: {},
+    auxAssignments: {},
+    currentAuxRole: 'flightMode',
+    captureSourceId: null,
+    captureTicks: 0,
+    statusText: '',
+    errorText: null
+};
+
+export function createDefaultCalibration(): CalibrationData {
+    return {
+        min: -1,
+        max: 1,
+        center: 0,
+        deadzone: 0.04,
+        trim: 0,
+        invert: false
+    };
 }
 
-export function getChannelInversionIndex(channel: ChannelKey): number {
-    return INVERTIBLE_CHANNELS.indexOf(channel);
+function createDefaultMappings(): ChannelMapping[] {
+    const defaults: Array<{ role: ChannelRole; label: string; controlType: ChannelMapping['controlType']; sourceId: string | null }> = [
+        { role: 'roll', label: 'Roll', controlType: 'stick', sourceId: null },
+        { role: 'pitch', label: 'Pitch', controlType: 'stick', sourceId: null },
+        { role: 'throttle', label: 'Throttle', controlType: 'throttle', sourceId: null },
+        { role: 'yaw', label: 'Yaw', controlType: 'stick', sourceId: null },
+        { role: 'flightMode', label: 'Flight Mode', controlType: 'switch-3pos', sourceId: null },
+        { role: 'arm', label: 'Arm', controlType: 'switch-2pos', sourceId: null },
+        { role: 'magnet', label: 'Magnet', controlType: 'button', sourceId: null },
+        { role: 'camera', label: 'Camera', controlType: 'switch-2pos', sourceId: null }
+    ];
+
+    return Array.from({ length: RC_CHANNEL_COUNT }, (_, index) => {
+        const preset = defaults[index];
+        return {
+            channel: index + 1,
+            role: preset?.role ?? 'aux',
+            sourceId: preset?.sourceId ?? null,
+            controlType: preset?.controlType ?? 'unknown',
+            label: preset?.label ?? `AUX ${index - 7}`,
+            invert: false,
+            visible: index < RC_VISIBLE_CHANNELS_DEFAULT,
+            discretePositions: preset?.controlType === 'switch-3pos' ? 3 : preset?.controlType === 'switch-2pos' ? 2 : preset?.controlType === 'selector-6pos' ? 6 : undefined
+        };
+    });
+}
+
+export function createDefaultProfile(overrides: Partial<DeviceProfile> = {}): DeviceProfile {
+    const now = new Date().toISOString();
+    return {
+        id: overrides.id ?? `profile-${Date.now()}`,
+        name: overrides.name ?? 'Radiomaster Profile',
+        deviceId: overrides.deviceId ?? '',
+        deviceKind: overrides.deviceKind ?? 'rc-transmitter',
+        transport: overrides.transport ?? 'gamepad-api',
+        detectedModel: overrides.detectedModel ?? 'Radiomaster USB HID',
+        channelCount: overrides.channelCount ?? RC_CHANNEL_COUNT,
+        visibleChannelCount: overrides.visibleChannelCount ?? RC_VISIBLE_CHANNELS_DEFAULT,
+        stickMode: overrides.stickMode ?? 2,
+        autoStickMode: overrides.autoStickMode ?? false,
+        inputSources: overrides.inputSources ?? [],
+        channelMappings: overrides.channelMappings ?? createDefaultMappings(),
+        calibration: overrides.calibration ?? {},
+        controlBindings: overrides.controlBindings ?? BINDING_ACTIONS.map((action) => ({
+            action,
+            channel: null,
+            sourceId: null,
+            label: action
+        })),
+        wizardSteps: overrides.wizardSteps ?? DEFAULT_WIZARD_STEPS.map((step) => ({ ...step })),
+        notes: overrides.notes ?? [],
+        createdAt: overrides.createdAt ?? now,
+        updatedAt: overrides.updatedAt ?? now
+    };
+}
+
+export function getStickModeLabel(mode: StickMode): string {
+    return `Mode ${mode}`;
 }
