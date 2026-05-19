@@ -9,7 +9,8 @@ export function initSidebar(callbacks: UICallbacks) {
     const DEFAULT_SIDEBAR_WIDTH = 320;
     const MIN_SIDEBAR_WIDTH = 320;
     const MAX_SIDEBAR_WIDTH = 1000;
-    const fullscreenPanels = new Set(['gamepad-panel', 'settings-panel']);
+    const fullscreenPanels = new Set(['gamepad-panel']);
+    const shouldLogPanelDebug = localStorage.getItem('sidebar-debug') === '1';
     let isResizing = false;
     let viewportRefreshFrame = 0;
 
@@ -162,7 +163,7 @@ export function initSidebar(callbacks: UICallbacks) {
     };
 
     const logPanelOpenDiagnostics = (phase: string, panelId: string, panel: HTMLElement | null) => {
-        if (!debugPanelIds.has(panelId)) return;
+        if (!shouldLogPanelDebug || !debugPanelIds.has(panelId)) return;
 
         const panelContent = panel?.querySelector('.panel-content') as HTMLElement | null;
         const settingsStack = panel?.querySelector('.settings-stack') as HTMLElement | null;

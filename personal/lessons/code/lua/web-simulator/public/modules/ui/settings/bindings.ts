@@ -5,6 +5,15 @@ import { setMappingRef } from './mapping.js';
 import type { SettingsRuntimeState } from './runtime-state.js';
 import type { ActionAuxChannelKey, ChannelKey, StickMode } from './types.js';
 
+function setRangeProgress(element: HTMLInputElement | null): void {
+    if (!element) return;
+    const min = Number(element.min || '0');
+    const max = Number(element.max || '100');
+    const value = Number(element.value || '0');
+    const progress = max > min ? ((value - min) / (max - min)) * 100 : 0;
+    element.style.setProperty('--range-progress', `${Math.max(0, Math.min(100, progress))}%`);
+}
+
 export function syncInversionCheckboxes(dom: SettingsDomRefs): void {
     for (const key of PRIMARY_CHANNELS) {
         const checkbox = dom.invCheckboxes[key];
@@ -24,15 +33,29 @@ export function bindGeneralSettingsControls(dom: SettingsDomRefs): void {
 
     if (dom.tracerColorEl) {
         dom.tracerColorEl.value = simSettings.tracerColor;
+        if (dom.tracerColorVal) {
+            dom.tracerColorVal.textContent = simSettings.tracerColor.toUpperCase();
+        }
         dom.tracerColorEl.addEventListener('input', () => {
             simSettings.tracerColor = dom.tracerColorEl?.value ?? simSettings.tracerColor;
+            if (dom.tracerColorVal) {
+                dom.tracerColorVal.textContent = simSettings.tracerColor.toUpperCase();
+            }
         });
     }
 
     if (dom.tracerWidthEl) {
         dom.tracerWidthEl.value = simSettings.tracerWidth.toString();
+        setRangeProgress(dom.tracerWidthEl);
+        if (dom.tracerWidthVal) {
+            dom.tracerWidthVal.textContent = `${simSettings.tracerWidth.toFixed(0)} px`;
+        }
         dom.tracerWidthEl.addEventListener('input', () => {
             simSettings.tracerWidth = parseFloat(dom.tracerWidthEl?.value ?? String(simSettings.tracerWidth));
+            setRangeProgress(dom.tracerWidthEl);
+            if (dom.tracerWidthVal) {
+                dom.tracerWidthVal.textContent = `${simSettings.tracerWidth.toFixed(0)} px`;
+            }
         });
     }
 
@@ -53,8 +76,10 @@ export function bindGeneralSettingsControls(dom: SettingsDomRefs): void {
     if (dom.simSpeedEl && dom.simSpeedVal) {
         dom.simSpeedEl.value = simSettings.simSpeed.toString();
         dom.simSpeedVal.textContent = `${simSettings.simSpeed.toFixed(1)}x`;
+        setRangeProgress(dom.simSpeedEl);
         dom.simSpeedEl.addEventListener('input', () => {
             simSettings.simSpeed = parseFloat(dom.simSpeedEl?.value ?? String(simSettings.simSpeed));
+            setRangeProgress(dom.simSpeedEl);
             if (dom.simSpeedVal) {
                 dom.simSpeedVal.textContent = `${simSettings.simSpeed.toFixed(1)}x`;
             }

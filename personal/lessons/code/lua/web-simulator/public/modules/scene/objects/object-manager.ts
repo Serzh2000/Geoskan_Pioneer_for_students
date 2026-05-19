@@ -111,6 +111,16 @@ export function getSelectedSceneObjectId() {
     return selectedObject ? selectedObject.uuid : null;
 }
 
+export function getSceneObjectTransformMode(): TransformMode {
+    const mode = transformControl?.getMode?.();
+    return mode === 'rotate' || mode === 'scale' ? mode : 'translate';
+}
+
+export function clearSceneSelection() {
+    handleDeselection();
+    return true;
+}
+
 export function selectSceneObjectById(id: string) {
     const obj = findSceneObjectById(id);
     if (!obj) return false;

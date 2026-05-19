@@ -23,10 +23,6 @@ import {
 import {
     activateTransformMode,
     rememberSelectedObjectInitialTransform,
-    getRotationStepDegrees,
-    resetSelectedObjectToInitialTransform,
-    rotateSelectedObjectByDegrees,
-    setRotationStepDegrees
 } from '../objects/object-transform.js';
 import {
     isTransformableObject,
@@ -69,29 +65,6 @@ function showTransformUi(obj: THREE.Object3D, preferredMode?: 'translate' | 'rot
     traceClick(`activate gizmo mode=${activeMode} for ${getObjectDisplayName(obj)}`);
     activateTransformMode(activeMode, obj);
     if (controls) controls.enabled = (window as any).cameraMode === 'free' && !(window as any).isTransforming;
-    if ((window as any).showGizmoToolbar) {
-        traceClick('showGizmoToolbar is available, rendering toolbar');
-        (window as any).showGizmoToolbar(
-            getObjectDisplayName(obj),
-            transformControl?.getMode?.() || activeMode,
-            getRotationStepDegrees(),
-            (mode: string) => {
-                const target = selectedObject || obj;
-                if (!target || !target.parent) return;
-                showTransformUi(target, mode as 'translate' | 'rotate' | 'scale');
-            },
-            (step: number) => {
-                setRotationStepDegrees(step);
-            },
-            (axis: 'x' | 'y' | 'z', direction: 1 | -1) => {
-                rotateSelectedObjectByDegrees(axis, direction * getRotationStepDegrees());
-            },
-            () => {
-                resetSelectedObjectToInitialTransform();
-            },
-            () => handleDeselection()
-        );
-    }
 }
 
 function hideTransformUiPreserveSelection() {
@@ -267,9 +240,6 @@ export function handleSelection(obj: THREE.Object3D | null, x: number, y: number
         hideTransformUiPreserveSelection();
     } else if (obj && transformable && !simState.running) {
         showTransformUi(obj);
-    } else if ((window as any).hideGizmoToolbar) {
-        traceClick(`gizmo toolbar hidden transformable=${String(transformable)} simRunning=${String(simState.running)}`);
-        (window as any).hideGizmoToolbar();
     }
 
     if (showMenu && (window as any).showContextMenu) {

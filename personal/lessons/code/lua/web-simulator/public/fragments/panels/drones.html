@@ -3,16 +3,21 @@
                     <span class="panel-title">Управление роем</span>
                     <button class="panel-close-btn" onclick="closePanel()">✕</button>
                 </div>
-                <div class="panel-content">
-                    <div class="card">
-                        <div class="swarm-manager">
-                            <div class="swarm-list">
-                                <select id="drone-list" size="10"></select>
+                <div class="panel-content panel-content--drones">
+                    <div class="swarm-manager">
+                        <div class="swarm-manager__intro">
+                            <p class="swarm-manager__subtitle">Выберите активный дрон роя и управляйте составом группы без перегруженного интерфейса.</p>
+                        </div>
+                        <section class="swarm-list-card" aria-labelledby="drone-list-title">
+                            <div class="swarm-list-card__header">
+                                <span id="drone-list-title" class="swarm-list-card__title">Список дронов</span>
+                                <span class="swarm-list-card__meta" id="drone-list-count">0 дронов</span>
                             </div>
-                            <div class="swarm-actions">
-                                <button id="add-drone-btn" class="btn-add-drone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Добавить</button>
-                                <button id="del-drone-btn" class="btn-del-drone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Удалить</button>
-                            </div>
+                            <div id="drone-list" class="swarm-list" role="listbox" aria-label="Список дронов"></div>
+                        </section>
+                        <div class="swarm-actions">
+                            <button id="add-drone-btn" class="swarm-action-btn swarm-action-btn--add" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span>Добавить</span></button>
+                            <button id="del-drone-btn" class="swarm-action-btn swarm-action-btn--delete" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg><span>Удалить</span></button>
                         </div>
                     </div>
                 </div>

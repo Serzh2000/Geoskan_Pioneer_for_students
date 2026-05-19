@@ -21,8 +21,16 @@ export function initSceneManager(callbacks: UICallbacks) {
     if (!callbacks.sceneManager) return;
 
     const elements: SceneManagerDomRefs = {
+        hierarchyTabBtn: document.getElementById('scene-tab-hierarchy') as HTMLButtonElement | null,
+        inspectorTabBtn: document.getElementById('scene-tab-inspector') as HTMLButtonElement | null,
+        hierarchyPanelEl: document.getElementById('scene-panel-hierarchy'),
+        inspectorPanelEl: document.getElementById('scene-panel-inspector'),
         listEl: document.getElementById('scene-object-list'),
+        listCountEl: document.getElementById('scene-object-count'),
         detailsEl: document.getElementById('scene-object-details'),
+        transformXEl: document.getElementById('scene-transform-x') as HTMLInputElement | null,
+        transformYEl: document.getElementById('scene-transform-y') as HTMLInputElement | null,
+        transformZEl: document.getElementById('scene-transform-z') as HTMLInputElement | null,
         addTypeEl: document.getElementById('scene-add-type') as HTMLSelectElement | null,
         addDictionaryEl: document.getElementById('scene-add-dictionary') as HTMLSelectElement | null,
         addValueEl: document.getElementById('scene-add-value') as HTMLInputElement | null,
@@ -74,15 +82,66 @@ export function initSceneManager(callbacks: UICallbacks) {
         groupBtn: document.getElementById('scene-group-btn'),
         ungroupBtn: document.getElementById('scene-ungroup-btn'),
         resetDroneBtn: document.getElementById('scene-drone-origin-btn'),
+        clearSelectionBtn: document.getElementById('scene-clear-selection-btn'),
         modeTranslateBtn: document.getElementById('scene-mode-translate'),
         modeRotateBtn: document.getElementById('scene-mode-rotate'),
         modeScaleBtn: document.getElementById('scene-mode-scale')
     };
 
     let lastSelectedId: string | null = null;
-    const render = () => {
-        lastSelectedId = renderSceneManager(callbacks, elements, lastSelectedId, render);
+    let activeTab: 'hierarchy' | 'inspector' = 'hierarchy';
+    let activeTransformMode: 'translate' | 'rotate' | 'scale' = 'translate';
+
+    const syncTabVisibility = () => {
+        const isInspector = activeTab === 'inspector';
+        elements.hierarchyTabBtn?.classList.toggle('is-active', !isInspector);
+        elements.hierarchyTabBtn?.setAttribute('aria-selected', String(!isInspector));
+        elements.inspectorTabBtn?.classList.toggle('is-active', isInspector);
+        elements.inspectorTabBtn?.setAttribute('aria-selected', String(isInspector));
+        elements.hierarchyPanelEl?.classList.toggle('is-active', !isInspector);
+        elements.inspectorPanelEl?.classList.toggle('is-active', isInspector);
+        if (elements.hierarchyPanelEl) elements.hierarchyPanelEl.hidden = isInspector;
+        if (elements.inspectorPanelEl) elements.inspectorPanelEl.hidden = !isInspector;
     };
+
+    const syncInspectorAvailability = (selectedId: string | null) => {
+        const hasSelection = !!selectedId;
+        elements.inspectorTabBtn?.toggleAttribute('disabled', !hasSelection);
+        if (!hasSelection && activeTab === 'inspector') {
+            activeTab = 'hierarchy';
+        }
+        syncTabVisibility();
+    };
+
+    const syncTransformModeState = () => {
+        elements.modeTranslateBtn?.classList.toggle('is-active', activeTransformMode === 'translate');
+        elements.modeTranslateBtn?.setAttribute('aria-selected', String(activeTransformMode === 'translate'));
+        elements.modeRotateBtn?.classList.toggle('is-active', activeTransformMode === 'rotate');
+        elements.modeRotateBtn?.setAttribute('aria-selected', String(activeTransformMode === 'rotate'));
+        elements.modeScaleBtn?.classList.toggle('is-active', activeTransformMode === 'scale');
+        elements.modeScaleBtn?.setAttribute('aria-selected', String(activeTransformMode === 'scale'));
+    };
+
+    const render = () => {
+        const previousSelectedId = lastSelectedId;
+        activeTransformMode = callbacks.sceneManager?.getMode?.() || activeTransformMode;
+        lastSelectedId = renderSceneManager(callbacks, elements, lastSelectedId, render, activeTransformMode);
+        if (lastSelectedId && lastSelectedId !== previousSelectedId) {
+            activeTab = 'inspector';
+        }
+        syncInspectorAvailability(lastSelectedId);
+        syncTransformModeState();
+    };
+
+    elements.hierarchyTabBtn?.addEventListener('click', () => {
+        activeTab = 'hierarchy';
+        syncTabVisibility();
+    });
+    elements.inspectorTabBtn?.addEventListener('click', () => {
+        if (!callbacks.sceneManager?.getSelectedId()) return;
+        activeTab = 'inspector';
+        syncTabVisibility();
+    });
 
     if (elements.addTypeEl) {
         elements.addTypeEl.addEventListener('change', () => updateAddControlsState(elements));
@@ -238,9 +297,16 @@ export function initSceneManager(callbacks: UICallbacks) {
             render();
         });
     }
+    if (elements.clearSelectionBtn) {
+        elements.clearSelectionBtn.addEventListener('click', () => {
+            callbacks.sceneManager?.clearSelection();
+            render();
+        });
+    }
     if (elements.modeTranslateBtn) {
         elements.modeTranslateBtn.addEventListener('click', () => {
             const selectedId = callbacks.sceneManager && callbacks.sceneManager.getSelectedId();
+            activeTransformMode = 'translate';
             callbacks.sceneManager && callbacks.sceneManager.setMode('translate', selectedId || undefined);
             render();
         });
@@ -248,6 +314,7 @@ export function initSceneManager(callbacks: UICallbacks) {
     if (elements.modeRotateBtn) {
         elements.modeRotateBtn.addEventListener('click', () => {
             const selectedId = callbacks.sceneManager && callbacks.sceneManager.getSelectedId();
+            activeTransformMode = 'rotate';
             callbacks.sceneManager && callbacks.sceneManager.setMode('rotate', selectedId || undefined);
             render();
         });
@@ -255,6 +322,7 @@ export function initSceneManager(callbacks: UICallbacks) {
     if (elements.modeScaleBtn) {
         elements.modeScaleBtn.addEventListener('click', () => {
             const selectedId = callbacks.sceneManager && callbacks.sceneManager.getSelectedId();
+            activeTransformMode = 'scale';
             callbacks.sceneManager && callbacks.sceneManager.setMode('scale', selectedId || undefined);
             render();
         });
@@ -262,5 +330,7 @@ export function initSceneManager(callbacks: UICallbacks) {
 
     (window as any).updateSceneManager = render;
     window.setInterval(render, 250);
+    syncTabVisibility();
+    syncTransformModeState();
     render();
 }

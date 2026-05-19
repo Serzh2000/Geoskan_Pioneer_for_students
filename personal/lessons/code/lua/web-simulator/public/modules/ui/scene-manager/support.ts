@@ -6,8 +6,16 @@ import {
 import type { MarkerMapOptions } from '../../environment/obstacles.js';
 
 export interface SceneManagerDomRefs {
+    hierarchyTabBtn: HTMLButtonElement | null;
+    inspectorTabBtn: HTMLButtonElement | null;
+    hierarchyPanelEl: HTMLElement | null;
+    inspectorPanelEl: HTMLElement | null;
     listEl: HTMLElement | null;
+    listCountEl: HTMLElement | null;
     detailsEl: HTMLElement | null;
+    transformXEl: HTMLInputElement | null;
+    transformYEl: HTMLInputElement | null;
+    transformZEl: HTMLInputElement | null;
     addTypeEl: HTMLSelectElement | null;
     addDictionaryEl: HTMLSelectElement | null;
     addValueEl: HTMLInputElement | null;
@@ -59,6 +67,7 @@ export interface SceneManagerDomRefs {
     groupBtn: HTMLElement | null;
     ungroupBtn: HTMLElement | null;
     resetDroneBtn: HTMLElement | null;
+    clearSelectionBtn: HTMLElement | null;
     modeTranslateBtn: HTMLElement | null;
     modeRotateBtn: HTMLElement | null;
     modeScaleBtn: HTMLElement | null;

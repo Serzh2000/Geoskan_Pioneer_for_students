@@ -7,8 +7,8 @@
     <!-- Three.js and modules loaded via Vite -->
     <!-- Fengari for Lua in browser -->
     <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
-  <script type="module" crossorigin src="/assets/index-BwqWd61l.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-_7JpTM_y.css">
+  <script type="module" crossorigin src="/assets/index-CAXZaXbR.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CbGZWucu.css">
 </head>
 <body>
             <header class="header">
@@ -105,16 +105,21 @@
                     <span class="panel-title">Управление роем</span>
                     <button class="panel-close-btn" onclick="closePanel()">✕</button>
                 </div>
-                <div class="panel-content">
-                    <div class="card">
-                        <div class="swarm-manager">
-                            <div class="swarm-list">
-                                <select id="drone-list" size="10"></select>
+                <div class="panel-content panel-content--drones">
+                    <div class="swarm-manager">
+                        <div class="swarm-manager__intro">
+                            <p class="swarm-manager__subtitle">Выберите активный дрон роя и управляйте составом группы без перегруженного интерфейса.</p>
+                        </div>
+                        <section class="swarm-list-card" aria-labelledby="drone-list-title">
+                            <div class="swarm-list-card__header">
+                                <span id="drone-list-title" class="swarm-list-card__title">Список дронов</span>
+                                <span class="swarm-list-card__meta" id="drone-list-count">0 дронов</span>
                             </div>
-                            <div class="swarm-actions">
-                                <button id="add-drone-btn" class="btn-add-drone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Добавить</button>
-                                <button id="del-drone-btn" class="btn-del-drone"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Удалить</button>
-                            </div>
+                            <div id="drone-list" class="swarm-list" role="listbox" aria-label="Список дронов"></div>
+                        </section>
+                        <div class="swarm-actions">
+                            <button id="add-drone-btn" class="swarm-action-btn swarm-action-btn--add" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span>Добавить</span></button>
+                            <button id="del-drone-btn" class="swarm-action-btn swarm-action-btn--delete" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg><span>Удалить</span></button>
                         </div>
                     </div>
                 </div>
@@ -125,52 +130,82 @@
                     <span class="panel-title">Менеджер сцены</span>
                     <button class="panel-close-btn" onclick="closePanel()">✕</button>
                 </div>
-                <div class="panel-content">
+                <div class="panel-content panel-content--scene-manager">
                     <div class="scene-manager">
-                        <div id="scene-click-coords" style="display: none; font-family: var(--font-mono); font-size: 10px; color: var(--accent-color); margin-bottom: 8px; padding: 4px 8px; background: rgba(56, 189, 248, 0.1); border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.2);"></div>
-                        <div id="scene-object-list" class="scene-manager-list"></div>
-                        <div id="scene-object-details" class="scene-manager-details">Выберите объект в списке</div>
-                        
-                        <div class="scene-manager-actions">
-                            <div class="action-group">
-                                <div class="action-group-title">Добавление объекта</div>
-                                <select id="scene-add-type">
-                                    <option value="gate">Ворота</option>
-                                    <option value="pylon">Пилон</option>
-                                    <option value="flag">Флаг</option>
-                                    <option value="building">Многоэтажка</option>
-                                    <option value="aruco">ArUco маркер</option>
-                                    <option value="aruco-map">ArUco карта</option>
-                                    <option value="apriltag">AprilTag маркер</option>
-                                    <option value="apriltag-map">AprilTag карта</option>
-                                    <option value="road">Автомобильная дорога</option>
-                                    <option value="rail">Железнодорожные пути</option>
-                                    <option value="hill">Холм</option>
-                                    <option value="arena-hills">Группа холмов</option>
-                                    <option value="tree">Ель</option>
-                                    <option value="forest-patch">Лесной массив</option>
-                                    <option value="settlement">Макет поселения</option>
-                                    <option value="transport">Транспорт</option>
-                                    <option value="cargo">Грузик</option>
-                                    <option value="start-position">Стартовая позиция</option>
-                                    <option value="heliport">Хелипорт</option>
-                                    <option value="charge-station">Станция заряда</option>
-                                    <option value="locus-beacon">Локус-маяк</option>
-                                    <option value="light-tower">Световая мачта</option>
-                                    <option value="video-tower">Видеомачта</option>
-                                    <option value="control-station">Пульт полигона</option>
-                                    <option value="arena-space">Арена с сеткой</option>
-                                    <option value="pad-h">Площадка H</option>
-                                    <option value="pad-charge">Площадка ⚡</option>
-                                </select>
-                                <select id="scene-add-dictionary">
-                                    <option value="">Выберите словарь</option>
-                                </select>
-                                <input id="scene-add-value" type="text" placeholder="Значение маркера">
-                                <label id="scene-add-floors-wrap" class="scene-field" style="display: none;">
-                                    <span>Этажей</span>
-                                    <input id="scene-add-floors" type="number" min="5" max="20" step="1" value="9">
-                                </label>
+                        <div class="scene-manager-tabs" role="tablist" aria-label="Режим панели менеджера сцены">
+                            <button id="scene-tab-hierarchy" class="scene-manager-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="scene-panel-hierarchy">Иерархия</button>
+                            <button id="scene-tab-inspector" class="scene-manager-tab" type="button" role="tab" aria-selected="false" aria-controls="scene-panel-inspector">Инспектор</button>
+                        </div>
+
+                        <section id="scene-panel-hierarchy" class="scene-panel-view is-active" role="tabpanel" aria-labelledby="scene-tab-hierarchy">
+                            <div class="scene-panel-card scene-panel-card--tree">
+                                <div class="scene-panel-card__header">
+                                    <div>
+                                        <div class="scene-panel-card__title">Иерархия сцены</div>
+                                        <p class="scene-panel-card__description">Структура объектов сцены, групп и дронов для быстрого выбора.</p>
+                                    </div>
+                                    <span id="scene-object-count" class="scene-panel-card__badge">0 объектов</span>
+                                </div>
+                                <div id="scene-click-coords" class="scene-click-coords" style="display: none;"></div>
+                                <div id="scene-object-list" class="scene-manager-list" role="tree" aria-label="Дерево объектов сцены"></div>
+                            </div>
+
+                            <div class="scene-panel-card scene-panel-card--composer">
+                                <div class="scene-panel-card__header">
+                                    <div>
+                                        <div class="scene-panel-card__title">Добавить на сцену</div>
+                                        <p class="scene-panel-card__description">Выберите тип объекта, задайте параметры и загрузите готовый пресет при необходимости.</p>
+                                    </div>
+                                </div>
+                                <div class="scene-form-grid">
+                                    <label class="scene-field">
+                                        <span>Тип объекта</span>
+                                        <select id="scene-add-type">
+                                            <option value="gate">Ворота</option>
+                                            <option value="pylon">Пилон</option>
+                                            <option value="flag">Флаг</option>
+                                            <option value="building">Многоэтажка</option>
+                                            <option value="aruco">ArUco маркер</option>
+                                            <option value="aruco-map">ArUco карта</option>
+                                            <option value="apriltag">AprilTag маркер</option>
+                                            <option value="apriltag-map">AprilTag карта</option>
+                                            <option value="road">Автомобильная дорога</option>
+                                            <option value="rail">Железнодорожные пути</option>
+                                            <option value="hill">Холм</option>
+                                            <option value="arena-hills">Группа холмов</option>
+                                            <option value="tree">Ель</option>
+                                            <option value="forest-patch">Лесной массив</option>
+                                            <option value="settlement">Макет поселения</option>
+                                            <option value="transport">Транспорт</option>
+                                            <option value="cargo">Грузик</option>
+                                            <option value="start-position">Стартовая позиция</option>
+                                            <option value="heliport">Хелипорт</option>
+                                            <option value="charge-station">Станция заряда</option>
+                                            <option value="locus-beacon">Локус-маяк</option>
+                                            <option value="light-tower">Световая мачта</option>
+                                            <option value="video-tower">Видеомачта</option>
+                                            <option value="control-station">Пульт полигона</option>
+                                            <option value="arena-space">Арена с сеткой</option>
+                                            <option value="pad-h">Площадка H</option>
+                                            <option value="pad-charge">Площадка ⚡</option>
+                                        </select>
+                                    </label>
+                                    <label class="scene-field">
+                                        <span>Словарь</span>
+                                        <select id="scene-add-dictionary">
+                                            <option value="">Выберите словарь</option>
+                                        </select>
+                                    </label>
+                                    <label class="scene-field">
+                                        <span>Значение</span>
+                                        <input id="scene-add-value" type="text" placeholder="Значение маркера">
+                                    </label>
+                                    <label id="scene-add-floors-wrap" class="scene-field" style="display: none;">
+                                        <span>Этажей</span>
+                                        <input id="scene-add-floors" type="number" min="5" max="20" step="1" value="9">
+                                    </label>
+                                </div>
+
                                 <div id="scene-add-building-settings" class="scene-building-settings">
                                     <div class="scene-building-settings-header">
                                         <div class="scene-building-settings-title">Сценарии по окнам</div>
@@ -207,13 +242,14 @@
                                         </div>
                                     </div>
                                     <div class="scene-building-settings-note">Подберите этажность и добавляйте события по окнам.</div>
-                                    <div class="action-row" style="margin-top: 4px;">
+                                    <div class="action-row">
                                         <button id="scene-add-building-append-btn" type="button" class="btn-secondary">+ Сценарий</button>
                                         <button id="scene-add-building-clear-btn" type="button" class="btn-secondary">Очистить</button>
                                     </div>
                                     <div class="scene-building-list-label">Активные сценарии</div>
                                     <textarea id="scene-add-building-incidents" rows="4" placeholder="Список сценариев для окон"></textarea>
                                 </div>
+
                                 <div id="scene-add-map-settings" class="scene-map-settings">
                                     <div class="scene-map-settings-title">Настройки карты маркеров</div>
                                     <div id="scene-add-map-summary" class="scene-map-summary">5 x 5, старт ID 0, по строкам</div>
@@ -283,30 +319,68 @@
                                         </label>
                                     </div>
                                 </div>
-                                <textarea id="scene-add-points" rows="2" placeholder="Точки маршрута: X, Y, Z"></textarea>
-                                <button id="scene-add-btn" class="btn-primary">Добавить объект</button>
-                            </div>
 
-                            <div class="action-group">
-                                <div class="action-group-title">Пресеты сцены</div>
-                                <select id="scene-preset-type">
-                                    <option value="preset-race-track">Гоночная трасса</option>
-                                    <option value="preset-residential">Спальный район</option>
-                                    <option value="preset-geoskan-arena">Геоскан Арена</option>
-                                </select>
-                                <button id="scene-preset-btn" class="btn-secondary" style="color: var(--success); border-color: rgba(16,185,129,0.3);">Загрузить пресет</button>
-                            </div>
-
-                            <div class="action-group">
-                                <div class="action-group-title">Редактирование выбранного</div>
-                                <select id="scene-selected-dictionary">
-                                    <option value="">Словарь маркера</option>
-                                </select>
-                                <input id="scene-selected-value" type="text" placeholder="Значение объекта">
-                                <label id="scene-selected-floors-wrap" class="scene-field" style="display: none;">
-                                    <span>Этажей</span>
-                                    <input id="scene-selected-floors" type="number" min="5" max="20" step="1" value="9">
+                                <label class="scene-field">
+                                    <span>Точки маршрута</span>
+                                    <textarea id="scene-add-points" rows="2" placeholder="Каждая строка: X, Y, Z"></textarea>
                                 </label>
+
+                                <div class="scene-action-stack">
+                                    <button id="scene-add-btn" class="btn-primary scene-btn scene-btn--primary">Добавить объект</button>
+                                </div>
+
+                                <div class="scene-subsection">
+                                    <div class="scene-subsection__title">Пресеты сцены</div>
+                                    <div class="scene-form-grid">
+                                        <label class="scene-field">
+                                            <span>Выбор пресета</span>
+                                            <select id="scene-preset-type">
+                                                <option value="preset-race-track">Гоночная трасса</option>
+                                                <option value="preset-residential">Спальный район</option>
+                                                <option value="preset-geoskan-arena">Геоскан Арена</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <button id="scene-preset-btn" class="btn-secondary scene-btn scene-btn--neutral">Загрузить пресет</button>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="scene-panel-inspector" class="scene-panel-view" role="tabpanel" aria-labelledby="scene-tab-inspector" hidden>
+                            <div class="scene-panel-card">
+                                <div class="scene-panel-card__header">
+                                    <div>
+                                        <div class="scene-panel-card__title">Информация об объекте</div>
+                                        <p class="scene-panel-card__description">Текущий выбор, базовые свойства и служебный статус объекта сцены.</p>
+                                    </div>
+                                </div>
+                                <div id="scene-object-details" class="scene-manager-details">Выберите объект в иерархии, чтобы открыть инспектор.</div>
+                            </div>
+
+                            <div class="scene-panel-card">
+                                <div class="scene-panel-card__header">
+                                    <div>
+                                        <div class="scene-panel-card__title">Параметры объекта</div>
+                                        <p class="scene-panel-card__description">Редактирование значений, словарей, этажности и маршрутов для выбранного объекта.</p>
+                                    </div>
+                                </div>
+                                <div class="scene-form-grid">
+                                    <label class="scene-field">
+                                        <span>Словарь маркера</span>
+                                        <select id="scene-selected-dictionary">
+                                            <option value="">Словарь маркера</option>
+                                        </select>
+                                    </label>
+                                    <label class="scene-field">
+                                        <span>Значение</span>
+                                        <input id="scene-selected-value" type="text" placeholder="Значение объекта">
+                                    </label>
+                                    <label id="scene-selected-floors-wrap" class="scene-field" style="display: none;">
+                                        <span>Этажей</span>
+                                        <input id="scene-selected-floors" type="number" min="5" max="20" step="1" value="9">
+                                    </label>
+                                </div>
+
                                 <div id="scene-selected-building-settings" class="scene-building-settings">
                                     <div class="scene-building-settings-header">
                                         <div class="scene-building-settings-title">Сценарии по окнам</div>
@@ -343,42 +417,63 @@
                                         </div>
                                     </div>
                                     <div class="scene-building-settings-note">Редактируйте этажность и события у выбранной многоэтажки.</div>
-                                    <div class="action-row" style="margin-top: 4px;">
+                                    <div class="action-row">
                                         <button id="scene-selected-building-append-btn" type="button" class="btn-secondary">+ Сценарий</button>
                                         <button id="scene-selected-building-clear-btn" type="button" class="btn-secondary">Очистить</button>
                                     </div>
                                     <div class="scene-building-list-label">Активные сценарии</div>
                                     <textarea id="scene-selected-building-incidents" rows="4" placeholder="Список сценариев для окон"></textarea>
                                 </div>
-                                <textarea id="scene-selected-points" rows="2" placeholder="Точки маршрута (для дорог)"></textarea>
-                                <div class="action-row">
-                                    <button id="scene-apply-meta-btn" class="btn-secondary">Применить</button>
-                                    <button id="scene-append-point-btn" class="btn-secondary">+ Точка</button>
+
+                                <label class="scene-field">
+                                    <span>Точки маршрута</span>
+                                    <textarea id="scene-selected-points" rows="2" placeholder="Точки маршрута (для дорог)"></textarea>
+                                </label>
+
+                                <div class="scene-inline-actions">
+                                    <button id="scene-apply-meta-btn" class="btn-secondary scene-btn scene-btn--neutral">Применить</button>
+                                    <button id="scene-append-point-btn" class="btn-secondary scene-btn scene-btn--neutral">+ Точка</button>
                                 </div>
-                                <div class="action-row">
-                                    <button id="scene-visual-edit-btn" class="btn-secondary">Проложить</button>
-                                </div>
+                                <button id="scene-visual-edit-btn" class="btn-secondary scene-btn scene-btn--neutral">Проложить</button>
                             </div>
 
-                            <div class="action-group">
-                                <div class="action-group-title">Трансформация</div>
-                                <div class="action-row">
-                                    <button id="scene-mode-translate" class="btn-secondary">Позиция</button>
-                                    <button id="scene-mode-rotate" class="btn-secondary">Вращение</button>
+                            <div class="scene-panel-card scene-panel-card--transform">
+                                <div class="scene-panel-card__header">
+                                    <div>
+                                        <div class="scene-panel-card__title">Трансформация</div>
+                                        <p class="scene-panel-card__description">Единая точка управления перемещением, поворотом и масштабом выбранного объекта.</p>
+                                    </div>
                                 </div>
-                                <div class="action-row">
-                                    <button id="scene-mode-scale" class="btn-secondary">Масштаб</button>
-                                    <button id="scene-drone-origin-btn" class="btn-secondary">Дрон в (0,0)</button>
+                                <div class="scene-transform-modes" role="tablist" aria-label="Режим трансформации">
+                                    <button id="scene-mode-translate" class="scene-segmented-btn" type="button" role="tab" aria-selected="true">Перемещение</button>
+                                    <button id="scene-mode-rotate" class="scene-segmented-btn" type="button" role="tab" aria-selected="false">Поворот</button>
+                                    <button id="scene-mode-scale" class="scene-segmented-btn" type="button" role="tab" aria-selected="false">Масштаб</button>
+                                </div>
+                                <div class="scene-transform-grid">
+                                    <label class="scene-transform-field">
+                                        <span class="scene-axis-chip scene-axis-chip--x">X</span>
+                                        <input id="scene-transform-x" type="text" readonly value="--" aria-label="Значение по оси X">
+                                    </label>
+                                    <label class="scene-transform-field">
+                                        <span class="scene-axis-chip scene-axis-chip--y">Y</span>
+                                        <input id="scene-transform-y" type="text" readonly value="--" aria-label="Значение по оси Y">
+                                    </label>
+                                    <label class="scene-transform-field">
+                                        <span class="scene-axis-chip scene-axis-chip--z">Z</span>
+                                        <input id="scene-transform-z" type="text" readonly value="--" aria-label="Значение по оси Z">
+                                    </label>
+                                </div>
+                                <div class="scene-transform-secondary">
+                                    <button id="scene-drone-origin-btn" class="btn-secondary scene-btn scene-btn--ghost" type="button">Дрон в (0,0)</button>
+                                </div>
+                                <button id="scene-clear-selection-btn" class="scene-clear-selection-btn" type="button">Снять выделение (Esc)</button>
+                                <div class="scene-inspector-actions">
+                                    <button id="scene-group-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button" title="Сгруппировать выбранные объекты (Ctrl+Click)">Группа</button>
+                                    <button id="scene-ungroup-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button" title="Разгруппировать выбранную группу">Разгруппировать</button>
+                                    <button id="scene-delete-btn" class="btn-secondary scene-btn scene-btn--danger" type="button">Удалить</button>
                                 </div>
                             </div>
-
-                            <div class="action-row" style="margin-bottom: 8px; gap: 8px;">
-                                <button id="scene-group-btn" class="btn-secondary" title="Сгруппировать выбранные объекты (Ctrl+Click)" style="flex: 1;">ГРУППА</button>
-                                <button id="scene-ungroup-btn" class="btn-secondary" title="Разгруппировать выбранную группу" style="flex: 1;">РАЗГРУППИРОВАТЬ</button>
-                            </div>
-                            
-                            <button id="scene-delete-btn" class="btn-secondary" style="color: var(--danger); border-color: rgba(239,68,68,0.3); width: 100%;">УДАЛИТЬ</button>
-                        </div>
+                        </section>
                     </div>
                 </div>
             </div>
@@ -394,13 +489,29 @@
             </div>
 
                         <div id="logs-panel" class="sidebar-panel">
-                <div class="panel-header">
-                    <span class="panel-title">Системный журнал</span>
+                <div class="panel-header panel-header--logs">
+                    <div class="panel-header__lead panel-header__lead--logs">
+                        <span class="panel-title">Системный журнал</span>
+                        <span class="logs-panel-subtitle">События симулятора, редактора и сцены</span>
+                    </div>
                     <button class="panel-close-btn" onclick="closePanel()">✕</button>
                 </div>
-                <div class="panel-content">
+                <div class="panel-content panel-content--logs">
                     <div class="logs-panel-content">
-                        <div id="logs"></div>
+                        <div class="logs-console">
+                            <div class="logs-console__header">
+                                <div class="logs-console__status">
+                                    <span class="logs-console__status-dot" aria-hidden="true"></span>
+                                    <span class="logs-console__status-label">Поток событий</span>
+                                </div>
+                                <span class="logs-console__hint">Автопрокрутка включена</span>
+                            </div>
+                            <div id="logs" class="logs-console__stream" aria-live="polite">
+                                <div class="logs-console__empty">
+                                    Журнал ожидает первые события симулятора.
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -727,54 +838,123 @@
             </div>
 
                         <div id="settings-panel" class="sidebar-panel">
-                <div class="panel-header">
-                    <span class="panel-title">Настройки</span>
+                <div class="panel-header panel-header--settings">
+                    <div class="panel-header__lead panel-header__lead--settings">
+                        <span class="panel-title">Настройки</span>
+                        <span class="settings-panel-subtitle">Параметры визуализации, сцены и симуляции</span>
+                    </div>
                     <button class="panel-close-btn" onclick="closePanel()">✕</button>
                 </div>
-                <div class="panel-content settings-panel-content">
-                    <div class="settings-stack">
-                        <div class="settings-group">
-                            <div class="settings-label">Трассер полета</div>
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="setting-show-tracer" checked>
-                                <span class="checkmark"></span>
-                                Показывать траекторию
-                            </label>
-                            <label class="scene-field">
-                                <span>Цвет линии</span>
-                                <input type="color" id="setting-tracer-color" value="#38bdf8">
-                            </label>
-                            <label class="scene-field">
-                                <span>Толщина</span>
-                                <input type="range" id="setting-tracer-width" min="1" max="12" step="1" value="2">
-                            </label>
-                            <label class="scene-field">
-                                <span>Форма</span>
-                                <select id="setting-tracer-shape">
-                                    <option value="line">Линия</option>
-                                    <option value="points">Точки</option>
-                                    <option value="both">Линия и точки</option>
-                                </select>
-                            </label>
-                        </div>
-                        <div class="settings-group">
-                            <div class="settings-label">Редактирование сцены</div>
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="setting-show-gizmo" checked>
-                                <span class="checkmark"></span>
-                                Показывать гизмо трансформации
-                            </label>
-                        </div>
-                        <div class="settings-group">
-                            <div class="settings-label">Скорость симуляции</div>
-                            <label class="scene-field">
-                                <span>Множитель времени: <strong id="sim-speed-val">1.0x</strong></span>
-                                <input type="range" id="setting-sim-speed" min="0.25" max="3" step="0.25" value="1">
-                            </label>
-                        </div>
-                        <div class="settings-group">
-                            <div class="settings-label">Управление пультом</div>
-                            <div class="status-indicator">Настройки и калибровка пульта перенесены в отдельную вкладку слева.</div>
+                <div class="panel-content settings-panel-content settings-panel-content--general">
+                    <div class="settings-shell">
+                        <div class="settings-stack settings-stack--general">
+                            <section class="settings-card">
+                                <div class="settings-card__header">
+                                    <div class="settings-card__title-wrap">
+                                        <span class="settings-card__accent" aria-hidden="true"></span>
+                                        <div class="settings-card__heading">
+                                            <div class="settings-card__title">Трассер полета</div>
+                                            <p class="settings-card__description">Настройте отображение маршрута дрона и графику траектории.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="settings-card__body settings-card__body--stack">
+                                    <label class="settings-toggle settings-control settings-control--full">
+                                        <input type="checkbox" id="setting-show-tracer" checked>
+                                        <span class="settings-toggle__box" aria-hidden="true"></span>
+                                        <span class="settings-toggle__content">
+                                            <span class="settings-toggle__title">Показывать траекторию</span>
+                                            <span class="settings-toggle__hint">Включает шлейф полета в 3D-сцене.</span>
+                                        </span>
+                                    </label>
+                                    <label class="settings-field settings-control">
+                                        <span class="settings-field__label">Цвет линии</span>
+                                        <span class="settings-field__hint">Цвет основного шлейфа трассера.</span>
+                                        <span class="settings-color-control">
+                                            <input type="color" id="setting-tracer-color" value="#38bdf8">
+                                            <span class="settings-color-control__value" id="setting-tracer-color-val">#38BDF8</span>
+                                        </span>
+                                    </label>
+                                    <label class="settings-field settings-control">
+                                        <span class="settings-field__row">
+                                            <span class="settings-field__label">Толщина линии</span>
+                                            <strong class="settings-field__value" id="tracer-width-val">2 px</strong>
+                                        </span>
+                                        <span class="settings-field__hint">Оптимальная ширина для обзора маршрута.</span>
+                                        <input type="range" id="setting-tracer-width" min="1" max="12" step="1" value="2">
+                                    </label>
+                                    <label class="settings-field settings-control">
+                                        <span class="settings-field__label">Форма отображения</span>
+                                        <span class="settings-field__hint">Выберите способ визуализации пути.</span>
+                                        <span class="settings-select-wrap">
+                                            <select id="setting-tracer-shape">
+                                                <option value="line">Линия</option>
+                                                <option value="points">Точки</option>
+                                                <option value="both">Линия и точки</option>
+                                            </select>
+                                        </span>
+                                    </label>
+                                </div>
+                            </section>
+                            <section class="settings-card">
+                                <div class="settings-card__header">
+                                    <div class="settings-card__title-wrap">
+                                        <span class="settings-card__accent" aria-hidden="true"></span>
+                                        <div class="settings-card__heading">
+                                            <div class="settings-card__title">Редактирование сцены</div>
+                                            <p class="settings-card__description">Параметры визуальных инструментов для работы с объектами сцены.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="settings-card__body">
+                                    <label class="settings-toggle settings-control settings-control--full">
+                                        <input type="checkbox" id="setting-show-gizmo" checked>
+                                        <span class="settings-toggle__box" aria-hidden="true"></span>
+                                        <span class="settings-toggle__content">
+                                            <span class="settings-toggle__title">Показывать гизмо трансформации</span>
+                                            <span class="settings-toggle__hint">Отображает оси перемещения, вращения и масштабирования.</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </section>
+                            <section class="settings-card">
+                                <div class="settings-card__header">
+                                    <div class="settings-card__title-wrap">
+                                        <span class="settings-card__accent" aria-hidden="true"></span>
+                                        <div class="settings-card__heading">
+                                            <div class="settings-card__title">Скорость симуляции</div>
+                                            <p class="settings-card__description">Управляйте темпом выполнения физики и скриптов без перегрузки интерфейса.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="settings-card__body">
+                                    <label class="settings-field settings-control settings-control--compact">
+                                        <span class="settings-field__row">
+                                            <span class="settings-field__label">Множитель времени</span>
+                                            <strong class="settings-field__value" id="sim-speed-val">1.0x</strong>
+                                        </span>
+                                        <span class="settings-field__hint">Рекомендуемый диапазон для ручной отладки и демонстраций.</span>
+                                        <input type="range" id="setting-sim-speed" min="0.25" max="3" step="0.25" value="1">
+                                    </label>
+                                </div>
+                            </section>
+                            <section class="settings-card">
+                                <div class="settings-card__header">
+                                    <div class="settings-card__title-wrap">
+                                        <span class="settings-card__accent" aria-hidden="true"></span>
+                                        <div class="settings-card__heading">
+                                            <div class="settings-card__title">Управление пультом</div>
+                                            <p class="settings-card__description">Быстрый переход к отдельному рабочему пространству калибровки.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="settings-card__body">
+                                    <div class="settings-alert settings-alert--info">
+                                        <span class="settings-alert__icon" aria-hidden="true">i</span>
+                                        <span class="settings-alert__text">Настройки и калибровка пульта перенесены в отдельную вкладку слева, чтобы не перегружать основное окно настроек.</span>
+                                    </div>
+                                </div>
+                            </section>
                         </div>
                     </div>
                 </div>

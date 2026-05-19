@@ -1,11 +1,27 @@
             <div id="logs-panel" class="sidebar-panel">
-                <div class="panel-header">
-                    <span class="panel-title">Системный журнал</span>
+                <div class="panel-header panel-header--logs">
+                    <div class="panel-header__lead panel-header__lead--logs">
+                        <span class="panel-title">Системный журнал</span>
+                        <span class="logs-panel-subtitle">События симулятора, редактора и сцены</span>
+                    </div>
                     <button class="panel-close-btn" onclick="closePanel()">✕</button>
                 </div>
-                <div class="panel-content">
+                <div class="panel-content panel-content--logs">
                     <div class="logs-panel-content">
-                        <div id="logs"></div>
+                        <div class="logs-console">
+                            <div class="logs-console__header">
+                                <div class="logs-console__status">
+                                    <span class="logs-console__status-dot" aria-hidden="true"></span>
+                                    <span class="logs-console__status-label">Поток событий</span>
+                                </div>
+                                <span class="logs-console__hint">Автопрокрутка включена</span>
+                            </div>
+                            <div id="logs" class="logs-console__stream" aria-live="polite">
+                                <div class="logs-console__empty">
+                                    Журнал ожидает первые события симулятора.
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

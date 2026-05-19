@@ -105,6 +105,37 @@ export let currentDroneId: string = 'drone_1';
 export type ScriptLanguage = 'lua' | 'python';
 export let currentScriptLanguage: ScriptLanguage = 'lua';
 
+export const DEFAULT_LUA_SCRIPT = [
+    '-- Pioneer Lua Script',
+    '',
+    'ap.push(Ev.MCE_PREFLIGHT)',
+    'Timer.callLater(0.5, function()',
+    '    ap.push(Ev.MCE_TAKEOFF)',
+    'end)'
+].join('\n');
+
+export const DEFAULT_PYTHON_SCRIPT = [
+    '# Pioneer Python Script',
+    'from pioneer_sdk import Pioneer',
+    'import time',
+    '',
+    'pioneer = Pioneer(simulator=True)',
+    '',
+    'pioneer.arm()',
+    'pioneer.takeoff()',
+    '',
+    'time.sleep(3)',
+    '',
+    'pioneer.go_to_local_point(x=1, y=1, z=1)',
+    'while not pioneer.point_reached():',
+    '    time.sleep(0.05)',
+    '',
+    'time.sleep(2)',
+    '',
+    'pioneer.land()',
+    'pioneer.close_connection()'
+].join('\n');
+
 export function setCurrentScriptLanguage(language: ScriptLanguage) {
     currentScriptLanguage = language;
 }
@@ -219,8 +250,8 @@ export function createDroneState(id: string, name: string, x: number = 0, y: num
         tickCommandSignature: null,
         timers: [],
         leds: Array.from({ length: 29 }, () => ({ r: 0, g: 0, b: 0, w: 0 })),
-        script: '-- Pioneer Lua Script\n\nap.push(Ev.MCE_PREFLIGHT)\nTimer.callLater(0.5, function()\n    ap.push(Ev.MCE_TAKEOFF)\nend)',
-        pythonScript: `# Pioneer Python Script\nfrom pioneer_sdk import Pioneer\nimport time\n\npioneer = Pioneer(simulator=True)\n\npioneer.arm()\npioneer.takeoff()\n\ntime.sleep(3)\n\npioneer.go_to_local_point(x=1, y=1, z=1)\nwhile not pioneer.point_reached():\n    time.sleep(0.05)\n\ntime.sleep(2)\n\npioneer.land()\npioneer.close_connection()`,
+        script: DEFAULT_LUA_SCRIPT,
+        pythonScript: DEFAULT_PYTHON_SCRIPT,
         printBubbleText: '',
         printBubbleUntil: 0,
         luaState: null

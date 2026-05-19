@@ -16,7 +16,9 @@ export type AuxRangeControlRefs = {
 export type SettingsDomRefs = {
     showTracerEl: HTMLInputElement | null;
     tracerColorEl: HTMLInputElement | null;
+    tracerColorVal: HTMLElement | null;
     tracerWidthEl: HTMLInputElement | null;
+    tracerWidthVal: HTMLElement | null;
     tracerShapeEl: HTMLSelectElement | null;
     showGizmoEl: HTMLInputElement | null;
     simSpeedEl: HTMLInputElement | null;
@@ -41,7 +43,9 @@ export function collectSettingsDomRefs(): SettingsDomRefs {
     return {
         showTracerEl: document.getElementById('setting-show-tracer') as HTMLInputElement | null,
         tracerColorEl: document.getElementById('setting-tracer-color') as HTMLInputElement | null,
+        tracerColorVal: document.getElementById('setting-tracer-color-val'),
         tracerWidthEl: document.getElementById('setting-tracer-width') as HTMLInputElement | null,
+        tracerWidthVal: document.getElementById('tracer-width-val'),
         tracerShapeEl: document.getElementById('setting-tracer-shape') as HTMLSelectElement | null,
         showGizmoEl: document.getElementById('setting-show-gizmo') as HTMLInputElement | null,
         simSpeedEl: document.getElementById('setting-sim-speed') as HTMLInputElement | null,

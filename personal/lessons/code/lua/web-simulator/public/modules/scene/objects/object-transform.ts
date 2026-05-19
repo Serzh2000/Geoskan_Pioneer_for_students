@@ -30,9 +30,6 @@ export function setRotationStepDegrees(step: number) {
     if (transformControl?.getMode() === 'rotate') {
         transformControl.setRotationSnap(THREE.MathUtils.degToRad(rotationStepDegrees));
     }
-    if ((window as any).setTransformToolbarRotationStep) {
-        (window as any).setTransformToolbarRotationStep(rotationStepDegrees);
-    }
     return rotationStepDegrees;
 }
 
@@ -93,10 +90,6 @@ export function activateTransformMode(mode: TransformMode, target: THREE.Object3
     if (transformHelper) {
         transformHelper.visible = simSettings.showGizmo;
         transformHelper.updateMatrixWorld(true);
-    }
-    if ((window as any).setGizmoToolbarMode) (window as any).setGizmoToolbarMode(mode);
-    if ((window as any).setTransformToolbarRotationStep) {
-        (window as any).setTransformToolbarRotationStep(rotationStepDegrees);
     }
     updateTransformModeDecorations(mode, target);
     if (controls) controls.enabled = (window as any).cameraMode === 'free' && !(window as any).isTransforming;

@@ -1,4 +1,4 @@
-import type { ScriptLanguage } from '../core/state.js';
+import { DEFAULT_LUA_SCRIPT, DEFAULT_PYTHON_SCRIPT, type ScriptLanguage } from '../core/state.js';
 import { apiDocs, pythonApiDocs, type ApiDoc } from '../docs/api-docs.js';
 import { evConstants } from '../docs/api-docs-events.js';
 import { Blockly, getBlocklyGenerator, initBlocklyDefinitions } from '../ui/mission-guide/blockly.js';
@@ -395,4 +395,28 @@ export function createRawCodeWorkspaceXml(language: ScriptLanguage, code: string
             </block>
         </xml>
     `;
+}
+
+export function createStarterWorkspaceXml(language: ScriptLanguage): string {
+    if (language === 'lua') {
+        return `
+            <xml xmlns="https://developers.google.com/blockly/xml">
+                <block type="lua_ap_push" x="32" y="32">
+                    <field name="EVENT">Ev.MCE_PREFLIGHT</field>
+                    <next>
+                        <block type="lua_timer_calllater">
+                            <field name="DELAY">0.5</field>
+                            <statement name="CALLBACK">
+                                <block type="lua_ap_push">
+                                    <field name="EVENT">Ev.MCE_TAKEOFF</field>
+                                </block>
+                            </statement>
+                        </block>
+                    </next>
+                </block>
+            </xml>
+        `;
+    }
+
+    return createRawCodeWorkspaceXml(language, language === 'python' ? DEFAULT_PYTHON_SCRIPT : DEFAULT_LUA_SCRIPT);
 }

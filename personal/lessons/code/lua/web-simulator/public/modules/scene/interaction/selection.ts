@@ -11,7 +11,6 @@ export function exitTransformMode() {
     }
     if (transformHelper) transformHelper.visible = false;
     updateTransformModeDecorations(null);
-    if ((window as any).hideGizmoToolbar) (window as any).hideGizmoToolbar();
     if (controls) controls.enabled = (window as any).cameraMode === 'free' && !(window as any).isTransforming;
 }
 

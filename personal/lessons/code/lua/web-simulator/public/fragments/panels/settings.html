@@ -1,52 +1,121 @@
             <div id="settings-panel" class="sidebar-panel">
-                <div class="panel-header">
-                    <span class="panel-title">Настройки</span>
+                <div class="panel-header panel-header--settings">
+                    <div class="panel-header__lead panel-header__lead--settings">
+                        <span class="panel-title">Настройки</span>
+                        <span class="settings-panel-subtitle">Параметры визуализации, сцены и симуляции</span>
+                    </div>
                     <button class="panel-close-btn" onclick="closePanel()">✕</button>
                 </div>
-                <div class="panel-content settings-panel-content">
-                    <div class="settings-stack">
-                        <div class="settings-group">
-                            <div class="settings-label">Трассер полета</div>
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="setting-show-tracer" checked>
-                                <span class="checkmark"></span>
-                                Показывать траекторию
-                            </label>
-                            <label class="scene-field">
-                                <span>Цвет линии</span>
-                                <input type="color" id="setting-tracer-color" value="#38bdf8">
-                            </label>
-                            <label class="scene-field">
-                                <span>Толщина</span>
-                                <input type="range" id="setting-tracer-width" min="1" max="12" step="1" value="2">
-                            </label>
-                            <label class="scene-field">
-                                <span>Форма</span>
-                                <select id="setting-tracer-shape">
-                                    <option value="line">Линия</option>
-                                    <option value="points">Точки</option>
-                                    <option value="both">Линия и точки</option>
-                                </select>
-                            </label>
-                        </div>
-                        <div class="settings-group">
-                            <div class="settings-label">Редактирование сцены</div>
-                            <label class="checkbox-container">
-                                <input type="checkbox" id="setting-show-gizmo" checked>
-                                <span class="checkmark"></span>
-                                Показывать гизмо трансформации
-                            </label>
-                        </div>
-                        <div class="settings-group">
-                            <div class="settings-label">Скорость симуляции</div>
-                            <label class="scene-field">
-                                <span>Множитель времени: <strong id="sim-speed-val">1.0x</strong></span>
-                                <input type="range" id="setting-sim-speed" min="0.25" max="3" step="0.25" value="1">
-                            </label>
-                        </div>
-                        <div class="settings-group">
-                            <div class="settings-label">Управление пультом</div>
-                            <div class="status-indicator">Настройки и калибровка пульта перенесены в отдельную вкладку слева.</div>
+                <div class="panel-content settings-panel-content settings-panel-content--general">
+                    <div class="settings-shell">
+                        <div class="settings-stack settings-stack--general">
+                            <section class="settings-card">
+                                <div class="settings-card__header">
+                                    <div class="settings-card__title-wrap">
+                                        <span class="settings-card__accent" aria-hidden="true"></span>
+                                        <div class="settings-card__heading">
+                                            <div class="settings-card__title">Трассер полета</div>
+                                            <p class="settings-card__description">Настройте отображение маршрута дрона и графику траектории.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="settings-card__body settings-card__body--stack">
+                                    <label class="settings-toggle settings-control settings-control--full">
+                                        <input type="checkbox" id="setting-show-tracer" checked>
+                                        <span class="settings-toggle__box" aria-hidden="true"></span>
+                                        <span class="settings-toggle__content">
+                                            <span class="settings-toggle__title">Показывать траекторию</span>
+                                            <span class="settings-toggle__hint">Включает шлейф полета в 3D-сцене.</span>
+                                        </span>
+                                    </label>
+                                    <label class="settings-field settings-control">
+                                        <span class="settings-field__label">Цвет линии</span>
+                                        <span class="settings-field__hint">Цвет основного шлейфа трассера.</span>
+                                        <span class="settings-color-control">
+                                            <input type="color" id="setting-tracer-color" value="#38bdf8">
+                                            <span class="settings-color-control__value" id="setting-tracer-color-val">#38BDF8</span>
+                                        </span>
+                                    </label>
+                                    <label class="settings-field settings-control">
+                                        <span class="settings-field__row">
+                                            <span class="settings-field__label">Толщина линии</span>
+                                            <strong class="settings-field__value" id="tracer-width-val">2 px</strong>
+                                        </span>
+                                        <span class="settings-field__hint">Оптимальная ширина для обзора маршрута.</span>
+                                        <input type="range" id="setting-tracer-width" min="1" max="12" step="1" value="2">
+                                    </label>
+                                    <label class="settings-field settings-control">
+                                        <span class="settings-field__label">Форма отображения</span>
+                                        <span class="settings-field__hint">Выберите способ визуализации пути.</span>
+                                        <span class="settings-select-wrap">
+                                            <select id="setting-tracer-shape">
+                                                <option value="line">Линия</option>
+                                                <option value="points">Точки</option>
+                                                <option value="both">Линия и точки</option>
+                                            </select>
+                                        </span>
+                                    </label>
+                                </div>
+                            </section>
+                            <section class="settings-card">
+                                <div class="settings-card__header">
+                                    <div class="settings-card__title-wrap">
+                                        <span class="settings-card__accent" aria-hidden="true"></span>
+                                        <div class="settings-card__heading">
+                                            <div class="settings-card__title">Редактирование сцены</div>
+                                            <p class="settings-card__description">Параметры визуальных инструментов для работы с объектами сцены.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="settings-card__body">
+                                    <label class="settings-toggle settings-control settings-control--full">
+                                        <input type="checkbox" id="setting-show-gizmo" checked>
+                                        <span class="settings-toggle__box" aria-hidden="true"></span>
+                                        <span class="settings-toggle__content">
+                                            <span class="settings-toggle__title">Показывать гизмо трансформации</span>
+                                            <span class="settings-toggle__hint">Отображает оси перемещения, вращения и масштабирования.</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </section>
+                            <section class="settings-card">
+                                <div class="settings-card__header">
+                                    <div class="settings-card__title-wrap">
+                                        <span class="settings-card__accent" aria-hidden="true"></span>
+                                        <div class="settings-card__heading">
+                                            <div class="settings-card__title">Скорость симуляции</div>
+                                            <p class="settings-card__description">Управляйте темпом выполнения физики и скриптов без перегрузки интерфейса.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="settings-card__body">
+                                    <label class="settings-field settings-control settings-control--compact">
+                                        <span class="settings-field__row">
+                                            <span class="settings-field__label">Множитель времени</span>
+                                            <strong class="settings-field__value" id="sim-speed-val">1.0x</strong>
+                                        </span>
+                                        <span class="settings-field__hint">Рекомендуемый диапазон для ручной отладки и демонстраций.</span>
+                                        <input type="range" id="setting-sim-speed" min="0.25" max="3" step="0.25" value="1">
+                                    </label>
+                                </div>
+                            </section>
+                            <section class="settings-card">
+                                <div class="settings-card__header">
+                                    <div class="settings-card__title-wrap">
+                                        <span class="settings-card__accent" aria-hidden="true"></span>
+                                        <div class="settings-card__heading">
+                                            <div class="settings-card__title">Управление пультом</div>
+                                            <p class="settings-card__description">Быстрый переход к отдельному рабочему пространству калибровки.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="settings-card__body">
+                                    <div class="settings-alert settings-alert--info">
+                                        <span class="settings-alert__icon" aria-hidden="true">i</span>
+                                        <span class="settings-alert__text">Настройки и калибровка пульта перенесены в отдельную вкладку слева, чтобы не перегружать основное окно настроек.</span>
+                                    </div>
+                                </div>
+                            </section>
                         </div>
                     </div>
                 </div>
