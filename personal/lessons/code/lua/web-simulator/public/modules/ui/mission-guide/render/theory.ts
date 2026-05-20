@@ -1,19 +1,15 @@
 import type { ScriptLanguage } from '../../api-docs/sections.js';
-import { getActiveChapter, getLessonsForChapter, getLessonSequence, getLessonWorkspaceState } from '../state.js';
-import { evaluateLesson } from '../lesson-evaluation.js';
+import { getActiveChapter, getFirstUnlockedLesson, getLessonProgressState, getLessonsForChapter } from '../state.js';
 import type { GuideLessonState } from '../types.js';
 import { escapeHtml } from './shared.js';
 
 export function renderTheoryView(state: GuideLessonState, language: ScriptLanguage): string {
     const activeChapter = getActiveChapter(state, language);
     const chapterLessons = getLessonsForChapter(state, activeChapter.id);
-    const solvedCount = chapterLessons.filter((lesson) => evaluateLesson(
-        lesson,
-        getLessonSequence(language, lesson.id),
-        getLessonWorkspaceState(language, lesson.id)
-    ).solved).length;
-
-    const practiceLessonId = chapterLessons[0]?.id || activeChapter.primaryLessonId;
+    const completedCount = chapterLessons.filter((lesson) => getLessonProgressState(state, language, lesson.id) === 'completed').length;
+    const practiceLesson = chapterLessons.find((lesson) => getLessonProgressState(state, language, lesson.id) !== 'locked')
+        || getFirstUnlockedLesson(state, language);
+    const practiceAvailableInChapter = chapterLessons.some((lesson) => getLessonProgressState(state, language, lesson.id) !== 'locked');
 
     return `
         <section class="guide-theory-page">
@@ -29,7 +25,7 @@ export function renderTheoryView(state: GuideLessonState, language: ScriptLangua
                 </div>
                 <div class="guide-lesson-page__meta-item">
                     <div class="guide-lesson-page__meta-label">Практика главы</div>
-                    <div class="guide-lesson-page__goal">Доступно заданий: ${chapterLessons.length}. Уже решено: ${solvedCount}.</div>
+                    <div class="guide-lesson-page__goal">Доступно заданий: ${chapterLessons.length}. Уже завершено: ${completedCount}.</div>
                 </div>
             </div>
 
@@ -58,22 +54,34 @@ export function renderTheoryView(state: GuideLessonState, language: ScriptLangua
                     </div>
                 </div>
                 <div class="guide-practice-grid">
-                    ${chapterLessons.map((lesson) => `
-                        <article class="guide-practice-card">
+                    ${chapterLessons.map((lesson) => {
+        const progressState = getLessonProgressState(state, language, lesson.id);
+        const statusLabel = progressState === 'completed'
+            ? 'Выполнен'
+            : progressState === 'locked'
+                ? 'Закрыт'
+                : progressState === 'in_progress'
+                    ? 'Текущий'
+                    : 'Доступен';
+        return `
+                        <article class="guide-practice-card ${progressState === 'locked' ? 'is-locked' : ''}">
                             <div class="guide-practice-card__difficulty">${escapeHtml(lesson.badge)}</div>
                             <div class="guide-practice-card__title">${escapeHtml(lesson.title)}</div>
                             <div class="guide-panel-card__text">${escapeHtml(lesson.summary)}</div>
+                            <div class="guide-panel-note">${statusLabel}</div>
                         </article>
-                    `).join('')}
+                    `;
+    }).join('')}
                 </div>
                 <div class="guide-actions">
                     <button
                         type="button"
                         class="guide-primary-action"
                         data-guide-go-practice="${escapeHtml(activeChapter.id)}"
-                        data-guide-lesson="${escapeHtml(practiceLessonId)}"
+                        data-guide-lesson="${escapeHtml(practiceLesson.id)}"
+                        ${practiceAvailableInChapter ? '' : 'disabled'}
                     >
-                        Перейти к практике
+                        ${practiceAvailableInChapter ? 'Перейти к практике' : 'Практика пока закрыта'}
                     </button>
                 </div>
             </section>

@@ -1,0 +1,739 @@
+Проверяю, что уже есть в проекте под учебный контур, чтобы не проектировать портал с нуля поверх существующего `mission-guide`, а опереться на готовую основу и предложить реалистичную архитектуру внедрения.
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\curriculum.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\render\navigation.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\types.ts
+          
+Контекст собран: в проекте уже есть мощная база `mission-guide` с сущностями `chapter/lesson`, теорией, проверкой заданий и навигацией. Значит, задачу можно решать не как новый продукт с нуля, а как эволюцию существующей учебной системы в полноценный образовательный портал с отдельными страницами уроков.
+        
+            
+toolName: todo_write
+            
+status: success
+          
+Todos updated: 9 items
+          
+
+        
+            
+toolName: AskUserQuestion
+            
+status: success
+          
+          
+Параметры зафиксированы: делаем `SPA` внутри текущего симулятора, сразу проектируем полный курс на `10–15` уроков и используем строгую блокировку перехода. На этой базе формирую рабочую архитектуру и план этапов, чтобы после вашего согласования перейти к реализации.
+        
+            
+toolName: todo_write
+            
+status: success
+          
+Todos updated: 9 items
+          
+**Основа**
+- В текущем проекте уже есть сильная учебная база: модель `chapter/lesson`, теория, практика, оценка решения и навигация в [types.ts](file:///c:/Users/serzh/Documents/GitHub/Geoskan-Pioneer-for-students/personal/lessons/code/lua/web-simulator/public/modules/ui/mission-guide/types.ts), [curriculum.ts](file:///c:/Users/serzh/Documents/GitHub/Geoskan-Pioneer-for-students/personal/lessons/code/lua/web-simulator/public/modules/ui/mission-guide/curriculum.ts) и [navigation.ts](file:///c:/Users/serzh/Documents/GitHub/Geoskan-Pioneer-for-students/personal/lessons/code/lua/web-simulator/public/modules/ui/mission-guide/render/navigation.ts).
+- Поэтому предлагаю не строить портал с нуля, а превратить существующий `mission-guide` в полноценный образовательный портал внутри `SPA` симулятора.
+- Зафиксированные решения: `SPA` внутри текущего продукта, полный курс `10–15` уроков, строгая разблокировка следующего урока только после полного выполнения текущего.
+
+**Предлагаемая архитектура**
+- `Вводная страница`: первая точка входа после авторизации или открытия проекта; содержит описание практикума, цели, структуру, правила прохождения, форматы уроков, критерии завершения и ожидаемый результат.
+- `Каталог/маршрут курса`: обзор всех уроков в виде дорожной карты; видно, что пройдено, что доступно, что заблокировано.
+- `Отдельная страница урока`: каждый урок получает собственный route/state и единый шаблон:
+  - теоретический блок;
+  - практический блок;
+  - статус проверки;
+  - кнопки `Назад` / `Далее`;
+  - индикатор прогресса по курсу.
+- `Слой прогресса`: хранит статус уроков, результаты проверок, unlock-логику и точку возврата пользователя.
+- `Слой контента`: теория, задания, критерии успеха, подсказки, диагностические сообщения, решение-образец.
+- `Слой оценки`: использует существующую механику проверки практики и расширяется до формального `lesson completion contract`.
+
+**Структура урока**
+- `Hero`: номер, название, цель, ожидаемый результат.
+- `Теория`: 2–4 смысловых секции с короткими абзацами, схемами, API-фокусом и ключевыми выводами.
+- `Практика`: одно основное задание и при необходимости 1–2 подзадачи.
+- `Проверка`: автоматическая валидация, список ошибок, рекомендации по исправлению.
+- `Финальный статус`: `не начат` / `в процессе` / `выполнен`.
+- `Переход`: `Далее` активируется только при полном успешном прохождении.
+
+**Механизм блокировки**
+- У каждого урока вводим состояния:
+  - `locked`
+  - `available`
+  - `in_progress`
+  - `completed`
+- Правило открытия:
+  - урок `N+1` открывается только если урок `N` имеет `completed = true`;
+  - если в уроке несколько практических задач, все должны быть закрыты успешно;
+  - кнопка `Далее` не просто не ведет дальше, а визуально объясняет причину блокировки.
+- Прогресс сохраняем локально на первом этапе:
+  - `localStorage` или существующий клиентский state-store;
+  - позже можно вынести в серверный профиль пользователя.
+- На вводной и в каталоге показываем:
+  - процент прохождения;
+  - текущий урок;
+  - ближайший заблокированный урок.
+
+**Контентная модель курса**
+- Предлагаю разбить курс на 4 смысловых блока по `10–15` уроков:
+- `Блок 1. Введение и среда`
+  - вводная страница;
+  - знакомство с интерфейсом;
+  - базовые команды;
+  - запуск первого сценария.
+- `Блок 2. Базовое управление`
+  - `PREFLIGHT`, `TAKEOFF`, `LANDING`;
+  - таймеры;
+  - FSM-мышление;
+  - `callback(event)`.
+- `Блок 3. Навигация и сценарии`
+  - `goToLocalPoint`;
+  - ожидание `TAKEOFF_COMPLETE`;
+  - `POINT_REACHED`;
+  - последовательные миссии.
+- `Блок 4. Практические миссии`
+  - составные задания;
+  - поиск и исправление ошибок;
+  - итоговая миссия;
+  - финальное закрепление.
+- Для каждого урока фиксируем:
+  - `learning objective`;
+  - `theory scope`;
+  - `practice task`;
+  - `auto-check criteria`;
+  - `unlock condition`;
+  - `common mistakes`.
+
+**UI/UX-концепция**
+- Визуально опираемся на текущую светлую инженерную систему проекта: белые поверхности, светло-серые карточки, тонкие границы, акцент `#FF6B00`, радиусы `8–12px`, что уже зафиксировано в проектных правилах.<mccoremem />
+- Формат урока:
+  - слева навигация/прогресс;
+  - по центру контент урока;
+  - практика и проверка в читаемых карточках;
+  - минимум визуального шума;
+  - комфортная типографика для длительного чтения.
+- На мобильных и узких экранах:
+  - вертикальный стек секций;
+  - sticky-блок прогресса;
+  - компактные CTA-кнопки.
+- Важный UX-принцип:
+  - не просто блокировать переход, а показывать, что именно осталось завершить.
+
+**Реализация по этапам**
+- `Этап 1. Архитектура и IA`
+  - маршруты портала;
+  - вводная страница;
+  - шаблон страницы урока;
+  - store прогресса;
+  - модель `portal lesson progress`.
+- `Этап 2. Контентная схема`
+  - список всех 10–15 уроков;
+  - цели;
+  - теоретические секции;
+  - задания;
+  - критерии проверки.
+- `Этап 3. UI/UX`
+  - wireframe вводной;
+  - wireframe страницы урока;
+  - каталог курса;
+  - состояния locked/completed/current.
+- `Этап 4. Frontend-реализация`
+  - portal shell;
+  - intro page;
+  - lesson page layout;
+  - gating;
+  - persistence;
+  - интеграция с существующим `mission-guide`.
+- `Этап 5. Наполнение`
+  - перенос и нормализация текущих уроков;
+  - дописывание недостающих уроков;
+  - унификация теории и практики.
+- `Этап 6. QA`
+  - проверка сценариев разблокировки;
+  - адаптивность;
+  - UX-прогоны;
+  - регрессия существующего симулятора.
+
+**Что уже можно переиспользовать**
+- `GuideChapter`, `GuideLesson`, `GuideTheorySection`, `GuidePracticeTask`, `GuideEvaluation` в [types.ts](file:///c:/Users/serzh/Documents/GitHub/Geoskan-Pioneer-for-students/personal/lessons/code/lua/web-simulator/public/modules/ui/mission-guide/types.ts).
+- Существующую сборку учебного контента через [curriculum.ts](file:///c:/Users/serzh/Documents/GitHub/Geoskan-Pioneer-for-students/personal/lessons/code/lua/web-simulator/public/modules/ui/mission-guide/curriculum.ts).
+- Часть навигационных паттернов из [navigation.ts](file:///c:/Users/serzh/Documents/GitHub/Geoskan-Pioneer-for-students/personal/lessons/code/lua/web-simulator/public/modules/ui/mission-guide/render/navigation.ts).
+- Уже готовую проверку решений и диагностику из подсистемы `mission-guide`.
+
+**Мой рекомендуемый порядок**
+- Сначала согласовать:
+  - карту курса из `10–15` уроков;
+  - шаблон вводной страницы;
+  - шаблон страницы урока;
+  - правила `completed/unlocked`.
+- Затем я делаю первый реализационный пакет:
+  - вводная страница;
+  - каркас каталога;
+  - каркас lesson-page;
+  - store прогресса;
+  - неактивную/активную кнопку `Далее`.
+
+**Предлагаю следующий шаг**
+- Если подход устраивает, я начну с `Этапа 1` и подготовлю конкретный технический дизайн:
+  - структуру route/state;
+  - схему данных урока;
+  - схему хранения прогресса;
+  - wireframe-описание вводной и lesson-page;
+  - карту из `10–15` уроков с кратким содержанием каждого.
+
+Начинаю с первого реализационного пакета: найду текущие точки входа `mission-guide`, его состояние и рендер, чтобы встроить вводную, страницы уроков и прогресс без поломки существующего симулятора.
+        
+            
+toolName: todo_write
+            
+status: success
+          
+Todos updated: 4 items
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\panel.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\render.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\state.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\index.ts
+          
+Уже видно, что портал логично строить прямо поверх текущего `mission-guide`: там есть рендер, состояние уроков и проверка решений. Сейчас добираю модалку и навигационные обработчики, чтобы внедрить вводную и строгую блокировку без ломки текущего потока.
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\modal.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\interactions-navigation.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\lessons.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\lesson-evaluation.ts
+          
+Нашел текущую точку, где проще всего внедрить портал без тяжелой перестройки: через расширение `mission-guide` состоянием `intro/lesson`, строгим `unlock` и постоянным прогрессом. Сейчас добираю вспомогательный рендер, чтобы аккуратно встроить новую вводную страницу и статусы locked/completed.
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\render-support.ts
+          
+
+        
+            
+toolName: file_search
+            
+status: success
+          
+file_pattern: public/styles/**/guide*.css
+          
+
+        
+            
+toolName: search_by_regex
+            
+status: success
+          
+query: guide-modal-layout|guide-lesson-page|guide-page-tab|guide-selector-bar|guide-hero
+          
+Контур понятен. Дальше делаю уже сам каркас портала: новое состояние `intro/lesson`, хранение прогресса, строгую блокировку перехода и визуальные статусы уроков в существующем guide UI.
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\panels\guide-panel.css
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\panels\guide-panel\page\layout.css
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\panels\guide-panel\page\lesson.css
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\panels\guide-panel\page-workbench.css
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\panels\guide-panel\page.css
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\interactions.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\interaction-context.ts
+          
+Нужен еще один узел для полноценного gating: место, где урок помечается завершенным после успешной проверки. Смотрю action-обработчики и после этого вношу state/store целиком.
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\interactions-actions.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\state.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\interactions-launch.ts
+          
+Перехожу к правкам в коде. Делаю минимально инвазивную реализацию: без нового фреймворка и без отдельного роутера, но с полноценным portal-state, вводной, строгим gating и сохранением прогресса между открытиями.
+        
+            
+toolName: apply_patch
+            
+status: failed
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\types.ts
+          
+changes: 
+          
+
+        
+            
+toolName: apply_patch
+            
+status: failed
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\state.ts
+          
+changes: 
+          
+
+        
+            
+toolName: apply_patch
+            
+status: failed
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\render\navigation.ts
+          
+changes: 
+          
+
+        
+            
+toolName: apply_patch
+            
+status: failed
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\render.ts
+          
+changes: 
+          
+
+        
+            
+toolName: apply_patch
+            
+status: failed
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\interactions-navigation.ts
+          
+changes: 
+          
+
+        
+            
+toolName: apply_patch
+            
+status: failed
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\interactions-actions.ts
+          
+changes: 
+          
+
+        
+            
+toolName: search_by_regex
+            
+status: success
+          
+query: guide-lesson__action|guide-primary-action
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\panels\guide-panel\puzzle\light.css
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\panels\guide-panel\page\light-theme.css
+          
+
+        
+            
+toolName: apply_patch
+            
+status: failed
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: failed
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\panels\guide-panel\page\lesson.css
+          
+          
+Патч по стилям частично не совпал с фактическим файлом. Перечитываю конец `lesson.css` и сразу добавлю новые portal-классы точечно, без затрагивания существующей верстки.
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\panels\guide-panel\page\lesson.css
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\panels\guide-panel\page\lesson.css
+          
+
+        
+            
+toolName: apply_patch
+            
+status: failed
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\panels\guide-panel\page\lesson.css
+          
+changes: 
+          
+
+        
+            
+toolName: apply_patch
+            
+status: failed
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\panels\guide-panel\page\light-theme.css
+          
+changes: 
+          
+
+        
+            
+toolName: apply_patch
+            
+status: failed
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\panels\guide-panel\puzzle\light.css
+          
+changes: 
+          
+Добавил базовый shell и теперь вычищаю углы навигации: чтобы нельзя было обойти блокировки через селекты, карточки уроков или переход по следующей теме. После этого прогоню диагностику по всему пакету правок.
+        
+            
+toolName: apply_patch
+            
+status: failed
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\mission-guide\interactions-navigation.ts
+          
+changes: 
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          Request limited, please try again later (4008)

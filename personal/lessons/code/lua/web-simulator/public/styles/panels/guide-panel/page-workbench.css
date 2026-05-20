@@ -128,19 +128,19 @@
  */
 
 .guide-workbench-layout {
-    grid-template-columns: minmax(680px, 1.18fr) minmax(360px, 0.82fr);
-    gap: 24px;
+    grid-template-columns: minmax(640px, 1.22fr) minmax(320px, 0.78fr);
+    gap: 12px;
 }
 
 .guide-workbench-layout__main {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 12px;
 }
 
 .guide-workbench-layout__scene {
     position: sticky;
-    top: 24px;
+    top: 12px;
 }
 
 .guide-panel-card--workspace,
@@ -150,14 +150,14 @@
 }
 
 .guide-blockly-shell {
-    padding: 12px;
-    border-radius: 16px;
+    padding: 8px;
+    border-radius: 12px;
     background: var(--guide-bg-muted);
     border: 1px solid var(--guide-border);
 }
 
 .guide-blockly-stage {
-    height: 440px;
+    height: 380px;
     width: 100%;
     border-radius: 12px;
     border: 1px solid var(--guide-border-strong);
@@ -232,8 +232,8 @@
 }
 
 .guide-scene-preview-host {
-    min-height: 420px;
-    border-radius: 16px;
+    min-height: 360px;
+    border-radius: 12px;
     border: 1px solid var(--guide-border);
     background: #ffffff;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -248,7 +248,7 @@
 
 .guide-scene-preview-host > .scene-container,
 .guide-scene-preview__placeholder {
-    min-height: 420px;
+    min-height: 360px;
 }
 
 .guide-scene-preview__placeholder {
@@ -259,7 +259,7 @@
 
 .guide-scene-preview-host > .scene-container,
 .guide-scene-preview-host > .scene-container > #canvas-container {
-    border-radius: 16px;
+    border-radius: 12px;
 }
 
 .guide-support-layout {

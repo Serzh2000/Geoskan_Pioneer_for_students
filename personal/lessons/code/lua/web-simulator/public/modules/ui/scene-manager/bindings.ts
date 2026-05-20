@@ -1,5 +1,4 @@
 import type { UICallbacks } from '../index.js';
-import type { SceneManagerDomRefs } from './support.js';
 import {
     appendIncidentEntry,
     clampFloors,
@@ -15,7 +14,7 @@ import {
     updateAddControlsState,
     updateMapSummary
 } from './support.js';
-import type { TransformMode } from './types.js';
+import type { SceneManagerDomRefs, TransformMode } from './types.js';
 import type { SceneManagerTab } from './view-state.js';
 
 type BindingOptions = {

@@ -16,6 +16,11 @@ export type EditorShellRefs = {
     blocklyCodeOverlayToggle: HTMLInputElement | null;
 };
 
+export type FallbackEditorOptions = {
+    initialValue: string;
+    onInput?: (value: string) => void;
+};
+
 export function getEditorStateKey(currentDroneId: string, language: ScriptLanguage): string {
     return `${currentDroneId}:${language}`;
 }
@@ -89,14 +94,42 @@ export function syncBlocklyCodeOverlayToggle(toggle: HTMLInputElement | null, bl
     toggle.disabled = !blocklyEnabled;
 }
 
-export function fallbackEditor(monacoRoot: HTMLElement | null) {
+function getFallbackEditorElement(): HTMLTextAreaElement | null {
+    return document.getElementById('fallback-editor') as HTMLTextAreaElement | null;
+}
+
+export function hasFallbackEditor(): boolean {
+    return Boolean(getFallbackEditorElement());
+}
+
+export function getFallbackEditorValue(): string {
+    return getFallbackEditorElement()?.value || '';
+}
+
+export function setFallbackEditorValue(value: string): void {
+    const fallbackEditorElement = getFallbackEditorElement();
+    if (fallbackEditorElement) {
+        fallbackEditorElement.value = value;
+    }
+}
+
+export function fallbackEditor(monacoRoot: HTMLElement | null, options?: FallbackEditorOptions) {
     if (!monacoRoot) return;
-    monacoRoot.innerHTML = '<div style="color:#d13b2e; padding:20px;">Не удалось загрузить Monaco Editor. Проверьте подключение к интернету. Используется резервный текстовый редактор.</div><textarea id="fallback-editor" style="width:100%; height:90%; background:#f4f5f7; color:#151515; font-family:monospace; padding:10px; border:1px solid rgba(9,9,11,0.1); border-radius:12px; resize:none;">-- Скрипт Pioneer Lua\n\nap.push(Ev.MCE_TAKEOFF)</textarea>';
-    (window as any).getEditorValueFallback = () => (document.getElementById('fallback-editor') as HTMLTextAreaElement).value;
-    (window as any).setEditorValueFallback = (val: string) => {
-        const el = document.getElementById('fallback-editor') as HTMLTextAreaElement;
-        if (el) el.value = val;
-    };
+    const initialValue = options?.initialValue || '-- Скрипт Pioneer Lua\n\nap.push(Ev.MCE_TAKEOFF)';
+    monacoRoot.innerHTML = '<div style="color:#d13b2e; padding:20px;">Не удалось загрузить Monaco Editor. Проверьте подключение к интернету. Используется резервный текстовый редактор.</div><textarea id="fallback-editor" style="width:100%; height:90%; background:#f4f5f7; color:#151515; font-family:monospace; padding:10px; border:1px solid rgba(9,9,11,0.1); border-radius:12px; resize:none;"></textarea>';
+
+    const fallbackEditorElement = getFallbackEditorElement();
+    if (fallbackEditorElement) {
+        fallbackEditorElement.value = initialValue;
+        if (options?.onInput) {
+            fallbackEditorElement.addEventListener('input', () => {
+                options.onInput?.(fallbackEditorElement.value);
+            });
+        }
+    }
+
+    (window as any).getEditorValueFallback = getFallbackEditorValue;
+    (window as any).setEditorValueFallback = setFallbackEditorValue;
 }
 
 function getSidebarPanelsElement(): HTMLElement | null {

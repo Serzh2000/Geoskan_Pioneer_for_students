@@ -1,5 +1,4 @@
-import type { SceneManagerDomRefs } from './support.js';
-import type { TransformMode } from './types.js';
+import type { SceneManagerDomRefs, TransformMode } from './types.js';
 
 export type SceneManagerTab = 'hierarchy' | 'inspector';
 

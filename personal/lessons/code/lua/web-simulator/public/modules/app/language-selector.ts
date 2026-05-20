@@ -2,17 +2,33 @@ import { currentDroneId, currentScriptLanguage, drones, setCurrentScriptLanguage
 import { renderMissionGuidePanel } from '../ui/mission-guide/panel.js';
 import { renderApiDocs } from '../ui/api-docs/index.js';
 import { log } from '../shared/logging/logger.js';
-import { getEditorValue, setEditorLanguage, setEditorValue } from '../editor/index.js';
+import { getEditorValue, getSavedEditorDraft, setEditorLanguage, setEditorValue } from '../editor/index.js';
+
+const SCRIPT_LANGUAGE_STORAGE_KEY = 'geoskan_script_language_v1';
+
+function getSavedScriptLanguage(): ScriptLanguage | null {
+    if (typeof window === 'undefined') return null;
+
+    const saved = window.localStorage.getItem(SCRIPT_LANGUAGE_STORAGE_KEY);
+    return saved === 'lua' || saved === 'python' ? saved : null;
+}
 
 export function initScriptLanguageSelector(): void {
     const langSelect = document.getElementById('script-language-select') as HTMLSelectElement | null;
     if (!langSelect) return;
 
+    const savedLanguage = getSavedScriptLanguage();
+    if (savedLanguage && savedLanguage !== currentScriptLanguage) {
+        setCurrentScriptLanguage(savedLanguage);
+    }
+
     langSelect.value = currentScriptLanguage;
     const drone = drones[currentDroneId];
     if (drone) {
         setEditorLanguage(currentScriptLanguage);
-        const initialCode = currentScriptLanguage === 'lua' ? drone.script : drone.pythonScript;
+        const initialCode =
+            getSavedEditorDraft(currentScriptLanguage) ||
+            (currentScriptLanguage === 'lua' ? drone.script : drone.pythonScript);
         setEditorValue(initialCode);
         renderApiDocs(currentScriptLanguage);
         renderMissionGuidePanel(currentScriptLanguage);
@@ -31,8 +47,9 @@ export function initScriptLanguageSelector(): void {
         }
 
         setCurrentScriptLanguage(lang);
+        window.localStorage.setItem(SCRIPT_LANGUAGE_STORAGE_KEY, lang);
         setEditorLanguage(lang);
-        const code = lang === 'lua' ? selectedDrone.script : selectedDrone.pythonScript;
+        const code = getSavedEditorDraft(lang) || (lang === 'lua' ? selectedDrone.script : selectedDrone.pythonScript);
         setEditorValue(code);
         renderApiDocs(lang);
         renderMissionGuidePanel(lang);

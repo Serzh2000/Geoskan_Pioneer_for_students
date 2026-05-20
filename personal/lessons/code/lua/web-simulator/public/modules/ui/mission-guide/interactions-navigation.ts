@@ -3,13 +3,39 @@ import { setCurrentScriptLanguage } from '../../core/state.js';
 import { logGuideEvent } from './guide-logging.js';
 import { buildGuideEventContext, resetGuideRuntimeView, type GuideInteractionContext } from './interaction-context.js';
 import {
+    getNextLesson,
+    getPreviousLesson,
+    isLessonCompleted,
+    isLessonUnlocked,
+    setActivePortalPage,
     setActiveChapterId,
-    setActiveLessonId,
-    setActiveTab
+    setActiveLessonId
 } from './state.js';
 
 export function attachGuideNavigationBindings(context: GuideInteractionContext): void {
     const { container, language, state, lesson, rerender } = context;
+
+    container.querySelectorAll<HTMLElement>('[data-guide-portal-page]').forEach((element) => {
+        element.addEventListener('click', () => {
+            const nextPage = element.dataset.guidePortalPage;
+            if (nextPage !== 'intro' && nextPage !== 'lesson') return;
+            setActivePortalPage(language, nextPage);
+            rerender(language);
+        });
+    });
+
+    container.querySelectorAll<HTMLElement>('[data-guide-open-lesson]').forEach((element) => {
+        element.addEventListener('click', () => {
+            const nextLessonId = element.dataset.guideOpenLesson;
+            if (!nextLessonId) return;
+            const selectedLesson = state.lessons.find((item) => item.id === nextLessonId);
+            if (!selectedLesson || !isLessonUnlocked(state, language, nextLessonId)) return;
+            setActivePortalPage(language, 'lesson');
+            setActiveChapterId(language, selectedLesson.chapterId);
+            setActiveLessonId(language, nextLessonId);
+            rerender(language);
+        });
+    });
 
     container.querySelectorAll<HTMLElement>('[data-guide-query]').forEach((element) => {
         element.addEventListener('click', () => {
@@ -21,23 +47,6 @@ export function attachGuideNavigationBindings(context: GuideInteractionContext):
                 previewKey
             });
             openApiDocsCatalog({ language, query, previewKey });
-        });
-    });
-
-    container.querySelectorAll<HTMLElement>('[data-guide-mode]').forEach((element) => {
-        element.addEventListener('click', () => {
-            const mode = element.dataset.guideMode;
-            if (mode !== 'tutorial' && mode !== 'trainer') {
-                return;
-            }
-
-            logGuideEvent('tab_change', {
-                ...buildGuideEventContext(context),
-                nextTab: mode
-            });
-            resetGuideRuntimeView();
-            setActiveTab(language, mode);
-            rerender(language);
         });
     });
 
@@ -76,8 +85,9 @@ export function attachGuideNavigationBindings(context: GuideInteractionContext):
             resetGuideRuntimeView();
             setActiveChapterId(language, chapterId);
             const chapterLessons = state.lessons.filter((item) => item.chapterId === chapterId);
-            if (chapterLessons.length > 0) {
-                setActiveLessonId(language, chapterLessons[0].id);
+            const firstUnlockedLesson = chapterLessons.find((item) => isLessonUnlocked(state, language, item.id));
+            if (firstUnlockedLesson) {
+                setActiveLessonId(language, firstUnlockedLesson.id);
             }
             rerender(language);
         });
@@ -94,6 +104,9 @@ export function attachGuideNavigationBindings(context: GuideInteractionContext):
             if (!selectedLesson) {
                 return;
             }
+            if (!isLessonUnlocked(state, language, nextLessonId)) {
+                return;
+            }
 
             logGuideEvent('lesson_change', {
                 ...buildGuideEventContext(context),
@@ -103,7 +116,7 @@ export function attachGuideNavigationBindings(context: GuideInteractionContext):
             resetGuideRuntimeView();
             setActiveChapterId(language, selectedLesson.chapterId);
             setActiveLessonId(language, nextLessonId);
-            setActiveTab(language, 'trainer');
+            setActivePortalPage(language, 'lesson');
             rerender(language);
         });
     });
@@ -121,10 +134,12 @@ export function attachGuideNavigationBindings(context: GuideInteractionContext):
             });
             resetGuideRuntimeView();
             setActiveChapterId(language, chapterId);
-            const nextChapter = state.chapters.find((chapter) => chapter.id === chapterId);
-            if (nextChapter) {
-                setActiveLessonId(language, nextChapter.primaryLessonId);
+            const chapterLessons = state.lessons.filter((item) => item.chapterId === chapterId);
+            const firstUnlockedLesson = chapterLessons.find((item) => isLessonUnlocked(state, language, item.id));
+            if (firstUnlockedLesson) {
+                setActiveLessonId(language, firstUnlockedLesson.id);
             }
+            setActivePortalPage(language, 'lesson');
             rerender(language);
         });
     });
@@ -142,10 +157,13 @@ export function attachGuideNavigationBindings(context: GuideInteractionContext):
                 nextChapterId: chapterId,
                 nextLessonId
             });
+            if (!isLessonUnlocked(state, language, nextLessonId)) {
+                return;
+            }
             resetGuideRuntimeView();
             setActiveChapterId(language, chapterId);
             setActiveLessonId(language, nextLessonId);
-            setActiveTab(language, 'trainer');
+            setActivePortalPage(language, 'lesson');
             rerender(language);
         });
     });
@@ -164,26 +182,31 @@ export function attachGuideNavigationBindings(context: GuideInteractionContext):
                 nextChapterId: selectedLesson?.chapterId
             });
             if (selectedLesson) {
+                if (!isLessonUnlocked(state, language, nextLessonId)) {
+                    return;
+                }
                 resetGuideRuntimeView();
                 setActiveChapterId(language, selectedLesson.chapterId);
             }
             setActiveLessonId(language, nextLessonId);
-            setActiveTab(language, 'trainer');
+            setActivePortalPage(language, 'lesson');
             rerender(language);
         });
     });
 
     container.querySelectorAll<HTMLElement>('[data-guide-nav]').forEach((element) => {
         element.addEventListener('click', () => {
-            const currentIndex = state.lessons.findIndex((item) => item.id === lesson.id);
-            if (currentIndex < 0) {
+            const direction = element.dataset.guideNav;
+            const nextLesson = direction === 'next'
+                ? getNextLesson(state, lesson.id)
+                : getPreviousLesson(state, lesson.id);
+            if (!nextLesson) {
                 return;
             }
-
-            const direction = element.dataset.guideNav;
-            const nextIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
-            const nextLesson = state.lessons[nextIndex];
-            if (!nextLesson) {
+            if (direction === 'next' && !isLessonCompleted(language, lesson.id)) {
+                return;
+            }
+            if (!isLessonUnlocked(state, language, nextLesson.id)) {
                 return;
             }
 
@@ -196,7 +219,7 @@ export function attachGuideNavigationBindings(context: GuideInteractionContext):
             resetGuideRuntimeView();
             setActiveChapterId(language, nextLesson.chapterId);
             setActiveLessonId(language, nextLesson.id);
-            setActiveTab(language, 'trainer');
+            setActivePortalPage(language, 'lesson');
             rerender(language);
         });
     });

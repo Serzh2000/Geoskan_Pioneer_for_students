@@ -2,66 +2,23 @@ import type {
     CommandSource,
     DroneFsmState,
     DroneState,
-    TickFlightCommand,
-    TickCommandSignature,
     Vector3
 } from '../core/state.js';
-import { showEarlyRouteNotice, showSimultaneousCommandsNotice } from '../app/script-execution-notice.js';
+import { showEarlyRouteNotice } from '../app/script-execution-notice.js';
 import { log } from '../shared/logging/logger.js';
-import { MCECommands } from './mce-events.js';
-
-const PREFLIGHT_TIMEOUT_MS = 3000;
-const MOVEMENT_REACHED_EPSILON = 0.15;
-const TAKEOFF_MIN_ALTITUDE = 1.0;
-
-type CommandName = 'MCE_PREFLIGHT' | 'MCE_TAKEOFF' | 'MCE_LANDING' | 'GO_TO_LOCAL_POINT' | 'ENGINES_ARM' | 'ENGINES_DISARM';
-
-function makeSignature(tickMs: number): TickCommandSignature {
-    return {
-        tickMs,
-        commands: []
-    };
-}
-
-function getTickCommandLabel(command: TickFlightCommand) {
-    switch (command) {
-        case 'preflight':
-            return 'PREFLIGHT';
-        case 'takeoff':
-            return 'TAKEOFF';
-        case 'goToLocalPoint':
-            return 'goToLocalPoint';
-        case 'landing':
-            return 'LANDING';
-        default:
-            return command;
-    }
-}
-
-function getCommandName(commandId: number): CommandName {
-    switch (commandId) {
-        case MCECommands.MCE_PREFLIGHT:
-            return 'MCE_PREFLIGHT';
-        case MCECommands.MCE_TAKEOFF:
-            return 'MCE_TAKEOFF';
-        case MCECommands.MCE_LANDING:
-            return 'MCE_LANDING';
-        case MCECommands.ENGINES_ARM:
-            return 'ENGINES_ARM';
-        case MCECommands.ENGINES_DISARM:
-            return 'ENGINES_DISARM';
-        default:
-            return 'ENGINES_DISARM';
-    }
-}
-
-function syncStatus(drone: DroneState) {
-    drone.status = drone.fsmState;
-}
+import {
+    type CommandName,
+    failSimultaneousCommands,
+    getCommandName,
+    makeSignature,
+    MOVEMENT_REACHED_EPSILON,
+    PREFLIGHT_TIMEOUT_MS,
+    setFsmStateAndSyncStatus,
+    TAKEOFF_MIN_ALTITUDE
+} from './fsm-internals.js';
 
 export function setDroneFsmState(drone: DroneState, nextState: DroneFsmState) {
-    drone.fsmState = nextState;
-    syncStatus(drone);
+    setFsmStateAndSyncStatus(drone, nextState);
 }
 
 export function getCurrentTickMs(drone: DroneState) {
@@ -102,22 +59,6 @@ export function shouldSpinRotors(drone: DroneState) {
         && drone.status !== 'CRASHED'
         && drone.status !== 'DISARMED_FALL'
     );
-}
-
-function failSimultaneousCommands(drone: DroneState, commands: TickFlightCommand[]) {
-    const labels = commands.map(getTickCommandLabel);
-    const message = `CRITICAL ERROR: Команды ${labels.join(', ')} вызваны одновременно. Разнесите их по разным моментам времени через Timer.callLater(...) или callback(event).`;
-    showSimultaneousCommandsNotice(labels);
-    drone.running = false;
-    drone.status = 'ОШИБКА';
-    drone.fsmState = 'IDLE';
-    drone.command_queue = [];
-    drone.pendingLocalPoint = false;
-    drone.pendingLocalPointSource = null;
-    drone.preflightDeadlineMs = null;
-    drone.tickCommandSignature = null;
-    log(message, 'error');
-    throw new Error(message);
 }
 
 export function recordTickCommand(drone: DroneState, command: TickFlightCommand) {

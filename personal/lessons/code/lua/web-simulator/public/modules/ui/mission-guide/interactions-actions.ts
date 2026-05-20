@@ -15,6 +15,7 @@ import {
     isLessonSolutionVisible,
     setLessonBanner,
     setLessonChecked,
+    setLessonCompleted,
     setLessonGeneratedCodeVisible,
     setLessonSolutionVisible,
     setLessonWorkspaceState
@@ -74,6 +75,7 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
             setLessonChecked(language, lesson.id, true);
 
             if (evaluation.solved) {
+                setLessonCompleted(language, lesson.id, true);
                 logGuideEvent('check_decision_launch_solved', buildGuideEventContext(context), 'success');
                 launchLesson(language, lesson, rerender, getGuideWorkspace(), {
                     kind: 'info',

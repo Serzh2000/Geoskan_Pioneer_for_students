@@ -1,29 +1,60 @@
-/**
- * ˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜˜ Monaco Editor.
- * ˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜˜˜˜ Lua-˜˜˜˜˜˜˜˜, ˜˜˜˜˜˜˜˜˜
- * ˜˜˜˜˜˜˜˜˜˜˜˜˜˜ (IntelliSense) ˜ hover-˜˜˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜
- * API-˜˜˜˜˜˜˜ ˜˜˜˜˜ Pioneer. ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜ ˜ ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜ ˜ ˜˜˜˜˜˜˜˜˜.
- */
 import 'monaco-editor/min/vs/editor/editor.main.css';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
-import 'monaco-editor/esm/vs/editor/editor.all.js';
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
-import { setupSyntaxHighlighting } from './syntax.js';
-import { setupHoverProvider } from './hover.js';
-import { setupCompletionProvider } from './completion.js';
 import { Blockly } from '../ui/mission-guide/blockly.js';
 import { currentDroneId, currentScriptLanguage, DEFAULT_LUA_SCRIPT, ScriptLanguage } from '../core/state.js';
 import {
     buildMainEditorToolbox,
     compileMainEditorWorkspace,
-    createStarterWorkspaceXml,
-    ensureEditorBlocklyDefinitions
+    createStarterWorkspaceXml
 } from './blockly.js';
 import {
-    applyEditorLayoutState,
-    resizeBlocklyCanvas,
-    updateGeneratedCodePreview
-} from './blockly-ui.js';
+    createEditorShell as createEditorShellDom,
+    fallbackEditor as mountFallbackEditor,
+    getFallbackEditorValue,
+    getEditorStateKey as getEditorStateKeyDom,
+    hasFallbackEditor,
+    setFallbackEditorValue,
+    syncBlocklyCodeOverlayToggle as syncBlocklyCodeOverlayToggleDom,
+    syncBlocklyEditorToggle as syncBlocklyEditorToggleDom,
+    syncEditorModeVisibility as syncEditorModeVisibilityDom
+} from './dom.js';
+import {
+    createTextEditorInstance,
+    getTextEditorValueFromInstance,
+    initializeMonacoEnvironment,
+    layoutTextEditorInstance,
+    setTextEditorLanguageOnInstance,
+    setTextEditorValueOnInstance
+} from './text-editor.js';
+import {
+    expandEditorPanelForBlockly as expandEditorPanelForBlocklyAutofit,
+    maybeAutoExpandTextEditorPanel as maybeAutoExpandTextEditorPanelAutofit,
+    restoreEditorPanelWidthAfterBlockly as restoreEditorPanelWidthAfterBlocklyAutofit,
+    scheduleEditorPanelAutofit as scheduleEditorPanelAutofitAutofit
+} from './autofit.js';
+import {
+    createBlocklyResizeRuntime,
+    ensureBlocklyResizeTracking as ensureBlocklyResizeTrackingSupport,
+    isBlocklyWorkspaceEmpty as isBlocklyWorkspaceEmptySupport,
+    resizeBlocklyWorkspaceViewport as resizeBlocklyWorkspaceViewportSupport,
+    updateBlocklyPreview as updateBlocklyPreviewSupport
+} from './blockly-support.js';
+import { blocklyTheme } from './runtime.js';
+import {
+    ensureBlocklyWorkspace as ensureBlocklyWorkspaceController,
+    loadBlocklyWorkspace as loadBlocklyWorkspaceController,
+    saveBlocklyWorkspaceState as saveBlocklyWorkspaceStateController
+} from './blockly-workspace-controller.js';
+import {
+    initBlocklyEditorToggle as initBlocklyEditorToggleController,
+    setBlocklyEditorEnabled as setBlocklyEditorEnabledController
+} from './blockly-toggle-controller.js';
+import {
+    createEditorAutofitContext,
+    createEditorHost,
+    getSavedEditorDraft,
+    loadEditorIndexSession,
+    persistEditorIndexSession
+} from './editor-index-helpers.js';
 
 let editorInstance: any;
 let pendingValue: string | null = null;
@@ -38,51 +69,99 @@ let blocklyCodeOverlayToggle: HTMLInputElement | null = null;
 let blocklyWorkspace: Blockly.WorkspaceSvg | null = null;
 let blocklyEnabled = false;
 let blocklyGeneratedCodeVisible = false;
-let blocklyResizeObserver: ResizeObserver | null = null;
-let blocklyWindowResizeBound = false;
+const blocklyResizeRuntime = createBlocklyResizeRuntime();
 let previousSidebarWidthBeforeBlockly: string | null = null;
 const blocklyWorkspaceXmlByKey = new Map<string, string>();
 const textDraftByKey = new Map<string, string>();
-const MIN_SIDEBAR_WIDTH = 320;
-const MAX_SIDEBAR_WIDTH = 1000;
-const LUA_EDITOR_FONT = "14px 'Fira Code', monospace";
-const LUA_EDITOR_HORIZONTAL_PADDING = 64;
-const BLOCKLY_CONTENT_PADDING = 96;
-let textMeasureCanvas: HTMLCanvasElement | null = null;
-let pendingSidebarAutofitTimer = 0;
 
-const blocklyTheme = Blockly.Theme.defineTheme('pioneer-main-blockly', {
-    name: 'pioneer-main-blockly',
-    base: Blockly.Themes.Classic,
-    fontStyle: {
-        family: 'Inter, Segoe UI, sans-serif',
-        weight: '600',
-        size: 12
-    },
-    componentStyles: {
-        workspaceBackgroundColour: '#f8f9fb',
-        toolboxBackgroundColour: '#ffffff',
-        toolboxForegroundColour: '#151515',
-        flyoutBackgroundColour: '#f4f5f7',
-        flyoutForegroundColour: '#151515',
-        scrollbarColour: '#cbd5e1',
-        insertionMarkerColour: '#ff6b00',
-        insertionMarkerOpacity: 0.32,
-        markerColour: '#ff6b00',
-        cursorColour: '#ff6b00'
-    }
-});
+function getEditorIndexState() {
+    return {
+        editorInstance,
+        pendingValue,
+        pendingLanguage,
+        monacoRoot,
+        blocklyRoot,
+        blocklyCanvasHost,
+        blocklyCanvas,
+        blocklyWorkspace,
+        blocklyCodeOverlayToggle,
+        blocklyEnabled,
+        blocklyGeneratedCodeVisible,
+        previousSidebarWidthBeforeBlockly
+    };
+}
+
+function getEditorControllers() {
+    return createEditorHost(getEditorIndexState(), {
+        textDraftByKey,
+        blocklyWorkspaceXmlByKey
+    }, {
+        theme: blocklyTheme,
+        buildMainEditorToolbox,
+        compileMainEditorWorkspace,
+        createStarterWorkspaceXml,
+        isStarterLuaScript,
+        getTextEditorValue,
+        getEditorStateKey,
+        updateBlocklyPreview: (language: ScriptLanguage) => {
+            updateBlocklyPreviewSupport(blocklyPreview, blocklyWorkspace, language);
+        },
+        resizeBlocklyWorkspaceViewport: () => {
+            resizeBlocklyWorkspaceViewportSupport(blocklyCanvasHost, blocklyCanvas, blocklyWorkspace);
+        },
+        ensureBlocklyResizeTracking: () => {
+            ensureBlocklyResizeTrackingSupport(blocklyResizeRuntime, blocklyCanvasHost, () => {
+                resizeBlocklyWorkspaceViewportSupport(blocklyCanvasHost, blocklyCanvas, blocklyWorkspace);
+            });
+        },
+        scheduleBlocklyAutofit: () => scheduleEditorPanelAutofitAutofit('blockly', createEditorAutofitContext(getEditorIndexState())),
+        setTextEditorValue,
+        saveBlocklyWorkspaceState,
+        ensureBlocklyWorkspace,
+        loadBlocklyWorkspace,
+        syncEditorModeVisibility,
+        syncBlocklyEditorToggle: () => {
+            syncBlocklyEditorToggleDom(blocklyEnabled);
+        },
+        syncBlocklyCodeOverlayToggle: () => {
+            syncBlocklyCodeOverlayToggleDom(blocklyCodeOverlayToggle, blocklyEnabled, blocklyGeneratedCodeVisible);
+        },
+        restoreEditorPanelWidthAfterBlockly: () => {
+            previousSidebarWidthBeforeBlockly = restoreEditorPanelWidthAfterBlocklyAutofit(previousSidebarWidthBeforeBlockly);
+        },
+        maybeAutoExpandTextEditorPanel: (text: string, language: ScriptLanguage = currentScriptLanguage) => {
+            maybeAutoExpandTextEditorPanelAutofit(createEditorAutofitContext(getEditorIndexState()), text, language);
+        },
+        expandEditorPanelForBlockly: () => {
+            previousSidebarWidthBeforeBlockly = expandEditorPanelForBlocklyAutofit(
+                createEditorAutofitContext(getEditorIndexState()),
+                previousSidebarWidthBeforeBlockly
+            );
+        },
+        layoutEditor,
+        isBlocklyWorkspaceEmpty: () => isBlocklyWorkspaceEmptySupport(blocklyWorkspace),
+        getCurrentScriptLanguage: () => currentScriptLanguage,
+        setBlocklyWorkspace: (workspace: Blockly.WorkspaceSvg | null) => {
+            blocklyWorkspace = workspace;
+        },
+        setBlocklyEnabled: (enabled: boolean) => {
+            blocklyEnabled = enabled;
+        },
+        setBlocklyGeneratedCodeVisible: (visible: boolean) => {
+            blocklyGeneratedCodeVisible = visible;
+        }
+    });
+}
 
 export function initEditor() {
+    const persisted = loadEditorIndexSession(getEditorIndexState(), {
+        textDraftByKey,
+        blocklyWorkspaceXmlByKey
+    });
+    blocklyEnabled = persisted.blocklyEnabled;
+    blocklyGeneratedCodeVisible = persisted.blocklyGeneratedCodeVisible;
     try {
-        (self as typeof globalThis & {
-            MonacoEnvironment?: { getWorker: () => Worker };
-        }).MonacoEnvironment = {
-            getWorker() {
-                return new editorWorker();
-            }
-        };
-
+        initializeMonacoEnvironment();
         createEditorShell();
         createEditor();
     } catch (err) {
@@ -92,75 +171,39 @@ export function initEditor() {
     }
 }
 
-function getEditorStateKey(language: ScriptLanguage = currentScriptLanguage): string {
-    return `${currentDroneId}:${language}`;
-}
+function getEditorStateKey(language: ScriptLanguage = currentScriptLanguage): string { return getEditorStateKeyDom(currentDroneId, language); }
 
 function createEditorShell() {
-    const editorElement = document.getElementById('editor');
-    if (!editorElement) return;
-
-    editorElement.innerHTML = `
-        <div id="monaco-editor-root" class="editor-mode-root"></div>
-        <div id="blockly-editor-root" class="editor-mode-root editor-mode-root--hidden">
-            <div class="blockly-editor-shell">
-                <div id="blockly-editor-canvas-host" class="blockly-editor-canvas-host">
-                    <div id="blockly-editor-canvas" class="blockly-editor-canvas"></div>
-                    <div id="blockly-code-overlay" class="blockly-code-overlay" aria-hidden="true">
-                        <div class="blockly-code-overlay__header">
-                            <div class="blockly-code-overlay__title">˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜</div>
-                        </div>
-                        <pre id="blockly-editor-code-preview" class="blockly-code-overlay__code"></pre>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    monacoRoot = document.getElementById('monaco-editor-root');
-    blocklyRoot = document.getElementById('blockly-editor-root');
-    blocklyCanvasHost = document.getElementById('blockly-editor-canvas-host');
-    blocklyCanvas = document.getElementById('blockly-editor-canvas');
-    blocklyPreview = document.getElementById('blockly-editor-code-preview');
-    blocklyCodeOverlay = document.getElementById('blockly-code-overlay');
-    blocklyCodeOverlayToggle = document.getElementById('blockly-code-overlay-toggle') as HTMLInputElement | null;
+    const refs = createEditorShellDom();
+    monacoRoot = refs.monacoRoot;
+    blocklyRoot = refs.blocklyRoot;
+    blocklyCanvasHost = refs.blocklyCanvasHost;
+    blocklyCanvas = refs.blocklyCanvas;
+    blocklyPreview = refs.blocklyPreview;
+    blocklyCodeOverlay = refs.blocklyCodeOverlay;
+    blocklyCodeOverlayToggle = refs.blocklyCodeOverlayToggle;
     syncEditorModeVisibility();
 }
 
-function syncBlocklyEditorToggle() {
-    const toggle = document.getElementById('blockly-editor-toggle') as HTMLInputElement | null;
-    if (toggle) {
-        toggle.checked = blocklyEnabled;
-    }
-}
-
-function syncBlocklyCodeOverlayToggle() {
-    if (!blocklyCodeOverlayToggle) return;
-    blocklyCodeOverlayToggle.checked = blocklyEnabled && blocklyGeneratedCodeVisible;
-    blocklyCodeOverlayToggle.disabled = !blocklyEnabled;
-}
-
 function fallbackEditor() {
-    if (monacoRoot) {
-        monacoRoot.innerHTML = `<div style="color:#d13b2e; padding:20px;">˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ Monaco Editor. ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜ ˜ ˜˜˜˜˜˜˜˜˜. ˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜.</div><textarea id="fallback-editor" style="width:100%; height:90%; background:#f4f5f7; color:#151515; font-family:monospace; padding:10px; border:1px solid rgba(9,9,11,0.1); border-radius:12px; resize:none;">${DEFAULT_LUA_SCRIPT}</textarea>`;
-        (window as any).getEditorValueFallback = () => (document.getElementById('fallback-editor') as HTMLTextAreaElement).value;
-        (window as any).setEditorValueFallback = (val: string) => {
-            const el = document.getElementById('fallback-editor') as HTMLTextAreaElement;
-            if(el) el.value = val;
-        };
-    }
+    mountFallbackEditor(monacoRoot, {
+        initialValue:
+            pendingValue ||
+            getSavedEditorDraft({ textDraftByKey }, currentDroneId, pendingLanguage || currentScriptLanguage) ||
+            DEFAULT_LUA_SCRIPT,
+        onInput: (value) => {
+            textDraftByKey.set(getEditorStateKey(currentScriptLanguage), value);
+            persistEditorIndexSession(getEditorIndexState(), { textDraftByKey, blocklyWorkspaceXmlByKey });
+            maybeAutoExpandTextEditorPanelAutofit(createEditorAutofitContext(getEditorIndexState()), value, currentScriptLanguage);
+        }
+    });
 }
 
 function createEditor() {
-    setupSyntaxHighlighting(monaco);
-    setupHoverProvider(monaco);
-    setupCompletionProvider(monaco);
-    ensureEditorBlocklyDefinitions();
-
     const initialLanguage: ScriptLanguage = pendingLanguage || 'lua';
-    const initialMonacoLang = initialLanguage === 'lua' ? 'lua' : 'python';
     const initialValue =
         pendingValue ||
+        getSavedEditorDraft({ textDraftByKey }, currentDroneId, initialLanguage) ||
         DEFAULT_LUA_SCRIPT;
 
     if (!monacoRoot) {
@@ -168,343 +211,50 @@ function createEditor() {
         return;
     }
 
-    editorInstance = monaco.editor.create(monacoRoot, {
-        value: initialValue,
-        language: initialMonacoLang,
-        theme: 'pioneer-light',
-        automaticLayout: true,
-        wordBasedSuggestions: 'off',
-        quickSuggestions: {
-            other: true,
-            comments: false,
-            strings: false
-        },
-        suggestOnTriggerCharacters: true,
-        parameterHints: {
-            enabled: true
-        },
-        hover: {
-            enabled: true,
-            delay: 200,
-            sticky: true
-        },
-        fontSize: 14,
-        fontFamily: "'Fira Code', monospace",
-        minimap: { enabled: false },
-        scrollbar: { verticalScrollbarSize: 10, horizontalScrollbarSize: 10 },
-        fixedOverflowWidgets: true,
-        suggest: {
-            snippetsPreventQuickSuggestions: false
+    editorInstance = createTextEditorInstance({
+        root: monacoRoot,
+        initialValue,
+        initialLanguage,
+        onDidChangeModelContent: (currentValue) => {
+            textDraftByKey.set(getEditorStateKey(currentScriptLanguage), currentValue);
+            persistEditorIndexSession(getEditorIndexState(), { textDraftByKey, blocklyWorkspaceXmlByKey });
+            maybeAutoExpandTextEditorPanelAutofit(createEditorAutofitContext(getEditorIndexState()), currentValue, currentScriptLanguage);
         }
     });
 
     pendingValue = null;
     pendingLanguage = null;
-    maybeAutoExpandTextEditorPanel(initialValue, initialLanguage);
+    maybeAutoExpandTextEditorPanelAutofit(createEditorAutofitContext(getEditorIndexState()), initialValue, initialLanguage);
 }
 
-function getTextEditorValue(): string {
-    if ((window as any).getEditorValueFallback) return (window as any).getEditorValueFallback();
-    return editorInstance ? editorInstance.getValue() : '';
-}
+function getTextEditorValue(): string { return hasFallbackEditor() ? getFallbackEditorValue() : getTextEditorValueFromInstance(editorInstance); }
 
 function setTextEditorValue(val: string) {
-    if ((window as any).setEditorValueFallback) return (window as any).setEditorValueFallback(val);
-    if (editorInstance) editorInstance.setValue(val);
-    else pendingValue = val;
-    maybeAutoExpandTextEditorPanel(val);
-}
-
-function normalizeMultilineText(value: string): string {
-    return value
-        .replace(/\r\n/g, '\n')
-        .split('\n')
-        .map((line) => line.replace(/\s+$/u, ''))
-        .join('\n')
-        .trim();
-}
-
-function isStarterLuaScript(value: string): boolean {
-    return normalizeMultilineText(value) === normalizeMultilineText(DEFAULT_LUA_SCRIPT);
-}
-
-function getSidebarCurrentWidth(panels: HTMLElement): number {
-    return Number.parseInt(panels.style.width || '', 10) || Math.floor(panels.getBoundingClientRect().width);
-}
-
-function getEditorContentElement(mode: 'text' | 'blockly'): HTMLElement | null {
-    if (mode === 'blockly') {
-        return blocklyCanvasHost || blocklyCanvas || blocklyRoot;
-    }
-    return monacoRoot || (document.getElementById('fallback-editor') as HTMLElement | null);
-}
-
-function getSidebarChromeWidth(panels: HTMLElement, contentElement: HTMLElement | null): number {
-    const contentWidth = Math.floor(contentElement?.getBoundingClientRect().width || 0);
-    const sidebarWidth = Math.floor(panels.getBoundingClientRect().width);
-    if (contentWidth <= 0 || sidebarWidth <= 0) {
-        return 64;
-    }
-    return Math.max(40, sidebarWidth - contentWidth);
-}
-
-function clampSidebarWidth(width: number): number {
-    return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, Math.ceil(width)));
-}
-
-function applySidebarAutofitWidth(requiredWidth: number): void {
-    const panels = getSidebarPanelsElement();
-    const activePanelId = document.querySelector('.sidebar-panel.active')?.id || null;
-    if (!panels || activePanelId !== 'editor-panel' || panels.classList.contains('is-fullscreen')) return;
-
-    const currentWidth = getSidebarCurrentWidth(panels);
-    const nextWidth = clampSidebarWidth(requiredWidth);
-    if (nextWidth <= currentWidth) return;
-
-    panels.style.width = `${nextWidth}px`;
-    localStorage.setItem('sidebar-width', `${nextWidth}px`);
-    window.dispatchEvent(new Event('resize'));
-}
-
-function measureTextWidth(text: string, font: string): number {
-    if (typeof document === 'undefined') return 0;
-    textMeasureCanvas ||= document.createElement('canvas');
-    const context = textMeasureCanvas.getContext('2d');
-    if (!context) return 0;
-    context.font = font;
-    return Math.ceil(context.measureText(text).width);
-}
-
-function getRequiredLuaSidebarWidth(text: string): number {
-    const panels = getSidebarPanelsElement();
-    if (!panels) return MIN_SIDEBAR_WIDTH;
-
-    const contentElement = getEditorContentElement('text');
-    const chromeWidth = getSidebarChromeWidth(panels, contentElement);
-    const measuredTextWidth = text
-        .replace(/\r\n/g, '\n')
-        .split('\n')
-        .reduce((maxWidth, line) => Math.max(maxWidth, measureTextWidth(line, LUA_EDITOR_FONT)), 0);
-    const editorScrollWidth = typeof editorInstance?.getScrollWidth === 'function'
-        ? Number(editorInstance.getScrollWidth()) || 0
-        : 0;
-    const requiredEditorWidth = Math.max(measuredTextWidth + LUA_EDITOR_HORIZONTAL_PADDING, editorScrollWidth);
-    return requiredEditorWidth + chromeWidth;
-}
-
-function getBlocklyBlocksWidth(): number {
-    if (!blocklyWorkspace) return 0;
-
-    const boundingBox = (blocklyWorkspace as Blockly.WorkspaceSvg & {
-        getBlocksBoundingBox?: () => { left: number; right: number };
-    }).getBlocksBoundingBox?.();
-    if (boundingBox) {
-        return Math.max(0, Math.ceil(boundingBox.right - boundingBox.left));
-    }
-
-    const blockCanvasElement = blocklyCanvas?.querySelector('.blocklyBlockCanvas') as SVGGraphicsElement | null;
-    if (blockCanvasElement?.getBBox) {
-        try {
-            const box = blockCanvasElement.getBBox();
-            return Math.max(0, Math.ceil(box.width));
-        } catch (error) {
-            console.warn('[Editor] Failed to measure Blockly block canvas', error);
-        }
-    }
-
-    return 0;
-}
-
-function getRequiredBlocklySidebarWidth(): number {
-    const panels = getSidebarPanelsElement();
-    if (!panels) return MIN_SIDEBAR_WIDTH;
-
-    const contentElement = getEditorContentElement('blockly');
-    const chromeWidth = getSidebarChromeWidth(panels, contentElement);
-    const toolboxWidth = Math.ceil(
-        (blocklyCanvas?.querySelector('.blocklyToolboxDiv') as HTMLElement | null)?.getBoundingClientRect().width || 0
-    );
-    const requiredCanvasWidth = toolboxWidth + getBlocklyBlocksWidth() + BLOCKLY_CONTENT_PADDING;
-    return requiredCanvasWidth + chromeWidth;
-}
-
-function autoExpandEditorPanelToContent(mode: 'text' | 'blockly', text = ''): void {
-    const requiredWidth = mode === 'blockly'
-        ? getRequiredBlocklySidebarWidth()
-        : getRequiredLuaSidebarWidth(text);
-    applySidebarAutofitWidth(requiredWidth);
-}
-
-function scheduleEditorPanelAutofit(mode: 'text' | 'blockly', text = ''): void {
-    if (typeof window === 'undefined') return;
-    if (pendingSidebarAutofitTimer) {
-        window.clearTimeout(pendingSidebarAutofitTimer);
-    }
-    pendingSidebarAutofitTimer = window.setTimeout(() => {
-        pendingSidebarAutofitTimer = 0;
-        window.requestAnimationFrame(() => {
-            if (mode === 'blockly') {
-                window.requestAnimationFrame(() => autoExpandEditorPanelToContent(mode, text));
-                return;
-            }
-            autoExpandEditorPanelToContent(mode, text);
-        });
-    }, 0);
-}
-
-function maybeAutoExpandTextEditorPanel(text: string, language: ScriptLanguage = currentScriptLanguage): void {
-    if (language !== 'lua' || !isStarterLuaScript(text)) return;
-    scheduleEditorPanelAutofit('text', text);
-}
-
-function getStarterBlocklyWorkspaceXml(language: ScriptLanguage): string | null {
-    if (language !== 'lua') return null;
-
-    const key = getEditorStateKey(language);
-    const draftText = textDraftByKey.get(key) || getTextEditorValue();
-    if (draftText.trim().length > 0 && !isStarterLuaScript(draftText)) {
-        return null;
-    }
-    return createStarterWorkspaceXml(language);
-}
-
-function saveBlocklyWorkspaceState(language: ScriptLanguage = currentScriptLanguage) {
-    if (!blocklyWorkspace) return;
-    const xml = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(blocklyWorkspace));
-    blocklyWorkspaceXmlByKey.set(getEditorStateKey(language), xml);
-}
-
-function updateBlocklyPreview(language: ScriptLanguage = currentScriptLanguage) {
-    if (!blocklyPreview || !blocklyWorkspace) return;
-    updateGeneratedCodePreview(blocklyPreview, compileMainEditorWorkspace(language, blocklyWorkspace));
-}
-
-function isBlocklyWorkspaceEmpty(): boolean {
-    if (!blocklyWorkspace) return true;
-    return blocklyWorkspace.getTopBlocks(false).filter((block) => !block.isInsertionMarker()).length === 0;
-}
-
-function getSidebarPanelsElement(): HTMLElement | null {
-    return document.querySelector('.sidebar-panels') as HTMLElement | null;
-}
-
-function expandEditorPanelForBlockly(): void {
-    const panels = getSidebarPanelsElement();
-    const activePanelId = document.querySelector('.sidebar-panel.active')?.id || null;
-    if (!panels || activePanelId !== 'editor-panel' || panels.classList.contains('is-fullscreen')) return;
-
-    if (!previousSidebarWidthBeforeBlockly) {
-        previousSidebarWidthBeforeBlockly = panels.style.width || `${getSidebarCurrentWidth(panels)}px`;
-    }
-    scheduleEditorPanelAutofit('blockly');
-}
-
-function restoreEditorPanelWidthAfterBlockly(): void {
-    const panels = getSidebarPanelsElement();
-    const activePanelId = document.querySelector('.sidebar-panel.active')?.id || null;
-    if (!panels || activePanelId !== 'editor-panel' || !previousSidebarWidthBeforeBlockly) return;
-
-    const currentWidth = getSidebarCurrentWidth(panels);
-    const previousWidth = Number.parseInt(previousSidebarWidthBeforeBlockly, 10);
-    const nextWidth = Number.isFinite(previousWidth)
-        ? Math.max(currentWidth, previousWidth)
-        : currentWidth;
-    panels.style.width = `${nextWidth}px`;
-    localStorage.setItem('sidebar-width', `${nextWidth}px`);
-    previousSidebarWidthBeforeBlockly = null;
-    window.dispatchEvent(new Event('resize'));
-}
-
-function resizeBlocklyWorkspaceViewport() {
-    resizeBlocklyCanvas(blocklyCanvasHost, blocklyCanvas);
-    if (blocklyWorkspace) {
-        Blockly.svgResize(blocklyWorkspace);
-    }
-}
-
-function ensureBlocklyResizeTracking() {
-    if (typeof ResizeObserver !== 'undefined') {
-        if (!blocklyResizeObserver) {
-            blocklyResizeObserver = new ResizeObserver(() => {
-                resizeBlocklyWorkspaceViewport();
-            });
-        }
-        blocklyResizeObserver.disconnect();
-        if (blocklyCanvasHost) {
-            blocklyResizeObserver.observe(blocklyCanvasHost);
-        }
-        return;
-    }
-
-    if (!blocklyWindowResizeBound) {
-        window.addEventListener('resize', resizeBlocklyWorkspaceViewport);
-        blocklyWindowResizeBound = true;
-    }
-}
-
-function loadBlocklyWorkspace(language: ScriptLanguage = currentScriptLanguage) {
-    if (!blocklyWorkspace) return;
-
-    const key = getEditorStateKey(language);
-    const savedXml = blocklyWorkspaceXmlByKey.get(key);
-    const starterXml = savedXml ? null : getStarterBlocklyWorkspaceXml(language);
-    const workspaceXml = savedXml || starterXml;
-
-    blocklyWorkspace.clear();
-
-    if (workspaceXml) {
-        try {
-            const xml = Blockly.utils.xml.textToDom(workspaceXml);
-            Blockly.Xml.domToWorkspace(xml, blocklyWorkspace);
-        } catch (error) {
-            console.error('[Editor] Failed to load Blockly workspace', error);
-        }
-    }
-
-    if (workspaceXml) {
-        saveBlocklyWorkspaceState(language);
+    if (hasFallbackEditor()) {
+        setFallbackEditorValue(val);
+    } else if (!setTextEditorValueOnInstance(editorInstance, val)) {
+        pendingValue = val;
     } else {
-        blocklyWorkspaceXmlByKey.delete(key);
+        pendingValue = null;
     }
-    updateBlocklyPreview(language);
-    resizeBlocklyWorkspaceViewport();
-    scheduleEditorPanelAutofit('blockly');
+    textDraftByKey.set(getEditorStateKey(currentScriptLanguage), val);
+    persistEditorIndexSession(getEditorIndexState(), { textDraftByKey, blocklyWorkspaceXmlByKey });
+    maybeAutoExpandTextEditorPanelAutofit(createEditorAutofitContext(getEditorIndexState()), val);
 }
 
-function ensureBlocklyWorkspace(language: ScriptLanguage = currentScriptLanguage) {
-    if (!blocklyCanvas) return;
-    if (!blocklyWorkspace) {
-        blocklyWorkspace = Blockly.inject(blocklyCanvas, {
-            toolbox: buildMainEditorToolbox(language),
-            scrollbars: true,
-            trashcan: true,
-            theme: blocklyTheme,
-            toolboxPosition: 'start'
-        });
+function saveBlocklyWorkspaceState(language: ScriptLanguage = currentScriptLanguage) { saveBlocklyWorkspaceStateController(getEditorControllers().workspaceController, language); }
 
-        blocklyWorkspace.addChangeListener(() => {
-            saveBlocklyWorkspaceState(currentScriptLanguage);
-            textDraftByKey.set(getEditorStateKey(currentScriptLanguage), compileMainEditorWorkspace(currentScriptLanguage, blocklyWorkspace!));
-            updateBlocklyPreview(currentScriptLanguage);
-        });
-    } else {
-        blocklyWorkspace.updateToolbox(buildMainEditorToolbox(language));
-    }
+function loadBlocklyWorkspace(language: ScriptLanguage = currentScriptLanguage) { loadBlocklyWorkspaceController(getEditorControllers().workspaceController, language); }
 
-    ensureBlocklyResizeTracking();
-    resizeBlocklyWorkspaceViewport();
-}
+function ensureBlocklyWorkspace(language: ScriptLanguage = currentScriptLanguage) { ensureBlocklyWorkspaceController(getEditorControllers().workspaceController, language, currentScriptLanguage); }
 
 function syncEditorModeVisibility() {
-    applyEditorLayoutState({
+    syncEditorModeVisibilityDom({
         monacoRoot,
         blocklyRoot,
-        codeOverlay: blocklyCodeOverlay,
-        codeToggle: blocklyCodeOverlayToggle
-    }, {
-        blocklyEnabled,
-        generatedCodeVisible: blocklyGeneratedCodeVisible
-    });
+        blocklyCodeOverlay,
+        blocklyCodeOverlayToggle
+    }, blocklyEnabled, blocklyGeneratedCodeVisible);
 }
 
 export function getEditorValue(): string {
@@ -517,6 +267,7 @@ export function getEditorValue(): string {
 export function setEditorValue(val: string) {
     const key = getEditorStateKey();
     textDraftByKey.set(key, val);
+    persistEditorIndexSession(getEditorIndexState(), { textDraftByKey, blocklyWorkspaceXmlByKey });
 
     if (blocklyEnabled) {
         ensureBlocklyWorkspace(currentScriptLanguage);
@@ -528,15 +279,9 @@ export function setEditorValue(val: string) {
 }
 
 export function setEditorLanguage(language: ScriptLanguage) {
-    if (!(window as any).getEditorValueFallback) {
-        if (!editorInstance) {
+    if (!hasFallbackEditor()) {
+        if (!setTextEditorLanguageOnInstance(editorInstance, language)) {
             pendingLanguage = language;
-        } else {
-            const model = editorInstance.getModel ? editorInstance.getModel() : null;
-            if (model) {
-                const langId = language === 'lua' ? 'lua' : 'python';
-                monaco.editor.setModelLanguage(model, langId);
-            }
         }
     }
 
@@ -547,44 +292,7 @@ export function setEditorLanguage(language: ScriptLanguage) {
 }
 
 export function setBlocklyEditorEnabled(enabled: boolean) {
-    if (blocklyEnabled === enabled) return;
-
-    if (!enabled) {
-        saveBlocklyWorkspaceState(currentScriptLanguage);
-        const key = getEditorStateKey(currentScriptLanguage);
-        const previousText = textDraftByKey.get(key) || '';
-        const generatedCode = blocklyWorkspace
-            ? compileMainEditorWorkspace(currentScriptLanguage, blocklyWorkspace)
-            : previousText;
-        const nextText = isBlocklyWorkspaceEmpty() && !blocklyWorkspaceXmlByKey.has(key)
-            ? previousText
-            : generatedCode;
-        textDraftByKey.set(key, nextText);
-        blocklyGeneratedCodeVisible = false;
-        blocklyEnabled = false;
-        syncEditorModeVisibility();
-        syncBlocklyEditorToggle();
-        syncBlocklyCodeOverlayToggle();
-        if (monacoRoot) {
-            setTextEditorValue(nextText);
-        }
-        restoreEditorPanelWidthAfterBlockly();
-        maybeAutoExpandTextEditorPanel(nextText, currentScriptLanguage);
-        layoutEditor();
-        return;
-    }
-
-    const currentText = getTextEditorValue();
-    textDraftByKey.set(getEditorStateKey(currentScriptLanguage), currentText);
-    blocklyGeneratedCodeVisible = false;
-    blocklyEnabled = true;
-    syncEditorModeVisibility();
-    syncBlocklyEditorToggle();
-    syncBlocklyCodeOverlayToggle();
-    ensureBlocklyWorkspace(currentScriptLanguage);
-    loadBlocklyWorkspace(currentScriptLanguage);
-    expandEditorPanelForBlockly();
-    layoutEditor();
+    setBlocklyEditorEnabledController(getEditorControllers().toggleController, enabled);
 }
 
 export function isBlocklyEditorEnabled(): boolean {
@@ -592,33 +300,18 @@ export function isBlocklyEditorEnabled(): boolean {
 }
 
 export function initBlocklyEditorToggle() {
-    const toggle = document.getElementById('blockly-editor-toggle') as HTMLInputElement | null;
-    syncBlocklyEditorToggle();
-    syncBlocklyCodeOverlayToggle();
+    initBlocklyEditorToggleController(getEditorControllers().toggleController);
+}
 
-    if (toggle) {
-        toggle.addEventListener('change', () => {
-            setBlocklyEditorEnabled(toggle.checked);
-        });
-    }
-
-    if (blocklyCodeOverlayToggle) {
-        blocklyCodeOverlayToggle.addEventListener('change', () => {
-            if (!blocklyEnabled) {
-                blocklyGeneratedCodeVisible = false;
-                syncEditorModeVisibility();
-                syncBlocklyCodeOverlayToggle();
-                return;
-            }
-            blocklyGeneratedCodeVisible = Boolean(blocklyCodeOverlayToggle?.checked);
-            syncEditorModeVisibility();
-            syncBlocklyCodeOverlayToggle();
-            resizeBlocklyWorkspaceViewport();
-        });
-    }
+export function getSavedEditorDraft(language: ScriptLanguage = currentScriptLanguage): string | null {
+    loadEditorIndexSession(getEditorIndexState(), {
+        textDraftByKey,
+        blocklyWorkspaceXmlByKey
+    });
+    return getSavedEditorDraft({ textDraftByKey }, currentDroneId, language);
 }
 
 export function layoutEditor() {
-    if (editorInstance) editorInstance.layout();
-    resizeBlocklyWorkspaceViewport();
+    layoutTextEditorInstance(editorInstance);
+    resizeBlocklyWorkspaceViewportSupport(blocklyCanvasHost, blocklyCanvas, blocklyWorkspace);
 }

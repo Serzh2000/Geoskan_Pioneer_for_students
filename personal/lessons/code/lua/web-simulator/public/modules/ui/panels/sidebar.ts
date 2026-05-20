@@ -8,13 +8,15 @@ export function initSidebar(callbacks: UICallbacks) {
     const resizer = document.getElementById('sidebar-resizer') as HTMLElement | null;
     if (!panels || !resizer) return;
 
+    const ACTIVE_PANEL_STORAGE_KEY = 'geoskan_sidebar_active_panel_v1';
+    const CLOSED_PANEL_SENTINEL = '__closed__';
     const DEFAULT_SIDEBAR_WIDTH = 320;
     const MIN_SIDEBAR_WIDTH = 320;
     const MAX_SIDEBAR_WIDTH = 1000;
     const fullscreenPanels = new Set(['gamepad-panel']);
     const shouldLogPanelDebug = localStorage.getItem('sidebar-debug') === '1';
     const loggablePanelNames: Record<string, string> = {
-        'settings-panel': '˜˜˜˜˜˜˜˜˜'
+        'settings-panel': 'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½'
     };
     const debugPanelIds = new Set(['settings-panel']);
     const logPanelOpenDiagnostics = createSidebarDiagnosticsLogger(panels, shouldLogPanelDebug, debugPanelIds);
@@ -26,6 +28,18 @@ export function initSidebar(callbacks: UICallbacks) {
         const parsed = Number.parseInt(value || '', 10);
         if (!Number.isFinite(parsed)) return `${DEFAULT_SIDEBAR_WIDTH}px`;
         return `${Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, parsed))}px`;
+    };
+
+    const persistActivePanel = (panelId: string | null) => {
+        localStorage.setItem(ACTIVE_PANEL_STORAGE_KEY, panelId || CLOSED_PANEL_SENTINEL);
+    };
+
+    const setActiveTabButton = (panelId: string | null) => {
+        const buttons = document.querySelectorAll('.sidebar-tab-btn');
+        buttons.forEach((btn) => {
+            const isTarget = !!panelId && btn.getAttribute('onclick')?.includes(`'${panelId}'`);
+            btn.classList.toggle('active', isTarget);
+        });
     };
 
     const refreshViewportLayout = () => {
@@ -65,7 +79,8 @@ export function initSidebar(callbacks: UICallbacks) {
         syncSidebarCollapsedState();
         syncSidebarMode(null);
         panels.classList.remove('is-closing');
-        document.querySelectorAll('.sidebar-tab-btn').forEach((b) => b.classList.remove('active'));
+        setActiveTabButton(null);
+        persistActivePanel(null);
         refreshViewportLayout();
     };
 
@@ -89,7 +104,7 @@ export function initSidebar(callbacks: UICallbacks) {
         const panel = document.getElementById(panelId);
         if (!panel) {
             console.warn('[Sidebar][Debug] openPanel target not found', { panelId });
-            log(`[Sidebar][Debug] ${panelId}: DOM ˜˜˜˜˜˜ ˜˜ ˜˜˜˜˜˜`, 'warn');
+            log(`[Sidebar][Debug] ${panelId}: DOM ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½`, 'warn');
             return;
         }
 
@@ -103,8 +118,8 @@ export function initSidebar(callbacks: UICallbacks) {
 
         if (isAlreadyActive && panels.style.width !== '0px') {
             if (panelName) {
-                console.info(`[Sidebar] ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜: ${panelName}`);
-                log(`˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜: ${panelName}`, 'info');
+                console.info(`[Sidebar] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ${panelName}`);
+                log(`ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ${panelName}`, 'info');
             }
             closePanelWithAnimation();
             logPanelOpenDiagnostics('after-close', panelId, panel);
@@ -118,17 +133,12 @@ export function initSidebar(callbacks: UICallbacks) {
         syncSidebarCollapsedState();
         syncSidebarMode(panelId);
         panel.classList.add('active');
-
-        const buttons = document.querySelectorAll('.sidebar-tab-btn');
-        buttons.forEach((btn) => {
-            if (btn.getAttribute('onclick')?.includes(`'${panelId}'`)) {
-                btn.classList.add('active');
-            }
-        });
+        setActiveTabButton(panelId);
+        persistActivePanel(panelId);
 
         if (panelName) {
-            console.info(`[Sidebar] ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜: ${panelName}`);
-            log(`˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜: ${panelName}`, 'info');
+            console.info(`[Sidebar] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ${panelName}`);
+            log(`ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ${panelName}`, 'info');
         }
 
         logPanelOpenDiagnostics('after-activate', panelId, panel);
@@ -175,7 +185,51 @@ export function initSidebar(callbacks: UICallbacks) {
     (window as any).switchTab = (window as any).openPanel;
     panels.style.width = normalizeSidebarWidth(localStorage.getItem('sidebar-width'));
     localStorage.setItem('sidebar-width', panels.style.width);
-    syncSidebarCollapsedState();
-    syncSidebarMode(document.querySelector('.sidebar-panel.active')?.id ?? null);
-    refreshViewportLayout();
+
+    const restoreSidebarState = () => {
+        const savedPanelId = localStorage.getItem(ACTIVE_PANEL_STORAGE_KEY);
+        if (savedPanelId === null) {
+            syncSidebarCollapsedState();
+            syncSidebarMode(document.querySelector('.sidebar-panel.active')?.id ?? null);
+            refreshViewportLayout();
+            return;
+        }
+
+        resetClosingState();
+        document.querySelectorAll('.sidebar-panel').forEach((panel) => {
+            panel.classList.remove('active');
+            panel.classList.remove('is-closing');
+        });
+        setActiveTabButton(null);
+
+        if (savedPanelId === CLOSED_PANEL_SENTINEL) {
+            panels.style.width = '0px';
+            syncSidebarCollapsedState();
+            syncSidebarMode(null);
+            refreshViewportLayout();
+            return;
+        }
+
+        const panel = document.getElementById(savedPanelId);
+        if (!panel) {
+            persistActivePanel('editor-panel');
+            (window as any).openPanel('editor-panel');
+            return;
+        }
+
+        panels.style.width = fullscreenPanels.has(savedPanelId) ? '100%' : normalizeSidebarWidth(localStorage.getItem('sidebar-width'));
+        if (!fullscreenPanels.has(savedPanelId)) {
+            localStorage.setItem('sidebar-width', panels.style.width);
+        }
+        panel.classList.add('active');
+        setActiveTabButton(savedPanelId);
+        syncSidebarCollapsedState();
+        syncSidebarMode(savedPanelId);
+        if (savedPanelId === 'editor-panel' && callbacks.onEditorResize) {
+            setTimeout(callbacks.onEditorResize, 350);
+        }
+        refreshViewportLayout();
+    };
+
+    restoreSidebarState();
 }

@@ -49,6 +49,10 @@ export type GuideTabId = 'tutorial' | 'trainer';
 
 export type GuideThemeId = 'dark' | 'light';
 
+export type GuidePortalPageId = 'intro' | 'lesson';
+
+export type GuideLessonProgressState = 'locked' | 'available' | 'in_progress' | 'completed';
+
 export type GuideTheorySection = {
     title: string;
     paragraphs: string[];

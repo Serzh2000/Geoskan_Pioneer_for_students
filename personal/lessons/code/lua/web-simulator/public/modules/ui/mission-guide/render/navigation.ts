@@ -3,12 +3,12 @@ import {
     getActiveChapter,
     getActiveLesson,
     getActiveTab,
+    getCompletedLessonsCount,
     getLessonBanner,
+    getLessonProgressState,
     getLessonsForChapter,
-    getLessonSequence,
-    getLessonWorkspaceState
+    isLessonCompleted
 } from '../state.js';
-import { evaluateLesson } from '../lesson-evaluation.js';
 import type { GuideLessonState } from '../types.js';
 import { escapeHtml } from './shared.js';
 
@@ -38,6 +38,7 @@ export function renderGuideSelectors(state: GuideLessonState, language: ScriptLa
     const activeChapter = getActiveChapter(state, language);
     const activeLesson = getActiveLesson(state, language);
     const chapterLessons = getLessonsForChapter(state, activeChapter.id);
+    const completedCount = getCompletedLessonsCount(state, language);
 
     return `
         <section class="guide-selector-bar">
@@ -61,13 +62,32 @@ export function renderGuideSelectors(state: GuideLessonState, language: ScriptLa
             <label class="guide-selector-field">
                 <span class="guide-selector-field__label">Задание</span>
                 <select class="guide-selector" data-guide-lesson-select aria-label="Выбор задания">
-                    ${chapterLessons.map((lesson, index) => `
-                        <option value="${escapeHtml(lesson.id)}" ${lesson.id === activeLesson.id ? 'selected' : ''}>
-                            ${index + 1}. ${escapeHtml(lesson.title)}
+                    ${chapterLessons.map((lesson, index) => {
+        const progressState = getLessonProgressState(state, language, lesson.id);
+        const unlocked = progressState !== 'locked';
+        const suffix = progressState === 'completed'
+            ? ' • выполнен'
+            : progressState === 'in_progress'
+                ? ' • текущий'
+                : progressState === 'locked'
+                    ? ' • закрыт'
+                    : '';
+        return `
+                        <option
+                            value="${escapeHtml(lesson.id)}"
+                            ${lesson.id === activeLesson.id ? 'selected' : ''}
+                            ${unlocked ? '' : 'disabled'}
+                        >
+                            ${index + 1}. ${escapeHtml(lesson.title)}${suffix}
                         </option>
-                    `).join('')}
+                    `;
+    }).join('')}
                 </select>
             </label>
+            <div class="guide-selector-meta">
+                <div class="guide-selector-meta__item">Пройдено уроков: ${completedCount} / ${state.lessons.length}</div>
+                <div class="guide-selector-meta__item">Текущий раздел: ${escapeHtml(activeChapter.title)}</div>
+            </div>
         </section>
     `;
 }
@@ -80,20 +100,19 @@ export function renderPageTabs(state: GuideLessonState, language: ScriptLanguage
     return `
         <div class="guide-page-tabs">
             ${chapterLessons.map((lesson, index) => {
-                const evaluation = evaluateLesson(
-                    lesson,
-                    getLessonSequence(language, lesson.id),
-                    getLessonWorkspaceState(language, lesson.id)
-                );
                 const isActive = activeLesson.id === lesson.id;
+                const progressState = getLessonProgressState(state, language, lesson.id);
+                const unlocked = progressState !== 'locked';
+                const completed = progressState === 'completed';
                 return `
                     <button
                         type="button"
-                        class="guide-page-tab ${isActive ? 'is-active' : ''} ${evaluation.solved ? 'is-solved' : ''}"
+                        class="guide-page-tab ${isActive ? 'is-active' : ''} ${completed ? 'is-solved' : ''} ${unlocked ? '' : 'is-locked'}"
                         data-guide-lesson="${escapeHtml(lesson.id)}"
+                        ${unlocked ? '' : 'disabled'}
                     >
                         <span class="guide-page-tab__step">${index + 1}</span>
-                        <span class="guide-page-tab__text">${escapeHtml(lesson.title)}</span>
+                        <span class="guide-page-tab__text">${escapeHtml(lesson.title)}${progressState === 'completed' ? ' · выполнен' : unlocked ? '' : ' · закрыт'}</span>
                     </button>
                 `;
             }).join('')}

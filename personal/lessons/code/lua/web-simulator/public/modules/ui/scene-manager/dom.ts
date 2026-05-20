@@ -1,4 +1,4 @@
-import type { SceneManagerDomRefs } from './support.js';
+import type { SceneManagerDomRefs } from './types.js';
 
 export function getSceneManagerDomRefs(): SceneManagerDomRefs {
     return {

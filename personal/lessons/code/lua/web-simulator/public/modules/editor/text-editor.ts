@@ -9,6 +9,13 @@ import { setupHoverProvider } from './monaco/hover.js';
 import { setupSyntaxHighlighting } from './monaco/syntax.js';
 import { editorRuntime } from './runtime.js';
 
+export type TextEditorCreateOptions = {
+    root: HTMLElement;
+    initialValue: string;
+    initialLanguage: ScriptLanguage;
+    onDidChangeModelContent?: (value: string) => void;
+};
+
 export function initializeMonacoEnvironment(): void {
     (self as typeof globalThis & {
         MonacoEnvironment?: { getWorker: () => Worker };
@@ -19,25 +26,19 @@ export function initializeMonacoEnvironment(): void {
     };
 }
 
-export function createTextEditor(): void {
+function getMonacoLanguage(language: ScriptLanguage): 'lua' | 'python' {
+    return language === 'lua' ? 'lua' : 'python';
+}
+
+export function createTextEditorInstance(options: TextEditorCreateOptions): any {
     setupSyntaxHighlighting(monaco);
     setupHoverProvider(monaco);
     setupCompletionProvider(monaco);
     ensureEditorBlocklyDefinitions();
 
-    const initialLanguage: ScriptLanguage = editorRuntime.pendingLanguage || 'lua';
-    const initialMonacoLang = initialLanguage === 'lua' ? 'lua' : 'python';
-    const initialValue =
-        editorRuntime.pendingValue ||
-        '-- ˜˜˜˜˜˜ Pioneer Lua\n\nap.push(Ev.MCE_TAKEOFF)\n\nTimer.callLater(3, function()\n    ap.push(Ev.MCE_LANDING)\nend)';
-
-    if (!editorRuntime.monacoRoot) {
-        return;
-    }
-
-    editorRuntime.editorInstance = monaco.editor.create(editorRuntime.monacoRoot, {
-        value: initialValue,
-        language: initialMonacoLang,
+    const editorInstance = monaco.editor.create(options.root, {
+        value: options.initialValue,
+        language: getMonacoLanguage(options.initialLanguage),
         theme: 'pioneer-light',
         automaticLayout: true,
         wordBasedSuggestions: 'off',
@@ -65,8 +66,37 @@ export function createTextEditor(): void {
         }
     });
 
+    if (options.onDidChangeModelContent) {
+        editorInstance.onDidChangeModelContent(() => {
+            options.onDidChangeModelContent?.(editorInstance.getValue());
+        });
+    }
+
+    return editorInstance;
+}
+
+export function createTextEditor(): void {
+    const initialLanguage: ScriptLanguage = editorRuntime.pendingLanguage || 'lua';
+    const initialValue =
+        editorRuntime.pendingValue ||
+        '-- ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Pioneer Lua\n\nap.push(Ev.MCE_TAKEOFF)\n\nTimer.callLater(3, function()\n    ap.push(Ev.MCE_LANDING)\nend)';
+
+    if (!editorRuntime.monacoRoot) {
+        return;
+    }
+
+    editorRuntime.editorInstance = createTextEditorInstance({
+        root: editorRuntime.monacoRoot,
+        initialValue,
+        initialLanguage
+    });
+
     editorRuntime.pendingValue = null;
     editorRuntime.pendingLanguage = null;
+}
+
+export function getTextEditorValueFromInstance(editorInstance: any): string {
+    return editorInstance ? editorInstance.getValue() : '';
 }
 
 export function getTextEditorValue(): string {
@@ -74,7 +104,16 @@ export function getTextEditorValue(): string {
         return (window as any).getEditorValueFallback();
     }
 
-    return editorRuntime.editorInstance ? editorRuntime.editorInstance.getValue() : '';
+    return getTextEditorValueFromInstance(editorRuntime.editorInstance);
+}
+
+export function setTextEditorValueOnInstance(editorInstance: any, value: string): boolean {
+    if (!editorInstance) {
+        return false;
+    }
+
+    editorInstance.setValue(value);
+    return true;
 }
 
 export function setTextEditorValue(value: string): void {
@@ -83,12 +122,21 @@ export function setTextEditorValue(value: string): void {
         return;
     }
 
-    if (editorRuntime.editorInstance) {
-        editorRuntime.editorInstance.setValue(value);
+    if (setTextEditorValueOnInstance(editorRuntime.editorInstance, value)) {
         return;
     }
 
     editorRuntime.pendingValue = value;
+}
+
+export function setTextEditorLanguageOnInstance(editorInstance: any, language: ScriptLanguage): boolean {
+    const model = editorInstance?.getModel ? editorInstance.getModel() : null;
+    if (!model) {
+        return false;
+    }
+
+    monaco.editor.setModelLanguage(model, getMonacoLanguage(language));
+    return true;
 }
 
 export function setTextEditorLanguage(language: ScriptLanguage): void {
@@ -101,16 +149,15 @@ export function setTextEditorLanguage(language: ScriptLanguage): void {
         return;
     }
 
-    const model = editorRuntime.editorInstance.getModel ? editorRuntime.editorInstance.getModel() : null;
-    if (!model) {
-        return;
-    }
+    setTextEditorLanguageOnInstance(editorRuntime.editorInstance, language);
+}
 
-    monaco.editor.setModelLanguage(model, language === 'lua' ? 'lua' : 'python');
+export function layoutTextEditorInstance(editorInstance: any): void {
+    if (editorInstance) {
+        editorInstance.layout();
+    }
 }
 
 export function layoutTextEditor(): void {
-    if (editorRuntime.editorInstance) {
-        editorRuntime.editorInstance.layout();
-    }
+    layoutTextEditorInstance(editorRuntime.editorInstance);
 }

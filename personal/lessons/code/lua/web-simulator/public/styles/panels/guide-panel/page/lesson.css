@@ -1,9 +1,9 @@
 .guide-page-tab {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px;
-    border-radius: 16px;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
     border: 1px solid rgba(56, 189, 248, 0.16);
     background: rgba(15, 23, 42, 0.72);
     color: #cbd5e1;
@@ -26,32 +26,41 @@
     box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.34);
 }
 
+.guide-page-tab.is-locked {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.guide-page-tab.is-locked:hover {
+    transform: none;
+}
+
 .guide-page-tab__step {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 22px;
+    height: 22px;
     border-radius: 999px;
     background: rgba(14, 165, 233, 0.16);
     color: #7dd3fc;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 800;
     flex-shrink: 0;
 }
 
 .guide-page-tab__text {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
-    line-height: 1.45;
+    line-height: 1.35;
     text-align: left;
 }
 
 .guide-lesson-page {
     display: flex;
     flex-direction: column;
-    gap: 18px;
-    padding: 22px;
+    gap: 12px;
+    padding: 0;
 }
 
 .guide-lesson-page__header,
@@ -120,6 +129,102 @@
     text-transform: uppercase;
 }
 
+.guide-lesson-overview,
+.guide-lesson-section,
+.guide-lesson-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(56, 189, 248, 0.14);
+    background: rgba(2, 6, 23, 0.4);
+}
+
+.guide-lesson-overview__head,
+.guide-lesson-section__header,
+.guide-lesson-footer__actions {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.guide-lesson-overview__percent {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.16);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    color: #7dd3fc;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.guide-lesson-overview__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap: 8px;
+}
+
+.guide-overview-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(56, 189, 248, 0.12);
+    background: rgba(15, 23, 42, 0.04);
+}
+
+.guide-lesson-overview__bar {
+    position: relative;
+    overflow: hidden;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.guide-lesson-overview__fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #0ea5e9 0%, #22c55e 100%);
+}
+
+.guide-lesson-overview__meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: #cbd5e1;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.guide-lesson-section__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.guide-selector-meta {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    align-self: stretch;
+    gap: 6px;
+}
+
+.guide-link-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
 .guide-lesson-page__nav,
 .guide-actions,
 .guide-methods,
@@ -145,8 +250,8 @@
 .guide-panel-card {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 18px;
+    gap: 10px;
+    padding: 14px;
 }
 
 .guide-panel-card--lesson {
@@ -197,27 +302,27 @@
 }
 
 .guide-panel-note {
-    padding: 12px 14px;
-    border-radius: 14px;
+    padding: 10px 12px;
+    border-radius: 10px;
     background: rgba(15, 23, 42, 0.54);
     border: 1px solid rgba(148, 163, 184, 0.16);
     color: #cbd5e1;
-    font-size: 13px;
-    line-height: 1.65;
+    font-size: 12px;
+    line-height: 1.5;
 }
 
 .guide-api-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 12px;
+    gap: 10px;
 }
 
 .guide-api-card {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding: 16px;
-    border-radius: 16px;
+    padding: 12px;
+    border-radius: 12px;
     border: 1px solid rgba(56, 189, 248, 0.14);
     background: rgba(2, 6, 23, 0.44);
 }
@@ -251,5 +356,192 @@
 
 .guide-actions--primary {
     justify-content: flex-start;
+}
+
+.guide-portal-switcher {
+    display: inline-flex;
+    gap: 8px;
+    align-self: flex-start;
+}
+
+.guide-page-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+.guide-portal-intro {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.guide-portal-intro__hero,
+.guide-portal-card,
+.guide-portal-roadmap {
+    padding: 22px;
+    border-radius: 18px;
+    border: 1px solid rgba(56, 189, 248, 0.14);
+    background: rgba(2, 6, 23, 0.4);
+}
+
+.guide-portal-intro__hero {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.guide-portal-intro__eyebrow {
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.guide-portal-intro__title {
+    color: #f8fafc;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.guide-portal-intro__text,
+.guide-portal-card__text,
+.guide-roadmap-item__summary {
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.guide-portal-intro__actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.guide-portal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.guide-portal-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.guide-portal-card__title {
+    color: #f8fafc;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.guide-portal-roadmap {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.guide-portal-roadmap__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.guide-roadmap-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    background: rgba(15, 23, 42, 0.5);
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.guide-roadmap-item:hover {
+    transform: translateY(-1px);
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.guide-roadmap-item.is-current {
+    border-color: rgba(125, 211, 252, 0.56);
+    background: rgba(14, 165, 233, 0.12);
+}
+
+.guide-roadmap-item.is-completed {
+    box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.32);
+}
+
+.guide-roadmap-item.is-locked {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.guide-roadmap-item.is-locked:hover {
+    transform: none;
+    border-color: rgba(56, 189, 248, 0.16);
+}
+
+.guide-roadmap-item__index {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.16);
+    color: #7dd3fc;
+    font-size: 12px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.guide-roadmap-item__body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.guide-roadmap-item__status {
+    color: #7dd3fc;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.guide-roadmap-item__title {
+    color: #f8fafc;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+@media (max-width: 860px) {
+    .guide-lesson-overview__head,
+    .guide-lesson-section__header,
+    .guide-lesson-footer__actions,
+    .guide-lesson-page__header {
+        flex-direction: column;
+    }
+
+    .guide-lesson-overview__stats,
+    .guide-lesson-section__grid,
+    .guide-lesson-page__meta,
+    .guide-portal-grid,
+    .guide-portal-roadmap__list {
+        grid-template-columns: 1fr;
+    }
+
+    .guide-selector-meta {
+        justify-content: flex-start;
+    }
 }
 
