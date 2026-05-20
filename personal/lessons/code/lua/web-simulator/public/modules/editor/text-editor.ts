@@ -1,5 +1,6 @@
 import 'monaco-editor/min/vs/editor/editor.main.css';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
+import 'monaco-editor/esm/vs/editor/editor.all.js';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import type { ScriptLanguage } from '../core/state.js';
 import { ensureEditorBlocklyDefinitions } from './blockly-mode/index.js';
@@ -28,7 +29,7 @@ export function createTextEditor(): void {
     const initialMonacoLang = initialLanguage === 'lua' ? 'lua' : 'python';
     const initialValue =
         editorRuntime.pendingValue ||
-        '-- Ð¡ÐºÑ€Ð¸Ð¿Ñ‚ Pioneer Lua\n\nap.push(Ev.MCE_TAKEOFF)\n\nTimer.callLater(3, function()\n    ap.push(Ev.MCE_LANDING)\nend)';
+        '-- ˜˜˜˜˜˜ Pioneer Lua\n\nap.push(Ev.MCE_TAKEOFF)\n\nTimer.callLater(3, function()\n    ap.push(Ev.MCE_LANDING)\nend)';
 
     if (!editorRuntime.monacoRoot) {
         return;
@@ -40,6 +41,20 @@ export function createTextEditor(): void {
         theme: 'pioneer-light',
         automaticLayout: true,
         wordBasedSuggestions: 'off',
+        quickSuggestions: {
+            other: true,
+            comments: false,
+            strings: false
+        },
+        suggestOnTriggerCharacters: true,
+        parameterHints: {
+            enabled: true
+        },
+        hover: {
+            enabled: true,
+            delay: 200,
+            sticky: true
+        },
         fontSize: 14,
         fontFamily: "'Fira Code', monospace",
         minimap: { enabled: false },

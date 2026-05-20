@@ -6,16 +6,19 @@
     --guide-bg: #ffffff;
     --guide-bg-muted: #f8f9fa;
     --guide-bg-emphasis: #f3f4f6;
-    --guide-text: #1a1a1a;
+    --guide-text: #1d1d20;
     --guide-text-muted: #5c6370;
     --guide-border: #e5e7eb;
-    --guide-border-strong: #d0d5dd;
+    --guide-border-strong: #d1d1d6;
     --guide-accent: #ff6b00;
     --guide-accent-strong: #e65f00;
     --guide-accent-soft: rgba(255, 107, 0, 0.12);
     --guide-success: #0f9d58;
     --guide-info: #2563eb;
     --guide-shadow: 0 16px 40px rgba(17, 24, 39, 0.08);
+    max-width: 1520px;
+    margin: 0 auto;
+    gap: 16px;
     color: var(--guide-text);
 }
 
@@ -29,7 +32,9 @@
 }
 
 .guide-hero {
-    background: var(--guide-bg);
+    gap: 10px;
+    padding: 18px 20px;
+    background: linear-gradient(180deg, #ffffff 0%, #fffaf5 100%);
     border-left: 4px solid var(--guide-accent);
 }
 
@@ -47,6 +52,7 @@
 .guide-practice-card__title,
 .guide-chapter-tab__title,
 .guide-theory-page__title,
+.guide-page-tab__text,
 .guide-theory-card__content,
 .guide-api-card__title,
 .guide-api-card__summary,
@@ -75,6 +81,20 @@
     border: 1px solid var(--guide-border);
 }
 
+.guide-hero__title,
+.guide-lesson-page__title,
+.guide-theory-page__title {
+    font-size: 28px;
+    line-height: 1.2;
+}
+
+.guide-hero__progress {
+    align-items: center;
+    min-height: 42px;
+    padding: 10px 14px;
+    font-weight: 700;
+}
+
 .guide-top-tabs,
 .guide-selector-bar {
     background: var(--guide-bg);
@@ -82,14 +102,44 @@
     box-shadow: 0 10px 30px rgba(17, 24, 39, 0.05);
 }
 
+.guide-top-tabs {
+    gap: 6px;
+    padding: 6px;
+    border-radius: 16px;
+}
+
 .guide-top-tab {
+    min-width: 124px;
+    min-height: 42px;
+    padding: 10px 16px;
+    border-radius: 10px;
     color: var(--guide-text-muted);
+}
+
+.guide-top-tab:hover {
+    background: #fffaf5;
+    border-color: rgba(255, 107, 0, 0.22);
+    color: var(--guide-text);
 }
 
 .guide-top-tab.is-active {
     background: var(--guide-accent-soft);
     border-color: rgba(255, 107, 0, 0.28);
     color: var(--guide-text);
+}
+
+.guide-top-tab:focus-visible,
+.guide-selector:focus-visible,
+.guide-chapter-tab:focus-visible,
+.guide-page-tab:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.14);
+}
+
+.guide-selector-bar {
+    align-items: end;
+    padding: 16px 18px;
+    border-radius: 16px;
 }
 
 .guide-selector {
@@ -113,6 +163,7 @@
     background: var(--guide-bg);
     border: 1px solid var(--guide-border);
     color: var(--guide-text);
+    border-radius: 16px;
     box-shadow: 0 10px 24px rgba(17, 24, 39, 0.04);
 }
 
@@ -152,8 +203,8 @@
 }
 
 .guide-panel-note {
-    background: var(--guide-bg-muted);
-    border: 1px solid var(--guide-border);
+    background: #fffaf5;
+    border: 1px solid rgba(255, 107, 0, 0.18);
     border-left: 4px solid var(--guide-accent);
 }
 
@@ -166,5 +217,51 @@
 .guide-theory-page__hero {
     background: var(--guide-bg);
     border-left: 4px solid var(--guide-accent);
+}
+
+.guide-lesson-page,
+.guide-panel-card,
+.guide-theory-page__hero,
+.guide-theory-card,
+.guide-practice-card,
+.guide-api-card {
+    border-radius: 16px;
+}
+
+.guide-panel-card,
+.guide-lesson-page,
+.guide-theory-page__hero {
+    gap: 16px;
+}
+
+.guide-theory-card__list,
+.guide-practice-card .guide-panel-card__text {
+    color: var(--guide-text-muted);
+}
+
+.guide-theory-card__list li::marker {
+    color: var(--guide-accent);
+}
+
+@media (max-width: 860px) {
+    .guide-modal-layout {
+        gap: 14px;
+    }
+
+    .guide-hero,
+    .guide-lesson-page,
+    .guide-panel-card,
+    .guide-theory-page__hero,
+    .guide-theory-card,
+    .guide-practice-card {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .guide-hero__title,
+    .guide-lesson-page__title,
+    .guide-theory-page__title {
+        font-size: 24px;
+    }
 }
 

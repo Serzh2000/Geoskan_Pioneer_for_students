@@ -1,5 +1,21 @@
+let syntaxRegistered = false;
+let themeRegistered = false;
+
+function ensureLanguageRegistered(monaco: any, id: string): void {
+    const languages = monaco.languages.getLanguages() as Array<{ id: string }>;
+    if (!languages.some((language) => language.id === id)) {
+        monaco.languages.register({ id });
+    }
+}
+
 export function setupSyntaxHighlighting(monaco: any) {
-    monaco.languages.setMonarchTokensProvider('lua', {
+    ensureLanguageRegistered(monaco, 'lua');
+    ensureLanguageRegistered(monaco, 'python');
+
+    if (!syntaxRegistered) {
+        syntaxRegistered = true;
+
+        monaco.languages.setMonarchTokensProvider('lua', {
         tokenizer: {
             root: [
                 // Pioneer Modules
@@ -30,9 +46,35 @@ export function setupSyntaxHighlighting(monaco: any) {
                 [/\d+/, "number"]
             ]
         }
-    });
+        });
 
-    monaco.languages.setMonarchTokensProvider('python', {
+        monaco.languages.setLanguageConfiguration('lua', {
+            comments: {
+                lineComment: '--',
+                blockComment: ['--[[', ']]']
+            },
+            brackets: [
+                ['{', '}'],
+                ['[', ']'],
+                ['(', ')']
+            ],
+            autoClosingPairs: [
+                { open: '{', close: '}' },
+                { open: '[', close: ']' },
+                { open: '(', close: ')' },
+                { open: '"', close: '"' },
+                { open: "'", close: "'" }
+            ],
+            surroundingPairs: [
+                { open: '{', close: '}' },
+                { open: '[', close: ']' },
+                { open: '(', close: ')' },
+                { open: '"', close: '"' },
+                { open: "'", close: "'" }
+            ]
+        });
+
+        monaco.languages.setMonarchTokensProvider('python', {
         tokenizer: {
             root: [
                 // Python keywords
@@ -58,7 +100,38 @@ export function setupSyntaxHighlighting(monaco: any) {
                 [/\d+([eE][-+]?\d+)?/, "number"]
             ]
         }
-    });
+        });
+
+        monaco.languages.setLanguageConfiguration('python', {
+            comments: {
+                lineComment: '#'
+            },
+            brackets: [
+                ['{', '}'],
+                ['[', ']'],
+                ['(', ')']
+            ],
+            autoClosingPairs: [
+                { open: '{', close: '}' },
+                { open: '[', close: ']' },
+                { open: '(', close: ')' },
+                { open: '"', close: '"' },
+                { open: "'", close: "'" }
+            ],
+            surroundingPairs: [
+                { open: '{', close: '}' },
+                { open: '[', close: ']' },
+                { open: '(', close: ')' },
+                { open: '"', close: '"' },
+                { open: "'", close: "'" }
+            ]
+        });
+    }
+
+    if (themeRegistered) {
+        return;
+    }
+    themeRegistered = true;
 
     monaco.editor.defineTheme('pioneer-light', {
         base: 'vs',

@@ -2,4 +2,6 @@
  * Mission guide page layout.
  */
 @import url('./page/layout.css');
+@import url('./page/lesson.css');
+@import url('./page/theory-and-practice.css');
 @import url('./page/light-theme.css');

@@ -2,6 +2,21 @@ import { apiDocs, evConstants, pythonApiDocs } from '../../docs/api-docs.js';
 
 let completionProvidersRegistered = false;
 
+function ensureLanguageRegistered(monaco: any, id: string): void {
+    const languages = monaco.languages.getLanguages() as Array<{ id: string }>;
+    if (!languages.some((language) => language.id === id)) {
+        monaco.languages.register({ id });
+    }
+}
+
+function parseApiMemberKey(key: string): { owner: string; separator: '.' | ':'; member: string } | null {
+    const match = key.match(/^(.*?)([.:])([^.:]+)$/);
+    if (!match) return null;
+    const [, owner, separator, member] = match;
+    if (separator !== '.' && separator !== ':') return null;
+    return { owner, separator, member };
+}
+
 function dedupeSuggestions(suggestions: any[]) {
     const seen = new Set<string>();
     return suggestions.filter((item) => {
@@ -15,6 +30,8 @@ function dedupeSuggestions(suggestions: any[]) {
 export function setupCompletionProvider(monaco: any) {
     if (completionProvidersRegistered) return;
     completionProvidersRegistered = true;
+    ensureLanguageRegistered(monaco, 'lua');
+    ensureLanguageRegistered(monaco, 'python');
 
     monaco.languages.registerCompletionItemProvider('lua', {
         provideCompletionItems: function(model: any, position: any) {
@@ -33,16 +50,13 @@ export function setupCompletionProvider(monaco: any) {
             // API Methods suggestions
             for (const [key, doc] of Object.entries(apiDocs as any)) {
                 const docObj = doc as any;
-                // Check if it's a module method (e.g. ap.push)
-                if (key.includes('.')) {
-                    const [module, method] = key.split('.');
-                    // Logic to suggest methods after dot
-                    
-                    if (textBeforeCursor.trim().endsWith(module + '.')) {
+                const parsed = parseApiMemberKey(key);
+                if (parsed) {
+                    if (textBeforeCursor.trim().endsWith(`${parsed.owner}${parsed.separator}`)) {
                          suggestions.push({
-                            label: method,
+                            label: parsed.member,
                             kind: (monaco.languages.CompletionItemKind as any)[docObj.kind] || monaco.languages.CompletionItemKind.Method,
-                            insertText: docObj.insertText || method,
+                            insertText: docObj.insertText || parsed.member,
                             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
                             documentation: { value: docObj.desc },
                             range: range
@@ -63,7 +77,7 @@ export function setupCompletionProvider(monaco: any) {
 
             // Suggest Modules if typing fresh
             const modules = ['ap', 'Sensors', 'Timer', 'Ledbar', 'camera', 'Gpio', 'Uart', 'Spi', 'mailbox', 'Ev'];
-            modules.forEach(mod => {
+            modules.forEach((mod) => {
                 suggestions.push({
                     label: mod,
                     kind: monaco.languages.CompletionItemKind.Module,
@@ -88,10 +102,10 @@ export function setupCompletionProvider(monaco: any) {
 
             return { suggestions: dedupeSuggestions(suggestions) };
         },
-        triggerCharacters: ['.']
+        triggerCharacters: ['.', ':']
     });
 
-    // Python completion: РїРѕРґСЃРєР°Р·С‹РІР°РµРј РјРµС‚РѕРґС‹ Pioneer/Camera РїСЂРё РІРІРѕРґРµ РїРѕСЃР»Рµ С‚РѕС‡РєРё.
+    // Python completion: подсказываем методы Pioneer/Camera при вводе после точки.
     monaco.languages.registerCompletionItemProvider('python', {
         provideCompletionItems: function(model: any, position: any) {
             const word = model.getWordUntilPosition(position);
@@ -114,7 +128,7 @@ export function setupCompletionProvider(monaco: any) {
                     return { method, key, doc };
                 });
 
-            // Р•СЃР»Рё РєСѓСЂСЃРѕСЂ РїРѕСЃР»Рµ С‚РѕС‡РєРё (РїСЂРёРјРµСЂ: "pioneer_mini.")
+            // Если курсор после точки (пример: "pioneer_mini.")
             if (normalized.endsWith('.')) {
                 methodDocs.forEach(({ method, doc }) => {
                     suggestions.push({
@@ -127,7 +141,7 @@ export function setupCompletionProvider(monaco: any) {
                     });
                 });
             } else {
-                // РџСЂРµРґР»РѕР¶РёРј РєР»СЋС‡РµРІС‹Рµ РєР»Р°СЃСЃС‹.
+                // Предложим ключевые классы.
                 ['Pioneer', 'Camera', 'VideoStream', 'time'].forEach((cls) => {
                     suggestions.push({
                         label: cls,
@@ -138,7 +152,7 @@ export function setupCompletionProvider(monaco: any) {
                     });
                 });
 
-                // Р С‡СѓС‚СЊ-С‡СѓС‚СЊ РїРѕРґСЃРєР°Р·РѕРє РґР»СЏ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂР°/С‡Р°СЃС‚Рѕ РёСЃРїРѕР»СЊР·СѓРµРјС‹С… С„СѓРЅРєС†РёР№.
+                // И чуть-чуть подсказок для конструктора/часто используемых функций.
                 if (normalized.length === 0) {
                     suggestions.push({
                         label: 'pioneer',

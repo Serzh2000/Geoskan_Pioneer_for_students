@@ -1,11 +1,12 @@
 /**
- * ĞœĞ¾Ğ´ÑƒĞ»ÑŒ Ğ¸Ğ½Ñ‚ĞµĞ³Ñ€Ğ°Ñ†Ğ¸Ğ¸ Ñ€ĞµĞ´Ğ°ĞºÑ‚Ğ¾Ñ€Ğ° ĞºĞ¾Ğ´Ğ° Monaco Editor.
- * ĞĞ°ÑÑ‚Ñ€Ğ°Ğ¸Ğ²Ğ°ĞµÑ‚ Ğ¾ĞºÑ€ÑƒĞ¶ĞµĞ½Ğ¸Ğµ Ğ´Ğ»Ñ Ğ½Ğ°Ğ¿Ğ¸ÑĞ°Ğ½Ğ¸Ñ Lua-ÑĞºÑ€Ğ¸Ğ¿Ñ‚Ğ¾Ğ², Ğ´Ğ¾Ğ±Ğ°Ğ²Ğ»ÑĞµÑ‚
- * Ğ°Ğ²Ñ‚Ğ¾Ğ´Ğ¾Ğ¿Ğ¾Ğ»Ğ½ĞµĞ½Ğ¸Ğµ (IntelliSense) Ğ¸ hover-Ğ¿Ğ¾Ğ´ÑĞºĞ°Ğ·ĞºĞ¸ Ğ´Ğ»Ñ ÑĞ¿ĞµÑ†Ğ¸Ñ„Ğ¸Ñ‡Ğ½Ñ‹Ñ…
- * API-Ñ„ÑƒĞ½ĞºÑ†Ğ¸Ğ¹ Ğ´Ñ€Ğ¾Ğ½Ğ° Pioneer. Ğ£Ğ¿Ñ€Ğ°Ğ²Ğ»ÑĞµÑ‚ Ğ¿Ğ¾Ğ»ÑƒÑ‡ĞµĞ½Ğ¸ĞµĞ¼ Ğ¸ ÑƒÑÑ‚Ğ°Ğ½Ğ¾Ğ²ĞºĞ¾Ğ¹ ĞºĞ¾Ğ´Ğ° Ğ² Ñ€ĞµĞ´Ğ°ĞºÑ‚Ğ¾Ñ€Ğµ.
+ * ˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜˜ Monaco Editor.
+ * ˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜˜˜˜ Lua-˜˜˜˜˜˜˜˜, ˜˜˜˜˜˜˜˜˜
+ * ˜˜˜˜˜˜˜˜˜˜˜˜˜˜ (IntelliSense) ˜ hover-˜˜˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜
+ * API-˜˜˜˜˜˜˜ ˜˜˜˜˜ Pioneer. ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜ ˜ ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜ ˜ ˜˜˜˜˜˜˜˜˜.
  */
 import 'monaco-editor/min/vs/editor/editor.main.css';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
+import 'monaco-editor/esm/vs/editor/editor.all.js';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import { setupSyntaxHighlighting } from './syntax.js';
 import { setupHoverProvider } from './hover.js';
@@ -107,7 +108,7 @@ function createEditorShell() {
                     <div id="blockly-editor-canvas" class="blockly-editor-canvas"></div>
                     <div id="blockly-code-overlay" class="blockly-code-overlay" aria-hidden="true">
                         <div class="blockly-code-overlay__header">
-                            <div class="blockly-code-overlay__title">Ğ¡Ğ³ĞµĞ½ĞµÑ€Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ½Ñ‹Ğ¹ ĞºĞ¾Ğ´</div>
+                            <div class="blockly-code-overlay__title">˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜</div>
                         </div>
                         <pre id="blockly-editor-code-preview" class="blockly-code-overlay__code"></pre>
                     </div>
@@ -141,7 +142,7 @@ function syncBlocklyCodeOverlayToggle() {
 
 function fallbackEditor() {
     if (monacoRoot) {
-        monacoRoot.innerHTML = `<div style="color:#d13b2e; padding:20px;">ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ·Ğ°Ğ³Ñ€ÑƒĞ·Ğ¸Ñ‚ÑŒ Monaco Editor. ĞŸÑ€Ğ¾Ğ²ĞµÑ€ÑŒÑ‚Ğµ Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ğµ Ğº Ğ¸Ğ½Ñ‚ĞµÑ€Ğ½ĞµÑ‚Ñƒ. Ğ˜ÑĞ¿Ğ¾Ğ»ÑŒĞ·ÑƒĞµÑ‚ÑÑ Ñ€ĞµĞ·ĞµÑ€Ğ²Ğ½Ñ‹Ğ¹ Ñ‚ĞµĞºÑÑ‚Ğ¾Ğ²Ñ‹Ğ¹ Ñ€ĞµĞ´Ğ°ĞºÑ‚Ğ¾Ñ€.</div><textarea id="fallback-editor" style="width:100%; height:90%; background:#f4f5f7; color:#151515; font-family:monospace; padding:10px; border:1px solid rgba(9,9,11,0.1); border-radius:12px; resize:none;">${DEFAULT_LUA_SCRIPT}</textarea>`;
+        monacoRoot.innerHTML = `<div style="color:#d13b2e; padding:20px;">˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ Monaco Editor. ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜ ˜ ˜˜˜˜˜˜˜˜˜. ˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜.</div><textarea id="fallback-editor" style="width:100%; height:90%; background:#f4f5f7; color:#151515; font-family:monospace; padding:10px; border:1px solid rgba(9,9,11,0.1); border-radius:12px; resize:none;">${DEFAULT_LUA_SCRIPT}</textarea>`;
         (window as any).getEditorValueFallback = () => (document.getElementById('fallback-editor') as HTMLTextAreaElement).value;
         (window as any).setEditorValueFallback = (val: string) => {
             const el = document.getElementById('fallback-editor') as HTMLTextAreaElement;
@@ -173,6 +174,20 @@ function createEditor() {
         theme: 'pioneer-light',
         automaticLayout: true,
         wordBasedSuggestions: 'off',
+        quickSuggestions: {
+            other: true,
+            comments: false,
+            strings: false
+        },
+        suggestOnTriggerCharacters: true,
+        parameterHints: {
+            enabled: true
+        },
+        hover: {
+            enabled: true,
+            delay: 200,
+            sticky: true
+        },
         fontSize: 14,
         fontFamily: "'Fira Code', monospace",
         minimap: { enabled: false },

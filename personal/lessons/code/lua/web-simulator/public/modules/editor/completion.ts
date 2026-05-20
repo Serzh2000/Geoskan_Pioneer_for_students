@@ -2,6 +2,21 @@ import { apiDocs, evConstants, pythonApiDocs } from '../docs/api-docs.js';
 
 let completionProvidersRegistered = false;
 
+function ensureLanguageRegistered(monaco: any, id: string): void {
+    const languages = monaco.languages.getLanguages() as Array<{ id: string }>;
+    if (!languages.some((language) => language.id === id)) {
+        monaco.languages.register({ id });
+    }
+}
+
+function parseApiMemberKey(key: string): { owner: string; separator: '.' | ':'; member: string } | null {
+    const match = key.match(/^(.*?)([.:])([^.:]+)$/);
+    if (!match) return null;
+    const [, owner, separator, member] = match;
+    if (separator !== '.' && separator !== ':') return null;
+    return { owner, separator, member };
+}
+
 function dedupeSuggestions(suggestions: any[]) {
     const seen = new Set<string>();
     return suggestions.filter((item) => {
@@ -15,6 +30,8 @@ function dedupeSuggestions(suggestions: any[]) {
 export function setupCompletionProvider(monaco: any) {
     if (completionProvidersRegistered) return;
     completionProvidersRegistered = true;
+    ensureLanguageRegistered(monaco, 'lua');
+    ensureLanguageRegistered(monaco, 'python');
 
     monaco.languages.registerCompletionItemProvider('lua', {
         provideCompletionItems: function(model: any, position: any) {
@@ -27,22 +44,23 @@ export function setupCompletionProvider(monaco: any) {
             };
             
             const suggestions: any[] = [];
+            const documentedEvMembers = new Set<string>();
             const lineContent = model.getLineContent(position.lineNumber);
             const textBeforeCursor = lineContent.substring(0, position.column - 1);
 
             // API Methods suggestions
             for (const [key, doc] of Object.entries(apiDocs as any)) {
                 const docObj = doc as any;
-                // Check if it's a module method (e.g. ap.push)
-                if (key.includes('.')) {
-                    const [module, method] = key.split('.');
-                    // Logic to suggest methods after dot
-                    
-                    if (textBeforeCursor.trim().endsWith(module + '.')) {
+                const parsed = parseApiMemberKey(key);
+                if (parsed) {
+                    if (parsed.owner === 'Ev' && parsed.separator === '.') {
+                        documentedEvMembers.add(parsed.member);
+                    }
+                    if (textBeforeCursor.trim().endsWith(`${parsed.owner}${parsed.separator}`)) {
                          suggestions.push({
-                            label: method,
+                            label: parsed.member,
                             kind: (monaco.languages.CompletionItemKind as any)[docObj.kind] || monaco.languages.CompletionItemKind.Method,
-                            insertText: docObj.insertText || method,
+                            insertText: docObj.insertText || parsed.member,
                             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
                             documentation: { value: docObj.desc },
                             range: range
@@ -63,7 +81,7 @@ export function setupCompletionProvider(monaco: any) {
 
             // Suggest Modules if typing fresh
             const modules = ['ap', 'Sensors', 'Timer', 'Ledbar', 'camera', 'Gpio', 'Uart', 'Spi', 'mailbox', 'Ev'];
-            modules.forEach(mod => {
+            modules.forEach((mod) => {
                 suggestions.push({
                     label: mod,
                     kind: monaco.languages.CompletionItemKind.Module,
@@ -76,6 +94,7 @@ export function setupCompletionProvider(monaco: any) {
             // Suggest Ev constants
             if (textBeforeCursor.trim().endsWith('Ev.')) {
                 evConstants.forEach(ev => {
+                    if (documentedEvMembers.has(ev)) return;
                      suggestions.push({
                         label: ev,
                         kind: monaco.languages.CompletionItemKind.EnumMember,
@@ -88,10 +107,10 @@ export function setupCompletionProvider(monaco: any) {
 
             return { suggestions: dedupeSuggestions(suggestions) };
         },
-        triggerCharacters: ['.']
+        triggerCharacters: ['.', ':']
     });
 
-    // Python completion: Ğ¿Ğ¾Ğ´ÑĞºĞ°Ğ·Ñ‹Ğ²Ğ°ĞµĞ¼ Ğ¼ĞµÑ‚Ğ¾Ğ´Ñ‹ Pioneer/Camera Ğ¿Ñ€Ğ¸ Ğ²Ğ²Ğ¾Ğ´Ğµ Ğ¿Ğ¾ÑĞ»Ğµ Ñ‚Ğ¾Ñ‡ĞºĞ¸.
+    // Python completion: ˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ Pioneer/Camera ˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜.
     monaco.languages.registerCompletionItemProvider('python', {
         provideCompletionItems: function(model: any, position: any) {
             const word = model.getWordUntilPosition(position);
@@ -114,7 +133,7 @@ export function setupCompletionProvider(monaco: any) {
                     return { method, key, doc };
                 });
 
-            // Ğ•ÑĞ»Ğ¸ ĞºÑƒÑ€ÑĞ¾Ñ€ Ğ¿Ğ¾ÑĞ»Ğµ Ñ‚Ğ¾Ñ‡ĞºĞ¸ (Ğ¿Ñ€Ğ¸Ğ¼ĞµÑ€: "pioneer_mini.")
+            // ˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜ (˜˜˜˜˜˜: "pioneer_mini.")
             if (normalized.endsWith('.')) {
                 methodDocs.forEach(({ method, doc }) => {
                     suggestions.push({
@@ -127,7 +146,7 @@ export function setupCompletionProvider(monaco: any) {
                     });
                 });
             } else {
-                // ĞŸÑ€ĞµĞ´Ğ»Ğ¾Ğ¶Ğ¸Ğ¼ ĞºĞ»ÑÑ‡ĞµĞ²Ñ‹Ğµ ĞºĞ»Ğ°ÑÑÑ‹.
+                // ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜.
                 ['Pioneer', 'Camera', 'VideoStream', 'time'].forEach((cls) => {
                     suggestions.push({
                         label: cls,
@@ -138,7 +157,7 @@ export function setupCompletionProvider(monaco: any) {
                     });
                 });
 
-                // Ğ˜ Ñ‡ÑƒÑ‚ÑŒ-Ñ‡ÑƒÑ‚ÑŒ Ğ¿Ğ¾Ğ´ÑĞºĞ°Ğ·Ğ¾Ğº Ğ´Ğ»Ñ ĞºĞ¾Ğ½ÑÑ‚Ñ€ÑƒĞºÑ‚Ğ¾Ñ€Ğ°/Ñ‡Ğ°ÑÑ‚Ğ¾ Ğ¸ÑĞ¿Ğ¾Ğ»ÑŒĞ·ÑƒĞµĞ¼Ñ‹Ñ… Ñ„ÑƒĞ½ĞºÑ†Ğ¸Ğ¹.
+                // ˜ ˜˜˜˜-˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜/˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜.
                 if (normalized.length === 0) {
                     suggestions.push({
                         label: 'pioneer',

@@ -14,10 +14,11 @@ export function initMissionGuideModal() {
             <div class="modal-content guide-modal" role="dialog" aria-modal="true" aria-labelledby="mission-guide-title">
                 <div class="guide-modal__header">
                     <div class="guide-modal__title-wrap">
-                        <div id="mission-guide-title" class="guide-modal__title">Практикум по Pioneer API</div>
-                        <div class="guide-modal__subtitle">Пошаговые уроки по управлению дроном в симуляторе</div>
+                        <div class="guide-modal__eyebrow">\u0423\u0447\u0435\u0431\u043d\u044b\u0439 \u043c\u043e\u0434\u0443\u043b\u044c</div>
+                        <div id="mission-guide-title" class="guide-modal__title">\u041f\u0440\u0430\u043a\u0442\u0438\u043a\u0443\u043c \u043f\u043e Pioneer API</div>
+                        <div class="guide-modal__subtitle">\u041f\u043e\u0448\u0430\u0433\u043e\u0432\u044b\u0435 \u0443\u0440\u043e\u043a\u0438 \u043f\u043e \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044e \u0434\u0440\u043e\u043d\u043e\u043c \u0432 \u0441\u0438\u043c\u0443\u043b\u044f\u0442\u043e\u0440\u0435</div>
                     </div>
-                    <button type="button" id="mission-guide-close" class="modal-close-btn guide-modal__close" aria-label="Закрыть">✕</button>
+                    <button type="button" id="mission-guide-close" class="modal-close-btn guide-modal__close" aria-label="\u0417\u0430\u043a\u0440\u044b\u0442\u044c">&times;</button>
                 </div>
                 <div id="mission-guide-modal-body" class="guide-modal__body"></div>
             </div>

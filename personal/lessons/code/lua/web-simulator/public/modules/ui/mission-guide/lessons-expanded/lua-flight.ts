@@ -6,104 +6,94 @@ import type { GuideLesson } from '../types.js';
 
 export function getLuaFlightExpandedLessons(): GuideLesson[] {
     return [
-            {
+        {
             id: 'lua-route',
             chapterId: GUIDE_CHAPTER_IDS.flight,
-            badge: 'Задание 7',
-            title: 'Полет к точке после взлета',
-            goal: 'Соберите FSM-цепочку, где `goToLocalPoint(...)` отправляется только после события `TAKEOFF_COMPLETE`.',
-            summary: 'Задание выделяет навигационный переход как отдельную тему: маршрут запускается не сразу после взлета, а после подтверждения завершения набора высоты.',
-            lessonIntro: 'В реальной логике миссии маршрут не должен начинаться в момент отправки взлета. Правильнее дождаться `TAKEOFF_COMPLETE`, и только затем переходить к команде полета в локальную точку.',
-            expectedOutcome: 'Сценарий отправляет `PREFLIGHT`, по `ENGINES_STARTED` вызывает `TAKEOFF`, а по `TAKEOFF_COMPLETE` запускает `ap.goToLocalPoint(...)`.',
-            builderHint: 'Следите за тем, чтобы `goToLocalPoint(...)` оказался в ветке `TAKEOFF_COMPLETE`, а не рядом с корневыми командами.',
+            badge: 'Р—Р°РґР°РЅРёРµ 7',
+            title: 'РџРѕР»РµС‚ Рє Р»РѕРєР°Р»СЊРЅРѕР№ С‚РѕС‡РєРµ',
+            goal: 'РЎРѕР±РµСЂРёС‚Рµ FSM-С†РµРїРѕС‡РєСѓ, РіРґРµ `goToLocalPoint(...)` РІС‹Р·С‹РІР°РµС‚СЃСЏ С‚РѕР»СЊРєРѕ РїРѕСЃР»Рµ СЃРѕР±С‹С‚РёСЏ `TAKEOFF_COMPLETE`.',
+            summary: 'РЈСЂРѕРє РѕС‚РґРµР»СЏРµС‚ СЃР°Рј С„Р°РєС‚ РІР·Р»РµС‚Р° РѕС‚ РЅР°С‡Р°Р»Р° РЅР°РІРёРіР°С†РёРё Рё РїРѕРєР°Р·С‹РІР°РµС‚, С‡С‚Рѕ РјР°СЂС€СЂСѓС‚ С‚РѕР¶Рµ РґРѕР»Р¶РµРЅ РёРјРµС‚СЊ СЃРІРѕР№ РѕСЃРјС‹СЃР»РµРЅРЅС‹Р№ РјРѕРјРµРЅС‚ Р·Р°РїСѓСЃРєР°.',
+            lessonIntro: 'Р’ Р»РёРЅРµР№РЅРѕРј СЃРєСЂРёРїС‚Рµ РјС‹ РёСЃРїРѕР»СЊР·РѕРІР°Р»Рё РїР°СѓР·С‹. Р’ FSM РјС‹ РѕР¶РёРґР°РµРј СЃРѕР±С‹С‚РёРµ `TAKEOFF_COMPLETE`, Рё С‚РѕР»СЊРєРѕ РїРѕСЃР»Рµ СЌС‚РѕРіРѕ РѕС‚РїСЂР°РІР»СЏРµРј РґСЂРѕРЅ Рє Р»РѕРєР°Р»СЊРЅРѕР№ С‚РѕС‡РєРµ.',
+            expectedOutcome: 'Р’С‹Р·С‹РІР°РµС‚СЃСЏ СЃРѕР±С‹С‚РёРµ `PREFLIGHT`, РЅР° `ENGINES_STARTED` РІС‹РґР°РµС‚СЃСЏ `TAKEOFF`, Р° РЅР° `TAKEOFF_COMPLETE` РІС‹Р·С‹РІР°РµС‚СЃСЏ `ap.goToLocalPoint(...)`.',
+            builderHint: 'РЎР»РµРґРёС‚Рµ Р·Р° С‚РµРј, С‡С‚РѕР±С‹ `goToLocalPoint(...)` РІС‹Р·С‹РІР°Р»СЃСЏ РІ Р±Р»РѕРєРµ `TAKEOFF_COMPLETE`, Р° РЅРµ СЃСЂР°Р·Сѓ РІ СЃС‚Р°СЂС‚РѕРІРѕРј.',
             apiFocus: [
-                apiFocus('Ev.TAKEOFF_COMPLETE', 'Это событие подтверждает, что взлет завершен и дрон может перейти к маршруту.', 'if event == Ev.TAKEOFF_COMPLETE then ... end'),
-                apiFocus('ap.goToLocalPoint(x, y, z)', 'Запускает реальное перемещение дрона к локальной координате.', 'ap.goToLocalPoint(1, 0, 1)')
+                apiFocus('Ev.TAKEOFF_COMPLETE', 'РЎРѕР±С‹С‚РёРµ, СЃРёРіРЅР°Р»РёР·РёСЂСѓСЋС‰РµРµ, С‡С‚Рѕ РІР·Р»РµС‚ Р·Р°РІРµСЂС€РµРЅ Рё РґСЂРѕРЅ РіРѕС‚РѕРІ Рє РЅР°РІРёРіР°С†РёРё.', 'if event == Ev.TAKEOFF_COMPLETE then ... end'),
+                apiFocus('ap.goToLocalPoint(x, y, z)', 'РћС‚РїСЂР°РІР»СЏРµС‚ РґСЂРѕРЅ Рє Р»РѕРєР°Р»СЊРЅРѕР№ РєРѕРѕСЂРґРёРЅР°С‚Рµ РїРѕСЃР»Рµ РІР·Р»РµС‚Р°.', 'ap.goToLocalPoint(1, 0, 1)')
             ],
             targetBlockIds: ['lua_ap_push', 'lua_event_callback', 'lua_ap_push', 'lua_event_callback', 'lua_goto_local_point', 'lua_callback_open', 'lua_callback_end'],
             blocks: [
-                createStatementBlock('lua8-preflight', 'PREFLIGHT', 'ap.push(Ev.MCE_PREFLIGHT)', 'Старт миссии.', 'setup', 'ap.push(Ev.MCE_PREFLIGHT)'),
-                createEventBlock('lua8-engines', 'ждать ENGINES_STARTED', 'if event == Ev.ENGINES_STARTED', 'Открывает ветку взлета.', 'Ev.ENGINES_STARTED'),
-                createStatementBlock('lua8-takeoff', 'TAKEOFF', 'ap.push(Ev.MCE_TAKEOFF)', 'Поднимает дрон.', 'action', 'ap.push(Ev.MCE_TAKEOFF)'),
-                createEventBlock('lua8-complete', 'ждать TAKEOFF_COMPLETE', 'if event == Ev.TAKEOFF_COMPLETE', 'Только после него допустим маршрут.', 'Ev.TAKEOFF_COMPLETE'),
-                createStatementBlock('lua8-goto', 'лететь к точке', 'ap.goToLocalPoint(1, 0, 1)', 'Целевой навигационный шаг.', 'action', 'ap.goToLocalPoint(1, 0, 1)'),
-                createStatementBlock('lua8-print', 'сообщить о маршруте', 'print("Маршрут стартовал")', 'Допустимый лог, но не основной шаг.', 'check', 'print("Маршрут стартовал")'),
-                createStatementBlock('lua_callback_open', 'открыть callback', 'function callback(event)', 'Открывает обязательную событийную функцию Lua-сценария.', 'setup', 'function callback(event)'),
-                createStatementBlock('lua_callback_end', 'закрыть callback', 'end', 'Закрывает область function callback(event).', 'setup', 'end')
+                createStatementBlock('lua8-preflight', 'PREFLIGHT', 'ap.push(Ev.MCE_PREFLIGHT)', 'РџРѕРґРіРѕС‚РѕРІРєР° Рє РїРѕР»РµС‚Сѓ.', 'setup', 'ap.push(Ev.MCE_PREFLIGHT)'),
+                createEventBlock('lua8-engines', 'СЃРѕР±С‹С‚РёРµ ENGINES_STARTED', 'if event == Ev.ENGINES_STARTED', 'РћР¶РёРґР°РЅРёРµ СЃС‚Р°СЂС‚Р° РјРѕС‚РѕСЂРѕРІ.', 'Ev.ENGINES_STARTED'),
+                createStatementBlock('lua8-takeoff', 'TAKEOFF', 'ap.push(Ev.MCE_TAKEOFF)', 'РљРѕРјР°РЅРґР° РІР·Р»РµС‚Р°.', 'action', 'ap.push(Ev.MCE_TAKEOFF)'),
+                createEventBlock('lua8-complete', 'СЃРѕР±С‹С‚РёРµ TAKEOFF_COMPLETE', 'if event == Ev.TAKEOFF_COMPLETE', 'РЎРёРіРЅР°Р» Р·Р°РІРµСЂС€РµРЅРёСЏ РІР·Р»РµС‚Р°.', 'Ev.TAKEOFF_COMPLETE'),
+                createStatementBlock('lua8-goto', 'РїРѕР»РµС‚ Рє С‚РѕС‡РєРµ', 'ap.goToLocalPoint(1, 0, 1)', 'Р¦РµР»РµРІРѕР№ РјР°СЂС€СЂСѓС‚.', 'action', 'ap.goToLocalPoint(1, 0, 1)'),
+                createStatementBlock('lua8-print', 'СЃРѕРѕР±С‰РµРЅРёРµ РІ РєРѕРЅСЃРѕР»СЊ', 'print("РњР°СЂС€СЂСѓС‚ РѕС‚РїСЂР°РІР»РµРЅ")', 'Р›РѕРіРёСЂРѕРІР°РЅРёРµ С€Р°РіР°.', 'check', 'print("РњР°СЂС€СЂСѓС‚ РѕС‚РїСЂР°РІР»РµРЅ")'),
+                createStatementBlock('lua_callback_open', 'СЃРѕР·РґР°С‚СЊ callback', 'function callback(event)', 'РћРїСЂРµРґРµР»РµРЅРёРµ С„СѓРЅРєС†РёРё.', 'setup', 'function callback(event)'),
+                createStatementBlock('lua_callback_end', 'Р·Р°РєСЂС‹С‚СЊ callback', 'end', 'Р—Р°РєСЂС‹С‚РёРµ С„СѓРЅРєС†РёРё.', 'setup', 'end')
             ],
             links: [
                 { label: 'Ev.TAKEOFF_COMPLETE', query: 'Ev.TAKEOFF_COMPLETE' },
                 { label: 'ap.goToLocalPoint', query: 'ap.goToLocalPoint', previewKey: 'ap.goToLocalPoint' }
             ],
-            solutionCode: `ap.push(Ev.MCE_PREFLIGHT)
-
-function callback(event)
-    if event == Ev.ENGINES_STARTED then
-        ap.push(Ev.MCE_TAKEOFF)
-    end
-
-    if event == Ev.TAKEOFF_COMPLETE then
-        ap.goToLocalPoint(1, 0, 1)
-    end
-end`,
-            actionLabel: 'Открыть переход к точке',
+            solutionCode: `ap.push(Ev.MCE_PREFLIGHT)\n\nfunction callback(event)\n    if event == Ev.ENGINES_STARTED then\n        ap.push(Ev.MCE_TAKEOFF)\n    end\n\n    if event == Ev.TAKEOFF_COMPLETE then\n        ap.goToLocalPoint(1, 0, 1)\n    end\nend`,
+            actionLabel: 'РћС‚РєСЂС‹С‚СЊ РјР°СЂС€СЂСѓС‚',
             actionQuery: 'Ev.TAKEOFF_COMPLETE ap.goToLocalPoint',
             actionPreviewKey: 'ap.goToLocalPoint',
             errorCatalog: [
                 {
                     kind: 'error',
-                    title: 'Маршрут отправляется без завершенного взлета',
-                    reason: '`goToLocalPoint(...)` должен идти после `TAKEOFF_COMPLETE`, иначе дрон получает команду маршрута слишком рано.',
-                    fix: 'Проверьте, что полет к точке находится в ветке `TAKEOFF_COMPLETE`.'
+                    title: 'РњР°СЂС€СЂСѓС‚ РѕС‚РїСЂР°РІР»РµРЅ СЃР»РёС€РєРѕРј СЂР°РЅРѕ',
+                    reason: 'Р‘РµР· РїРѕРґРіРѕС‚РѕРІРєРё Рё РІР·Р»РµС‚Р° РєРѕРјР°РЅРґР° `goToLocalPoint(...)` РЅРµ РѕС‚СЂР°Р¶Р°РµС‚ РєРѕСЂСЂРµРєС‚РЅС‹Р№ СЌС‚Р°Рї РјРёСЃСЃРёРё.',
+                    fix: 'РЎРЅР°С‡Р°Р»Р° СЃРѕР±РµСЂРёС‚Рµ С†РµРїРѕС‡РєСѓ РІР·Р»РµС‚Р°, Р·Р°С‚РµРј РїРµСЂРµС…РѕРґРёС‚Рµ Рє РјР°СЂС€СЂСѓС‚Сѓ РІ `TAKEOFF_COMPLETE`.'
                 }
             ],
             missingBlockDiagnostics: {
                 lua_ap_push: {
                     kind: 'error',
-                    title: 'Не хватает команд автопилота',
-                    reason: 'Для урока нужны и старт подготовки, и команда взлета.',
-                    fix: 'Добавьте блоки `PREFLIGHT` и `TAKEOFF`.'
+                    title: 'РќРµС‚ РєРѕРјР°РЅРґС‹ РїРѕРґРіРѕС‚РѕРІРєРё',
+                    reason: 'РќРµС‚ РєРѕРјР°РЅРґ РґР»СЏ РїРѕРґРіРѕС‚РѕРІРєРё Рє РІР·Р»РµС‚Сѓ.',
+                    fix: 'Р”РѕР±Р°РІСЊС‚Рµ РєРѕРјР°РЅРґС‹ `PREFLIGHT` Рё `TAKEOFF`.'
                 },
                 lua_event_callback: {
                     kind: 'error',
-                    title: 'Не хватает событийной ветки',
-                    reason: 'Навигация должна быть привязана к событиям FSM, а не стоять в корне сценария.',
-                    fix: 'Используйте ожидание `ENGINES_STARTED` и `TAKEOFF_COMPLETE`.'
+                    title: 'РќРµ С…РІР°С‚Р°РµС‚ РѕР±СЂР°Р±РѕС‚РєРё СЃРѕР±С‹С‚РёР№',
+                    reason: 'РЎС†РµРЅР°СЂРёР№ РґРѕР»Р¶РµРЅ СЂРµР°РіРёСЂРѕРІР°С‚СЊ РЅР° СЃРѕР±С‹С‚РёСЏ `ENGINES_STARTED` Рё `TAKEOFF_COMPLETE`.',
+                    fix: 'РСЃРїРѕР»СЊР·СѓР№С‚Рµ РѕР±СЂР°Р±РѕС‚С‡РёРєРё `ENGINES_STARTED` Рё `TAKEOFF_COMPLETE`.'
                 },
                 lua_goto_local_point: {
                     kind: 'error',
-                    title: 'Не добавлен переход к точке',
-                    reason: 'Сценарий доходит до взлета, но не выполняет навигационную часть.',
-                    fix: 'Добавьте `ap.goToLocalPoint(...)` в ветку `TAKEOFF_COMPLETE`.'
+                    title: 'РќРµС‚ РєРѕРјР°РЅРґС‹ РјР°СЂС€СЂСѓС‚Р°',
+                    reason: 'РЈСЂРѕРє С‚СЂРµР±СѓРµС‚ РїРµСЂРµС…РѕРґ РёРјРµРЅРЅРѕ Рє Р»РѕРєР°Р»СЊРЅРѕР№ С‚РѕС‡РєРµ.',
+                    fix: 'Р”РѕР±Р°РІСЊС‚Рµ `goToLocalPoint(...)` РІ СЃРѕР±С‹С‚РёРё `TAKEOFF_COMPLETE`.'
                 },
                 'lua_callback_open': {
                     kind: 'error',
-                    title: 'Не открыт callback',
-                    reason: 'В интерактивном учебнике `function callback(event)` должен быть отдельным открывающим блоком.',
-                    fix: 'Добавьте блок `открыть callback` перед событийной логикой.'
+                    title: 'РќРµС‚ С„СѓРЅРєС†РёРё callback',
+                    reason: 'РќРµ РѕР±СЉСЏРІР»РµРЅР° С„СѓРЅРєС†РёСЏ callback.',
+                    fix: 'Р”РѕР±Р°РІСЊС‚Рµ РѕР±СЉСЏРІР»РµРЅРёРµ С„СѓРЅРєС†РёРё callback.'
                 },
                 'lua_callback_end': {
                     kind: 'error',
-                    title: 'Не закрыт callback',
-                    reason: 'Конструкция `function callback(event)` должна завершаться отдельным независимым блоком `end`.',
-                    fix: 'Добавьте блок `закрыть callback` после содержимого callback.'
+                    title: 'РќРµС‚ РєРѕРЅС†Р° callback',
+                    reason: 'Р¤СѓРЅРєС†РёСЏ callback РЅРµ Р·Р°РєСЂС‹С‚Р°.',
+                    fix: 'Р”РѕР±Р°РІСЊС‚Рµ `end` РґР»СЏ С„СѓРЅРєС†РёРё callback.'
                 }
             },
             extraBlockDiagnostics: {
                 lua_print: {
                     kind: 'warning',
-                    title: 'Оставлен только лог вместо маршрута',
-                    reason: '`print(...)` полезен как сопровождение, но не заменяет вызов `ap.goToLocalPoint(...)`.',
-                    fix: 'Соберите полноценный маршрут, а лог оставьте только дополнительно.'
+                    title: 'Р›РёС€РЅРёР№ РІС‹РІРѕРґ',
+                    reason: 'Р’С‹РІРѕРґ РІ РєРѕРЅСЃРѕР»СЊ РЅРµ С‚СЂРµР±СѓРµС‚СЃСЏ.',
+                    fix: 'РЈРґР°Р»РёС‚Рµ Р±Р»РѕРє РІС‹РІРѕРґР° РІ РєРѕРЅСЃРѕР»СЊ.'
                 }
             },
             orderRules: [
                 {
                     before: 'lua_ap_push',
                     after: 'lua_event_callback',
-                    title: 'Событие поставлено раньше старта миссии',
-                    reason: 'Сначала должны уйти корневые команды автопилота, а затем ветки ожидания событий.',
-                    fix: 'Начните сценарий с `PREFLIGHT`.'
+                    title: 'РџРѕСЂСЏРґРѕРє РєРѕРјР°РЅРґ',
+                    reason: 'РџРѕРґРіРѕС‚РѕРІРєР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ РґРѕ СЃРѕР±С‹С‚РёР№.',
+                    fix: 'РџРµСЂРµРјРµСЃС‚РёС‚Рµ `PREFLIGHT` РІ РЅР°С‡Р°Р»Рѕ.'
                 }
             ],
             compile: compileLuaEvents
@@ -111,88 +101,74 @@ end`,
         {
             id: 'lua-point-confirm',
             chapterId: GUIDE_CHAPTER_IDS.flight,
-            badge: 'Задание 8',
-            title: 'Подтвердить достижение точки',
-            goal: 'Расширьте маршрут: после `POINT_REACHED` выведите сообщение о достижении цели.',
-            summary: 'Урок концентрируется на подтверждении результата маршрута и показывает, что событие точки полезно само по себе, даже до посадки.',
-            lessonIntro: 'Частая ошибка начинающих заключается в том, что команда маршрута считается завершенной сразу после отправки. На самом деле нужно дождаться отдельного сигнала `POINT_REACHED` и только после него считать задачу выполненной.',
-            expectedOutcome: 'Сценарий выполняет подготовку, взлет, полет к точке и по событию `POINT_REACHED` печатает сообщение о достижении цели.',
-            builderHint: 'Ветка `POINT_REACHED` должна идти после ветки `TAKEOFF_COMPLETE`, потому что без маршрута событие точки просто не появится.',
+            badge: 'Р—Р°РґР°РЅРёРµ 8',
+            title: 'РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ РґРѕСЃС‚РёР¶РµРЅРёСЏ С‚РѕС‡РєРё',
+            goal: 'Р”РѕР±Р°РІСЊС‚Рµ РѕР¶РёРґР°РЅРёРµ СЃРѕР±С‹С‚РёСЏ `POINT_REACHED` Рё С‚РѕР»СЊРєРѕ Р·Р°С‚РµРј РІС‹РІРµРґРёС‚Рµ СЃРѕРѕР±С‰РµРЅРёРµ РѕР± СѓСЃРїРµС…Рµ.',
+            summary: 'РЈСЂРѕРє Р·Р°РєСЂРµРїР»СЏРµС‚ РєР»СЋС‡РµРІСѓСЋ РјС‹СЃР»СЊ: РѕС‚РїСЂР°РІРєР° РјР°СЂС€СЂСѓС‚Р° Рё Р·Р°РІРµСЂС€РµРЅРёРµ РјР°СЂС€СЂСѓС‚Р° СЌС‚Рѕ СЂР°Р·РЅС‹Рµ РІРµС‰Рё.',
+            lessonIntro: 'Р’ FSM Р°СЂС…РёС‚РµРєС‚СѓСЂРµ РґРѕСЃС‚РёР¶РµРЅРёРµ С‚РѕС‡РєРё РїРѕРґС‚РІРµСЂР¶РґР°РµС‚СЃСЏ РѕС‚РґРµР»СЊРЅС‹Рј СЃРѕР±С‹С‚РёРµРј `POINT_REACHED`. РћР±СЂР°Р±РѕС‚Р°Р№С‚Рµ РµРіРѕ.',
+            expectedOutcome: 'РЎС†РµРЅР°СЂРёР№ РґРѕР»РµС‚Р°РµС‚ РґРѕ С‚РѕС‡РєРё, РѕР±СЂР°Р±Р°С‚С‹РІР°РµС‚ `POINT_REACHED` Рё РїРµС‡Р°С‚Р°РµС‚ СЃРѕРѕР±С‰РµРЅРёРµ.',
+            builderHint: 'РќРµ РїСѓС‚Р°Р№С‚Рµ СЃРѕР±С‹С‚РёСЏ. Р’С‹РІРѕРґ СЃРѕРѕР±С‰РµРЅРёСЏ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РІ Р±Р»РѕРєРµ `POINT_REACHED`.',
             apiFocus: [
-                apiFocus('Ev.POINT_REACHED', 'Подтверждает, что маршрут действительно выполнен.', 'if event == Ev.POINT_REACHED then ... end'),
-                apiFocus('print(...)', 'В этом уроке лог нужен как подтверждение достижения навигационной цели.', 'print("Точка достигнута")')
+                apiFocus('Ev.POINT_REACHED', 'РЎРѕР±С‹С‚РёРµ, РєРѕРіРґР° РґСЂРѕРЅ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ РґРѕСЃС‚РёРі Р·Р°РґР°РЅРЅРѕР№ РєРѕРѕСЂРґРёРЅР°С‚С‹.', 'if event == Ev.POINT_REACHED then ... end'),
+                apiFocus('print(...)', 'РўРµРєСЃС‚РѕРІРѕРµ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ.', 'print("РўРѕС‡РєР° РґРѕСЃС‚РёРіРЅСѓС‚Р°")')
             ],
             targetBlockIds: ['lua_ap_push', 'lua_event_callback', 'lua_ap_push', 'lua_event_callback', 'lua_goto_local_point', 'lua_event_callback', 'lua_print', 'lua_callback_open', 'lua_callback_end'],
             blocks: [
-                createStatementBlock('lua9-preflight', 'PREFLIGHT', 'ap.push(Ev.MCE_PREFLIGHT)', 'Старт миссии.', 'setup', 'ap.push(Ev.MCE_PREFLIGHT)'),
-                createEventBlock('lua9-engines', 'ждать ENGINES_STARTED', 'if event == Ev.ENGINES_STARTED', 'Стартовая ветка FSM.', 'Ev.ENGINES_STARTED'),
-                createStatementBlock('lua9-takeoff', 'TAKEOFF', 'ap.push(Ev.MCE_TAKEOFF)', 'Взлет.', 'action', 'ap.push(Ev.MCE_TAKEOFF)'),
-                createEventBlock('lua9-complete', 'ждать TAKEOFF_COMPLETE', 'if event == Ev.TAKEOFF_COMPLETE', 'Открывает маршрут.', 'Ev.TAKEOFF_COMPLETE'),
-                createStatementBlock('lua9-goto', 'лететь к точке', 'ap.goToLocalPoint(1, 0, 1)', 'Навигационный шаг.', 'action', 'ap.goToLocalPoint(1, 0, 1)'),
-                createEventBlock('lua9-point', 'ждать POINT_REACHED', 'if event == Ev.POINT_REACHED', 'Подтверждает достижение маршрута.', 'Ev.POINT_REACHED'),
-                createStatementBlock('lua9-print', 'сообщить о точке', 'print("Точка достигнута")', 'Целевое подтверждение урока.', 'check', 'print("Точка достигнута")'),
-                createStatementBlock('lua_callback_open', 'открыть callback', 'function callback(event)', 'Открывает обязательную событийную функцию Lua-сценария.', 'setup', 'function callback(event)'),
-                createStatementBlock('lua_callback_end', 'закрыть callback', 'end', 'Закрывает область function callback(event).', 'setup', 'end')
+                createStatementBlock('lua9-preflight', 'PREFLIGHT', 'ap.push(Ev.MCE_PREFLIGHT)', 'РџРѕРґРіРѕС‚РѕРІРєР°.', 'setup', 'ap.push(Ev.MCE_PREFLIGHT)'),
+                createEventBlock('lua9-engines', 'СЃРѕР±С‹С‚РёРµ ENGINES_STARTED', 'if event == Ev.ENGINES_STARTED', 'РћР¶РёРґР°РЅРёРµ.', 'Ev.ENGINES_STARTED'),
+                createStatementBlock('lua9-takeoff', 'TAKEOFF', 'ap.push(Ev.MCE_TAKEOFF)', 'Р’Р·Р»РµС‚.', 'action', 'ap.push(Ev.MCE_TAKEOFF)'),
+                createEventBlock('lua9-complete', 'СЃРѕР±С‹С‚РёРµ TAKEOFF_COMPLETE', 'if event == Ev.TAKEOFF_COMPLETE', 'Р—Р°РІРµСЂС€РµРЅРёРµ РІР·Р»РµС‚Р°.', 'Ev.TAKEOFF_COMPLETE'),
+                createStatementBlock('lua9-goto', 'РјР°СЂС€СЂСѓС‚', 'ap.goToLocalPoint(1, 0, 1)', 'РЎС‚Р°СЂС‚ РјР°СЂС€СЂСѓС‚Р°.', 'action', 'ap.goToLocalPoint(1, 0, 1)'),
+                createEventBlock('lua9-point', 'СЃРѕР±С‹С‚РёРµ POINT_REACHED', 'if event == Ev.POINT_REACHED', 'РўРѕС‡РєР° РґРѕСЃС‚РёРіРЅСѓС‚Р°.', 'Ev.POINT_REACHED'),
+                createStatementBlock('lua9-print', 'СЃРѕРѕР±С‰РёС‚СЊ РѕР± СѓСЃРїРµС…Рµ', 'print("РўРѕС‡РєР° РґРѕСЃС‚РёРіРЅСѓС‚Р°")', 'РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ.', 'check', 'print("РўРѕС‡РєР° РґРѕСЃС‚РёРіРЅСѓС‚Р°")'),
+                createStatementBlock('lua_callback_open', 'СЃРѕР·РґР°С‚СЊ callback', 'function callback(event)', 'Р¤СѓРЅРєС†РёСЏ.', 'setup', 'function callback(event)'),
+                createStatementBlock('lua_callback_end', 'Р·Р°РєСЂС‹С‚СЊ callback', 'end', 'РљРѕРЅРµС†.', 'setup', 'end')
             ],
             links: [
                 { label: 'Ev.POINT_REACHED', query: 'Ev.POINT_REACHED' },
                 { label: 'ap.goToLocalPoint', query: 'ap.goToLocalPoint', previewKey: 'ap.goToLocalPoint' }
             ],
-            solutionCode: `ap.push(Ev.MCE_PREFLIGHT)
-
-function callback(event)
-    if event == Ev.ENGINES_STARTED then
-        ap.push(Ev.MCE_TAKEOFF)
-    end
-
-    if event == Ev.TAKEOFF_COMPLETE then
-        ap.goToLocalPoint(1, 0, 1)
-    end
-
-    if event == Ev.POINT_REACHED then
-        print("Точка достигнута")
-    end
-end`,
-            actionLabel: 'Открыть контроль точки',
+            solutionCode: `ap.push(Ev.MCE_PREFLIGHT)\n\nfunction callback(event)\n    if event == Ev.ENGINES_STARTED then\n        ap.push(Ev.MCE_TAKEOFF)\n    end\n\n    if event == Ev.TAKEOFF_COMPLETE then\n        ap.goToLocalPoint(1, 0, 1)\n    end\n\n    if event == Ev.POINT_REACHED then\n        print("РўРѕС‡РєР° РґРѕСЃС‚РёРіРЅСѓС‚Р°")\n    end\nend`,
+            actionLabel: 'Р”РѕР¶РґР°С‚СЊСЃСЏ С‚РѕС‡РєРё',
             actionQuery: 'Ev.POINT_REACHED ap.goToLocalPoint print',
             actionPreviewKey: 'ap.goToLocalPoint',
             errorCatalog: [
                 {
                     kind: 'error',
-                    title: 'Результат маршрута не подтвержден',
-                    reason: 'Без отдельной ветки `POINT_REACHED` миссия не показывает, что маршрут действительно завершен.',
-                    fix: 'Добавьте обработку `Ev.POINT_REACHED` с подтверждающим действием.'
+                    title: 'РќРµС‚ РѕР¶РёРґР°РЅРёСЏ С‚РѕС‡РєРё',
+                    reason: 'Р‘РµР· РѕР¶РёРґР°РЅРёСЏ `POINT_REACHED` РјРёСЃСЃРёСЏ РјРѕР¶РµС‚ Р·Р°РІРµСЂС€РёС‚СЊСЃСЏ СЃР»РёС€РєРѕРј СЂР°РЅРѕ.',
+                    fix: 'Р”РѕР±Р°РІСЊС‚Рµ РїСЂРѕРІРµСЂРєСѓ СЃРѕР±С‹С‚РёСЏ `POINT_REACHED`.'
                 }
             ],
             missingBlockDiagnostics: {
                 lua_goto_local_point: {
                     kind: 'error',
-                    title: 'Нет полета к точке',
-                    reason: 'Без маршрута событие `POINT_REACHED` не имеет смысла.',
-                    fix: 'Добавьте `goToLocalPoint(...)` после `TAKEOFF_COMPLETE`.'
+                    title: 'РќРµС‚ РєРѕРјР°РЅРґС‹ РјР°СЂС€СЂСѓС‚Р°',
+                    reason: 'РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ РІС‹Р·РѕРІ `goToLocalPoint`.',
+                    fix: 'Р”РѕР±Р°РІСЊС‚Рµ `goToLocalPoint(...)`.'
                 },
                 lua_print: {
                     kind: 'error',
-                    title: 'Нет сообщения о достижении точки',
-                    reason: 'Событие маршрута не подтверждено видимым действием.',
-                    fix: 'Добавьте `print("Точка достигнута")` в ветку `POINT_REACHED`.'
+                    title: 'РќРµС‚ РІС‹РІРѕРґР° РІ РєРѕРЅСЃРѕР»СЊ',
+                    reason: 'РўСЂРµР±СѓРµС‚СЃСЏ РїРѕРґС‚РІРµСЂРґРёС‚СЊ РґРѕСЃС‚РёР¶РµРЅРёРµ С‚РѕС‡РєРё.',
+                    fix: 'Р”РѕР±Р°РІСЊС‚Рµ РІС‹РІРѕРґ РІ СЃРѕР±С‹С‚РёРё `POINT_REACHED`.'
                 },
                 'lua_callback_open': {
                     kind: 'error',
-                    title: 'Не открыт callback',
-                    reason: 'В интерактивном учебнике `function callback(event)` должен быть отдельным открывающим блоком.',
-                    fix: 'Добавьте блок `открыть callback` перед событийной логикой.'
+                    title: 'РќРµС‚ С„СѓРЅРєС†РёРё callback',
+                    reason: 'РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ callback.',
+                    fix: 'Р”РѕР±Р°РІСЊС‚Рµ С„СѓРЅРєС†РёСЋ callback.'
                 },
                 'lua_callback_end': {
                     kind: 'error',
-                    title: 'Не закрыт callback',
-                    reason: 'Конструкция `function callback(event)` должна завершаться отдельным независимым блоком `end`.',
-                    fix: 'Добавьте блок `закрыть callback` после содержимого callback.'
+                    title: 'РќРµС‚ РєРѕРЅС†Р° callback',
+                    reason: 'Р¤СѓРЅРєС†РёСЏ callback РЅРµ Р·Р°РєСЂС‹С‚Р°.',
+                    fix: 'Р”РѕР±Р°РІСЊС‚Рµ `end`.'
                 }
             },
             extraBlockDiagnostics: {},
             orderRules: [],
             compile: compileLuaEvents
-        },
+        }
     ];
 }

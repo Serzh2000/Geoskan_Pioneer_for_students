@@ -1,4 +1,20 @@
+let syntaxRegistered = false;
+let themeRegistered = false;
+
+function ensureLanguageRegistered(monaco: any, id: string): void {
+    const languages = monaco.languages.getLanguages() as Array<{ id: string }>;
+    if (!languages.some((language) => language.id === id)) {
+        monaco.languages.register({ id });
+    }
+}
+
 export function setupSyntaxHighlighting(monaco: any) {
+    ensureLanguageRegistered(monaco, 'lua');
+    ensureLanguageRegistered(monaco, 'python');
+
+    if (!syntaxRegistered) {
+        syntaxRegistered = true;
+
     monaco.languages.setMonarchTokensProvider('lua', {
         tokenizer: {
             root: [
@@ -32,6 +48,32 @@ export function setupSyntaxHighlighting(monaco: any) {
         }
     });
 
+        monaco.languages.setLanguageConfiguration('lua', {
+            comments: {
+                lineComment: '--',
+                blockComment: ['--[[', ']]']
+            },
+            brackets: [
+                ['{', '}'],
+                ['[', ']'],
+                ['(', ')']
+            ],
+            autoClosingPairs: [
+                { open: '{', close: '}' },
+                { open: '[', close: ']' },
+                { open: '(', close: ')' },
+                { open: '"', close: '"' },
+                { open: "'", close: "'" }
+            ],
+            surroundingPairs: [
+                { open: '{', close: '}' },
+                { open: '[', close: ']' },
+                { open: '(', close: ')' },
+                { open: '"', close: '"' },
+                { open: "'", close: "'" }
+            ]
+        });
+
     monaco.languages.setMonarchTokensProvider('python', {
         tokenizer: {
             root: [
@@ -59,6 +101,37 @@ export function setupSyntaxHighlighting(monaco: any) {
             ]
         }
     });
+
+        monaco.languages.setLanguageConfiguration('python', {
+            comments: {
+                lineComment: '#'
+            },
+            brackets: [
+                ['{', '}'],
+                ['[', ']'],
+                ['(', ')']
+            ],
+            autoClosingPairs: [
+                { open: '{', close: '}' },
+                { open: '[', close: ']' },
+                { open: '(', close: ')' },
+                { open: '"', close: '"' },
+                { open: "'", close: "'" }
+            ],
+            surroundingPairs: [
+                { open: '{', close: '}' },
+                { open: '[', close: ']' },
+                { open: '(', close: ')' },
+                { open: '"', close: '"' },
+                { open: "'", close: "'" }
+            ]
+        });
+    }
+
+    if (themeRegistered) {
+        return;
+    }
+    themeRegistered = true;
 
     monaco.editor.defineTheme('pioneer-light', {
         base: 'vs',

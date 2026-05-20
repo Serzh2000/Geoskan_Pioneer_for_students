@@ -1,6 +1,6 @@
 /*
- * ÐšÐ°Ñ€Ñ‚Ð¾Ñ‡ÐºÐ¸ Ñ‚ÐµÐ»ÐµÐ¼ÐµÑ‚Ñ€Ð¸Ð¸.
- * Ð¤Ð°Ð¹Ð» Ð²Ñ‹Ð´ÐµÐ»ÐµÐ½ Ð¸Ð· `public/style.css` Ð¿Ñ€Ð¸ Ð´ÐµÐºÐ¾Ð¼Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¸ Ð¾Ð±Ñ‰ÐµÐ³Ð¾ CSS.
+ * ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜.
+ * ˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜ `public/style.css` ˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ CSS.
  */
 /* TELEMETRY */
 .stats-grid {
@@ -27,16 +27,21 @@
 }
 .stat-value {
     font-family: var(--font-mono);
-    font-size: 19px;
+    font-size: 18px;
     font-weight: 700;
-    color: var(--text-strong);
+    color: #1d1d20;
     display: flex;
     align-items: baseline;
-    gap: 3px;
+    gap: 4px;
     line-height: 1.1;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(209, 209, 214, 0.72);
+    background: linear-gradient(180deg, rgba(248, 249, 250, 0.96), rgba(255, 255, 255, 0.92));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 .stat-value span:first-child {
-    color: var(--text-strong);
+    color: #1d1d20;
 }
 .stat-value span:last-child {
     font-size: 9px;
@@ -48,12 +53,30 @@
     background: linear-gradient(180deg, #ffffff 0%, #fcfcfc 100%);
 }
 
+.stat-item--primary .stat-value {
+    border-color: rgba(255, 107, 0, 0.18);
+    background: linear-gradient(180deg, rgba(255, 249, 245, 0.96), rgba(255, 255, 255, 0.96));
+}
+
+.stat-item--primary .stat-value span:first-child {
+    color: #1d1d20;
+}
+
+.stat-item--primary .stat-value span:last-child {
+    color: var(--accent-color-strong);
+}
+
 .stat-item--status {
     grid-column: span 2;
     background: linear-gradient(180deg, rgba(255, 107, 0, 0.1), rgba(255, 107, 0, 0.04));
     border-color: rgba(255, 107, 0, 0.16);
 }
 
+.stat-item--status .stat-value {
+    border-color: rgba(255, 107, 0, 0.14);
+    background: rgba(255, 255, 255, 0.96);
+}
+
 .stat-item--status .stat-value span:first-child {
-    color: var(--accent-color);
+    color: #1d1d20;
 }

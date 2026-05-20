@@ -4,6 +4,7 @@ import { createSidebarDiagnosticsLogger } from './sidebar-debug.js';
 
 export function initSidebar(callbacks: UICallbacks) {
     const panels = document.querySelector('.sidebar-panels') as HTMLElement | null;
+    const workspaceSidebar = panels?.closest('.workspace-sidebar') as HTMLElement | null;
     const resizer = document.getElementById('sidebar-resizer') as HTMLElement | null;
     if (!panels || !resizer) return;
 
@@ -13,12 +14,13 @@ export function initSidebar(callbacks: UICallbacks) {
     const fullscreenPanels = new Set(['gamepad-panel']);
     const shouldLogPanelDebug = localStorage.getItem('sidebar-debug') === '1';
     const loggablePanelNames: Record<string, string> = {
-        'settings-panel': 'ÐÐ°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ¸'
+        'settings-panel': '˜˜˜˜˜˜˜˜˜'
     };
     const debugPanelIds = new Set(['settings-panel']);
     const logPanelOpenDiagnostics = createSidebarDiagnosticsLogger(panels, shouldLogPanelDebug, debugPanelIds);
     let isResizing = false;
     let viewportRefreshFrame = 0;
+    let closeAnimationTimer = 0;
 
     const normalizeSidebarWidth = (value: string | null): string => {
         const parsed = Number.parseInt(value || '', 10);
@@ -36,38 +38,76 @@ export function initSidebar(callbacks: UICallbacks) {
     };
 
     const syncSidebarCollapsedState = () => {
-        panels.classList.toggle('is-collapsed', panels.style.width === '0px');
+        const isCollapsed = panels.style.width === '0px';
+        panels.classList.toggle('is-collapsed', isCollapsed);
+        workspaceSidebar?.classList.toggle('is-collapsed', isCollapsed);
     };
 
     const syncSidebarMode = (panelId: string | null) => {
         panels.classList.toggle('is-fullscreen', !!panelId && fullscreenPanels.has(panelId) && panels.style.width !== '0px');
     };
 
+    const resetClosingState = () => {
+        if (closeAnimationTimer) {
+            window.clearTimeout(closeAnimationTimer);
+            closeAnimationTimer = 0;
+        }
+        panels.classList.remove('is-closing');
+        document.querySelectorAll('.sidebar-panel').forEach((panel) => panel.classList.remove('is-closing'));
+    };
+
+    const finishClosePanel = () => {
+        panels.style.width = '0px';
+        document.querySelectorAll('.sidebar-panel').forEach((panel) => {
+            panel.classList.remove('active');
+            panel.classList.remove('is-closing');
+        });
+        syncSidebarCollapsedState();
+        syncSidebarMode(null);
+        panels.classList.remove('is-closing');
+        document.querySelectorAll('.sidebar-tab-btn').forEach((b) => b.classList.remove('active'));
+        refreshViewportLayout();
+    };
+
+    const closePanelWithAnimation = () => {
+        const activePanel = document.querySelector('.sidebar-panel.active') as HTMLElement | null;
+        document.querySelectorAll('.sidebar-tab-btn').forEach((b) => b.classList.remove('active'));
+        if (!activePanel) {
+            finishClosePanel();
+            return;
+        }
+        resetClosingState();
+        panels.classList.add('is-closing');
+        activePanel.classList.add('is-closing');
+        closeAnimationTimer = window.setTimeout(() => {
+            closeAnimationTimer = 0;
+            finishClosePanel();
+        }, 220);
+    };
+
     (window as any).openPanel = function(panelId: string) {
         const panel = document.getElementById(panelId);
         if (!panel) {
             console.warn('[Sidebar][Debug] openPanel target not found', { panelId });
-            log(`[Sidebar][Debug] ${panelId}: DOM Ð¿Ð°Ð½ÐµÐ»Ð¸ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½`, 'warn');
+            log(`[Sidebar][Debug] ${panelId}: DOM ˜˜˜˜˜˜ ˜˜ ˜˜˜˜˜˜`, 'warn');
             return;
         }
 
         const isAlreadyActive = panel.classList.contains('active');
         const panelName = loggablePanelNames[panelId];
         logPanelOpenDiagnostics('before-reset', panelId, panel);
+        resetClosingState();
 
         document.querySelectorAll('.sidebar-panel').forEach((p) => p.classList.remove('active'));
         document.querySelectorAll('.sidebar-tab-btn').forEach((b) => b.classList.remove('active'));
 
         if (isAlreadyActive && panels.style.width !== '0px') {
             if (panelName) {
-                console.info(`[Sidebar] Ð—Ð°ÐºÑ€Ñ‹Ñ‚Ð° Ð²ÐºÐ»Ð°Ð´ÐºÐ°: ${panelName}`);
-                log(`Ð—Ð°ÐºÑ€Ñ‹Ñ‚Ð° Ð²ÐºÐ»Ð°Ð´ÐºÐ°: ${panelName}`, 'info');
+                console.info(`[Sidebar] ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜: ${panelName}`);
+                log(`˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜: ${panelName}`, 'info');
             }
-            panels.style.width = '0px';
-            syncSidebarCollapsedState();
-            syncSidebarMode(null);
+            closePanelWithAnimation();
             logPanelOpenDiagnostics('after-close', panelId, panel);
-            refreshViewportLayout();
             return;
         }
 
@@ -87,8 +127,8 @@ export function initSidebar(callbacks: UICallbacks) {
         });
 
         if (panelName) {
-            console.info(`[Sidebar] ÐžÑ‚ÐºÑ€Ñ‹Ñ‚Ð° Ð²ÐºÐ»Ð°Ð´ÐºÐ°: ${panelName}`);
-            log(`ÐžÑ‚ÐºÑ€Ñ‹Ñ‚Ð° Ð²ÐºÐ»Ð°Ð´ÐºÐ°: ${panelName}`, 'info');
+            console.info(`[Sidebar] ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜: ${panelName}`);
+            log(`˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜: ${panelName}`, 'info');
         }
 
         logPanelOpenDiagnostics('after-activate', panelId, panel);
@@ -105,11 +145,7 @@ export function initSidebar(callbacks: UICallbacks) {
     };
 
     (window as any).closePanel = function() {
-        panels.style.width = '0px';
-        syncSidebarCollapsedState();
-        syncSidebarMode(null);
-        document.querySelectorAll('.sidebar-tab-btn').forEach((b) => b.classList.remove('active'));
-        refreshViewportLayout();
+        closePanelWithAnimation();
     };
 
     resizer.addEventListener('mousedown', () => {

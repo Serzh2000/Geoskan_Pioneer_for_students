@@ -1,6 +1,6 @@
 /*
- * ÐÐ´Ð°Ð¿Ñ‚Ð¸Ð²Ð½Ñ‹Ðµ Ð¿Ñ€Ð°Ð²Ð¸Ð»Ð° Ð¸ ÑÐ¾ÑÑ‚Ð¾ÑÐ½Ð¸Ñ Ð»Ð¾Ð³Ð¾Ð².
- * Ð¤Ð°Ð¹Ð» Ð²Ñ‹Ð´ÐµÐ»ÐµÐ½ Ð¸Ð· `public/style.css` Ð¿Ñ€Ð¸ Ð´ÐµÐºÐ¾Ð¼Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¸ Ð¾Ð±Ñ‰ÐµÐ³Ð¾ CSS.
+ * ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜.
+ * ˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜ `public/style.css` ˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ CSS.
  */
 @media (max-width: 1200px) {
     .header {
@@ -39,11 +39,11 @@
 
 @media (max-width: 1220px) {
     .gamepad-dashboard-grid {
-        grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+        grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
     }
 
     .gamepad-section--quick {
-        grid-column: 1 / -1;
+        grid-column: auto;
     }
 
     .gamepad-section--aux {
@@ -51,7 +51,7 @@
     }
 
     .gp-aux-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -121,6 +121,14 @@
 
     .gp-aux-grid {
         grid-template-columns: 1fr;
+    }
+
+    .gamepad-toolbar-actions--split {
+        grid-template-columns: 1fr;
+    }
+
+    .gamepad-toolbar-actions--split > :first-child {
+        grid-column: auto;
     }
 }
 

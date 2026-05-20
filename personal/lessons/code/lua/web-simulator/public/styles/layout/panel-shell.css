@@ -1,6 +1,6 @@
 /*
- * Ð¨Ð°Ð¿ÐºÐ¸ Ð¸ ÐºÐ¾Ð½Ñ‚ÐµÐ½Ñ‚ Ð¿Ð°Ð½ÐµÐ»ÐµÐ¹.
- * Ð¤Ð°Ð¹Ð» Ð²Ñ‹Ð´ÐµÐ»ÐµÐ½ Ð¸Ð· `public/style.css` Ð¿Ñ€Ð¸ Ð´ÐµÐºÐ¾Ð¼Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¸ Ð¾Ð±Ñ‰ÐµÐ³Ð¾ CSS.
+ * ˜˜˜˜˜ ˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜.
+ * ˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜ `public/style.css` ˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ CSS.
  */
 /* PANEL HEADER AND CONTENT */
 .panel-header {
@@ -56,10 +56,22 @@
     border-right: none;
     background: #fbfcfd;
     box-shadow: none;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .sidebar-panels.is-fullscreen .resizer {
     display: none;
+}
+
+.sidebar-panels.is-fullscreen .sidebar-panel {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+}
+
+.sidebar-panels.is-fullscreen .panel-content {
+    overflow: visible;
 }
 
 .settings-panel-content {
@@ -112,21 +124,27 @@
 }
 
 .sidebar-panel#gamepad-panel .panel-content {
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+}
+
+.sidebar-panels.is-fullscreen .sidebar-panel#gamepad-panel .panel-content {
+    overflow: visible;
 }
 
 .sidebar-panel#gamepad-panel .settings-panel-content {
     padding: 8px 12px 12px;
     background: #F5F7F9;
-    overflow: hidden;
-    min-height: 0;
+    overflow: visible;
+    min-height: fit-content;
 }
 
 .sidebar-panel#gamepad-panel .settings-stack {
     max-width: none;
-    height: 100%;
+    height: auto;
     margin: 0 auto;
-    min-height: 0;
+    min-height: fit-content;
 }
 
 .sidebar-panel#gamepad-panel .panel-title {

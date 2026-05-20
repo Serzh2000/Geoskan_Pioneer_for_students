@@ -1,6 +1,6 @@
 /*
- * ÐšÐ¾Ð½Ñ‚ÐµÐ¹Ð½ÐµÑ€Ñ‹ Ð±Ð¾ÐºÐ¾Ð²Ñ‹Ñ… Ð¿Ð°Ð½ÐµÐ»ÐµÐ¹.
- * Ð¤Ð°Ð¹Ð» Ð²Ñ‹Ð´ÐµÐ»ÐµÐ½ Ð¸Ð· `public/style.css` Ð¿Ñ€Ð¸ Ð´ÐµÐºÐ¾Ð¼Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¸ Ð¾Ð±Ñ‰ÐµÐ³Ð¾ CSS.
+ * ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜.
+ * ˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜ `public/style.css` ˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ CSS.
  */
 /* SIDEBAR PANELS */
 .sidebar-panels {
@@ -16,6 +16,7 @@
     position: relative;
     z-index: 90;
     min-width: 320px;
+    min-height: 0;
 }
 
 .sidebar-panels .resizer {
@@ -23,6 +24,9 @@
 }
 
 .sidebar-panels.is-collapsed {
+    width: 0 !important;
+    min-width: 0;
+    flex-basis: 0;
     border-right-color: transparent;
     box-shadow: none;
 }
@@ -37,12 +41,32 @@
     flex-direction: column;
     height: 100%;
     width: 100%;
+    min-height: 0;
     overflow: hidden;
     background: transparent;
+    opacity: 0;
+    transform: translateX(28px);
+    transition:
+        transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.18s ease;
+    will-change: transform, opacity;
 }
 
 .sidebar-panel.active {
     display: flex;
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.sidebar-panel.is-closing {
+    display: flex;
+    opacity: 0;
+    transform: translateX(-36px);
+    pointer-events: none;
+}
+
+.sidebar-panels.is-closing {
+    pointer-events: none;
 }
 
 .sidebar-panel#drones-panel .panel-header,

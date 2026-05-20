@@ -92,8 +92,7 @@
 
 .guide-workspace__remove,
 .guide-lesson__action,
-.guide-method-chip,
-.guide-primary-action {
+.guide-method-chip {
     border: 1px solid var(--guide-border-strong);
     background: #ffffff;
     color: var(--guide-text);

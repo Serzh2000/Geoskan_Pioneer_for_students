@@ -1,6 +1,6 @@
 /*
- * РћСЃРЅРѕРІРЅР°СЏ СЂР°СЃРєР»Р°РґРєР° РєРѕРЅС‚РµР№РЅРµСЂР°.
- * Р¤Р°Р№Р» РІС‹РґРµР»РµРЅ РёР· `public/style.css` РїСЂРё РґРµРєРѕРјРїРѕР·РёС†РёРё РѕР±С‰РµРіРѕ CSS.
+ * Основная раскладка контейнера.
+ * Файл выделен из `public/style.css` при декомпозиции общего CSS.
  */
 /* LAYOUT SHELL */
 .container {
@@ -29,4 +29,9 @@
     background: rgba(255, 255, 255, 0.92);
     box-shadow: var(--shadow-card);
     overflow: hidden;
+}
+
+.workspace-sidebar.is-collapsed {
+    width: 64px;
+    min-width: 64px;
 }
