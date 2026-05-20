@@ -1,0 +1,169 @@
+                        <section id="scene-panel-inspector" class="scene-panel-view" role="tabpanel" aria-labelledby="scene-tab-inspector" hidden>
+                            <div class="scene-panel-card">
+                                <div class="scene-panel-card__header">
+                                    <div>
+                                        <div class="scene-panel-card__title">Информация об объекте</div>
+                                        <p class="scene-panel-card__description">Текущий выбор, базовые свойства и служебный статус объекта сцены.</p>
+                                    </div>
+                                </div>
+                                <div id="scene-object-details" class="scene-manager-details">Выберите объект в иерархии, чтобы открыть инспектор.</div>
+                            </div>
+
+                            <div class="scene-panel-card">
+                                <div class="scene-panel-card__header">
+                                    <div>
+                                        <div class="scene-panel-card__title">Параметры объекта</div>
+                                        <p class="scene-panel-card__description">Редактирование значений, словарей, этажности и маршрутов для выбранного объекта.</p>
+                                    </div>
+                                </div>
+                                <div class="scene-form-grid">
+                                    <label class="scene-field">
+                                        <span>Словарь маркера</span>
+                                        <select id="scene-selected-dictionary">
+                                            <option value="">Словарь маркера</option>
+                                        </select>
+                                    </label>
+                                    <label class="scene-field">
+                                        <span>Значение</span>
+                                        <input id="scene-selected-value" type="text" placeholder="Значение объекта">
+                                    </label>
+                                    <label id="scene-selected-floors-wrap" class="scene-field" style="display: none;">
+                                        <span>Этажей</span>
+                                        <input id="scene-selected-floors" type="number" min="5" max="20" step="1" value="9">
+                                    </label>
+                                </div>
+
+                                <div id="scene-selected-building-settings" class="scene-building-settings">
+                                    <div class="scene-building-settings-header">
+                                        <div class="scene-building-settings-title">Сценарии по окнам</div>
+                                    </div>
+                                    <div class="scene-building-controls-row">
+                                        <div class="scene-building-settings-grid">
+                                            <label class="scene-field">
+                                                <span>Этаж</span>
+                                                <input id="scene-selected-building-floor" type="number" min="1" max="20" step="1" value="3">
+                                            </label>
+                                            <label class="scene-field">
+                                                <span>Сторона</span>
+                                                <select id="scene-selected-building-face">
+                                                    <option value="front">Перед</option>
+                                                    <option value="back">Зад</option>
+                                                </select>
+                                            </label>
+                                            <label class="scene-field">
+                                                <span>Окно</span>
+                                                <select id="scene-selected-building-window">
+                                                    <option value="1">1</option>
+                                                    <option value="2">2</option>
+                                                    <option value="3">3</option>
+                                                </select>
+                                            </label>
+                                            <label class="scene-field">
+                                                <span>Событие</span>
+                                                <select id="scene-selected-building-kind">
+                                                    <option value="smoke">Дым</option>
+                                                    <option value="fire">Пожар</option>
+                                                    <option value="thief">Вор</option>
+                                                </select>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="scene-building-settings-note">Редактируйте этажность и события у выбранной многоэтажки.</div>
+                                    <div class="action-row">
+                                        <button id="scene-selected-building-append-btn" type="button" class="btn-secondary">+ Сценарий</button>
+                                        <button id="scene-selected-building-clear-btn" type="button" class="btn-secondary">Очистить</button>
+                                    </div>
+                                    <div class="scene-building-list-label">Активные сценарии</div>
+                                    <textarea id="scene-selected-building-incidents" rows="4" placeholder="Список сценариев для окон"></textarea>
+                                </div>
+
+                                <label class="scene-field">
+                                    <span>Точки маршрута</span>
+                                    <textarea id="scene-selected-points" rows="2" placeholder="Точки маршрута (для дорог)"></textarea>
+                                </label>
+
+                                <div class="scene-inline-actions">
+                                    <button id="scene-apply-meta-btn" class="btn-secondary scene-btn scene-btn--neutral">Применить</button>
+                                    <button id="scene-append-point-btn" class="btn-secondary scene-btn scene-btn--neutral">+ Точка</button>
+                                </div>
+                                <button id="scene-visual-edit-btn" class="btn-secondary scene-btn scene-btn--neutral">Проложить</button>
+                            </div>
+
+                            <div class="scene-panel-card scene-panel-card--transform">
+                                <div class="scene-panel-card__header">
+                                    <div>
+                                        <div class="scene-panel-card__title">Трансформация</div>
+                                        <p class="scene-panel-card__description">Единая точка управления перемещением, поворотом и масштабом выбранного объекта.</p>
+                                    </div>
+                                </div>
+                                <div class="scene-transform-modes" role="tablist" aria-label="Режим трансформации">
+                                    <button id="scene-mode-translate" class="scene-segmented-btn" type="button" role="tab" aria-selected="true">Перемещение</button>
+                                    <button id="scene-mode-rotate" class="scene-segmented-btn" type="button" role="tab" aria-selected="false">Поворот</button>
+                                    <button id="scene-mode-scale" class="scene-segmented-btn" type="button" role="tab" aria-selected="false">Масштаб</button>
+                                </div>
+                                <div class="scene-transform-grid">
+                                    <label class="scene-transform-field">
+                                        <span class="scene-axis-chip scene-axis-chip--x">X</span>
+                                        <input id="scene-transform-x" type="text" readonly value="--" aria-label="Значение по оси X">
+                                    </label>
+                                    <label class="scene-transform-field">
+                                        <span class="scene-axis-chip scene-axis-chip--y">Y</span>
+                                        <input id="scene-transform-y" type="text" readonly value="--" aria-label="Значение по оси Y">
+                                    </label>
+                                    <label class="scene-transform-field">
+                                        <span class="scene-axis-chip scene-axis-chip--z">Z</span>
+                                        <input id="scene-transform-z" type="text" readonly value="--" aria-label="Значение по оси Z">
+                                    </label>
+                                </div>
+                                <div id="scene-rotate-controls" class="scene-rotate-controls" hidden>
+                                    <div class="scene-rotate-controls__header">
+                                        <div>
+                                            <div class="scene-rotate-controls__title">Быстрые углы</div>
+                                            <p class="scene-rotate-controls__description">Поворот по осям X/Y/Z на удобные фиксированные значения.</p>
+                                        </div>
+                                        <button id="scene-rotate-reset-btn" class="btn-secondary scene-btn scene-btn--ghost" type="button">Сбросить</button>
+                                    </div>
+                                    <div class="scene-rotate-presets" role="group" aria-label="Быстрые углы поворота">
+                                        <div class="scene-rotate-row">
+                                            <span class="scene-axis-chip scene-axis-chip--x">X</span>
+                                            <div class="scene-rotate-row__buttons">
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="-90">-90°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="-45">-45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="45">+45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="90">+90°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="180">180°</button>
+                                            </div>
+                                        </div>
+                                        <div class="scene-rotate-row">
+                                            <span class="scene-axis-chip scene-axis-chip--y">Y</span>
+                                            <div class="scene-rotate-row__buttons">
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="-90">-90°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="-45">-45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="45">+45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="90">+90°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="180">180°</button>
+                                            </div>
+                                        </div>
+                                        <div class="scene-rotate-row">
+                                            <span class="scene-axis-chip scene-axis-chip--z">Z</span>
+                                            <div class="scene-rotate-row__buttons">
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="-90">-90°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="-45">-45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="45">+45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="90">+90°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="180">180°</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="scene-transform-secondary">
+                                    <button id="scene-drone-origin-btn" class="btn-secondary scene-btn scene-btn--ghost" type="button">Дрон в (0,0)</button>
+                                </div>
+                                <button id="scene-clear-selection-btn" class="scene-clear-selection-btn" type="button">Снять выделение (Esc)</button>
+                                <div class="scene-inspector-actions">
+                                    <button id="scene-group-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button" title="Сгруппировать выбранные объекты (Ctrl+Click)">Группа</button>
+                                    <button id="scene-ungroup-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button" title="Разгруппировать выбранную группу">Разгруппировать</button>
+                                    <button id="scene-delete-btn" class="btn-secondary scene-btn scene-btn--danger" type="button">Удалить</button>
+                                </div>
+                            </div>
+                        </section>

@@ -6,6 +6,22 @@
                 <div class="panel-content panel-content--drones">
                     <div class="swarm-manager">
                         <div class="swarm-manager__intro">
+                            <div class="swarm-manager__eyebrow">
+                                <span class="swarm-manager__eyebrow-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="7" cy="7" r="2.1"></circle>
+                                        <circle cx="17" cy="7" r="2.1"></circle>
+                                        <circle cx="7" cy="17" r="2.1"></circle>
+                                        <circle cx="17" cy="17" r="2.1"></circle>
+                                        <rect x="9.5" y="9.5" width="5" height="5" rx="1.5"></rect>
+                                        <path d="M8.6 8.6 10 10"></path>
+                                        <path d="M15.4 8.6 14 10"></path>
+                                        <path d="M8.6 15.4 10 14"></path>
+                                        <path d="M15.4 15.4 14 14"></path>
+                                    </svg>
+                                </span>
+                                <span>Координация роя</span>
+                            </div>
                             <p class="swarm-manager__subtitle">Выберите активный дрон роя и управляйте составом группы без перегруженного интерфейса.</p>
                         </div>
                         <section class="swarm-list-card" aria-labelledby="drone-list-title">
@@ -16,8 +32,24 @@
                             <div id="drone-list" class="swarm-list" role="listbox" aria-label="Список дронов"></div>
                         </section>
                         <div class="swarm-actions">
-                            <button id="add-drone-btn" class="swarm-action-btn swarm-action-btn--add" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span>Добавить</span></button>
-                            <button id="del-drone-btn" class="swarm-action-btn swarm-action-btn--delete" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg><span>Удалить</span></button>
+                            <button id="add-drone-btn" class="swarm-action-btn swarm-action-btn--add" type="button">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="8"></circle>
+                                    <path d="M12 8v8"></path>
+                                    <path d="M8 12h8"></path>
+                                </svg>
+                                <span>Добавить</span>
+                            </button>
+                            <button id="del-drone-btn" class="swarm-action-btn swarm-action-btn--delete" type="button">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M9 10v6"></path>
+                                    <path d="M15 10v6"></path>
+                                    <path d="M5 7h14"></path>
+                                    <path d="M8 7V5.8A1.8 1.8 0 0 1 9.8 4h4.4A1.8 1.8 0 0 1 16 5.8V7"></path>
+                                    <path d="M6.2 7 7 18a2 2 0 0 0 2 1.8h6a2 2 0 0 0 2-1.8L17.8 7"></path>
+                                </svg>
+                                <span>Удалить</span>
+                            </button>
                         </div>
                     </div>
                 </div>

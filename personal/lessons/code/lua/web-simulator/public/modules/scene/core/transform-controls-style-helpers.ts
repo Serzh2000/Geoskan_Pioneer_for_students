@@ -18,19 +18,19 @@ export type StyledTransformControls = TransformControls & {
 };
 
 export const AXIS_COLORS: Record<AxisName, THREE.Color> = {
-    X: new THREE.Color('#d48f8f'),
-    Y: new THREE.Color('#8fbe9f'),
-    Z: new THREE.Color('#86a9d8')
+    X: new THREE.Color('#e07a5f'),
+    Y: new THREE.Color('#3aa675'),
+    Z: new THREE.Color('#5b8def')
 };
 
-export const ACTIVE_COLOR = new THREE.Color('#ffe29a');
-export const NEUTRAL_COLOR = new THREE.Color('#94a3b8');
-export const CENTER_COLOR = new THREE.Color('#f3f6fb');
+export const ACTIVE_COLOR = new THREE.Color('#ff6b00');
+export const NEUTRAL_COLOR = new THREE.Color('#a3afbf');
+export const CENTER_COLOR = new THREE.Color('#fff4e8');
 
 export const MODE_SIZES: Record<TransformMode, number> = {
-    translate: 0.72,
-    rotate: 0.78,
-    scale: 0.72
+    translate: 0.78,
+    rotate: 0.84,
+    scale: 0.78
 };
 
 function getAxisValue(vector: THREE.Vector3, axis: AxisName): number {
@@ -153,10 +153,14 @@ export function tuneMaterialLibrary(internals: GizmoInternals) {
     if (lib.zAxisTransparent?.color) lib.zAxisTransparent.color.copy(AXIS_COLORS.Z);
     if (lib.activeTransparent?.color) lib.activeTransparent.color.copy(ACTIVE_COLOR);
 
-    if (lib.xAxisTransparent?.opacity !== undefined) lib.xAxisTransparent.opacity = 0.28;
-    if (lib.yAxisTransparent?.opacity !== undefined) lib.yAxisTransparent.opacity = 0.28;
-    if (lib.zAxisTransparent?.opacity !== undefined) lib.zAxisTransparent.opacity = 0.28;
-    if (lib.activeTransparent?.opacity !== undefined) lib.activeTransparent.opacity = 0.42;
+    if (lib.xAxis?.opacity !== undefined) lib.xAxis.opacity = 0.94;
+    if (lib.yAxis?.opacity !== undefined) lib.yAxis.opacity = 0.94;
+    if (lib.zAxis?.opacity !== undefined) lib.zAxis.opacity = 0.94;
+    if (lib.active?.opacity !== undefined) lib.active.opacity = 0.98;
+    if (lib.xAxisTransparent?.opacity !== undefined) lib.xAxisTransparent.opacity = 0.2;
+    if (lib.yAxisTransparent?.opacity !== undefined) lib.yAxisTransparent.opacity = 0.2;
+    if (lib.zAxisTransparent?.opacity !== undefined) lib.zAxisTransparent.opacity = 0.2;
+    if (lib.activeTransparent?.opacity !== undefined) lib.activeTransparent.opacity = 0.32;
 }
 
 export function removeByName(group: THREE.Object3D, names: string[]) {

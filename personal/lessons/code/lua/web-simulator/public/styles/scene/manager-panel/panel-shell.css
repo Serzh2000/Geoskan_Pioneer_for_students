@@ -1,0 +1,178 @@
+﻿/*
+ * Светлый layout панели менеджера сцены.
+ * Иерархия и инспектор работают как отдельные режимы внутри одного sidebar.
+ */
+#manager-panel .panel-content--scene-manager {
+    background:
+        radial-gradient(circle at top left, rgba(255, 107, 0, 0.08), transparent 34%),
+        linear-gradient(180deg, #fbfcfd 0%, #f4f6f8 100%);
+}
+
+#manager-panel .scene-manager {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding: 16px;
+    gap: 16px;
+}
+
+#manager-panel .scene-manager-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 6px;
+    background: linear-gradient(180deg, #fbfcfd 0%, #f3f4f6 100%);
+    border: 1px solid rgba(9, 9, 11, 0.08);
+    border-radius: 18px;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+#manager-panel .scene-manager-tab {
+    position: relative;
+    min-height: 50px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 14px;
+    background: transparent;
+    color: #7b8696;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease,
+        border-color 0.2s ease;
+    border: 1px solid transparent;
+}
+
+#manager-panel .scene-manager-tab:hover:not(:disabled) {
+    color: #212529;
+    background: rgba(255, 255, 255, 0.78);
+    border-color: rgba(9, 9, 11, 0.06);
+    transform: translateY(-1px);
+}
+
+#manager-panel .scene-manager-tab.is-active {
+    color: #161922;
+    background: linear-gradient(180deg, #ffffff 0%, #fff8f1 100%);
+    border-color: rgba(255, 107, 0, 0.18);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 107, 0, 0.08),
+        0 14px 26px rgba(255, 107, 0, 0.12),
+        0 8px 18px rgba(15, 23, 42, 0.05);
+}
+
+#manager-panel .scene-manager-tab.is-active::after {
+    content: '';
+    position: absolute;
+    right: 14px;
+    bottom: 0;
+    left: 14px;
+    height: 3px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #ff6b00 0%, #ff7a00 100%);
+    box-shadow: 0 2px 6px rgba(255, 107, 0, 0.22);
+}
+
+#manager-panel .scene-manager-tab__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 9px;
+    background: rgba(9, 9, 11, 0.03);
+    border: 1px solid rgba(9, 9, 11, 0.05);
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+#manager-panel .scene-manager-tab > span:last-child {
+    position: relative;
+    z-index: 1;
+}
+
+#manager-panel .scene-manager-tab__icon svg {
+    width: 14px;
+    height: 14px;
+}
+
+#manager-panel .scene-manager-tab.is-active .scene-manager-tab__icon {
+    color: var(--accent-color);
+    background: rgba(255, 107, 0, 0.1);
+    border-color: rgba(255, 107, 0, 0.14);
+}
+
+#manager-panel .scene-manager-tab:disabled {
+    color: #adb5bd;
+    cursor: not-allowed;
+}
+
+#manager-panel .scene-panel-view {
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+}
+
+#manager-panel .scene-panel-view.is-active {
+    display: flex;
+}
+
+#manager-panel .scene-panel-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    background: #ffffff;
+    border: 1px solid rgba(9, 9, 11, 0.08);
+    border-radius: 18px;
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.05);
+}
+
+#manager-panel .scene-panel-card--tree {
+    min-height: 240px;
+}
+
+#manager-panel .scene-panel-card--transform {
+    gap: 12px;
+}
+
+#manager-panel .scene-panel-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+#manager-panel .scene-panel-card__title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #212529;
+}
+
+#manager-panel .scene-panel-card__description {
+    margin: 4px 0 0;
+    font-size: 11px;
+    line-height: 1.45;
+    color: #6c757d;
+}
+
+#manager-panel .scene-panel-card__badge {
+    flex-shrink: 0;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(255, 107, 0, 0.08);
+    border: 1px solid rgba(255, 107, 0, 0.12);
+    color: #9a3412;
+    font-size: 11px;
+    font-weight: 700;
+}
+

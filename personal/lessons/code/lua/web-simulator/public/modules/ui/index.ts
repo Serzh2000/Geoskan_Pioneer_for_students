@@ -64,6 +64,8 @@ export interface UICallbacks {
         isLinearEditingActive: (id?: string) => boolean;
         setMode: (mode: 'translate' | 'rotate' | 'scale', id?: string) => boolean;
         getMode: () => 'translate' | 'rotate' | 'scale';
+        rotateByDegrees: (axis: 'x' | 'y' | 'z', angle: number) => boolean;
+        resetRotation: () => boolean;
         resetDroneOrigin: () => boolean;
         clearSelection: () => boolean;
         getSelectedId: () => string | null;

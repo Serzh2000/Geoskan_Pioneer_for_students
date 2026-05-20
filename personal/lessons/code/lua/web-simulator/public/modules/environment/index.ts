@@ -4,7 +4,7 @@
  */
 import * as THREE from 'three';
 import { setupLights } from './lights.js';
-import { createGround, createAxesLabels } from './ground.js';
+import { createGround } from './ground.js';
 import {
     createArenaControlStationMesh,
     createArenaHeliportMesh,
@@ -55,12 +55,6 @@ export function setupEnvironment(scene: THREE.Scene) {
 
     createGround(scene, envGroup);
     createObstacles(envGroup);
-
-    const axesHelper = new THREE.AxesHelper(2);
-    axesHelper.position.z = 0.01;
-    scene.add(axesHelper);
-
-    createAxesLabels(scene);
 }
 
 export function addObjectToScene(type: string, camera?: THREE.Camera | null, options: SceneObjectOptions = {}) {

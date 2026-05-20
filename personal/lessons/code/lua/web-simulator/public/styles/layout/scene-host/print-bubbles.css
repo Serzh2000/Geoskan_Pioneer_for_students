@@ -1,0 +1,44 @@
+.drone-print-bubbles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 6;
+}
+
+
+.drone-print-bubble {
+    position: absolute;
+    max-width: min(280px, 40vw);
+    padding: 8px 12px;
+    border: 1px solid rgba(9, 9, 11, 0.14);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--text-color);
+    font-size: 13px;
+    line-height: 1.35;
+    white-space: pre-wrap;
+    word-break: break-word;
+    box-shadow: var(--shadow-soft);
+    transform: translate(-50%, calc(-100% - 18px)) scale(0.92);
+    transform-origin: bottom center;
+    opacity: 0;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.drone-print-bubble.visible {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 22px)) scale(1);
+}
+
+.drone-print-bubble::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -8px;
+    width: 14px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.96);
+    border-right: 1px solid rgba(9, 9, 11, 0.14);
+    border-bottom: 1px solid rgba(9, 9, 11, 0.14);
+    transform: translateX(-50%) rotate(45deg);
+}

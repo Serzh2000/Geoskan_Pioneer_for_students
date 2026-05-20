@@ -1,0 +1,104 @@
+#settings-panel .settings-field input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    margin: 8px 0 4px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(
+        90deg,
+        var(--accent-color) 0,
+        var(--accent-color) var(--range-progress, 50%),
+        #d9dee5 var(--range-progress, 50%),
+        #d9dee5 100%
+    );
+}
+
+#settings-panel .settings-field input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 999px;
+    background: transparent;
+}
+
+#settings-panel .settings-field input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    margin-top: -6px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.14);
+}
+
+#settings-panel .settings-field input[type="range"]::-moz-range-track {
+    height: 6px;
+    border-radius: 999px;
+    background: #d9dee5;
+}
+
+#settings-panel .settings-field input[type="range"]::-moz-range-progress {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--accent-color);
+}
+
+#settings-panel .settings-field input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.14);
+}
+
+#settings-panel .settings-select-wrap,
+#settings-panel .settings-color-control {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+}
+
+#settings-panel .settings-select-wrap::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    width: 8px;
+    height: 8px;
+    border-right: 1.5px solid #6c757d;
+    border-bottom: 1.5px solid #6c757d;
+    transform: translateY(-65%) rotate(45deg);
+    pointer-events: none;
+}
+
+#settings-panel .settings-field select,
+#settings-panel .settings-color-control input[type="color"] {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    background: #ffffff;
+    color: #212529;
+}
+
+#settings-panel .settings-field select {
+    appearance: none;
+    min-height: 38px;
+    padding: 8px 38px 8px 14px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+#settings-panel .settings-color-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    background: #ffffff;
+}
+

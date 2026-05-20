@@ -1,0 +1,54 @@
+#fpv-overlay {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 8;
+    transition: opacity 0.18s ease;
+}
+
+.fpv-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    backdrop-filter: blur(12px);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.92),
+        0 12px 28px rgba(15, 23, 42, 0.1);
+}
+
+.fpv-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    min-height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(255, 107, 0, 0.1);
+    border: 1px solid rgba(255, 107, 0, 0.18);
+    color: var(--accent-color);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.fpv-cam-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.fpv-cam-info div {
+    color: #334155;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.35;
+}
+

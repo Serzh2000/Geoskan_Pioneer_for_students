@@ -1,13 +1,19 @@
 import type { MarkerMapOptions } from '../../../environment/obstacles.js';
-import type { SceneManagerDomRefs } from '../support.js';
+import type { SceneManagerDomRefs } from './dom.js';
 import {
     fillDictionarySelect,
-    getMarkerMode,
+    getMarkerMode
+} from './markers.js';
+import {
+    clampInt,
+    clampNumber
+} from './numbers.js';
+import {
     isBuildingType,
     isMarkerMapType,
     isSingleMarkerType,
     isValueInputType
-} from '../support.js';
+} from './type-guards.js';
 import { setBuildingControlsVisible, syncFloorLimit, syncIncidentValue } from './building.js';
 
 export function getMapInputs(elements: SceneManagerDomRefs) {
@@ -28,9 +34,7 @@ export function getMapInputs(elements: SceneManagerDomRefs) {
 }
 
 export function readAddMarkerMapOptions(
-    elements: SceneManagerDomRefs,
-    clampInt: (value: string | undefined, fallback: number, min: number, max: number) => number,
-    clampNumber: (value: string | undefined, fallback: number, min: number, max: number) => number
+    elements: SceneManagerDomRefs
 ): MarkerMapOptions {
     return {
         rows: clampInt(elements.addMapRowsEl?.value, 5, 1, 20),
@@ -59,12 +63,10 @@ export function readAddMarkerMapOptions(
 }
 
 export function updateMapSummary(
-    elements: SceneManagerDomRefs,
-    clampInt: (value: string | undefined, fallback: number, min: number, max: number) => number,
-    clampNumber: (value: string | undefined, fallback: number, min: number, max: number) => number
+    elements: SceneManagerDomRefs
 ) {
     if (!elements.addMapSummaryEl) return;
-    const options = readAddMarkerMapOptions(elements, clampInt, clampNumber);
+    const options = readAddMarkerMapOptions(elements);
     const total = options.rows! * options.columns!;
     const firstId = options.startId!;
     const lastId = firstId + Math.max(0, total - 1) * options.idStep!;
@@ -82,11 +84,7 @@ export function updateMapSummary(
 }
 
 export function updateAddControlsState(
-    elements: SceneManagerDomRefs,
-    clampFloors: (value: string | undefined, fallback?: number) => number,
-    clampWindowFloor: (value: string | undefined, maxFloor: number) => number,
-    clampInt: (value: string | undefined, fallback: number, min: number, max: number) => number,
-    clampNumber: (value: string | undefined, fallback: number, min: number, max: number) => number
+    elements: SceneManagerDomRefs
 ) {
     if (!elements.addTypeEl || !elements.addValueEl || !elements.addPointsEl || !elements.addDictionaryEl) return;
     const type = elements.addTypeEl.value;
@@ -113,15 +111,12 @@ export function updateAddControlsState(
         ? 'Каждая строка: X, Y, Z\n0, 0, 0\n6, 0, 0\n10, 4, 0'
         : 'Только для дорог и путей';
     elements.addPointsEl.style.display = isPath ? 'block' : 'none';
-    if (elements.addPathHintEl) {
-        elements.addPathHintEl.style.display = isPath ? 'block' : 'none';
-    }
     setBuildingControlsVisible(isBuilding, elements.addFloorsWrapEl, elements.addFloorsEl, elements.addBuildingSettingsEl);
     if (elements.addMapSettingsEl) elements.addMapSettingsEl.classList.toggle('visible', isMarkerMap);
     getMapInputs(elements).forEach((input) => {
         input.disabled = !isMarkerMap;
     });
-    syncFloorLimit(elements.addFloorsEl, elements.addBuildingFloorEl, clampFloors, clampWindowFloor);
+    syncFloorLimit(elements.addFloorsEl, elements.addBuildingFloorEl);
     syncIncidentValue(elements.addValueEl, elements.addBuildingIncidentsEl);
-    updateMapSummary(elements, clampInt, clampNumber);
+    updateMapSummary(elements);
 }

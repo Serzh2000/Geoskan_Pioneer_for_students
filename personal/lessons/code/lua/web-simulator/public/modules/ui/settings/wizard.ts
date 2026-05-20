@@ -1,11 +1,11 @@
-﻿import { saveGamepadSettings, type GamepadInputRef } from '../../core/state.js';
+import type { GamepadInputRef } from '../../core/state.js';
 import { getChannelInversionIndex } from './constants.js';
 import {
     rememberObservedInputValue,
     resetObservedInputStats
 } from './observed-inputs.js';
 import type { ChannelKey, PrimaryChannelKey } from './types.js';
-import { CHANNEL_LABELS, SETTINGS_CHANGED_EVENT, STEPS } from './wizard-config.js';
+import { CHANNEL_LABELS, STEPS } from './wizard-config.js';
 import {
     detectPrimaryAxis,
     getAuxStepRcValue,
@@ -13,9 +13,15 @@ import {
     getUsedRefs,
     rememberSwitchTransition
 } from './wizard-detection.js';
-import { createWizardDraftInversion, getStoredMappingRef, persistWizardResults } from './wizard-persistence.js';
+import { createWizardDraftInversion } from './wizard-persistence.js';
 import { WizardPreviewController } from './wizard-preview.js';
+import { computePreviewRef } from './wizard-preview-ref.js';
 import { renderWizardState as renderWizardUi } from './wizard-ui.js';
+import {
+    finishWizardSession,
+    getFirstConnectedGamepad,
+    getResolvedPrimaryRef as getResolvedPrimaryWizardRef
+} from './wizard-lifecycle.js';
 import type {
     AuxDetectionResult,
     AxisMotionStats,
@@ -156,12 +162,6 @@ function getCurrentStep(): WizardStep {
     return STEPS[currentStepIdx];
 }
 
-function getFirstConnectedGamepad(): Gamepad | null {
-    if (typeof navigator.getGamepads !== 'function') return null;
-    const connected = Array.from(navigator.getGamepads()).filter((gp): gp is Gamepad => gp !== null);
-    return connected[0] ?? null;
-}
-
 function getDetectedRef(channel: ChannelKey): GamepadInputRef | null {
     return detectedMapping[channel] ?? null;
 }
@@ -169,29 +169,12 @@ function getDetectedRef(channel: ChannelKey): GamepadInputRef | null {
 function getPreviewRef(channel: ChannelKey): GamepadInputRef | null {
     const resolvedRef = getDetectedRef(channel);
     if (resolvedRef) return resolvedRef;
-
-    const step = getCurrentStep();
-    if (step.type !== 'primary' || step.channel !== channel) return null;
-
-    const usedRefs = getUsedRefs(detectedMapping, channel);
-    let bestRef: GamepadInputRef | null = null;
-    let bestScore = 0;
-
-    for (let index = 0; index < stepAxisStats.length; index += 1) {
-        const ref = `a${index}` as GamepadInputRef;
-        if (usedRefs.has(ref)) continue;
-
-        const stats = stepAxisStats[index];
-        if (!stats) continue;
-
-        const score = stats.maxDelta * 4 + stats.travel + stats.activitySamples * 0.04;
-        if (score > bestScore) {
-            bestScore = score;
-            bestRef = ref;
-        }
-    }
-
-    return bestScore > 0.08 ? bestRef : null;
+    return computePreviewRef({
+        channel,
+        step: getCurrentStep(),
+        detectedMapping,
+        stepAxisStats
+    });
 }
 
 function isCurrentStepResolved(): boolean {
@@ -214,7 +197,7 @@ function getCurrentChannelState(): WizardChannelState | null {
 }
 
 function getResolvedPrimaryRef(channel: PrimaryChannelKey): GamepadInputRef | null {
-    return detectedMapping[channel] ?? getStoredMappingRef(channel);
+    return getResolvedPrimaryWizardRef(channel, detectedMapping);
 }
 
 function wizardLoop() {
@@ -305,11 +288,5 @@ function detectAuxInput(gp: Gamepad, step: WizardStep) {
 }
 
 function finishWizard() {
-    persistWizardResults({ detectedMapping, auxResults, wizardDraftInversion });
-    saveGamepadSettings();
-    window.dispatchEvent(new CustomEvent(SETTINGS_CHANGED_EVENT));
-
-    const overlay = document.getElementById('gp-wizard-overlay');
-    if (overlay) overlay.style.display = 'none';
-    stopWizard();
+    finishWizardSession({ detectedMapping, auxResults, wizardDraftInversion, stopWizard });
 }

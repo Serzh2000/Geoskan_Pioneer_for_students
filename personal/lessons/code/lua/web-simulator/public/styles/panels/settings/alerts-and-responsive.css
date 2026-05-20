@@ -1,0 +1,84 @@
+#settings-panel .settings-alert {
+    max-width: 100%;
+}
+
+#settings-panel .settings-color-control input[type="color"] {
+    max-width: 56px;
+    min-width: 56px;
+    height: 34px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+#settings-panel .settings-color-control input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+#settings-panel .settings-color-control input[type="color"]::-webkit-color-swatch,
+#settings-panel .settings-color-control input[type="color"]::-moz-color-swatch {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 8px;
+}
+
+#settings-panel .settings-color-control__value {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: #495057;
+}
+
+#settings-panel .settings-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid #dbeafe;
+    background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
+}
+
+#settings-panel .settings-alert__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    border-radius: 999px;
+    background: #e7f1ff;
+    color: #2b6cb0;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+#settings-panel .settings-alert__text {
+    font-size: 13px;
+    line-height: 1.55;
+    color: #52606d;
+}
+
+@media (max-width: 980px) {
+    .settings-panel-content--general {
+        padding: 16px;
+    }
+
+    #settings-panel .settings-card {
+        padding: 20px;
+        padding-bottom: 20px;
+    }
+
+    #settings-panel .settings-card__body--grid,
+    #settings-panel .settings-card__body--stack {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    #settings-panel .settings-field__row {
+        align-items: flex-start;
+    }
+}

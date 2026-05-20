@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Pioneer Lua Web Simulator</title>
-    <link rel="icon" href="data:,">
+    <link rel="icon" href="data:,">
     <!-- Three.js and modules loaded via Vite -->
     <!-- Fengari for Lua in browser -->
     <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
-  <script type="module" crossorigin src="/assets/index-CAXZaXbR.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-CbGZWucu.css">
+  <script type="module" crossorigin src="/assets/index-DCLebHvi.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BGLwFgSE.css">
 </head>
 <body>
             <header class="header">
@@ -47,36 +47,84 @@
         <aside class="workspace-sidebar">
                     <!-- Sidebar Tabs -->
         <div class="sidebar-tabs">
-            <button class="sidebar-tab-btn active" onclick="openPanel('editor-panel')" title="Редактор">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-            </button>
-            <button class="sidebar-tab-btn" onclick="openPanel('drones-panel')" title="Рой">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="8" r="2"></circle><circle cx="18" cy="8" r="2"></circle><circle cx="12" cy="17" r="2"></circle><path d="M8 9.5l2.5 4"></path><path d="M16 9.5l-2.5 4"></path><path d="M8 8h8"></path></svg>
-            </button>
-            <button class="sidebar-tab-btn" onclick="openPanel('manager-panel')" title="Менеджер сцены">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><path d="M14 17h7"></path><path d="M17.5 13.5v7"></path></svg>
-            </button>
-            <button class="sidebar-tab-btn" onclick="openPanel('docs-panel')" title="API">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M8 10l-2 2 2 2"></path><path d="M16 10l2 2-2 2"></path><line x1="11" y1="16" x2="13" y2="8"></line></svg>
-            </button>
-            <button id="sidebar-guide-btn" class="sidebar-tab-btn" onclick="openMissionGuideModal()" title="Руководство">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path><path d="M19 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path><path d="M7 17c3.2-2.9 5.6-5.3 10-10"></path><path d="M12 7h5v5"></path></svg>
-            </button>
-            <button class="sidebar-tab-btn" onclick="openPanel('logs-panel')" title="Логи">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
-            </button>
-            <div style="flex: 1;"></div>
-            <button class="sidebar-tab-btn" onclick="openPanel('gamepad-panel')" title="Пульт">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M6 11h12"></path>
-                    <path d="M8 8v6"></path>
-                    <path d="M16 9h.01"></path>
-                    <path d="M18 13h.01"></path>
-                    <path d="M7 18l-3-7a3 3 0 0 1 2.9-4h10.2A3 3 0 0 1 20 11l-3 7"></path>
+            <button class="sidebar-tab-btn active" type="button" onclick="openPanel('editor-panel')" title="Редактор" aria-label="Редактор">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M8 8.5 4.5 12 8 15.5"></path>
+                    <path d="M16 8.5 19.5 12 16 15.5"></path>
+                    <path d="m13.5 6.5-3 11"></path>
                 </svg>
             </button>
-            <button class="sidebar-tab-btn" onclick="openPanel('settings-panel')" title="Настройки">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <button class="sidebar-tab-btn" type="button" onclick="openPanel('drones-panel')" title="Рой" aria-label="Управление роем">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="7" cy="7" r="2.25"></circle>
+                    <circle cx="17" cy="7" r="2.25"></circle>
+                    <circle cx="7" cy="17" r="2.25"></circle>
+                    <circle cx="17" cy="17" r="2.25"></circle>
+                    <rect x="9.5" y="9.5" width="5" height="5" rx="1.5"></rect>
+                    <path d="M8.7 8.7 10 10"></path>
+                    <path d="M15.3 8.7 14 10"></path>
+                    <path d="M8.7 15.3 10 14"></path>
+                    <path d="M15.3 15.3 14 14"></path>
+                </svg>
+            </button>
+            <button class="sidebar-tab-btn" type="button" onclick="openPanel('manager-panel')" title="Менеджер сцены" aria-label="Менеджер сцены">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 4.5 18.5 8 12 11.5 5.5 8 12 4.5Z"></path>
+                    <path d="M5.5 8v8L12 19.5l6.5-3.5V8"></path>
+                    <path d="M12 11.5v8"></path>
+                </svg>
+            </button>
+            <button class="sidebar-tab-btn" type="button" onclick="openPanel('docs-panel')" title="API" aria-label="Справочник API">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M6 4.5h8l4 4v11a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 19.5V6A1.5 1.5 0 0 1 6 4.5Z"></path>
+                    <path d="M14 4.5V9h4.5"></path>
+                    <path d="M8.5 13.5 7 15l1.5 1.5"></path>
+                    <path d="M12 12.5 10.8 17.5"></path>
+                    <path d="M15.5 13.5 17 15l-1.5 1.5"></path>
+                </svg>
+            </button>
+            <button id="sidebar-guide-btn" class="sidebar-tab-btn" type="button" onclick="openMissionGuideModal()" title="Руководство" aria-label="Руководство">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 20s6-3.3 6-8.4A3.6 3.6 0 0 0 14.4 8 4.2 4.2 0 0 0 12 8.9 4.2 4.2 0 0 0 9.6 8 3.6 3.6 0 0 0 6 11.6C6 16.7 12 20 12 20Z"></path>
+                    <path d="m12 9.5 1.2 2.4 2.7.4-2 1.9.5 2.8-2.4-1.3-2.4 1.3.5-2.8-2-1.9 2.7-.4L12 9.5Z"></path>
+                </svg>
+            </button>
+            <button class="sidebar-tab-btn" type="button" onclick="openPanel('logs-panel')" title="Логи" aria-label="Логи">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M6.5 7.5h11"></path>
+                    <path d="M10 12h7.5"></path>
+                    <path d="M6.5 16.5h11"></path>
+                    <circle cx="5" cy="7.5" r="1"></circle>
+                    <circle cx="8.5" cy="12" r="1"></circle>
+                    <circle cx="5" cy="16.5" r="1"></circle>
+                </svg>
+            </button>
+            <div style="flex: 1;"></div>
+            <button class="sidebar-tab-btn" type="button" onclick="openPanel('gamepad-panel')" title="Пульт" aria-label="Пульт">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M7 10h10a3 3 0 0 1 2.9 2.2l1.1 4.1A2.2 2.2 0 0 1 18.9 19h-1.4a2 2 0 0 1-1.4-.6l-1.5-1.5a1.5 1.5 0 0 0-1.1-.4h-3a1.5 1.5 0 0 0-1.1.4l-1.5 1.5a2 2 0 0 1-1.4.6H5.1A2.2 2.2 0 0 1 3 16.3l1.1-4.1A3 3 0 0 1 7 10Z"></path>
+                    <path d="M8 12.5v3"></path>
+                    <path d="M6.5 14h3"></path>
+                    <circle cx="16" cy="13" r=".8"></circle>
+                    <circle cx="18" cy="15" r=".8"></circle>
+                </svg>
+            </button>
+            <button class="sidebar-tab-btn" type="button" onclick="openPanel('settings-panel')" title="Настройки" aria-label="Настройки">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="2.75"></circle>
+                    <path d="M12 4v2.2"></path>
+                    <path d="M12 17.8V20"></path>
+                    <path d="m6.3 6.3 1.6 1.6"></path>
+                    <path d="m16.1 16.1 1.6 1.6"></path>
+                    <path d="M4 12h2.2"></path>
+                    <path d="M17.8 12H20"></path>
+                    <path d="m6.3 17.7 1.6-1.6"></path>
+                    <path d="m16.1 7.9 1.6-1.6"></path>
+                    <path d="M9.2 5.1 8.4 7"></path>
+                    <path d="m15.6 17-.8 1.9"></path>
+                    <path d="m5.1 14.8 1.9-.8"></path>
+                    <path d="m17 9.2 1.9-.8"></path>
+                </svg>
             </button>
         </div>
 
@@ -108,6 +156,22 @@
                 <div class="panel-content panel-content--drones">
                     <div class="swarm-manager">
                         <div class="swarm-manager__intro">
+                            <div class="swarm-manager__eyebrow">
+                                <span class="swarm-manager__eyebrow-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="7" cy="7" r="2.1"></circle>
+                                        <circle cx="17" cy="7" r="2.1"></circle>
+                                        <circle cx="7" cy="17" r="2.1"></circle>
+                                        <circle cx="17" cy="17" r="2.1"></circle>
+                                        <rect x="9.5" y="9.5" width="5" height="5" rx="1.5"></rect>
+                                        <path d="M8.6 8.6 10 10"></path>
+                                        <path d="M15.4 8.6 14 10"></path>
+                                        <path d="M8.6 15.4 10 14"></path>
+                                        <path d="M15.4 15.4 14 14"></path>
+                                    </svg>
+                                </span>
+                                <span>Координация роя</span>
+                            </div>
                             <p class="swarm-manager__subtitle">Выберите активный дрон роя и управляйте составом группы без перегруженного интерфейса.</p>
                         </div>
                         <section class="swarm-list-card" aria-labelledby="drone-list-title">
@@ -118,8 +182,24 @@
                             <div id="drone-list" class="swarm-list" role="listbox" aria-label="Список дронов"></div>
                         </section>
                         <div class="swarm-actions">
-                            <button id="add-drone-btn" class="swarm-action-btn swarm-action-btn--add" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span>Добавить</span></button>
-                            <button id="del-drone-btn" class="swarm-action-btn swarm-action-btn--delete" type="button"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg><span>Удалить</span></button>
+                            <button id="add-drone-btn" class="swarm-action-btn swarm-action-btn--add" type="button">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="8"></circle>
+                                    <path d="M12 8v8"></path>
+                                    <path d="M8 12h8"></path>
+                                </svg>
+                                <span>Добавить</span>
+                            </button>
+                            <button id="del-drone-btn" class="swarm-action-btn swarm-action-btn--delete" type="button">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M9 10v6"></path>
+                                    <path d="M15 10v6"></path>
+                                    <path d="M5 7h14"></path>
+                                    <path d="M8 7V5.8A1.8 1.8 0 0 1 9.8 4h4.4A1.8 1.8 0 0 1 16 5.8V7"></path>
+                                    <path d="M6.2 7 7 18a2 2 0 0 0 2 1.8h6a2 2 0 0 0 2-1.8L17.8 7"></path>
+                                </svg>
+                                <span>Удалить</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -133,11 +213,30 @@
                 <div class="panel-content panel-content--scene-manager">
                     <div class="scene-manager">
                         <div class="scene-manager-tabs" role="tablist" aria-label="Режим панели менеджера сцены">
-                            <button id="scene-tab-hierarchy" class="scene-manager-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="scene-panel-hierarchy">Иерархия</button>
-                            <button id="scene-tab-inspector" class="scene-manager-tab" type="button" role="tab" aria-selected="false" aria-controls="scene-panel-inspector">Инспектор</button>
+                            <button id="scene-tab-hierarchy" class="scene-manager-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="scene-panel-hierarchy">
+                                <span class="scene-manager-tab__icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 4.5 18.5 8 12 11.5 5.5 8 12 4.5Z"></path>
+                                        <path d="M5.5 8v8L12 19.5l6.5-3.5V8"></path>
+                                        <path d="M12 11.5v8"></path>
+                                    </svg>
+                                </span>
+                                <span>Иерархия</span>
+                            </button>
+                            <button id="scene-tab-inspector" class="scene-manager-tab" type="button" role="tab" aria-selected="false" aria-controls="scene-panel-inspector">
+                                <span class="scene-manager-tab__icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="5.5"></circle>
+                                        <path d="m15 15 4 4"></path>
+                                        <path d="M11 8.8v2.5"></path>
+                                        <circle cx="11" cy="14.2" r=".75" fill="currentColor" stroke="none"></circle>
+                                    </svg>
+                                </span>
+                                <span>Инспектор</span>
+                            </button>
                         </div>
 
-                        <section id="scene-panel-hierarchy" class="scene-panel-view is-active" role="tabpanel" aria-labelledby="scene-tab-hierarchy">
+                                                <section id="scene-panel-hierarchy" class="scene-panel-view is-active" role="tabpanel" aria-labelledby="scene-tab-hierarchy">
                             <div class="scene-panel-card scene-panel-card--tree">
                                 <div class="scene-panel-card__header">
                                     <div>
@@ -346,7 +445,7 @@
                             </div>
                         </section>
 
-                        <section id="scene-panel-inspector" class="scene-panel-view" role="tabpanel" aria-labelledby="scene-tab-inspector" hidden>
+                                                <section id="scene-panel-inspector" class="scene-panel-view" role="tabpanel" aria-labelledby="scene-tab-inspector" hidden>
                             <div class="scene-panel-card">
                                 <div class="scene-panel-card__header">
                                     <div>
@@ -463,6 +562,47 @@
                                         <input id="scene-transform-z" type="text" readonly value="--" aria-label="Значение по оси Z">
                                     </label>
                                 </div>
+                                <div id="scene-rotate-controls" class="scene-rotate-controls" hidden>
+                                    <div class="scene-rotate-controls__header">
+                                        <div>
+                                            <div class="scene-rotate-controls__title">Быстрые углы</div>
+                                            <p class="scene-rotate-controls__description">Поворот по осям X/Y/Z на удобные фиксированные значения.</p>
+                                        </div>
+                                        <button id="scene-rotate-reset-btn" class="btn-secondary scene-btn scene-btn--ghost" type="button">Сбросить</button>
+                                    </div>
+                                    <div class="scene-rotate-presets" role="group" aria-label="Быстрые углы поворота">
+                                        <div class="scene-rotate-row">
+                                            <span class="scene-axis-chip scene-axis-chip--x">X</span>
+                                            <div class="scene-rotate-row__buttons">
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="-90">-90°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="-45">-45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="45">+45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="90">+90°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="180">180°</button>
+                                            </div>
+                                        </div>
+                                        <div class="scene-rotate-row">
+                                            <span class="scene-axis-chip scene-axis-chip--y">Y</span>
+                                            <div class="scene-rotate-row__buttons">
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="-90">-90°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="-45">-45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="45">+45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="90">+90°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="180">180°</button>
+                                            </div>
+                                        </div>
+                                        <div class="scene-rotate-row">
+                                            <span class="scene-axis-chip scene-axis-chip--z">Z</span>
+                                            <div class="scene-rotate-row__buttons">
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="-90">-90°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="-45">-45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="45">+45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="90">+90°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="180">180°</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="scene-transform-secondary">
                                     <button id="scene-drone-origin-btn" class="btn-secondary scene-btn scene-btn--ghost" type="button">Дрон в (0,0)</button>
                                 </div>
@@ -474,10 +614,10 @@
                                 </div>
                             </div>
                         </section>
+
                     </div>
                 </div>
             </div>
-
                         <div id="docs-panel" class="sidebar-panel">
                 <div class="panel-header">
                     <span class="panel-title">Справочник API</span>
@@ -539,7 +679,7 @@
                             </div>
 
                             <div class="gamepad-panel-panes">
-                                <div id="gamepad-pane-mapping" class="gamepad-panel-pane is-active" data-gamepad-pane-panel="mapping">
+                                                                <div id="gamepad-pane-mapping" class="gamepad-panel-pane is-active" data-gamepad-pane-panel="mapping">
                                     <div id="gamepad-info" class="gamepad-stage" style="display: none;">
                                 <div class="gamepad-stage-top">
                                     <div id="gp-auto-status" class="gamepad-auto-status">Нажмите AUTO и подвигайте нужный стик или тумблер.</div>
@@ -796,7 +936,7 @@
                             </div>
                             </div>
 
-                            <div id="channel-monitor-panel" class="gamepad-panel-pane gamepad-panel-pane--channel-monitor" data-gamepad-pane-panel="monitor">
+                                                            <div id="channel-monitor-panel" class="gamepad-panel-pane gamepad-panel-pane--channel-monitor" data-gamepad-pane-panel="monitor">
                                 <div class="settings-group settings-group--channel-monitor">
                                     <div class="channel-monitor-hero">
                                         <div class="channel-monitor-hero-copy">
@@ -831,10 +971,11 @@
                                     </div>
                                 </div>
                             </div>
+
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             </div>
 
                         <div id="settings-panel" class="sidebar-panel">
@@ -969,12 +1110,20 @@
                 <section class="scene-stage">
             <div class="scene-viewport-card">
                 <div class="scene-viewport-header">
-                    <div class="scene-viewport-label">Полетная зона</div>
+                    <div class="scene-viewport-title">
+                        <div class="scene-viewport-label">Полетная зона</div>
+                        <div class="scene-viewport-subtitle">3D-сцена и управление камерой</div>
+                    </div>
+                    <div class="scene-viewport-status">
+                        <span class="scene-viewport-status__dot"></span>
+                        <span>Онлайн</span>
+                    </div>
                 </div>
                 <div class="scene-container">
                     <div id="canvas-container"></div>
                     <div id="fpv-overlay">
                         <div class="fpv-header">
+                            <div class="fpv-badge">FPV</div>
                             <div class="fpv-cam-info">
                                 <div>OV2640 [1600x1200]</div>
                                 <div>FPS: 24</div>
@@ -1116,6 +1265,6 @@
             </div>
         </div>
     </div>
-
+
 </body>
 </html>

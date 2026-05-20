@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import * as fengari from 'fengari-web';
 import { simState, resetState, resetRuntimeStatePreservePose, drones, currentDroneId, currentScriptLanguage } from './modules/core/state.js';
-import { init3D, updateDrone3D, is3DActive, addObject, appendPointToSelectedLinearObject, clearSceneSelection, deleteSelectedObject, finishSelectedLinearObjectEditing, getSceneObjectTransformMode, getSelectedSceneObjectId, isSelectedLinearObjectEditingActive, listSceneObjects, resetDroneToOrigin, selectSceneObjectById, setSceneObjectTransformMode, startSelectedLinearObjectEditing, updateSelectedSceneObject, deleteSceneObjectById } from './modules/drone/index.js';
+import { init3D, updateDrone3D, is3DActive, addObject, appendPointToSelectedLinearObject, clearSceneSelection, deleteSelectedObject, finishSelectedLinearObjectEditing, getSceneObjectTransformMode, getSelectedSceneObjectId, isSelectedLinearObjectEditingActive, listSceneObjects, resetDroneToOrigin, resetSelectedSceneObjectRotation, rotateSelectedSceneObjectByDegrees, selectSceneObjectById, setSceneObjectTransformMode, startSelectedLinearObjectEditing, updateSelectedSceneObject, deleteSceneObjectById } from './modules/drone/index.js';
 import { runLuaScript, stopLuaScript, triggerLuaCallback } from './modules/lua/index.js';
 import { setLocalFrameOrigin } from './modules/lua/autopilot.js';
 import { runPythonScript, stopPythonScript } from './modules/python/index.js';
@@ -71,6 +71,8 @@ function init() {
             isLinearEditingActive: (id?: string) => isSelectedLinearObjectEditingActive(id),
             setMode: (mode: 'translate' | 'rotate' | 'scale', id?: string) => setSceneObjectTransformMode(mode, id),
             getMode: () => getSceneObjectTransformMode(),
+            rotateByDegrees: (axis: 'x' | 'y' | 'z', angle: number) => rotateSelectedSceneObjectByDegrees(axis, angle),
+            resetRotation: () => resetSelectedSceneObjectRotation(),
             resetDroneOrigin: () => resetDroneToOrigin(),
             clearSelection: () => clearSceneSelection(),
             getSelectedId: () => getSelectedSceneObjectId()

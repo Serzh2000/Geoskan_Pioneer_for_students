@@ -6,13 +6,9 @@ export function initCameraModeUI() {
         const buttons = document.querySelectorAll('.camera-controls button') as NodeListOf<HTMLButtonElement>;
         buttons.forEach((btn) => {
             const onclick = btn.getAttribute('onclick') || '';
-            if (onclick.includes(`'${mode}'`)) {
-                btn.style.background = '#38bdf8';
-                btn.style.color = '#0f172a';
-            } else {
-                btn.style.background = '';
-                btn.style.color = '';
-            }
+            const isActive = onclick.includes(`'${mode}'`);
+            btn.classList.toggle('is-active', isActive);
+            btn.setAttribute('aria-pressed', String(isActive));
         });
         log(`Режим камеры: ${mode.toUpperCase()}`, 'info');
     };

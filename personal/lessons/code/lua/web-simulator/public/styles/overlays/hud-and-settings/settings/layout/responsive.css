@@ -1,0 +1,61 @@
+@media (max-width: 1180px) {
+    .rc-workspace__main {
+        grid-template-columns: 1fr;
+    }
+
+    .rc-workspace__right {
+        position: static;
+    }
+
+    .rc-master-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .rc-stepper {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rc-stick-monitor-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rc-mode-card-grid,
+    .rc-drone-telemetry {
+        grid-template-columns: 1fr;
+    }
+
+    .rc-wizard-shell__footer {
+        grid-template-columns: 1fr;
+    }
+
+    .rc-stick-mode-toggle__control {
+        grid-template-columns: 1fr;
+    }
+
+    .rc-nav-hint {
+        order: 3;
+    }
+
+    .rc-wizard-modal {
+        padding: 12px;
+    }
+
+    .rc-wizard-modal__dialog {
+        width: calc(100vw - 24px);
+        max-height: calc(100vh - 24px);
+        padding: 16px;
+    }
+
+    .rc-wizard-modal__layout,
+    .rc-wizard-modal__choice-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rc-wizard-modal__header,
+    .rc-wizard-modal__footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

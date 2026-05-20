@@ -58,6 +58,15 @@ export function rotateSelectedObjectByDegrees(axis: RotationAxis, deltaDegrees: 
     return true;
 }
 
+export function resetSelectedObjectRotation() {
+    if (!selectedObject || !transformControl || !isTransformableObject(selectedObject) || simState.running) return false;
+    selectedObject.rotation.set(0, 0, 0, selectedObject.rotation.order);
+    selectedObject.updateMatrixWorld(true);
+    transformControl.dispatchEvent({ type: 'change', target: transformControl });
+    updateTransformModeDecorations(transformControl.getMode(), selectedObject);
+    return true;
+}
+
 export function resetSelectedObjectToInitialTransform() {
     if (!selectedObject || !transformControl || !isTransformableObject(selectedObject) || simState.running) return false;
     if (!initialTransformTarget || !initialTransformSnapshot || selectedObject !== initialTransformTarget) return false;

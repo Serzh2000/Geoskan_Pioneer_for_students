@@ -3,6 +3,8 @@ import { DroneOrbitControls } from './DroneOrbitControls.js';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { log } from '../../shared/logging/logger.js';
 import { setupEnvironment, envGroup } from '../../environment/index.js';
+import { applyTransformControlsUxTheme } from './transform-controls-style.js';
+import { initOrientationWidget, updateOrientationWidget } from './orientation-widget.js';
 
 export let scene: THREE.Scene;
 export let camera: THREE.PerspectiveCamera;
@@ -111,6 +113,7 @@ function configureTransformHelperVisuals(helper: THREE.Object3D) {
 
 export function syncViewportDependentSceneVisuals() {
     if (!renderer) return;
+    updateOrientationWidget(camera);
 }
 
 export function initScene(container: HTMLElement) {
@@ -140,6 +143,7 @@ export function initScene(container: HTMLElement) {
     
     canvasContainer.innerHTML = '';
     canvasContainer.appendChild(renderer.domElement);
+    initOrientationWidget(canvasContainer);
 
     controls = new DroneOrbitControls(camera, renderer.domElement);
     controls.target.set(0, 0, 1);
@@ -162,6 +166,7 @@ export function initScene(container: HTMLElement) {
     
     transformHelper = (transformControl as any).getHelper ? (transformControl as any).getHelper() : (transformControl as unknown as THREE.Object3D);
     configureTransformHelperVisuals(transformHelper);
+    applyTransformControlsUxTheme(transformControl, transformHelper);
     scene.add(transformHelper);
     transformHelper.visible = false;
     (window as any).transformControl = transformControl;
@@ -187,6 +192,7 @@ export function initScene(container: HTMLElement) {
     mouse = new THREE.Vector2();
 
     is3DActive = true;
+    syncViewportDependentSceneVisuals();
 
     if (typeof ResizeObserver !== 'undefined') {
         canvasResizeObserver = new ResizeObserver(() => {

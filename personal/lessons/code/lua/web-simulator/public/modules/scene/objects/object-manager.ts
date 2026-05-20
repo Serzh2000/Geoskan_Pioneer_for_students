@@ -8,7 +8,7 @@ import { handleDeselection, deselectObject } from '../interaction/selection.js';
 import { handleSelection, updateObjectSelectionVisuals } from '../interaction/input.js';
 import { findSceneObjectById, getSceneTopLevelObjects, isTransformableObject, listSceneObjects, normalizePoints, parsePointsText } from './object-catalog.js';
 import type { TransformMode } from './object-transform.js';
-import { activateTransformMode, clearSelectedObjectInitialTransform, getRotationStepDegrees, getRotationStepOptions, rememberSelectedObjectInitialTransform, resetSelectedObjectToInitialTransform, rotateSelectedObjectByDegrees, setRotationStepDegrees } from './object-transform.js';
+import { activateTransformMode, clearSelectedObjectInitialTransform, getRotationStepDegrees, getRotationStepOptions, rememberSelectedObjectInitialTransform, resetSelectedObjectRotation, resetSelectedObjectToInitialTransform, rotateSelectedObjectByDegrees, setRotationStepDegrees } from './object-transform.js';
 import { finishLinearFeatureEditing, getLinearFeatureEditingTargetId, isLinearFeatureEditingActive, startLinearFeatureEditing } from '../interaction/linear-editing.js';
 
 export function groupObjects() {
@@ -103,6 +103,7 @@ export {
     rememberSelectedObjectInitialTransform,
     clearSelectedObjectInitialTransform,
     rotateSelectedObjectByDegrees,
+    resetSelectedObjectRotation,
     resetSelectedObjectToInitialTransform,
     activateTransformMode
 } from './object-transform.js';
@@ -138,6 +139,14 @@ export function setSceneObjectTransformMode(mode: TransformMode, id?: string) {
         handleSelection(target, window.innerWidth / 2, window.innerHeight / 2, false);
     }
     return activateTransformMode(mode, target);
+}
+
+export function rotateSelectedSceneObjectByDegrees(axis: 'x' | 'y' | 'z', angle: number) {
+    return rotateSelectedObjectByDegrees(axis, angle);
+}
+
+export function resetSelectedSceneObjectRotation() {
+    return resetSelectedObjectRotation();
 }
 
 export function deleteSceneObjectById(id: string) {

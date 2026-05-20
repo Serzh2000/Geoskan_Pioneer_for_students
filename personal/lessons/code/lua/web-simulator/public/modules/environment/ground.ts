@@ -2,67 +2,101 @@ import * as THREE from 'three';
 import { createTrussArena } from './truss-arena.js';
 import { GROUND_PHYSICS_MATERIAL } from '../physics/materials.js';
 
+function createFloorTexture(textureSize = 1024) {
+    const canvas = document.createElement('canvas');
+    canvas.width = textureSize;
+    canvas.height = textureSize;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) return new THREE.CanvasTexture(canvas);
+
+    const squaresPerSide = 8;
+    const tileSize = textureSize / squaresPerSide;
+    const seamSize = Math.max(2, Math.round(tileSize * 0.025));
+    const baseColor = '#f5f7fa';
+    const whiteSquare = '#fbfcfd';
+    const graySquare = '#edf1f5';
+    const seamColor = 'rgba(148, 163, 184, 0.24)';
+    const accentColor = '#ff6b00';
+
+    const hash = (x: number, y: number) => {
+        const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+        return value - Math.floor(value);
+    };
+
+    ctx.fillStyle = baseColor;
+    ctx.fillRect(0, 0, textureSize, textureSize);
+
+    for (let row = 0; row < squaresPerSide; row++) {
+        for (let col = 0; col < squaresPerSide; col++) {
+            const x = col * tileSize;
+            const y = row * tileSize;
+            const innerX = x + seamSize;
+            const innerY = y + seamSize;
+            const innerSize = tileSize - seamSize * 2;
+            const isLight = (row + col) % 2 === 0;
+            const squareColor = isLight ? whiteSquare : graySquare;
+
+            ctx.fillStyle = squareColor;
+            ctx.fillRect(innerX, innerY, innerSize, innerSize);
+
+            ctx.strokeStyle = seamColor;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(innerX + 0.5, innerY + 0.5, innerSize - 1, innerSize - 1);
+
+            for (let localY = seamSize + 10; localY < tileSize - seamSize - 10; localY += 18) {
+                for (let localX = seamSize + 10; localX < tileSize - seamSize - 10; localX += 18) {
+                    const n = hash(localX / 18, localY / 18);
+                    const tone = isLight ? 24 : 40;
+                    const alpha = isLight ? 0.018 + n * 0.012 : 0.016 + n * 0.012;
+                    ctx.fillStyle = `rgba(${tone}, ${tone}, ${tone}, ${alpha.toFixed(3)})`;
+                    ctx.fillRect(x + localX, y + localY, 2, 2);
+                }
+            }
+
+            for (let i = 0; i < 8; i++) {
+                const scuffSeed = hash(col * 10 + i, row * 10 + i * 3);
+                const scuffX = innerX + 8 + ((innerSize - 24) * hash(col * 21 + i, row * 17 + i));
+                const scuffY = innerY + 8 + ((innerSize - 24) * hash(col * 13 + i, row * 29 + i));
+                const scuffLength = 8 + scuffSeed * 10;
+                const scuffAlpha = isLight ? 0.02 : 0.016;
+                ctx.strokeStyle = `rgba(255, 255, 255, ${scuffAlpha.toFixed(3)})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(scuffX, scuffY);
+                ctx.lineTo(scuffX + scuffLength, scuffY + scuffLength * 0.18);
+                ctx.stroke();
+            }
+
+            if (row % 2 === 0 && col % 2 === 0) {
+                const markerInset = seamSize + 8;
+                const markerSize = Math.max(8, Math.round(tileSize * 0.06));
+                ctx.fillStyle = accentColor;
+                ctx.fillRect(x + markerInset, y + markerInset, markerSize * 2, 2);
+                ctx.fillRect(x + markerInset, y + markerInset, 2, markerSize * 2);
+            }
+        }
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.anisotropy = 16;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+}
+
 export function createGround(scene: THREE.Scene, envGroup: THREE.Group) {
     const groundSize = 200;
     const groundGeom = new THREE.PlaneGeometry(groundSize, groundSize);
-    
-    const canvas = document.createElement('canvas');
-    canvas.width = 1024; canvas.height = 1024;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-        const W = canvas.width;
-        const H = canvas.height;
-        
-        // Base background - ultra-light test floor
-        ctx.fillStyle = '#eceff3';
-        ctx.fillRect(0, 0, W, H);
-
-        // Draw coordinate grid
-        const pxPerMeter = 102.4;
-
-        // Minor grid lines (every 0.5m)
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-        ctx.lineWidth = 1;
-        for (let i = 0; i <= 10; i += 0.5) {
-            const pos = i * pxPerMeter;
-            ctx.beginPath(); ctx.moveTo(pos, 0); ctx.lineTo(pos, H); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, pos); ctx.lineTo(W, pos); ctx.stroke();
-        }
-
-        // Major grid lines (every 1m)
-        ctx.strokeStyle = 'rgba(255, 255, 255, 1)';
-        ctx.lineWidth = 2;
-        for (let i = 0; i <= 10; i += 1) {
-            const pos = i * pxPerMeter;
-            ctx.beginPath(); ctx.moveTo(pos, 0); ctx.lineTo(pos, H); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, pos); ctx.lineTo(W, pos); ctx.stroke();
-        }
-
-        // 10m boundary lines (thickest)
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 4;
-        ctx.strokeRect(0, 0, W, H);
-
-        // Subtle texture to keep the floor from reading flat
-        ctx.globalAlpha = 0.03;
-        for (let i = 0; i < 3000; i++) {
-            ctx.fillStyle = '#111111';
-            ctx.fillRect(Math.random() * W, Math.random() * H, 1, 1);
-        }
-        ctx.globalAlpha = 1;
-    }
-    
-    const gridTex = new THREE.CanvasTexture(canvas);
-    gridTex.wrapS = THREE.RepeatWrapping;
-    gridTex.wrapT = THREE.RepeatWrapping;
-    gridTex.repeat.set(groundSize / 10, groundSize / 10);
-    gridTex.anisotropy = 16;
-    gridTex.colorSpace = THREE.SRGBColorSpace;
+    const gridTex = createFloorTexture();
+    gridTex.repeat.set(groundSize / 8, groundSize / 8);
 
     const groundMat = new THREE.MeshStandardMaterial({ 
         map: gridTex,
-        roughness: 0.8,
-        metalness: 0.2
+        roughness: 0.96,
+        metalness: 0.02,
+        color: 0xffffff
     });
     const ground = new THREE.Mesh(groundGeom, groundMat);
     ground.receiveShadow = true;

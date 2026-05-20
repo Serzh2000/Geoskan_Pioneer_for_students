@@ -1,0 +1,35 @@
+                            <div id="channel-monitor-panel" class="gamepad-panel-pane gamepad-panel-pane--channel-monitor" data-gamepad-pane-panel="monitor">
+                                <div class="settings-group settings-group--channel-monitor">
+                                    <div class="channel-monitor-hero">
+                                        <div class="channel-monitor-hero-copy">
+                                            <div class="channel-monitor-hero-eyebrow">GEOSCAN CHANNEL MONITOR</div>
+                                            <div class="channel-monitor-hero-title">Монитор каналов</div>
+                                            <div class="channel-monitor-hero-subtitle">Плотная realtime-матрица CH1-CH16 для мгновенной оценки входов пульта.</div>
+                                        </div>
+                                        <div id="channel-monitor-status" class="gamepad-status-pill is-disconnected">Пульт не подключен</div>
+                                    </div>
+
+                                    <div class="channel-monitor-stage">
+                                        <div class="channel-monitor-toolbar-card">
+                                            <div class="channel-monitor-toolbar">
+                                                <button id="cm-btn-freeze" class="btn-secondary channel-monitor-toolbar-btn" type="button">Заморозить график</button>
+                                                <button id="cm-btn-reset-peaks" class="btn-secondary channel-monitor-toolbar-btn" type="button">Сбросить пиковые значения</button>
+                                                <label class="checkbox-container channel-monitor-checkbox">
+                                                    <input type="checkbox" id="cm-toggle-peaks" checked>
+                                                    <span class="checkmark"></span>
+                                                    Показывать min/max границы
+                                                </label>
+                                            </div>
+                                            <div class="channel-monitor-toolbar-note">Первые 16 входов активного пульта отображаются в реальном времени.</div>
+                                        </div>
+
+                                        <div class="channel-monitor-board-card">
+                                            <div class="channel-monitor-board-heading">
+                                                <div class="gamepad-section-title">Каналы CH1-CH16</div>
+                                                <div id="channel-monitor-board-status" class="gamepad-section-caption">Нет данных от активного пульта.</div>
+                                            </div>
+                                            <div id="channel-monitor-grid" class="channel-monitor-grid"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>

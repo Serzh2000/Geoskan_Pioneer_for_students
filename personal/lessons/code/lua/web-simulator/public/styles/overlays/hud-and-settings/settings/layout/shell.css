@@ -1,0 +1,244 @@
+.rc-setup-root {
+    display: block;
+    min-height: 720px;
+}
+
+.rc-setup-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.rc-setup-grid--two {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.rc-setup-grid--three {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.rc-setup-grid--wizard-focus {
+    grid-template-columns: 1fr;
+}
+
+.rc-setup-toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.rc-setup-toolbar--wrap {
+    flex-wrap: wrap;
+}
+
+.rc-setup-toolbar--stack {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.rc-field-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.rc-source-caption {
+    color: #475569;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.rc-source-caption--muted {
+    color: #94a3b8;
+}
+
+.rc-section-subtitle {
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.rc-action-btn {
+    border: 1px solid #CBD5E1;
+    background: #ffffff;
+    color: #1E293B;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.rc-action-btn:hover,
+.rc-action-btn:focus-visible {
+    border-color: #FB923C;
+    box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.16);
+    outline: none;
+}
+
+.rc-action-btn--danger {
+    color: #B91C1C;
+}
+
+.rc-action-btn--active {
+    background: #FFEDD5;
+    border-color: #FB923C;
+    color: #9A3412;
+    white-space: normal;
+    text-align: left;
+}
+
+.rc-inline-link {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: #c2410c;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.rc-inline-link:hover,
+.rc-inline-link:focus-visible {
+    color: #9a3412;
+    text-decoration: underline;
+    outline: none;
+}
+
+.rc-setup-status-row {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.rc-setup-note {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    background: #F8FAFC;
+    color: #334155;
+    font-size: 13px;
+}
+
+.rc-setup-note--warning {
+    border-color: #FDE68A;
+    background: #FFFBEB;
+    color: #92400E;
+}
+
+.rc-setup-note--error {
+    border-color: #FCA5A5;
+    background: #FEF2F2;
+    color: #991B1B;
+}
+
+.rc-setup-inline-list {
+    margin: 0;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.rc-workspace {
+    width: 100%;
+}
+
+.rc-master-layout {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(260px, 0.95fr) minmax(320px, 1.3fr) minmax(260px, 0.95fr);
+    align-items: start;
+}
+
+.rc-master-layout--focus {
+    grid-template-columns: minmax(280px, 0.95fr) minmax(420px, 1.45fr);
+}
+
+.rc-master-layout__panel {
+    min-width: 0;
+}
+
+.rc-workspace__main {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1.85fr) minmax(300px, 1fr);
+    align-items: start;
+}
+
+.rc-workspace__left {
+    min-width: 0;
+}
+
+.rc-workspace__right {
+    position: sticky;
+    top: 0;
+    align-self: start;
+}
+
+.rc-monitor-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.rc-workspace-tabs {
+    display: inline-flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 6px;
+    border-radius: 14px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+}
+
+.rc-workspace-tab {
+    border: 0;
+    background: transparent;
+    color: #475569;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.rc-workspace-tab--active {
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+}
+
+.rc-wizard-shell {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 16px;
+    min-height: 680px;
+}
+
+.rc-wizard-shell__header,
+.rc-wizard-shell__footer {
+    position: sticky;
+    z-index: 2;
+}
+
+.rc-wizard-shell__header {
+    top: 0;
+}
+
+.rc-wizard-shell__footer {
+    bottom: 0;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(10px);
+}

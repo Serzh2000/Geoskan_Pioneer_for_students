@@ -3,6 +3,7 @@ import { drones } from '../../core/state.js';
 import { droneMeshes, selectedObject, transformControl, controls } from '../core/scene-init.js';
 import { envGroup } from '../../environment/index.js';
 import { snapMarkerToSurface } from '../../environment/obstacles.js';
+import { AXIS_COLORS } from '../core/transform-controls-style-helpers.js';
 
 let rotationGuide: THREE.Group | null = null;
 let rotationGuideHost: THREE.Object3D | null = null;
@@ -15,17 +16,19 @@ function createAxisLabel(text: string, color: string) {
     if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.beginPath();
-        ctx.arc(64, 64, 38, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+        ctx.arc(64, 64, 36, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
         ctx.fill();
-        ctx.lineWidth = 6;
+        ctx.lineWidth = 5;
         ctx.strokeStyle = color;
         ctx.stroke();
-        ctx.font = 'bold 56px Arial';
+        ctx.font = '700 52px Inter, Arial, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = color;
-        ctx.fillText(text, 64, 68);
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.85)';
+        ctx.shadowBlur = 10;
+        ctx.fillText(text, 64, 67);
     }
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -95,13 +98,13 @@ function showRotationGuide(target: THREE.Object3D) {
     const length = getGuideLength(target);
 
     const axes = [
-        { axis: new THREE.Vector3(1, 0, 0), color: 0xff6b6b, label: 'X' },
-        { axis: new THREE.Vector3(0, 1, 0), color: 0x34d399, label: 'Y' },
-        { axis: new THREE.Vector3(0, 0, 1), color: 0x60a5fa, label: 'Z' }
+        { axis: new THREE.Vector3(1, 0, 0), color: AXIS_COLORS.X.getHex(), label: 'X' },
+        { axis: new THREE.Vector3(0, 1, 0), color: AXIS_COLORS.Y.getHex(), label: 'Y' },
+        { axis: new THREE.Vector3(0, 0, 1), color: AXIS_COLORS.Z.getHex(), label: 'Z' }
     ];
 
     axes.forEach(({ axis, color, label }) => {
-        const arrow = new THREE.ArrowHelper(axis, new THREE.Vector3(0, 0, 0), length, color, 0.28, 0.16);
+        const arrow = new THREE.ArrowHelper(axis, new THREE.Vector3(0, 0, 0), length, color, 0.24, 0.12);
         setHelperRenderOrder(arrow);
         guide.add(arrow);
 

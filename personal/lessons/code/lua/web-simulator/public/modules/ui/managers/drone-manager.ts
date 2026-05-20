@@ -79,6 +79,14 @@ export function initDroneManager(onSceneUpdate?: () => void) {
             item.setAttribute('role', 'option');
             item.setAttribute('aria-selected', id === currentDroneId ? 'true' : 'false');
 
+            const main = document.createElement('span');
+            main.className = 'swarm-list__item-main';
+
+            const icon = document.createElement('span');
+            icon.className = 'swarm-list__item-icon';
+            icon.setAttribute('aria-hidden', 'true');
+            icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="2.05"></circle><circle cx="17" cy="7" r="2.05"></circle><circle cx="7" cy="17" r="2.05"></circle><circle cx="17" cy="17" r="2.05"></circle><rect x="9.5" y="9.5" width="5" height="5" rx="1.5"></rect><path d="M8.6 8.6 10 10"></path><path d="M15.4 8.6 14 10"></path><path d="M8.6 15.4 10 14"></path><path d="M15.4 15.4 14 14"></path></svg>';
+
             const name = document.createElement('span');
             name.className = 'swarm-list__item-name';
             name.textContent = drones[id].name;
@@ -87,7 +95,9 @@ export function initDroneManager(onSceneUpdate?: () => void) {
             badge.className = 'swarm-list__item-badge';
             badge.textContent = String(index + 1);
 
-            item.appendChild(name);
+            main.appendChild(icon);
+            main.appendChild(name);
+            item.appendChild(main);
             item.appendChild(badge);
             list.appendChild(item);
         });

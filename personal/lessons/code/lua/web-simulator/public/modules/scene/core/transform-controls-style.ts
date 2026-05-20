@@ -85,21 +85,21 @@ function customizeRotateModeGroup(group: THREE.Object3D) {
         const axis = axisFromName(child.name);
 
         if (axis) {
-            replaceRotateGeometry(child, 0.58, 0.012, 0.5);
-            setMaterialColor((child as THREE.Mesh).material, AXIS_COLORS[axis], 0.96);
+            replaceRotateGeometry(child, 0.62, 0.015, 0.5);
+            setMaterialColor((child as THREE.Mesh).material, AXIS_COLORS[axis], 0.92);
             addBackHalfArc(child, axis, AXIS_COLORS[axis]);
             continue;
         }
 
         if (child.name === 'XYZE') {
-            replaceRotateGeometry(child, 0.54, 0.008, 1);
-            setMaterialColor((child as THREE.Mesh).material, NEUTRAL_COLOR, 0.12);
+            replaceRotateGeometry(child, 0.56, 0.01, 1);
+            setMaterialColor((child as THREE.Mesh).material, NEUTRAL_COLOR, 0.08);
             continue;
         }
 
         if (child.name === 'E') {
-            replaceRotateGeometry(child, 0.84, 0.012, 1);
-            setMaterialColor((child as THREE.Mesh).material, CENTER_COLOR, 0.22);
+            replaceRotateGeometry(child, 0.88, 0.014, 1);
+            setMaterialColor((child as THREE.Mesh).material, CENTER_COLOR, 0.3);
         }
     }
 }
@@ -118,10 +118,10 @@ function customizeScaleModeGroup(gizmo: THREE.Object3D, picker: THREE.Object3D) 
         }
 
         if (child.name === 'XYZ') {
-            scaleGeometryAlongAxis(child, 'X', 1.2);
-            scaleGeometryAlongAxis(child, 'Y', 1.2);
-            scaleGeometryAlongAxis(child, 'Z', 1.2);
-            setMaterialColor((child as THREE.Mesh).material, CENTER_COLOR, 0.85);
+            scaleGeometryAlongAxis(child, 'X', 1.26);
+            scaleGeometryAlongAxis(child, 'Y', 1.26);
+            scaleGeometryAlongAxis(child, 'Z', 1.26);
+            setMaterialColor((child as THREE.Mesh).material, CENTER_COLOR, 0.92);
         }
     }
 
@@ -156,7 +156,7 @@ function syncCustomHighlight(control: TransformControls, internals: GizmoInterna
         setMaterialColor(
             backArc.material,
             active ? ACTIVE_COLOR : AXIS_COLORS[axis],
-            active ? 0.48 : 0.3
+            active ? 0.62 : 0.24
         );
     }
 }
@@ -186,15 +186,15 @@ export function applyTransformControlsUxTheme(control: TransformControls, helper
         removeCenterPlanes: true,
         removeCenterUniform: true,
         removeNegativeMirrors: true,
-        shaftScale: 1.34,
-        headOffset: 0.12
+        shaftScale: 1.24,
+        headOffset: 0.1
     });
     customizeLinearModeGroup(internals.picker.translate, {
         removeCenterPlanes: true,
         removeCenterUniform: true,
         removeNegativeMirrors: true,
-        shaftScale: 1.16,
-        headOffset: 0.1
+        shaftScale: 1.12,
+        headOffset: 0.08
     });
 
     customizeRotateModeGroup(internals.gizmo.rotate);

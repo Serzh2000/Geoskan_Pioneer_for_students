@@ -1,0 +1,117 @@
+.panel-header--settings {
+    padding: 18px 20px 16px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.panel-header__lead--settings {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 0;
+}
+
+.settings-panel-subtitle {
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text-muted);
+}
+
+.settings-panel-content--general {
+    padding: 20px 22px 24px;
+    background: linear-gradient(180deg, #f8f9fa 0%, #f1f3f5 100%);
+    overflow-y: auto;
+}
+
+#settings-panel .settings-shell {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+}
+
+#settings-panel .settings-stack--general {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+}
+
+#settings-panel .settings-card {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+    padding: 24px;
+    padding-bottom: 24px;
+    border-radius: 14px;
+    border: 1px solid #e9ecef;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfcfd 100%);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+#settings-panel .settings-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+#settings-panel .settings-card__title-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+}
+
+#settings-panel .settings-card__accent {
+    width: 8px;
+    height: 8px;
+    margin-top: 7px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ff8c3a, var(--accent-color));
+    box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1);
+}
+
+#settings-panel .settings-card__heading {
+    min-width: 0;
+}
+
+#settings-panel .settings-card__title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #212529;
+}
+
+#settings-panel .settings-card__description {
+    margin: 6px 0 0;
+    max-width: 58ch;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #6c757d;
+}
+
+#settings-panel .settings-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    justify-content: flex-start;
+}
+
+#settings-panel .settings-card__body--stack {
+    gap: 12px;
+}
+
+#settings-panel .settings-card__body--grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(240px, 360px));
+    gap: 18px 20px;
+    justify-content: start;
+    align-items: start;
+}
+
+#settings-panel .settings-card__body--grid > .settings-control {
+    align-self: start;
+}
+

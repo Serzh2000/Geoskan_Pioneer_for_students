@@ -1,4 +1,4 @@
-import type { SceneManagerDomRefs } from '../support.js';
+import { clampFloors, clampInt, clampWindowFloor } from './numbers.js';
 
 function normalizeIncidentEntries(value: string | undefined) {
     return (value || '')
@@ -24,7 +24,7 @@ export function syncIncidentValue(targetEl: HTMLInputElement | null, sourceEl: H
     targetEl.value = serializeIncidentEntries(normalizeIncidentEntries(sourceEl.value));
 }
 
-export function syncFloorLimit(floorsEl: HTMLInputElement | null, floorEl: HTMLInputElement | null, clampFloors: (value: string | undefined, fallback?: number) => number, clampWindowFloor: (value: string | undefined, maxFloor: number) => number) {
+export function syncFloorLimit(floorsEl: HTMLInputElement | null, floorEl: HTMLInputElement | null) {
     if (!floorsEl || !floorEl) return;
     const maxFloor = clampFloors(floorsEl.value, 9);
     floorsEl.value = String(maxFloor);
@@ -56,10 +56,7 @@ export function appendIncidentEntry(
     faceEl: HTMLSelectElement | null,
     windowEl: HTMLSelectElement | null,
     kindEl: HTMLSelectElement | null,
-    valueEl: HTMLInputElement | null,
-    clampFloors: (value: string | undefined, fallback?: number) => number,
-    clampWindowFloor: (value: string | undefined, maxFloor: number) => number,
-    clampInt: (value: string | undefined, fallback: number, min: number, max: number) => number
+    valueEl: HTMLInputElement | null
 ) {
     if (!incidentsEl || !floorEl || !faceEl || !windowEl || !kindEl) return;
     const maxFloor = clampFloors(floorsEl?.value, 9);

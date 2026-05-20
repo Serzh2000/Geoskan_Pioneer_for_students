@@ -1,0 +1,165 @@
+.rc-advanced-table-wrap {
+    overflow: auto;
+}
+
+.rc-advanced-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 900px;
+}
+
+.rc-advanced-table th,
+.rc-advanced-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+    text-align: left;
+}
+
+.rc-advanced-table thead th {
+    position: sticky;
+    top: 0;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    z-index: 1;
+}
+
+.rc-advanced-table__channel strong {
+    display: block;
+    color: #0f172a;
+    font-size: 13px;
+}
+
+.rc-advanced-table__channel span {
+    color: #64748b;
+    font-size: 12px;
+}
+
+.rc-table-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 180px;
+}
+
+.rc-advanced-details summary {
+    cursor: pointer;
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.rc-advanced-details__content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.rc-calibration-meta--row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+}
+
+.rc-wizard-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.rc-wizard-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    background: rgba(15, 23, 42, 0.62);
+    cursor: pointer;
+}
+
+.rc-wizard-modal__dialog {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 18px;
+    width: min(1480px, calc(100vw - 48px));
+    max-height: calc(100vh - 48px);
+    padding: 24px;
+    border-radius: 24px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.35);
+    overflow: hidden;
+}
+
+.rc-wizard-modal__header,
+.rc-wizard-modal__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.rc-wizard-modal__header {
+    padding-bottom: 18px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.rc-wizard-modal__title {
+    color: #0f172a;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.15;
+}
+
+.rc-wizard-modal__subtitle {
+    margin-top: 6px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.rc-wizard-modal__layout {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: minmax(340px, 0.9fr) minmax(0, 1.4fr);
+    min-height: 0;
+    overflow: hidden;
+}
+
+.rc-wizard-modal__panel {
+    min-width: 0;
+    min-height: 0;
+}
+
+.rc-wizard-modal__panel--story {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow: auto;
+    padding-right: 4px;
+}
+
+.rc-wizard-modal__panel--viewport {
+    min-height: 0;
+    overflow: auto;
+}
+
+.rc-wizard-modal__instruction {
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #fff7ed, #ffffff);
+    border: 1px solid #fed7aa;
+    color: #9a3412;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.55;
+}
+
