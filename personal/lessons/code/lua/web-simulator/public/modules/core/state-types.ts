@@ -11,11 +11,11 @@ export type DroneFsmState =
 
 export type CommandSource = 'direct' | 'timer' | 'python';
 
+export type TickFlightCommand = 'preflight' | 'takeoff' | 'goToLocalPoint' | 'landing';
+
 export interface TickCommandSignature {
     tickMs: number;
-    takeoff: boolean;
-    goToLocalPoint: boolean;
-    landing: boolean;
+    commands: TickFlightCommand[];
 }
 
 export interface QueuedMceCommand {

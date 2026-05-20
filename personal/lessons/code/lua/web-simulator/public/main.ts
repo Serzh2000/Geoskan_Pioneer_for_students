@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import * as fengari from 'fengari-web';
 import { simState, resetState, resetRuntimeStatePreservePose, drones, currentDroneId, currentScriptLanguage } from './modules/core/state.js';
-import { init3D, updateDrone3D, is3DActive, addObject, appendPointToSelectedLinearObject, clearSceneSelection, deleteSelectedObject, finishSelectedLinearObjectEditing, getSceneObjectTransformMode, getSelectedSceneObjectId, isSelectedLinearObjectEditingActive, listSceneObjects, resetDroneToOrigin, resetSelectedSceneObjectRotation, rotateSelectedSceneObjectByDegrees, selectSceneObjectById, setSceneObjectTransformMode, startSelectedLinearObjectEditing, updateSelectedSceneObject, deleteSceneObjectById } from './modules/drone/index.js';
+import { init3D, updateDrone3D, is3DActive, addObject, appendPointToSelectedLinearObject, deleteSelectedObject, finishSelectedLinearObjectEditing, getSelectedSceneObjectId, isSelectedLinearObjectEditingActive, listSceneObjects, resetDroneToOrigin, selectSceneObjectById, setSceneObjectTransformMode, startSelectedLinearObjectEditing, updateSelectedSceneObject, deleteSceneObjectById } from './modules/drone/index.js';
 import { runLuaScript, stopLuaScript, triggerLuaCallback } from './modules/lua/index.js';
 import { setLocalFrameOrigin } from './modules/lua/autopilot.js';
 import { runPythonScript, stopPythonScript } from './modules/python/index.js';
@@ -19,7 +19,7 @@ import { initEditor, getEditorValue, initBlocklyEditorToggle, layoutEditor, setE
 import { initUI } from './modules/ui/index.js';
 import { log } from './modules/shared/logging/logger.js';
 import type { MarkerMapOptions } from './modules/environment/obstacles.js';
-import { showScenarioValidationNotice } from './modules/app/script-execution-notice.js';
+import { resetScriptExecutionNoticeState, showScenarioValidationNotice } from './modules/app/script-execution-notice.js';
 import { configureSimulationControls } from './modules/app/simulation-controls.js';
 import { initScriptLanguageSelector } from './modules/app/language-selector.js';
 import { registerGlobalErrorHandler } from './modules/app/global-error.js';
@@ -70,11 +70,7 @@ function init() {
             finishLinearEditing: (commit = true) => finishSelectedLinearObjectEditing(commit),
             isLinearEditingActive: (id?: string) => isSelectedLinearObjectEditingActive(id),
             setMode: (mode: 'translate' | 'rotate' | 'scale', id?: string) => setSceneObjectTransformMode(mode, id),
-            getMode: () => getSceneObjectTransformMode(),
-            rotateByDegrees: (axis: 'x' | 'y' | 'z', angle: number) => rotateSelectedSceneObjectByDegrees(axis, angle),
-            resetRotation: () => resetSelectedSceneObjectRotation(),
             resetDroneOrigin: () => resetDroneToOrigin(),
-            clearSelection: () => clearSceneSelection(),
             getSelectedId: () => getSelectedSceneObjectId()
         }
     });
@@ -97,6 +93,7 @@ function init() {
 
 function startSimulation() {
     log(`[DEBUG] startSimulation called. currentDroneId: ${currentDroneId}`, 'info');
+    resetScriptExecutionNoticeState();
     
     // Run all drones
     let anyStarted = false;

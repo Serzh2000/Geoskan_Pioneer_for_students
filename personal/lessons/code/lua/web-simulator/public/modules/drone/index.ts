@@ -26,11 +26,10 @@ import { initTrailForDrone, disposeTrailForDrone, updateTrailForDrone } from './
 
 export { is3DActive, selectedObject, droneMeshes, envGroup, scene };
 export { 
-    addObject, clearSceneSelection, deleteSelectedObject, duplicateObject, getSceneObjectTransformMode, resetDroneToOrigin,
+    addObject, deleteSelectedObject, duplicateObject, resetDroneToOrigin,
     listSceneObjects, selectSceneObjectById, deleteSceneObjectById,
     appendPointToSelectedLinearObject, updateSelectedSceneObject,
     setSceneObjectTransformMode, getSelectedSceneObjectId,
-    rotateSelectedSceneObjectByDegrees, resetSelectedSceneObjectRotation,
     startSelectedLinearObjectEditing, finishSelectedLinearObjectEditing,
     isSelectedLinearObjectEditingActive, getSelectedLinearObjectEditingTargetId
 } from '../scene/objects/object-manager.js';
@@ -262,7 +261,6 @@ export function updateDrone3D(dt: number) {
         updateCamera(camera, droneMeshes[currentDroneId], controls, cameraMode);
     }
 
-    syncViewportDependentSceneVisuals();
     syncDronePrintBubbles();
 
     try {

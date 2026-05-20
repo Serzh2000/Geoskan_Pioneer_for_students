@@ -2,9 +2,11 @@ import type {
     CommandSource,
     DroneFsmState,
     DroneState,
+    TickFlightCommand,
     TickCommandSignature,
     Vector3
 } from '../core/state.js';
+import { showEarlyRouteNotice, showSimultaneousCommandsNotice } from '../app/script-execution-notice.js';
 import { log } from '../shared/logging/logger.js';
 import { MCECommands } from './mce-events.js';
 
@@ -17,10 +19,23 @@ type CommandName = 'MCE_PREFLIGHT' | 'MCE_TAKEOFF' | 'MCE_LANDING' | 'GO_TO_LOCA
 function makeSignature(tickMs: number): TickCommandSignature {
     return {
         tickMs,
-        takeoff: false,
-        goToLocalPoint: false,
-        landing: false
+        commands: []
     };
+}
+
+function getTickCommandLabel(command: TickFlightCommand) {
+    switch (command) {
+        case 'preflight':
+            return 'PREFLIGHT';
+        case 'takeoff':
+            return 'TAKEOFF';
+        case 'goToLocalPoint':
+            return 'goToLocalPoint';
+        case 'landing':
+            return 'LANDING';
+        default:
+            return command;
+    }
 }
 
 function getCommandName(commandId: number): CommandName {
@@ -89,27 +104,35 @@ export function shouldSpinRotors(drone: DroneState) {
     );
 }
 
-export function recordTickCommand(drone: DroneState, command: 'takeoff' | 'goToLocalPoint' | 'landing') {
+function failSimultaneousCommands(drone: DroneState, commands: TickFlightCommand[]) {
+    const labels = commands.map(getTickCommandLabel);
+    const message = `CRITICAL ERROR: Команды ${labels.join(', ')} вызваны одновременно. Разнесите их по разным моментам времени через Timer.callLater(...) или callback(event).`;
+    showSimultaneousCommandsNotice(labels);
+    drone.running = false;
+    drone.status = 'ОШИБКА';
+    drone.fsmState = 'IDLE';
+    drone.command_queue = [];
+    drone.pendingLocalPoint = false;
+    drone.pendingLocalPointSource = null;
+    drone.preflightDeadlineMs = null;
+    drone.tickCommandSignature = null;
+    log(message, 'error');
+    throw new Error(message);
+}
+
+export function recordTickCommand(drone: DroneState, command: TickFlightCommand) {
     const tickMs = getCurrentTickMs(drone);
     const signature = (!drone.tickCommandSignature || drone.tickCommandSignature.tickMs !== tickMs)
         ? makeSignature(tickMs)
         : drone.tickCommandSignature;
 
-    signature[command] = true;
-    drone.tickCommandSignature = signature;
-
-    if (signature.takeoff && signature.goToLocalPoint && signature.landing) {
-        const message = 'CRITICAL ERROR: Вызовы команд произошли одновременно! Код выполнился мгновенно без использования Timer.callLater. В реальности дрон проигнорирует эти команды или упадет.';
-        drone.running = false;
-        drone.status = 'ОШИБКА';
-        drone.fsmState = 'IDLE';
-        drone.command_queue = [];
-        drone.pendingLocalPoint = false;
-        drone.pendingLocalPointSource = null;
-        drone.preflightDeadlineMs = null;
-        log(message, 'error');
-        throw new Error(message);
+    if (signature.commands.length > 0) {
+        signature.commands.push(command);
+        failSimultaneousCommands(drone, signature.commands);
     }
+
+    signature.commands.push(command);
+    drone.tickCommandSignature = signature;
 }
 
 export function throwFsmTransitionError(drone: DroneState, command: CommandName): never {
@@ -128,6 +151,7 @@ export function rejectCommandByFsm(drone: DroneState, command: CommandName, mess
 
 export function queueMceCommand(drone: DroneState, commandId: number, source: CommandSource) {
     const command = getCommandName(commandId);
+    if (command === 'MCE_PREFLIGHT') recordTickCommand(drone, 'preflight');
     if (command === 'MCE_TAKEOFF') recordTickCommand(drone, 'takeoff');
     if (command === 'MCE_LANDING') recordTickCommand(drone, 'landing');
 
@@ -147,6 +171,7 @@ export function applyGoToLocalPointRequest(
 
     if (drone.fsmState === 'PREFLIGHT' || drone.fsmState === 'TAKEOFF_PROCESS' || drone.fsmState === 'LANDING_PROCESS') {
         if (getCommandSource(drone) === 'timer') {
+            showEarlyRouteNotice();
             log('WARNING: Таймер сработал слишком поздно. Команда отклонена конечным автоматом', 'warn');
             return false;
         }

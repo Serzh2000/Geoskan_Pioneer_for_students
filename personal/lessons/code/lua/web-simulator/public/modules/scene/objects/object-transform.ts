@@ -30,6 +30,9 @@ export function setRotationStepDegrees(step: number) {
     if (transformControl?.getMode() === 'rotate') {
         transformControl.setRotationSnap(THREE.MathUtils.degToRad(rotationStepDegrees));
     }
+    if ((window as any).setTransformToolbarRotationStep) {
+        (window as any).setTransformToolbarRotationStep(rotationStepDegrees);
+    }
     return rotationStepDegrees;
 }
 
@@ -52,15 +55,6 @@ export function rotateSelectedObjectByDegrees(axis: RotationAxis, deltaDegrees: 
     if (!selectedObject || !transformControl || !isTransformableObject(selectedObject) || simState.running) return false;
     const radians = THREE.MathUtils.degToRad(deltaDegrees);
     selectedObject.rotation[axis] += radians;
-    selectedObject.updateMatrixWorld(true);
-    transformControl.dispatchEvent({ type: 'change', target: transformControl });
-    updateTransformModeDecorations(transformControl.getMode(), selectedObject);
-    return true;
-}
-
-export function resetSelectedObjectRotation() {
-    if (!selectedObject || !transformControl || !isTransformableObject(selectedObject) || simState.running) return false;
-    selectedObject.rotation.set(0, 0, 0, selectedObject.rotation.order);
     selectedObject.updateMatrixWorld(true);
     transformControl.dispatchEvent({ type: 'change', target: transformControl });
     updateTransformModeDecorations(transformControl.getMode(), selectedObject);
@@ -99,6 +93,10 @@ export function activateTransformMode(mode: TransformMode, target: THREE.Object3
     if (transformHelper) {
         transformHelper.visible = simSettings.showGizmo;
         transformHelper.updateMatrixWorld(true);
+    }
+    if ((window as any).setGizmoToolbarMode) (window as any).setGizmoToolbarMode(mode);
+    if ((window as any).setTransformToolbarRotationStep) {
+        (window as any).setTransformToolbarRotationStep(rotationStepDegrees);
     }
     updateTransformModeDecorations(mode, target);
     if (controls) controls.enabled = (window as any).cameraMode === 'free' && !(window as any).isTransforming;

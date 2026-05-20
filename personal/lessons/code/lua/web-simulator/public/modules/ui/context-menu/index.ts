@@ -1,6 +1,7 @@
 import { createContextMenuDom } from './dom.js';
 import { renderContextMenuContents } from './menu-builder.js';
-import type { MenuCallbacks } from './types.js';
+import { renderContextToolbar } from './toolbar-builder.js';
+import type { MenuCallbacks, ObjectToolPanelCallbacks } from './types.js';
 
 let callbacks: MenuCallbacks = {
     onTransform: () => {},
@@ -8,13 +9,26 @@ let callbacks: MenuCallbacks = {
     onDuplicate: () => {}
 };
 
+let toolPanelCallbacks: ObjectToolPanelCallbacks = {
+    title: '',
+    activeMode: null,
+    onTransform: () => {},
+    rotationStepDeg: 15,
+    onSetRotationStep: () => {},
+    onRotateStep: () => {},
+    onResetTransform: () => {},
+    onExit: () => {}
+};
+
 export function initContextMenu() {
     const prevMenu = document.getElementById('object-context-menu');
     if (prevMenu) prevMenu.remove();
+    const prevToolPanel = document.getElementById('transform-toolbar');
+    if (prevToolPanel) prevToolPanel.remove();
     const prevStyle = document.getElementById('ctx-menu-style');
     if (prevStyle) prevStyle.remove();
 
-    const { style, menu, header } = createContextMenuDom();
+    const { style, menu, header, toolbar, toolbarTitle, toolbarActions } = createContextMenuDom();
     document.head.appendChild(style);
 
     const renderButtons = () => {
@@ -23,6 +37,38 @@ export function initContextMenu() {
 
     const hide = () => {
         menu.classList.remove('visible');
+    };
+
+    const setToolbarMode = (mode?: string | null) => {
+        toolPanelCallbacks.activeMode = mode || null;
+        const buttons = toolbar.querySelectorAll<HTMLButtonElement>('[data-transform-mode]');
+        buttons.forEach((button) => {
+            button.classList.toggle('active', button.dataset.transformMode === toolPanelCallbacks.activeMode);
+        });
+        const rotateSections = toolbar.querySelectorAll<HTMLElement>('[data-rotate-only]');
+        rotateSections.forEach((section) => {
+            section.style.display = toolPanelCallbacks.activeMode === 'rotate' ? '' : 'none';
+        });
+    };
+
+    const hideToolbar = () => {
+        toolbar.classList.remove('visible');
+    };
+
+    const setRotationStep = (step: number) => {
+        toolPanelCallbacks.rotationStepDeg = step;
+        const buttons = toolbar.querySelectorAll<HTMLButtonElement>('[data-rotation-step]');
+        buttons.forEach((button) => {
+            button.classList.toggle('active', Number(button.dataset.rotationStep) === step);
+        });
+    };
+
+    const renderToolbar = () => {
+        renderContextToolbar(
+            { toolbar, toolbarTitle, toolbarActions },
+            toolPanelCallbacks,
+            { setToolbarMode, setRotationStep }
+        );
     };
 
     const show = (x: number, y: number) => {
@@ -45,6 +91,7 @@ export function initContextMenu() {
     menu.addEventListener('contextmenu', (e) => e.preventDefault());
 
     document.body.appendChild(menu);
+    document.body.appendChild(toolbar);
 
     window.showContextMenu = (
         x: number,
@@ -74,6 +121,31 @@ export function initContextMenu() {
     };
 
     window.hideContextMenu = hide;
+    (window as any).showGizmoToolbar = (
+        title: string,
+        activeMode: string | null | undefined,
+        rotationStepDeg: number,
+        onTransform: (mode: string) => void,
+        onSetRotationStep: (step: number) => void,
+        onRotateStep: (axis: 'x' | 'y' | 'z', direction: 1 | -1) => void,
+        onResetTransform: () => void,
+        onExit: () => void
+    ) => {
+        toolPanelCallbacks = {
+            title,
+            activeMode: activeMode || null,
+            onTransform,
+            rotationStepDeg,
+            onSetRotationStep,
+            onRotateStep,
+            onResetTransform,
+            onExit
+        };
+        renderToolbar();
+    };
+    (window as any).hideGizmoToolbar = hideToolbar;
+    (window as any).setGizmoToolbarMode = setToolbarMode;
+    (window as any).setTransformToolbarRotationStep = setRotationStep;
 
     document.addEventListener('pointerdown', (e: PointerEvent) => {
         const target = e.target as Node | null;
