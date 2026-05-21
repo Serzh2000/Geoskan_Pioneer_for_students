@@ -5,9 +5,13 @@ import { log } from '../../shared/logging/logger.js';
 import { normalizePoints } from '../objects/object-catalog.js';
 import { camera, raycaster, renderer, scene, selectedObject } from '../core/scene-init.js';
 import { exitTransformMode } from './selection.js';
-
-const groundPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-const SNAP_THRESHOLD = 0.18;
+import {
+    cloneLinearPoints,
+    getLinearEditingHoverPointFromEvent,
+    localPointToWorldVector,
+    refreshLinearEditingPreview,
+    setLinearEditingCoordsHint
+} from './linear-editing-support.js';
 
 type EditingState = {
     active: boolean;
@@ -29,174 +33,19 @@ const editingState: EditingState = {
     lastSnapAxes: []
 };
 
-function clonePoints(points: ScenePathPoint[]) {
-    return points.map((point) => ({ x: point.x, y: point.y, z: point.z ?? 0 }));
-}
-
-function pointToVector(point: ScenePathPoint) {
-    return new THREE.Vector3(point.x, point.y, point.z ?? 0);
-}
-
-function localPointToWorldVector(point: ScenePathPoint) {
-    const local = pointToVector(point);
-    if (!editingState.target) return local;
-    return editingState.target.localToWorld(local);
-}
-
-function worldVectorToLocalPoint(point: THREE.Vector3): ScenePathPoint {
-    if (!editingState.target) {
-        return { x: point.x, y: point.y, z: point.z };
-    }
-    const local = editingState.target.worldToLocal(point.clone());
-    return {
-        x: local.x,
-        y: local.y,
-        z: local.z
-    };
-}
-
-function roundIfClose(value: number) {
-    const rounded = Math.round(value);
-    return Math.abs(value - rounded) <= SNAP_THRESHOLD ? rounded : value;
-}
-
-function applySoftSnap(point: THREE.Vector3) {
-    const next = point.clone();
-    const snapAxes: string[] = [];
-
-    const snappedX = roundIfClose(next.x);
-    if (snappedX !== next.x) snapAxes.push('X');
-    next.x = snappedX;
-
-    const snappedY = roundIfClose(next.y);
-    if (snappedY !== next.y) snapAxes.push('Y');
-    next.y = snappedY;
-
-    const snappedZ = roundIfClose(next.z);
-    if (snappedZ !== next.z) snapAxes.push('Z');
-    next.z = Math.max(0, snappedZ);
-
-    return { point: next, snapAxes };
-}
-
-function setCoordsHint(point: ScenePathPoint | null, snapAxes: string[] = []) {
-    const coordsEl = document.getElementById('scene-click-coords');
-    if (!coordsEl) return;
-    if (!point) {
-        coordsEl.style.display = 'none';
-        coordsEl.textContent = '';
-        return;
-    }
-
-    const snappedText = snapAxes.length ? ` | РїСЂРёР»РёРїР°РЅРёРµ: ${snapAxes.join(', ')}` : '';
-    coordsEl.textContent =
-        `РљСѓСЂСЃРѕСЂ: ${point.x.toFixed(2)}, ${point.y.toFixed(2)}, ${point.z.toFixed(2)}${snappedText}`;
-    coordsEl.style.display = 'block';
-}
-
-function disposePreviewGroup() {
-    if (!editingState.previewGroup) return;
-    editingState.previewGroup.removeFromParent();
-    editingState.previewGroup.traverse((node: any) => {
-        if (node.geometry) node.geometry.dispose();
-        if (node.material) {
-            const materials = Array.isArray(node.material) ? node.material : [node.material];
-            materials.forEach((material: THREE.Material) => material.dispose());
-        }
-    });
-    editingState.previewGroup = null;
-}
-
-function buildMarker(point: ScenePathPoint, color: number, radius: number) {
-    const marker = new THREE.Mesh(
-        new THREE.SphereGeometry(radius, 16, 16),
-        new THREE.MeshBasicMaterial({
-            color,
-            transparent: true,
-            opacity: 0.95,
-            depthTest: false
-        })
-    );
-    marker.position.copy(pointToVector(point));
-    marker.renderOrder = 9800;
-    return marker;
-}
-
 function refreshPreview() {
-    disposePreviewGroup();
-    if (!editingState.active || !scene) return;
-
-    const group = new THREE.Group();
-    group.name = '__linear_feature_preview__';
-
-    const previewPoints = clonePoints(editingState.workingPoints);
-    if (editingState.hoverPoint) previewPoints.push({ ...editingState.hoverPoint });
-
-    if (previewPoints.length >= 2) {
-        const lineGeometry = new THREE.BufferGeometry().setFromPoints(previewPoints.map(localPointToWorldVector));
-        const lineMaterial = new THREE.LineBasicMaterial({
-            color: 0x38bdf8,
-            transparent: true,
-            opacity: 0.95,
-            depthTest: false
-        });
-        const line = new THREE.Line(lineGeometry, lineMaterial);
-        line.renderOrder = 9799;
-        group.add(line);
-    }
-
-    editingState.workingPoints.forEach((point, index) => {
-        group.add(buildMarker(
-            {
-                x: localPointToWorldVector(point).x,
-                y: localPointToWorldVector(point).y,
-                z: localPointToWorldVector(point).z
-            },
-            index === 0 ? 0x34d399 : 0x38bdf8,
-            0.12
-        ));
+    editingState.previewGroup = refreshLinearEditingPreview({
+        active: editingState.active,
+        previewGroup: editingState.previewGroup,
+        scene,
+        target: editingState.target,
+        workingPoints: editingState.workingPoints,
+        hoverPoint: editingState.hoverPoint
     });
-
-    if (editingState.hoverPoint) {
-        group.add(buildMarker(
-            {
-                x: localPointToWorldVector(editingState.hoverPoint).x,
-                y: localPointToWorldVector(editingState.hoverPoint).y,
-                z: localPointToWorldVector(editingState.hoverPoint).z
-            },
-            0xf59e0b,
-            0.1
-        ));
-    }
-
-    group.traverse((node: any) => {
-        node.renderOrder = 9800;
-    });
-    scene.add(group);
-    editingState.previewGroup = group;
 }
 
 function getHoverPointFromEvent(event: PointerEvent) {
-    if (!renderer || !camera || !raycaster) return null;
-    const rect = renderer.domElement.getBoundingClientRect();
-    const pointer = new THREE.Vector2(
-        ((event.clientX - rect.left) / rect.width) * 2 - 1,
-        -((event.clientY - rect.top) / rect.height) * 2 + 1
-    );
-    raycaster.setFromCamera(pointer, camera);
-
-    const intersection = new THREE.Vector3();
-    if (!raycaster.ray.intersectPlane(groundPlane, intersection)) return null;
-    const snapped = applySoftSnap(intersection);
-    return {
-        point: worldVectorToLocalPoint(snapped.point),
-        worldPoint: {
-            x: snapped.point.x,
-            y: snapped.point.y,
-            z: snapped.point.z
-        } satisfies ScenePathPoint,
-        snapAxes: snapped.snapAxes
-    };
+    return getLinearEditingHoverPointFromEvent(event, editingState.target, renderer, camera, raycaster);
 }
 
 function syncObjectPoints() {
@@ -209,14 +58,21 @@ function syncObjectPoints() {
 }
 
 function resetState() {
-    disposePreviewGroup();
+    editingState.previewGroup = refreshLinearEditingPreview({
+        active: false,
+        previewGroup: editingState.previewGroup,
+        scene,
+        target: editingState.target,
+        workingPoints: editingState.workingPoints,
+        hoverPoint: editingState.hoverPoint
+    });
     editingState.active = false;
     editingState.target = null;
     editingState.originalPoints = [];
     editingState.workingPoints = [];
     editingState.hoverPoint = null;
     editingState.lastSnapAxes = [];
-    setCoordsHint(null);
+    setLinearEditingCoordsHint(null);
     (window as any).updateSceneManager?.();
 }
 
@@ -231,13 +87,13 @@ export function getLinearFeatureEditingTargetId() {
 
 export function startLinearFeatureEditing(target = selectedObject) {
     if (!target?.userData?.supportsPoints) {
-        log('Р’РёР·СѓР°Р»СЊРЅР°СЏ РїСЂРѕРєР»Р°РґРєР° РґРѕСЃС‚СѓРїРЅР° С‚РѕР»СЊРєРѕ РґР»СЏ РґРѕСЂРѕРіРё РёР»Рё СЂРµР»СЊСЃ', 'warn');
+        log('Визуальная прокладка доступна только для дороги или рельс', 'warn');
         return false;
     }
 
     const points = normalizePoints(target.userData?.points);
     if (points.length < 2) {
-        log('Р”Р»СЏ РІРёР·СѓР°Р»СЊРЅРѕР№ РїСЂРѕРєР»Р°РґРєРё РЅСѓР¶РЅРѕ РјРёРЅРёРјСѓРј 2 С‚РѕС‡РєРё Сѓ РѕР±СЉРµРєС‚Р°', 'warn');
+        log('Для визуальной прокладки нужно минимум 2 точки у объекта', 'warn');
         return false;
     }
 
@@ -247,13 +103,13 @@ export function startLinearFeatureEditing(target = selectedObject) {
     exitTransformMode();
     editingState.active = true;
     editingState.target = target;
-    editingState.originalPoints = clonePoints(points);
-    editingState.workingPoints = clonePoints(points);
+    editingState.originalPoints = cloneLinearPoints(points);
+    editingState.workingPoints = cloneLinearPoints(points);
     editingState.hoverPoint = null;
     editingState.lastSnapAxes = [];
     refreshPreview();
     (window as any).updateSceneManager?.();
-    log('Р РµР¶РёРј РїСЂРѕРєР»Р°РґРєРё РІРєР»СЋС‡РµРЅ: Р›РљРњ РґРѕР±Р°РІР»СЏРµС‚ С‚РѕС‡РєСѓ, Backspace СѓРґР°Р»СЏРµС‚ РїРѕСЃР»РµРґРЅСЋСЋ, Enter/РџРљРњ Р·Р°РІРµСЂС€Р°РµС‚, Esc РѕС‚РјРµРЅСЏРµС‚', 'info');
+    log('Режим прокладки включен: ЛКМ добавляет точку, Backspace удаляет последнюю, Enter/ПКМ завершает, Esc отменяет', 'info');
     return true;
 }
 
@@ -262,9 +118,9 @@ export function finishLinearFeatureEditing(commit = true) {
 
     if (!commit) {
         updateSceneObjectPoints(editingState.target, editingState.originalPoints);
-        log('РџСЂРѕРєР»Р°РґРєР° РјР°СЂС€СЂСѓС‚Р° РѕС‚РјРµРЅРµРЅР°, РёСЃС…РѕРґРЅС‹Рµ С‚РѕС‡РєРё РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅС‹', 'info');
+        log('Прокладка маршрута отменена, исходные точки восстановлены', 'info');
     } else {
-        log('РџСЂРѕРєР»Р°РґРєР° РјР°СЂС€СЂСѓС‚Р° Р·Р°РІРµСЂС€РµРЅР°', 'success');
+        log('Прокладка маршрута завершена', 'success');
     }
 
     resetState();
@@ -278,7 +134,7 @@ export function handleLinearEditingPointerMove(event: PointerEvent) {
 
     editingState.hoverPoint = hover.point;
     editingState.lastSnapAxes = hover.snapAxes;
-    setCoordsHint(hover.worldPoint, hover.snapAxes);
+    setLinearEditingCoordsHint(hover.worldPoint, hover.snapAxes);
     refreshPreview();
     return true;
 }
@@ -295,9 +151,9 @@ export function handleLinearEditingPointerUp(event: PointerEvent) {
     const hover = editingState.hoverPoint ? {
         point: editingState.hoverPoint,
         worldPoint: {
-            x: localPointToWorldVector(editingState.hoverPoint).x,
-            y: localPointToWorldVector(editingState.hoverPoint).y,
-            z: localPointToWorldVector(editingState.hoverPoint).z
+            x: localPointToWorldVector(editingState.hoverPoint, editingState.target).x,
+            y: localPointToWorldVector(editingState.hoverPoint, editingState.target).y,
+            z: localPointToWorldVector(editingState.hoverPoint, editingState.target).z
         } satisfies ScenePathPoint,
         snapAxes: editingState.lastSnapAxes
     } : getHoverPointFromEvent(event);
@@ -308,7 +164,7 @@ export function handleLinearEditingPointerUp(event: PointerEvent) {
     editingState.workingPoints.push({ ...hover.point });
     const ok = syncObjectPoints();
     if (ok) {
-        setCoordsHint(hover.worldPoint, hover.snapAxes);
+        setLinearEditingCoordsHint(hover.worldPoint, hover.snapAxes);
         refreshPreview();
     }
     return true;
@@ -332,7 +188,7 @@ export function handleLinearEditingKeyDown(event: KeyboardEvent) {
     if (event.key === 'Backspace' || event.key === 'Delete') {
         event.preventDefault();
         if (editingState.workingPoints.length <= 2) {
-            log('РЈ РјР°СЂС€СЂСѓС‚Р° РґРѕР»Р¶РЅРѕ РѕСЃС‚Р°С‚СЊСЃСЏ РјРёРЅРёРјСѓРј 2 С‚РѕС‡РєРё', 'warn');
+            log('У маршрута должно остаться минимум 2 точки', 'warn');
             return true;
         }
         editingState.workingPoints.pop();

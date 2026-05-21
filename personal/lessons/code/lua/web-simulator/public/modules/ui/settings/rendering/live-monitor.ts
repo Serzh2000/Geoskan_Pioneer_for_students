@@ -1,8 +1,8 @@
 import { getBindingActions, getChannelOptions } from '../runtime.js';
 import { getDuplicateSourceConflicts } from '../mapping.js';
-import { escapeHtml, getLocalizedRoleLabel, getSwitchLabel, localizeSourceGroup, localizeSourceLabel, renderOptions } from '../rendering-helpers.js';
+import { escapeHtml, getLocalizedRoleLabel, getSwitchLabel, localizeSourceGroup, localizeSourceLabel, renderOptions } from './helpers.js';
 import type { ChannelRole, RcRuntimeSnapshot, StickMode } from '../types.js';
-import { getRcPreviewValues, getRcSignalStatus } from '../viewport-bridge.js';
+import { getRcPreviewValues, getRcSignalStatus } from './viewport-bridge.js';
 import type { MonitorFocus } from './drone-viewport.js';
 
 type StickDescriptor = {

@@ -2,35 +2,16 @@ import * as THREE from 'three';
 import {
     pointerDownPos,
     transformControl,
-    controls,
     raycaster,
     mouse,
     camera,
-    selectedObject,
     multiSelectedObjects,
     renderer,
-    focusOrbitControlsOnObject,
     toggleMultiSelectObject
 } from '../core/scene-init.js';
 import { simState } from '../../core/state.js';
-import { handleDeselection, deselectObject, exitTransformMode } from './selection.js';
-import { updateTransformModeDecorations } from './transform.js';
-import {
-    deleteSelectedObject,
-    duplicateObject,
-    resetDroneToOrigin
-} from '../objects/object-manager.js';
-import {
-    activateTransformMode,
-    rememberSelectedObjectInitialTransform,
-    getRotationStepDegrees,
-    resetSelectedObjectToInitialTransform,
-    rotateSelectedObjectByDegrees,
-    setRotationStepDegrees
-} from '../objects/object-transform.js';
-import {
-    isTransformableObject,
-} from '../objects/object-catalog.js';
+import { handleDeselection } from './selection.js';
+import { isTransformableObject } from '../objects/object-catalog.js';
 import { handleLinearEditingPointerUp, isLinearFeatureEditingActive } from './linear-editing.js';
 import { showGroundPoint } from '../core/ground-feedback.js';
 import {
@@ -42,63 +23,9 @@ import {
     isGroundObject,
     traceClick
 } from './input-helpers.js';
+import { handleSelection, updateObjectSelectionVisuals } from './selection-ui.js';
 
-type ObjectContextMenuAction = {
-    label: string;
-    icon: string;
-    action: () => void;
-    active?: boolean;
-    danger?: boolean;
-};
-
-type ObjectContextMenuInfoItem = {
-    title?: string;
-    text: string;
-};
-
-type ObjectContextMenuConfig = {
-    infoTitle?: string;
-    infoItems?: ObjectContextMenuInfoItem[];
-    title?: string;
-    actions?: ObjectContextMenuAction[];
-};
-
-function showTransformUi(obj: THREE.Object3D, preferredMode?: 'translate' | 'rotate' | 'scale') {
-    if (!transformControl || !isTransformableObject(obj) || simState.running) return;
-    const activeMode = preferredMode || (transformControl.object === obj ? transformControl.getMode() : 'translate');
-    traceClick(`activate gizmo mode=${activeMode} for ${getObjectDisplayName(obj)}`);
-    activateTransformMode(activeMode, obj);
-    if (controls) controls.enabled = (window as any).cameraMode === 'free' && !(window as any).isTransforming;
-    if ((window as any).showGizmoToolbar) {
-        traceClick('showGizmoToolbar is available, rendering toolbar');
-        (window as any).showGizmoToolbar(
-            getObjectDisplayName(obj),
-            transformControl?.getMode?.() || activeMode,
-            getRotationStepDegrees(),
-            (mode: string) => {
-                const target = selectedObject || obj;
-                if (!target || !target.parent) return;
-                showTransformUi(target, mode as 'translate' | 'rotate' | 'scale');
-            },
-            (step: number) => {
-                setRotationStepDegrees(step);
-            },
-            (axis: 'x' | 'y' | 'z', direction: 1 | -1) => {
-                rotateSelectedObjectByDegrees(axis, direction * getRotationStepDegrees());
-            },
-            () => {
-                resetSelectedObjectToInitialTransform();
-            },
-            () => handleDeselection()
-        );
-    }
-}
-
-function hideTransformUiPreserveSelection() {
-    exitTransformMode();
-    updateTransformModeDecorations(null);
-    if (controls) controls.enabled = (window as any).cameraMode === 'free' && !(window as any).isTransforming;
-}
+export { handleSelection, updateObjectSelectionVisuals };
 
 export function onPointerDown(event: PointerEvent) {
     pointerDownPos.set(event.clientX, event.clientY);
@@ -145,20 +72,20 @@ export function onPointerUp(event: PointerEvent) {
     
     try {
         const intersects = raycaster.intersectObjects(collectPointerTargets(), true);
-        const isCtrl = (event.ctrlKey || event.metaKey) && event.button === 0; // Ctrl + Ð›ÐšÐœ
-        const isRightClick = event.button === 2; // ÐŸÐšÐœ
+        const isCtrl = (event.ctrlKey || event.metaKey) && event.button === 0; // Ctrl + ˜˜˜
+        const isRightClick = event.button === 2; // ˜˜˜
         
         if (intersects.length > 0) {
             const intersect = intersects[0];
             const rootObject = getRootSceneObject(intersect.object);
             
-            // ÐšÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹ Ñ‡ÐµÑ€ÐµÐ· Ctrl + Ð›ÐšÐœ
+            // ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜ Ctrl + ˜˜˜
             if (isCtrl) {
                 showGroundPoint(intersect.point);
                 if ((window as any).updateSceneObjectClickCoords) {
                     (window as any).updateSceneObjectClickCoords(intersect.point);
                 }
-                // Ctrl+Ð›ÐšÐœ Ñ‚Ð°ÐºÐ¶Ðµ Ð²Ñ‹Ð¿Ð¾Ð»Ð½ÑÐµÑ‚ Ð¼ÑƒÐ»ÑŒÑ‚Ð¸Ð²Ñ‹Ð±Ð¾Ñ€
+                // Ctrl+˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜
                 if (isDroneObject(rootObject) || isTransformableObject(rootObject)) {
                     toggleMultiSelectObject(rootObject);
                     multiSelectedObjects.forEach(obj => updateObjectSelectionVisuals(obj, true));
@@ -167,11 +94,11 @@ export function onPointerUp(event: PointerEvent) {
                 return;
             }
 
-            // ÐŸÐšÐœ Ð¿Ð¾ Ð»ÑŽÐ±Ð¾Ð¼Ñƒ Ð¾Ð±ÑŠÐµÐºÑ‚Ñƒ Ð²Ñ‹Ð·Ñ‹Ð²Ð°ÐµÑ‚ Ð¼ÐµÐ½ÑŽ
+            // ˜˜˜ ˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜
             if (isRightClick) {
-                // Ð•ÑÐ»Ð¸ ÑÑ‚Ð¾ Ð·ÐµÐ¼Ð»Ñ - Ð¿Ð¾ÐºÐ°Ð·Ñ‹Ð²Ð°ÐµÐ¼ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹
+                // ˜˜˜˜ ˜˜˜ ˜˜˜˜˜ - ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜
                 if (isGroundObject(intersect.object) || isGroundObject(rootObject)) {
-                    // Ð˜ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐµÐ¼ ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹ Ð¿ÐµÑ€ÐµÑÐµÑ‡ÐµÐ½Ð¸Ñ Ð»ÑƒÑ‡Ð° Ñ Ð¼ÐµÑˆÐµÐ¼ Ð·ÐµÐ¼Ð»Ð¸
+                    // ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜ ˜ ˜˜˜˜˜ ˜˜˜˜˜
                     handleSelection(null as any, event.clientX, event.clientY, true, false, intersect.point);
                 } else {
                     handleSelection(rootObject, event.clientX, event.clientY, true, false, intersect.point);
@@ -179,14 +106,14 @@ export function onPointerUp(event: PointerEvent) {
                 return;
             }
 
-            // ÐžÐ±Ñ‹Ñ‡Ð½Ñ‹Ð¹ Ð›ÐšÐœ Ð¿Ð¾ Ð·ÐµÐ¼Ð»Ðµ - ÑÐ±Ñ€Ð¾Ñ Ð²Ñ‹Ð±Ð¾Ñ€Ð°
+            // ˜˜˜˜˜˜˜ ˜˜˜ ˜˜ ˜˜˜˜˜ - ˜˜˜˜˜ ˜˜˜˜˜˜
             if (isGroundObject(intersect.object) || isGroundObject(rootObject)) {
                 traceClick('ground intersect, deselecting');
                 handleDeselection();
                 return;
             }
 
-            // ÐžÐ±Ñ‹Ñ‡Ð½Ñ‹Ð¹ Ð›ÐšÐœ Ð¿Ð¾ Ð¾Ð±ÑŠÐµÐºÑ‚Ñƒ - Ð²Ñ‹Ð±Ð¾Ñ€ Ð¸ Ñ€ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¸Ðµ
+            // ˜˜˜˜˜˜˜ ˜˜˜ ˜˜ ˜˜˜˜˜˜˜ - ˜˜˜˜˜ ˜ ˜˜˜˜˜˜˜˜˜˜˜˜˜˜
             if (isDroneObject(rootObject) || isTransformableObject(rootObject)) {
                 traceClick(`selectable intersect object=${getObjectDisplayName(rootObject)} select=true`);
                 handleSelection(rootObject, event.clientX, event.clientY, false, false, intersect.point);
@@ -194,7 +121,7 @@ export function onPointerUp(event: PointerEvent) {
             }
         }
 
-        // ÐšÐ»Ð¸Ðº Ð² Ð¿ÑƒÑÑ‚Ð¾Ñ‚Ñƒ
+        // ˜˜˜˜ ˜ ˜˜˜˜˜˜˜
         const groundPoint = getGroundPointFromPointer();
         if (groundPoint) {
             if (isCtrl) {
@@ -203,7 +130,7 @@ export function onPointerUp(event: PointerEvent) {
                     (window as any).updateSceneObjectClickCoords(groundPoint);
                 }
             } else if (isRightClick) {
-                // ÐŸÐšÐœ Ð¿Ð¾ Ð¿ÑƒÑÑ‚Ð¾Ð¼Ñƒ Ð¼ÐµÑÑ‚Ñƒ (Ð·ÐµÐ¼Ð»Ðµ) - Ñ‚Ð¾Ð¶Ðµ Ð¼ÐµÐ½ÑŽ
+                // ˜˜˜ ˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜ (˜˜˜˜˜) - ˜˜˜˜ ˜˜˜˜
                 const dummy = new THREE.Object3D();
                 dummy.position.copy(groundPoint);
                 handleSelection(dummy, event.clientX, event.clientY, true, false, groundPoint);
@@ -217,106 +144,4 @@ export function onPointerUp(event: PointerEvent) {
     }
 
     handleDeselection();
-}
-
-export function updateObjectSelectionVisuals(obj: THREE.Object3D, selected: boolean) {
-    const emissiveColor = new THREE.Color(0x38bdf8);
-    obj.traverse((node: any) => {
-        if (node.isMesh && node.material) {
-            const materials = Array.isArray(node.material) ? node.material : [node.material];
-            materials.forEach((mat: any) => {
-                if (mat.emissive) {
-                    if (mat.userData.originalEmissive === undefined) {
-                        mat.userData.originalEmissive = mat.emissive.getHex();
-                        mat.userData.originalEmissiveIntensity = mat.emissiveIntensity || 0;
-                    }
-                    if (selected) {
-                        mat.emissive.copy(emissiveColor);
-                        mat.emissiveIntensity = Math.max(0.6, mat.userData.originalEmissiveIntensity);
-                    } else {
-                        mat.emissive.setHex(mat.userData.originalEmissive);
-                        mat.emissiveIntensity = mat.userData.originalEmissiveIntensity;
-                    }
-                }
-            });
-        }
-    });
-
-    if (selected && (window as any).selectionHelper) {
-        (window as any).selectionHelper.setFromObject(obj);
-        (window as any).selectionHelper.visible = true;
-    }
-}
-
-export function handleSelection(obj: THREE.Object3D | null, x: number, y: number, showMenu = false, focusCamera = false, clickPoint?: THREE.Vector3) {
-    const isSameObject = selectedObject === obj;
-    traceClick(`handleSelection object=${obj ? getObjectDisplayName(obj) : 'null'} same=${String(isSameObject)} showMenu=${String(showMenu)}`);
-    
-    if (selectedObject && !isSameObject) deselectObject();
-    if (obj && !isSameObject) rememberSelectedObjectInitialTransform(obj);
-
-    (window as any).setSelectedObject(obj);
-    if (obj) updateObjectSelectionVisuals(obj, true);
-
-    if (focusCamera && obj) {
-        focusOrbitControlsOnObject(obj);
-    }
-
-    const transformable = obj ? (isDroneObject(obj) || isTransformableObject(obj)) : false;
-    if (showMenu) {
-        hideTransformUiPreserveSelection();
-    } else if (obj && transformable && !simState.running) {
-        showTransformUi(obj);
-    } else if ((window as any).hideGizmoToolbar) {
-        traceClick(`gizmo toolbar hidden transformable=${String(transformable)} simRunning=${String(simState.running)}`);
-        (window as any).hideGizmoToolbar();
-    }
-
-    if (showMenu && (window as any).showContextMenu) {
-        const isDrone = obj ? isDroneObject(obj) : false;
-        traceClick(`showContextMenu for ${obj ? getObjectDisplayName(obj) : 'ground'} at x=${x} y=${y} isDrone=${String(isDrone)}`);
-
-        let objectActionsTitle: string | undefined;
-        let objectActions: ObjectContextMenuAction[] | undefined;
-        let objectInfoTitle: string | undefined;
-        let objectInfoItems: ObjectContextMenuInfoItem[] | undefined;
-        if (obj && typeof obj.userData.getContextMenuActions === 'function') {
-            try {
-                const config = obj.userData.getContextMenuActions(obj) as ObjectContextMenuConfig | undefined;
-                if (config?.infoItems?.length) {
-                    objectInfoTitle = config.infoTitle;
-                    objectInfoItems = config.infoItems;
-                }
-                if (config?.actions?.length) {
-                    objectActionsTitle = config.title;
-                    objectActions = config.actions;
-                }
-            } catch (error) {
-                console.warn('[3D] Failed to build object context actions:', error);
-            }
-        }
-
-        (window as any).showContextMenu(x, y,
-            (mode: string) => {
-                const target = selectedObject;
-                if (!target || !target.parent) return;
-                showTransformUi(target, mode as 'translate' | 'rotate' | 'scale');
-            },
-            () => deleteSelectedObject(),
-            () => duplicateObject(),
-            clickPoint ? () => {
-                showGroundPoint(clickPoint);
-                if ((window as any).updateSceneObjectClickCoords) {
-                    (window as any).updateSceneObjectClickCoords(clickPoint);
-                }
-            } : undefined,
-            isDrone ? () => resetDroneToOrigin() : undefined,
-            objectInfoTitle,
-            objectInfoItems,
-            objectActionsTitle,
-            objectActions
-        );
-    } else if (showMenu) {
-        traceClick('showMenu requested but window.showContextMenu is unavailable', 'warn');
-    }
 }

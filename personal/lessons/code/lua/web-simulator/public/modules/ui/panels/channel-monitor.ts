@@ -1,5 +1,5 @@
 import { simSettings } from '../../core/state.js';
-import { normalizeCenteredAxis } from '../settings/calibration.js';
+import { normalizeCenteredAxis } from '../settings/input/calibration.js';
 import { clamp, clampRc } from '../settings/constants.js';
 import { getConnectedGamepads, getGamepadName } from '../settings/mapping.js';
 
@@ -70,13 +70,13 @@ function readChannelSample(gp: Gamepad, channelIndex: number): ChannelSample | n
 }
 
 function syncFreezeButton(button: HTMLButtonElement, frozen: boolean): void {
-    button.textContent = frozen ? 'РџСЂРѕРґРѕР»Р¶РёС‚СЊ' : 'Р—Р°РјРѕСЂРѕР·РёС‚СЊ РіСЂР°С„РёРє';
+    button.textContent = frozen ? 'Продолжить' : 'Заморозить график';
     button.classList.toggle('is-active', frozen);
 }
 
 function updateStatusPill(element: HTMLElement, gamepad: Gamepad | null, frozen: boolean): void {
     if (!gamepad) {
-        element.textContent = frozen ? 'РњРѕРЅРёС‚РѕСЂ Р·Р°РјРѕСЂРѕР¶РµРЅ' : 'РџСѓР»СЊС‚ РЅРµ РїРѕРґРєР»СЋС‡РµРЅ';
+        element.textContent = frozen ? 'Монитор заморожен' : 'Пульт не подключен';
         element.classList.add('is-disconnected');
         element.classList.remove('is-connected');
         return;
@@ -84,9 +84,9 @@ function updateStatusPill(element: HTMLElement, gamepad: Gamepad | null, frozen:
 
     const gamepadName = escapeHtml(getGamepadName(gamepad));
     const inputsCount = Math.min(TOTAL_CHANNELS, gamepad.axes.length + gamepad.buttons.length);
-    const freezeMeta = frozen ? ' В· СЃС‚РѕРї' : '';
+    const freezeMeta = frozen ? ' · стоп' : '';
     element.innerHTML =
-        `<span class="gamepad-status-pill__name">${gamepadName}</span><span class="gamepad-status-pill__meta">В· ${inputsCount}/16 РІС…РѕРґРѕРІ${freezeMeta}</span>`;
+        `<span class="gamepad-status-pill__name">${gamepadName}</span><span class="gamepad-status-pill__meta">· ${inputsCount}/16 входов${freezeMeta}</span>`;
     element.classList.add('is-connected');
     element.classList.remove('is-disconnected');
 }
@@ -129,13 +129,13 @@ function renderChannelCell(cell: ChannelUi, value: number | null, minValue: numb
 function renderBoardStatus(element: HTMLElement, gamepad: Gamepad | null, activeCount: number, frozen: boolean): void {
     if (!gamepad) {
         element.textContent = frozen
-            ? 'РџРѕРєР°Р·Р°РЅРёСЏ Р·Р°РјРѕСЂРѕР¶РµРЅС‹. Р”Р»СЏ РІРѕР·РѕР±РЅРѕРІР»РµРЅРёСЏ РїРѕРґРєР»СЋС‡РёС‚Рµ РїСѓР»СЊС‚ РёР»Рё РѕС‚РєР»СЋС‡РёС‚Рµ СЂРµР¶РёРј СЃС‚РѕРї.'
-            : 'РќРµС‚ РґР°РЅРЅС‹С… РѕС‚ Р°РєС‚РёРІРЅРѕРіРѕ РїСѓР»СЊС‚Р°.';
+            ? 'Показания заморожены. Для возобновления подключите пульт или отключите режим стоп.'
+            : 'Нет данных от активного пульта.';
         return;
     }
 
-    const stateText = frozen ? 'Р—Р°РјРѕСЂРѕР¶РµРЅРѕ' : 'Р’ СЂРµР°Р»СЊРЅРѕРј РІСЂРµРјРµРЅРё';
-    element.textContent = `${stateText} В· Р°РєС‚РёРІРЅС‹ ${activeCount} РёР· 16 РєР°РЅР°Р»РѕРІ`;
+    const stateText = frozen ? 'Заморожено' : 'В реальном времени';
+    element.textContent = `${stateText} · активны ${activeCount} из 16 каналов`;
 }
 
 function pickGamepad(previousKey: string | null): Gamepad | null {

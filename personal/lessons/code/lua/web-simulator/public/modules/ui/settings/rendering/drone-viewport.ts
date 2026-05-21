@@ -1,6 +1,6 @@
-import { escapeHtml, getLocalizedRoleLabel, localizeSourceLabel } from '../rendering-helpers.js';
+import { escapeHtml, getLocalizedRoleLabel, localizeSourceLabel } from './helpers.js';
 import type { ChannelRole, RcRuntimeSnapshot } from '../types.js';
-import { getRcPreviewValues, getRcSignalStatus } from '../viewport-bridge.js';
+import { getRcPreviewValues, getRcSignalStatus } from './viewport-bridge.js';
 
 export type MonitorFocus = {
     role: ChannelRole | null;

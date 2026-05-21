@@ -3,32 +3,32 @@ import { getChannelInversionIndex } from './constants.js';
 import {
     rememberObservedInputValue,
     resetObservedInputStats
-} from './observed-inputs.js';
+} from './input/observed.js';
 import type { ChannelKey, PrimaryChannelKey } from './types.js';
-import { CHANNEL_LABELS, STEPS } from './wizard-config.js';
+import { CHANNEL_LABELS, STEPS } from './wizard/config.js';
 import {
     detectPrimaryAxis,
     getAuxStepRcValue,
     getBestAuxCandidate,
     getUsedRefs,
     rememberSwitchTransition
-} from './wizard-detection.js';
-import { createWizardDraftInversion } from './wizard-persistence.js';
-import { WizardPreviewController } from './wizard-preview.js';
-import { computePreviewRef } from './wizard-preview-ref.js';
-import { renderWizardState as renderWizardUi } from './wizard-ui.js';
+} from './wizard/detection.js';
+import { createWizardDraftInversion } from './wizard/persistence.js';
+import { WizardPreviewController } from './wizard/preview.js';
+import { computePreviewRef } from './wizard/preview-ref.js';
+import { renderWizardState as renderWizardUi } from './wizard/ui.js';
 import {
     finishWizardSession,
     getFirstConnectedGamepad,
     getResolvedPrimaryRef as getResolvedPrimaryWizardRef
-} from './wizard-lifecycle.js';
+} from './wizard/lifecycle.js';
 import type {
     AuxDetectionResult,
     AxisMotionStats,
     WizardAuxChannelKey,
     WizardChannelState,
     WizardStep
-} from './wizard-types.js';
+} from './wizard/types.js';
 
 let currentStepIdx = 0;
 let isWizardActive = false;

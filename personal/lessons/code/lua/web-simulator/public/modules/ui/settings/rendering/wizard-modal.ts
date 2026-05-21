@@ -1,4 +1,4 @@
-import { escapeHtml, localizeSourceGroup, localizeSourceLabel } from '../rendering-helpers.js';
+import { escapeHtml, localizeSourceGroup, localizeSourceLabel } from './helpers.js';
 import type { ChannelRole, RcRuntimeSnapshot, RcWizardPrimaryRole, StickMode } from '../types.js';
 import { renderDroneViewport } from './drone-viewport.js';
 

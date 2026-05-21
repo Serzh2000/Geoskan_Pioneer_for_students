@@ -1,4 +1,4 @@
-import { CHANNEL_ROLE_OPTIONS, CONTROL_TYPE_OPTIONS, escapeHtml, getLocalizedRoleLabel, getSwitchLabel, renderOptions, renderWarnings } from '../rendering-helpers.js';
+import { CHANNEL_ROLE_OPTIONS, CONTROL_TYPE_OPTIONS, escapeHtml, getLocalizedRoleLabel, getSwitchLabel, renderOptions, renderWarnings } from './helpers.js';
 import type { ChannelMapping, RcRuntimeSnapshot, WizardStepId } from '../types.js';
 import { renderBindings } from './live-monitor.js';
 import { renderConflictResolution } from './panel-core.js';

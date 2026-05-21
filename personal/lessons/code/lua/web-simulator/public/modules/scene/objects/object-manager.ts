@@ -10,78 +10,61 @@ import { findSceneObjectById, getSceneTopLevelObjects, isTransformableObject, li
 import type { TransformMode } from './object-transform.js';
 import { activateTransformMode, clearSelectedObjectInitialTransform, getRotationStepDegrees, getRotationStepOptions, rememberSelectedObjectInitialTransform, resetSelectedObjectToInitialTransform, rotateSelectedObjectByDegrees, setRotationStepDegrees } from './object-transform.js';
 import { finishLinearFeatureEditing, getLinearFeatureEditingTargetId, isLinearFeatureEditingActive, startLinearFeatureEditing } from '../interaction/linear-editing.js';
+import {
+    detachObjectFromGroupPreservingWorldTransform,
+    disposeObjectHierarchyResources,
+    getViewportCenterSelectionPoint,
+    isDroneSceneObject,
+    moveObjectIntoGroupPreservingWorldTransform
+} from './object-manager-support.js';
 
 export function groupObjects() {
     if (multiSelectedObjects.length < 2) {
-        log('Р”Р»СЏ РіСЂСѓРїРїРёСЂРѕРІРєРё РЅСѓР¶РЅРѕ РІС‹Р±СЂР°С‚СЊ С…РѕС‚СЏ Р±С‹ РґРІР° РѕР±СЉРµРєС‚Р° (Ctrl+Click)', 'warn');
+        log('Для группировки нужно выбрать хотя бы два объекта (Ctrl+Click)', 'warn');
         return false;
     }
 
     const group = new THREE.Group();
-    group.name = `Р“СЂСѓРїРїР° (${multiSelectedObjects.length})`;
+    group.name = `Группа (${multiSelectedObjects.length})`;
     group.userData.type = 'group';
     group.userData.draggable = true;
 
-    // Р’С‹С‡РёСЃР»СЏРµРј С†РµРЅС‚СЂ РіСЂСѓРїРїС‹
+    // Вычисляем центр группы
     const center = new THREE.Vector3();
     multiSelectedObjects.forEach(obj => center.add(obj.position));
     center.divideScalar(multiSelectedObjects.length);
     group.position.copy(center);
 
-    // Р”РѕР±Р°РІР»СЏРµРј РѕР±СЉРµРєС‚С‹ РІ РіСЂСѓРїРїСѓ
+    // Добавляем объекты в группу
     multiSelectedObjects.forEach(obj => {
         updateObjectSelectionVisuals(obj, false);
-        // РЎРѕС…СЂР°РЅСЏРµРј РјРёСЂРѕРІРѕРµ РїРѕР»РѕР¶РµРЅРёРµ РїСЂРё РїРµСЂРµРЅРѕСЃРµ РІ РіСЂСѓРїРїСѓ
-        const worldPos = new THREE.Vector3();
-        const worldQuat = new THREE.Quaternion();
-        const worldScale = new THREE.Vector3();
-        obj.getWorldPosition(worldPos);
-        obj.getWorldQuaternion(worldQuat);
-        obj.getWorldScale(worldScale);
-
-        group.add(obj);
-        
-        // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј Р»РѕРєР°Р»СЊРЅРѕРµ РїРѕР»РѕР¶РµРЅРёРµ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РЅРѕРІРѕР№ РіСЂСѓРїРїС‹
-        obj.position.copy(worldPos).sub(center);
-        // РћСЂРёРµРЅС‚Р°С†РёСЏ Рё РјР°СЃС€С‚Р°Р± РѕСЃС‚Р°СЋС‚СЃСЏ РјРёСЂРѕРІС‹РјРё, С‚Р°Рє РєР°Рє Сѓ РіСЂСѓРїРїС‹ РѕРЅРё РґРµС„РѕР»С‚РЅС‹Рµ (РїРѕРєР°)
-        obj.quaternion.copy(worldQuat);
-        obj.scale.copy(worldScale);
+        moveObjectIntoGroupPreservingWorldTransform(obj, group, center);
     });
 
     if (envGroup) envGroup.add(group);
     
     handleDeselection();
-    handleSelection(group, window.innerWidth / 2, window.innerHeight / 2, false);
-    log(`РћР±СЉРµРєС‚С‹ РѕР±СЉРµРґРёРЅРµРЅС‹ РІ РіСЂСѓРїРїСѓ`, 'success');
+    const viewportCenter = getViewportCenterSelectionPoint();
+    handleSelection(group, viewportCenter.x, viewportCenter.y, false);
+    log(`Объекты объединены в группу`, 'success');
     return true;
 }
 
 export function ungroupObject(targetGroup?: THREE.Object3D) {
     const group = targetGroup || selectedObject;
     if (!group || group.userData.type !== 'group') {
-        log('Р’С‹Р±СЂР°РЅРЅС‹Р№ РѕР±СЉРµРєС‚ РЅРµ СЏРІР»СЏРµС‚СЃСЏ РіСЂСѓРїРїРѕР№', 'warn');
+        log('Выбранный объект не является группой', 'warn');
         return false;
     }
 
     const children = [...group.children];
     children.forEach(obj => {
-        const worldPos = new THREE.Vector3();
-        const worldQuat = new THREE.Quaternion();
-        const worldScale = new THREE.Vector3();
-        obj.getWorldPosition(worldPos);
-        obj.getWorldQuaternion(worldQuat);
-        obj.getWorldScale(worldScale);
-
-        if (envGroup) envGroup.add(obj);
-        
-        obj.position.copy(worldPos);
-        obj.quaternion.copy(worldQuat);
-        obj.scale.copy(worldScale);
+        if (envGroup) detachObjectFromGroupPreservingWorldTransform(obj, envGroup);
     });
 
     group.removeFromParent();
     handleDeselection();
-    log(`Р“СЂСѓРїРїР° СЂР°СЃС„РѕСЂРјРёСЂРѕРІР°РЅР°`, 'info');
+    log(`Группа расформирована`, 'info');
     return true;
 }
 
@@ -132,12 +115,10 @@ export function setSceneObjectTransformMode(mode: TransformMode, id?: string) {
 
 export function deleteSceneObjectById(id: string) {
     const obj = findSceneObjectById(id);
-    let isDrone = false;
-    for (const droneId in droneMeshes) {
-        if (obj === droneMeshes[droneId]) isDrone = true;
-    }
+    const isDrone = isDroneSceneObject(obj, droneMeshes);
     if (!obj || isDrone) return false;
-    handleSelection(obj, window.innerWidth / 2, window.innerHeight / 2, false);
+    const viewportCenter = getViewportCenterSelectionPoint();
+    handleSelection(obj, viewportCenter.x, viewportCenter.y, false);
     deleteSelectedObject();
     return true;
 }
@@ -148,7 +129,7 @@ export function resetDroneToOrigin() {
     const droneState = drones[currentDroneId];
     
     if (simState.running) {
-        log('РќРµР»СЊР·СЏ РІРµСЂРЅСѓС‚СЊ РґСЂРѕРЅ РІ РЅР°С‡Р°Р»Рѕ РІРѕ РІСЂРµРјСЏ РІС‹РїРѕР»РЅРµРЅРёСЏ СЃРєСЂРёРїС‚Р°', 'warn');
+        log('Нельзя вернуть дрон в начало во время выполнения скрипта', 'warn');
         return false;
     }
     
@@ -161,7 +142,7 @@ export function resetDroneToOrigin() {
     droneState.pendingLocalPoint = false;
     currentDrone.position.set(0, 0, 0);
     currentDrone.rotation.set(0, 0, 0, 'ZYX');
-    log(`Р”СЂРѕРЅ ${currentDroneId} РІРѕР·РІСЂР°С‰РµРЅ РІ РЅР°С‡Р°Р»Рѕ СЃРёСЃС‚РµРјС‹ РєРѕРѕСЂРґРёРЅР°С‚`, 'success');
+    log(`Дрон ${currentDroneId} возвращен в начало системы координат`, 'success');
     
     if (selectedObject === currentDrone && transformControl) {
         transformControl.detach();
@@ -171,30 +152,16 @@ export function resetDroneToOrigin() {
 }
 
 export function deleteSelectedObject() {
-    let isDrone = false;
-    for (const id in droneMeshes) {
-        if (selectedObject === droneMeshes[id]) isDrone = true;
-    }
+    const isDrone = isDroneSceneObject(selectedObject, droneMeshes);
     
     if (selectedObject && !isDrone) {
         const obj = selectedObject;
         if (isLinearFeatureEditingActive(obj.uuid)) finishLinearFeatureEditing(true);
         handleDeselection();
 
-        obj.traverse((child: any) => {
-            if (child.isMesh) {
-                if (child.geometry) child.geometry.dispose();
-                if (child.material) {
-                    if (Array.isArray(child.material)) {
-                        child.material.forEach((material: THREE.Material) => material.dispose());
-                    } else {
-                        child.material.dispose();
-                    }
-                }
-            }
-        });
+        disposeObjectHierarchyResources(obj);
         obj.removeFromParent();
-        log('РћР±СЉРµРєС‚ СѓРґР°Р»РµРЅ', 'info');
+        log('Объект удален', 'info');
     }
 }
 
@@ -216,10 +183,7 @@ export function getSelectedLinearObjectEditingTargetId() {
 }
 
 export function duplicateObject() {
-    let isDrone = false;
-    for (const id in droneMeshes) {
-        if (selectedObject === droneMeshes[id]) isDrone = true;
-    }
+    const isDrone = isDroneSceneObject(selectedObject, droneMeshes);
 
     if (selectedObject && !isDrone) {
         const clone = selectedObject.clone();
@@ -228,8 +192,9 @@ export function duplicateObject() {
         if (envGroup) envGroup.add(clone);
         
         handleDeselection();
-        handleSelection(clone, window.innerWidth / 2, window.innerHeight / 2, false, false);
-        log('РћР±СЉРµРєС‚ РґСѓР±Р»РёСЂРѕРІР°РЅ', 'success');
+        const viewportCenter = getViewportCenterSelectionPoint();
+        handleSelection(clone, viewportCenter.x, viewportCenter.y, false, false);
+        log('Объект дублирован', 'success');
     }
 }
 
@@ -248,10 +213,11 @@ export function addObject(
     const obj = addObjectToScene(type, controls?.camera || null, objectOptions);
     if (obj) {
         handleDeselection();
-        handleSelection(obj, window.innerWidth / 2, window.innerHeight / 2, false, false);
-        log(`Р”РѕР±Р°РІР»РµРЅ РѕР±СЉРµРєС‚: ${obj.userData?.type || obj.name}`, 'success');
+        const viewportCenter = getViewportCenterSelectionPoint();
+        handleSelection(obj, viewportCenter.x, viewportCenter.y, false, false);
+        log(`Добавлен объект: ${obj.userData?.type || obj.name}`, 'success');
     } else {
-        log(`РќРµ СѓРґР°Р»РѕСЃСЊ РґРѕР±Р°РІРёС‚СЊ РѕР±СЉРµРєС‚ С‚РёРїР° "${type}"`, 'warn');
+        log(`Не удалось добавить объект типа "${type}"`, 'warn');
     }
 }
 
@@ -265,7 +231,7 @@ export function updateSelectedSceneObject(params: { value?: string; markerDictio
             markerDictionary: params.markerDictionary,
             floors: params.floors
         }) || updated;
-    } else if (params.floors !== undefined && selectedObject.userData?.type === 'РњРЅРѕРіРѕСЌС‚Р°Р¶РєР°') {
+    } else if (params.floors !== undefined && selectedObject.userData?.type === 'Многоэтажка') {
         updated = updateSceneObjectValue(selectedObject, {
             floors: params.floors
         }) || updated;
@@ -274,15 +240,16 @@ export function updateSelectedSceneObject(params: { value?: string; markerDictio
     if (params.pointsText !== undefined && selectedObject.userData?.supportsPoints) {
         const points = parsePointsText(params.pointsText);
         if (points.length < 2) {
-            log('Р”Р»СЏ РґРѕСЂРѕРіРё РёР»Рё СЂРµР»СЊСЃ РЅСѓР¶РЅРѕ РјРёРЅРёРјСѓРј 2 С‚РѕС‡РєРё', 'warn');
+            log('Для дороги или рельс нужно минимум 2 точки', 'warn');
             return false;
         }
         updated = updateSceneObjectPoints(selectedObject, points) || updated;
     }
 
     if (updated) {
-        handleSelection(selectedObject, window.innerWidth / 2, window.innerHeight / 2, false);
-        log('РџР°СЂР°РјРµС‚СЂС‹ РѕР±СЉРµРєС‚Р° РѕР±РЅРѕРІР»РµРЅС‹', 'success');
+        const viewportCenter = getViewportCenterSelectionPoint();
+        handleSelection(selectedObject, viewportCenter.x, viewportCenter.y, false);
+        log('Параметры объекта обновлены', 'success');
     }
 
     return updated;
@@ -308,8 +275,9 @@ export function appendPointToSelectedLinearObject() {
 
     const ok = updateSceneObjectPoints(selectedObject, points);
     if (ok) {
-        handleSelection(selectedObject, window.innerWidth / 2, window.innerHeight / 2, false);
-        log('Р’ РјР°СЂС€СЂСѓС‚ РґРѕР±Р°РІР»РµРЅР° РЅРѕРІР°СЏ С‚РѕС‡РєР°', 'success');
+        const viewportCenter = getViewportCenterSelectionPoint();
+        handleSelection(selectedObject, viewportCenter.x, viewportCenter.y, false);
+        log('В маршрут добавлена новая точка', 'success');
     }
     return ok;
 }

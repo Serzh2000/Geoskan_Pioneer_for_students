@@ -1,6 +1,6 @@
 import { Blockly } from '../ui/mission-guide/blockly.js';
 import type { ScriptLanguage } from '../core/state.js';
-import { createBlocklyResizeRuntime, type BlocklyResizeRuntime } from './blockly-support.js';
+import { createBlocklyResizeRuntime, type BlocklyResizeRuntime } from './blockly/support.js';
 import type { EditorShellRefs } from './dom.js';
 
 export type EditorRuntime = EditorShellRefs & {

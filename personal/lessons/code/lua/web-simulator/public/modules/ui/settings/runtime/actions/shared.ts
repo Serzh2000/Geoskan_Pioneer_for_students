@@ -1,6 +1,6 @@
 import type { DeviceProfile } from '../../types.js';
-import { cloneProfile, getActiveProfile, replaceActiveProfile } from '../../runtime-profile.js';
-import { updateRcInputRuntime } from '../../runtime-core.js';
+import { cloneProfile, getActiveProfile, replaceActiveProfile } from '../profile.js';
+import { updateRcInputRuntime } from '../core.js';
 
 export function commitProfile(profile: DeviceProfile): void {
     replaceActiveProfile(profile);

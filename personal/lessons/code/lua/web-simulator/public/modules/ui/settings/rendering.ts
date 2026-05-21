@@ -1,11 +1,11 @@
 import { simSettings, type GamepadInputRef } from '../../core/state.js';
 import { ALL_CHANNELS, CALIBRATION_DURATION_MS, PRIMARY_CHANNELS, clamp } from './constants.js';
-import { getObservedPositions } from './observed-inputs.js';
+import { getObservedPositions } from './input/observed.js';
 import type { SettingsDomRefs } from './dom.js';
 import type { SettingsRuntimeState, AutoStatusMode } from './runtime-state.js';
 import type { ActionAuxChannelKey, ChannelKey, ObservedInputPosition, PrimaryChannelKey } from './types.js';
-export { renderAuxRangeEditors } from './rendering-aux-ranges.js';
-import { renderAuxRangeEditors } from './rendering-aux-ranges.js';
+export { renderAuxRangeEditors } from './rendering/aux-ranges.js';
+import { renderAuxRangeEditors } from './rendering/aux-ranges.js';
 
 export function renderChannelValue(dom: SettingsDomRefs, key: ChannelKey, value: number): void {
     const el = dom.valueEls[key];

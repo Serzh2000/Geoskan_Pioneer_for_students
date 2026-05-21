@@ -5,10 +5,10 @@
  * трассера, гизмо трансформации, скоростью симуляции и USB-пультом.
  */
 import { simSettings } from '../../core/state.js';
-import { detectAutoInput, startAutoDetection, stopAutoDetection } from './auto-detect.js';
-import { bindGamepadSettingsControls, bindGeneralSettingsControls, syncInversionCheckboxes } from './bindings.js';
+import { detectAutoInput, startAutoDetection, stopAutoDetection } from './gamepad/auto-detect.js';
+import { bindGamepadSettingsControls, bindGeneralSettingsControls, syncInversionCheckboxes } from './gamepad/bindings.js';
 import { collectSettingsDomRefs } from './dom.js';
-import { createGamepadSettingsController } from './gamepad-controller.js';
+import { createGamepadSettingsController } from './gamepad/controller.js';
 import { setMappingRef } from './mapping.js';
 import { createSettingsRuntimeState } from './runtime-state.js';
 import { initWizard } from './wizard.js';

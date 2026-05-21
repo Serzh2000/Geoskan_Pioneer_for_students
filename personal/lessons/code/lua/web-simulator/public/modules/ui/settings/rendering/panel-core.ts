@@ -1,5 +1,5 @@
 import { getDuplicateSourceConflicts } from '../mapping.js';
-import { escapeHtml, localizeSourceGroup, localizeSourceLabel } from '../rendering-helpers.js';
+import { escapeHtml, localizeSourceGroup, localizeSourceLabel } from './helpers.js';
 import type { RcRuntimeSnapshot, WizardStepId } from '../types.js';
 
 export const WIZARD_ORDER: WizardStepId[] = ['device', 'sticks', 'switches', 'calibration', 'bindings', 'review'];

@@ -1,0 +1,50 @@
+.gamepad-panel-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px;
+    border-radius: 12px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    width: fit-content;
+}
+
+.gamepad-panel-tab {
+    min-height: 36px;
+    padding: 8px 14px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: #718096;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.gamepad-panel-tab:hover {
+    color: #1A202C;
+    background: #F8FAFC;
+}
+
+.gamepad-panel-tab.is-active {
+    background: #ffffff;
+    color: #FF6B00;
+    border-color: rgba(255, 107, 0, 0.22);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.gamepad-panel-panes {
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.gamepad-panel-pane {
+    display: none;
+    min-height: 0;
+}
+
+.gamepad-panel-pane.is-active {
+    display: block;
+}

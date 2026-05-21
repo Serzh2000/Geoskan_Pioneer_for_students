@@ -3,7 +3,7 @@ export {
     initRcSetupRuntime,
     subscribeRcRuntime,
     updateRcInputRuntime
-} from './runtime-core.js';
+} from './runtime/core.js';
 export {
     autoAssignPrimaryChannels,
     applyWizardModalConfig,
@@ -39,4 +39,4 @@ export {
     startAutoDetect,
     startCalibration,
     stopCalibration
-} from './runtime-actions.js';
+} from './runtime/actions.js';

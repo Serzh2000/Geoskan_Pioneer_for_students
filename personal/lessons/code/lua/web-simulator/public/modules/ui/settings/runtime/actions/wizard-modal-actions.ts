@@ -1,7 +1,7 @@
 import { DEFAULT_WIZARD_MODAL_STATE, createDefaultCalibration } from '../../constants.js';
 import { getDuplicateSourceConflicts } from '../../mapping.js';
-import { setWizardModalState, wizardModalState } from '../../runtime-store.js';
-import { updateRcInputRuntime } from '../../runtime-core.js';
+import { setWizardModalState, wizardModalState } from '../store.js';
+import { updateRcInputRuntime } from '../core.js';
 import type { BindingAction, ChannelMapping, InputControlType, RcWizardAuxRole, StickMode } from '../../types.js';
 import { mutateActiveProfile } from './shared.js';
 

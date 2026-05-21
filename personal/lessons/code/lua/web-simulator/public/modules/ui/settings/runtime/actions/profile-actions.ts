@@ -1,10 +1,10 @@
 import { BINDING_ACTIONS, DEFAULT_WIZARD_SESSION, RC_CHANNEL_COUNT, RC_VISIBLE_CHANNELS_DEFAULT, createDefaultCalibration } from '../../constants.js';
 import { applyAutoAssignments, createProfileForDevice, detectStickMode, getChannelTitle } from '../../mapping.js';
-import { buildDeviceSummaries } from '../../runtime-devices.js';
-import { persistedState } from '../../runtime-store.js';
-import { getActiveDeviceSummary } from '../../runtime-profile.js';
+import { buildDeviceSummaries } from '../devices.js';
+import { persistedState } from '../store.js';
+import { getActiveDeviceSummary } from '../profile.js';
 import type { BindingAction, ChannelMapping, InputControlType, WizardStepId, WorkspaceView } from '../../types.js';
-import { updateRcInputRuntime } from '../../runtime-core.js';
+import { updateRcInputRuntime } from '../core.js';
 import { cloneProfile, commitProfile, getActiveProfile, mutateActiveProfile } from './shared.js';
 
 export function setPreferredDevice(deviceId: string): void {

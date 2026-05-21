@@ -1,4 +1,4 @@
-import { escapeHtml, getLocalizedRoleLabel } from '../rendering-helpers.js';
+import { escapeHtml, getLocalizedRoleLabel } from './helpers.js';
 import type { ChannelRole, ChannelMapping, RcRuntimeSnapshot } from '../types.js';
 import { PRIMARY_CHANNELS } from './panel-core.js';
 import { getResolvedStickMode, getSourceSummary } from './wizard-display.js';

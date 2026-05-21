@@ -1,6 +1,6 @@
 import { RC_CHANNEL_COUNT, RC_VISIBLE_CHANNELS_DEFAULT } from '../constants.js';
 import { getExpandedVisibilityLabel } from '../runtime.js';
-import { CHANNEL_ROLE_OPTIONS, CONTROL_TYPE_OPTIONS, escapeHtml, getLocalizedRoleLabel, renderOptions } from '../rendering-helpers.js';
+import { CHANNEL_ROLE_OPTIONS, CONTROL_TYPE_OPTIONS, escapeHtml, getLocalizedRoleLabel, renderOptions } from './helpers.js';
 import type { RcRuntimeSnapshot } from '../types.js';
 import { renderDroneViewport } from './drone-viewport.js';
 import { renderBindings, renderLiveMonitor } from './live-monitor.js';

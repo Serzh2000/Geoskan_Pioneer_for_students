@@ -1,0 +1,154 @@
+.guide-portal-intro__hero,
+.guide-portal-card,
+.guide-portal-roadmap,
+.guide-lesson-overview,
+.guide-overview-item {
+    background: var(--guide-bg);
+    border: 1px solid var(--guide-border);
+    box-shadow: 0 6px 16px rgba(17, 24, 39, 0.04);
+}
+
+.guide-portal-intro__hero {
+    background: linear-gradient(180deg, #ffffff 0%, #fffaf5 100%);
+    border-left: 4px solid var(--guide-accent);
+}
+
+.guide-portal-intro__eyebrow,
+.guide-roadmap-item__status,
+.guide-lesson-overview__percent {
+    color: var(--guide-accent);
+}
+
+.guide-portal-intro__title,
+.guide-portal-card__title,
+.guide-roadmap-item__title {
+    color: var(--guide-text);
+}
+
+.guide-portal-intro__text,
+.guide-portal-card__text,
+.guide-roadmap-item__summary,
+.guide-lesson-overview__meta,
+.guide-theory-card__list,
+.guide-practice-card .guide-panel-card__text {
+    color: var(--guide-text-muted);
+}
+
+.guide-roadmap-item {
+    background: var(--guide-bg);
+    border-color: var(--guide-border);
+}
+
+.guide-roadmap-item:hover {
+    background: #fffaf5;
+    border-color: rgba(255, 107, 0, 0.22);
+}
+
+.guide-roadmap-item.is-current {
+    background: var(--guide-accent-soft);
+    border-color: rgba(255, 107, 0, 0.28);
+}
+
+.guide-roadmap-item.is-locked {
+    opacity: 0.62;
+}
+
+.guide-roadmap-item.is-locked:hover {
+    background: var(--guide-bg);
+    border-color: var(--guide-border);
+    box-shadow: none;
+}
+
+.guide-roadmap-item__index {
+    background: rgba(255, 107, 0, 0.12);
+    color: var(--guide-accent);
+}
+
+.guide-lesson-overview__percent {
+    background: var(--guide-accent-soft);
+    border-color: rgba(255, 107, 0, 0.18);
+}
+
+.guide-lesson-overview__bar {
+    background: var(--guide-bg-muted);
+    border-color: var(--guide-border);
+}
+
+.guide-lesson-overview__fill {
+    background: linear-gradient(90deg, #ff6b00 0%, #0f9d58 100%);
+}
+
+.guide-lesson__action.is-active {
+    background: var(--guide-accent-soft);
+    border-color: rgba(255, 107, 0, 0.28);
+    color: var(--guide-text);
+}
+
+.guide-lesson-page,
+.guide-panel-card,
+.guide-theory-page__hero,
+.guide-theory-card,
+.guide-practice-card,
+.guide-api-card {
+    border-radius: 12px;
+}
+
+.guide-panel-card,
+.guide-lesson-page,
+.guide-theory-page__hero {
+    gap: 12px;
+}
+
+.guide-lesson-page {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+.guide-panel-card {
+    padding: 14px;
+}
+
+.guide-lesson-overview {
+    padding: 12px 14px;
+}
+
+.guide-lesson-section,
+.guide-lesson-footer {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+}
+
+.guide-overview-item {
+    background: var(--guide-bg-muted);
+    border-color: var(--guide-border);
+    box-shadow: none;
+}
+
+.guide-theory-card__list li::marker {
+    color: var(--guide-accent);
+}
+
+@media (max-width: 860px) {
+    .guide-modal-layout {
+        gap: 10px;
+    }
+
+    .guide-hero,
+    .guide-lesson-page,
+    .guide-panel-card,
+    .guide-theory-page__hero,
+    .guide-theory-card,
+    .guide-practice-card {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .guide-hero__title,
+    .guide-lesson-page__title,
+    .guide-theory-page__title {
+        font-size: 24px;
+    }
+}

@@ -1,0 +1,222 @@
+.guide-page-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(56, 189, 248, 0.16);
+    background: rgba(15, 23, 42, 0.72);
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.guide-page-tab:hover {
+    transform: translateY(-1px);
+    border-color: rgba(56, 189, 248, 0.38);
+    background: rgba(15, 23, 42, 0.92);
+}
+
+.guide-page-tab.is-active {
+    border-color: rgba(125, 211, 252, 0.72);
+    background: rgba(14, 165, 233, 0.14);
+}
+
+.guide-page-tab.is-solved {
+    box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.34);
+}
+
+.guide-page-tab.is-locked {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.guide-page-tab.is-locked:hover {
+    transform: none;
+}
+
+.guide-page-tab__step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.16);
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.guide-page-tab__text {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.35;
+    text-align: left;
+}
+
+.guide-lesson-page {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0;
+}
+
+.guide-lesson-page__header,
+.guide-panel-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.guide-lesson-page__badge {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.guide-lesson-page__title {
+    color: #f8fafc;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.guide-lesson-page__summary,
+.guide-lesson-page__goal,
+.guide-panel-card__text,
+.guide-workspace__hint,
+.guide-library__empty {
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.guide-lesson-page__meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.guide-lesson-page__meta-item {
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(56, 189, 248, 0.14);
+    background: rgba(2, 6, 23, 0.4);
+}
+
+.guide-lesson-page__meta-item--wide {
+    grid-column: 1 / -1;
+}
+
+.guide-lesson-page__meta-label {
+    margin-bottom: 10px;
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.guide-lesson-overview,
+.guide-lesson-section,
+.guide-lesson-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(56, 189, 248, 0.14);
+    background: rgba(2, 6, 23, 0.4);
+}
+
+.guide-lesson-overview__head,
+.guide-lesson-section__header,
+.guide-lesson-footer__actions {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.guide-lesson-overview__percent {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(14, 165, 233, 0.16);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    color: #7dd3fc;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.guide-lesson-overview__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap: 8px;
+}
+
+.guide-overview-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(56, 189, 248, 0.12);
+    background: rgba(15, 23, 42, 0.04);
+}
+
+.guide-lesson-overview__bar {
+    position: relative;
+    overflow: hidden;
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.guide-lesson-overview__fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #0ea5e9 0%, #22c55e 100%);
+}
+
+.guide-lesson-overview__meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: #cbd5e1;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+@media (max-width: 860px) {
+    .guide-lesson-overview__head,
+    .guide-lesson-section__header,
+    .guide-lesson-footer__actions,
+    .guide-lesson-page__header {
+        flex-direction: column;
+    }
+
+    .guide-lesson-overview__stats,
+    .guide-lesson-section__grid,
+    .guide-lesson-page__meta {
+        grid-template-columns: 1fr;
+    }
+}

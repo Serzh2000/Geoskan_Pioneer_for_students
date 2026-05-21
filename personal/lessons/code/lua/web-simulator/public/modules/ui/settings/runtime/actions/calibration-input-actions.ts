@@ -1,10 +1,10 @@
-import { captureCalibrationCenter, sanitizeCalibration } from '../../calibration.js';
+import { captureCalibrationCenter, sanitizeCalibration } from '../../input/calibration.js';
 import { createDefaultCalibration } from '../../constants.js';
-import { getRawInputMap } from '../../runtime-devices.js';
-import { persistedState, virtualAxes, virtualButtons } from '../../runtime-store.js';
-import { getCalibration } from '../../runtime-profile.js';
+import { getRawInputMap } from '../devices.js';
+import { persistedState, virtualAxes, virtualButtons } from '../store.js';
+import { getCalibration } from '../profile.js';
 import type { CalibrationData } from '../../types.js';
-import { updateRcInputRuntime } from '../../runtime-core.js';
+import { updateRcInputRuntime } from '../core.js';
 import { cloneProfile, getActiveProfile, mutateActiveProfile, replaceActiveProfile } from './shared.js';
 
 export function startCalibration(): void {

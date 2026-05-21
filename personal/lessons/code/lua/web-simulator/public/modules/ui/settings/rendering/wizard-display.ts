@@ -1,4 +1,4 @@
-import { escapeHtml, getLocalizedRoleLabel, localizeSourceGroup, localizeSourceLabel, renderOptions } from '../rendering-helpers.js';
+import { escapeHtml, getLocalizedRoleLabel, localizeSourceGroup, localizeSourceLabel, renderOptions } from './helpers.js';
 import type { ChannelMapping, RcRuntimeSnapshot, WizardStepId } from '../types.js';
 import { getSourceOptions, getWizardStepDescription, getWizardStepTitle } from './panel-core.js';
 
