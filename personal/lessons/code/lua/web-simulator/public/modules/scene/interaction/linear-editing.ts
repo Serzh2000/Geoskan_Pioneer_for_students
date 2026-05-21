@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+п»їimport * as THREE from 'three';
 import { updateSceneObjectPoints } from '../../environment/index.js';
 import type { ScenePathPoint } from '../../environment/obstacles.js';
 import { log } from '../../shared/logging/logger.js';
@@ -87,13 +87,13 @@ export function getLinearFeatureEditingTargetId() {
 
 export function startLinearFeatureEditing(target = selectedObject) {
     if (!target?.userData?.supportsPoints) {
-        log('Визуальная прокладка доступна только для дороги или рельс', 'warn');
+        log('Р’РёР·СѓР°Р»СЊРЅР°СЏ РїСЂРѕРєР»Р°РґРєР° РґРѕСЃС‚СѓРїРЅР° С‚РѕР»СЊРєРѕ РґР»СЏ РґРѕСЂРѕРіРё РёР»Рё СЂРµР»СЊСЃ', 'warn');
         return false;
     }
 
     const points = normalizePoints(target.userData?.points);
     if (points.length < 2) {
-        log('Для визуальной прокладки нужно минимум 2 точки у объекта', 'warn');
+        log('Р”Р»СЏ РІРёР·СѓР°Р»СЊРЅРѕР№ РїСЂРѕРєР»Р°РґРєРё РЅСѓР¶РЅРѕ РјРёРЅРёРјСѓРј 2 С‚РѕС‡РєРё Сѓ РѕР±СЉРµРєС‚Р°', 'warn');
         return false;
     }
 
@@ -109,7 +109,7 @@ export function startLinearFeatureEditing(target = selectedObject) {
     editingState.lastSnapAxes = [];
     refreshPreview();
     (window as any).updateSceneManager?.();
-    log('Режим прокладки включен: ЛКМ добавляет точку, Backspace удаляет последнюю, Enter/ПКМ завершает, Esc отменяет', 'info');
+    log('Р РµР¶РёРј РїСЂРѕРєР»Р°РґРєРё РІРєР»СЋС‡РµРЅ: Р›РљРњ РґРѕР±Р°РІР»СЏРµС‚ С‚РѕС‡РєСѓ, Backspace СѓРґР°Р»СЏРµС‚ РїРѕСЃР»РµРґРЅСЋСЋ, Enter/РџРљРњ Р·Р°РІРµСЂС€Р°РµС‚, Esc РѕС‚РјРµРЅСЏРµС‚', 'info');
     return true;
 }
 
@@ -118,9 +118,9 @@ export function finishLinearFeatureEditing(commit = true) {
 
     if (!commit) {
         updateSceneObjectPoints(editingState.target, editingState.originalPoints);
-        log('Прокладка маршрута отменена, исходные точки восстановлены', 'info');
+        log('РџСЂРѕРєР»Р°РґРєР° РјР°СЂС€СЂСѓС‚Р° РѕС‚РјРµРЅРµРЅР°, РёСЃС…РѕРґРЅС‹Рµ С‚РѕС‡РєРё РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅС‹', 'info');
     } else {
-        log('Прокладка маршрута завершена', 'success');
+        log('РџСЂРѕРєР»Р°РґРєР° РјР°СЂС€СЂСѓС‚Р° Р·Р°РІРµСЂС€РµРЅР°', 'success');
     }
 
     resetState();
@@ -188,7 +188,7 @@ export function handleLinearEditingKeyDown(event: KeyboardEvent) {
     if (event.key === 'Backspace' || event.key === 'Delete') {
         event.preventDefault();
         if (editingState.workingPoints.length <= 2) {
-            log('У маршрута должно остаться минимум 2 точки', 'warn');
+            log('РЈ РјР°СЂС€СЂСѓС‚Р° РґРѕР»Р¶РЅРѕ РѕСЃС‚Р°С‚СЊСЃСЏ РјРёРЅРёРјСѓРј 2 С‚РѕС‡РєРё', 'warn');
             return true;
         }
         editingState.workingPoints.pop();
@@ -199,3 +199,4 @@ export function handleLinearEditingKeyDown(event: KeyboardEvent) {
 
     return false;
 }
+

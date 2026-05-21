@@ -17,13 +17,13 @@
                                     </div>
                                 </div>
                                 <div class="scene-form-grid">
-                                    <label class="scene-field">
+                                    <label id="scene-selected-dictionary-wrap" class="scene-field">
                                         <span>Словарь маркера</span>
                                         <select id="scene-selected-dictionary">
                                             <option value="">Словарь маркера</option>
                                         </select>
                                     </label>
-                                    <label class="scene-field">
+                                    <label id="scene-selected-value-wrap" class="scene-field">
                                         <span>Значение</span>
                                         <input id="scene-selected-value" type="text" placeholder="Значение объекта">
                                     </label>
@@ -77,7 +77,7 @@
                                     <textarea id="scene-selected-building-incidents" rows="4" placeholder="Список сценариев для окон"></textarea>
                                 </div>
 
-                                <label class="scene-field">
+                                <label id="scene-selected-points-wrap" class="scene-field">
                                     <span>Точки маршрута</span>
                                     <textarea id="scene-selected-points" rows="2" placeholder="Точки маршрута (для дорог)"></textarea>
                                 </label>
@@ -115,6 +115,48 @@
                                         <input id="scene-transform-z" type="text" readonly value="--">
                                     </label>
                                 </div>
+                                <div id="scene-rotate-controls" class="scene-rotate-controls">
+                                    <div class="scene-rotate-controls__header">
+                                        <div>
+                                            <div class="scene-rotate-controls__title">Компас поворота</div>
+                                            <p class="scene-rotate-controls__description">Быстрый доворот объекта по осям X, Y и Z фиксированными шагами.</p>
+                                        </div>
+                                        <button id="scene-rotate-reset-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button">Сбросить</button>
+                                    </div>
+                                    <div class="scene-rotate-presets">
+                                        <div class="scene-rotate-row">
+                                            <span class="scene-axis-chip scene-axis-chip--x">X</span>
+                                            <div class="scene-rotate-row__buttons">
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="-45">-45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="-15">-15°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="5">+5°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="15">+15°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="45">+45°</button>
+                                            </div>
+                                        </div>
+                                        <div class="scene-rotate-row">
+                                            <span class="scene-axis-chip scene-axis-chip--y">Y</span>
+                                            <div class="scene-rotate-row__buttons">
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="-45">-45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="-15">-15°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="5">+5°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="15">+15°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="45">+45°</button>
+                                            </div>
+                                        </div>
+                                        <div class="scene-rotate-row">
+                                            <span class="scene-axis-chip scene-axis-chip--z">Z</span>
+                                            <div class="scene-rotate-row__buttons">
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="-45">-45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="-15">-15°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="5">+5°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="15">+15°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="45">+45°</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button id="scene-clear-selection-btn" class="scene-clear-selection-btn" type="button">Снять выделение</button>
                                 <button id="scene-drone-origin-btn" class="btn-secondary scene-btn scene-btn--neutral">Дрон в (0,0)</button>
                             </div>
 

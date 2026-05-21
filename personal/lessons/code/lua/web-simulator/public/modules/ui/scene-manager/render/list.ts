@@ -1,5 +1,5 @@
 import type { UICallbacks } from '../../index.js';
-import type { SceneManagerDomRefs } from '../support.js';
+import type { SceneManagerDomRefs } from '../types.js';
 import type { SceneManagerEntry } from '../types.js';
 import { escapeHtml, formatSceneLabel } from './format.js';
 import { getSceneObjectIcon } from './icons.js';

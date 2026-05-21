@@ -1,4 +1,4 @@
-import { apiDocs, evConstants, pythonApiDocs } from '../docs/api-docs.js';
+ï»¿import { apiDocs, evConstants, pythonApiDocs } from '../docs/api-docs.js';
 
 let completionProvidersRegistered = false;
 
@@ -110,7 +110,7 @@ export function setupCompletionProvider(monaco: any) {
         triggerCharacters: ['.', ':']
     });
 
-    // Python completion: ˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ Pioneer/Camera ˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜.
+    // Python completion: Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜ Pioneer/Camera Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜.
     monaco.languages.registerCompletionItemProvider('python', {
         provideCompletionItems: function(model: any, position: any) {
             const word = model.getWordUntilPosition(position);
@@ -133,7 +133,7 @@ export function setupCompletionProvider(monaco: any) {
                     return { method, key, doc };
                 });
 
-            // ˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜ (˜˜˜˜˜˜: "pioneer_mini.")
+            // Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜ (Â˜Â˜Â˜Â˜Â˜Â˜: "pioneer_mini.")
             if (normalized.endsWith('.')) {
                 methodDocs.forEach(({ method, doc }) => {
                     suggestions.push({
@@ -146,7 +146,7 @@ export function setupCompletionProvider(monaco: any) {
                     });
                 });
             } else {
-                // ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜.
+                // Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜.
                 ['Pioneer', 'Camera', 'VideoStream', 'time'].forEach((cls) => {
                     suggestions.push({
                         label: cls,
@@ -157,7 +157,7 @@ export function setupCompletionProvider(monaco: any) {
                     });
                 });
 
-                // ˜ ˜˜˜˜-˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜/˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜.
+                // Â˜ Â˜Â˜Â˜Â˜-Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜/Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜.
                 if (normalized.length === 0) {
                     suggestions.push({
                         label: 'pioneer',
@@ -174,3 +174,4 @@ export function setupCompletionProvider(monaco: any) {
         triggerCharacters: ['.']
     });
 }
+

@@ -54,7 +54,7 @@ import {
 import { editorIndexState, getEditorIndexCollections, getEditorIndexShellState } from './state.js';
 
 function getEditorControllers() {
-    return createEditorIndexControllers(getEditorIndexShellState(), getEditorIndexCollections(), {
+    return createEditorIndexControllers(editorIndexState, getEditorIndexCollections(), {
         theme: blocklyTheme,
         buildMainEditorToolbox,
         compileMainEditorWorkspace,

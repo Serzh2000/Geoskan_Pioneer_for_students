@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+ο»Ώimport * as THREE from 'three';
 import { createApartmentBuildingMesh } from '../buildings.js';
 import {
     createArenaControlStationMesh,
@@ -13,7 +13,7 @@ import { createParkPatch, createTreeMesh } from '../nature.js';
 import { applyShadows, setCommonMeta } from '../utils.js';
 
 export function createResidentialPreset() {
-    const group = setCommonMeta(new THREE.Group(), 'Οπερες: ροΰλόνϋι πΰιξν', {
+    const group = setCommonMeta(new THREE.Group(), 'ΠΡ€ΠµΡΠµΡ‚: ΡΠΏΠ°Π»ΡΠ½Ρ‹ΠΉ Ρ€Π°ΠΉΠΎΠ½', {
         collidableRadius: 22,
         presetName: 'residential'
     });
@@ -109,3 +109,4 @@ export function createResidentialPreset() {
     applyShadows(group);
     return group;
 }
+

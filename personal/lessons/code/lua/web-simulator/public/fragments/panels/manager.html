@@ -1,13 +1,15 @@
             <div id="manager-panel" class="sidebar-panel">
                 <div class="panel-header">
-                    <span class="panel-title">Менеджер сцены</span>
-                    <button class="panel-close-btn" onclick="closePanel()">?</button>
+                    <div class="panel-header__lead">
+                        <span class="panel-title">РњРµРЅРµРґР¶РµСЂ СЃС†РµРЅС‹</span>
+                    </div>
+                    <button class="panel-close-btn" onclick="closePanel()">вњ•</button>
                 </div>
                 <div class="panel-content panel-content--scene-manager">
                     <div class="scene-manager">
-                        <div class="scene-manager-tabs" role="tablist" aria-label="Режим панели менеджера сцены">
-                            <button id="scene-tab-hierarchy" class="scene-manager-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="scene-panel-hierarchy">Иерархия</button>
-                            <button id="scene-tab-inspector" class="scene-manager-tab" type="button" role="tab" aria-selected="false" aria-controls="scene-panel-inspector">Инспектор</button>
+                        <div class="scene-manager-tabs" role="tablist" aria-label="Р РµР¶РёРј РїР°РЅРµР»Рё РјРµРЅРµРґР¶РµСЂР° СЃС†РµРЅС‹">
+                            <button id="scene-tab-hierarchy" class="scene-manager-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="scene-panel-hierarchy">РРµСЂР°СЂС…РёСЏ</button>
+                            <button id="scene-tab-inspector" class="scene-manager-tab" type="button" role="tab" aria-selected="false" aria-controls="scene-panel-inspector">РРЅСЃРїРµРєС‚РѕСЂ</button>
                         </div>
 
                         <!-- @include ./manager/hierarchy.html -->
@@ -16,3 +18,4 @@
                     </div>
                 </div>
             </div>
+

@@ -1,4 +1,4 @@
-import { simState, simSettings } from '../../core/state.js';
+п»їimport { simState, simSettings } from '../../core/state.js';
 
 const stateAlt = document.getElementById('state-alt') as HTMLElement | null;
 const stateSpd = document.getElementById('state-spd') as HTMLElement | null;
@@ -30,7 +30,7 @@ export function updateStats() {
             stateStatus.style.color = '#15803d'; // Green
         } else if (simState.fsmState === 'PREFLIGHT') {
             stateStatus.style.color = '#b45309'; // Yellow
-        } else if (simState.status === 'ОШИБКА' || simState.status === 'CRASHED') {
+        } else if (simState.status === 'РћРЁРР‘РљРђ' || simState.status === 'CRASHED') {
             stateStatus.style.color = '#c2410c'; // Red
         } else {
             stateStatus.style.color = '#151515';
@@ -98,7 +98,7 @@ export function updateStats() {
                 if (baseLedEl) {
                     baseLedEl.style.backgroundColor = colorStr;
                     baseLedEl.style.boxShadow = (r+g+b > 0) ? `0 0 8px ${colorStr}` : 'none';
-                    baseLedEl.title = `Базовый светодиод ${i}\nRGB: ${r}, ${g}, ${b}`;
+                    baseLedEl.title = `Р‘Р°Р·РѕРІС‹Р№ СЃРІРµС‚РѕРґРёРѕРґ ${i}\nRGB: ${r}, ${g}, ${b}`;
                 }
             } else if (i < 29) {
                 // Matrix LEDs
@@ -106,9 +106,10 @@ export function updateStats() {
                 if (pixelEl) {
                     pixelEl.style.backgroundColor = colorStr;
                     pixelEl.style.boxShadow = (r+g+b > 0) ? `0 0 8px ${colorStr}` : 'none';
-                    pixelEl.title = `Светодиод матрицы ${i}\nRGB: ${r}, ${g}, ${b}`;
+                    pixelEl.title = `РЎРІРµС‚РѕРґРёРѕРґ РјР°С‚СЂРёС†С‹ ${i}\nRGB: ${r}, ${g}, ${b}`;
                 }
             }
         }
     }
 }
+

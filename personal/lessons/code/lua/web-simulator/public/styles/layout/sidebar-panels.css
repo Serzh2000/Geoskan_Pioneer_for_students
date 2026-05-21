@@ -1,6 +1,6 @@
 /*
- * ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜.
- * ˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜ `public/style.css` ˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ CSS.
+ * Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜.
+ * Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜ `public/style.css` Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜ CSS.
  */
 /* SIDEBAR PANELS */
 .sidebar-panels {
@@ -69,11 +69,4 @@
     pointer-events: none;
 }
 
-.sidebar-panel#drones-panel .panel-header,
-.sidebar-panel#manager-panel .panel-header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    backdrop-filter: blur(16px);
-    background: rgba(255, 255, 255, 0.9);
-}
+

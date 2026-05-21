@@ -1,6 +1,6 @@
-/*
- * Агрегатор стилей панели геймпада.
- * Сохраняет прежнюю точку подключения `public/styles/gamepad/panel.css`.
+п»ї/*
+ * РђРіСЂРµРіР°С‚РѕСЂ СЃС‚РёР»РµР№ РїР°РЅРµР»Рё РіРµР№РјРїР°РґР°.
+ * РЎРѕС…СЂР°РЅСЏРµС‚ РїСЂРµР¶РЅСЋСЋ С‚РѕС‡РєСѓ РїРѕРґРєР»СЋС‡РµРЅРёСЏ `public/styles/gamepad/panel.css`.
  */
 @import url('./panel/buttons.css');
 @import url('./panel/layout.css');
@@ -8,3 +8,4 @@
 @import url('./panel/ranges.css');
 @import url('./panel/tabs.css');
 @import url('./panel/channel-monitor.css');
+

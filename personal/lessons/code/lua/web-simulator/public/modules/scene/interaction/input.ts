@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+ï»¿import * as THREE from 'three';
 import {
     pointerDownPos,
     transformControl,
@@ -72,20 +72,20 @@ export function onPointerUp(event: PointerEvent) {
     
     try {
         const intersects = raycaster.intersectObjects(collectPointerTargets(), true);
-        const isCtrl = (event.ctrlKey || event.metaKey) && event.button === 0; // Ctrl + ˜˜˜
-        const isRightClick = event.button === 2; // ˜˜˜
+        const isCtrl = (event.ctrlKey || event.metaKey) && event.button === 0; // Ctrl + Â˜Â˜Â˜
+        const isRightClick = event.button === 2; // Â˜Â˜Â˜
         
         if (intersects.length > 0) {
             const intersect = intersects[0];
             const rootObject = getRootSceneObject(intersect.object);
             
-            // ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜ Ctrl + ˜˜˜
+            // Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜ Ctrl + Â˜Â˜Â˜
             if (isCtrl) {
                 showGroundPoint(intersect.point);
                 if ((window as any).updateSceneObjectClickCoords) {
                     (window as any).updateSceneObjectClickCoords(intersect.point);
                 }
-                // Ctrl+˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜
+                // Ctrl+Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜
                 if (isDroneObject(rootObject) || isTransformableObject(rootObject)) {
                     toggleMultiSelectObject(rootObject);
                     multiSelectedObjects.forEach(obj => updateObjectSelectionVisuals(obj, true));
@@ -94,11 +94,11 @@ export function onPointerUp(event: PointerEvent) {
                 return;
             }
 
-            // ˜˜˜ ˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜
+            // Â˜Â˜Â˜ Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜
             if (isRightClick) {
-                // ˜˜˜˜ ˜˜˜ ˜˜˜˜˜ - ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜
+                // Â˜Â˜Â˜Â˜ Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜ - Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜
                 if (isGroundObject(intersect.object) || isGroundObject(rootObject)) {
-                    // ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜ ˜ ˜˜˜˜˜ ˜˜˜˜˜
+                    // Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜ Â˜ Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜
                     handleSelection(null as any, event.clientX, event.clientY, true, false, intersect.point);
                 } else {
                     handleSelection(rootObject, event.clientX, event.clientY, true, false, intersect.point);
@@ -106,14 +106,14 @@ export function onPointerUp(event: PointerEvent) {
                 return;
             }
 
-            // ˜˜˜˜˜˜˜ ˜˜˜ ˜˜ ˜˜˜˜˜ - ˜˜˜˜˜ ˜˜˜˜˜˜
+            // Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜ Â˜Â˜ Â˜Â˜Â˜Â˜Â˜ - Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜
             if (isGroundObject(intersect.object) || isGroundObject(rootObject)) {
                 traceClick('ground intersect, deselecting');
                 handleDeselection();
                 return;
             }
 
-            // ˜˜˜˜˜˜˜ ˜˜˜ ˜˜ ˜˜˜˜˜˜˜ - ˜˜˜˜˜ ˜ ˜˜˜˜˜˜˜˜˜˜˜˜˜˜
+            // Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜ Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜ - Â˜Â˜Â˜Â˜Â˜ Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜
             if (isDroneObject(rootObject) || isTransformableObject(rootObject)) {
                 traceClick(`selectable intersect object=${getObjectDisplayName(rootObject)} select=true`);
                 handleSelection(rootObject, event.clientX, event.clientY, false, false, intersect.point);
@@ -121,7 +121,7 @@ export function onPointerUp(event: PointerEvent) {
             }
         }
 
-        // ˜˜˜˜ ˜ ˜˜˜˜˜˜˜
+        // Â˜Â˜Â˜Â˜ Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜
         const groundPoint = getGroundPointFromPointer();
         if (groundPoint) {
             if (isCtrl) {
@@ -130,7 +130,7 @@ export function onPointerUp(event: PointerEvent) {
                     (window as any).updateSceneObjectClickCoords(groundPoint);
                 }
             } else if (isRightClick) {
-                // ˜˜˜ ˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜ (˜˜˜˜˜) - ˜˜˜˜ ˜˜˜˜
+                // Â˜Â˜Â˜ Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜ (Â˜Â˜Â˜Â˜Â˜) - Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜
                 const dummy = new THREE.Object3D();
                 dummy.position.copy(groundPoint);
                 handleSelection(dummy, event.clientX, event.clientY, true, false, groundPoint);
@@ -145,3 +145,4 @@ export function onPointerUp(event: PointerEvent) {
 
     handleDeselection();
 }
+

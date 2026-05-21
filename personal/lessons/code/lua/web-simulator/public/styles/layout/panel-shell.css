@@ -1,15 +1,20 @@
 /*
- * ˜˜˜˜˜ ˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜.
- * ˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜ `public/style.css` ˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ CSS.
+ * Â˜Â˜Â˜Â˜Â˜ Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜.
+ * Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜ `public/style.css` Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜Â˜ Â˜Â˜Â˜Â˜Â˜Â˜ CSS.
  */
 /* PANEL HEADER AND CONTENT */
 .panel-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 18px 20px 16px;
+    border-bottom: 1px solid #e9ecef;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(255, 255, 255, 0.72);
+    gap: 12px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 249, 250, 0.92) 100%);
+    backdrop-filter: blur(16px);
 }
 
 .panel-title {
@@ -75,52 +80,12 @@
 }
 
 .settings-panel-content {
-    padding: 24px;
-}
-
-.sidebar-panel#settings-panel .panel-header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    backdrop-filter: blur(16px);
-}
-
-.sidebar-panel#docs-panel .panel-header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    padding: 12px 16px 10px;
-    border-bottom: 1px solid #E2E8F0;
-    background: rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(16px);
+    padding: 16px;
+    background: linear-gradient(180deg, #f8f9fa 0%, #f3f5f7 100%);
 }
 
 .sidebar-panel#docs-panel .panel-content {
     background: #F5F7F9;
-}
-
-.sidebar-panel#docs-panel .panel-title {
-    color: #1A202C;
-}
-
-.sidebar-panel#docs-panel .panel-close-btn {
-    color: #718096;
-}
-
-.sidebar-panel#docs-panel .panel-close-btn:hover {
-    color: #FF6B00;
-    background: rgba(255, 107, 0, 0.08);
-    border-color: rgba(255, 107, 0, 0.12);
-}
-
-.sidebar-panel#gamepad-panel .panel-header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    backdrop-filter: blur(16px);
-    padding: 10px 12px 8px;
-    border-bottom: 1px solid #E2E8F0;
-    background: rgba(255, 255, 255, 0.96);
 }
 
 .sidebar-panel#gamepad-panel .panel-content {
@@ -134,8 +99,6 @@
 }
 
 .sidebar-panel#gamepad-panel .settings-panel-content {
-    padding: 8px 12px 12px;
-    background: #F5F7F9;
     overflow: visible;
     min-height: fit-content;
 }
@@ -147,36 +110,11 @@
     min-height: fit-content;
 }
 
-.sidebar-panel#gamepad-panel .panel-title {
-    color: #1A202C;
-}
-
-.sidebar-panel#gamepad-panel .panel-close-btn {
-    color: #718096;
-}
-
-.sidebar-panel#gamepad-panel .panel-close-btn:hover {
-    color: #FF6B00;
-    background: rgba(255, 107, 0, 0.08);
-    border-color: rgba(255, 107, 0, 0.12);
-}
-
-.sidebar-panel#channel-monitor-panel .panel-header {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    backdrop-filter: blur(16px);
-    padding: 10px 12px 8px;
-    border-bottom-color: transparent;
-    background: rgba(251, 252, 253, 0.96);
-}
-
 .sidebar-panel#channel-monitor-panel .panel-content {
     overflow-y: auto;
 }
 
 .sidebar-panel#channel-monitor-panel .settings-panel-content {
-    padding: 8px 12px 12px;
     background: #fbfcfd;
     overflow: visible;
     min-height: 0;
@@ -189,16 +127,4 @@
     min-height: 0;
 }
 
-.sidebar-panel#channel-monitor-panel .panel-title {
-    color: #161922;
-}
 
-.sidebar-panel#channel-monitor-panel .panel-close-btn {
-    color: #7d8694;
-}
-
-.sidebar-panel#channel-monitor-panel .panel-close-btn:hover {
-    color: #1d2430;
-    background: rgba(255, 107, 0, 0.08);
-    border-color: rgba(255, 107, 0, 0.12);
-}

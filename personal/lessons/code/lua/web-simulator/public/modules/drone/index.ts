@@ -30,6 +30,7 @@ export {
     listSceneObjects, selectSceneObjectById, deleteSceneObjectById,
     appendPointToSelectedLinearObject, updateSelectedSceneObject,
     setSceneObjectTransformMode, getSelectedSceneObjectId,
+    clearSceneSelection, rotateSelectedSceneObjectByDegrees, resetSelectedSceneObjectTransform,
     startSelectedLinearObjectEditing, finishSelectedLinearObjectEditing,
     isSelectedLinearObjectEditingActive, getSelectedLinearObjectEditingTargetId
 } from '../scene/objects/object-manager.js';
@@ -262,6 +263,7 @@ export function updateDrone3D(dt: number) {
     }
 
     syncDronePrintBubbles();
+    syncViewportDependentSceneVisuals();
 
     try {
         renderer.render(scene, camera);

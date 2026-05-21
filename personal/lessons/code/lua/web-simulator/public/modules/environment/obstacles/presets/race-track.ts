@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+п»їimport * as THREE from 'three';
 import { createGateMesh, createPylonMesh } from '../competition.js';
 import { createAprilTagMarkerMesh } from '../markers.js';
 import {
@@ -11,7 +11,7 @@ import { createRoadMesh } from '../linear.js';
 import { applyShadows, setCommonMeta } from '../utils.js';
 
 export function createRaceTrackPreset() {
-    const group = setCommonMeta(new THREE.Group(), 'Пресет: гоночная трасса', {
+    const group = setCommonMeta(new THREE.Group(), 'РџСЂРµСЃРµС‚: РіРѕРЅРѕС‡РЅР°СЏ С‚СЂР°СЃСЃР°', {
         collidableRadius: 16,
         presetName: 'race-track'
     });
@@ -78,3 +78,4 @@ export function createRaceTrackPreset() {
     applyShadows(group);
     return group;
 }
+

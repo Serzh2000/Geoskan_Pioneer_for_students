@@ -20,22 +20,22 @@ import {
 
 export function groupObjects() {
     if (multiSelectedObjects.length < 2) {
-        log('Для группировки нужно выбрать хотя бы два объекта (Ctrl+Click)', 'warn');
+        log('Р”Р»СЏ РіСЂСѓРїРїРёСЂРѕРІРєРё РЅСѓР¶РЅРѕ РІС‹Р±СЂР°С‚СЊ С…РѕС‚СЏ Р±С‹ РґРІР° РѕР±СЉРµРєС‚Р° (Ctrl+Click)', 'warn');
         return false;
     }
 
     const group = new THREE.Group();
-    group.name = `Группа (${multiSelectedObjects.length})`;
+    group.name = `Р“СЂСѓРїРїР° (${multiSelectedObjects.length})`;
     group.userData.type = 'group';
     group.userData.draggable = true;
 
-    // Вычисляем центр группы
+    // Р’С‹С‡РёСЃР»СЏРµРј С†РµРЅС‚СЂ РіСЂСѓРїРїС‹
     const center = new THREE.Vector3();
     multiSelectedObjects.forEach(obj => center.add(obj.position));
     center.divideScalar(multiSelectedObjects.length);
     group.position.copy(center);
 
-    // Добавляем объекты в группу
+    // Р”РѕР±Р°РІР»СЏРµРј РѕР±СЉРµРєС‚С‹ РІ РіСЂСѓРїРїСѓ
     multiSelectedObjects.forEach(obj => {
         updateObjectSelectionVisuals(obj, false);
         moveObjectIntoGroupPreservingWorldTransform(obj, group, center);
@@ -46,14 +46,14 @@ export function groupObjects() {
     handleDeselection();
     const viewportCenter = getViewportCenterSelectionPoint();
     handleSelection(group, viewportCenter.x, viewportCenter.y, false);
-    log(`Объекты объединены в группу`, 'success');
+    log(`РћР±СЉРµРєС‚С‹ РѕР±СЉРµРґРёРЅРµРЅС‹ РІ РіСЂСѓРїРїСѓ`, 'success');
     return true;
 }
 
 export function ungroupObject(targetGroup?: THREE.Object3D) {
     const group = targetGroup || selectedObject;
     if (!group || group.userData.type !== 'group') {
-        log('Выбранный объект не является группой', 'warn');
+        log('Р’С‹Р±СЂР°РЅРЅС‹Р№ РѕР±СЉРµРєС‚ РЅРµ СЏРІР»СЏРµС‚СЃСЏ РіСЂСѓРїРїРѕР№', 'warn');
         return false;
     }
 
@@ -64,7 +64,7 @@ export function ungroupObject(targetGroup?: THREE.Object3D) {
 
     group.removeFromParent();
     handleDeselection();
-    log(`Группа расформирована`, 'info');
+    log(`Р“СЂСѓРїРїР° СЂР°СЃС„РѕСЂРјРёСЂРѕРІР°РЅР°`, 'info');
     return true;
 }
 
@@ -94,6 +94,10 @@ export function getSelectedSceneObjectId() {
     return selectedObject ? selectedObject.uuid : null;
 }
 
+export function clearSceneSelection() {
+    handleDeselection();
+}
+
 export function selectSceneObjectById(id: string) {
     const obj = findSceneObjectById(id);
     if (!obj) return false;
@@ -113,6 +117,14 @@ export function setSceneObjectTransformMode(mode: TransformMode, id?: string) {
     return activateTransformMode(mode, target);
 }
 
+export function rotateSelectedSceneObjectByDegrees(axis: RotationAxis, angle: number) {
+    return rotateSelectedObjectByDegrees(axis, angle);
+}
+
+export function resetSelectedSceneObjectTransform() {
+    return resetSelectedObjectToInitialTransform();
+}
+
 export function deleteSceneObjectById(id: string) {
     const obj = findSceneObjectById(id);
     const isDrone = isDroneSceneObject(obj, droneMeshes);
@@ -129,7 +141,7 @@ export function resetDroneToOrigin() {
     const droneState = drones[currentDroneId];
     
     if (simState.running) {
-        log('Нельзя вернуть дрон в начало во время выполнения скрипта', 'warn');
+        log('РќРµР»СЊР·СЏ РІРµСЂРЅСѓС‚СЊ РґСЂРѕРЅ РІ РЅР°С‡Р°Р»Рѕ РІРѕ РІСЂРµРјСЏ РІС‹РїРѕР»РЅРµРЅРёСЏ СЃРєСЂРёРїС‚Р°', 'warn');
         return false;
     }
     
@@ -142,7 +154,7 @@ export function resetDroneToOrigin() {
     droneState.pendingLocalPoint = false;
     currentDrone.position.set(0, 0, 0);
     currentDrone.rotation.set(0, 0, 0, 'ZYX');
-    log(`Дрон ${currentDroneId} возвращен в начало системы координат`, 'success');
+    log(`Р”СЂРѕРЅ ${currentDroneId} РІРѕР·РІСЂР°С‰РµРЅ РІ РЅР°С‡Р°Р»Рѕ СЃРёСЃС‚РµРјС‹ РєРѕРѕСЂРґРёРЅР°С‚`, 'success');
     
     if (selectedObject === currentDrone && transformControl) {
         transformControl.detach();
@@ -161,7 +173,7 @@ export function deleteSelectedObject() {
 
         disposeObjectHierarchyResources(obj);
         obj.removeFromParent();
-        log('Объект удален', 'info');
+        log('РћР±СЉРµРєС‚ СѓРґР°Р»РµРЅ', 'info');
     }
 }
 
@@ -194,7 +206,7 @@ export function duplicateObject() {
         handleDeselection();
         const viewportCenter = getViewportCenterSelectionPoint();
         handleSelection(clone, viewportCenter.x, viewportCenter.y, false, false);
-        log('Объект дублирован', 'success');
+        log('РћР±СЉРµРєС‚ РґСѓР±Р»РёСЂРѕРІР°РЅ', 'success');
     }
 }
 
@@ -215,9 +227,9 @@ export function addObject(
         handleDeselection();
         const viewportCenter = getViewportCenterSelectionPoint();
         handleSelection(obj, viewportCenter.x, viewportCenter.y, false, false);
-        log(`Добавлен объект: ${obj.userData?.type || obj.name}`, 'success');
+        log(`Р”РѕР±Р°РІР»РµРЅ РѕР±СЉРµРєС‚: ${obj.userData?.type || obj.name}`, 'success');
     } else {
-        log(`Не удалось добавить объект типа "${type}"`, 'warn');
+        log(`РќРµ СѓРґР°Р»РѕСЃСЊ РґРѕР±Р°РІРёС‚СЊ РѕР±СЉРµРєС‚ С‚РёРїР° "${type}"`, 'warn');
     }
 }
 
@@ -231,7 +243,7 @@ export function updateSelectedSceneObject(params: { value?: string; markerDictio
             markerDictionary: params.markerDictionary,
             floors: params.floors
         }) || updated;
-    } else if (params.floors !== undefined && selectedObject.userData?.type === 'Многоэтажка') {
+    } else if (params.floors !== undefined && selectedObject.userData?.type === 'РњРЅРѕРіРѕСЌС‚Р°Р¶РєР°') {
         updated = updateSceneObjectValue(selectedObject, {
             floors: params.floors
         }) || updated;
@@ -240,7 +252,7 @@ export function updateSelectedSceneObject(params: { value?: string; markerDictio
     if (params.pointsText !== undefined && selectedObject.userData?.supportsPoints) {
         const points = parsePointsText(params.pointsText);
         if (points.length < 2) {
-            log('Для дороги или рельс нужно минимум 2 точки', 'warn');
+            log('Р”Р»СЏ РґРѕСЂРѕРіРё РёР»Рё СЂРµР»СЊСЃ РЅСѓР¶РЅРѕ РјРёРЅРёРјСѓРј 2 С‚РѕС‡РєРё', 'warn');
             return false;
         }
         updated = updateSceneObjectPoints(selectedObject, points) || updated;
@@ -249,7 +261,7 @@ export function updateSelectedSceneObject(params: { value?: string; markerDictio
     if (updated) {
         const viewportCenter = getViewportCenterSelectionPoint();
         handleSelection(selectedObject, viewportCenter.x, viewportCenter.y, false);
-        log('Параметры объекта обновлены', 'success');
+        log('РџР°СЂР°РјРµС‚СЂС‹ РѕР±СЉРµРєС‚Р° РѕР±РЅРѕРІР»РµРЅС‹', 'success');
     }
 
     return updated;
@@ -277,7 +289,8 @@ export function appendPointToSelectedLinearObject() {
     if (ok) {
         const viewportCenter = getViewportCenterSelectionPoint();
         handleSelection(selectedObject, viewportCenter.x, viewportCenter.y, false);
-        log('В маршрут добавлена новая точка', 'success');
+        log('Р’ РјР°СЂС€СЂСѓС‚ РґРѕР±Р°РІР»РµРЅР° РЅРѕРІР°СЏ С‚РѕС‡РєР°', 'success');
     }
     return ok;
 }
+

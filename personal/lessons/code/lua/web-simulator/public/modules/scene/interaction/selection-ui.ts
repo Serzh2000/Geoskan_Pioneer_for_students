@@ -6,17 +6,13 @@ import {
     transformControl
 } from '../core/scene-init.js';
 import { simState } from '../../core/state.js';
-import { handleDeselection, deselectObject, exitTransformMode } from './selection.js';
+import { deselectObject, exitTransformMode } from './selection.js';
 import { updateTransformModeDecorations } from './transform.js';
 import { showGroundPoint } from '../core/ground-feedback.js';
 import { deleteSelectedObject, duplicateObject, resetDroneToOrigin } from '../objects/object-manager.js';
 import {
     activateTransformMode,
-    getRotationStepDegrees,
-    rememberSelectedObjectInitialTransform,
-    resetSelectedObjectToInitialTransform,
-    rotateSelectedObjectByDegrees,
-    setRotationStepDegrees
+    rememberSelectedObjectInitialTransform
 } from '../objects/object-transform.js';
 import { isTransformableObject } from '../objects/object-catalog.js';
 import { getObjectDisplayName, isDroneObject, traceClick } from './input-helpers.js';
@@ -41,37 +37,17 @@ type ObjectContextMenuConfig = {
     actions?: ObjectContextMenuAction[];
 };
 
-function getTransformToolbarTitle(obj: THREE.Object3D) {
-    const rawType = String(obj.userData?.type || obj.userData?.sceneType || obj.name || obj.type || '').trim().toLowerCase();
-    if (isDroneObject(obj) || rawType.includes('drone')) return 'Дрон (свойства)';
-    if (rawType.includes('gate') || rawType.includes('ворота')) return 'Ворота (свойства)';
-    if (rawType.includes('group') || rawType.includes('группа')) return 'Группа (свойства)';
-    if (rawType.includes('ground') || rawType.includes('земля')) return 'Земля (свойства)';
-    return `${getObjectDisplayName(obj).trim() || 'Объект'} (свойства)`;
-}
-
 function showTransformUi(obj: THREE.Object3D, preferredMode?: 'translate' | 'rotate' | 'scale') {
     if (!transformControl || !isTransformableObject(obj) || simState.running) return;
     const activeMode = preferredMode || 'translate';
     traceClick(`activate gizmo mode=${activeMode} for ${getObjectDisplayName(obj)}`);
     activateTransformMode(activeMode, obj);
     if (controls) controls.enabled = (window as any).cameraMode === 'free' && !(window as any).isTransforming;
-    if (!(window as any).showGizmoToolbar) return;
-
-    (window as any).showGizmoToolbar(
-        getTransformToolbarTitle(obj),
-        transformControl?.getMode?.() || activeMode,
-        getRotationStepDegrees(),
-        (mode: string) => {
-            const target = selectedObject || obj;
-            if (!target || !target.parent) return;
-            showTransformUi(target, mode as 'translate' | 'rotate' | 'scale');
-        },
-        (step: number) => setRotationStepDegrees(step),
-        (axis: 'x' | 'y' | 'z', direction: 1 | -1) => rotateSelectedObjectByDegrees(axis, direction * getRotationStepDegrees()),
-        () => resetSelectedObjectToInitialTransform(),
-        () => handleDeselection()
-    );
+    // The inspector already exposes transform mode switching and rotation presets,
+    // so the floating gizmo toolbar only duplicates controls and obscures the scene.
+    if ((window as any).hideGizmoToolbar) {
+        (window as any).hideGizmoToolbar();
+    }
 }
 
 function hideTransformUiPreserveSelection() {

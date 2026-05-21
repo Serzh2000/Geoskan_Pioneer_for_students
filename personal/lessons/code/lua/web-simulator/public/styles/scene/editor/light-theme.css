@@ -1,6 +1,6 @@
 /* Light IDE overrides for the main simulator shell */
 .panel-header--editor {
-    padding: 18px 20px;
+    padding: 18px 20px 16px;
     background: linear-gradient(180deg, #ffffff 0%, #f8f8f9 100%);
 }
 

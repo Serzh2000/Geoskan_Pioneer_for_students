@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+ο»Ώimport * as THREE from 'three';
 import {
     createAprilTagMarkerMapMesh,
     createArucoMarkerMapMesh
@@ -20,7 +20,7 @@ import {
 import { applyShadows, setCommonMeta } from '../utils.js';
 
 export function createGeoskanArenaPreset() {
-    const group = setCommonMeta(new THREE.Group(), 'Οπερες: Γεξρκΰν ΐπενΰ', {
+    const group = setCommonMeta(new THREE.Group(), 'ΠΡ€ΠµΡΠµΡ‚: Π“ΠµΠΎΡΠΊΠ°Π½ ΠΡ€ΠµΠ½Π°', {
         collidableRadius: 18,
         presetName: 'geoskan-arena'
     });
@@ -137,3 +137,4 @@ export function createGeoskanArenaPreset() {
     applyShadows(group);
     return group;
 }
+

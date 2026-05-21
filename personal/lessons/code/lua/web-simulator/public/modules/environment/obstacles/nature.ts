@@ -24,15 +24,13 @@ function createGrassClump(material: THREE.Material) {
         const dist = Math.random() * 0.04;
         blade.position.set(Math.cos(angle) * dist, Math.sin(angle) * dist, 0);
         
-        // Вращаем так, чтобы травинки росли из центра и отклонялись наружу
+        // Оставляем травинки статичными, без дополнительного вращения вокруг осей.
         blade.rotation.order = 'ZYX';
-        blade.rotation.z = angle; // Направляем "лицом" от центра пучка
+        blade.rotation.z = 0;
         
         const lean = 0.1 + Math.random() * 0.35; // Угол отклонения
         blade.rotation.x = Math.PI / 2 + lean; // Поднимаем вертикально (+Z) и наклоняем
-        
-        // Добавляем случайное скручивание вокруг своей оси для естественности
-        blade.rotation.y = (Math.random() - 0.5) * 0.6;
+        blade.rotation.y = 0;
 
         group.add(blade);
     }
@@ -136,7 +134,7 @@ export function createHillMesh() {
         const clump = createGrassClump(mat);
         clump.position.set(x, y, z);
         clump.scale.setScalar(scale);
-        clump.rotation.z = seededRandom(i * 10 + 4) * Math.PI * 2;
+        clump.rotation.z = 0;
         
         group.add(clump);
     }

@@ -1,4 +1,4 @@
-import { apiDocs, evConstants, pythonApiDocs } from '../../docs/api-docs.js';
+п»їimport { apiDocs, evConstants, pythonApiDocs } from '../../docs/api-docs.js';
 
 let completionProvidersRegistered = false;
 
@@ -105,7 +105,7 @@ export function setupCompletionProvider(monaco: any) {
         triggerCharacters: ['.', ':']
     });
 
-    // Python completion: подсказываем методы Pioneer/Camera при вводе после точки.
+    // Python completion: РїРѕРґСЃРєР°Р·С‹РІР°РµРј РјРµС‚РѕРґС‹ Pioneer/Camera РїСЂРё РІРІРѕРґРµ РїРѕСЃР»Рµ С‚РѕС‡РєРё.
     monaco.languages.registerCompletionItemProvider('python', {
         provideCompletionItems: function(model: any, position: any) {
             const word = model.getWordUntilPosition(position);
@@ -128,7 +128,7 @@ export function setupCompletionProvider(monaco: any) {
                     return { method, key, doc };
                 });
 
-            // Если курсор после точки (пример: "pioneer_mini.")
+            // Р•СЃР»Рё РєСѓСЂСЃРѕСЂ РїРѕСЃР»Рµ С‚РѕС‡РєРё (РїСЂРёРјРµСЂ: "pioneer_mini.")
             if (normalized.endsWith('.')) {
                 methodDocs.forEach(({ method, doc }) => {
                     suggestions.push({
@@ -141,7 +141,7 @@ export function setupCompletionProvider(monaco: any) {
                     });
                 });
             } else {
-                // Предложим ключевые классы.
+                // РџСЂРµРґР»РѕР¶РёРј РєР»СЋС‡РµРІС‹Рµ РєР»Р°СЃСЃС‹.
                 ['Pioneer', 'Camera', 'VideoStream', 'time'].forEach((cls) => {
                     suggestions.push({
                         label: cls,
@@ -152,7 +152,7 @@ export function setupCompletionProvider(monaco: any) {
                     });
                 });
 
-                // И чуть-чуть подсказок для конструктора/часто используемых функций.
+                // Р С‡СѓС‚СЊ-С‡СѓС‚СЊ РїРѕРґСЃРєР°Р·РѕРє РґР»СЏ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂР°/С‡Р°СЃС‚Рѕ РёСЃРїРѕР»СЊР·СѓРµРјС‹С… С„СѓРЅРєС†РёР№.
                 if (normalized.length === 0) {
                     suggestions.push({
                         label: 'pioneer',
@@ -169,3 +169,4 @@ export function setupCompletionProvider(monaco: any) {
         triggerCharacters: ['.']
     });
 }
+

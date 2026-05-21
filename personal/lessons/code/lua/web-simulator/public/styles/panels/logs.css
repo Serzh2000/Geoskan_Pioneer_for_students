@@ -3,11 +3,6 @@
  * Файл выделен из `public/style.css` при декомпозиции общего CSS.
  */
 /* LOGS PANEL POLISH */
-.panel-header--logs {
-    padding: 18px 20px 16px;
-    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
-}
-
 .panel-header__lead--logs {
     display: flex;
     flex-direction: column;
@@ -31,7 +26,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    padding: 18px;
+    padding: 16px;
     background: transparent;
 }
 
@@ -257,4 +252,3 @@
         grid-column: 2;
     }
 }
-

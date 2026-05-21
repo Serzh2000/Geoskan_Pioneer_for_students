@@ -19,45 +19,60 @@
                                     </div>
                                 </div>
                                 <div class="scene-form-grid">
-                                    <label class="scene-field">
-                                        <span>Тип объекта</span>
-                                        <select id="scene-add-type">
-                                            <option value="gate">Ворота</option>
-                                            <option value="pylon">Пилон</option>
-                                            <option value="flag">Флаг</option>
-                                            <option value="building">Многоэтажка</option>
-                                            <option value="aruco">ArUco маркер</option>
-                                            <option value="aruco-map">ArUco карта</option>
-                                            <option value="apriltag">AprilTag маркер</option>
-                                            <option value="apriltag-map">AprilTag карта</option>
-                                            <option value="road">Автомобильная дорога</option>
-                                            <option value="rail">Железнодорожные пути</option>
-                                            <option value="hill">Холм</option>
-                                            <option value="arena-hills">Группа холмов</option>
-                                            <option value="tree">Ель</option>
-                                            <option value="forest-patch">Лесной массив</option>
-                                            <option value="settlement">Макет поселения</option>
-                                            <option value="transport">Транспорт</option>
-                                            <option value="cargo">Грузик</option>
-                                            <option value="start-position">Стартовая позиция</option>
-                                            <option value="heliport">Хелипорт</option>
-                                            <option value="charge-station">Станция заряда</option>
-                                            <option value="locus-beacon">Локус-маяк</option>
-                                            <option value="light-tower">Световая мачта</option>
-                                            <option value="video-tower">Видеомачта</option>
-                                            <option value="control-station">Пульт полигона</option>
-                                            <option value="arena-space">Арена с сеткой</option>
-                                            <option value="pad-h">Площадка H</option>
-                                            <option value="pad-charge">Площадка ⚡</option>
-                                        </select>
-                                    </label>
-                                    <label class="scene-field">
+                                    <div id="scene-add-type-picker" class="scene-type-picker">
+                                        <label class="scene-field">
+                                            <span>Компонент сцены</span>
+                                            <button id="scene-add-type-open-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral scene-btn--catalog">
+                                                <span>Открыть каталог компонентов</span>
+                                            </button>
+                                            <div class="scene-type-picker__selection">
+                                                <span class="scene-type-picker__selection-label">Текущий компонент</span>
+                                                <div id="scene-add-type-selection-card" class="scene-type-picker__selection-card">
+                                                    <span id="scene-add-type-current-icon" class="scene-type-picker__selection-icon" aria-hidden="true"></span>
+                                                    <span class="scene-type-picker__selection-content">
+                                                        <strong id="scene-add-type-current">Ворота</strong>
+                                                        <span id="scene-add-type-current-text" class="scene-type-picker__selection-text">Ориентир и пролётная рамка для трасс и учебных миссий.</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <select id="scene-add-type" class="scene-type-select__native" tabindex="-1" aria-hidden="true">
+                                                <option value="gate">Ворота</option>
+                                                <option value="pylon">Пилон</option>
+                                                <option value="flag">Флаг</option>
+                                                <option value="building">Многоэтажка</option>
+                                                <option value="aruco">ArUco маркер</option>
+                                                <option value="aruco-map">ArUco карта</option>
+                                                <option value="apriltag">AprilTag маркер</option>
+                                                <option value="apriltag-map">AprilTag карта</option>
+                                                <option value="road">Автомобильная дорога</option>
+                                                <option value="rail">Железнодорожные пути</option>
+                                                <option value="hill">Холм</option>
+                                                <option value="arena-hills">Группа холмов</option>
+                                                <option value="tree">Ель</option>
+                                                <option value="forest-patch">Лесной массив</option>
+                                                <option value="settlement">Макет поселения</option>
+                                                <option value="transport">Транспорт</option>
+                                                <option value="cargo">Грузик</option>
+                                                <option value="start-position">Стартовая позиция</option>
+                                                <option value="heliport">Хелипорт</option>
+                                                <option value="charge-station">Станция заряда</option>
+                                                <option value="locus-beacon">Локус-маяк</option>
+                                                <option value="light-tower">Световая мачта</option>
+                                                <option value="video-tower">Видеомачта</option>
+                                                <option value="control-station">Пульт полигона</option>
+                                                <option value="arena-space">Арена с сеткой</option>
+                                                <option value="pad-h">Площадка H</option>
+                                                <option value="pad-charge">Площадка ⚡</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <label id="scene-add-dictionary-wrap" class="scene-field">
                                         <span>Словарь</span>
                                         <select id="scene-add-dictionary">
                                             <option value="">Выберите словарь</option>
                                         </select>
                                     </label>
-                                    <label class="scene-field">
+                                    <label id="scene-add-value-wrap" class="scene-field">
                                         <span>Значение</span>
                                         <input id="scene-add-value" type="text" placeholder="Значение маркера">
                                     </label>
@@ -181,7 +196,7 @@
                                     </div>
                                 </div>
 
-                                <label class="scene-field">
+                                <label id="scene-add-points-wrap" class="scene-field">
                                     <span>Точки маршрута</span>
                                     <textarea id="scene-add-points" rows="2" placeholder="Каждая строка: X, Y, Z"></textarea>
                                 </label>
@@ -206,3 +221,47 @@
                                 </div>
                             </div>
                         </section>
+                        <div id="scene-type-modal" class="scene-type-modal" aria-hidden="true">
+                            <div class="scene-type-modal__backdrop" data-scene-type-modal-close="true"></div>
+                            <div class="scene-type-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="scene-type-modal-title">
+                                <div class="scene-type-modal__header">
+                                    <div>
+                                        <div id="scene-type-modal-title" class="scene-type-modal__title">Каталог компонентов</div>
+                                        <div class="scene-type-modal__subtitle">Выберите объект сцены из каталога и перелистывайте страницы влево или вправо.</div>
+                                    </div>
+                                    <button id="scene-type-modal-close-btn" type="button" class="scene-type-modal__close" aria-label="Закрыть каталог">×</button>
+                                </div>
+                                <div class="scene-type-modal__layout">
+                                    <div id="scene-type-modal-preview" class="scene-type-modal__preview" aria-hidden="true">
+                                        <div class="scene-type-modal__preview-meta">
+                                            <div class="scene-type-modal__preview-head">
+                                                <span class="scene-type-modal__preview-eyebrow">3D Preview</span>
+                                                <span class="scene-type-modal__preview-status">Live</span>
+                                            </div>
+                                            <div id="scene-type-modal-preview-title" class="scene-type-modal__preview-title">Ворота</div>
+                                            <div id="scene-type-modal-preview-text" class="scene-type-modal__preview-text">Ориентир и пролётная рамка для трасс и учебных миссий.</div>
+                                        </div>
+                                        <div id="scene-type-modal-preview-viewport" class="scene-type-modal__preview-viewport"></div>
+                                    </div>
+                                    <div class="scene-type-modal__catalog">
+                                        <div class="scene-type-modal__toolbar">
+                                            <button id="scene-type-modal-prev-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral">← Назад</button>
+                                            <div id="scene-type-modal-page-indicator" class="scene-type-modal__page-indicator">1 / 1</div>
+                                            <button id="scene-type-modal-next-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral">Вперёд →</button>
+                                        </div>
+                                        <div id="scene-type-modal-grid" class="scene-type-modal__grid"></div>
+                                        <div class="scene-type-modal__selection">
+                                            <div id="scene-type-modal-selection-card" class="scene-type-modal__selection-card">
+                                                <span id="scene-type-modal-selection-icon" class="scene-type-modal__selection-icon" aria-hidden="true"></span>
+                                                <span class="scene-type-modal__selection-content">
+                                                    <span class="scene-type-modal__selection-label">Выбор каталога</span>
+                                                    <strong id="scene-type-modal-selection-title" class="scene-type-modal__selection-title">Ворота</strong>
+                                                    <span id="scene-type-modal-selection-text" class="scene-type-modal__selection-text">Ориентир и пролётная рамка для трасс и учебных миссий.</span>
+                                                </span>
+                                            </div>
+                                            <button id="scene-type-modal-apply-btn" type="button" class="btn-primary scene-btn scene-btn--primary">Подтвердить выбор</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>

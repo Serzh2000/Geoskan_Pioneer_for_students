@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+п»ї/* eslint-disable @typescript-eslint/no-explicit-any */
 import { drones } from '../core/state.js';
 import {
     applyGoToLocalPointRequest,
@@ -47,7 +47,7 @@ export function installJsRuntimeAPI() {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
         if (d.pos.z > AIRBORNE_ALTITUDE_EPSILON) {
-            beginDisarmedFall(d, id, 'pioneer.disarm() в воздухе');
+            beginDisarmedFall(d, id, 'pioneer.disarm() РІ РІРѕР·РґСѓС…Рµ');
         } else {
             setDroneFsmState(d, 'IDLE');
             d.pendingLocalPoint = false;
@@ -206,3 +206,4 @@ export function installJsRuntimeAPI() {
         return getDroneCameraCvFrame(id);
     };
 }
+

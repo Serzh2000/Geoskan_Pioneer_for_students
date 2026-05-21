@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+п»ї/* eslint-disable @typescript-eslint/no-explicit-any */
 import { envGroup } from '../environment/index.js';
 import { getDroneOrDefault } from './runtime-shared.js';
 
-const VIDEO_TOWER_TYPE = 'Видеомачта';
+const VIDEO_TOWER_TYPE = 'Р’РёРґРµРѕРјР°С‡С‚Р°';
 const DEFAULT_VIDEO_TOWER_CONNECT_RADIUS = 8;
 const VIDEO_TOWER_STREAM_MAX_DISTANCE = 12;
 
@@ -144,3 +144,4 @@ export function getDroneCameraCvFrame(id: string) {
         ]
     };
 }
+

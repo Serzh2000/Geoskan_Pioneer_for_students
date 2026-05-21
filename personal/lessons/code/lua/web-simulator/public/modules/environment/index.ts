@@ -47,18 +47,7 @@ import {
 
 export let envGroup: THREE.Group;
 
-export function setupEnvironment(scene: THREE.Scene) {
-    setupLights(scene);
-
-    envGroup = new THREE.Group();
-    scene.add(envGroup);
-
-    createGround(scene, envGroup);
-    createObstacles(envGroup);
-}
-
-export function addObjectToScene(type: string, camera?: THREE.Camera | null, options: SceneObjectOptions = {}) {
-    if (!envGroup) return null;
+export function createSceneObjectByType(type: string, options: SceneObjectOptions = {}) {
     let obj: THREE.Object3D | undefined;
     if (type === 'gate') obj = createGateMesh();
     else if (type === 'pylon') obj = createPylonMesh();
@@ -90,6 +79,22 @@ export function addObjectToScene(type: string, camera?: THREE.Camera | null, opt
     else if (type === 'preset-race-track') obj = createRaceTrackPreset();
     else if (type === 'preset-residential') obj = createResidentialPreset();
     else if (type === 'preset-geoskan-arena') obj = createGeoskanArenaPreset();
+    return obj || null;
+}
+
+export function setupEnvironment(scene: THREE.Scene) {
+    setupLights(scene);
+
+    envGroup = new THREE.Group();
+    scene.add(envGroup);
+
+    createGround(scene, envGroup);
+    createObstacles(envGroup);
+}
+
+export function addObjectToScene(type: string, camera?: THREE.Camera | null, options: SceneObjectOptions = {}) {
+    if (!envGroup) return null;
+    const obj = createSceneObjectByType(type, options);
     
     if (obj) {
         let pos = new THREE.Vector3(0, 0, 0);

@@ -2,6 +2,7 @@ import type { UICallbacks } from '../index.js';
 import { registerSceneManagerBindings } from './bindings.js';
 import { getSceneManagerDomRefs } from './dom.js';
 import { renderSceneManager } from './render.js';
+import { initSceneTypePreview } from './type-preview.js';
 import { type TransformMode } from './types.js';
 import {
     createSceneManagerViewState,
@@ -14,7 +15,11 @@ export function initSceneManager(callbacks: UICallbacks) {
     if (!callbacks.sceneManager) return;
 
     const elements = getSceneManagerDomRefs();
+    if (elements.addTypeModalEl && elements.addTypeModalEl.parentElement !== document.body) {
+        document.body.appendChild(elements.addTypeModalEl);
+    }
     const viewState = createSceneManagerViewState();
+    const typePreview = initSceneTypePreview(elements);
 
     const render = () => {
         const previousSelectedId = viewState.lastSelectedId;
@@ -36,6 +41,7 @@ export function initSceneManager(callbacks: UICallbacks) {
         callbacks,
         elements,
         render,
+        typePreview,
         setActiveTab: (tab) => {
             viewState.activeTab = tab;
             syncTabVisibility(elements, viewState.activeTab);

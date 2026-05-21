@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+п»їimport * as THREE from 'three';
 import type { ScenePathPoint } from '../../environment/obstacles.js';
 
 const groundPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -74,9 +74,9 @@ export function setLinearEditingCoordsHint(point: ScenePathPoint | null, snapAxe
         return;
     }
 
-    const snappedText = snapAxes.length ? ` | прилипание: ${snapAxes.join(', ')}` : '';
+    const snappedText = snapAxes.length ? ` | РїСЂРёР»РёРїР°РЅРёРµ: ${snapAxes.join(', ')}` : '';
     coordsEl.textContent =
-        `Курсор: ${point.x.toFixed(2)}, ${point.y.toFixed(2)}, ${point.z.toFixed(2)}${snappedText}`;
+        `РљСѓСЂСЃРѕСЂ: ${point.x.toFixed(2)}, ${point.y.toFixed(2)}, ${point.z.toFixed(2)}${snappedText}`;
     coordsEl.style.display = 'block';
 }
 
@@ -185,3 +185,4 @@ export function getLinearEditingHoverPointFromEvent(
         snapAxes: snapped.snapAxes
     };
 }
+

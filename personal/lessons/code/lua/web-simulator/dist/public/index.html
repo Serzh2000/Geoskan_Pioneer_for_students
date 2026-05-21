@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Pioneer Lua Web Simulator</title>
-    <link rel="icon" href="data:,">
+    <link rel="icon" href="data:,">
     <!-- Three.js and modules loaded via Vite -->
     <!-- Fengari for Lua in browser -->
     <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
-  <script type="module" crossorigin src="/assets/index-BkFYDbdu.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-DRQs44w2.css">
+  <script type="module" crossorigin src="/assets/index-BsBbrgXj.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-C5JRpAAd.css">
 </head>
 <body>
             <header class="header">
@@ -205,35 +205,16 @@
                 </div>
             </div>
 
-                        <div id="manager-panel" class="sidebar-panel">
+            ﻿            <div id="manager-panel" class="sidebar-panel">
                 <div class="panel-header">
                     <span class="panel-title">Менеджер сцены</span>
-                    <button class="panel-close-btn" onclick="closePanel()">✕</button>
+                    <button class="panel-close-btn" onclick="closePanel()">?</button>
                 </div>
                 <div class="panel-content panel-content--scene-manager">
                     <div class="scene-manager">
                         <div class="scene-manager-tabs" role="tablist" aria-label="Режим панели менеджера сцены">
-                            <button id="scene-tab-hierarchy" class="scene-manager-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="scene-panel-hierarchy">
-                                <span class="scene-manager-tab__icon" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 4.5 18.5 8 12 11.5 5.5 8 12 4.5Z"></path>
-                                        <path d="M5.5 8v8L12 19.5l6.5-3.5V8"></path>
-                                        <path d="M12 11.5v8"></path>
-                                    </svg>
-                                </span>
-                                <span>Иерархия</span>
-                            </button>
-                            <button id="scene-tab-inspector" class="scene-manager-tab" type="button" role="tab" aria-selected="false" aria-controls="scene-panel-inspector">
-                                <span class="scene-manager-tab__icon" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="11" cy="11" r="5.5"></circle>
-                                        <path d="m15 15 4 4"></path>
-                                        <path d="M11 8.8v2.5"></path>
-                                        <circle cx="11" cy="14.2" r=".75" fill="currentColor" stroke="none"></circle>
-                                    </svg>
-                                </span>
-                                <span>Инспектор</span>
-                            </button>
+                            <button id="scene-tab-hierarchy" class="scene-manager-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="scene-panel-hierarchy">Иерархия</button>
+                            <button id="scene-tab-inspector" class="scene-manager-tab" type="button" role="tab" aria-selected="false" aria-controls="scene-panel-inspector">Инспектор</button>
                         </div>
 
                                                 <section id="scene-panel-hierarchy" class="scene-panel-view is-active" role="tabpanel" aria-labelledby="scene-tab-hierarchy">
@@ -257,45 +238,60 @@
                                     </div>
                                 </div>
                                 <div class="scene-form-grid">
-                                    <label class="scene-field">
-                                        <span>Тип объекта</span>
-                                        <select id="scene-add-type">
-                                            <option value="gate">Ворота</option>
-                                            <option value="pylon">Пилон</option>
-                                            <option value="flag">Флаг</option>
-                                            <option value="building">Многоэтажка</option>
-                                            <option value="aruco">ArUco маркер</option>
-                                            <option value="aruco-map">ArUco карта</option>
-                                            <option value="apriltag">AprilTag маркер</option>
-                                            <option value="apriltag-map">AprilTag карта</option>
-                                            <option value="road">Автомобильная дорога</option>
-                                            <option value="rail">Железнодорожные пути</option>
-                                            <option value="hill">Холм</option>
-                                            <option value="arena-hills">Группа холмов</option>
-                                            <option value="tree">Ель</option>
-                                            <option value="forest-patch">Лесной массив</option>
-                                            <option value="settlement">Макет поселения</option>
-                                            <option value="transport">Транспорт</option>
-                                            <option value="cargo">Грузик</option>
-                                            <option value="start-position">Стартовая позиция</option>
-                                            <option value="heliport">Хелипорт</option>
-                                            <option value="charge-station">Станция заряда</option>
-                                            <option value="locus-beacon">Локус-маяк</option>
-                                            <option value="light-tower">Световая мачта</option>
-                                            <option value="video-tower">Видеомачта</option>
-                                            <option value="control-station">Пульт полигона</option>
-                                            <option value="arena-space">Арена с сеткой</option>
-                                            <option value="pad-h">Площадка H</option>
-                                            <option value="pad-charge">Площадка ⚡</option>
-                                        </select>
-                                    </label>
-                                    <label class="scene-field">
+                                    <div id="scene-add-type-picker" class="scene-type-picker">
+                                        <label class="scene-field">
+                                            <span>Компонент сцены</span>
+                                            <button id="scene-add-type-open-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral scene-btn--catalog">
+                                                <span>Открыть каталог компонентов</span>
+                                            </button>
+                                            <div class="scene-type-picker__selection">
+                                                <span class="scene-type-picker__selection-label">Текущий компонент</span>
+                                                <div id="scene-add-type-selection-card" class="scene-type-picker__selection-card">
+                                                    <span id="scene-add-type-current-icon" class="scene-type-picker__selection-icon" aria-hidden="true"></span>
+                                                    <span class="scene-type-picker__selection-content">
+                                                        <strong id="scene-add-type-current">Ворота</strong>
+                                                        <span id="scene-add-type-current-text" class="scene-type-picker__selection-text">Ориентир и пролётная рамка для трасс и учебных миссий.</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <select id="scene-add-type" class="scene-type-select__native" tabindex="-1" aria-hidden="true">
+                                                <option value="gate">Ворота</option>
+                                                <option value="pylon">Пилон</option>
+                                                <option value="flag">Флаг</option>
+                                                <option value="building">Многоэтажка</option>
+                                                <option value="aruco">ArUco маркер</option>
+                                                <option value="aruco-map">ArUco карта</option>
+                                                <option value="apriltag">AprilTag маркер</option>
+                                                <option value="apriltag-map">AprilTag карта</option>
+                                                <option value="road">Автомобильная дорога</option>
+                                                <option value="rail">Железнодорожные пути</option>
+                                                <option value="hill">Холм</option>
+                                                <option value="arena-hills">Группа холмов</option>
+                                                <option value="tree">Ель</option>
+                                                <option value="forest-patch">Лесной массив</option>
+                                                <option value="settlement">Макет поселения</option>
+                                                <option value="transport">Транспорт</option>
+                                                <option value="cargo">Грузик</option>
+                                                <option value="start-position">Стартовая позиция</option>
+                                                <option value="heliport">Хелипорт</option>
+                                                <option value="charge-station">Станция заряда</option>
+                                                <option value="locus-beacon">Локус-маяк</option>
+                                                <option value="light-tower">Световая мачта</option>
+                                                <option value="video-tower">Видеомачта</option>
+                                                <option value="control-station">Пульт полигона</option>
+                                                <option value="arena-space">Арена с сеткой</option>
+                                                <option value="pad-h">Площадка H</option>
+                                                <option value="pad-charge">Площадка ⚡</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <label id="scene-add-dictionary-wrap" class="scene-field">
                                         <span>Словарь</span>
                                         <select id="scene-add-dictionary">
                                             <option value="">Выберите словарь</option>
                                         </select>
                                     </label>
-                                    <label class="scene-field">
+                                    <label id="scene-add-value-wrap" class="scene-field">
                                         <span>Значение</span>
                                         <input id="scene-add-value" type="text" placeholder="Значение маркера">
                                     </label>
@@ -419,7 +415,7 @@
                                     </div>
                                 </div>
 
-                                <label class="scene-field">
+                                <label id="scene-add-points-wrap" class="scene-field">
                                     <span>Точки маршрута</span>
                                     <textarea id="scene-add-points" rows="2" placeholder="Каждая строка: X, Y, Z"></textarea>
                                 </label>
@@ -444,6 +440,51 @@
                                 </div>
                             </div>
                         </section>
+                        <div id="scene-type-modal" class="scene-type-modal" aria-hidden="true">
+                            <div class="scene-type-modal__backdrop" data-scene-type-modal-close="true"></div>
+                            <div class="scene-type-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="scene-type-modal-title">
+                                <div class="scene-type-modal__header">
+                                    <div>
+                                        <div id="scene-type-modal-title" class="scene-type-modal__title">Каталог компонентов</div>
+                                        <div class="scene-type-modal__subtitle">Выберите объект сцены из каталога и перелистывайте страницы влево или вправо.</div>
+                                    </div>
+                                    <button id="scene-type-modal-close-btn" type="button" class="scene-type-modal__close" aria-label="Закрыть каталог">×</button>
+                                </div>
+                                <div class="scene-type-modal__layout">
+                                    <div id="scene-type-modal-preview" class="scene-type-modal__preview" aria-hidden="true">
+                                        <div class="scene-type-modal__preview-meta">
+                                            <div class="scene-type-modal__preview-head">
+                                                <span class="scene-type-modal__preview-eyebrow">3D Preview</span>
+                                                <span class="scene-type-modal__preview-status">Live</span>
+                                            </div>
+                                            <div id="scene-type-modal-preview-title" class="scene-type-modal__preview-title">Ворота</div>
+                                            <div id="scene-type-modal-preview-text" class="scene-type-modal__preview-text">Ориентир и пролётная рамка для трасс и учебных миссий.</div>
+                                        </div>
+                                        <div id="scene-type-modal-preview-viewport" class="scene-type-modal__preview-viewport"></div>
+                                    </div>
+                                    <div class="scene-type-modal__catalog">
+                                        <div class="scene-type-modal__toolbar">
+                                            <button id="scene-type-modal-prev-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral">← Назад</button>
+                                            <div id="scene-type-modal-page-indicator" class="scene-type-modal__page-indicator">1 / 1</div>
+                                            <button id="scene-type-modal-next-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral">Вперёд →</button>
+                                        </div>
+                                        <div id="scene-type-modal-grid" class="scene-type-modal__grid"></div>
+                                        <div class="scene-type-modal__selection">
+                                            <div id="scene-type-modal-selection-card" class="scene-type-modal__selection-card">
+                                                <span id="scene-type-modal-selection-icon" class="scene-type-modal__selection-icon" aria-hidden="true"></span>
+                                                <span class="scene-type-modal__selection-content">
+                                                    <span class="scene-type-modal__selection-label">Выбор каталога</span>
+                                                    <strong id="scene-type-modal-selection-title" class="scene-type-modal__selection-title">Ворота</strong>
+                                                    <span id="scene-type-modal-selection-text" class="scene-type-modal__selection-text">Ориентир и пролётная рамка для трасс и учебных миссий.</span>
+                                                </span>
+                                            </div>
+                                            <button id="scene-type-modal-apply-btn" type="button" class="btn-primary scene-btn scene-btn--primary">Подтвердить выбор</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
 
                                                 <section id="scene-panel-inspector" class="scene-panel-view" role="tabpanel" aria-labelledby="scene-tab-inspector" hidden>
                             <div class="scene-panel-card">
@@ -464,13 +505,13 @@
                                     </div>
                                 </div>
                                 <div class="scene-form-grid">
-                                    <label class="scene-field">
+                                    <label id="scene-selected-dictionary-wrap" class="scene-field">
                                         <span>Словарь маркера</span>
                                         <select id="scene-selected-dictionary">
                                             <option value="">Словарь маркера</option>
                                         </select>
                                     </label>
-                                    <label class="scene-field">
+                                    <label id="scene-selected-value-wrap" class="scene-field">
                                         <span>Значение</span>
                                         <input id="scene-selected-value" type="text" placeholder="Значение объекта">
                                     </label>
@@ -524,7 +565,7 @@
                                     <textarea id="scene-selected-building-incidents" rows="4" placeholder="Список сценариев для окон"></textarea>
                                 </div>
 
-                                <label class="scene-field">
+                                <label id="scene-selected-points-wrap" class="scene-field">
                                     <span>Точки маршрута</span>
                                     <textarea id="scene-selected-points" rows="2" placeholder="Точки маршрута (для дорог)"></textarea>
                                 </label>
@@ -536,88 +577,89 @@
                                 <button id="scene-visual-edit-btn" class="btn-secondary scene-btn scene-btn--neutral">Проложить</button>
                             </div>
 
-                            <div class="scene-panel-card scene-panel-card--transform">
+                            <div class="scene-panel-card">
                                 <div class="scene-panel-card__header">
                                     <div>
                                         <div class="scene-panel-card__title">Трансформация</div>
-                                        <p class="scene-panel-card__description">Единая точка управления перемещением, поворотом и масштабом выбранного объекта.</p>
+                                        <p class="scene-panel-card__description">Выберите режим редактирования и отслеживайте текущие координаты объекта.</p>
                                     </div>
                                 </div>
-                                <div class="scene-transform-modes" role="tablist" aria-label="Режим трансформации">
-                                    <button id="scene-mode-translate" class="scene-segmented-btn" type="button" role="tab" aria-selected="true">Перемещение</button>
-                                    <button id="scene-mode-rotate" class="scene-segmented-btn" type="button" role="tab" aria-selected="false">Поворот</button>
-                                    <button id="scene-mode-scale" class="scene-segmented-btn" type="button" role="tab" aria-selected="false">Масштаб</button>
+                                <div class="scene-transform-modes" role="group" aria-label="Режим трансформации">
+                                    <button id="scene-mode-translate" class="scene-segmented-btn" type="button">Позиция</button>
+                                    <button id="scene-mode-rotate" class="scene-segmented-btn" type="button">Вращение</button>
+                                    <button id="scene-mode-scale" class="scene-segmented-btn" type="button">Масштаб</button>
                                 </div>
                                 <div class="scene-transform-grid">
                                     <label class="scene-transform-field">
-                                        <span class="scene-axis-chip scene-axis-chip--x">X</span>
-                                        <input id="scene-transform-x" type="text" readonly value="--" aria-label="Значение по оси X">
+                                        <span>X</span>
+                                        <input id="scene-transform-x" type="text" readonly value="--">
                                     </label>
                                     <label class="scene-transform-field">
-                                        <span class="scene-axis-chip scene-axis-chip--y">Y</span>
-                                        <input id="scene-transform-y" type="text" readonly value="--" aria-label="Значение по оси Y">
+                                        <span>Y</span>
+                                        <input id="scene-transform-y" type="text" readonly value="--">
                                     </label>
                                     <label class="scene-transform-field">
-                                        <span class="scene-axis-chip scene-axis-chip--z">Z</span>
-                                        <input id="scene-transform-z" type="text" readonly value="--" aria-label="Значение по оси Z">
+                                        <span>Z</span>
+                                        <input id="scene-transform-z" type="text" readonly value="--">
                                     </label>
                                 </div>
-                                <div id="scene-rotate-controls" class="scene-rotate-controls" hidden>
+                                <div id="scene-rotate-controls" class="scene-rotate-controls">
                                     <div class="scene-rotate-controls__header">
                                         <div>
-                                            <div class="scene-rotate-controls__title">Быстрые углы</div>
-                                            <p class="scene-rotate-controls__description">Поворот по осям X/Y/Z на удобные фиксированные значения.</p>
+                                            <div class="scene-rotate-controls__title">Компас поворота</div>
+                                            <p class="scene-rotate-controls__description">Быстрый доворот объекта по осям X, Y и Z фиксированными шагами.</p>
                                         </div>
-                                        <button id="scene-rotate-reset-btn" class="btn-secondary scene-btn scene-btn--ghost" type="button">Сбросить</button>
+                                        <button id="scene-rotate-reset-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button">Сбросить</button>
                                     </div>
-                                    <div class="scene-rotate-presets" role="group" aria-label="Быстрые углы поворота">
+                                    <div class="scene-rotate-presets">
                                         <div class="scene-rotate-row">
                                             <span class="scene-axis-chip scene-axis-chip--x">X</span>
                                             <div class="scene-rotate-row__buttons">
-                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="-90">-90°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="-45">-45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="-15">-15°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="5">+5°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="15">+15°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="45">+45°</button>
-                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="90">+90°</button>
-                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="180">180°</button>
                                             </div>
                                         </div>
                                         <div class="scene-rotate-row">
                                             <span class="scene-axis-chip scene-axis-chip--y">Y</span>
                                             <div class="scene-rotate-row__buttons">
-                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="-90">-90°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="-45">-45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="-15">-15°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="5">+5°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="15">+15°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="45">+45°</button>
-                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="90">+90°</button>
-                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="180">180°</button>
                                             </div>
                                         </div>
                                         <div class="scene-rotate-row">
                                             <span class="scene-axis-chip scene-axis-chip--z">Z</span>
                                             <div class="scene-rotate-row__buttons">
-                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="-90">-90°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="-45">-45°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="-15">-15°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="5">+5°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="15">+15°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="45">+45°</button>
-                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="90">+90°</button>
-                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="180">180°</button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="scene-transform-secondary">
-                                    <button id="scene-drone-origin-btn" class="btn-secondary scene-btn scene-btn--ghost" type="button">Дрон в (0,0)</button>
-                                </div>
-                                <button id="scene-clear-selection-btn" class="scene-clear-selection-btn" type="button">Снять выделение (Esc)</button>
-                                <div class="scene-inspector-actions">
-                                    <button id="scene-group-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button" title="Сгруппировать выбранные объекты (Ctrl+Click)">Группа</button>
-                                    <button id="scene-ungroup-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button" title="Разгруппировать выбранную группу">Разгруппировать</button>
-                                    <button id="scene-delete-btn" class="btn-secondary scene-btn scene-btn--danger" type="button">Удалить</button>
-                                </div>
+                                <button id="scene-clear-selection-btn" class="scene-clear-selection-btn" type="button">Снять выделение</button>
+                                <button id="scene-drone-origin-btn" class="btn-secondary scene-btn scene-btn--neutral">Дрон в (0,0)</button>
+                            </div>
+
+                            <div class="scene-inspector-actions">
+                                <button id="scene-group-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button" title="Сгруппировать выбранные объекты (Ctrl+Click)">Группа</button>
+                                <button id="scene-ungroup-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button" title="Разгруппировать выбранную группу">Разгруппировать</button>
+                                <button id="scene-delete-btn" class="btn-secondary scene-btn scene-btn--danger" type="button">Удалить</button>
                             </div>
                         </section>
 
                     </div>
                 </div>
             </div>
+
+
                         <div id="docs-panel" class="sidebar-panel">
                 <div class="panel-header">
                     <span class="panel-title">Справочник API</span>
@@ -658,43 +700,39 @@
 
                         <div id="gamepad-panel" class="sidebar-panel">
                 <div class="panel-header">
-                    <span class="panel-title">Пульт</span>
-                    <button class="panel-close-btn" onclick="closePanel()">✕</button>
+                    <span class="panel-title">&#1055;&#1091;&#1083;&#1100;&#1090;</span>
+                    <button class="panel-close-btn" onclick="closePanel()">&#10005;</button>
                 </div>
                 <div class="panel-content settings-panel-content">
                     <div class="settings-stack">
                         <div class="settings-group settings-group--gamepad">
                             <div class="gamepad-hero">
                                 <div class="gamepad-hero-copy">
-                                    <div class="gamepad-hero-eyebrow">GEOSCAN RC SETUP</div>
-                                    <div class="gamepad-hero-title">Настройка каналов пульта</div>
-                                    <div class="gamepad-hero-subtitle">Компактная панель привязки каналов и калибровки без прокрутки.</div>
+                                    <div class="gamepad-hero-eyebrow">&#1059;&#1087;&#1088;&#1072;&#1074;&#1083;&#1077;&#1085;&#1080;&#1077; &#1087;&#1091;&#1083;&#1100;&#1090;&#1086;&#1084;</div>
+                                    <div class="gamepad-hero-title">&#1053;&#1072;&#1089;&#1090;&#1088;&#1086;&#1081;&#1082;&#1072; &#1082;&#1072;&#1085;&#1072;&#1083;&#1086;&#1074;</div>
+                                    <div class="gamepad-hero-subtitle">&#1053;&#1072;&#1079;&#1085;&#1072;&#1095;&#1077;&#1085;&#1080;&#1077; &#1082;&#1072;&#1085;&#1072;&#1083;&#1086;&#1074;, &#1082;&#1072;&#1083;&#1080;&#1073;&#1088;&#1086;&#1074;&#1082;&#1072; &#1080; &#1078;&#1080;&#1074;&#1086;&#1081; &#1084;&#1086;&#1085;&#1080;&#1090;&#1086;&#1088;&#1080;&#1085;&#1075; &#1089;&#1080;&#1075;&#1085;&#1072;&#1083;&#1072;.</div>
                                 </div>
-                                <div id="gamepad-status" class="gamepad-status-pill is-disconnected">Пульт не подключен</div>
+                                <div id="gamepad-status" class="gamepad-status-pill is-disconnected">&#1055;&#1091;&#1083;&#1100;&#1090; &#1085;&#1077; &#1087;&#1086;&#1076;&#1082;&#1083;&#1102;&#1095;&#1077;&#1085;</div>
                             </div>
 
-                            <div class="gamepad-panel-tabs" role="tablist" aria-label="Разделы панели пульта">
-                                <button id="gp-tab-mapping" class="gamepad-panel-tab is-active" type="button" data-gamepad-pane="mapping" aria-selected="true">Настройка каналов</button>
-                                <button id="gp-tab-monitor" class="gamepad-panel-tab" type="button" data-gamepad-pane="monitor" aria-selected="false">Монитор каналов</button>
+                            <div class="gamepad-panel-tabs" role="tablist" aria-label="&#1056;&#1072;&#1079;&#1076;&#1077;&#1083;&#1099; &#1087;&#1072;&#1085;&#1077;&#1083;&#1080; &#1087;&#1091;&#1083;&#1100;&#1090;&#1072;">
+                                <button id="gp-tab-mapping" class="gamepad-panel-tab is-active" type="button" data-gamepad-pane="mapping" aria-selected="true">&#1050;&#1072;&#1085;&#1072;&#1083;&#1099;</button>
+                                <button id="gp-tab-monitor" class="gamepad-panel-tab" type="button" data-gamepad-pane="monitor" aria-selected="false">&#1052;&#1086;&#1085;&#1080;&#1090;&#1086;&#1088;</button>
                             </div>
 
                             <div class="gamepad-panel-panes">
                                                                 <div id="gamepad-pane-mapping" class="gamepad-panel-pane is-active" data-gamepad-pane-panel="mapping">
                                     <div id="gamepad-info" class="gamepad-stage" style="display: none;">
-                                <div class="gamepad-stage-top">
-                                    <div id="gp-auto-status" class="gamepad-auto-status">Нажмите AUTO и подвигайте нужный стик или тумблер.</div>
-                                    <div id="gp-channel-data-status" class="gamepad-channel-status">Ожидание данных каналов текущего пульта.</div>
-                                </div>
-
                                 <div class="gamepad-dashboard-grid">
                                     <div class="gamepad-section gamepad-section--quick">
                                         <div class="gamepad-section-heading">
-                                            <div class="gamepad-section-title">Быстрая настройка</div>
-                                            <div class="gamepad-section-caption">Профиль пульта и сервисные действия.</div>
+                                            <div class="gamepad-section-title">&#1041;&#1099;&#1089;&#1090;&#1088;&#1072;&#1103; &#1085;&#1072;&#1089;&#1090;&#1088;&#1086;&#1081;&#1082;&#1072;</div>
+                                            <div class="gamepad-section-caption">&#1056;&#1077;&#1078;&#1080;&#1084; &#1089;&#1090;&#1080;&#1082;&#1086;&#1074;, &#1084;&#1072;&#1089;&#1090;&#1077;&#1088; &#1080; &#1082;&#1072;&#1083;&#1080;&#1073;&#1088;&#1086;&#1074;&#1082;&#1072;.</div>
                                         </div>
                                         <div class="gamepad-quick-stack">
+                                            <div id="gp-auto-status" class="gamepad-auto-status gamepad-auto-status--card">&#1053;&#1072;&#1078;&#1084;&#1080;&#1090;&#1077; &laquo;&#1040;&#1074;&#1090;&#1086;&raquo; &#1080; &#1087;&#1086;&#1076;&#1074;&#1080;&#1075;&#1072;&#1081;&#1090;&#1077; &#1085;&#1091;&#1078;&#1085;&#1099;&#1081; &#1089;&#1090;&#1080;&#1082; &#1080;&#1083;&#1080; &#1090;&#1091;&#1084;&#1073;&#1083;&#1077;&#1088;.</div>
                                             <label class="scene-field gamepad-config-field">
-                                                <span>Режим стиков</span>
+                                                <span>&#1056;&#1077;&#1078;&#1080;&#1084; &#1089;&#1090;&#1080;&#1082;&#1086;&#1074;</span>
                                                 <select id="gp-stick-mode" class="gp-axis-select">
                                                     <option value="1">Mode 1</option>
                                                     <option value="2">Mode 2</option>
@@ -702,29 +740,29 @@
                                                     <option value="4">Mode 4</option>
                                                 </select>
                                             </label>
-                                            <div class="gamepad-toolbar-actions">
-                                                <button id="gp-btn-wizard" class="btn-primary gamepad-action-btn">Мастер настройки</button>
-                                                <button id="gp-btn-calibrate" class="btn-secondary gamepad-action-btn">Калибровка</button>
-                                                <button id="gp-btn-reset-cal" class="btn-secondary gamepad-action-btn">Сброс</button>
+                                            <div class="gamepad-toolbar-actions gamepad-toolbar-actions--split">
+                                                <button id="gp-btn-wizard" class="btn-primary gamepad-action-btn">&#1052;&#1072;&#1089;&#1090;&#1077;&#1088; &#1085;&#1072;&#1089;&#1090;&#1088;&#1086;&#1081;&#1082;&#1080;</button>
+                                                <button id="gp-btn-calibrate" class="btn-secondary gamepad-action-btn">&#1050;&#1072;&#1083;&#1080;&#1073;&#1088;&#1086;&#1074;&#1082;&#1072;</button>
+                                                <button id="gp-btn-reset-cal" class="btn-secondary gamepad-action-btn gamepad-action-btn--danger">&#1057;&#1073;&#1088;&#1086;&#1089;</button>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="gamepad-section gamepad-section--primary">
                                         <div class="gamepad-section-heading">
-                                            <div class="gamepad-section-title">Основные каналы</div>
-                                            <div class="gamepad-section-caption">Оси управления и живой сигнал.</div>
+                                            <div class="gamepad-section-title">&#1054;&#1089;&#1085;&#1086;&#1074;&#1085;&#1099;&#1077; &#1082;&#1072;&#1085;&#1072;&#1083;&#1099;</div>
+                                            <div id="gp-channel-data-status" class="gamepad-channel-status gamepad-channel-status--section">&#1046;&#1076;&#1091; &#1089;&#1080;&#1075;&#1085;&#1072;&#1083; &#1086;&#1090; &#1087;&#1091;&#1083;&#1100;&#1090;&#1072;.</div>
                                         </div>
                                         <div class="gamepad-mapping-grid">
                                             <div class="gp-channel-row">
                                                 <div class="gp-channel-main">
                                                     <div class="gp-channel-badge">CH1</div>
                                                     <div class="gp-channel-copy">
-                                                        <div class="gp-channel-title">Roll</div>
-                                                        <div class="gp-channel-subtitle">Крен</div>
+                                                        <div class="gp-channel-title">&#1050;&#1088;&#1077;&#1085;</div>
+                                                        <div class="gp-channel-subtitle">Roll</div>
                                                     </div>
                                                     <label class="scene-field gp-channel-select">
-                                                        <span>Источник сигнала</span>
+                                                        <span>&#1048;&#1089;&#1090;&#1086;&#1095;&#1085;&#1080;&#1082; &#1089;&#1080;&#1075;&#1085;&#1072;&#1083;&#1072;</span>
                                                         <select id="gp-map-roll" class="gp-axis-select"></select>
                                                     </label>
                                                 </div>
@@ -734,11 +772,11 @@
                                                     </div>
                                                 </div>
                                                 <div class="gp-channel-actions">
-                                                    <button id="gp-auto-roll" class="btn-secondary gp-auto-btn" type="button">AUTO</button>
+                                                    <button id="gp-auto-roll" class="btn-secondary gp-auto-btn" type="button">&#1040;&#1074;&#1090;&#1086;</button>
                                                     <label class="checkbox-container gp-invert-checkbox">
                                                         <input type="checkbox" id="gp-inv-roll">
                                                         <span class="checkmark gp-checkmark"></span>
-                                                        INV
+                                                        &#1056;&#1077;&#1074;&#1077;&#1088;&#1089;
                                                     </label>
                                                     <div id="gp-val-roll" class="gp-channel-value">1500</div>
                                                 </div>
@@ -748,11 +786,11 @@
                                                 <div class="gp-channel-main">
                                                     <div class="gp-channel-badge">CH2</div>
                                                     <div class="gp-channel-copy">
-                                                        <div class="gp-channel-title">Pitch</div>
-                                                        <div class="gp-channel-subtitle">Тангаж</div>
+                                                        <div class="gp-channel-title">&#1058;&#1072;&#1085;&#1075;&#1072;&#1078;</div>
+                                                        <div class="gp-channel-subtitle">Pitch</div>
                                                     </div>
                                                     <label class="scene-field gp-channel-select">
-                                                        <span>Источник сигнала</span>
+                                                        <span>&#1048;&#1089;&#1090;&#1086;&#1095;&#1085;&#1080;&#1082; &#1089;&#1080;&#1075;&#1085;&#1072;&#1083;&#1072;</span>
                                                         <select id="gp-map-pitch" class="gp-axis-select"></select>
                                                     </label>
                                                 </div>
@@ -762,11 +800,11 @@
                                                     </div>
                                                 </div>
                                                 <div class="gp-channel-actions">
-                                                    <button id="gp-auto-pitch" class="btn-secondary gp-auto-btn" type="button">AUTO</button>
+                                                    <button id="gp-auto-pitch" class="btn-secondary gp-auto-btn" type="button">&#1040;&#1074;&#1090;&#1086;</button>
                                                     <label class="checkbox-container gp-invert-checkbox">
                                                         <input type="checkbox" id="gp-inv-pitch">
                                                         <span class="checkmark gp-checkmark"></span>
-                                                        INV
+                                                        &#1056;&#1077;&#1074;&#1077;&#1088;&#1089;
                                                     </label>
                                                     <div id="gp-val-pitch" class="gp-channel-value">1500</div>
                                                 </div>
@@ -776,11 +814,11 @@
                                                 <div class="gp-channel-main">
                                                     <div class="gp-channel-badge">CH3</div>
                                                     <div class="gp-channel-copy">
-                                                        <div class="gp-channel-title">Throttle</div>
-                                                        <div class="gp-channel-subtitle">Газ</div>
+                                                        <div class="gp-channel-title">&#1043;&#1072;&#1079;</div>
+                                                        <div class="gp-channel-subtitle">Throttle</div>
                                                     </div>
                                                     <label class="scene-field gp-channel-select">
-                                                        <span>Источник сигнала</span>
+                                                        <span>&#1048;&#1089;&#1090;&#1086;&#1095;&#1085;&#1080;&#1082; &#1089;&#1080;&#1075;&#1085;&#1072;&#1083;&#1072;</span>
                                                         <select id="gp-map-throttle" class="gp-axis-select"></select>
                                                     </label>
                                                 </div>
@@ -790,11 +828,11 @@
                                                     </div>
                                                 </div>
                                                 <div class="gp-channel-actions">
-                                                    <button id="gp-auto-throttle" class="btn-secondary gp-auto-btn" type="button">AUTO</button>
+                                                    <button id="gp-auto-throttle" class="btn-secondary gp-auto-btn" type="button">&#1040;&#1074;&#1090;&#1086;</button>
                                                     <label class="checkbox-container gp-invert-checkbox">
                                                         <input type="checkbox" id="gp-inv-throttle">
                                                         <span class="checkmark gp-checkmark"></span>
-                                                        INV
+                                                        &#1056;&#1077;&#1074;&#1077;&#1088;&#1089;
                                                     </label>
                                                     <div id="gp-val-throttle" class="gp-channel-value">1000</div>
                                                 </div>
@@ -804,11 +842,11 @@
                                                 <div class="gp-channel-main">
                                                     <div class="gp-channel-badge">CH4</div>
                                                     <div class="gp-channel-copy">
-                                                        <div class="gp-channel-title">Yaw</div>
-                                                        <div class="gp-channel-subtitle">Рыскание</div>
+                                                        <div class="gp-channel-title">&#1056;&#1099;&#1089;&#1082;&#1072;&#1085;&#1080;&#1077;</div>
+                                                        <div class="gp-channel-subtitle">Yaw</div>
                                                     </div>
                                                     <label class="scene-field gp-channel-select">
-                                                        <span>Источник сигнала</span>
+                                                        <span>&#1048;&#1089;&#1090;&#1086;&#1095;&#1085;&#1080;&#1082; &#1089;&#1080;&#1075;&#1085;&#1072;&#1083;&#1072;</span>
                                                         <select id="gp-map-yaw" class="gp-axis-select"></select>
                                                     </label>
                                                 </div>
@@ -818,11 +856,11 @@
                                                     </div>
                                                 </div>
                                                 <div class="gp-channel-actions">
-                                                    <button id="gp-auto-yaw" class="btn-secondary gp-auto-btn" type="button">AUTO</button>
+                                                    <button id="gp-auto-yaw" class="btn-secondary gp-auto-btn" type="button">&#1040;&#1074;&#1090;&#1086;</button>
                                                     <label class="checkbox-container gp-invert-checkbox">
                                                         <input type="checkbox" id="gp-inv-yaw">
                                                         <span class="checkmark gp-checkmark"></span>
-                                                        INV
+                                                        &#1056;&#1077;&#1074;&#1077;&#1088;&#1089;
                                                     </label>
                                                     <div id="gp-val-yaw" class="gp-channel-value">1500</div>
                                                 </div>
@@ -832,25 +870,25 @@
 
                                     <div class="gamepad-section gamepad-section--aux">
                                         <div class="gamepad-section-heading">
-                                            <div class="gamepad-section-title">Дополнительные каналы</div>
-                                            <div class="gamepad-section-caption">Mode, Arm, Magnet.</div>
+                                            <div class="gamepad-section-title">&#1044;&#1086;&#1087;&#1086;&#1083;&#1085;&#1080;&#1090;&#1077;&#1083;&#1100;&#1085;&#1099;&#1077; &#1082;&#1072;&#1085;&#1072;&#1083;&#1099;</div>
+                                            <div class="gamepad-section-caption">&#1056;&#1077;&#1078;&#1080;&#1084;, &#1074;&#1079;&#1074;&#1086;&#1076; &#1080; &#1084;&#1072;&#1075;&#1085;&#1080;&#1090;.</div>
                                         </div>
                                         <div class="gp-aux-grid">
                                             <div class="gp-aux-card">
                                             <div class="gp-aux-card-head">
                                                 <div class="gp-aux-card-badge">AUX</div>
                                                 <div class="gp-aux-card-copy">
-                                                    <div class="gp-aux-card-title">Mode</div>
-                                                    <div class="gp-aux-card-subtitle">Режим полета</div>
+                                                    <div class="gp-aux-card-title">&#1056;&#1077;&#1078;&#1080;&#1084;</div>
+                                                    <div class="gp-aux-card-subtitle">&#1056;&#1077;&#1078;&#1080;&#1084; &#1087;&#1086;&#1083;&#1077;&#1090;&#1072;</div>
                                                 </div>
                                             </div>
                                             <label class="scene-field gp-aux-field">
-                                                <span>Источник сигнала</span>
+                                                <span>&#1048;&#1089;&#1090;&#1086;&#1095;&#1085;&#1080;&#1082; &#1089;&#1080;&#1075;&#1085;&#1072;&#1083;&#1072;</span>
                                                 <select id="gp-map-mode" class="gp-axis-select"></select>
                                             </label>
-                                            <div id="gp-mode-meta" class="gp-range-meta">Во время калибровки запишите все положения тумблера режима.</div>
+                                            <div id="gp-mode-meta" class="gp-range-meta">&#1042;&#1086; &#1074;&#1088;&#1077;&#1084;&#1103; &#1082;&#1072;&#1083;&#1080;&#1073;&#1088;&#1086;&#1074;&#1082;&#1080; &#1079;&#1072;&#1087;&#1080;&#1096;&#1080;&#1090;&#1077; &#1074;&#1089;&#1077; &#1087;&#1086;&#1083;&#1086;&#1078;&#1077;&#1085;&#1080;&#1103; &#1090;&#1091;&#1084;&#1073;&#1083;&#1077;&#1088;&#1072; &#1088;&#1077;&#1078;&#1080;&#1084;&#1072;.</div>
                                             <div class="gp-aux-card-footer">
-                                                <button id="gp-auto-mode" class="btn-secondary gp-auto-btn gp-auto-btn-wide" type="button">AUTO</button>
+                                                <button id="gp-auto-mode" class="btn-secondary gp-auto-btn gp-auto-btn-wide" type="button">&#1040;&#1074;&#1090;&#1086;</button>
                                                 <div id="gp-val-mode" class="gp-aux-value">1000</div>
                                             </div>
                                         </div>
@@ -859,17 +897,17 @@
                                             <div class="gp-aux-card-head">
                                                 <div class="gp-aux-card-badge">AUX</div>
                                                 <div class="gp-aux-card-copy">
-                                                    <div class="gp-aux-card-title">Arm</div>
-                                                    <div class="gp-aux-card-subtitle">Постановка на взвод</div>
+                                                    <div class="gp-aux-card-title">&#1042;&#1079;&#1074;&#1086;&#1076;</div>
+                                                    <div class="gp-aux-card-subtitle">&#1055;&#1086;&#1089;&#1090;&#1072;&#1085;&#1086;&#1074;&#1082;&#1072; &#1085;&#1072; &#1074;&#1079;&#1074;&#1086;&#1076;</div>
                                                 </div>
                                             </div>
                                             <label class="scene-field gp-aux-field">
-                                                <span>Источник сигнала</span>
+                                                <span>&#1048;&#1089;&#1090;&#1086;&#1095;&#1085;&#1080;&#1082; &#1089;&#1080;&#1075;&#1085;&#1072;&#1083;&#1072;</span>
                                                 <select id="gp-map-arm" class="gp-axis-select"></select>
                                             </label>
                                             <div id="gp-range-arm-card" class="gp-range-editor">
                                                 <label class="scene-field gp-aux-subfield">
-                                                    <span>Позиция</span>
+                                                    <span>&#1055;&#1086;&#1079;&#1080;&#1094;&#1080;&#1103;</span>
                                                     <select id="gp-range-arm-preset"></select>
                                                 </label>
                                                 <div class="gp-range-track">
@@ -885,10 +923,10 @@
                                                     <span id="gp-range-arm-live">LIVE 1000</span>
                                                     <span id="gp-range-arm-max-val">2000</span>
                                                 </div>
-                                                <div id="gp-range-arm-meta" class="gp-range-meta">Нет данных назначенного канала.</div>
+                                                <div id="gp-range-arm-meta" class="gp-range-meta">&#1053;&#1077;&#1090; &#1076;&#1072;&#1085;&#1085;&#1099;&#1093; &#1085;&#1072;&#1079;&#1085;&#1072;&#1095;&#1077;&#1085;&#1085;&#1086;&#1075;&#1086; &#1082;&#1072;&#1085;&#1072;&#1083;&#1072;.</div>
                                             </div>
                                             <div class="gp-aux-card-footer">
-                                                <button id="gp-auto-arm" class="btn-secondary gp-auto-btn gp-auto-btn-wide" type="button">AUTO</button>
+                                                <button id="gp-auto-arm" class="btn-secondary gp-auto-btn gp-auto-btn-wide" type="button">&#1040;&#1074;&#1090;&#1086;</button>
                                                 <div id="gp-val-arm" class="gp-aux-value">1000</div>
                                             </div>
                                         </div>
@@ -897,17 +935,17 @@
                                             <div class="gp-aux-card-head">
                                                 <div class="gp-aux-card-badge">AUX</div>
                                                 <div class="gp-aux-card-copy">
-                                                    <div class="gp-aux-card-title">Magnet</div>
-                                                    <div class="gp-aux-card-subtitle">Управление магнитом</div>
+                                                    <div class="gp-aux-card-title">&#1052;&#1072;&#1075;&#1085;&#1080;&#1090;</div>
+                                                    <div class="gp-aux-card-subtitle">&#1059;&#1087;&#1088;&#1072;&#1074;&#1083;&#1077;&#1085;&#1080;&#1077; &#1084;&#1072;&#1075;&#1085;&#1080;&#1090;&#1086;&#1084;</div>
                                                 </div>
                                             </div>
                                             <label class="scene-field gp-aux-field">
-                                                <span>Источник сигнала</span>
+                                                <span>&#1048;&#1089;&#1090;&#1086;&#1095;&#1085;&#1080;&#1082; &#1089;&#1080;&#1075;&#1085;&#1072;&#1083;&#1072;</span>
                                                 <select id="gp-map-magnet" class="gp-axis-select"></select>
                                             </label>
                                             <div id="gp-range-magnet-card" class="gp-range-editor">
                                                 <label class="scene-field gp-aux-subfield">
-                                                    <span>Позиция</span>
+                                                    <span>&#1055;&#1086;&#1079;&#1080;&#1094;&#1080;&#1103;</span>
                                                     <select id="gp-range-magnet-preset"></select>
                                                 </label>
                                                 <div class="gp-range-track">
@@ -923,10 +961,10 @@
                                                     <span id="gp-range-magnet-live">LIVE 1000</span>
                                                     <span id="gp-range-magnet-max-val">2000</span>
                                                 </div>
-                                                <div id="gp-range-magnet-meta" class="gp-range-meta">Нет данных назначенного канала.</div>
+                                                <div id="gp-range-magnet-meta" class="gp-range-meta">&#1053;&#1077;&#1090; &#1076;&#1072;&#1085;&#1085;&#1099;&#1093; &#1085;&#1072;&#1079;&#1085;&#1072;&#1095;&#1077;&#1085;&#1085;&#1086;&#1075;&#1086; &#1082;&#1072;&#1085;&#1072;&#1083;&#1072;.</div>
                                             </div>
                                             <div class="gp-aux-card-footer">
-                                                <button id="gp-auto-magnet" class="btn-secondary gp-auto-btn gp-auto-btn-wide" type="button">AUTO</button>
+                                                <button id="gp-auto-magnet" class="btn-secondary gp-auto-btn gp-auto-btn-wide" type="button">&#1040;&#1074;&#1090;&#1086;</button>
                                                 <div id="gp-val-magnet" class="gp-aux-value">1000</div>
                                             </div>
                                         </div>
@@ -1265,6 +1303,6 @@
             </div>
         </div>
     </div>
-
+
 </body>
 </html>

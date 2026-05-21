@@ -1,5 +1,5 @@
 import type { UICallbacks } from '../index.js';
-import type { SceneManagerDomRefs } from './support.js';
+import type { SceneManagerDomRefs } from './types.js';
 import {
     clampFloors,
     fillDictionarySelect,
@@ -33,6 +33,20 @@ function formatSceneLabel(value: string, objectName = ''): string {
     return normalized || name || 'Объект';
 }
 
+function normalizeDegrees(radians: number): number {
+    const degrees = (radians * 180) / Math.PI;
+    return ((degrees % 360) + 360) % 360;
+}
+
+function getCompassDirectionLabel(degrees: number): string {
+    const directions = ['С', 'СВ', 'В', 'ЮВ', 'Ю', 'ЮЗ', 'З', 'СЗ'];
+    return directions[Math.round(degrees / 45) % directions.length];
+}
+
+function formatCompassDegrees(degrees: number): string {
+    return `${degrees.toFixed(1)}°`;
+}
+
 function getSceneObjectIcon(entry: SceneManagerEntry): string {
     if (entry.isDrone) {
         return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 9l-4-4m14 0l-4 4m-6 6l-4 4m14 0l-4-4"/><circle cx="12" cy="12" r="3"/><circle cx="5" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/></svg>';
@@ -59,6 +73,11 @@ function setTransformFields(elements: SceneManagerDomRefs, values?: { x: number;
     if (elements.transformXEl) elements.transformXEl.value = x;
     if (elements.transformYEl) elements.transformYEl.value = y;
     if (elements.transformZEl) elements.transformZEl.value = z;
+}
+
+function setFieldVisibility(fieldEl: HTMLElement | null, visible: boolean) {
+    if (!fieldEl) return;
+    fieldEl.style.display = visible ? '' : 'none';
 }
 
 function renderObjectList(
@@ -110,12 +129,10 @@ function renderEmptyState(elements: SceneManagerDomRefs) {
         elements.selectedDictionaryEl.innerHTML = '<option value="">Словарь маркера</option>';
         elements.selectedDictionaryEl.value = '';
         elements.selectedDictionaryEl.disabled = true;
-        elements.selectedDictionaryEl.style.display = 'none';
     }
     if (elements.selectedValueEl) {
         elements.selectedValueEl.value = '';
         elements.selectedValueEl.disabled = true;
-        elements.selectedValueEl.style.display = 'none';
     }
     if (elements.selectedFloorsEl) {
         elements.selectedFloorsEl.value = '9';
@@ -128,19 +145,23 @@ function renderEmptyState(elements: SceneManagerDomRefs) {
     if (elements.selectedPointsEl) {
         elements.selectedPointsEl.value = '';
         elements.selectedPointsEl.disabled = true;
-        elements.selectedPointsEl.style.display = 'none';
     }
+    setFieldVisibility(elements.selectedDictionaryWrapEl, false);
+    setFieldVisibility(elements.selectedValueWrapEl, false);
+    setFieldVisibility(elements.selectedPointsWrapEl, false);
     setBuildingControlsVisible(false, elements.selectedFloorsWrapEl, elements.selectedFloorsEl, elements.selectedBuildingSettingsEl);
     if (elements.visualEditBtn) {
         elements.visualEditBtn.style.display = 'none';
         elements.visualEditBtn.toggleAttribute('disabled', true);
     }
+    elements.rotateControlsEl?.classList.remove('is-visible');
     elements.applyMetaBtn?.toggleAttribute('disabled', true);
     elements.appendPointBtn?.toggleAttribute('disabled', true);
     elements.deleteBtn?.toggleAttribute('disabled', true);
     elements.groupBtn?.toggleAttribute('disabled', true);
     elements.ungroupBtn?.toggleAttribute('disabled', true);
     elements.resetDroneBtn?.toggleAttribute('disabled', true);
+    elements.clearSelectionBtn?.toggleAttribute('disabled', true);
     elements.modeTranslateBtn?.toggleAttribute('disabled', true);
     elements.modeRotateBtn?.toggleAttribute('disabled', true);
     elements.modeScaleBtn?.toggleAttribute('disabled', true);
@@ -149,6 +170,8 @@ function renderEmptyState(elements: SceneManagerDomRefs) {
 function renderSelectedDetails(elements: SceneManagerDomRefs, selected: SceneManagerEntry, mode: TransformMode) {
     if (!elements.detailsEl) return;
 
+    const headingDegrees = normalizeDegrees(selected.rotation.y);
+    const headingDirection = getCompassDirectionLabel(headingDegrees);
     const metaMarkup = (selected.metaLines?.length ?? 0) > 0
         ? `
             <div class="scene-details-meta">
@@ -170,6 +193,26 @@ function renderSelectedDetails(elements: SceneManagerDomRefs, selected: SceneMan
                 <div class="scene-details-row">
                     <span class="scene-details-row__label">Статус</span>
                     <span class="scene-details-row__value">${selected.draggable ? 'Редактируемый' : 'Зафиксирован'}</span>
+                </div>
+            </div>
+            <div class="scene-details-compass" style="--scene-compass-angle: ${headingDegrees.toFixed(2)}deg;">
+                <div class="scene-details-compass__header">
+                    <span class="scene-details-compass__title">Компас</span>
+                    <span class="scene-details-compass__badge">${headingDirection} ${formatCompassDegrees(headingDegrees)}</span>
+                </div>
+                <div class="scene-details-compass__body">
+                    <div class="scene-details-compass__dial" aria-hidden="true">
+                        <span class="scene-details-compass__marker scene-details-compass__marker--north">С</span>
+                        <span class="scene-details-compass__marker scene-details-compass__marker--east">В</span>
+                        <span class="scene-details-compass__marker scene-details-compass__marker--south">Ю</span>
+                        <span class="scene-details-compass__marker scene-details-compass__marker--west">З</span>
+                        <span class="scene-details-compass__needle"></span>
+                        <span class="scene-details-compass__center"></span>
+                    </div>
+                    <div class="scene-details-compass__readout">
+                        <span class="scene-details-compass__readout-label">Поворот вокруг оси Y</span>
+                        <span class="scene-details-compass__readout-value">${formatSceneNumber(selected.rotation.y)} rad</span>
+                    </div>
                 </div>
             </div>
             ${metaMarkup}
@@ -204,26 +247,36 @@ function syncSelectedInputs(
     if (elements.selectedPointsEl) elements.selectedPointsEl.value = selected.pointsText || '';
 }
 
-function updateSelectedControls(callbacks: UICallbacks, elements: SceneManagerDomRefs, selected: SceneManagerEntry) {
+function updateSelectedControls(
+    callbacks: UICallbacks,
+    elements: SceneManagerDomRefs,
+    selected: SceneManagerEntry,
+    mode: TransformMode
+) {
     const isBuildingSelected = selected.sceneType === 'Многоэтажка';
     const isVisualEditing = callbacks.sceneManager?.isLinearEditingActive(selected.id) || false;
     const isAnyLinearEditing = callbacks.sceneManager?.isLinearEditingActive() || false;
     const isGroup = selected.sceneType.toLowerCase() === 'group' || selected.name.toLowerCase() === 'group';
+    const isMarkerDictionaryEditable = !!selected.supportsMarkerDictionary;
+    const hasValueField = selected.supportsValue && !isBuildingSelected;
+    const hasPointsField = !!selected.supportsPoints;
+    const showRotateControls = selected.draggable && mode === 'rotate';
 
     elements.applyMetaBtn?.toggleAttribute('disabled', false);
     elements.deleteBtn?.toggleAttribute('disabled', false);
     elements.groupBtn?.toggleAttribute('disabled', false);
     elements.ungroupBtn?.toggleAttribute('disabled', !isGroup);
     elements.resetDroneBtn?.toggleAttribute('disabled', !selected.isDrone);
+    elements.clearSelectionBtn?.toggleAttribute('disabled', false);
     elements.modeTranslateBtn?.toggleAttribute('disabled', !selected.draggable);
     elements.modeRotateBtn?.toggleAttribute('disabled', !selected.draggable);
     elements.modeScaleBtn?.toggleAttribute('disabled', !selected.draggable);
+    elements.rotateControlsEl?.classList.toggle('is-visible', showRotateControls);
 
     if (elements.selectedDictionaryEl) {
-        const isMarkerDictionaryEditable = !!selected.supportsMarkerDictionary;
         elements.selectedDictionaryEl.disabled = !isMarkerDictionaryEditable;
-        elements.selectedDictionaryEl.style.display = isMarkerDictionaryEditable ? 'block' : 'none';
     }
+    setFieldVisibility(elements.selectedDictionaryWrapEl, isMarkerDictionaryEditable);
     if (elements.selectedValueEl) {
         elements.selectedValueEl.disabled = !selected.supportsValue || isBuildingSelected;
         elements.selectedValueEl.placeholder = !selected.supportsValue
@@ -231,8 +284,8 @@ function updateSelectedControls(callbacks: UICallbacks, elements: SceneManagerDo
             : selected.sceneType === 'Многоэтажка'
                 ? 'Окна: 3:front:2=smoke; 5:back:1=fire'
                 : 'Значение маркера';
-        elements.selectedValueEl.style.display = selected.supportsValue && !isBuildingSelected ? 'block' : 'none';
     }
+    setFieldVisibility(elements.selectedValueWrapEl, hasValueField);
     setBuildingControlsVisible(
         isBuildingSelected,
         elements.selectedFloorsWrapEl,
@@ -246,8 +299,8 @@ function updateSelectedControls(callbacks: UICallbacks, elements: SceneManagerDo
         elements.selectedPointsEl.placeholder = selected.supportsPoints
             ? 'Каждая строка: X, Y, Z'
             : 'Маршрут можно редактировать только у дорог и рельс';
-        elements.selectedPointsEl.style.display = selected.supportsPoints ? 'block' : 'none';
     }
+    setFieldVisibility(elements.selectedPointsWrapEl, hasPointsField);
     if (elements.appendPointBtn) elements.appendPointBtn.toggleAttribute('disabled', !selected.supportsPoints);
     if (elements.visualEditBtn) {
         elements.visualEditBtn.style.display = selected.supportsPoints ? 'inline-flex' : 'none';
@@ -283,7 +336,7 @@ export function renderSceneManager(
 
     const selectionChanged = lastSelectedId !== selected.id;
     syncSelectedInputs(elements, selected, selectionChanged, isSceneEditorFocused(elements));
-    updateSelectedControls(callbacks, elements, selected);
+    updateSelectedControls(callbacks, elements, selected, activeTransformMode);
 
     return selected.id;
 }

@@ -1,5 +1,5 @@
 import type { UICallbacks } from '../../index.js';
-import type { SceneManagerDomRefs } from '../support.js';
+import type { SceneManagerDomRefs } from '../types.js';
 import {
     clampFloors,
     fillDictionarySelect,
