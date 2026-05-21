@@ -1,10 +1,13 @@
 import * as THREE from 'three';
 import { createSceneObjectByType } from '../../environment/index.js';
 import type { SceneObjectOptions } from '../../environment/obstacles.js';
+import { log } from '../../shared/logging/logger.js';
 import { disposeObjectHierarchyResources } from '../../scene/objects/object-manager-support.js';
 import { parsePointsText } from '../../scene/objects/object-catalog.js';
 import { getSceneTypePreviewConfig, readAddSceneObjectDraft } from './support.js';
 import type { SceneManagerDomRefs } from './types.js';
+
+const PREVIEW_FALLBACK_MESSAGE = '3D-превью недоступно в текущей сессии браузера. Закройте другие вкладки с WebGL или перезагрузите страницу.';
 
 function getPreviewObjectOptions(elements: SceneManagerDomRefs, previewType: string): SceneObjectOptions {
     const draft = readAddSceneObjectDraft(elements);
@@ -59,19 +62,37 @@ export type SceneTypePreviewController = {
     destroy: () => void;
 };
 
+function createNoopPreviewController(): SceneTypePreviewController {
+    return {
+        sync() {},
+        show() {},
+        hide() {},
+        showSelected() {},
+        showForType() {},
+        destroy() {}
+    };
+}
+
+function renderPreviewFallback(host: HTMLDivElement, message: string) {
+    const fallback = document.createElement('div');
+    fallback.className = 'scene-type-modal__preview-fallback';
+
+    const title = document.createElement('strong');
+    title.textContent = '3D-превью недоступно';
+
+    const text = document.createElement('span');
+    text.textContent = message;
+
+    fallback.append(title, text);
+    host.replaceChildren(fallback);
+}
+
 export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePreviewController {
     const host = elements.addTypeModalPreviewViewportEl;
     const popup = elements.addTypeModalPreviewEl;
 
     if (!host || !popup || !elements.addTypeEl) {
-        return {
-            sync() {},
-            show() {},
-            hide() {},
-            showSelected() {},
-            showForType() {},
-            destroy() {}
-        };
+        return createNoopPreviewController();
     }
 
     const scene = new THREE.Scene();
@@ -80,12 +101,21 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 200);
     camera.up.set(0, 0, 1);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.shadowMap.enabled = false;
-    renderer.domElement.setAttribute('aria-hidden', 'true');
-    host.replaceChildren(renderer.domElement);
+    let renderer: THREE.WebGLRenderer | null = null;
+    let isRendererAvailable = false;
+    try {
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.shadowMap.enabled = false;
+        renderer.domElement.setAttribute('aria-hidden', 'true');
+        host.replaceChildren(renderer.domElement);
+        isRendererAvailable = true;
+    } catch (error) {
+        console.warn('[SceneManager] Failed to initialize 3D type preview:', error);
+        log('[SCENE-PREVIEW] 3D preview unavailable, UI fallback enabled.', 'warn');
+        renderPreviewFallback(host, PREVIEW_FALLBACK_MESSAGE);
+    }
 
     const ambient = new THREE.HemisphereLight(0xffffff, 0xdfe7ef, 1.55);
     const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
@@ -108,6 +138,7 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
     let lastPreviewSignature: string | null = null;
 
     const render = () => {
+        if (!renderer || !isRendererAvailable) return;
         const width = Math.max(host.clientWidth, 320);
         const height = Math.max(host.clientHeight, 320);
         renderer.setSize(width, height, false);
@@ -173,6 +204,9 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
         );
 
         updatePreviewMeta(activeType, activeLabel);
+        if (!renderer || !isRendererAvailable) {
+            return;
+        }
 
         const previewOptions = getPreviewObjectOptions(elements, activeType);
         const previewSignature = JSON.stringify({
@@ -240,7 +274,7 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
             lastPreviewSignature = null;
             ground.geometry.dispose();
             (ground.material as THREE.Material).dispose();
-            renderer.dispose();
+            renderer?.dispose();
         }
     };
 }

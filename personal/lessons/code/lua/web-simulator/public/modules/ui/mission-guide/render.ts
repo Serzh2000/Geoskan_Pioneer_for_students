@@ -1,6 +1,6 @@
 import type { ScriptLanguage } from '../api-docs/sections.js';
-import { evaluateLesson } from './lesson-evaluation.js';
-import { isMissionGuideScenePreviewActive } from './scene-preview.js';
+import { evaluateLesson } from './evaluation/index.js';
+import { isMissionGuideScenePreviewActive } from './support/scene-preview.js';
 import {
     getActivePortalPage,
     getActiveLesson,
@@ -24,8 +24,8 @@ import {
     renderResultHero,
     renderRunBanner,
     renderDiagnosticCard
-} from './render-support.js';
-import { renderLessonOverview, renderLessonTheory, renderPortalIntro } from './render-sections.js';
+} from './render/support.js';
+import { renderLessonOverview, renderLessonTheory, renderPortalIntro } from './render/sections.js';
 
 export function renderGuide(state: GuideLessonState, language: ScriptLanguage): string {
     const activePage = getActivePortalPage(language);

@@ -1,5 +1,5 @@
-import { createEventBlock, createStatementBlock, createTimerBlock } from '../../lesson-builders.js';
-import { compileLuaEvents, compileLuaLinear, compileLuaTimed, compilePython } from '../../lesson-compilers.js';
+import { createEventBlock, createStatementBlock, createTimerBlock } from '../support/builders.js';
+import { compileLuaEvents, compileLuaLinear, compileLuaTimed, compilePython } from '../support/compilers.js';
 import {
     LUA_LED_SEQUENCE_EXAMPLE,
     LUA_LED_SINGLE_EXAMPLE,
@@ -11,10 +11,10 @@ import {
     PYTHON_LED_SINGLE_EXAMPLE,
     PYTHON_MISSION_EXAMPLE,
     PYTHON_TAKEOFF_EXAMPLE
-} from '../../snippets.js';
+} from '../support/snippets.js';
 import type { GuideLesson, GuideLessonState } from '../../types.js';
 import { GUIDE_CHAPTER_IDS } from '../../curriculum.js';
-import { apiFocus } from '../../lesson-state-helpers.js';
+import { apiFocus } from '../support/state-helpers.js';
 
 export function getLuaCoreFlightLessons(): GuideLesson[] {
     return [

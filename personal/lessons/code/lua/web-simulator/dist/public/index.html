@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Pioneer Lua Web Simulator</title>
-    <link rel="icon" href="data:,">
+    <link rel="icon" href="data:,">
     <!-- Three.js and modules loaded via Vite -->
     <!-- Fengari for Lua in browser -->
     <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
-  <script type="module" crossorigin src="/assets/index-BsBbrgXj.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-C5JRpAAd.css">
+  <script type="module" crossorigin src="/assets/index-C6ILHSIx.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CCrkrKsD.css">
 </head>
 <body>
             <header class="header">
@@ -150,7 +150,9 @@
 
                         <div id="drones-panel" class="sidebar-panel">
                 <div class="panel-header">
-                    <span class="panel-title">Управление роем</span>
+                    <div class="panel-header__lead">
+                        <span class="panel-title">Управление роем</span>
+                    </div>
                     <button class="panel-close-btn" onclick="closePanel()">✕</button>
                 </div>
                 <div class="panel-content panel-content--drones">
@@ -205,10 +207,12 @@
                 </div>
             </div>
 
-            ﻿            <div id="manager-panel" class="sidebar-panel">
+                        <div id="manager-panel" class="sidebar-panel">
                 <div class="panel-header">
-                    <span class="panel-title">Менеджер сцены</span>
-                    <button class="panel-close-btn" onclick="closePanel()">?</button>
+                    <div class="panel-header__lead">
+                        <span class="panel-title">Менеджер сцены</span>
+                    </div>
+                    <button class="panel-close-btn" onclick="closePanel()">✕</button>
                 </div>
                 <div class="panel-content panel-content--scene-manager">
                     <div class="scene-manager">
@@ -644,8 +648,10 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button id="scene-clear-selection-btn" class="scene-clear-selection-btn" type="button">Снять выделение</button>
-                                <button id="scene-drone-origin-btn" class="btn-secondary scene-btn scene-btn--neutral">Дрон в (0,0)</button>
+                                <div class="scene-transform-secondary">
+                                    <button id="scene-clear-selection-btn" class="scene-clear-selection-btn" type="button">Снять выделение</button>
+                                    <button id="scene-drone-origin-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button">Дрон в (0,0)</button>
+                                </div>
                             </div>
 
                             <div class="scene-inspector-actions">
@@ -662,7 +668,9 @@
 
                         <div id="docs-panel" class="sidebar-panel">
                 <div class="panel-header">
-                    <span class="panel-title">Справочник API</span>
+                    <div class="panel-header__lead">
+                        <span class="panel-title">Справочник API</span>
+                    </div>
                     <button class="panel-close-btn" onclick="closePanel()">✕</button>
                 </div>
                 <div class="panel-content">
@@ -680,18 +688,9 @@
                 </div>
                 <div class="panel-content panel-content--logs">
                     <div class="logs-panel-content">
-                        <div class="logs-console">
-                            <div class="logs-console__header">
-                                <div class="logs-console__status">
-                                    <span class="logs-console__status-dot" aria-hidden="true"></span>
-                                    <span class="logs-console__status-label">Поток событий</span>
-                                </div>
-                                <span class="logs-console__hint">Автопрокрутка включена</span>
-                            </div>
-                            <div id="logs" class="logs-console__stream" aria-live="polite">
-                                <div class="logs-console__empty">
-                                    Журнал ожидает первые события симулятора.
-                                </div>
+                        <div id="logs" class="logs-console__stream" aria-live="polite">
+                            <div class="logs-console__empty">
+                                Журнал ожидает первые события симулятора.
                             </div>
                         </div>
                     </div>
@@ -700,7 +699,9 @@
 
                         <div id="gamepad-panel" class="sidebar-panel">
                 <div class="panel-header">
-                    <span class="panel-title">&#1055;&#1091;&#1083;&#1100;&#1090;</span>
+                    <div class="panel-header__lead">
+                        <span class="panel-title">&#1055;&#1091;&#1083;&#1100;&#1090;</span>
+                    </div>
                     <button class="panel-close-btn" onclick="closePanel()">&#10005;</button>
                 </div>
                 <div class="panel-content settings-panel-content">
@@ -1303,6 +1304,6 @@
             </div>
         </div>
     </div>
-
+
 </body>
 </html>

@@ -14,7 +14,7 @@ import {
     loadGuideSessionState,
     persistGuideProgress,
     persistGuideSessionState
-} from './state-storage.js';
+} from './state/storage.js';
 
 const loadedSessionState = loadGuideSessionState();
 

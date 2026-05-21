@@ -1,5 +1,5 @@
 import type { MarkerMapOptions } from '../../../environment/obstacles.js';
-import type { SceneManagerDomRefs } from './dom.js';
+import type { SceneManagerDomRefs } from '../types.js';
 import {
     fillDictionarySelect,
     getMarkerMode
@@ -15,6 +15,12 @@ import {
     isValueInputType
 } from './type-guards.js';
 import { setBuildingControlsVisible, syncFloorLimit, syncIncidentValue } from './building.js';
+import { updateAddTypePreview } from './type-preview-config.js';
+
+function setFieldVisibility(fieldEl: HTMLElement | null, visible: boolean) {
+    if (!fieldEl) return;
+    fieldEl.style.display = visible ? '' : 'none';
+}
 
 export function getMapInputs(elements: SceneManagerDomRefs) {
     return [
@@ -96,9 +102,9 @@ export function updateAddControlsState(
     const isPath = type === 'road' || type === 'rail';
     if (isMarker) fillDictionarySelect(elements.addDictionaryEl, getMarkerMode(type), elements.addDictionaryEl.value);
     elements.addDictionaryEl.disabled = !isMarker;
-    elements.addDictionaryEl.style.display = isMarker ? 'block' : 'none';
+    setFieldVisibility(elements.addDictionaryWrapEl, isMarker);
     elements.addValueEl.disabled = !(needsValueInput && !isBuilding);
-    elements.addValueEl.style.display = needsValueInput && !isBuilding ? 'block' : 'none';
+    setFieldVisibility(elements.addValueWrapEl, needsValueInput && !isBuilding);
     elements.addPointsEl.disabled = !isPath;
     elements.addValueEl.placeholder = isSingleMarker
         ? 'ID маркера'
@@ -110,7 +116,7 @@ export function updateAddControlsState(
     elements.addPointsEl.placeholder = isPath
         ? 'Каждая строка: X, Y, Z\n0, 0, 0\n6, 0, 0\n10, 4, 0'
         : 'Только для дорог и путей';
-    elements.addPointsEl.style.display = isPath ? 'block' : 'none';
+    setFieldVisibility(elements.addPointsWrapEl, isPath);
     setBuildingControlsVisible(isBuilding, elements.addFloorsWrapEl, elements.addFloorsEl, elements.addBuildingSettingsEl);
     if (elements.addMapSettingsEl) elements.addMapSettingsEl.classList.toggle('visible', isMarkerMap);
     getMapInputs(elements).forEach((input) => {
@@ -119,4 +125,5 @@ export function updateAddControlsState(
     syncFloorLimit(elements.addFloorsEl, elements.addBuildingFloorEl);
     syncIncidentValue(elements.addValueEl, elements.addBuildingIncidentsEl);
     updateMapSummary(elements);
+    updateAddTypePreview(elements);
 }

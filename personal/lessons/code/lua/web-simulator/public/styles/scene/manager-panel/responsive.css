@@ -92,7 +92,6 @@
     }
 
     .scene-transform-grid,
-    .scene-rotate-row__buttons,
     .scene-inspector-actions {
         grid-template-columns: 1fr;
     }
@@ -105,6 +104,14 @@
     .scene-rotate-row {
         display: grid;
         grid-template-columns: 1fr;
+    }
+
+    .scene-transform-secondary {
+        flex-direction: column;
+    }
+
+    .scene-rotate-row__buttons {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .scene-details-row {

@@ -1,6 +1,6 @@
 import type { GuideLessonState } from '../../types.js';
 import { getGuideChapters } from '../../curriculum.js';
-import { getLuaExpandedLessons } from '../../lua-lessons-expanded.js';
+import { getLuaExpandedLessons } from '../expanded/lua.js';
 import { getLuaLedLessons } from '../led/lua.js';
 import { getLuaFlightLessons } from '../flight/lua.js';
 

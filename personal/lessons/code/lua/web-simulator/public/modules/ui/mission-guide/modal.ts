@@ -1,7 +1,7 @@
 import { currentScriptLanguage } from '../../core/state.js';
-import { logGuideEvent } from './guide-logging.js';
+import { logGuideEvent } from './support/logging.js';
 import { renderMissionGuidePanel } from './panel.js';
-import { restoreMissionGuideScenePreview } from './scene-preview.js';
+import { restoreMissionGuideScenePreview } from './support/scene-preview.js';
 
 export function initMissionGuideModal() {
     let overlay = document.getElementById('mission-guide-overlay') as HTMLDivElement | null;

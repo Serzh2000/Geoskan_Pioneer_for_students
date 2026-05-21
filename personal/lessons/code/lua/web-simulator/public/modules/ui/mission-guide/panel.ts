@@ -1,8 +1,8 @@
 import type { ScriptLanguage } from '../api-docs/sections.js';
-import { logGuideEvent } from './guide-logging.js';
+import { logGuideEvent } from './support/logging.js';
 import { getGuideLessonState } from './lessons.js';
 import { renderGuide } from './render.js';
-import { mountMissionGuideScenePreview } from './scene-preview.js';
+import { mountMissionGuideScenePreview } from './support/scene-preview.js';
 import { ensureActiveChapterId, ensureActiveLessonId, getActiveLesson } from './state.js';
 
 export function renderMissionGuidePanel(language: ScriptLanguage = 'lua'): void {

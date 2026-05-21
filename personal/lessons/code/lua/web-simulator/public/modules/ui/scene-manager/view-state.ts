@@ -40,10 +40,13 @@ export function syncInspectorAvailability(elements: SceneManagerDomRefs, state: 
 export function syncTransformModeState(elements: SceneManagerDomRefs, activeTransformMode: TransformMode) {
     elements.modeTranslateBtn?.classList.toggle('is-active', activeTransformMode === 'translate');
     elements.modeTranslateBtn?.setAttribute('aria-selected', String(activeTransformMode === 'translate'));
+    elements.modeTranslateBtn?.setAttribute('aria-pressed', String(activeTransformMode === 'translate'));
     elements.modeRotateBtn?.classList.toggle('is-active', activeTransformMode === 'rotate');
     elements.modeRotateBtn?.setAttribute('aria-selected', String(activeTransformMode === 'rotate'));
+    elements.modeRotateBtn?.setAttribute('aria-pressed', String(activeTransformMode === 'rotate'));
     elements.modeScaleBtn?.classList.toggle('is-active', activeTransformMode === 'scale');
     elements.modeScaleBtn?.setAttribute('aria-selected', String(activeTransformMode === 'scale'));
+    elements.modeScaleBtn?.setAttribute('aria-pressed', String(activeTransformMode === 'scale'));
     if (elements.rotateControlsEl) {
         const isRotateMode = activeTransformMode === 'rotate';
         elements.rotateControlsEl.hidden = !isRotateMode;

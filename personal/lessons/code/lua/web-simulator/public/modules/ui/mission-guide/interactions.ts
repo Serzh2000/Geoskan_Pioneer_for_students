@@ -3,11 +3,11 @@ import {
     getActiveLesson
 } from './state.js';
 import { getGuideLessonState } from './lessons.js';
-import { logGuideEvent } from './guide-logging.js';
-import { buildGuideEventContext, type GuideInteractionContext } from './interaction-context.js';
-import { attachGuideActionBindings } from './interactions-actions.js';
-import { attachGuideNavigationBindings } from './interactions-navigation.js';
-import { attachGuideWorkspace } from './interactions-workspace.js';
+import { logGuideEvent } from './support/logging.js';
+import { buildGuideEventContext, type GuideInteractionContext } from './interactions/context.js';
+import { attachGuideActionBindings } from './interactions/actions.js';
+import { attachGuideNavigationBindings } from './interactions/navigation.js';
+import { attachGuideWorkspace } from './interactions/workspace.js';
 import type { RenderMissionGuidePanel } from './types.js';
 import type { ScriptLanguage } from '../api-docs/sections.js';
 

@@ -1,6 +1,6 @@
 import type { GuideLessonState } from '../../types.js';
 import { getGuideChapters } from '../../curriculum.js';
-import { getPythonExpandedLessons } from '../../python-lessons-expanded.js';
+import { getPythonExpandedLessons } from '../expanded/python.js';
 import { getPythonLedLessons } from '../led/python.js';
 import { getPythonFlightLessons } from '../flight/python.js';
 

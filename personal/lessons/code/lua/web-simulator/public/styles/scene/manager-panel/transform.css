@@ -1,23 +1,23 @@
 .scene-transform-modes {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 4px;
+    gap: 6px;
     width: 100%;
-    padding: 4px;
-    background: rgba(255, 255, 255, 0.8);
+    padding: 5px;
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.96) 100%);
     border: 1px solid rgba(9, 9, 11, 0.08);
-    border-radius: 14px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
 .scene-segmented-btn {
     position: relative;
-    min-height: 40px;
-    padding: 0 10px;
+    min-height: 42px;
+    padding: 0 12px;
     border: none;
-    border-radius: 9px;
+    border-radius: 11px;
     background: transparent;
-    color: #6c757d;
+    color: #64748b;
     font-size: 11px;
     font-weight: 700;
     cursor: pointer;
@@ -32,7 +32,9 @@
 .scene-segmented-btn.is-active {
     color: #ffffff;
     background: linear-gradient(180deg, #ff7a00 0%, #ff6b00 100%);
-    box-shadow: 0 8px 16px rgba(255, 107, 0, 0.22);
+    box-shadow:
+        0 8px 18px rgba(255, 107, 0, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.26);
     transform: translateY(-1px);
 }
 
@@ -44,11 +46,11 @@
 
 .scene-rotate-controls {
     display: none;
-    gap: 12px;
-    padding: 14px;
+    gap: 14px;
+    padding: 16px;
     background: linear-gradient(180deg, #fffaf5 0%, #ffffff 100%);
-    border: 1px solid rgba(255, 107, 0, 0.12);
-    border-radius: 14px;
+    border: 1px solid rgba(255, 107, 0, 0.14);
+    border-radius: 16px;
 }
 
 .scene-rotate-controls.is-visible {
@@ -78,7 +80,7 @@
 
 .scene-rotate-controls__header .scene-btn {
     width: auto;
-    min-width: 96px;
+    min-width: 104px;
 }
 
 .scene-rotate-presets {
@@ -88,19 +90,19 @@
 
 .scene-rotate-row {
     display: grid;
-    grid-template-columns: 24px minmax(0, 1fr);
-    align-items: center;
-    gap: 10px;
+    grid-template-columns: 28px minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
 }
 
 .scene-rotate-row__buttons {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(52px, 1fr));
     gap: 8px;
 }
 
 .scene-rotate-preset-btn {
-    min-height: 34px;
+    min-height: 36px;
     padding: 0 8px;
     border: 1px solid rgba(9, 9, 11, 0.08);
     border-radius: 10px;
@@ -128,7 +130,7 @@
     padding: 10px 12px 12px;
     background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
     border: 1px solid rgba(9, 9, 11, 0.07);
-    border-radius: 10px;
+    border-radius: 12px;
 }
 
 .scene-transform-field span {
@@ -144,10 +146,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     flex-shrink: 0;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -176,11 +178,11 @@
     background: transparent;
     color: #1e293b;
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
-    text-align: left;
+    text-align: center;
     box-shadow: none;
 }
 
@@ -190,33 +192,41 @@
 
 .scene-transform-secondary {
     display: flex;
-    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
-.scene-transform-secondary .scene-btn {
-    width: 100%;
-    justify-content: flex-start;
-    text-align: left;
+.scene-transform-secondary .scene-btn,
+.scene-clear-selection-btn {
+    flex: 1 1 140px;
 }
 
 .scene-clear-selection-btn {
-    align-self: flex-start;
-    padding: 0;
-    border: none;
-    background: transparent;
-    color: #64748b;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #475569;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: color 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
 .scene-clear-selection-btn:hover:not(:disabled) {
-    color: #ff6b00;
+    border-color: rgba(255, 107, 0, 0.24);
+    background: rgba(255, 107, 0, 0.06);
+    color: #c2410c;
 }
 
 .scene-clear-selection-btn:disabled {
-    color: #cbd5e1;
+    border-color: #e2e8f0;
+    background: #f8fafc;
+    color: #94a3b8;
     cursor: not-allowed;
 }
 
