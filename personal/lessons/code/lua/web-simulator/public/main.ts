@@ -22,6 +22,7 @@ import type { MarkerMapOptions } from './modules/environment/obstacles.js';
 import { resetScriptExecutionNoticeState, showScenarioValidationNotice } from './modules/app/script-execution-notice.js';
 import { configureSimulationControls } from './modules/app/simulation-controls.js';
 import { initScriptLanguageSelector } from './modules/app/language-selector.js';
+import { initThemeToggle } from './modules/app/theme-toggle.js';
 import { registerGlobalErrorHandler } from './modules/app/global-error.js';
 import { startAnimationLoop } from './modules/app/animation-loop.js';
 
@@ -34,6 +35,7 @@ import { startAnimationLoop } from './modules/app/animation-loop.js';
 function init() {
     log('Инициализация системы...', 'info');
     registerGlobalErrorHandler();
+    initThemeToggle();
 
     configureSimulationControls({
         start: startSimulation,

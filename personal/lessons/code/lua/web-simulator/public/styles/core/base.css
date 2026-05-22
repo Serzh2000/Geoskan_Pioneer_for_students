@@ -39,6 +39,49 @@
     --shadow-card: 0 20px 50px rgba(15, 23, 42, 0.06), 0 6px 18px rgba(15, 23, 42, 0.05);
     --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.05);
     --glass-border: 1px solid rgba(9, 9, 11, 0.08);
+    --body-gradient-start: #ffffff;
+    --body-gradient-end: #f5f5f6;
+    --header-bg: rgba(255, 255, 255, 0.96);
+    --header-border: rgba(9, 9, 11, 0.08);
+    --header-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    --control-group-bg: #f7f7f8;
+    --control-bg: #ffffff;
+    --control-bg-hover: #f8fafc;
+    --control-text: #1a202c;
+    --control-border: #e2e8f0;
+    --control-focus-ring: rgba(255, 107, 0, 0.18);
+    --input-bg: #ffffff;
+    --input-bg-focus: #ffffff;
+}
+
+:root[data-theme='dark'] {
+    --bg-color: #020617;
+    --bg-muted: #0f172a;
+    --bg-elevated: #111827;
+    --card-bg: #0f172a;
+    --panel-bg: #0f172a;
+    --panel-bg-strong: #1e293b;
+    --text-color: #dbe4f0;
+    --text-strong: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: rgba(148, 163, 184, 0.2);
+    --border-strong: rgba(148, 163, 184, 0.34);
+    --shadow-card: 0 20px 50px rgba(2, 6, 23, 0.5), 0 8px 24px rgba(2, 6, 23, 0.4);
+    --shadow-soft: 0 14px 32px rgba(2, 6, 23, 0.3);
+    --glass-border: 1px solid rgba(148, 163, 184, 0.14);
+    --body-gradient-start: #0f172a;
+    --body-gradient-end: #020617;
+    --header-bg: rgba(15, 23, 42, 0.9);
+    --header-border: rgba(148, 163, 184, 0.16);
+    --header-shadow: 0 12px 28px rgba(2, 6, 23, 0.42);
+    --control-group-bg: transparent;
+    --control-bg: #111827;
+    --control-bg-hover: #1f2937;
+    --control-text: #e5e7eb;
+    --control-border: rgba(148, 163, 184, 0.24);
+    --control-focus-ring: rgba(255, 107, 0, 0.24);
+    --input-bg: #0f172a;
+    --input-bg-focus: #111827;
 }
 
 body {
@@ -50,7 +93,7 @@ body {
     overflow: hidden;
     background:
         radial-gradient(circle at top left, rgba(255, 107, 0, 0.06), transparent 28%),
-        linear-gradient(180deg, #ffffff 0%, #f5f5f6 100%);
+        linear-gradient(180deg, var(--body-gradient-start) 0%, var(--body-gradient-end) 100%);
     color: var(--text-color);
 }
 

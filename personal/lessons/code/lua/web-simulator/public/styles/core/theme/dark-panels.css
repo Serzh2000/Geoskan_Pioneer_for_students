@@ -1,0 +1,216 @@
+:root[data-theme='dark'] .dashboard-toolbar,
+:root[data-theme='dark'] .dashboard-panel {
+    border-color: rgba(148, 163, 184, 0.12);
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(17, 24, 39, 0.92));
+    box-shadow: 0 18px 34px rgba(2, 6, 23, 0.32), 0 6px 16px rgba(2, 6, 23, 0.24);
+}
+
+:root[data-theme='dark'] .stat-item {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(17, 24, 39, 0.94));
+    border-color: rgba(148, 163, 184, 0.14);
+    box-shadow: 0 8px 18px rgba(2, 6, 23, 0.18);
+}
+
+:root[data-theme='dark'] .stat-item--primary {
+    background: linear-gradient(180deg, rgba(22, 28, 43, 0.98) 0%, rgba(15, 23, 42, 0.96) 100%);
+}
+
+:root[data-theme='dark'] .stat-value,
+:root[data-theme='dark'] .stat-item--status .stat-value {
+    border-color: rgba(148, 163, 184, 0.16);
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.82), rgba(15, 23, 42, 0.88));
+    color: var(--text-strong);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme='dark'] .stat-value span:first-child,
+:root[data-theme='dark'] .stat-item--primary .stat-value span:first-child,
+:root[data-theme='dark'] .stat-item--status .stat-value span:first-child {
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .stat-item--status {
+    background: linear-gradient(180deg, rgba(255, 107, 0, 0.12), rgba(255, 107, 0, 0.05));
+    border-color: rgba(255, 107, 0, 0.18);
+}
+
+:root[data-theme='dark'] .panel-content--drones {
+    background:
+        radial-gradient(circle at top left, rgba(255, 107, 0, 0.08), transparent 32%),
+        linear-gradient(180deg, #0b1220 0%, #111827 100%);
+}
+
+:root[data-theme='dark'] .panel-content--logs {
+    background: linear-gradient(180deg, #0b1220 0%, #111827 100%);
+}
+
+:root[data-theme='dark'] .logs-console__stream {
+    border-color: rgba(148, 163, 184, 0.12);
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(17, 24, 39, 0.98) 100%);
+    box-shadow:
+        0 10px 24px rgba(2, 6, 23, 0.24),
+        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme='dark'] .log-entry {
+    background: rgba(15, 23, 42, 0.7);
+    color: var(--text-color);
+}
+
+:root[data-theme='dark'] .log-entry:hover {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(148, 163, 184, 0.12);
+    box-shadow: 0 8px 18px rgba(2, 6, 23, 0.18);
+}
+
+:root[data-theme='dark'] .log-entry__time {
+    color: #94a3b8;
+}
+
+:root[data-theme='dark'] .log-entry--info,
+:root[data-theme='dark'] .log-entry--info .log-entry__tag {
+    color: #cbd5e1;
+}
+
+:root[data-theme='dark'] .log-entry--action,
+:root[data-theme='dark'] .log-entry--action .log-entry__tag {
+    color: #a5b4c8;
+}
+
+:root[data-theme='dark'] .log-entry--warn,
+:root[data-theme='dark'] .log-entry--warn .log-entry__tag {
+    color: #fbbf24;
+}
+
+:root[data-theme='dark'] .log-entry--error,
+:root[data-theme='dark'] .log-entry--error .log-entry__tag {
+    color: #f87171;
+}
+
+:root[data-theme='dark'] .log-entry--success,
+:root[data-theme='dark'] .log-entry--success .log-entry__tag {
+    color: #4ade80;
+}
+
+:root[data-theme='dark'] .swarm-manager__intro,
+:root[data-theme='dark'] .swarm-list-card,
+:root[data-theme='dark'] .led-matrix-card {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.96)) !important;
+    border-color: rgba(148, 163, 184, 0.14);
+    box-shadow: 0 12px 28px rgba(2, 6, 23, 0.24);
+}
+
+:root[data-theme='dark'] .swarm-manager__subtitle,
+:root[data-theme='dark'] .swarm-list__empty {
+    color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .swarm-list-card__title,
+:root[data-theme='dark'] .swarm-list__item-name {
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .swarm-list {
+    border-color: rgba(148, 163, 184, 0.12);
+    background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+}
+
+:root[data-theme='dark'] .swarm-list__item {
+    background: rgba(15, 23, 42, 0.72);
+    border-color: rgba(148, 163, 184, 0.08);
+    color: var(--text-color);
+}
+
+:root[data-theme='dark'] .swarm-list__item:hover {
+    background: rgba(30, 41, 59, 0.92);
+    box-shadow: 0 12px 18px rgba(2, 6, 23, 0.18);
+}
+
+:root[data-theme='dark'] .swarm-list__item.is-active {
+    background: linear-gradient(90deg, rgba(255, 107, 0, 0.14) 0%, rgba(30, 41, 59, 0.96) 100%);
+}
+
+:root[data-theme='dark'] .swarm-list__item-icon,
+:root[data-theme='dark'] .swarm-list__item-badge,
+:root[data-theme='dark'] .swarm-list__empty,
+:root[data-theme='dark'] .led-matrix-grid {
+    background: rgba(15, 23, 42, 0.86);
+    border-color: rgba(148, 163, 184, 0.16);
+    color: var(--text-muted);
+    box-shadow: none;
+}
+
+:root[data-theme='dark'] .swarm-list__item.is-active .swarm-list__item-badge {
+    background: rgba(255, 107, 0, 0.14);
+}
+
+:root[data-theme='dark'] .led-pixel,
+:root[data-theme='dark'] .led-pixel-base {
+    background: #334155;
+    border-color: rgba(148, 163, 184, 0.28);
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme='dark'] .gamepad-hero,
+:root[data-theme='dark'] .gamepad-section,
+:root[data-theme='dark'] .gp-aux-card,
+:root[data-theme='dark'] .channel-monitor-toolbar-card,
+:root[data-theme='dark'] .channel-monitor-board-card {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.96));
+    border-color: rgba(148, 163, 184, 0.14);
+    box-shadow: 0 12px 26px rgba(2, 6, 23, 0.22);
+}
+
+:root[data-theme='dark'] .gamepad-hero-title,
+:root[data-theme='dark'] .gamepad-section-title,
+:root[data-theme='dark'] .gp-aux-card-title,
+:root[data-theme='dark'] .channel-monitor-hero-title,
+:root[data-theme='dark'] .channel-monitor-label,
+:root[data-theme='dark'] .channel-monitor-value {
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .gamepad-hero-subtitle,
+:root[data-theme='dark'] .gamepad-status-pill,
+:root[data-theme='dark'] .gamepad-status-pill__label,
+:root[data-theme='dark'] .gamepad-status-pill__meta,
+:root[data-theme='dark'] .gamepad-auto-status,
+:root[data-theme='dark'] .gamepad-channel-status,
+:root[data-theme='dark'] .gamepad-section-caption,
+:root[data-theme='dark'] .gp-aux-card-subtitle,
+:root[data-theme='dark'] .gamepad-config-field span,
+:root[data-theme='dark'] .gp-aux-field span,
+:root[data-theme='dark'] .gp-aux-subfield span,
+:root[data-theme='dark'] .gp-channel-select span,
+:root[data-theme='dark'] .channel-monitor-hero-eyebrow,
+:root[data-theme='dark'] .channel-monitor-hero-subtitle,
+:root[data-theme='dark'] .channel-monitor-toolbar-note,
+:root[data-theme='dark'] .channel-monitor-value.is-muted {
+    color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .gamepad-status-pill,
+:root[data-theme='dark'] .gamepad-auto-status,
+:root[data-theme='dark'] .gamepad-channel-status,
+:root[data-theme='dark'] .gp-aux-card-badge,
+:root[data-theme='dark'] .channel-monitor-toolbar-btn,
+:root[data-theme='dark'] .channel-monitor-checkbox,
+:root[data-theme='dark'] .channel-monitor-cell,
+:root[data-theme='dark'] .channel-monitor-meter {
+    background: rgba(15, 23, 42, 0.88);
+    border-color: rgba(148, 163, 184, 0.16);
+    color: var(--text-color);
+}
+
+:root[data-theme='dark'] .channel-monitor-toolbar-btn:hover {
+    background: rgba(30, 41, 59, 0.94);
+    border-color: rgba(148, 163, 184, 0.24);
+}
+
+:root[data-theme='dark'] .channel-monitor-meter::before {
+    background: rgba(148, 163, 184, 0.24);
+}
+
+:root[data-theme='dark'] .channel-monitor-fill {
+    background: #475569;
+}

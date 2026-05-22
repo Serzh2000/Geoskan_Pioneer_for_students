@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <title>Pioneer Lua Web Simulator</title>
     <link rel="icon" href="data:,">
+    <script>
+        (function () {
+            var storageKey = 'geoskan_app_theme_v1';
+            var savedTheme = null;
+            try {
+                savedTheme = window.localStorage.getItem(storageKey);
+            } catch (error) {
+                savedTheme = null;
+            }
+
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var theme = savedTheme === 'dark' || savedTheme === 'light' ? savedTheme : (prefersDark ? 'dark' : 'light');
+            document.documentElement.dataset.theme = theme;
+        })();
+    </script>
     <link rel="stylesheet" href="style.css">
     <!-- Three.js and modules loaded via Vite -->
     <!-- Fengari for Lua in browser -->

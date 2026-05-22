@@ -8,6 +8,7 @@ import { setupCompletionProvider } from './monaco/completion.js';
 import { setupHoverProvider } from './monaco/hover.js';
 import { setupSyntaxHighlighting } from './monaco/syntax.js';
 import { editorRuntime } from './runtime.js';
+import type { AppTheme } from '../app/theme-toggle.js';
 
 export type TextEditorCreateOptions = {
     root: HTMLElement;
@@ -30,6 +31,14 @@ function getMonacoLanguage(language: ScriptLanguage): 'lua' | 'python' {
     return language === 'lua' ? 'lua' : 'python';
 }
 
+function getMonacoThemeName(theme: AppTheme): 'pioneer-light' | 'pioneer-dark' {
+    return theme === 'dark' ? 'pioneer-dark' : 'pioneer-light';
+}
+
+function getCurrentAppTheme(): AppTheme {
+    return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+}
+
 export function createTextEditorInstance(options: TextEditorCreateOptions): any {
     setupSyntaxHighlighting(monaco);
     setupHoverProvider(monaco);
@@ -39,7 +48,7 @@ export function createTextEditorInstance(options: TextEditorCreateOptions): any 
     const editorInstance = monaco.editor.create(options.root, {
         value: options.initialValue,
         language: getMonacoLanguage(options.initialLanguage),
-        theme: 'pioneer-light',
+        theme: getMonacoThemeName(getCurrentAppTheme()),
         automaticLayout: true,
         wordBasedSuggestions: 'off',
         quickSuggestions: {
@@ -160,4 +169,9 @@ export function layoutTextEditorInstance(editorInstance: any): void {
 
 export function layoutTextEditor(): void {
     layoutTextEditorInstance(editorRuntime.editorInstance);
+}
+
+export function setTextEditorTheme(theme: AppTheme): void {
+    setupSyntaxHighlighting(monaco);
+    monaco.editor.setTheme(getMonacoThemeName(theme));
 }

@@ -5,8 +5,8 @@
 /* FORM ELEMENTS GLOBALLY */
 input[type="text"], input[type="number"], textarea, select {
     width: 100%;
-    background: #ffffff;
-    border: 1px solid rgba(9, 9, 11, 0.1);
+    background: var(--input-bg);
+    border: 1px solid var(--control-border);
     color: var(--text-color);
     padding: 10px 12px;
     border-radius: 12px;
@@ -19,7 +19,7 @@ input[type="text"], input[type="number"], textarea, select {
 
 input:focus, textarea:focus, select:focus {
     border-color: var(--accent-color);
-    background: #ffffff;
+    background: var(--input-bg-focus);
     box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12);
 }
 

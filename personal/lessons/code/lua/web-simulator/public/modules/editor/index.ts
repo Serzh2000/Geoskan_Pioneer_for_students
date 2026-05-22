@@ -7,6 +7,7 @@ export {
     initEditor,
     isBlocklyEditorEnabled,
     layoutEditor,
+    setEditorTheme,
     setBlocklyEditorEnabled,
     setEditorLanguage,
     setEditorValue

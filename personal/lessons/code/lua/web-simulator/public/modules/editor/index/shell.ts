@@ -13,9 +13,11 @@ import {
     getTextEditorValueFromInstance,
     initializeMonacoEnvironment,
     layoutTextEditorInstance,
+    setTextEditorTheme,
     setTextEditorLanguageOnInstance,
     setTextEditorValueOnInstance
 } from '../text-editor.js';
+import type { AppTheme } from '../../app/theme-toggle.js';
 import {
     createEditorAutofitContext,
     getSavedEditorDraft as getSavedEditorDraftFromStorage,
@@ -131,4 +133,10 @@ export function setEditorTextLanguage(language: ScriptLanguage): void {
 
 export function layoutEditor(): void {
     layoutTextEditorInstance(editorIndexState.editorInstance);
+}
+
+export function setEditorTheme(theme: AppTheme): void {
+    if (hasFallbackEditor()) return;
+
+    setTextEditorTheme(theme);
 }

@@ -156,4 +156,28 @@ export function setupSyntaxHighlighting(monaco: any) {
             'editor.inactiveSelectionBackground': '#f2e2d6'
         }
     });
+
+    monaco.editor.defineTheme('pioneer-dark', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [
+            { token: 'keyword.class', foreground: 'cbd5f5', fontStyle: 'bold' },
+            { token: 'function.call', foreground: 'ff9c53', fontStyle: 'bold' },
+            { token: 'constant', foreground: '60a5fa', fontStyle: 'bold' },
+            { token: 'comment', foreground: '94a3b8' },
+            { token: 'string', foreground: 'fdba74' },
+            { token: 'number', foreground: '5eead4' },
+            { token: 'keyword', foreground: 'c084fc', fontStyle: 'bold' }
+        ],
+        colors: {
+            'editor.background': '#0f172a',
+            'editor.foreground': '#e5e7eb',
+            'editor.lineHighlightBackground': '#172033',
+            'editorLineNumber.foreground': '#64748b',
+            'editorLineNumber.activeForeground': '#e5e7eb',
+            'editorCursor.foreground': '#ff9c53',
+            'editor.selectionBackground': '#7c2d1238',
+            'editor.inactiveSelectionBackground': '#33415588'
+        }
+    });
 }

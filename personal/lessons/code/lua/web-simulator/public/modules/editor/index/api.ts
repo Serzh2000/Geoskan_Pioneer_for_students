@@ -47,6 +47,7 @@ import {
     getTextEditorValue,
     initializeEditorShellEnvironment,
     layoutEditor as layoutEditorShell,
+    setEditorTheme as setEditorThemeShell,
     setEditorTextLanguage,
     setTextEditorValue,
     syncEditorModeVisibility
@@ -214,4 +215,8 @@ export function layoutEditor(): void {
         editorIndexState.blocklyCanvas,
         editorIndexState.blocklyWorkspace
     );
+}
+
+export function setEditorTheme(theme: 'light' | 'dark'): void {
+    setEditorThemeShell(theme);
 }
