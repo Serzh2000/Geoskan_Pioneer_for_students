@@ -33,9 +33,52 @@ export let multiSelectedObjects: THREE.Object3D[] = [];
 export let pointerDownPos = new THREE.Vector2();
 export let isHittingGizmo = false;
 let canvasResizeObserver: ResizeObserver | null = null;
+let sceneThemeListenerAttached = false;
 
 const orbitTargetBounds = new THREE.Box3();
 const orbitTargetCenter = new THREE.Vector3();
+
+type SceneTheme = 'light' | 'dark';
+
+function getSceneTheme(): SceneTheme {
+    return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+}
+
+function getSceneThemePalette(): { background: number; fog: number } {
+    if (getSceneTheme() === 'dark') {
+        return {
+            background: 0x0f172a,
+            fog: 0x0f172a
+        };
+    }
+
+    return {
+        background: 0xf5f6f8,
+        fog: 0xf5f6f8
+    };
+}
+
+function applySceneTheme(): void {
+    if (!scene) return;
+
+    const { background, fog } = getSceneThemePalette();
+    scene.background = new THREE.Color(background);
+
+    if (scene.fog instanceof THREE.FogExp2) {
+        scene.fog.color.setHex(fog);
+    } else {
+        scene.fog = new THREE.FogExp2(fog, 0.01);
+    }
+}
+
+function ensureSceneThemeListener(): void {
+    if (sceneThemeListenerAttached || typeof window === 'undefined') return;
+
+    window.addEventListener('app-theme-change', () => {
+        applySceneTheme();
+    });
+    sceneThemeListenerAttached = true;
+}
 
 export function setSelectedObject(obj: THREE.Object3D | null) {
     selectedObject = obj;
@@ -65,7 +108,7 @@ export function toggleMultiSelectObject(obj: THREE.Object3D) {
     } else if (multiSelectedObjects.length === 0) {
         selectedObject = null;
     } else {
-        // Р•СЃР»Рё РІС‹Р±СЂР°РЅРѕ РјРЅРѕРіРѕ, РѕСЃРЅРѕРІРЅС‹Рј СЃС‡РёС‚Р°РµС‚СЃСЏ РїРѕСЃР»РµРґРЅРёР№ РІС‹Р±СЂР°РЅРЅС‹Р№ (РґР»СЏ РёРЅС„РѕРїР°РЅРµР»Рё)
+        // Если выбрано много, основным считается последний выбранный (для инфопанели)
         selectedObject = multiSelectedObjects[multiSelectedObjects.length - 1];
     }
     
@@ -121,8 +164,7 @@ export function initScene(container: HTMLElement) {
     canvasResizeObserver?.disconnect();
     
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf5f6f8);
-    scene.fog = new THREE.FogExp2(0xf5f6f8, 0.01);
+    applySceneTheme();
 
     const width = canvasContainer.clientWidth || window.innerWidth;
     const height = canvasContainer.clientHeight || window.innerHeight;
@@ -155,7 +197,7 @@ export function initScene(container: HTMLElement) {
     controls.enabled = false; 
 
     controls.addEventListener('change', () => {
-        // РЈР±СЂР°РЅРѕ СЃРІРµСЂС…РїРѕРґСЂРѕР±РЅРѕРµ Р»РѕРіРёСЂРѕРІР°РЅРёРµ РІСЂР°С‰РµРЅРёСЏ РєР°РјРµСЂС‹
+        // Убрано сверхподробное логирование вращения камеры
     });
 
     transformControl = new TransformControls(camera, renderer.domElement);
@@ -192,6 +234,7 @@ export function initScene(container: HTMLElement) {
     mouse = new THREE.Vector2();
 
     is3DActive = true;
+    ensureSceneThemeListener();
     syncViewportDependentSceneVisuals();
 
     if (typeof ResizeObserver !== 'undefined') {

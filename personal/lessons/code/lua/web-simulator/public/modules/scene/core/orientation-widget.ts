@@ -9,7 +9,6 @@ type AxisConfig = {
 
 type AxisDom = {
     root: HTMLDivElement;
-    tail: HTMLDivElement;
     shaft: HTMLDivElement;
     tip: HTMLDivElement;
     label: HTMLDivElement;
@@ -31,9 +30,6 @@ function createAxisDom(axis: AxisConfig) {
     root.className = `scene-orientation-widget__axis scene-orientation-widget__axis--${axis.key}`;
     root.style.setProperty('--axis-color', axis.color);
 
-    const tail = document.createElement('div');
-    tail.className = 'scene-orientation-widget__tail';
-
     const shaft = document.createElement('div');
     shaft.className = 'scene-orientation-widget__shaft';
 
@@ -44,12 +40,11 @@ function createAxisDom(axis: AxisConfig) {
     label.className = 'scene-orientation-widget__label';
     label.textContent = axis.label;
 
-    root.appendChild(tail);
     root.appendChild(shaft);
     root.appendChild(tip);
     root.appendChild(label);
 
-    return { root, tail, shaft, tip, label };
+    return { root, shaft, tip, label };
 }
 
 export function initOrientationWidget(container: HTMLElement) {
@@ -100,7 +95,6 @@ export function updateOrientationWidget(camera: THREE.Camera | null) {
         const angle = Math.atan2(y, x);
         const emphasis = 0.42 + ((depth + 1) * 0.29);
         const shaftThickness = 2.3 + ((depth + 1) * 0.45);
-        const tailLength = 8 + ((1 - depth) * 2.5);
         const tipScale = 0.84 + ((depth + 1) * 0.18);
         const labelOffset = 11 + ((depth + 1) * 3);
         const labelX = x + (Math.cos(angle) * labelOffset);
@@ -109,9 +103,6 @@ export function updateOrientationWidget(camera: THREE.Camera | null) {
 
         dom.root.style.zIndex = String(Math.round((depth + 1) * 100));
         dom.root.style.opacity = emphasis.toFixed(3);
-        dom.tail.style.width = `${tailLength.toFixed(1)}px`;
-        dom.tail.style.height = `${Math.max(1.4, shaftThickness - 0.8).toFixed(2)}px`;
-        dom.tail.style.transform = `translate(${-tailLength.toFixed(1)}px, -50%) rotate(${angle}rad)`;
         dom.shaft.style.width = `${Math.max(10, length).toFixed(1)}px`;
         dom.shaft.style.height = `${shaftThickness.toFixed(2)}px`;
         dom.shaft.style.transform = `translateY(-50%) rotate(${angle}rad)`;

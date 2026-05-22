@@ -6,21 +6,19 @@
 }
 
 :root[data-theme='dark'] .stat-item {
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(17, 24, 39, 0.94));
-    border-color: rgba(148, 163, 184, 0.14);
-    box-shadow: 0 8px 18px rgba(2, 6, 23, 0.18);
+    background: rgba(15, 23, 42, 0.96);
+    border-color: rgba(148, 163, 184, 0.18);
 }
 
 :root[data-theme='dark'] .stat-item--primary {
-    background: linear-gradient(180deg, rgba(22, 28, 43, 0.98) 0%, rgba(15, 23, 42, 0.96) 100%);
+    background: rgba(18, 26, 41, 0.98);
 }
 
 :root[data-theme='dark'] .stat-value,
 :root[data-theme='dark'] .stat-item--status .stat-value {
-    border-color: rgba(148, 163, 184, 0.16);
-    background: linear-gradient(180deg, rgba(30, 41, 59, 0.82), rgba(15, 23, 42, 0.88));
-    color: var(--text-strong);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    border-color: rgba(148, 163, 184, 0.2);
+    background: rgba(30, 41, 59, 0.92);
+    color: #f8fafc;
 }
 
 :root[data-theme='dark'] .stat-value span:first-child,
@@ -30,8 +28,25 @@
 }
 
 :root[data-theme='dark'] .stat-item--status {
-    background: linear-gradient(180deg, rgba(255, 107, 0, 0.12), rgba(255, 107, 0, 0.05));
-    border-color: rgba(255, 107, 0, 0.18);
+    background: rgba(255, 107, 0, 0.12);
+    border-color: rgba(255, 176, 103, 0.2);
+}
+
+:root[data-theme='dark'] .stat-label {
+    color: #cbd5e1;
+}
+
+:root[data-theme='dark'] .stat-value span:last-child {
+    color: #cbd5e1;
+}
+
+:root[data-theme='dark'] .stat-item--primary .stat-value span:last-child {
+    color: #ffb067;
+}
+
+:root[data-theme='dark'] .stat-item--status .stat-value {
+    border-color: rgba(255, 176, 103, 0.2);
+    background: rgba(17, 24, 39, 0.96);
 }
 
 :root[data-theme='dark'] .panel-content--drones {
@@ -144,6 +159,27 @@
     background: rgba(255, 107, 0, 0.14);
 }
 
+:root[data-theme='dark'] .swarm-action-btn--delete {
+    background: rgba(124, 45, 18, 0.24);
+    color: #fdba74;
+    border-color: rgba(251, 146, 60, 0.24);
+    box-shadow: none;
+}
+
+:root[data-theme='dark'] .swarm-action-btn--delete:hover:not(:disabled),
+:root[data-theme='dark'] .swarm-action-btn--delete:focus-visible {
+    background: rgba(154, 52, 18, 0.34);
+    color: #ffedd5;
+    border-color: rgba(251, 146, 60, 0.34);
+}
+
+:root[data-theme='dark'] .swarm-action-btn--delete:disabled {
+    background: rgba(51, 65, 85, 0.42);
+    color: #94a3b8;
+    border-color: rgba(148, 163, 184, 0.16);
+    opacity: 0.65;
+}
+
 :root[data-theme='dark'] .led-pixel,
 :root[data-theme='dark'] .led-pixel-base {
     background: #334155;
@@ -159,6 +195,30 @@
     background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.96));
     border-color: rgba(148, 163, 184, 0.14);
     box-shadow: 0 12px 26px rgba(2, 6, 23, 0.22);
+}
+
+:root[data-theme='dark'] .gamepad-panel-tabs {
+    background: linear-gradient(180deg, rgba(2, 6, 23, 0.62), rgba(15, 23, 42, 0.78));
+    border-color: rgba(148, 163, 184, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme='dark'] .gamepad-panel-tab {
+    color: #94a3b8;
+}
+
+:root[data-theme='dark'] .gamepad-panel-tab:hover {
+    color: #e2e8f0;
+    background: rgba(30, 41, 59, 0.92);
+}
+
+:root[data-theme='dark'] .gamepad-panel-tab.is-active {
+    background: linear-gradient(180deg, rgba(51, 65, 85, 0.96), rgba(30, 41, 59, 0.96));
+    color: #ff9a4d;
+    border-color: rgba(255, 107, 0, 0.28);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 8px 18px rgba(2, 6, 23, 0.22);
 }
 
 :root[data-theme='dark'] .gamepad-hero-title,
@@ -213,4 +273,495 @@
 
 :root[data-theme='dark'] .channel-monitor-fill {
     background: #475569;
+}
+
+:root[data-theme='dark'] .gp-channel-row,
+:root[data-theme='dark'] .gp-range-editor,
+:root[data-theme='dark'] .gp-wizard-drone-card,
+:root[data-theme='dark'] .gp-wizard-stick-card,
+:root[data-theme='dark'] .gp-wizard-summary-lead,
+:root[data-theme='dark'] .gp-wizard-summary-card,
+:root[data-theme='dark'] .modal-content {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.96));
+    border-color: rgba(148, 163, 184, 0.16);
+    box-shadow: 0 18px 36px rgba(2, 6, 23, 0.34);
+}
+
+:root[data-theme='dark'] .gp-channel-badge,
+:root[data-theme='dark'] .gp-invert-checkbox,
+:root[data-theme='dark'] .gp-channel-value,
+:root[data-theme='dark'] .gp-aux-value,
+:root[data-theme='dark'] .modal-header,
+:root[data-theme='dark'] .gp-wizard-invert-checkbox,
+:root[data-theme='dark'] .gp-wizard-stick-status,
+:root[data-theme='dark'] .gp-wizard-summary-badge {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(148, 163, 184, 0.18);
+    color: var(--text-color);
+}
+
+:root[data-theme='dark'] .gp-channel-title,
+:root[data-theme='dark'] .modal-title,
+:root[data-theme='dark'] .gp-wizard-axis-label,
+:root[data-theme='dark'] .gp-wizard-stick-title,
+:root[data-theme='dark'] .gp-wizard-summary-card-title,
+:root[data-theme='dark'] .gp-wizard-summary-row strong {
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .gp-channel-subtitle,
+:root[data-theme='dark'] .gp-range-values,
+:root[data-theme='dark'] .gp-range-meta,
+:root[data-theme='dark'] .gp-wizard-status,
+:root[data-theme='dark'] .gp-wizard-summary-lead,
+:root[data-theme='dark'] .gp-wizard-summary-row,
+:root[data-theme='dark'] .gp-wizard-summary-note,
+:root[data-theme='dark'] .modal-close-btn {
+    color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .gp-bar-bg,
+:root[data-theme='dark'] .gp-range-track {
+    background: rgba(51, 65, 85, 0.82);
+}
+
+:root[data-theme='dark'] .gp-bar-bg::after {
+    background: rgba(148, 163, 184, 0.26);
+}
+
+:root[data-theme='dark'] .gp-invert-checkbox:hover,
+:root[data-theme='dark'] .gp-wizard-invert-checkbox:hover,
+:root[data-theme='dark'] .modal-close-btn:hover {
+    background: rgba(30, 41, 59, 0.96);
+    border-color: rgba(255, 107, 0, 0.24);
+}
+
+:root[data-theme='dark'] .gp-checkmark {
+    background: rgba(15, 23, 42, 0.94);
+    border-color: rgba(148, 163, 184, 0.22);
+}
+
+:root[data-theme='dark'] .gp-channel-value,
+:root[data-theme='dark'] .gp-aux-value {
+    font-variant-numeric: tabular-nums;
+}
+
+:root[data-theme='dark'] .gp-range-marker,
+:root[data-theme='dark'] .gp-range-dual-slider input[type="range"]::-webkit-slider-thumb,
+:root[data-theme='dark'] .gp-range-dual-slider input[type="range"]::-moz-range-thumb {
+    background: #e2e8f0;
+    border-color: #ff6b00;
+    box-shadow: 0 0 0 1px rgba(51, 65, 85, 0.9), 0 0 10px rgba(255, 107, 0, 0.16);
+}
+
+:root[data-theme='dark'] .gamepad-action-btn--danger {
+    color: #fdba74;
+    border-color: rgba(251, 146, 60, 0.26);
+    background: rgba(124, 45, 18, 0.28);
+}
+
+:root[data-theme='dark'] .gamepad-action-btn--danger:hover,
+:root[data-theme='dark'] .gamepad-action-btn--danger:focus-visible {
+    color: #ffedd5;
+    border-color: rgba(251, 146, 60, 0.34);
+    background: rgba(154, 52, 18, 0.34);
+}
+
+:root[data-theme='dark'] .modal-overlay {
+    background: rgba(2, 6, 23, 0.72);
+}
+
+:root[data-theme='dark'] .modal-header {
+    border-bottom-color: rgba(148, 163, 184, 0.14);
+}
+
+:root[data-theme='dark'] .gp-wizard-body {
+    background: linear-gradient(180deg, #0b1220 0%, #111827 100%);
+}
+
+:root[data-theme='dark'] .gp-wizard-drone-stage {
+    background:
+        radial-gradient(circle at 50% 22%, rgba(255, 107, 0, 0.16), transparent 24%),
+        linear-gradient(180deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.98) 48%, rgba(11, 18, 32, 0.98) 100%);
+    border-color: rgba(96, 165, 250, 0.16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme='dark'] .gp-wizard-footer {
+    border-top-color: rgba(148, 163, 184, 0.14);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-card.is-active {
+    border-color: rgba(255, 107, 0, 0.28);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12), 0 16px 28px rgba(2, 6, 23, 0.24);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-shell {
+    background:
+        radial-gradient(circle at 50% 48%, #1e293b 0%, #0f172a 72%, #020617 100%);
+    border-color: rgba(148, 163, 184, 0.24);
+    box-shadow:
+        inset 0 10px 20px rgba(255, 255, 255, 0.04),
+        inset 0 -6px 18px rgba(2, 6, 23, 0.4),
+        0 12px 22px rgba(2, 6, 23, 0.28);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-shell::before {
+    border-color: rgba(148, 163, 184, 0.22);
+    background: radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.82) 0%, rgba(15, 23, 42, 0.92) 100%);
+    box-shadow: inset 0 0 18px rgba(2, 6, 23, 0.3);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-shell::after {
+    background: #475569;
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(148, 163, 184, 0.18);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-guides,
+:root[data-theme='dark'] .gp-wizard-stick-guides::before {
+    background: rgba(148, 163, 184, 0.18);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-knob {
+    background: radial-gradient(circle at 35% 35%, #f8fafc 0%, #94a3b8 28%, #334155 72%, #0f172a 100%);
+    box-shadow:
+        inset 0 -3px 8px rgba(2, 6, 23, 0.4),
+        inset 0 3px 6px rgba(255, 255, 255, 0.14),
+        0 10px 18px rgba(2, 6, 23, 0.3),
+        0 4px 8px rgba(2, 6, 23, 0.18);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-knob::before {
+    background:
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(148, 163, 184, 0.12) 2px, rgba(148, 163, 184, 0.12) 4px),
+        repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(148, 163, 184, 0.12) 2px, rgba(148, 163, 184, 0.12) 4px);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-knob::after {
+    background: radial-gradient(circle at 50% 50%, #94a3b8 0%, #475569 100%);
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.14), 0 1px 1px rgba(2, 6, 23, 0.12);
+}
+
+:root[data-theme='dark'] .guide-modal-overlay {
+    background: rgba(2, 6, 23, 0.84);
+}
+
+:root[data-theme='dark'] .guide-modal {
+    background:
+        radial-gradient(circle at top right, rgba(255, 107, 0, 0.12), transparent 30%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.98));
+    border-color: rgba(148, 163, 184, 0.14);
+    box-shadow: 0 24px 60px rgba(2, 6, 23, 0.4);
+}
+
+:root[data-theme='dark'] .guide-modal__header {
+    background: rgba(15, 23, 42, 0.9);
+    border-bottom-color: rgba(148, 163, 184, 0.14);
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme='dark'] .guide-modal__title {
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .guide-modal__subtitle {
+    color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .guide-modal__close {
+    border-color: rgba(148, 163, 184, 0.18);
+    color: var(--text-muted);
+    background: rgba(15, 23, 42, 0.88);
+}
+
+:root[data-theme='dark'] .guide-modal__close:hover {
+    color: #ffb067;
+    background: rgba(30, 41, 59, 0.96);
+    border-color: rgba(255, 107, 0, 0.28);
+}
+
+:root[data-theme='dark'] .guide-modal__body {
+    background: linear-gradient(180deg, #0b1220 0%, #111827 100%);
+}
+
+:root[data-theme='dark'] .guide-modal-layout {
+    --guide-bg: rgba(15, 23, 42, 0.96);
+    --guide-bg-muted: rgba(15, 23, 42, 0.86);
+    --guide-bg-emphasis: rgba(30, 41, 59, 0.92);
+    --guide-text: #f8fafc;
+    --guide-text-muted: #cbd5e1;
+    --guide-border: rgba(148, 163, 184, 0.14);
+    --guide-border-strong: rgba(148, 163, 184, 0.22);
+    --guide-accent: #ff6b00;
+    --guide-accent-strong: #ff8f3a;
+    --guide-accent-soft: rgba(255, 107, 0, 0.14);
+    --guide-success: #4ade80;
+    --guide-info: #38bdf8;
+    --guide-shadow: 0 18px 40px rgba(2, 6, 23, 0.28);
+    color: var(--guide-text);
+}
+
+:root[data-theme='dark'] .guide-hero,
+:root[data-theme='dark'] .guide-lesson-page,
+:root[data-theme='dark'] .guide-panel-card,
+:root[data-theme='dark'] .guide-theory-page__hero,
+:root[data-theme='dark'] .guide-portal-intro__hero,
+:root[data-theme='dark'] .guide-portal-card,
+:root[data-theme='dark'] .guide-portal-roadmap,
+:root[data-theme='dark'] .guide-lesson-overview,
+:root[data-theme='dark'] .guide-overview-item,
+:root[data-theme='dark'] .guide-lesson-page__meta-item,
+:root[data-theme='dark'] .guide-selector-summary__item {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.96));
+    border-color: rgba(148, 163, 184, 0.14);
+    box-shadow: 0 12px 28px rgba(2, 6, 23, 0.24);
+}
+
+:root[data-theme='dark'] .guide-hero,
+:root[data-theme='dark'] .guide-portal-intro__hero {
+    background:
+        radial-gradient(circle at top right, rgba(255, 107, 0, 0.08), transparent 28%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.96));
+    border-left-color: #ff6b00;
+}
+
+:root[data-theme='dark'] .guide-hero__title,
+:root[data-theme='dark'] .guide-hero__text,
+:root[data-theme='dark'] .guide-hero__flow,
+:root[data-theme='dark'] .guide-hero__progress,
+:root[data-theme='dark'] .guide-portal-intro__title,
+:root[data-theme='dark'] .guide-portal-intro__text,
+:root[data-theme='dark'] .guide-portal-card__title,
+:root[data-theme='dark'] .guide-portal-card__text,
+:root[data-theme='dark'] .guide-roadmap-item__title,
+:root[data-theme='dark'] .guide-roadmap-item__summary,
+:root[data-theme='dark'] .guide-panel-card__title,
+:root[data-theme='dark'] .guide-panel-card__text {
+    color: inherit;
+}
+
+:root[data-theme='dark'] .guide-hero__title,
+:root[data-theme='dark'] .guide-portal-intro__title,
+:root[data-theme='dark'] .guide-portal-card__title,
+:root[data-theme='dark'] .guide-roadmap-item__title,
+:root[data-theme='dark'] .guide-panel-card__title {
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .guide-hero__text,
+:root[data-theme='dark'] .guide-hero__flow,
+:root[data-theme='dark'] .guide-hero__progress,
+:root[data-theme='dark'] .guide-portal-intro__text,
+:root[data-theme='dark'] .guide-portal-card__text,
+:root[data-theme='dark'] .guide-roadmap-item__summary,
+:root[data-theme='dark'] .guide-panel-card__text,
+:root[data-theme='dark'] .guide-portal-roadmap__header .guide-panel-card__text {
+    color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .guide-hero__eyebrow,
+:root[data-theme='dark'] .guide-portal-intro__eyebrow,
+:root[data-theme='dark'] .guide-roadmap-item__status {
+    color: #ffb067;
+}
+
+:root[data-theme='dark'] .guide-hero__flow,
+:root[data-theme='dark'] .guide-hero__progress {
+    background: rgba(15, 23, 42, 0.88);
+    border-color: rgba(148, 163, 184, 0.16);
+}
+
+:root[data-theme='dark'] .guide-portal-switcher {
+    padding: 6px;
+    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.78);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+:root[data-theme='dark'] .guide-lesson__action,
+:root[data-theme='dark'] .guide-primary-action {
+    border-color: rgba(148, 163, 184, 0.18);
+    background: rgba(15, 23, 42, 0.9);
+    color: var(--text-color);
+}
+
+:root[data-theme='dark'] .guide-lesson__action:hover,
+:root[data-theme='dark'] .guide-primary-action:hover {
+    background: rgba(30, 41, 59, 0.96);
+    border-color: rgba(255, 107, 0, 0.26);
+}
+
+:root[data-theme='dark'] .guide-lesson__action.is-active {
+    background: linear-gradient(135deg, rgba(255, 107, 0, 0.14), rgba(30, 41, 59, 0.96));
+    border-color: rgba(255, 107, 0, 0.28);
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .guide-primary-action {
+    background: linear-gradient(180deg, rgba(255, 107, 0, 0.32), rgba(234, 88, 12, 0.24));
+    border-color: rgba(255, 176, 103, 0.28);
+    color: #fff7ed;
+}
+
+:root[data-theme='dark'] .guide-primary-action:hover {
+    background: linear-gradient(180deg, rgba(255, 107, 0, 0.42), rgba(234, 88, 12, 0.32));
+}
+
+:root[data-theme='dark'] .guide-roadmap-item {
+    background: rgba(15, 23, 42, 0.82);
+    border-color: rgba(148, 163, 184, 0.16);
+}
+
+:root[data-theme='dark'] .guide-roadmap-item:hover {
+    background: rgba(30, 41, 59, 0.96);
+    border-color: rgba(255, 107, 0, 0.22);
+}
+
+:root[data-theme='dark'] .guide-roadmap-item.is-current {
+    background: linear-gradient(135deg, rgba(255, 107, 0, 0.14), rgba(30, 41, 59, 0.96));
+    border-color: rgba(255, 176, 103, 0.26);
+}
+
+:root[data-theme='dark'] .guide-roadmap-item.is-completed {
+    box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.28);
+}
+
+:root[data-theme='dark'] .guide-roadmap-item.is-locked {
+    opacity: 0.58;
+}
+
+:root[data-theme='dark'] .guide-roadmap-item.is-locked:hover {
+    background: rgba(15, 23, 42, 0.82);
+    border-color: rgba(148, 163, 184, 0.16);
+}
+
+:root[data-theme='dark'] .guide-roadmap-item__index {
+    background: rgba(255, 107, 0, 0.14);
+    color: #ffb067;
+}
+
+:root[data-theme='dark'] .guide-chapter-tab,
+:root[data-theme='dark'] .guide-page-tab,
+:root[data-theme='dark'] .guide-theory-card,
+:root[data-theme='dark'] .guide-practice-card,
+:root[data-theme='dark'] .guide-api-card {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(17, 24, 39, 0.96));
+    border-color: rgba(148, 163, 184, 0.14);
+    color: var(--text-color);
+    box-shadow: 0 10px 24px rgba(2, 6, 23, 0.2);
+}
+
+:root[data-theme='dark'] .guide-chapter-tab:hover,
+:root[data-theme='dark'] .guide-page-tab:hover,
+:root[data-theme='dark'] .guide-practice-card--selectable:hover {
+    border-color: rgba(255, 107, 0, 0.24);
+    background: rgba(30, 41, 59, 0.96);
+    box-shadow: 0 14px 28px rgba(2, 6, 23, 0.24);
+}
+
+:root[data-theme='dark'] .guide-chapter-tab.is-active,
+:root[data-theme='dark'] .guide-page-tab.is-active,
+:root[data-theme='dark'] .guide-practice-card--selectable.is-active {
+    background: linear-gradient(135deg, rgba(255, 107, 0, 0.14), rgba(30, 41, 59, 0.96));
+    border-color: rgba(255, 107, 0, 0.28);
+}
+
+:root[data-theme='dark'] .guide-page-tab.is-solved,
+:root[data-theme='dark'] .guide-practice-card--selectable.is-solved {
+    box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.28);
+}
+
+:root[data-theme='dark'] .guide-practice-card.is-locked,
+:root[data-theme='dark'] .guide-page-tab.is-locked {
+    opacity: 0.6;
+}
+
+:root[data-theme='dark'] .guide-page-tab__step,
+:root[data-theme='dark'] .guide-chapter-tab__step,
+:root[data-theme='dark'] .guide-lesson-page__badge,
+:root[data-theme='dark'] .guide-panel-card__badge,
+:root[data-theme='dark'] .guide-practice-card__difficulty,
+:root[data-theme='dark'] .guide-lesson-overview__percent {
+    background: rgba(255, 107, 0, 0.14);
+    border-color: rgba(255, 107, 0, 0.22);
+    color: #ffb067;
+}
+
+:root[data-theme='dark'] .guide-chapter-tab__title,
+:root[data-theme='dark'] .guide-page-tab__text,
+:root[data-theme='dark'] .guide-theory-page__title,
+:root[data-theme='dark'] .guide-practice-card__title,
+:root[data-theme='dark'] .guide-api-card__title,
+:root[data-theme='dark'] .guide-lesson-page__title,
+:root[data-theme='dark'] .guide-lesson-page__goal {
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .guide-theory-card__content,
+:root[data-theme='dark'] .guide-theory-card__list,
+:root[data-theme='dark'] .guide-api-card__summary,
+:root[data-theme='dark'] .guide-practice-card .guide-panel-card__text,
+:root[data-theme='dark'] .guide-lesson-page__summary,
+:root[data-theme='dark'] .guide-lesson-overview__meta {
+    color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .guide-target-chip,
+:root[data-theme='dark'] .guide-panel-note,
+:root[data-theme='dark'] .guide-api-card__example,
+:root[data-theme='dark'] .guide-lesson-overview__bar,
+:root[data-theme='dark'] .guide-overview-item {
+    background: rgba(15, 23, 42, 0.88);
+    border-color: rgba(148, 163, 184, 0.16);
+    color: var(--text-color);
+}
+
+:root[data-theme='dark'] .guide-panel-note {
+    border-left-color: #ff6b00;
+}
+
+:root[data-theme='dark'] .guide-api-card__example {
+    color: #dbe4f0;
+}
+
+:root[data-theme='dark'] .guide-lesson-overview__bar {
+    background: rgba(51, 65, 85, 0.82);
+}
+
+:root[data-theme='dark'] .guide-theory-page__hero {
+    border-left-color: #ff6b00;
+}
+
+:root[data-theme='dark'] .guide-blockly-stage {
+    border-color: rgba(148, 163, 184, 0.22);
+    background-color: #0f172a;
+    background-image: radial-gradient(circle, rgba(148, 163, 184, 0.18) 1px, transparent 1.2px);
+}
+
+:root[data-theme='dark'] .guide-blockly-stage .blocklyToolbox,
+:root[data-theme='dark'] .guide-blockly-stage .blocklyToolboxDiv {
+    background: #0f172a !important;
+    border-right: 1px solid rgba(148, 163, 184, 0.14);
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme='dark'] .guide-scene-preview-host {
+    border-color: rgba(148, 163, 184, 0.18);
+    background:
+        radial-gradient(circle at top, rgba(255, 107, 0, 0.08), transparent 42%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.96));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        inset 0 -18px 28px rgba(2, 6, 23, 0.3);
+}
+
+:root[data-theme='dark'] .guide-scene-preview-host.is-active {
+    border-color: rgba(255, 107, 0, 0.3);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 0 0 3px rgba(255, 107, 0, 0.12);
+}
+
+:root[data-theme='dark'] .guide-scene-preview__placeholder {
+    color: #cbd5e1;
 }

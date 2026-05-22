@@ -22,8 +22,15 @@ let blocklyInitialized = false;
 let pendingBlocklyInitTimeout: number | null = null;
 let activeBlocklyInitToken = 0;
 let workspaceResizeHandler: (() => void) | null = null;
+let blocklyThemeListenerAttached = false;
 
-const blocklyTheme = Blockly.Theme.defineTheme('pioneer-light-blockly', {
+type BlocklyAppTheme = 'light' | 'dark';
+
+function getBlocklyAppTheme(): BlocklyAppTheme {
+    return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+}
+
+const lightBlocklyTheme = Blockly.Theme.defineTheme('pioneer-light-blockly', {
     name: 'pioneer-light-blockly',
     base: Blockly.Themes.Classic,
     componentStyles: {
@@ -39,6 +46,53 @@ const blocklyTheme = Blockly.Theme.defineTheme('pioneer-light-blockly', {
         cursorColour: '#ff6b00'
     }
 });
+
+const darkBlocklyTheme = Blockly.Theme.defineTheme('pioneer-dark-blockly', {
+    name: 'pioneer-dark-blockly',
+    base: Blockly.Themes.Classic,
+    componentStyles: {
+        workspaceBackgroundColour: 'transparent',
+        toolboxBackgroundColour: '#0f172a',
+        toolboxForegroundColour: '#e2e8f0',
+        flyoutBackgroundColour: '#111827',
+        flyoutForegroundColour: '#e2e8f0',
+        scrollbarColour: '#475569',
+        insertionMarkerColour: '#ff6b00',
+        insertionMarkerOpacity: 0.34,
+        markerColour: '#ff9a4d',
+        cursorColour: '#ff9a4d'
+    }
+});
+
+function getGuideBlocklyTheme(): Blockly.Theme {
+    return getBlocklyAppTheme() === 'dark' ? darkBlocklyTheme : lightBlocklyTheme;
+}
+
+function getGuideBlocklyGridColour(): string {
+    return getBlocklyAppTheme() === 'dark' ? '#334155' : '#d7dde5';
+}
+
+function syncGuideWorkspaceTheme(activeWorkspace: Blockly.WorkspaceSvg | null = workspace): void {
+    if (!activeWorkspace) {
+        return;
+    }
+
+    activeWorkspace.setTheme(getGuideBlocklyTheme());
+    const gridColour = getGuideBlocklyGridColour();
+    document.querySelectorAll<SVGLineElement>('#blocklyDiv pattern[id^="blocklyGridPattern"] line').forEach((line) => line.setAttribute('stroke', gridColour));
+    Blockly.svgResize(activeWorkspace);
+}
+
+function ensureGuideBlocklyThemeListener(): void {
+    if (blocklyThemeListenerAttached || typeof window === 'undefined') {
+        return;
+    }
+
+    window.addEventListener('app-theme-change', () => {
+        syncGuideWorkspaceTheme();
+    });
+    blocklyThemeListenerAttached = true;
+}
 
 function hasSequenceChanged(previous: string[], next: string[]): boolean {
     if (previous.length !== next.length) {
@@ -175,17 +229,18 @@ function initializeWorkspace(context: GuideInteractionContext, blocklyDiv: HTMLE
             toolbox: toolboxXml,
             scrollbars: true,
             trashcan: true,
-            theme: blocklyTheme,
+            theme: getGuideBlocklyTheme(),
             toolboxPosition: 'start',
             grid: {
                 spacing: 24,
                 length: 1,
-                colour: '#d7dde5',
+                colour: getGuideBlocklyGridColour(),
                 snap: false
             }
         });
 
         workspace = activeWorkspace;
+        ensureGuideBlocklyThemeListener();
         workspaceResizeHandler = () => Blockly.svgResize(activeWorkspace);
         window.addEventListener('resize', workspaceResizeHandler, false);
         Blockly.svgResize(activeWorkspace);

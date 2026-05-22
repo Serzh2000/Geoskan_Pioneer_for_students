@@ -7,7 +7,12 @@ import { parsePointsText } from '../../scene/objects/object-catalog.js';
 import { getSceneTypePreviewConfig, readAddSceneObjectDraft } from './support.js';
 import type { SceneManagerDomRefs } from './types.js';
 
-const PREVIEW_FALLBACK_MESSAGE = '3D-Ð¿Ñ€ÐµÐ²ÑŒÑŽ Ð½ÐµÐ´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ð¾ Ð² Ñ‚ÐµÐºÑƒÑ‰ÐµÐ¹ ÑÐµÑÑÐ¸Ð¸ Ð±Ñ€Ð°ÑƒÐ·ÐµÑ€Ð°. Ð—Ð°ÐºÑ€Ð¾Ð¹Ñ‚Ðµ Ð´Ñ€ÑƒÐ³Ð¸Ðµ Ð²ÐºÐ»Ð°Ð´ÐºÐ¸ Ñ WebGL Ð¸Ð»Ð¸ Ð¿ÐµÑ€ÐµÐ·Ð°Ð³Ñ€ÑƒÐ·Ð¸Ñ‚Ðµ ÑÑ‚Ñ€Ð°Ð½Ð¸Ñ†Ñƒ.';
+const PREVIEW_FALLBACK_MESSAGE = '3D-ïðåâüþ íåäîñòóïíî â òåêóùåé ñåññèè áðàóçåðà. Çàêðîéòå äðóãèå âêëàäêè ñ WebGL èëè ïåðåçàãðóçèòå ñòðàíèöó.';
+type PreviewTheme = 'light' | 'dark';
+
+function getPreviewTheme(): PreviewTheme {
+    return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+}
 
 function getPreviewObjectOptions(elements: SceneManagerDomRefs, previewType: string): SceneObjectOptions {
     const draft = readAddSceneObjectDraft(elements);
@@ -39,12 +44,12 @@ function getPreviewObjectOptions(elements: SceneManagerDomRefs, previewType: str
     };
 }
 
-function createPreviewGround(size: number) {
+function createPreviewGround(size: number, theme: PreviewTheme) {
     const geometry = new THREE.CircleGeometry(size, 64);
     const material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        roughness: 0.98,
-        metalness: 0.02
+        color: theme === 'dark' ? 0x1e293b : 0xffffff,
+        roughness: theme === 'dark' ? 0.94 : 0.98,
+        metalness: theme === 'dark' ? 0.06 : 0.02
     });
     const mesh = new THREE.Mesh(geometry, material);
     mesh.rotation.x = -Math.PI / 2;
@@ -78,7 +83,7 @@ function renderPreviewFallback(host: HTMLDivElement, message: string) {
     fallback.className = 'scene-type-modal__preview-fallback';
 
     const title = document.createElement('strong');
-    title.textContent = '3D-Ð¿Ñ€ÐµÐ²ÑŒÑŽ Ð½ÐµÐ´Ð¾ÑÑ‚ÑƒÐ¿Ð½Ð¾';
+    title.textContent = '3D-ïðåâüþ íåäîñòóïíî';
 
     const text = document.createElement('span');
     text.textContent = message;
@@ -96,7 +101,8 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
     }
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf8f9fa);
+    let activeTheme: PreviewTheme = getPreviewTheme();
+    scene.background = new THREE.Color(activeTheme === 'dark' ? 0x0f172a : 0xf8f9fa);
 
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 200);
     camera.up.set(0, 0, 1);
@@ -126,7 +132,8 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
     rimLight.position.set(0, 12, 6);
     scene.add(ambient, keyLight, fillLight, rimLight);
 
-    let ground = createPreviewGround(6);
+    let groundRadius = 6;
+    let ground = createPreviewGround(groundRadius, activeTheme);
     scene.add(ground);
 
     const root = new THREE.Group();
@@ -136,6 +143,30 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
     let previewTypeOverride: { type: string; label?: string } | null = null;
     let isVisible = false;
     let lastPreviewSignature: string | null = null;
+
+    const rebuildGround = (size: number) => {
+        groundRadius = size;
+        scene.remove(ground);
+        ground.geometry.dispose();
+        (ground.material as THREE.Material).dispose();
+        ground = createPreviewGround(groundRadius, activeTheme);
+        scene.add(ground);
+    };
+
+    const applyPreviewTheme = (theme: PreviewTheme) => {
+        activeTheme = theme;
+        scene.background = new THREE.Color(theme === 'dark' ? 0x0f172a : 0xf8f9fa);
+        ambient.color.set(theme === 'dark' ? 0xe2e8f0 : 0xffffff);
+        ambient.groundColor.set(theme === 'dark' ? 0x020617 : 0xdfe7ef);
+        ambient.intensity = theme === 'dark' ? 1.3 : 1.55;
+        keyLight.intensity = theme === 'dark' ? 1.85 : 1.5;
+        fillLight.color.set(theme === 'dark' ? 0xffb067 : 0xfff3e8);
+        fillLight.intensity = theme === 'dark' ? 0.42 : 0.72;
+        rimLight.color.set(theme === 'dark' ? 0x93c5fd : 0xe2e8f0);
+        rimLight.intensity = theme === 'dark' ? 0.52 : 0.36;
+        rebuildGround(groundRadius);
+        render();
+    };
 
     const render = () => {
         if (!renderer || !isRendererAvailable) return;
@@ -178,11 +209,7 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
         camera.position.copy(direction.multiplyScalar(distance));
         camera.lookAt(lookAtTarget);
 
-        scene.remove(ground);
-        ground.geometry.dispose();
-        (ground.material as THREE.Material).dispose();
-        ground = createPreviewGround(Math.min(Math.max(Math.max(size.x, size.y) * 1.1, 5), 20));
-        scene.add(ground);
+        rebuildGround(Math.min(Math.max(Math.max(size.x, size.y) * 1.1, 5), 20));
     };
 
     const updatePreviewMeta = (type: string, label?: string) => {
@@ -252,7 +279,12 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
         if (isVisible) render();
     });
     resizeObserver.observe(host);
+    const handleThemeChange = () => {
+        applyPreviewTheme(getPreviewTheme());
+    };
+    window.addEventListener('app-theme-change', handleThemeChange);
 
+    applyPreviewTheme(activeTheme);
     sync();
 
     return {
@@ -270,6 +302,7 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
         destroy() {
             isVisible = false;
             resizeObserver.disconnect();
+            window.removeEventListener('app-theme-change', handleThemeChange);
             clearPreviewObject();
             lastPreviewSignature = null;
             ground.geometry.dispose();
