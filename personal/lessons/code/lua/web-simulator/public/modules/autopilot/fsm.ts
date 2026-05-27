@@ -55,7 +55,7 @@ export function isDroneMovingState(drone: DroneState) {
 export function shouldSpinRotors(drone: DroneState) {
     return (
         drone.fsmState !== 'IDLE'
-        && drone.status !== 'РћРЁРР‘РљРђ'
+        && drone.status !== 'ОШИБКА'
         && drone.status !== 'CRASHED'
         && drone.status !== 'DISARMED_FALL'
     );
@@ -76,13 +76,20 @@ export function recordTickCommand(drone: DroneState, command: TickFlightCommand)
     drone.tickCommandSignature = signature;
 }
 
+export function beginEventCallbackPhase(drone: DroneState) {
+    // Commands issued from callback(event) belong to a new event-driven phase.
+    // This keeps valid FSM chains from being treated as "instantaneous" with the
+    // command that produced the event while still preserving same-callback checks.
+    drone.tickCommandSignature = null;
+}
+
 export function throwFsmTransitionError(drone: DroneState, command: CommandName): never {
-    throw new Error(`РћС€РёР±РєР° FSM: РќРµРІРѕР·РјРѕР¶РЅС‹Р№ РїРµСЂРµС…РѕРґ РёР· СЃРѕСЃС‚РѕСЏРЅРёСЏ ${drone.fsmState} С‡РµСЂРµР· РєРѕРјР°РЅРґСѓ ${command}`);
+    throw new Error(`Ошибка FSM: Невозможный переход из состояния ${drone.fsmState} через команду ${command}`);
 }
 
 export function rejectCommandByFsm(drone: DroneState, command: CommandName, message: string) {
     if (getCommandSource(drone) === 'timer') {
-        log('WARNING: РўР°Р№РјРµСЂ СЃСЂР°Р±РѕС‚Р°Р» СЃР»РёС€РєРѕРј РїРѕР·РґРЅРѕ. РљРѕРјР°РЅРґР° РѕС‚РєР»РѕРЅРµРЅР° РєРѕРЅРµС‡РЅС‹Рј Р°РІС‚РѕРјР°С‚РѕРј', 'warn');
+        log('WARNING: Таймер сработал слишком поздно. Команда отклонена конечным автоматом', 'warn');
         return false;
     }
 
@@ -113,7 +120,7 @@ export function applyGoToLocalPointRequest(
     if (drone.fsmState === 'PREFLIGHT' || drone.fsmState === 'TAKEOFF_PROCESS' || drone.fsmState === 'LANDING_PROCESS') {
         if (getCommandSource(drone) === 'timer') {
             showEarlyRouteNotice();
-            log('WARNING: РўР°Р№РјРµСЂ СЃСЂР°Р±РѕС‚Р°Р» СЃР»РёС€РєРѕРј РїРѕР·РґРЅРѕ. РљРѕРјР°РЅРґР° РѕС‚РєР»РѕРЅРµРЅР° РєРѕРЅРµС‡РЅС‹Рј Р°РІС‚РѕРјР°С‚РѕРј', 'warn');
+            log('WARNING: Таймер сработал слишком поздно. Команда отклонена конечным автоматом', 'warn');
             return false;
         }
         throwFsmTransitionError(drone, 'GO_TO_LOCAL_POINT');
@@ -123,7 +130,7 @@ export function applyGoToLocalPointRequest(
         return rejectCommandByFsm(
             drone,
             'GO_TO_LOCAL_POINT',
-            'CRITICAL WARNING: РљРѕРјР°РЅРґР° goToLocalPoint РІС‹Р·РІР°РЅР° РЅР° Р·РµРјР»Рµ! Р”СЂРѕРЅ РЅРµ РЅР°С…РѕРґРёС‚СЃСЏ РІ РІРѕР·РґСѓС…Рµ. Р’Р·Р»РµС‚ (TAKEOFF) РґРѕР»Р¶РµРЅ РїРѕР»РЅРѕСЃС‚СЊСЋ Р·Р°РІРµСЂС€РёС‚СЊСЃСЏ.'
+            'CRITICAL WARNING: Команда goToLocalPoint вызвана на земле! Дрон не находится в воздухе. Взлет (TAKEOFF) должен полностью завершиться.'
         );
     }
 
@@ -142,7 +149,7 @@ export function applyGoToLocalPointRequest(
 export function enterPreflight(drone: DroneState) {
     if (drone.fsmState !== 'IDLE') {
         if (getCommandSource(drone) === 'timer') {
-            log('WARNING: РўР°Р№РјРµСЂ СЃСЂР°Р±РѕС‚Р°Р» СЃР»РёС€РєРѕРј РїРѕР·РґРЅРѕ. РљРѕРјР°РЅРґР° РѕС‚РєР»РѕРЅРµРЅР° РєРѕРЅРµС‡РЅС‹Рј Р°РІС‚РѕРјР°С‚РѕРј', 'warn');
+            log('WARNING: Таймер сработал слишком поздно. Команда отклонена конечным автоматом', 'warn');
             return false;
         }
         throwFsmTransitionError(drone, 'MCE_PREFLIGHT');
@@ -158,7 +165,7 @@ export function enterPreflight(drone: DroneState) {
 export function enterTakeoffProcess(drone: DroneState) {
     if (drone.fsmState !== 'PREFLIGHT') {
         if (getCommandSource(drone) === 'timer') {
-            log('WARNING: РўР°Р№РјРµСЂ СЃСЂР°Р±РѕС‚Р°Р» СЃР»РёС€РєРѕРј РїРѕР·РґРЅРѕ. РљРѕРјР°РЅРґР° РѕС‚РєР»РѕРЅРµРЅР° РєРѕРЅРµС‡РЅС‹Рј Р°РІС‚РѕРјР°С‚РѕРј', 'warn');
+            log('WARNING: Таймер сработал слишком поздно. Команда отклонена конечным автоматом', 'warn');
             return false;
         }
         if (drone.fsmState !== 'IDLE') {
@@ -167,7 +174,7 @@ export function enterTakeoffProcess(drone: DroneState) {
         return rejectCommandByFsm(
             drone,
             'MCE_TAKEOFF',
-            'WARNING: РљРѕРјР°РЅРґР° РІР·Р»РµС‚Р° РїСЂРѕРёРіРЅРѕСЂРёСЂРѕРІР°РЅР°: РјРѕС‚РѕСЂС‹ РЅРµ Р·Р°РїСѓС‰РµРЅС‹ (РІС‹Р·РѕРІРёС‚Рµ PREFLIGHT Р·Р°СЂР°РЅРµРµ)'
+            'WARNING: Команда взлета проигнорирована: моторы не запущены (вызовите PREFLIGHT заранее)'
         );
     }
 
@@ -184,7 +191,7 @@ export function enterTakeoffProcess(drone: DroneState) {
 export function enterLandingProcess(drone: DroneState) {
     if (drone.fsmState !== 'FLYING_HOVER' && drone.fsmState !== 'FLYING_MOVING') {
         if (getCommandSource(drone) === 'timer') {
-            log('WARNING: РўР°Р№РјРµСЂ СЃСЂР°Р±РѕС‚Р°Р» СЃР»РёС€РєРѕРј РїРѕР·РґРЅРѕ. РљРѕРјР°РЅРґР° РѕС‚РєР»РѕРЅРµРЅР° РєРѕРЅРµС‡РЅС‹Рј Р°РІС‚РѕРјР°С‚РѕРј', 'warn');
+            log('WARNING: Таймер сработал слишком поздно. Команда отклонена конечным автоматом', 'warn');
             return false;
         }
         if (drone.fsmState === 'TAKEOFF_PROCESS' || drone.fsmState === 'LANDING_PROCESS') {
@@ -193,12 +200,12 @@ export function enterLandingProcess(drone: DroneState) {
         return rejectCommandByFsm(
             drone,
             'MCE_LANDING',
-            'WARNING: РџРѕСЃР°РґРєР° РЅРµРІРѕР·РјРѕР¶РЅР°: РґСЂРѕРЅ РЅРµ РЅР°С…РѕРґРёС‚СЃСЏ РІ РІРѕР·РґСѓС…Рµ'
+            'WARNING: Посадка невозможна: дрон не находится в воздухе'
         );
     }
 
     if (drone.fsmState === 'FLYING_MOVING' || drone.lastAcceptedGoToTickMs === getCurrentTickMs(drone)) {
-        log('WARNING: РљРѕРјР°РЅРґР° РїРѕСЃР°РґРєРё (LANDING) РїРµСЂРµС‚РµСЂР»Р° Р°РєС‚РёРІРЅСѓСЋ РєРѕРјР°РЅРґСѓ РґРІРёР¶РµРЅРёСЏ Рє С‚РѕС‡РєРµ (goToLocalPoint).', 'warn');
+        log('WARNING: Команда посадки (LANDING) перетерла активную команду движения к точке (goToLocalPoint).', 'warn');
     }
 
     drone.target_pos = { x: drone.pos.x, y: drone.pos.y, z: 0 };
@@ -218,7 +225,7 @@ export function handlePreflightTimeout(drone: DroneState) {
     drone.pendingLocalPoint = false;
     drone.pendingLocalPointSource = null;
     setDroneFsmState(drone, 'IDLE');
-    log('WARNING: РџСЂРµРІС‹С€РµРЅРѕ РІСЂРµРјСЏ РѕР¶РёРґР°РЅРёСЏ РІР·Р»РµС‚Р°. РњРѕС‚РѕСЂС‹ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РѕС‚РєР»СЋС‡РµРЅС‹ РІ С†РµР»СЏС… Р±РµР·РѕРїР°СЃРЅРѕСЃС‚Рё.', 'warn');
+    log('WARNING: Превышено время ожидания взлета. Моторы автоматически отключены в целях безопасности.', 'warn');
     return true;
 }
 

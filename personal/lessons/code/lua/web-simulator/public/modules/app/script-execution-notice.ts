@@ -28,6 +28,48 @@ function hasLuaEarlyRouteIssue(code: string) {
     return hasTakeoff && hasGoTo && hasTimerBasedRoute && !hasTakeoffCompleteRouteHandler;
 }
 
+function countLuaBlockOpeners(line: string) {
+    let count = 0;
+    count += (line.match(/\bfunction\b/g) || []).length;
+    count += (line.match(/\bif\b.*\bthen\b/g) || []).length;
+    count += (line.match(/\bfor\b.*\bdo\b/g) || []).length;
+    count += (line.match(/\bwhile\b.*\bdo\b/g) || []).length;
+    return count;
+}
+
+function countLuaBlockClosers(line: string) {
+    return (line.match(/\bend\b/g) || []).length;
+}
+
+function stripLuaManagedBlocks(code: string) {
+    const lines = code.split(/\r?\n/);
+    const remainingLines: string[] = [];
+    let skipDepth = 0;
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+
+        if (skipDepth > 0) {
+            skipDepth += countLuaBlockOpeners(trimmed);
+            skipDepth -= countLuaBlockClosers(trimmed);
+            if (skipDepth < 0) skipDepth = 0;
+            continue;
+        }
+
+        const isCallbackStart = /^function\s+callback\s*\(/.test(trimmed);
+        const isTimerFunctionStart = /timer\.(calllater|new)\s*\([\s\S]*\bfunction\b/.test(trimmed);
+
+        if (isCallbackStart || isTimerFunctionStart) {
+            skipDepth = 1;
+            continue;
+        }
+
+        remainingLines.push(line);
+    }
+
+    return remainingLines.join('\n');
+}
+
 function collectLuaIssues(code: string): string[] {
     const normalized = (code || '').toLowerCase();
     const issues: string[] = [];
@@ -41,35 +83,33 @@ function collectLuaIssues(code: string): string[] {
     const hasLedSet = /:set\s*\(/.test(normalized);
 
     if (hasLedbar && !hasLedSet) {
-        issues.push('РЎРѕР·РґР°РЅР° СЃРІРµС‚РѕРґРёРѕРґРЅР°СЏ Р»РµРЅС‚Р°, РЅРѕ РЅРё РѕРґРЅРѕРјСѓ РґРёРѕРґСѓ РЅРµ РЅР°Р·РЅР°С‡РµРЅ С†РІРµС‚ С‡РµСЂРµР· leds:set(...).');
+        issues.push('Создана светодиодная лента, но ни одному диоду не назначен цвет через leds:set(...).');
     }
     if (hasTakeoff && !hasPreflight) {
-        issues.push('РљРѕРјР°РЅРґР° РІР·Р»РµС‚Р° РЅР°Р№РґРµРЅР° Р±РµР· Ev.MCE_PREFLIGHT. РЎРЅР°С‡Р°Р»Р° РЅСѓР¶РЅР° РїСЂРµРґРїРѕР»РµС‚РЅР°СЏ РїРѕРґРіРѕС‚РѕРІРєР°.');
+        issues.push('Команда взлета найдена без Ev.MCE_PREFLIGHT. Сначала нужна предполетная подготовка.');
     }
     if (hasGoTo && !hasTakeoff) {
-        issues.push('РџРѕР»РµС‚ Рє Р»РѕРєР°Р»СЊРЅРѕР№ С‚РѕС‡РєРµ РЅР°Р№РґРµРЅ Р±РµР· С€Р°РіР° РІР·Р»РµС‚Р°. РЎРЅР°С‡Р°Р»Р° РІС‹РїРѕР»РЅРёС‚Рµ PREFLIGHT Рё TAKEOFF.');
+        issues.push('Полет к локальной точке найден без шага взлета. Сначала выполните PREFLIGHT и TAKEOFF.');
     }
     if (hasLanding && !hasTakeoff) {
-        issues.push('РџРѕСЃР°РґРєР° РµСЃС‚СЊ, Р° СЏРІРЅРѕРіРѕ РІР·Р»РµС‚Р° РЅРµС‚. РџСЂРѕРІРµСЂСЊС‚Рµ Р»РѕРіРёРєСѓ СЃС†РµРЅР°СЂРёСЏ.');
+        issues.push('Посадка есть, а явного взлета нет. Проверьте логику сценария.');
     }
     if ((hasTakeoff || hasGoTo || hasLanding) && !hasTimer && !hasCallback) {
-        issues.push('РњРёСЃСЃРёСЏ РЅРµ СЂР°Р·РІРµРґРµРЅР° РїРѕ С€Р°РіР°Рј: РґРѕР±Р°РІСЊС‚Рµ Timer.callLater(...) РёР»Рё callback(event), РёРЅР°С‡Рµ РєРѕРјР°РЅРґС‹ СѓР№РґСѓС‚ СЃР»РёС€РєРѕРј Р±С‹СЃС‚СЂРѕ.');
+        issues.push('Миссия не разведена по шагам: добавьте Timer.callLater(...) или callback(event), иначе команды уйдут слишком быстро.');
     }
     if (hasLuaEarlyRouteIssue(code)) {
-        issues.push('РњР°СЂС€СЂСѓС‚ Р·Р°РїСѓСЃРєР°РµС‚СЃСЏ РїРѕ Timer.callLater(...), РЅРѕ РЅРµ РїСЂРёРІСЏР·Р°РЅ Рє СЃРѕР±С‹С‚РёСЋ TAKEOFF_COMPLETE. РџРµСЂРІС‹Р№ goToLocalPoint(...) РјРѕР¶РµС‚ РїСЂРёР№С‚Рё СЃР»РёС€РєРѕРј СЂР°РЅРѕ Рё Р±СѓРґРµС‚ РѕС‚РєР»РѕРЅРµРЅ FSM.');
+        issues.push('Маршрут запускается по Timer.callLater(...), но не привязан к событию TAKEOFF_COMPLETE. Первый goToLocalPoint(...) может прийти слишком рано и будет отклонен FSM.');
     }
 
-    const immediateControlCode = normalized
-        .replace(/timer\.calllater\s*\(\s*[0-9]*\.?[0-9]+\s*,\s*function\s*\([^)]*\)\s*[\s\S]*?end\s*\)/g, ' ')
-        .replace(/function\s+callback\s*\([^)]*\)\s*[\s\S]*?end/g, ' ');
+    const immediateControlCode = stripLuaManagedBlocks(normalized);
     const immediateCommands = collectLuaMissionCommands(immediateControlCode);
     if (immediateCommands.length >= 2) {
-        issues.push(`РќРµСЃРєРѕР»СЊРєРѕ СѓРїСЂР°РІР»СЏСЋС‰РёС… РєРѕРјР°РЅРґ Р·Р°РїСѓСЃРєР°СЋС‚СЃСЏ СЃСЂР°Р·Сѓ: ${immediateCommands.join(', ')}. Р Р°Р·РЅРµСЃРёС‚Рµ РёС… С‡РµСЂРµР· Timer.callLater(...) РёР»Рё callback(event).`);
+        issues.push(`Несколько управляющих команд запускаются сразу: ${immediateCommands.join(', ')}. Разнесите их через Timer.callLater(...) или callback(event).`);
     }
 
     for (const [delay, commands] of collectLuaDelayedMissionCommands(normalized).entries()) {
         if (commands.length >= 2) {
-            issues.push(`Р’ Timer.callLater(${delay}) РѕРґРЅРѕРІСЂРµРјРµРЅРЅРѕ Р·Р°РїР»Р°РЅРёСЂРѕРІР°РЅС‹ РєРѕРјР°РЅРґС‹ ${commands.join(', ')}. Р Р°Р·РЅРµСЃРёС‚Рµ РёС… РїРѕ СЂР°Р·РЅС‹Рј Р·Р°РґРµСЂР¶РєР°Рј РёР»Рё СЌС‚Р°РїР°Рј callback(event).`);
+            issues.push(`В Timer.callLater(${delay}) одновременно запланированы команды ${commands.join(', ')}. Разнесите их по разным задержкам или этапам callback(event).`);
         }
     }
 
@@ -152,22 +192,22 @@ function collectPythonIssues(code: string): string[] {
     const ledCalls = (normalized.match(/led_control\s*\(/g) || []).length;
 
     if (ledCalls > 1 && !hasSleep) {
-        issues.push('РќРµСЃРєРѕР»СЊРєРѕ РєРѕРјР°РЅРґ led_control(...) РёРґСѓС‚ РїРѕРґСЂСЏРґ Р±РµР· time.sleep(...). Р¦РІРµС‚Р° СЃРјРµРЅСЏС‚СЃСЏ СЃР»РёС€РєРѕРј Р±С‹СЃС‚СЂРѕ.');
+        issues.push('Несколько команд led_control(...) идут подряд без time.sleep(...). Цвета сменятся слишком быстро.');
     }
     if (hasTakeoff && !hasArm) {
-        issues.push('РќР°Р№РґРµРЅ takeoff() Р±РµР· arm(). РџРµСЂРµРґ РІР·Р»РµС‚РѕРј СЃРЅР°С‡Р°Р»Р° РїРѕРґРіРѕС‚РѕРІСЊС‚Рµ РґРІРёРіР°С‚РµР»Рё.');
+        issues.push('Найден takeoff() без arm(). Перед взлетом сначала подготовьте двигатели.');
     }
     if (hasGoTo && !hasTakeoff) {
-        issues.push('РќР°Р№РґРµРЅ go_to_local_point(...), РЅРѕ РІ СЃС†РµРЅР°СЂРёРё РЅРµС‚ takeoff(). РЎРЅР°С‡Р°Р»Р° РґСЂРѕРЅ РґРѕР»Р¶РµРЅ РІР·Р»РµС‚РµС‚СЊ.');
+        issues.push('Найден go_to_local_point(...), но в сценарии нет takeoff(). Сначала дрон должен взлететь.');
     }
     if (hasLand && !hasTakeoff) {
-        issues.push('РќР°Р№РґРµРЅР° РїРѕСЃР°РґРєР° Р±РµР· РІР·Р»РµС‚Р°. РџСЂРѕРІРµСЂСЊС‚Рµ РїРѕСЂСЏРґРѕРє С€Р°РіРѕРІ.');
+        issues.push('Найдена посадка без взлета. Проверьте порядок шагов.');
     }
     if ((hasTakeoff || hasGoTo || hasLand) && !hasSleep && !hasPointReached) {
-        issues.push('РњРёСЃСЃРёСЏ РІС‹РїРѕР»РЅСЏРµС‚СЃСЏ Р±РµР· РїР°СѓР· Рё РѕР¶РёРґР°РЅРёР№. Р”РѕР±Р°РІСЊС‚Рµ time.sleep(...) Рё/РёР»Рё РїСЂРѕРІРµСЂРєСѓ point_reached().');
+        issues.push('Миссия выполняется без пауз и ожиданий. Добавьте time.sleep(...) и/или проверку point_reached().');
     }
     if (hasGoTo && !hasPointReached && !hasSleep) {
-        issues.push('РџРѕСЃР»Рµ go_to_local_point(...) РЅРµС‚ РѕР¶РёРґР°РЅРёСЏ РґРѕСЃС‚РёР¶РµРЅРёСЏ С‚РѕС‡РєРё. Р”РѕР±Р°РІСЊС‚Рµ С†РёРєР» СЃ point_reached() РёР»Рё РїР°СѓР·С‹.');
+        issues.push('После go_to_local_point(...) нет ожидания достижения точки. Добавьте цикл с point_reached() или паузы.');
     }
 
     return issues;
@@ -179,8 +219,8 @@ export function showScenarioValidationNotice(language: ScriptLanguage, code: str
 
     if (language === 'lua') {
         const simultaneousIssue = issues.find((issue) =>
-            issue.includes('РѕРґРЅРѕРІСЂРµРјРµРЅРЅРѕ')
-            || issue.includes('Р·Р°РїСѓСЃРєР°СЋС‚СЃСЏ СЃСЂР°Р·Сѓ')
+            issue.includes('одновременно')
+            || issue.includes('запускаются сразу')
         );
         if (simultaneousIssue) {
             markSimultaneousNoticeAsShown();
@@ -192,14 +232,14 @@ export function showScenarioValidationNotice(language: ScriptLanguage, code: str
 
     const summary = issues.length === 1
         ? issues[0]
-        : `РќР°Р№РґРµРЅРѕ ${issues.length} РїРѕРґСЃРєР°Р·РєРё РїРѕ СЃС†РµРЅР°СЂРёСЋ. Р›СѓС‡С€Рµ РёСЃРїСЂР°РІРёС‚СЊ РёС… РґРѕ Р·Р°РїСѓСЃРєР°.`;
+        : `Найдено ${issues.length} подсказки по сценарию. Лучше исправить их до запуска.`;
 
     log(summary, 'warn');
 
     if (!(window as any).showSimulationNotice) return;
 
     (window as any).showSimulationNotice({
-        title: 'РџСЂРѕРІРµСЂСЊС‚Рµ СЃС†РµРЅР°СЂРёР№ РїРµСЂРµРґ Р·Р°РїСѓСЃРєРѕРј',
+        title: 'Проверьте сценарий перед запуском',
         message: summary,
         detailsHtml: renderIssuesHtml(language, issues),
         level: 'warn'
@@ -208,15 +248,15 @@ export function showScenarioValidationNotice(language: ScriptLanguage, code: str
 
 export function warnAboutInstantExecution(language: ScriptLanguage) {
     const message = language === 'python'
-        ? 'РЎС†РµРЅР°СЂРёР№ РІС‹РїРѕР»РЅСЏРµС‚ РєРѕРјР°РЅРґС‹ РїРѕС‡С‚Рё РјРіРЅРѕРІРµРЅРЅРѕ. Р”Р»СЏ РїРѕР»РµС‚Р° РЅСѓР¶РЅС‹ РїР°СѓР·С‹ РјРµР¶РґСѓ arm(), takeoff(), go_to_local_point() Рё land().'
-        : 'РЎС†РµРЅР°СЂРёР№ РѕС‚РїСЂР°РІР»СЏРµС‚ РєРѕРјР°РЅРґС‹ РјРіРЅРѕРІРµРЅРЅРѕ. Р”Р»СЏ FSM РґСЂРѕРЅР° СЂР°Р·РІРѕРґРёС‚Рµ С€Р°РіРё С‡РµСЂРµР· Timer.callLater(...) РёР»Рё callback(event).';
+        ? 'Сценарий выполняет команды почти мгновенно. Для полета нужны паузы между arm(), takeoff(), go_to_local_point() и land().'
+        : 'Сценарий отправляет команды мгновенно. Для FSM дрона разводите шаги через Timer.callLater(...) или callback(event).';
 
     log(message, 'warn');
 
     if (!(window as any).showSimulationNotice) return;
 
     (window as any).showSimulationNotice({
-        title: 'РџСЂРµРґСѓРїСЂРµР¶РґРµРЅРёРµ РїРѕ С‚Р°Р№РјРёРЅРіР°Рј',
+        title: 'Предупреждение по таймингам',
         message,
         detailsHtml: renderIssuesHtml(language, [message]),
         level: 'warn'
@@ -228,12 +268,12 @@ export function showSimultaneousCommandsNotice(commands: string[]) {
 
     const uniqueCommands = Array.from(new Set(commands));
     const message = uniqueCommands.length > 1
-        ? `РћРґРЅРѕРІСЂРµРјРµРЅРЅРѕ РІС‹Р·РІР°РЅС‹ РєРѕРјР°РЅРґС‹: ${uniqueCommands.join(', ')}.`
-        : `РљРѕРјР°РЅРґР° ${uniqueCommands[0] || 'РјРёСЃСЃРёРё'} РІС‹Р·РІР°РЅР° РѕРґРЅРѕРІСЂРµРјРµРЅРЅРѕ СЃ РґСЂСѓРіРѕР№ РѕРїРµСЂР°С†РёРµР№.`;
+        ? `Одновременно вызваны команды: ${uniqueCommands.join(', ')}.`
+        : `Команда ${uniqueCommands[0] || 'миссии'} вызвана одновременно с другой операцией.`;
 
     if (!(window as any).showSimulationNotice) return;
     (window as any).showSimulationNotice({
-        title: 'РљРѕРЅС„Р»РёРєС‚ РѕРґРЅРѕРІСЂРµРјРµРЅРЅС‹С… РєРѕРјР°РЅРґ',
+        title: 'Конфликт одновременных команд',
         message,
         detailsHtml: renderSimultaneousCommandsHtml(uniqueCommands),
         level: 'warn'
@@ -244,13 +284,13 @@ export function showEarlyRouteNotice() {
     if (shouldSuppressEarlyRouteNotice()) return;
     markEarlyRouteNoticeAsShown();
 
-    const message = 'РљРѕРјР°РЅРґР° goToLocalPoint(...) РїСЂРёС€Р»Р° РґРѕ Р·Р°РІРµСЂС€РµРЅРёСЏ РІР·Р»РµС‚Р°. Р”РѕР¶РґРёС‚РµСЃСЊ СЃРѕР±С‹С‚РёСЏ TAKEOFF_COMPLETE.';
+    const message = 'Команда goToLocalPoint(...) пришла до завершения взлета. Дождитесь события TAKEOFF_COMPLETE.';
 
     log(message, 'warn');
 
     if (!(window as any).showSimulationNotice) return;
     (window as any).showSimulationNotice({
-        title: 'РњР°СЂС€СЂСѓС‚ Р·Р°РїСѓС‰РµРЅ СЃР»РёС€РєРѕРј СЂР°РЅРѕ',
+        title: 'Маршрут запущен слишком рано',
         message,
         detailsHtml: renderEarlyRouteHtml(),
         level: 'warn'

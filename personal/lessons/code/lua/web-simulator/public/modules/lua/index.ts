@@ -1,7 +1,7 @@
 import { drones, currentDroneId, getDroneFromLua } from '../core/state.js';
 import { showDronePrintBubble } from '../drone/index.js';
 import { log } from '../shared/logging/logger.js';
-import { withCommandSource } from '../autopilot/fsm.js';
+import { beginEventCallbackPhase, withCommandSource } from '../autopilot/fsm.js';
 import { luaToStr } from './utils.js';
 import { triggerEvent } from '../autopilot/mce-events.js';
 import { runCoroutine } from './runner.js';
@@ -34,7 +34,7 @@ export function setupLuaBridgeForDrone(id: string) {
             SYNC_START=15, SHOCK=16, CONTROL_FAIL=17, ENGINE_FAIL=18
         }
         
-        -- РџРѕРґРґРµСЂР¶РєР° СЃС‚Р°СЂРѕРіРѕ API: РґРµР»Р°РµРј РєРѕРЅСЃС‚Р°РЅС‚С‹ РіР»РѕР±Р°Р»СЊРЅС‹РјРё
+        -- Поддержка старого API: делаем константы глобальными
         for k, v in pairs(Ev) do
             _G[k] = v
         end
@@ -172,7 +172,7 @@ export function runLuaScript(id: string, scriptContent: string) {
     if (loadStatus !== 0) {
         const errVal = window.fengari.lua.lua_tostring(L, -1);
         const errorMsg = luaToStr(errVal, L);
-        log(`РћС€РёР±РєР° СЃРёРЅС‚Р°РєСЃРёСЃР° (${id}): ${errorMsg}`, 'error');
+        log(`Ошибка синтаксиса (${id}): ${errorMsg}`, 'error');
         window.fengari.lua.lua_pop(L, 1);
         return;
     }
@@ -240,6 +240,7 @@ export function triggerLuaCallback(id: string, eventId: number) {
     const drone = drones[id];
     if (!drone || !drone.luaState) return;
     const L = drone.luaState;
+    beginEventCallbackPhase(drone);
     
     // console.log(`[Lua Debug] Triggering callback ${eventId} for drone ${id}`);
     
@@ -256,7 +257,7 @@ export function triggerLuaCallback(id: string, eventId: number) {
             }
         } catch (e) {
             console.error(`[JS Error] Fatal error in triggerLuaCallback(${eventId}):`, e);
-            log(`[JS Error] Р¤Р°С‚Р°Р»СЊРЅР°СЏ РѕС€РёР±РєР° РІ РєРѕР»Р»Р±СЌРєРµ ${eventId}: ${e}`, 'error');
+            log(`[JS Error] Фатальная ошибка в коллбэке ${eventId}: ${e}`, 'error');
         }
     } else {
         window.fengari.lua.lua_pop(L, 1);
