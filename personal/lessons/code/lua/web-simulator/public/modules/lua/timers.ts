@@ -3,7 +3,8 @@ import { log } from '../shared/logging/logger.js';
 
 export const timer_callLater = function(L: any) {
     if (window.fengari.lua.lua_gettop(L) < 2) return 0;
-    const delay = window.fengari.lua.lua_tonumber(L, 1);
+    const requestedDelay = window.fengari.lua.lua_tonumber(L, 1);
+    const delay = Number.isFinite(requestedDelay) ? Math.max(0, requestedDelay) : 0;
     window.fengari.lua.lua_pushvalue(L, 2);
     const func_ref = window.fengari.lauxlib.luaL_ref(L, window.fengari.lua.LUA_REGISTRYINDEX);
     const simState = getDroneFromLua(L);
@@ -13,15 +14,17 @@ export const timer_callLater = function(L: any) {
         callback_ref: func_ref,
         one_shot: true,
         running: true,
+        kind: 'callback',
         sourceState: simState.fsmState
     });
-    log(`[Lua Timer] callLater(${delay}s) зарегистрирован`, 'info');
+    log(`[Lua Timer] callLater(${delay}s) registered`, 'info');
     return 0;
 };
 
 export const timer_new = function(L: any) {
     if (window.fengari.lua.lua_gettop(L) < 2) return 0;
-    const period = window.fengari.lua.lua_tonumber(L, 1);
+    const requestedPeriod = window.fengari.lua.lua_tonumber(L, 1);
+    const period = Number.isFinite(requestedPeriod) ? Math.max(0, requestedPeriod) : 0;
     window.fengari.lua.lua_pushvalue(L, 2);
     const func_ref = window.fengari.lauxlib.luaL_ref(L, window.fengari.lua.LUA_REGISTRYINDEX);
     const simState = getDroneFromLua(L);
@@ -33,11 +36,12 @@ export const timer_new = function(L: any) {
         trigger_time: simState.current_time + period,
         one_shot: false,
         running: false,
+        kind: 'callback',
         sourceState: simState.fsmState
     };
     
     simState.timers.push(timer_obj);
-    log(`[Lua Timer] new(${period}s) создан`, 'info');
+    log(`[Lua Timer] new(${period}s) created`, 'info');
     
     window.fengari.lua.lua_newtable(L);
     window.fengari.lua.lua_pushlightuserdata(L, timer_obj);
@@ -79,7 +83,18 @@ export const sys_deltaTime = function(L: any) {
 };
 
 export const js_sleep = function(L: any) {
-    const delay = window.fengari.lua.lua_tonumber(L, 1);
-    window.fengari.lua.lua_pushnumber(L, delay);
-    return window.fengari.lua.lua_yield(L, 1);
+    const requestedDelay = window.fengari.lua.lua_tonumber(L, 1);
+    const delay = Number.isFinite(requestedDelay) ? Math.max(0, requestedDelay) : 0;
+    const simState = getDroneFromLua(L);
+
+    simState.timers.push({
+        trigger_time: simState.current_time + delay,
+        one_shot: true,
+        running: true,
+        resume_thread: L,
+        kind: 'sleep',
+        sourceState: simState.fsmState
+    });
+    log(`[Lua Timer] sleep(${delay}s) registered`, 'info');
+    return window.fengari.lua.lua_yield(L, 0);
 };

@@ -70,6 +70,35 @@ function stripLuaManagedBlocks(code: string) {
     return remainingLines.join('\n');
 }
 
+function collectLuaMissionCommandGroups(fragment: string): string[][] {
+    const groups: string[][] = [];
+    let currentGroup: string[] = [];
+
+    for (const line of fragment.split(/\r?\n/)) {
+        const normalizedLine = line.trim().toLowerCase();
+        if (!normalizedLine) continue;
+
+        if (/\bsleep\s*\(/.test(normalizedLine)) {
+            if (currentGroup.length) {
+                groups.push(currentGroup);
+                currentGroup = [];
+            }
+            continue;
+        }
+
+        const commands = collectLuaMissionCommands(normalizedLine);
+        if (commands.length) {
+            currentGroup.push(...commands);
+        }
+    }
+
+    if (currentGroup.length) {
+        groups.push(currentGroup);
+    }
+
+    return groups;
+}
+
 function collectLuaIssues(code: string): string[] {
     const normalized = (code || '').toLowerCase();
     const issues: string[] = [];
@@ -79,37 +108,40 @@ function collectLuaIssues(code: string): string[] {
     const hasGoTo = normalized.includes('ap.gotolocalpoint');
     const hasCallback = /function\s+callback\s*\(/.test(normalized);
     const hasTimer = /timer\.(calllater|new)\s*\(/.test(normalized);
+    const hasSleep = /\bsleep\s*\(/.test(normalized);
     const hasLedbar = /ledbar\.new\s*\(/.test(normalized);
     const hasLedSet = /:set\s*\(/.test(normalized);
 
     if (hasLedbar && !hasLedSet) {
-        issues.push('Создана светодиодная лента, но ни одному диоду не назначен цвет через leds:set(...).');
+        issues.push('Led strip object is created, but `leds:set(...)` is never called.');
     }
     if (hasTakeoff && !hasPreflight) {
-        issues.push('Команда взлета найдена без Ev.MCE_PREFLIGHT. Сначала нужна предполетная подготовка.');
+        issues.push('Takeoff command is used without `Ev.MCE_PREFLIGHT`. Start with the preflight stage.');
     }
     if (hasGoTo && !hasTakeoff) {
-        issues.push('Полет к локальной точке найден без шага взлета. Сначала выполните PREFLIGHT и TAKEOFF.');
+        issues.push('Route command is used before takeoff. Run `PREFLIGHT` and `TAKEOFF` first.');
     }
     if (hasLanding && !hasTakeoff) {
-        issues.push('Посадка есть, а явного взлета нет. Проверьте логику сценария.');
+        issues.push('Landing command is used before takeoff. Check the mission order.');
     }
-    if ((hasTakeoff || hasGoTo || hasLanding) && !hasTimer && !hasCallback) {
-        issues.push('Миссия не разведена по шагам: добавьте Timer.callLater(...) или callback(event), иначе команды уйдут слишком быстро.');
+    if ((hasTakeoff || hasGoTo || hasLanding) && !hasTimer && !hasCallback && !hasSleep) {
+        issues.push('Mission commands run back-to-back without pauses. Add `sleep(...)`, `Timer.callLater(...)`, or `callback(event)` between stages.');
     }
     if (hasLuaEarlyRouteIssue(code)) {
-        issues.push('Маршрут запускается по Timer.callLater(...), но не привязан к событию TAKEOFF_COMPLETE. Первый goToLocalPoint(...) может прийти слишком рано и будет отклонен FSM.');
+        issues.push('Route start is tied to `Timer.callLater(...)` instead of `TAKEOFF_COMPLETE`, so `goToLocalPoint(...)` may run while takeoff FSM is still active.');
     }
 
     const immediateControlCode = stripLuaManagedBlocks(normalized);
-    const immediateCommands = collectLuaMissionCommands(immediateControlCode);
-    if (immediateCommands.length >= 2) {
-        issues.push(`Несколько управляющих команд запускаются сразу: ${immediateCommands.join(', ')}. Разнесите их через Timer.callLater(...) или callback(event).`);
+    for (const commands of collectLuaMissionCommandGroups(immediateControlCode)) {
+        if (commands.length >= 2) {
+            issues.push(`Multiple mission commands are issued in one step: ${commands.join(', ')}. Split them with \`sleep(...)\`, \`Timer.callLater(...)\`, or \`callback(event)\`.`);
+            break;
+        }
     }
 
     for (const [delay, commands] of collectLuaDelayedMissionCommands(normalized).entries()) {
         if (commands.length >= 2) {
-            issues.push(`В Timer.callLater(${delay}) одновременно запланированы команды ${commands.join(', ')}. Разнесите их по разным задержкам или этапам callback(event).`);
+            issues.push(`\`Timer.callLater(${delay})\` schedules multiple commands at once: ${commands.join(', ')}. Use separate timers or continue from \`callback(event)\`.`);
         }
     }
 
@@ -192,22 +224,22 @@ function collectPythonIssues(code: string): string[] {
     const ledCalls = (normalized.match(/led_control\s*\(/g) || []).length;
 
     if (ledCalls > 1 && !hasSleep) {
-        issues.push('Несколько команд led_control(...) идут подряд без time.sleep(...). Цвета сменятся слишком быстро.');
+        issues.push('Multiple `led_control(...)` calls run without `time.sleep(...)`. The color may change too fast.');
     }
     if (hasTakeoff && !hasArm) {
-        issues.push('Найден takeoff() без arm(). Перед взлетом сначала подготовьте двигатели.');
+        issues.push('`takeoff()` is called without `arm()`. Arm the drone first.');
     }
     if (hasGoTo && !hasTakeoff) {
-        issues.push('Найден go_to_local_point(...), но в сценарии нет takeoff(). Сначала дрон должен взлететь.');
+        issues.push('`go_to_local_point(...)` is called before `takeoff()`. Take off first.');
     }
     if (hasLand && !hasTakeoff) {
-        issues.push('Найдена посадка без взлета. Проверьте порядок шагов.');
+        issues.push('`land()` is called before takeoff. Check the command order.');
     }
     if ((hasTakeoff || hasGoTo || hasLand) && !hasSleep && !hasPointReached) {
-        issues.push('Миссия выполняется без пауз и ожиданий. Добавьте time.sleep(...) и/или проверку point_reached().');
+        issues.push('Mission commands run without waiting. Add `time.sleep(...)` and/or `point_reached()` checks.');
     }
     if (hasGoTo && !hasPointReached && !hasSleep) {
-        issues.push('После go_to_local_point(...) нет ожидания достижения точки. Добавьте цикл с point_reached() или паузы.');
+        issues.push('There is no wait after `go_to_local_point(...)`. Add a `point_reached()` loop or a pause.');
     }
 
     return issues;
@@ -219,8 +251,8 @@ export function showScenarioValidationNotice(language: ScriptLanguage, code: str
 
     if (language === 'lua') {
         const simultaneousIssue = issues.find((issue) =>
-            issue.includes('одновременно')
-            || issue.includes('запускаются сразу')
+            issue.includes('at once')
+            || issue.includes('Multiple mission commands')
         );
         if (simultaneousIssue) {
             markSimultaneousNoticeAsShown();
@@ -232,14 +264,14 @@ export function showScenarioValidationNotice(language: ScriptLanguage, code: str
 
     const summary = issues.length === 1
         ? issues[0]
-        : `Найдено ${issues.length} подсказки по сценарию. Лучше исправить их до запуска.`;
+        : `Found ${issues.length} scenario issues. Fix them before launch.`;
 
     log(summary, 'warn');
 
     if (!(window as any).showSimulationNotice) return;
 
     (window as any).showSimulationNotice({
-        title: 'Проверьте сценарий перед запуском',
+        title: 'Check Script Before Launch',
         message: summary,
         detailsHtml: renderIssuesHtml(language, issues),
         level: 'warn'
@@ -248,15 +280,15 @@ export function showScenarioValidationNotice(language: ScriptLanguage, code: str
 
 export function warnAboutInstantExecution(language: ScriptLanguage) {
     const message = language === 'python'
-        ? 'Сценарий выполняет команды почти мгновенно. Для полета нужны паузы между arm(), takeoff(), go_to_local_point() и land().'
-        : 'Сценарий отправляет команды мгновенно. Для FSM дрона разводите шаги через Timer.callLater(...) или callback(event).';
+        ? 'The script runs commands too fast. In Python you usually need pauses between `arm()`, `takeoff()`, `go_to_local_point()`, and `land()`.'
+        : 'The script runs commands too fast. In Lua FSM, add pauses with `sleep(...)`, `Timer.callLater(...)`, or `callback(event)`.';
 
     log(message, 'warn');
 
     if (!(window as any).showSimulationNotice) return;
 
     (window as any).showSimulationNotice({
-        title: 'Предупреждение по таймингам',
+        title: 'Script Warning',
         message,
         detailsHtml: renderIssuesHtml(language, [message]),
         level: 'warn'
@@ -268,12 +300,12 @@ export function showSimultaneousCommandsNotice(commands: string[]) {
 
     const uniqueCommands = Array.from(new Set(commands));
     const message = uniqueCommands.length > 1
-        ? `Одновременно вызваны команды: ${uniqueCommands.join(', ')}.`
-        : `Команда ${uniqueCommands[0] || 'миссии'} вызвана одновременно с другой операцией.`;
+        ? `Commands run at the same time: ${uniqueCommands.join(', ')}.`
+        : `Command ${uniqueCommands[0] || 'mission'} runs together with another operation.`;
 
     if (!(window as any).showSimulationNotice) return;
     (window as any).showSimulationNotice({
-        title: 'Конфликт одновременных команд',
+        title: 'Commands Overlap',
         message,
         detailsHtml: renderSimultaneousCommandsHtml(uniqueCommands),
         level: 'warn'
@@ -284,13 +316,13 @@ export function showEarlyRouteNotice() {
     if (shouldSuppressEarlyRouteNotice()) return;
     markEarlyRouteNoticeAsShown();
 
-    const message = 'Команда goToLocalPoint(...) пришла до завершения взлета. Дождитесь события TAKEOFF_COMPLETE.';
+    const message = '`goToLocalPoint(...)` was sent before takeoff finished. Wait for `TAKEOFF_COMPLETE`.';
 
     log(message, 'warn');
 
     if (!(window as any).showSimulationNotice) return;
     (window as any).showSimulationNotice({
-        title: 'Маршрут запущен слишком рано',
+        title: 'Route Started Too Early',
         message,
         detailsHtml: renderEarlyRouteHtml(),
         level: 'warn'

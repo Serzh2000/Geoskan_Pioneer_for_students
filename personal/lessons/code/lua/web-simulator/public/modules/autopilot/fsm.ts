@@ -2,6 +2,7 @@ import type {
     CommandSource,
     DroneFsmState,
     DroneState,
+    TickFlightCommand,
     Vector3
 } from '../core/state.js';
 import { showEarlyRouteNotice } from '../app/script-execution-notice.js';
@@ -16,6 +17,8 @@ import {
     setFsmStateAndSyncStatus,
     TAKEOFF_MIN_ALTITUDE
 } from './fsm-internals.js';
+
+const ERROR_STATUS = '\u041e\u0428\u0418\u0411\u041a\u0410';
 
 export function setDroneFsmState(drone: DroneState, nextState: DroneFsmState) {
     setFsmStateAndSyncStatus(drone, nextState);
@@ -55,7 +58,7 @@ export function isDroneMovingState(drone: DroneState) {
 export function shouldSpinRotors(drone: DroneState) {
     return (
         drone.fsmState !== 'IDLE'
-        && drone.status !== 'ОШИБКА'
+        && drone.status !== ERROR_STATUS
         && drone.status !== 'CRASHED'
         && drone.status !== 'DISARMED_FALL'
     );
@@ -77,19 +80,17 @@ export function recordTickCommand(drone: DroneState, command: TickFlightCommand)
 }
 
 export function beginEventCallbackPhase(drone: DroneState) {
-    // Commands issued from callback(event) belong to a new event-driven phase.
-    // This keeps valid FSM chains from being treated as "instantaneous" with the
-    // command that produced the event while still preserving same-callback checks.
+    // Commands from callback(event) belong to a new event-driven phase.
     drone.tickCommandSignature = null;
 }
 
 export function throwFsmTransitionError(drone: DroneState, command: CommandName): never {
-    throw new Error(`Ошибка FSM: Невозможный переход из состояния ${drone.fsmState} через команду ${command}`);
+    throw new Error(`FSM error: invalid transition from ${drone.fsmState} by command ${command}`);
 }
 
 export function rejectCommandByFsm(drone: DroneState, command: CommandName, message: string) {
     if (getCommandSource(drone) === 'timer') {
-        log('WARNING: Таймер сработал слишком поздно. Команда отклонена конечным автоматом', 'warn');
+        log('WARNING: Delayed command was rejected because FSM state has already changed.', 'warn');
         return false;
     }
 
@@ -120,7 +121,7 @@ export function applyGoToLocalPointRequest(
     if (drone.fsmState === 'PREFLIGHT' || drone.fsmState === 'TAKEOFF_PROCESS' || drone.fsmState === 'LANDING_PROCESS') {
         if (getCommandSource(drone) === 'timer') {
             showEarlyRouteNotice();
-            log('WARNING: Таймер сработал слишком поздно. Команда отклонена конечным автоматом', 'warn');
+            log('WARNING: Delayed command was rejected because FSM state has already changed.', 'warn');
             return false;
         }
         throwFsmTransitionError(drone, 'GO_TO_LOCAL_POINT');
@@ -130,7 +131,7 @@ export function applyGoToLocalPointRequest(
         return rejectCommandByFsm(
             drone,
             'GO_TO_LOCAL_POINT',
-            'CRITICAL WARNING: Команда goToLocalPoint вызвана на земле! Дрон не находится в воздухе. Взлет (TAKEOFF) должен полностью завершиться.'
+            'CRITICAL WARNING: goToLocalPoint is rejected on the ground. Move the drone to the airborne state first.'
         );
     }
 
@@ -149,7 +150,7 @@ export function applyGoToLocalPointRequest(
 export function enterPreflight(drone: DroneState) {
     if (drone.fsmState !== 'IDLE') {
         if (getCommandSource(drone) === 'timer') {
-            log('WARNING: Таймер сработал слишком поздно. Команда отклонена конечным автоматом', 'warn');
+            log('WARNING: Delayed command was rejected because FSM state has already changed.', 'warn');
             return false;
         }
         throwFsmTransitionError(drone, 'MCE_PREFLIGHT');
@@ -165,7 +166,7 @@ export function enterPreflight(drone: DroneState) {
 export function enterTakeoffProcess(drone: DroneState) {
     if (drone.fsmState !== 'PREFLIGHT') {
         if (getCommandSource(drone) === 'timer') {
-            log('WARNING: Таймер сработал слишком поздно. Команда отклонена конечным автоматом', 'warn');
+            log('WARNING: Delayed command was rejected because FSM state has already changed.', 'warn');
             return false;
         }
         if (drone.fsmState !== 'IDLE') {
@@ -174,7 +175,7 @@ export function enterTakeoffProcess(drone: DroneState) {
         return rejectCommandByFsm(
             drone,
             'MCE_TAKEOFF',
-            'WARNING: Команда взлета проигнорирована: моторы не запущены (вызовите PREFLIGHT заранее)'
+            'WARNING: TAKEOFF command is ignored because the drone is not in PREFLIGHT.'
         );
     }
 
@@ -191,7 +192,7 @@ export function enterTakeoffProcess(drone: DroneState) {
 export function enterLandingProcess(drone: DroneState) {
     if (drone.fsmState !== 'FLYING_HOVER' && drone.fsmState !== 'FLYING_MOVING') {
         if (getCommandSource(drone) === 'timer') {
-            log('WARNING: Таймер сработал слишком поздно. Команда отклонена конечным автоматом', 'warn');
+            log('WARNING: Delayed command was rejected because FSM state has already changed.', 'warn');
             return false;
         }
         if (drone.fsmState === 'TAKEOFF_PROCESS' || drone.fsmState === 'LANDING_PROCESS') {
@@ -200,12 +201,12 @@ export function enterLandingProcess(drone: DroneState) {
         return rejectCommandByFsm(
             drone,
             'MCE_LANDING',
-            'WARNING: Посадка невозможна: дрон не находится в воздухе'
+            'WARNING: LANDING command is ignored because the drone is not airborne.'
         );
     }
 
     if (drone.fsmState === 'FLYING_MOVING' || drone.lastAcceptedGoToTickMs === getCurrentTickMs(drone)) {
-        log('WARNING: Команда посадки (LANDING) перетерла активную команду движения к точке (goToLocalPoint).', 'warn');
+        log('WARNING: LANDING overrides the active goToLocalPoint movement.', 'warn');
     }
 
     drone.target_pos = { x: drone.pos.x, y: drone.pos.y, z: 0 };
@@ -225,7 +226,7 @@ export function handlePreflightTimeout(drone: DroneState) {
     drone.pendingLocalPoint = false;
     drone.pendingLocalPointSource = null;
     setDroneFsmState(drone, 'IDLE');
-    log('WARNING: Превышено время ожидания взлета. Моторы автоматически отключены в целях безопасности.', 'warn');
+    log('WARNING: Preflight timeout expired. The drone is returned to IDLE.', 'warn');
     return true;
 }
 

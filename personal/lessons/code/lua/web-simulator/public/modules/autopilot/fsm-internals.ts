@@ -70,10 +70,10 @@ export function setFsmStateAndSyncStatus(drone: DroneState, nextState: DroneFsmS
 
 export function failSimultaneousCommands(drone: DroneState, commands: TickFlightCommand[]): never {
     const labels = commands.map(getTickCommandLabel);
-    const message = `CRITICAL ERROR: Команды ${labels.join(', ')} вызваны одновременно. Разнесите их по разным моментам времени через Timer.callLater(...) или callback(event).`;
+    const message = `CRITICAL ERROR: Commands ${labels.join(', ')} run at the same time. Split them with Timer.callLater(...) or callback(event).`;
     showSimultaneousCommandsNotice(labels);
     drone.running = false;
-    drone.status = 'ОШИБКА';
+    drone.status = '\u041e\u0428\u0418\u0411\u041a\u0410';
     drone.fsmState = 'IDLE';
     drone.command_queue = [];
     drone.pendingLocalPoint = false;

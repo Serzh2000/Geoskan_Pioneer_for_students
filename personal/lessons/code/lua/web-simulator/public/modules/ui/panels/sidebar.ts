@@ -16,7 +16,7 @@ export function initSidebar(callbacks: UICallbacks) {
     const fullscreenPanels = new Set(['gamepad-panel']);
     const shouldLogPanelDebug = localStorage.getItem('sidebar-debug') === '1';
     const loggablePanelNames: Record<string, string> = {
-        'settings-panel': '���������'
+        'settings-panel': 'Settings'
     };
     const debugPanelIds = new Set(['settings-panel']);
     const logPanelOpenDiagnostics = createSidebarDiagnosticsLogger(panels, shouldLogPanelDebug, debugPanelIds);
@@ -104,7 +104,7 @@ export function initSidebar(callbacks: UICallbacks) {
         const panel = document.getElementById(panelId);
         if (!panel) {
             console.warn('[Sidebar][Debug] openPanel target not found', { panelId });
-            log(`[Sidebar][Debug] ${panelId}: DOM ������ �� ������`, 'warn');
+            log(`[Sidebar][Debug] ${panelId}: DOM element not found`, 'warn');
             return;
         }
 
@@ -118,8 +118,8 @@ export function initSidebar(callbacks: UICallbacks) {
 
         if (isAlreadyActive && panels.style.width !== '0px') {
             if (panelName) {
-                console.info(`[Sidebar] ������� �������: ${panelName}`);
-                log(`������� �������: ${panelName}`, 'info');
+                console.info(`[Sidebar] Closing panel: ${panelName}`);
+                log(`Closing panel: ${panelName}`, 'info');
             }
             closePanelWithAnimation();
             logPanelOpenDiagnostics('after-close', panelId, panel);
@@ -137,8 +137,8 @@ export function initSidebar(callbacks: UICallbacks) {
         persistActivePanel(panelId);
 
         if (panelName) {
-            console.info(`[Sidebar] ������� �������: ${panelName}`);
-            log(`������� �������: ${panelName}`, 'info');
+            console.info(`[Sidebar] Opening panel: ${panelName}`);
+            log(`Opening panel: ${panelName}`, 'info');
         }
 
         logPanelOpenDiagnostics('after-activate', panelId, panel);

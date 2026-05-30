@@ -26,9 +26,11 @@ export interface QueuedMceCommand {
 
 export interface TimerTask {
     trigger_time: number;
-    callback_ref: number;
     one_shot: boolean;
     running: boolean;
+    callback_ref?: number;
+    resume_thread?: any;
+    kind?: 'callback' | 'sleep';
     period?: number;
     next_trigger?: number;
     sourceState?: DroneFsmState;

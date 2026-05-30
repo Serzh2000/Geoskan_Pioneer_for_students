@@ -67,6 +67,20 @@ ap.push(Ev.MCE_LANDING)`;
         showScenarioValidationNotice('lua', code);
 
         expect(shownNotice).not.toBeNull();
-        expect(String(shownNotice.detailsHtml || '')).toContain('Ќесколько управл€ющих команд запускаютс€ сразу');
+        expect(String(shownNotice.detailsHtml || '')).toContain('Multiple mission commands are issued in one step');
+    });
+
+    test('does not warn for lua mission separated by sleep calls', () => {
+        const code = `ap.push(Ev.MCE_PREFLIGHT)
+sleep(1)
+ap.push(Ev.MCE_TAKEOFF)
+sleep(3)
+ap.goToLocalPoint(1, 0, 1)
+sleep(2)
+ap.push(Ev.MCE_LANDING)`;
+
+        showScenarioValidationNotice('lua', code);
+
+        expect(shownNotice).toBeNull();
     });
 });

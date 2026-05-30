@@ -16,11 +16,19 @@ describe('drone FSM validation', () => {
     let processCommandQueue: typeof import('../public/modules/physics/commands.js').processCommandQueue;
     let drone: ReturnType<typeof import('../public/modules/core/state.js').createDroneState>;
     const logLines: string[] = [];
+    const ERROR_STATUS = '\u041e\u0428\u0418\u0411\u041a\u0410';
+
+    function captureLogLine(node: any): string {
+        const metaChildren = Array.isArray(node?.children?.[0]?.children) ? node.children[0].children : [];
+        const tag = String(metaChildren[1]?.textContent || '').trim();
+        const message = String(node?.children?.[1]?.textContent || node?.textContent || node?.innerHTML || '').trim();
+        return tag && message ? `${tag}: ${message}` : message;
+    }
 
     beforeAll(async () => {
         const logsEl = {
             appendChild(node: { innerHTML?: string }) {
-                logLines.push(String(node.innerHTML || ''));
+                logLines.push(captureLogLine(node));
             },
             querySelector: () => null,
             scrollTop: 0,
@@ -30,12 +38,21 @@ describe('drone FSM validation', () => {
         (globalThis as any).window = {};
         (globalThis as any).document = {
             getElementById: (id: string) => (id === 'logs' ? logsEl : null),
-            createElement: () => ({
-                className: '',
-                innerHTML: '',
-                textContent: '',
-                append: () => {}
-            })
+            createElement: () => {
+                const node = {
+                    className: '',
+                    innerHTML: '',
+                    textContent: '',
+                    children: [] as any[],
+                    append(...parts: any[]) {
+                        node.children.push(...parts);
+                        node.textContent = node.children
+                            .map((part) => String(part?.textContent || part?.innerHTML || ''))
+                            .join('');
+                    }
+                };
+                return node;
+            }
         };
 
         await import('../public/modules/shared/logging/logger.js');
@@ -64,15 +81,13 @@ describe('drone FSM validation', () => {
         logLines.length = 0;
     });
 
-    test('stops simulation on instantaneous TAKEOFF -> goToLocalPoint -> LANDING sequence', () => {
+    test('stops simulation on instantaneous TAKEOFF -> goToLocalPoint sequence', () => {
         queueMceCommand(drone, MCECommands.MCE_TAKEOFF, 'direct');
-        applyGoToLocalPointRequest(drone, { x: 1, y: 0, z: 1 });
-
-        expect(() => queueMceCommand(drone, MCECommands.MCE_LANDING, 'direct')).toThrow(
-            'CRITICAL ERROR: ˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜! ˜˜˜ ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜˜ Timer.callLater. ˜ ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜.'
+        expect(() => applyGoToLocalPointRequest(drone, { x: 1, y: 0, z: 1 })).toThrow(
+            'CRITICAL ERROR: Commands TAKEOFF, goToLocalPoint run at the same time. Split them with Timer.callLater(...) or callback(event).'
         );
         expect(drone.running).toBe(false);
-        expect(drone.status).toBe('˜˜˜˜˜˜');
+        expect(drone.status).toBe(ERROR_STATUS);
     });
 
     test('allows next command from a new callback(event) phase in the same tick', () => {
@@ -92,20 +107,20 @@ describe('drone FSM validation', () => {
     test('ignores TAKEOFF outside PREFLIGHT', () => {
         expect(enterTakeoffProcess(drone)).toBe(false);
         expect(drone.fsmState).toBe('IDLE');
-        expect(logLines.some((line) => line.includes('WARNING: ˜˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜˜˜˜˜: ˜˜˜˜˜˜ ˜˜ ˜˜˜˜˜˜˜˜'))).toBe(true);
+        expect(logLines.some((line) => line.includes('WARNING: TAKEOFF command is ignored because the drone is not in PREFLIGHT.'))).toBe(true);
     });
 
     test('rejects goToLocalPoint on ground', () => {
         expect(applyGoToLocalPointRequest(drone, { x: 1, y: 2, z: 1 })).toBe(false);
         expect(drone.fsmState).toBe('IDLE');
-        expect(logLines.some((line) => line.includes('CRITICAL WARNING: ˜˜˜˜˜˜˜ goToLocalPoint ˜˜˜˜˜˜˜ ˜˜ ˜˜˜˜˜!'))).toBe(true);
+        expect(logLines.some((line) => line.includes('CRITICAL WARNING: goToLocalPoint is rejected on the ground.'))).toBe(true);
     });
 
     test('throws detailed FSM error for goToLocalPoint during PREFLIGHT', () => {
         setDroneFsmState(drone, 'PREFLIGHT');
 
         expect(() => applyGoToLocalPointRequest(drone, { x: 1, y: 0, z: 1 })).toThrow(
-            '˜˜˜˜˜˜ FSM: ˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜ ˜˜˜˜˜˜˜˜˜ PREFLIGHT ˜˜˜˜˜ ˜˜˜˜˜˜˜ GO_TO_LOCAL_POINT'
+            'FSM error: invalid transition from PREFLIGHT by command GO_TO_LOCAL_POINT'
         );
     });
 
@@ -115,7 +130,7 @@ describe('drone FSM validation', () => {
 
         expect(handlePreflightTimeout(drone)).toBe(true);
         expect(drone.fsmState).toBe('IDLE');
-        expect(logLines.some((line) => line.includes('WARNING: ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜.'))).toBe(true);
+        expect(logLines.some((line) => line.includes('WARNING: Preflight timeout expired. The drone is returned to IDLE.'))).toBe(true);
     });
 
     test('keeps manual RC arming latched without PREFLIGHT timeout while arm switch stays active', () => {
@@ -138,7 +153,7 @@ describe('drone FSM validation', () => {
 
         expect(enterLandingProcess(drone)).toBe(true);
         expect(drone.fsmState).toBe('LANDING_PROCESS');
-        expect(logLines.some((line) => line.includes('WARNING: ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜ (LANDING) ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜ ˜˜˜˜˜'))).toBe(true);
+        expect(logLines.some((line) => line.includes('WARNING: LANDING overrides the active goToLocalPoint movement.'))).toBe(true);
     });
 
     test('ignores late timer command when FSM is incompatible', () => {
@@ -146,7 +161,7 @@ describe('drone FSM validation', () => {
         const accepted = withCommandSource(drone, 'timer', () => applyGoToLocalPointRequest(drone, { x: 1, y: 0, z: 1 }));
 
         expect(accepted).toBe(false);
-        expect(logLines.some((line) => line.includes('WARNING: ˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜. ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜'))).toBe(true);
+        expect(logLines.some((line) => line.includes('WARNING: Delayed command was rejected because FSM state has already changed.'))).toBe(true);
     });
 
     test('accepts goToLocalPoint from timer when drone already hovers', () => {
@@ -163,12 +178,13 @@ describe('drone FSM validation', () => {
         setDroneFsmState(drone, 'FLYING_MOVING');
 
         expect(() => enterTakeoffProcess(drone)).toThrow(
-            '˜˜˜˜˜˜ FSM: ˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜ ˜˜˜˜˜˜˜˜˜ FLYING_MOVING ˜˜˜˜˜ ˜˜˜˜˜˜˜ MCE_TAKEOFF'
+            'FSM error: invalid transition from FLYING_MOVING by command MCE_TAKEOFF'
         );
     });
 
     test('processes PREFLIGHT then TAKEOFF through queued MCE commands', () => {
         queueMceCommand(drone, MCECommands.MCE_PREFLIGHT, 'direct');
+        beginEventCallbackPhase(drone);
         queueMceCommand(drone, MCECommands.MCE_TAKEOFF, 'direct');
 
         processCommandQueue(drone, drone.id);

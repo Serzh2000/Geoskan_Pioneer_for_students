@@ -88,7 +88,7 @@ export function createTextEditor(): void {
     const initialLanguage: ScriptLanguage = editorRuntime.pendingLanguage || 'lua';
     const initialValue =
         editorRuntime.pendingValue ||
-        '-- ������ Pioneer Lua\n\nap.push(Ev.MCE_TAKEOFF)\n\nTimer.callLater(3, function()\n    ap.push(Ev.MCE_LANDING)\nend)';
+        '-- Pioneer Lua Script\n\nap.push(Ev.MCE_TAKEOFF)\n\nTimer.callLater(3, function()\n    ap.push(Ev.MCE_LANDING)\nend)';
 
     if (!editorRuntime.monacoRoot) {
         return;

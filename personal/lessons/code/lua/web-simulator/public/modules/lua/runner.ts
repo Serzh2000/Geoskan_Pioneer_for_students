@@ -16,21 +16,13 @@ export function runCoroutine(L: any, T: any, nresults: any, id: string) {
     }
     
     if (status === lua.LUA_YIELD) {
-        let sleepTime = 0;
-        if (lua.lua_gettop(T) > 0 && lua.lua_isnumber(T, -1)) {
-            sleepTime = lua.lua_tonumber(T, -1);
-            lua.lua_pop(T, 1); 
-        }
-        setTimeout(() => {
-            runCoroutine(L, T, 0, id);
-        }, sleepTime * 1000);
-        
+        return;
     } else if (status !== lua.LUA_OK) {
         const errVal = lua.lua_tostring(T, -1);
         log(`Runtime Error (${id}): ${luaToStr(errVal, T)}`, 'error');
         if (drone) {
             drone.running = false;
-            drone.status = 'ОШИБКА';
+            drone.status = '\u041e\u0428\u0418\u0411\u041a\u0410';
         }
     }
 }

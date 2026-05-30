@@ -34,7 +34,7 @@ export function setupLuaBridgeForDrone(id: string) {
             SYNC_START=15, SHOCK=16, CONTROL_FAIL=17, ENGINE_FAIL=18
         }
         
-        -- Поддержка старого API: делаем константы глобальными
+        -- Duplicate API event constants: available via Ev and as globals
         for k, v in pairs(Ev) do
             _G[k] = v
         end
@@ -172,7 +172,7 @@ export function runLuaScript(id: string, scriptContent: string) {
     if (loadStatus !== 0) {
         const errVal = window.fengari.lua.lua_tostring(L, -1);
         const errorMsg = luaToStr(errVal, L);
-        log(`Ошибка синтаксиса (${id}): ${errorMsg}`, 'error');
+        log(`Lua script load error (${id}): ${errorMsg}`, 'error');
         window.fengari.lua.lua_pop(L, 1);
         return;
     }
@@ -209,23 +209,30 @@ export function updateTimers() {
         for (let i = drone.timers.length - 1; i >= 0; i--) {
             const t = drone.timers[i];
             if (t.running && drone.current_time >= t.trigger_time) {
-                
-                const T = lua.lua_newthread(L);
-                lua.lua_rawgeti(L, lua.LUA_REGISTRYINDEX, t.callback_ref);
-                lua.lua_xmove(L, T, 1);
-                
-                if (lua.lua_isfunction(T, -1)) {
+                if (t.kind === 'sleep' && t.resume_thread) {
                     withCommandSource(drone, 'timer', () => {
-                        runCoroutine(L, T, 0, id);
+                        runCoroutine(L, t.resume_thread, 0, id);
                     });
-                } else {
-                    lua.lua_pop(T, 1);
+                } else if (typeof t.callback_ref === 'number') {
+                    const T = lua.lua_newthread(L);
+                    lua.lua_rawgeti(L, lua.LUA_REGISTRYINDEX, t.callback_ref);
+                    lua.lua_xmove(L, T, 1);
+                    
+                    if (lua.lua_isfunction(T, -1)) {
+                        withCommandSource(drone, 'timer', () => {
+                            runCoroutine(L, T, 0, id);
+                        });
+                    } else {
+                        lua.lua_pop(T, 1);
+                    }
+                    
+                    lua.lua_pop(L, 1);
                 }
-                
-                lua.lua_pop(L, 1);
 
                 if (t.one_shot) {
-                    lauxlib.luaL_unref(L, lua.LUA_REGISTRYINDEX, t.callback_ref);
+                    if (typeof t.callback_ref === 'number') {
+                        lauxlib.luaL_unref(L, lua.LUA_REGISTRYINDEX, t.callback_ref);
+                    }
                     drone.timers.splice(i, 1);
                 } else {
                     t.trigger_time = drone.current_time + (t.period || 0); 
@@ -257,7 +264,7 @@ export function triggerLuaCallback(id: string, eventId: number) {
             }
         } catch (e) {
             console.error(`[JS Error] Fatal error in triggerLuaCallback(${eventId}):`, e);
-            log(`[JS Error] Фатальная ошибка в коллбэке ${eventId}: ${e}`, 'error');
+            log(`[JS Error] Fatal callback error ${eventId}: ${e}`, 'error');
         }
     } else {
         window.fengari.lua.lua_pop(L, 1);
