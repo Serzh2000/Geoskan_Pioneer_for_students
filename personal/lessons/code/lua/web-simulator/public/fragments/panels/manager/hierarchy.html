@@ -19,52 +19,36 @@
                                     </div>
                                 </div>
                                 <div class="scene-form-grid">
-                                    <div id="scene-add-type-picker" class="scene-type-picker">
-                                        <label class="scene-field">
-                                            <span>Компонент сцены</span>
-                                            <button id="scene-add-type-open-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral scene-btn--catalog">
-                                                <span>Открыть каталог компонентов</span>
-                                            </button>
-                                            <div class="scene-type-picker__selection">
-                                                <span class="scene-type-picker__selection-label">Текущий компонент</span>
-                                                <div id="scene-add-type-selection-card" class="scene-type-picker__selection-card">
-                                                    <span id="scene-add-type-current-icon" class="scene-type-picker__selection-icon" aria-hidden="true"></span>
-                                                    <span class="scene-type-picker__selection-content">
-                                                        <strong id="scene-add-type-current">Ворота</strong>
-                                                        <span id="scene-add-type-current-text" class="scene-type-picker__selection-text">Ориентир и пролётная рамка для трасс и учебных миссий.</span>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <select id="scene-add-type" class="scene-type-select__native" tabindex="-1" aria-hidden="true">
-                                                <option value="gate">Ворота</option>
-                                                <option value="pylon">Пилон</option>
-                                                <option value="flag">Флаг</option>
-                                                <option value="building">Многоэтажка</option>
-                                                <option value="aruco">ArUco маркер</option>
-                                                <option value="aruco-map">ArUco карта</option>
-                                                <option value="apriltag">AprilTag маркер</option>
-                                                <option value="apriltag-map">AprilTag карта</option>
-                                                <option value="road">Автомобильная дорога</option>
-                                                <option value="rail">Железнодорожные пути</option>
-                                                <option value="hill">Холм</option>
-                                                <option value="arena-hills">Группа холмов</option>
-                                                <option value="tree">Ель</option>
-                                                <option value="forest-patch">Лесной массив</option>
-                                                <option value="settlement">Макет поселения</option>
-                                                <option value="transport">Транспорт</option>
-                                                <option value="cargo">Грузик</option>
-                                                <option value="start-position">Стартовая позиция</option>
-                                                <option value="heliport">Хелипорт</option>
-                                                <option value="charge-station">Станция заряда</option>
-                                                <option value="locus-beacon">Локус-маяк</option>
-                                                <option value="light-tower">Световая мачта</option>
-                                                <option value="video-tower">Видеомачта</option>
-                                                <option value="control-station">Пульт полигона</option>
-                                                <option value="arena-space">Арена с сеткой</option>
-                                                <option value="pad-h">Площадка H</option>
-                                                <option value="pad-charge">Площадка ⚡</option>
-                                            </select>
-                                        </label>
+                                    <div hidden aria-hidden="true">
+                                        <select id="scene-add-type" class="scene-type-select__native" tabindex="-1">
+                                            <option value="gate">Ворота</option>
+                                            <option value="pylon">Пилон</option>
+                                            <option value="flag">Флаг</option>
+                                            <option value="building">Многоэтажка</option>
+                                            <option value="aruco">ArUco маркер</option>
+                                            <option value="aruco-map">ArUco карта</option>
+                                            <option value="apriltag">AprilTag маркер</option>
+                                            <option value="apriltag-map">AprilTag карта</option>
+                                            <option value="road">Автомобильная дорога</option>
+                                            <option value="rail">Железнодорожные пути</option>
+                                            <option value="hill">Холм</option>
+                                            <option value="arena-hills">Группа холмов</option>
+                                            <option value="tree">Ель</option>
+                                            <option value="forest-patch">Лесной массив</option>
+                                            <option value="settlement">Макет поселения</option>
+                                            <option value="transport">Транспорт</option>
+                                            <option value="cargo">Грузик</option>
+                                            <option value="start-position">Стартовая позиция</option>
+                                            <option value="heliport">Хелипорт</option>
+                                            <option value="charge-station">Станция заряда</option>
+                                            <option value="locus-beacon">Локус-маяк</option>
+                                            <option value="light-tower">Световая мачта</option>
+                                            <option value="video-tower">Видеомачта</option>
+                                            <option value="control-station">Пульт полигона</option>
+                                            <option value="arena-space">Арена с сеткой</option>
+                                            <option value="pad-h">Площадка H</option>
+                                            <option value="pad-charge">Площадка ⚡</option>
+                                        </select>
                                     </div>
                                     <label id="scene-add-dictionary-wrap" class="scene-field">
                                         <span>Словарь</span>

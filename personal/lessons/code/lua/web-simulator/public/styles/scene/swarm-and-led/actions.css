@@ -11,16 +11,14 @@
     gap: 8px;
     min-height: 40px;
     padding: 10px 12px;
-    border: 1px solid transparent;
+    border: 1px solid rgba(9, 9, 11, 0.08);
     border-radius: 12px;
-    color: #ffffff;
+    color: var(--text-color);
     font-size: 12px;
     font-weight: 700;
     line-height: 1;
     cursor: pointer;
     transition:
-        transform 0.18s ease,
-        box-shadow 0.18s ease,
         opacity 0.18s ease,
         background-color 0.18s ease,
         border-color 0.18s ease,
@@ -32,7 +30,7 @@
 }
 
 .swarm-action-btn:hover:not(:disabled) {
-    transform: translateY(-1px);
+    border-color: rgba(9, 9, 11, 0.12);
 }
 
 .swarm-action-btn:focus-visible {
@@ -43,28 +41,26 @@
 .swarm-action-btn:disabled {
     cursor: not-allowed;
     opacity: 0.55;
-    transform: none;
-    box-shadow: none;
 }
 
 .swarm-action-btn--add {
-    background: linear-gradient(180deg, #ff7a00 0%, #ff6b00 100%);
-    border-color: rgba(255, 107, 0, 0.28);
-    box-shadow: 0 14px 24px rgba(255, 107, 0, 0.18);
+    background: rgba(255, 107, 0, 0.1);
+    border-color: rgba(255, 107, 0, 0.16);
+    color: var(--accent-color);
 }
 
 .swarm-action-btn--add:hover:not(:disabled) {
-    background: linear-gradient(180deg, #ff8a1f 0%, #ff6b00 100%);
+    background: rgba(255, 107, 0, 0.14);
+    border-color: rgba(255, 107, 0, 0.22);
 }
 
 .swarm-action-btn--delete {
-    background: #ffffff;
-    color: #b45309;
-    border-color: rgba(245, 158, 11, 0.22);
-    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05);
+    background: rgba(255, 255, 255, 0.9);
+    color: #8b5e34;
+    border-color: rgba(180, 83, 9, 0.16);
 }
 
 .swarm-action-btn--delete:hover:not(:disabled) {
-    background: #fff7ed;
-    border-color: rgba(255, 107, 0, 0.18);
+    background: rgba(255, 247, 237, 0.96);
+    border-color: rgba(180, 83, 9, 0.22);
 }

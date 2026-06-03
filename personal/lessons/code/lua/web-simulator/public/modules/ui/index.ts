@@ -15,6 +15,7 @@ import { initLEDMatrixUI } from './panels/led-matrix.js';
 import { initSettingsUI } from './settings/index.js';
 import { initSimulationNotice } from './panels/simulation-notice.js';
 import { initMissionGuideModal } from './mission-guide/modal.js';
+import { initInfoModal } from './info/modal.js';
 import { initHudControls } from './controls/hud-controls.js';
 import { initSidebar } from './panels/sidebar.js';
 import { initCameraModeUI } from './controls/camera-mode.js';
@@ -77,6 +78,7 @@ export function initUI(callbacks: UICallbacks) {
     initDroneManager(callbacks.onSceneUpdate);
     renderApiDocs();
     initMissionGuideModal();
+    initInfoModal();
     renderMissionGuidePanel();
     initChannelMonitor();
     initLEDMatrixUI();

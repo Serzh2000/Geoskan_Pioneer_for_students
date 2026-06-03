@@ -1,4 +1,4 @@
-import { appendIncidentEntry, clampFloors, clearIncidentEntries, readAddSceneObjectDraft } from '../support.js';
+import { appendIncidentEntry, clampFloors, clearIncidentEntries } from '../support.js';
 import type { TransformMode } from '../types.js';
 import type { BindingOptions } from './shared.js';
 
@@ -34,14 +34,6 @@ export function registerIncidentBindings({ elements }: BindingOptions) {
 }
 
 export function registerCreationBindings({ callbacks, elements, render }: BindingOptions) {
-    if (elements.addBtn && elements.addTypeEl) {
-        elements.addBtn.addEventListener('click', () => {
-            const draft = readAddSceneObjectDraft(elements);
-            callbacks.sceneManager?.add(draft.type, draft.options);
-            render();
-        });
-    }
-
     if (elements.presetBtn && elements.presetTypeEl) {
         elements.presetBtn.addEventListener('click', () => {
             callbacks.sceneManager?.add(elements.presetTypeEl?.value || '');

@@ -8,32 +8,26 @@
 }
 
 :root[data-theme='dark'] .sidebar-tabs {
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(10, 17, 31, 0.98) 100%);
+    background: #0f172a;
     border-right-color: rgba(148, 163, 184, 0.12);
-    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.02);
 }
 
 :root[data-theme='dark'] .sidebar-tab-btn {
     color: #94a3b8;
-    background: linear-gradient(180deg, rgba(30, 41, 59, 0.35), rgba(15, 23, 42, 0.1));
-    border-color: rgba(148, 163, 184, 0.1);
+    background: transparent;
+    border-color: transparent;
 }
 
 :root[data-theme='dark'] .sidebar-tab-btn:hover {
-    background: linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(17, 24, 39, 0.96));
+    background: rgba(148, 163, 184, 0.08);
     color: #f8fafc;
-    border-color: rgba(255, 107, 0, 0.16);
-    box-shadow: 0 12px 22px rgba(2, 6, 23, 0.32);
+    border-color: rgba(148, 163, 184, 0.08);
 }
 
 :root[data-theme='dark'] .sidebar-tab-btn.active {
-    background:
-        radial-gradient(circle at 50% 18%, rgba(255, 107, 0, 0.2), transparent 62%),
-        linear-gradient(180deg, rgba(35, 24, 18, 0.96) 0%, rgba(17, 24, 39, 0.98) 100%);
-    box-shadow:
-        0 16px 26px rgba(255, 107, 0, 0.14),
-        0 8px 18px rgba(2, 6, 23, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(148, 163, 184, 0.12);
+    color: #f8fafc;
 }
 
 :root[data-theme='dark'] .sidebar-panels {

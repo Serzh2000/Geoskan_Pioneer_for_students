@@ -290,3 +290,137 @@
 .checkmark {
     display: none;
 }
+
+.info-modal-overlay {
+    z-index: 2250;
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.34);
+}
+
+.info-modal {
+    width: min(560px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    display: flex;
+    flex-direction: column;
+    background:
+        radial-gradient(circle at top right, rgba(255, 107, 0, 0.12), transparent 28%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 249, 250, 0.99));
+}
+
+.info-modal__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.info-modal__title-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.info-modal__eyebrow {
+    color: var(--accent-color);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.info-modal__title {
+    color: var(--text-strong);
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.info-modal__subtitle {
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.info-modal__close {
+    flex: 0 0 auto;
+}
+
+.info-modal__body {
+    overflow: auto;
+    padding: 22px;
+    display: grid;
+    gap: 16px;
+}
+
+.info-modal__lead {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+.info-modal__facts {
+    display: grid;
+    gap: 12px;
+}
+
+.info-modal__fact {
+    padding: 14px 16px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.76);
+}
+
+.info-modal__fact-label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.info-modal__fact-value {
+    color: var(--text-strong);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.info-modal__link {
+    color: var(--accent-color);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.info-modal__link:hover {
+    text-decoration: underline;
+}
+
+.info-modal__footnote {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+@media (max-width: 640px) {
+    .info-modal-overlay {
+        padding: 10px;
+    }
+
+    .info-modal {
+        width: calc(100vw - 20px);
+        max-height: calc(100vh - 20px);
+    }
+
+    .info-modal__header,
+    .info-modal__body {
+        padding: 16px;
+    }
+
+    .info-modal__title {
+        font-size: 21px;
+    }
+}

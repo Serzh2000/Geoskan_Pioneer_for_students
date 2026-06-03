@@ -1,6 +1,7 @@
 import {
     getMapInputs,
     getSceneTypePreviewConfig,
+    readAddSceneObjectDraft,
     syncFloorLimit,
     syncIncidentValue,
     updateAddControlsState,
@@ -11,7 +12,7 @@ import type { BindingOptions } from './shared.js';
 
 const TYPE_MODAL_PAGE_SIZE = 16;
 
-export function registerAddFormBindings({ elements, typePreview }: BindingOptions) {
+export function registerAddFormBindings({ callbacks, elements, render, typePreview }: BindingOptions) {
     const syncPreview = () => {
         updateAddTypePreview(elements);
         typePreview.sync();
@@ -20,6 +21,7 @@ export function registerAddFormBindings({ elements, typePreview }: BindingOption
 
     let pageIndex = 0;
     let pendingTypeValue: string | null = null;
+    let modalIntent: 'select' | 'add' = 'select';
 
     const getOptions = () => Array.from(elements.addTypeEl?.options || []);
     const getPendingOption = () => {
@@ -58,8 +60,12 @@ export function registerAddFormBindings({ elements, typePreview }: BindingOption
         }
         if (elements.addTypeModalApplyBtn && elements.addTypeEl) {
             const alreadyApplied = pendingOption.value === elements.addTypeEl.value;
-            elements.addTypeModalApplyBtn.disabled = alreadyApplied;
-            elements.addTypeModalApplyBtn.textContent = alreadyApplied ? 'Компонент уже выбран' : 'Подтвердить выбор';
+            elements.addTypeModalApplyBtn.disabled = modalIntent === 'select' && alreadyApplied;
+            elements.addTypeModalApplyBtn.textContent = modalIntent === 'add'
+                ? 'Добавить объект'
+                : alreadyApplied
+                    ? 'Компонент уже выбран'
+                    : 'Подтвердить выбор';
         }
     };
     const closeModal = (restoreFocus = false) => {
@@ -70,7 +76,7 @@ export function registerAddFormBindings({ elements, typePreview }: BindingOption
         typePreview.hide();
         pendingTypeValue = null;
         if (restoreFocus) {
-            elements.addTypeOpenBtn?.focus();
+            (elements.addBtn || elements.addTypeOpenBtn)?.focus();
         }
     };
     const applyPendingSelection = () => {
@@ -83,6 +89,11 @@ export function registerAddFormBindings({ elements, typePreview }: BindingOption
             elements.addTypeEl.dispatchEvent(new Event('change', { bubbles: true }));
         } else {
             updateAddControlsState(elements);
+        }
+        if (modalIntent === 'add') {
+            const draft = readAddSceneObjectDraft(elements);
+            callbacks.sceneManager?.add(draft.type, draft.options);
+            render();
         }
         closeModal(true);
     };
@@ -138,8 +149,9 @@ export function registerAddFormBindings({ elements, typePreview }: BindingOption
             pageIndex = Math.floor(selectedIndex / TYPE_MODAL_PAGE_SIZE);
         }
     };
-    const openModal = () => {
+    const openModal = (intent: 'select' | 'add') => {
         if (!elements.addTypeModalEl || !elements.addTypeEl) return;
+        modalIntent = intent;
         pendingTypeValue = elements.addTypeEl.value;
         syncPageWithSelection();
         renderModalPage();
@@ -167,7 +179,8 @@ export function registerAddFormBindings({ elements, typePreview }: BindingOption
         syncPreview();
     }
 
-    elements.addTypeOpenBtn?.addEventListener('click', openModal);
+    elements.addTypeOpenBtn?.addEventListener('click', () => openModal('select'));
+    elements.addBtn?.addEventListener('click', () => openModal('add'));
     elements.addTypeModalApplyBtn?.addEventListener('click', applyPendingSelection);
     elements.addTypeModalPrevBtn?.addEventListener('click', () => changePage(-1));
     elements.addTypeModalNextBtn?.addEventListener('click', () => changePage(1));
