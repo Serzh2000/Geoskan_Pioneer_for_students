@@ -3,6 +3,7 @@ import { drones } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 import { installPioneerSdkModule } from './pioneer-sdk-module.js';
 import { cancelledRuns, lastManualSpeedUpdateMs, localOriginByDrone } from './runtime-shared.js';
+import { createScriptFailureError, showScriptFailureNotice } from '../app/script-execution-notice.js';
 
 let pyodideInstance: any = null;
 let pyodideLoadPromise: Promise<any> | null = null;
@@ -53,6 +54,32 @@ type ActivePythonRun = {
 
 const activeRuns: Record<string, ActivePythonRun> = {};
 
+async function validatePythonSyntax(pyodide: any, code: string): Promise<void> {
+    const payloadJson = pyodide.runPython(`
+import json
+source = ${JSON.stringify(code)}
+try:
+    compile(source, "<user-script>", "exec")
+    json.dumps({"ok": True})
+except SyntaxError as e:
+    json.dumps({
+        "ok": False,
+        "message": e.msg or "invalid syntax",
+        "line": e.lineno,
+        "column": e.offset,
+        "details": (e.text or "").strip()
+    })
+`);
+    const payload = JSON.parse(String(payloadJson));
+    if (payload?.ok) return;
+
+    throw createScriptFailureError('syntax', payload?.message || 'invalid syntax', {
+        line: typeof payload?.line === 'number' ? payload.line : null,
+        column: typeof payload?.column === 'number' ? payload.column : null,
+        details: payload?.details || null
+    });
+}
+
 export async function initPythonRuntime(): Promise<void> {
     await ensurePyodide();
 }
@@ -69,6 +96,8 @@ export async function runPythonScript(droneId: string, code: string): Promise<vo
 
     const normalizedUserCode = (code || '')
         .replace(/\r\n/g, '\n');
+
+    await validatePythonSyntax(pyodide, normalizedUserCode);
 
     // Минимальная трансформация под web-runtime:
     // - запускаем код внутри async функции
@@ -124,6 +153,14 @@ except Exception as e:
         // Если пользователь нажал Stop — JS bridge выбросит PYTHON_CANCELLED.
         const msg = e instanceof Error ? e.message : String(e);
         log(`Python run error (${droneId}): ${msg}`, 'error');
+        if (msg.includes('PYTHON_CANCELLED')) {
+            return;
+        }
+        if (drones[droneId]) {
+            drones[droneId].running = false;
+            drones[droneId].status = 'ОШИБКА';
+        }
+        showScriptFailureNotice('python', createScriptFailureError('runtime', msg));
     });
 }
 

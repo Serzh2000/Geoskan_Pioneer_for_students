@@ -3,13 +3,287 @@ import type { ScriptLanguage } from '../core/state.js';
 import {
     renderEarlyRouteHtml,
     renderIssuesHtml,
+    renderScriptFailureHtml,
     renderSimultaneousCommandsHtml
 } from './script-execution-notice-templates.js';
+
+export type ScriptFailureKind = 'syntax' | 'runtime';
+
+export type ScriptFailureError = Error & {
+    scriptFailureKind?: ScriptFailureKind;
+    scriptFailureLine?: number | null;
+    scriptFailureColumn?: number | null;
+    scriptFailureDetails?: string | null;
+};
+
+type HumanizedScriptFailure = {
+    summary: string;
+    details?: string | null;
+    rawDetails?: string | null;
+};
 
 type NoticeSuppressionState = {
     simultaneousCommands: boolean;
     earlyRoute: boolean;
 };
+
+type ScenarioValidationResult = {
+    issues: string[];
+    blockingIssues: string[];
+    shouldBlock: boolean;
+};
+
+export function createScriptFailureError(
+    kind: ScriptFailureKind,
+    message: string,
+    options?: {
+        line?: number | null;
+        column?: number | null;
+        details?: string | null;
+    }
+): ScriptFailureError {
+    const error = new Error(message) as ScriptFailureError;
+    error.name = kind === 'syntax' ? 'ScriptSyntaxError' : 'ScriptRuntimeError';
+    error.scriptFailureKind = kind;
+    error.scriptFailureLine = options?.line ?? null;
+    error.scriptFailureColumn = options?.column ?? null;
+    error.scriptFailureDetails = options?.details ?? null;
+    return error;
+}
+
+function normalizeScriptFailureError(error: unknown, fallbackKind: ScriptFailureKind): ScriptFailureError {
+    if (error instanceof Error) {
+        const typed = error as ScriptFailureError;
+        typed.scriptFailureKind = typed.scriptFailureKind || fallbackKind;
+        return typed;
+    }
+
+    return createScriptFailureError(fallbackKind, String(error));
+}
+
+function getLastNonEmptyLine(value: string): string {
+    const lines = value
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+    return lines[lines.length - 1] || value.trim();
+}
+
+function humanizeLuaSyntaxMessage(message: string): HumanizedScriptFailure | null {
+    if (/'\)' expected \(to close '\(' at line \d+\) near 'end'/.test(message)) {
+        return {
+            summary: 'Похоже, в `Timer.callLater(...)` передан вызов уже существующей функции, а не callback.',
+            details: 'В записи вроде `Timer.callLater(1, changeColor({0,1,0}) end)` обычно появляется лишний `end`. Если нужно передать уже готовую функцию, пишите так: `Timer.callLater(1, blinkGreen)`. Если нужно вызвать `changeColor({0,1,0})` позже, оберните вызов в `function() ... end`: `Timer.callLater(1, function() changeColor({0,1,0}) end)`.',
+            rawDetails: message
+        };
+    }
+    if (/unexpected symbol near 'or'/.test(message)) {
+        return {
+            summary: 'Похоже, имя переменной или функции разорвано пробелом.',
+            details: 'Например, вы могли случайно написать `changeCol or` вместо `changeColor`. Проверьте, не попало ли слово `or` внутрь имени или не разбился ли идентификатор на две части.',
+            rawDetails: message
+        };
+    }
+    if (/'end' expected/.test(message)) {
+        return {
+            summary: 'Не хватает `end` для закрытия блока `if`, `function`, `for` или `while`.',
+            rawDetails: message
+        };
+    }
+    if (/unexpected symbol near/.test(message)) {
+        return {
+            summary: 'В строке есть лишний или недопустимый символ. Проверьте запятые, скобки и кавычки.',
+            rawDetails: message
+        };
+    }
+    if (/unfinished string near/.test(message)) {
+        return {
+            summary: 'Похоже, не закрыта строка в кавычках.',
+            rawDetails: message
+        };
+    }
+    if (/<eof> expected near/.test(message)) {
+        return {
+            summary: 'В конце файла есть лишний текст или незавершенная конструкция.',
+            rawDetails: message
+        };
+    }
+    return null;
+}
+
+function humanizeLuaRuntimeMessage(message: string): HumanizedScriptFailure | null {
+    if (/attempt to call a nil value/.test(message)) {
+        return {
+            summary: 'Вы вызываете функцию или метод, которых не существует.',
+            rawDetails: message
+        };
+    }
+    if (/attempt to index a nil value/.test(message)) {
+        return {
+            summary: 'Вы обращаетесь к полю или методу у значения `nil`.',
+            rawDetails: message
+        };
+    }
+    if (/bad argument #\d+/.test(message)) {
+        return {
+            summary: 'В функцию передан аргумент неподходящего типа или формата.',
+            rawDetails: message
+        };
+    }
+    if (/attempt to perform arithmetic on/.test(message)) {
+        return {
+            summary: 'Невозможно выполнить арифметическую операцию с текущими значениями.',
+            rawDetails: message
+        };
+    }
+    if (/fsm error:/i.test(message)) {
+        return {
+            summary: 'Команда конфликтует с текущим состоянием полетного автомата.',
+            rawDetails: message
+        };
+    }
+    return null;
+}
+
+function humanizePythonSyntaxMessage(message: string): HumanizedScriptFailure | null {
+    if (/expected ':'/.test(message)) {
+        return {
+            summary: 'После конструкции Python требуется двоеточие `:`.',
+            rawDetails: message
+        };
+    }
+    if (/unexpected indent/.test(message)) {
+        return {
+            summary: 'В строке найден лишний отступ.',
+            rawDetails: message
+        };
+    }
+    if (/unindent does not match any outer indentation level/.test(message)) {
+        return {
+            summary: 'Отступ не совпадает с предыдущим уровнем блока. Проверьте пробелы и табы.',
+            rawDetails: message
+        };
+    }
+    if (/unterminated string literal|EOL while scanning string literal/.test(message)) {
+        return {
+            summary: 'Похоже, не закрыта строка в кавычках.',
+            rawDetails: message
+        };
+    }
+    if (/was never closed/.test(message)) {
+        return {
+            summary: 'Одна из скобок не была закрыта.',
+            rawDetails: message
+        };
+    }
+    if (/invalid syntax/.test(message)) {
+        return {
+            summary: 'В коде есть синтаксическая ошибка. Проверьте строку и соседние выражения.',
+            rawDetails: message
+        };
+    }
+    return null;
+}
+
+function humanizePythonRuntimeMessage(message: string): HumanizedScriptFailure | null {
+    const primaryLine = getLastNonEmptyLine(message);
+    if (/nameerror: .* is not defined/i.test(primaryLine)) {
+        return {
+            summary: 'Используется имя переменной или функции, которое не определено.',
+            rawDetails: primaryLine
+        };
+    }
+    if (/attributeerror: .* has no attribute /i.test(primaryLine)) {
+        return {
+            summary: 'У объекта нет запрошенного поля или метода.',
+            rawDetails: primaryLine
+        };
+    }
+    if (/zerodivisionerror: division by zero/i.test(primaryLine) || /division by zero/i.test(primaryLine)) {
+        return {
+            summary: 'В коде выполняется деление на ноль.',
+            rawDetails: primaryLine
+        };
+    }
+    if (/typeerror: unsupported operand/i.test(primaryLine)) {
+        return {
+            summary: 'Используются несовместимые типы данных в одной операции.',
+            rawDetails: primaryLine
+        };
+    }
+    if (/indexerror:/i.test(primaryLine)) {
+        return {
+            summary: 'Вы обращаетесь к элементу по индексу вне границ списка.',
+            rawDetails: primaryLine
+        };
+    }
+    if (/keyerror:/i.test(primaryLine)) {
+        return {
+            summary: 'Вы обращаетесь к ключу, которого нет в словаре.',
+            rawDetails: primaryLine
+        };
+    }
+    return null;
+}
+
+function humanizeScriptFailure(language: ScriptLanguage, kind: ScriptFailureKind, message: string): HumanizedScriptFailure {
+    const normalizedMessage = String(message || '').trim();
+    const humanized = language === 'python'
+        ? (kind === 'syntax' ? humanizePythonSyntaxMessage(normalizedMessage) : humanizePythonRuntimeMessage(normalizedMessage))
+        : (kind === 'syntax' ? humanizeLuaSyntaxMessage(normalizedMessage) : humanizeLuaRuntimeMessage(normalizedMessage));
+
+    if (humanized) {
+        return humanized;
+    }
+
+    return {
+        summary: getLastNonEmptyLine(normalizedMessage) || 'Не удалось распознать тип ошибки.',
+        rawDetails: normalizedMessage
+    };
+}
+
+export function showScriptFailureNotice(
+    language: ScriptLanguage,
+    error: unknown,
+    fallbackKind: ScriptFailureKind = 'runtime'
+) {
+    const resolved = normalizeScriptFailureError(error, fallbackKind);
+    const kind = resolved.scriptFailureKind || fallbackKind;
+    const humanized = humanizeScriptFailure(language, kind, resolved.message);
+    const title = kind === 'syntax'
+        ? 'Синтаксическая ошибка'
+        : 'Ошибка выполнения';
+    const message = humanized.summary;
+
+    log(
+        kind === 'syntax'
+            ? `Синтаксическая ошибка ${language.toUpperCase()}: ${resolved.message}`
+            : `Ошибка выполнения ${language.toUpperCase()}: ${resolved.message}`,
+        'error'
+    );
+
+    if (typeof resolved.scriptFailureLine === 'number') {
+        (window as any).highlightEditorProblem?.({
+            line: resolved.scriptFailureLine,
+            column: resolved.scriptFailureColumn,
+            message: humanized.summary
+        });
+    }
+
+    if (!(window as any).showSimulationNotice) return;
+
+    (window as any).showSimulationNotice({
+        title,
+        message,
+        detailsHtml: renderScriptFailureHtml(language, kind, humanized.summary, {
+            line: resolved.scriptFailureLine,
+            column: resolved.scriptFailureColumn,
+            note: humanized.details,
+            details: resolved.scriptFailureDetails || humanized.rawDetails || humanized.details
+        }),
+        level: 'error'
+    });
+}
 
 export function scriptHasVisibleDelay(language: ScriptLanguage, code: string) {
     const normalized = (code || '').toLowerCase();
@@ -113,39 +387,70 @@ function collectLuaIssues(code: string): string[] {
     const hasLedSet = /:set\s*\(/.test(normalized);
 
     if (hasLedbar && !hasLedSet) {
-        issues.push('Led strip object is created, but `leds:set(...)` is never called.');
+        issues.push('Лента светодиодов создана, но `leds:set(...)` ни разу не вызывается.');
     }
     if (hasTakeoff && !hasPreflight) {
-        issues.push('Takeoff command is used without `Ev.MCE_PREFLIGHT`. Start with the preflight stage.');
+        issues.push('Команда взлета используется без `Ev.MCE_PREFLIGHT`. Начните со стадии предполета.');
     }
     if (hasGoTo && !hasTakeoff) {
-        issues.push('Route command is used before takeoff. Run `PREFLIGHT` and `TAKEOFF` first.');
+        issues.push('Маршрут запускается до взлета. Сначала выполните `PREFLIGHT` и `TAKEOFF`.');
     }
     if (hasLanding && !hasTakeoff) {
-        issues.push('Landing command is used before takeoff. Check the mission order.');
+        issues.push('Посадка запускается до взлета. Проверьте порядок команд миссии.');
     }
     if ((hasTakeoff || hasGoTo || hasLanding) && !hasTimer && !hasCallback && !hasSleep) {
-        issues.push('Mission commands run back-to-back without pauses. Add `sleep(...)`, `Timer.callLater(...)`, or `callback(event)` between stages.');
+        issues.push('Команды миссии запускаются подряд без пауз. Добавьте между этапами `sleep(...)`, `Timer.callLater(...)` или `callback(event)`.');
     }
     if (hasLuaEarlyRouteIssue(code)) {
-        issues.push('Route start is tied to `Timer.callLater(...)` instead of `TAKEOFF_COMPLETE`, so `goToLocalPoint(...)` may run while takeoff FSM is still active.');
+        issues.push('Маршрут привязан к `Timer.callLater(...)`, а не к `TAKEOFF_COMPLETE`, поэтому `goToLocalPoint(...)` может выполниться, пока FSM взлета еще активен.');
+    }
+    if (/timer\.calllater\s*\(\s*[^,]+,\s*(?!function\b)[a-z_][\w.:]*\s*\(/i.test(code || '')) {
+        issues.push('В `Timer.callLater(...)` передан результат вызова функции, поэтому она выполняется сразу. Передайте сам callback, например `blinkGreen` или `function() ... end`.');
     }
 
     const immediateControlCode = stripLuaManagedBlocks(normalized);
     for (const commands of collectLuaMissionCommandGroups(immediateControlCode)) {
         if (commands.length >= 2) {
-            issues.push(`Multiple mission commands are issued in one step: ${commands.join(', ')}. Split them with \`sleep(...)\`, \`Timer.callLater(...)\`, or \`callback(event)\`.`);
+            issues.push(`В одном шаге запускаются несколько команд миссии: ${commands.join(', ')}. Разделите их через \`sleep(...)\`, \`Timer.callLater(...)\` или \`callback(event)\`.`);
             break;
         }
     }
 
     for (const [delay, commands] of collectLuaDelayedMissionCommands(normalized).entries()) {
         if (commands.length >= 2) {
-            issues.push(`\`Timer.callLater(${delay})\` schedules multiple commands at once: ${commands.join(', ')}. Use separate timers or continue from \`callback(event)\`.`);
+            issues.push(`\`Timer.callLater(${delay})\` ставит несколько команд одновременно: ${commands.join(', ')}. Разнесите их по разным таймерам или продолжайте сценарий из \`callback(event)\`.`);
         }
     }
 
     return issues;
+}
+
+function collectLuaBlockingIssues(code: string): string[] {
+    const normalized = (code || '').toLowerCase();
+    const issues: string[] = [];
+
+    const whileTrueBodies = [...normalized.matchAll(/\bwhile\s+true\s+do\b([\s\S]*?)\bend\b/g)];
+    if (whileTrueBodies.some((match) => !/\bsleep\s*\(/.test(match[1] || ''))) {
+        issues.push(
+            '\u0412 `while true do` \u043d\u0435\u0442 `sleep(...)`, \u043f\u043e\u044d\u0442\u043e\u043c\u0443 \u0446\u0438\u043a\u043b \u043d\u0435 \u0443\u0441\u0442\u0443\u043f\u0430\u0435\u0442 \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u0441\u0438\u043c\u0443\u043b\u044f\u0442\u043e\u0440\u0443 \u0438 \u043c\u043e\u0436\u0435\u0442 \u043c\u0433\u043d\u043e\u0432\u0435\u043d\u043d\u043e \u0437\u0430\u0432\u0438\u0441\u0438\u0442\u044c \u0437\u0430\u043f\u0443\u0441\u043a.'
+        );
+    }
+
+    return issues;
+}
+
+function collectScenarioValidationResult(language: ScriptLanguage, code: string): ScenarioValidationResult {
+    const issues = Array.from(new Set(language === 'python' ? collectPythonIssues(code) : collectLuaIssues(code)));
+    const blockingIssues = Array.from(new Set(language === 'lua' ? collectLuaBlockingIssues(code) : []));
+    return {
+        issues,
+        blockingIssues,
+        shouldBlock: blockingIssues.length > 0
+    };
+}
+
+export function validateScenarioBeforeLaunch(language: ScriptLanguage, code: string): ScenarioValidationResult {
+    return collectScenarioValidationResult(language, code);
 }
 
 function getNoticeSuppressionState(): NoticeSuppressionState {
@@ -224,35 +529,36 @@ function collectPythonIssues(code: string): string[] {
     const ledCalls = (normalized.match(/led_control\s*\(/g) || []).length;
 
     if (ledCalls > 1 && !hasSleep) {
-        issues.push('Multiple `led_control(...)` calls run without `time.sleep(...)`. The color may change too fast.');
+        issues.push('Несколько вызовов `led_control(...)` идут без `time.sleep(...)`. Цвет может меняться слишком быстро.');
     }
     if (hasTakeoff && !hasArm) {
-        issues.push('`takeoff()` is called without `arm()`. Arm the drone first.');
+        issues.push('`takeoff()` вызывается без `arm()`. Сначала взведите дрон.');
     }
     if (hasGoTo && !hasTakeoff) {
-        issues.push('`go_to_local_point(...)` is called before `takeoff()`. Take off first.');
+        issues.push('`go_to_local_point(...)` вызывается до `takeoff()`. Сначала выполните взлет.');
     }
     if (hasLand && !hasTakeoff) {
-        issues.push('`land()` is called before takeoff. Check the command order.');
+        issues.push('`land()` вызывается до взлета. Проверьте порядок команд.');
     }
     if ((hasTakeoff || hasGoTo || hasLand) && !hasSleep && !hasPointReached) {
-        issues.push('Mission commands run without waiting. Add `time.sleep(...)` and/or `point_reached()` checks.');
+        issues.push('Команды миссии выполняются без ожидания. Добавьте `time.sleep(...)` и/или проверки `point_reached()`.');
     }
     if (hasGoTo && !hasPointReached && !hasSleep) {
-        issues.push('There is no wait after `go_to_local_point(...)`. Add a `point_reached()` loop or a pause.');
+        issues.push('После `go_to_local_point(...)` нет ожидания. Добавьте цикл с `point_reached()` или паузу.');
     }
 
     return issues;
 }
 
-export function showScenarioValidationNotice(language: ScriptLanguage, code: string) {
-    const issues = language === 'python' ? collectPythonIssues(code) : collectLuaIssues(code);
-    if (!issues.length) return;
+export function showScenarioValidationNotice(language: ScriptLanguage, code: string): ScenarioValidationResult {
+    const result = collectScenarioValidationResult(language, code);
+    const issues = [...result.blockingIssues, ...result.issues];
+    if (!issues.length) return result;
 
     if (language === 'lua') {
         const simultaneousIssue = issues.find((issue) =>
-            issue.includes('at once')
-            || issue.includes('Multiple mission commands')
+            issue.includes('одновременно')
+            || issue.includes('несколько команд миссии')
         );
         if (simultaneousIssue) {
             markSimultaneousNoticeAsShown();
@@ -262,33 +568,43 @@ export function showScenarioValidationNotice(language: ScriptLanguage, code: str
         }
     }
 
-    const summary = issues.length === 1
-        ? issues[0]
-        : `Found ${issues.length} scenario issues. Fix them before launch.`;
+    const summary = result.shouldBlock
+        ? (
+            result.blockingIssues.length === 1
+                ? 'Найден опасный сценарий. Исправьте его перед запуском.'
+                : `Найдено ${result.blockingIssues.length} опасных сценария. Исправьте их перед запуском.`
+        )
+        : (
+            issues.length === 1
+                ? 'Найдена проблема в сценарии. Проверьте код перед запуском.'
+                : `Найдено ${issues.length} проблем в сценарии. Проверьте код перед запуском.`
+        );
 
-    log(summary, 'warn');
+    log(summary, result.shouldBlock ? 'error' : 'warn');
 
-    if (!(window as any).showSimulationNotice) return;
+    if (!(window as any).showSimulationNotice) return result;
 
     (window as any).showSimulationNotice({
-        title: 'Check Script Before Launch',
+        title: result.shouldBlock ? '\u0417\u0430\u043f\u0443\u0441\u043a \u0437\u0430\u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0430\u043d' : 'Проверьте сценарий перед запуском',
         message: summary,
         detailsHtml: renderIssuesHtml(language, issues),
-        level: 'warn'
+        level: result.shouldBlock ? 'error' : 'warn'
     });
+
+    return result;
 }
 
 export function warnAboutInstantExecution(language: ScriptLanguage) {
     const message = language === 'python'
-        ? 'The script runs commands too fast. In Python you usually need pauses between `arm()`, `takeoff()`, `go_to_local_point()`, and `land()`.'
-        : 'The script runs commands too fast. In Lua FSM, add pauses with `sleep(...)`, `Timer.callLater(...)`, or `callback(event)`.';
+        ? 'Скрипт выполняет команды слишком быстро. В Python обычно нужны паузы между `arm()`, `takeoff()`, `go_to_local_point()` и `land()`.'
+        : 'Скрипт выполняет команды слишком быстро. В Lua FSM добавьте паузы через `sleep(...)`, `Timer.callLater(...)` или `callback(event)`.';
 
     log(message, 'warn');
 
     if (!(window as any).showSimulationNotice) return;
 
     (window as any).showSimulationNotice({
-        title: 'Script Warning',
+        title: 'Предупреждение о сценарии',
         message,
         detailsHtml: renderIssuesHtml(language, [message]),
         level: 'warn'
@@ -300,12 +616,12 @@ export function showSimultaneousCommandsNotice(commands: string[]) {
 
     const uniqueCommands = Array.from(new Set(commands));
     const message = uniqueCommands.length > 1
-        ? `Commands run at the same time: ${uniqueCommands.join(', ')}.`
-        : `Command ${uniqueCommands[0] || 'mission'} runs together with another operation.`;
+        ? `Команды выполняются одновременно: ${uniqueCommands.join(', ')}.`
+        : `Команда ${uniqueCommands[0] || 'миссии'} выполняется одновременно с другой операцией.`;
 
     if (!(window as any).showSimulationNotice) return;
     (window as any).showSimulationNotice({
-        title: 'Commands Overlap',
+        title: 'Команды пересекаются',
         message,
         detailsHtml: renderSimultaneousCommandsHtml(uniqueCommands),
         level: 'warn'
@@ -316,13 +632,13 @@ export function showEarlyRouteNotice() {
     if (shouldSuppressEarlyRouteNotice()) return;
     markEarlyRouteNoticeAsShown();
 
-    const message = '`goToLocalPoint(...)` was sent before takeoff finished. Wait for `TAKEOFF_COMPLETE`.';
+    const message = '`goToLocalPoint(...)` отправлен до завершения взлета. Дождитесь `TAKEOFF_COMPLETE`.';
 
     log(message, 'warn');
 
     if (!(window as any).showSimulationNotice) return;
     (window as any).showSimulationNotice({
-        title: 'Route Started Too Early',
+        title: 'Маршрут запущен слишком рано',
         message,
         detailsHtml: renderEarlyRouteHtml(),
         level: 'warn'

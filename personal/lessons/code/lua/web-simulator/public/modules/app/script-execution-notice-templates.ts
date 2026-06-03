@@ -31,7 +31,7 @@ end`;
         <div class="simulation-notice__list">
             ${issues.map((issue) => `<div>${issue}</div>`).join('')}
         </div>
-        <button type="button" class="simulation-notice__action" data-simulation-action="open-mission-guide">Открыть 5 учебных заданий</button>
+        <button type="button" class="simulation-notice__action" data-simulation-action="open-mission-guide">Открыть 5 шагов миссии</button>
         <div class="simulation-notice__code">${example}</div>
     `;
 }
@@ -54,11 +54,11 @@ end`;
 
     return `
         <div class="simulation-notice__list">
-            <div class="is-critical">Одновременно вызваны команды: ${uniqueCommands.join(', ')}.</div>
-            <div>Команды должны быть разнесены по времени и запускаться по этапам.</div>
-            <div>Используйте разные задержки в Timer.callLater(...) или запускайте следующий шаг из callback(event).</div>
+            <div class="is-critical">Несколько команд запущены одновременно: ${uniqueCommands.join(', ')}.</div>
+            <div>Команды миссии нужно выполнять по этапам и дожидаться завершения шага.</div>
+            <div>Используйте паузы через Timer.callLater(...) или продолжайте сценарий из callback(event).</div>
         </div>
-        <button type="button" class="simulation-notice__action" data-simulation-action="open-mission-guide">Открыть 5 учебных заданий</button>
+        <button type="button" class="simulation-notice__action" data-simulation-action="open-mission-guide">Открыть 5 шагов миссии</button>
         <div class="simulation-notice__code">${example}</div>
     `;
 }
@@ -80,12 +80,67 @@ end`;
 
     return `
         <div class="simulation-notice__list">
-            <div class="is-critical">Маршрут отправлен слишком рано: дрон еще не завершил взлет.</div>
-            <div>Во время PREFLIGHT и TAKEOFF_PROCESS команда goToLocalPoint(...) отклоняется конечным автоматом.</div>
-            <div>Не привязывайте старт маршрута к Timer.callLater(...), если момент завершения взлета еще не подтвержден.</div>
-            <div>Запускайте первый переход по событию callback(Ev.TAKEOFF_COMPLETE), а следующий шаг - по callback(Ev.POINT_REACHED).</div>
+            <div class="is-critical">Маршрут запущен слишком рано: взлет еще не завершен.</div>
+            <div>На этапах PREFLIGHT и TAKEOFF_PROCESS команда goToLocalPoint(...) может нарушить выполнение сценария.</div>
+            <div>Не запускайте маршрут из Timer.callLater(...), если взлет еще продолжается.</div>
+            <div>Безопаснее начинать маршрут из callback(Ev.TAKEOFF_COMPLETE), а продолжение - из callback(Ev.POINT_REACHED).</div>
         </div>
-        <button type="button" class="simulation-notice__action" data-simulation-action="open-mission-guide">Открыть 5 учебных заданий</button>
+        <button type="button" class="simulation-notice__action" data-simulation-action="open-mission-guide">Открыть 5 шагов миссии</button>
         <div class="simulation-notice__code">${example}</div>
+    `;
+}
+
+function escapeHtml(value: string): string {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+export function renderScriptFailureHtml(
+    language: ScriptLanguage,
+    kind: 'syntax' | 'runtime',
+    message: string,
+    options?: {
+        line?: number | null;
+        column?: number | null;
+        note?: string | null;
+        details?: string | null;
+    }
+): string {
+    const location: string[] = [];
+    if (typeof options?.line === 'number') {
+        location.push(`Строка: ${options.line}`);
+    }
+    if (typeof options?.column === 'number') {
+        location.push(`Колонка: ${options.column}`);
+    }
+
+    const hint = kind === 'syntax'
+        ? (
+            language === 'python'
+                ? 'Скрипт не запускается из-за синтаксиса. Проверьте двоеточия, отступы, скобки и закрытие строк.'
+                : 'Скрипт не запускается из-за синтаксиса. Проверьте `end`, скобки, запятые и закрытие строк.'
+        )
+        : (
+            language === 'python'
+                ? 'Скрипт начал выполняться, но затем остановился из-за ошибки выполнения. Часто это неверное имя, пустое значение или операция.'
+                : 'Скрипт начал выполняться, но затем остановился из-за ошибки выполнения. Часто это пустое значение, неверный аргумент или конфликт FSM.'
+        );
+
+    const detailLines = [
+        `<div>${escapeHtml(hint)}</div>`,
+        location.length ? `<div>${escapeHtml(location.join(' | '))}</div>` : '',
+        `<div class="is-critical">${escapeHtml(message)}</div>`,
+        options?.note ? `<div>${escapeHtml(options.note)}</div>` : '',
+        options?.details ? `<div>${escapeHtml(options.details)}</div>` : ''
+    ].filter(Boolean);
+
+    return `
+        <div class="simulation-notice__list">
+            ${detailLines.join('')}
+        </div>
     `;
 }

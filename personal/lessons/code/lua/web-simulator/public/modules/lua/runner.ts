@@ -1,6 +1,7 @@
 import { log } from '../shared/logging/logger.js';
 import { luaToStr } from './utils.js';
 import { drones } from '../core/state.js';
+import { createScriptFailureError, showScriptFailureNotice } from '../app/script-execution-notice.js';
 
 export function runCoroutine(L: any, T: any, nresults: any, id: string) {
     const drone = drones[id];
@@ -19,10 +20,12 @@ export function runCoroutine(L: any, T: any, nresults: any, id: string) {
         return;
     } else if (status !== lua.LUA_OK) {
         const errVal = lua.lua_tostring(T, -1);
-        log(`Runtime Error (${id}): ${luaToStr(errVal, T)}`, 'error');
+        const errorMsg = luaToStr(errVal, T);
+        log(`Runtime Error (${id}): ${errorMsg}`, 'error');
         if (drone) {
             drone.running = false;
             drone.status = '\u041e\u0428\u0418\u0411\u041a\u0410';
         }
+        showScriptFailureNotice('lua', createScriptFailureError('runtime', errorMsg));
     }
 }

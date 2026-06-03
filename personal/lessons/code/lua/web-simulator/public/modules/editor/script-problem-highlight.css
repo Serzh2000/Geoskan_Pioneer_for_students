@@ -1,0 +1,9 @@
+.monaco-editor .editor-script-problem-line {
+    background: linear-gradient(90deg, rgba(209, 59, 46, 0.16), rgba(209, 59, 46, 0.08));
+    border-radius: 4px;
+}
+
+.monaco-editor .margin .editor-script-problem-gutter {
+    border-left: 3px solid #d13b2e;
+    margin-left: 2px;
+}

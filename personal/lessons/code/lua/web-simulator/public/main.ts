@@ -9,17 +9,14 @@ import { runLuaScript, stopLuaScript, triggerLuaCallback } from './modules/lua/i
 import { setLocalFrameOrigin } from './modules/lua/autopilot.js';
 import { runPythonScript, stopPythonScript } from './modules/python/index.js';
 /**
- * Главный входной файл (Entry Point) клиентской части веб-симулятора.
- * Инициализирует все подсистемы: 3D-сцену, пользовательский интерфейс, 
- * редактор кода (Monaco Editor) и физический движок. 
- * Управляет главным циклом обновления (requestAnimationFrame), 
- * запуском/остановкой Lua-скриптов и связью между UI и логикой симуляции.
+ * Main browser entry point for the simulator.
+ * Wires together the 3D scene, editor, UI controls, and script runtimes.
  */
 import { initEditor, getEditorValue, initBlocklyEditorToggle, layoutEditor, setEditorValue } from './modules/editor/index.js';
 import { initUI } from './modules/ui/index.js';
 import { log } from './modules/shared/logging/logger.js';
 import type { MarkerMapOptions } from './modules/environment/obstacles.js';
-import { resetScriptExecutionNoticeState, showScenarioValidationNotice } from './modules/app/script-execution-notice.js';
+import { resetScriptExecutionNoticeState, showScenarioValidationNotice, showScriptFailureNotice, validateScenarioBeforeLaunch } from './modules/app/script-execution-notice.js';
 import { configureSimulationControls } from './modules/app/simulation-controls.js';
 import { initScriptLanguageSelector } from './modules/app/language-selector.js';
 import { initThemeToggle } from './modules/app/theme-toggle.js';
@@ -33,7 +30,7 @@ import { startAnimationLoop } from './modules/app/animation-loop.js';
 // Global Loop
 
 function init() {
-    log('Инициализация системы...', 'info');
+    log('Инициализация симулятора...', 'info');
     registerGlobalErrorHandler();
     initThemeToggle();
 
@@ -96,12 +93,14 @@ function init() {
     });
 }
 
-function startSimulation() {
+async function startSimulation() {
     log(`[DEBUG] startSimulation called. currentDroneId: ${currentDroneId}`, 'info');
     resetScriptExecutionNoticeState();
+    (window as any).clearEditorProblemHighlight?.();
     
     // Run all drones
     let anyStarted = false;
+    let anyAttempted = false;
 
     // First save current editor code to the currently selected drone
     if (drones[currentDroneId]) {
@@ -113,44 +112,41 @@ function startSimulation() {
         log(`[DEBUG] drones[currentDroneId] is undefined!`, 'error');
     }
 
-    // Пока Python runtime не реализован: запускаем только Lua.
+    // Python is launched only for the selected drone. Lua still runs for all drones.
     if (currentScriptLanguage === 'python') {
         const id = currentDroneId;
         const drone = drones[id];
         if (!drone) {
-            log(`Python: drone '${id}' не найден`, 'error');
+            log(`Python: дрон '${id}' не найден`, 'error');
             return;
         }
 
         const code = drone.pythonScript;
         if (!code || !code.trim()) {
-            log('Python: пустой скрипт. Нечего запускать.', 'warn');
+            log('Python: скрипт пустой. Нечего запускать.', 'warn');
             return;
         }
+        anyAttempted = true;
         showScenarioValidationNotice('python', code);
 
-        // Остановим любые активные Lua/py run для этого дрона.
+        // Stop any previous runtime before starting the new one.
         stopLuaScript(id);
         stopPythonScript(id);
 
         resetRuntimeStatePreservePose(id);
         drone.running = true;
-        drone.status = 'ЗАПУСК';
+        drone.status = 'РАБОТАЕТ';
 
         try {
-            runPythonScript(id, code).catch((e: any) => {
-                drone.running = false;
-                drone.status = 'ОШИБКА';
-                const errMsg = e instanceof Error ? e.message : String(e);
-                log(`Ошибка запуска Python скрипта ${drone.name}: ${errMsg}`, 'error');
-            });
+            await runPythonScript(id, code);
             anyStarted = true;
-            log(`Python скрипт запущен для ${drone.name}`, 'success');
+            log(`Python-скрипт запущен для ${drone.name}`, 'success');
         } catch (e: any) {
             drone.running = false;
             drone.status = 'ОШИБКА';
             const errMsg = e instanceof Error ? e.message : String(e);
-            log(`Ошибка запуска Python скрипта ${drone.name}: ${errMsg}`, 'error');
+            showScriptFailureNotice('python', e, 'syntax');
+            log(`Ошибка запуска Python для ${drone.name}: ${errMsg}`, 'error');
         }
 
         return;
@@ -163,15 +159,21 @@ function startSimulation() {
         const code = drone.script;
         log(`[DEBUG] Drone ${id} script length: ${code ? code.length : 0}`, 'info');
         if (!code || !code.trim()) continue;
+        anyAttempted = true;
+        const validation = validateScenarioBeforeLaunch('lua', code);
         if (id === currentDroneId) {
             showScenarioValidationNotice('lua', code);
+        }
+        if (validation.shouldBlock) {
+            log(`Запуск скрипта ${drone.name} заблокирован: ${validation.blockingIssues[0]}`, 'error');
+            continue;
         }
 
         stopLuaScript(id);
         resetRuntimeStatePreservePose(id);
         setLocalFrameOrigin(drone.pos.x, drone.pos.y, drone.pos.z);
         drone.running = true;
-        drone.status = 'ЗАПУСК';
+        drone.status = 'РАБОТАЕТ';
         
         try {
             runLuaScript(id, code);
@@ -189,14 +191,14 @@ function startSimulation() {
             drone.running = false;
             drone.status = 'ОШИБКА';
             const errMsg = e instanceof Error ? e.message : String(e);
-            log(`Ошибка запуска скрипта ${drone.name}: ${errMsg}`, 'error');
+            showScriptFailureNotice('lua', e, 'syntax');
+            log(`Ошибка запуска скрипта для ${drone.name}: ${errMsg}`, 'error');
             console.error(`[Main] Error running script for ${id}:`, e);
-            anyStarted = true; // Set to true so we don't show the "Нет скриптов" warning if it actually tried to run
         }
     }
     
-    if (!anyStarted) {
-        log('Нет скриптов для запуска', 'warn');
+    if (!anyAttempted) {
+        log('Нет сценариев для запуска', 'warn');
     }
 }
 
@@ -218,8 +220,7 @@ function resetSimulation() {
     for (const id in drones) {
         resetState(id);
 
-        // СБРОС должен мгновенно вернуть дрон в начало координат (0,0,0)
-        // resetState() сбрасывает "управляющую/физическую" часть, но не позу.
+        // Keep reset deterministic: return every drone transform to the origin.
         const drone = drones[id];
         drone.pos = { x: 0, y: 0, z: 0 };
         drone.orientation = { roll: 0, pitch: 0, yaw: 0 };
@@ -228,7 +229,7 @@ function resetSimulation() {
         drone.target_yaw = 0;
     }
 
-    // Принудительно рендерим, чтобы изменения в координатах были видны сразу.
+    // Force one frame update so the UI immediately reflects the reset state.
     if (is3DActive) updateDrone3D(0);
     log('Симуляция сброшена', 'info');
 }

@@ -286,7 +286,7 @@ export function createGround(_scene: THREE.Scene, envGroup: THREE.Group) {
     centerRing.position.z = 0.012;
     ground.add(centerRing);
 
-    // ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ H (Landing Pad) ˜˜˜ ˜˜˜˜˜˜ (0,0)
+    // Add the H landing pad marker at the origin.
     const padGeom = new THREE.PlaneGeometry(2, 2);
     landingPadTexture = createLandingPadTexture(groundTheme);
     landingPadMaterial = new THREE.MeshStandardMaterial({
@@ -331,7 +331,7 @@ export function createGround(_scene: THREE.Scene, envGroup: THREE.Group) {
     ensureGroundThemeListener();
     envGroup.add(ground);
 
-    // ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜ (Truss Arena) ˜ ˜˜˜˜˜ ˜˜˜ ˜˜ ˜˜˜˜
+    // Add the truss arena structure above the base floor.
     createTrussArena(envGroup);
 }
 

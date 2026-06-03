@@ -108,7 +108,7 @@ export function toggleMultiSelectObject(obj: THREE.Object3D) {
     } else if (multiSelectedObjects.length === 0) {
         selectedObject = null;
     } else {
-        // Если выбрано много, основным считается последний выбранный (для инфопанели)
+        // Р•СЃР»Рё РІС‹Р±СЂР°РЅРѕ РјРЅРѕРіРѕ, РѕСЃРЅРѕРІРЅС‹Рј СЃС‡РёС‚Р°РµС‚СЃСЏ РїРѕСЃР»РµРґРЅРёР№ РІС‹Р±СЂР°РЅРЅС‹Р№ (РґР»СЏ РёРЅС„РѕРїР°РЅРµР»Рё)
         selectedObject = multiSelectedObjects[multiSelectedObjects.length - 1];
     }
     
@@ -197,7 +197,7 @@ export function initScene(container: HTMLElement) {
     controls.enabled = false; 
 
     controls.addEventListener('change', () => {
-        // Убрано сверхподробное логирование вращения камеры
+        // РЈР±СЂР°РЅРѕ СЃРІРµСЂС…РїРѕРґСЂРѕР±РЅРѕРµ Р»РѕРіРёСЂРѕРІР°РЅРёРµ РІСЂР°С‰РµРЅРёСЏ РєР°РјРµСЂС‹
     });
 
     transformControl = new TransformControls(camera, renderer.domElement);

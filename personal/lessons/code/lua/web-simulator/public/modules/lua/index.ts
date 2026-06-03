@@ -10,6 +10,12 @@ import { sensors_pos, sensors_vel, sensors_accel, sensors_gyro, sensors_orientat
 import { timer_callLater, timer_new, sys_time, sys_deltaTime, js_sleep } from './timers.js';
 import { camera_requestMakeShot, camera_checkRequestShot, camera_requestRecordStart, camera_requestRecordStop, gpio_new, uart_new, spi_new } from './hardware.js';
 import { ledbar_fromHSV, js_init_leds, js_ledbar_set } from './leds.js';
+import { createScriptFailureError } from '../app/script-execution-notice.js';
+
+function extractLuaSyntaxLine(errorMsg: string): number | null {
+    const match = errorMsg.match(/:(\d+):/);
+    return match ? Number(match[1]) : null;
+}
 
 const lua_print = function(L: any) {
     const drone = getDroneFromLua(L);
@@ -172,9 +178,16 @@ export function runLuaScript(id: string, scriptContent: string) {
     if (loadStatus !== 0) {
         const errVal = window.fengari.lua.lua_tostring(L, -1);
         const errorMsg = luaToStr(errVal, L);
-        log(`Lua script load error (${id}): ${errorMsg}`, 'error');
         window.fengari.lua.lua_pop(L, 1);
-        return;
+        try {
+            window.fengari.lua.lua_close(L);
+        } catch (e) {
+            console.error('Error closing lua state after syntax failure:', e);
+        }
+        drone.luaState = null;
+        throw createScriptFailureError('syntax', errorMsg, {
+            line: extractLuaSyntaxLine(errorMsg)
+        });
     }
 
     const T = window.fengari.lua.lua_newthread(L);

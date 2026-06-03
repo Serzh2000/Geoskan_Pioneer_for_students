@@ -3,19 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <title>Pioneer Lua Web Simulator</title>
-    <link rel="icon" href="data:,">
+    <link rel="icon" href="data:,">
+    <script>
+        (function () {
+            var storageKey = 'geoskan_app_theme_v1';
+            var savedTheme = null;
+            try {
+                savedTheme = window.localStorage.getItem(storageKey);
+            } catch (error) {
+                savedTheme = null;
+            }
+
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var theme = savedTheme === 'dark' || savedTheme === 'light' ? savedTheme : (prefersDark ? 'dark' : 'light');
+            document.documentElement.dataset.theme = theme;
+        })();
+    </script>
     <!-- Three.js and modules loaded via Vite -->
     <!-- Fengari for Lua in browser -->
     <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
-  <script type="module" crossorigin src="/assets/index-C6ILHSIx.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-CCrkrKsD.css">
+  <script type="module" crossorigin src="/assets/index-0nsQVOhm.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-C_o4-ur9.css">
 </head>
 <body>
             <header class="header">
             <div class="header-brand">
                 <div class="header-brand-mark">G</div>
                 <div class="header-brand-copy">
-                    <div class="header-logo">Geoscan <span>Симулятор</span></div>
+                    <div class="header-logo">
+                        <span class="header-logo-geoscan">Geoscan</span>
+                        <span class="header-logo-simulator">Симулятор</span>
+                    </div>
                     <div class="header-meta">Инженерная полетная среда</div>
                 </div>
             </div>
@@ -30,6 +48,12 @@
                         <option value="lua">Lua</option>
                         <option value="python">Python</option>
                     </select>
+                    <button id="theme-toggle" type="button" class="btn-secondary header-theme-toggle" title="Переключить тему" aria-label="Переключить тему" aria-pressed="false">
+                        <span class="header-theme-toggle__track" aria-hidden="true">
+                            <span class="header-theme-toggle__thumb"></span>
+                        </span>
+                        <span class="header-theme-toggle__label">Светлая тема</span>
+                    </button>
                     <label class="header-check">
                         <input type="checkbox" id="blockly-editor-toggle">
                         <span>Режим Blockly</span>

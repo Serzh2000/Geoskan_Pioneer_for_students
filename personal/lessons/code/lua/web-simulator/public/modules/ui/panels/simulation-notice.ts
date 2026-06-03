@@ -2,7 +2,7 @@ type SimulationNoticePayload = string | {
     title?: string;
     message: string;
     detailsHtml?: string;
-    level?: 'warn' | 'info';
+    level?: 'warn' | 'info' | 'error';
 };
 
 export function initSimulationNotice() {
@@ -40,7 +40,10 @@ export function initSimulationNotice() {
             (window as any).openMissionGuideModal?.();
         }
     });
-    (window as any).showSimulationNotice = (payload: SimulationNoticePayload, fallbackLevel: 'warn' | 'info' = 'warn') => {
+    (window as any).showSimulationNotice = (
+        payload: SimulationNoticePayload,
+        fallbackLevel: 'warn' | 'info' | 'error' = 'warn'
+    ) => {
         if (!notice || !messageEl || !titleEl || !detailsEl) return;
         window.clearTimeout(hideTimer);
         const resolved = typeof payload === 'string'

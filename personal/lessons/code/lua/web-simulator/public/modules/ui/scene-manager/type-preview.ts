@@ -7,7 +7,7 @@ import { parsePointsText } from '../../scene/objects/object-catalog.js';
 import { getSceneTypePreviewConfig, readAddSceneObjectDraft } from './support.js';
 import type { SceneManagerDomRefs } from './types.js';
 
-const PREVIEW_FALLBACK_MESSAGE = '3D-превью недоступно в текущей сессии браузера. Закройте другие вкладки с WebGL или перезагрузите страницу.';
+const PREVIEW_FALLBACK_MESSAGE = '3D-РїСЂРµРІСЊСЋ РЅРµРґРѕСЃС‚СѓРїРЅРѕ РІ С‚РµРєСѓС‰РµР№ СЃРµСЃСЃРёРё Р±СЂР°СѓР·РµСЂР°. Р—Р°РєСЂРѕР№С‚Рµ РґСЂСѓРіРёРµ РІРєР»Р°РґРєРё СЃ WebGL РёР»Рё РїРµСЂРµР·Р°РіСЂСѓР·РёС‚Рµ СЃС‚СЂР°РЅРёС†Сѓ.';
 type PreviewTheme = 'light' | 'dark';
 
 function getPreviewTheme(): PreviewTheme {
@@ -83,7 +83,7 @@ function renderPreviewFallback(host: HTMLDivElement, message: string) {
     fallback.className = 'scene-type-modal__preview-fallback';
 
     const title = document.createElement('strong');
-    title.textContent = '3D-превью недоступно';
+    title.textContent = '3D-РїСЂРµРІСЊСЋ РЅРµРґРѕСЃС‚СѓРїРЅРѕ';
 
     const text = document.createElement('span');
     text.textContent = message;

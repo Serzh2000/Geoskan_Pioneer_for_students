@@ -16,34 +16,49 @@ export function setupSyntaxHighlighting(monaco: any) {
         syntaxRegistered = true;
 
     monaco.languages.setMonarchTokensProvider('lua', {
+        modules: ['ap', 'Sensors', 'Timer', 'Ledbar', 'camera', 'Gpio', 'Uart', 'Spi', 'mailbox'],
+        methods: [
+            'push', 'goToLocalPoint', 'goToPoint', 'updateYaw', 'lpsPosition', 'lpsVelocity', 'lpsYaw',
+            'accel', 'gyro', 'orientation', 'range', 'battery', 'tof', 'altitude', 'rc', 'callLater',
+            'callAt', 'callAtGlobal', 'new', 'set', 'start', 'stop', 'read', 'write', 'reset',
+            'setFunction', 'bytesToRead', 'setBaudRate', 'exchange', 'connect', 'hasMessages',
+            'myHullNumber', 'receive', 'send', 'setHullNumber', 'requestMakeShot', 'checkRequestShot',
+            'requestRecordStart', 'requestRecordStop', 'checkRequestRecord', 'fromHSV', 'time',
+            'deltaTime', 'launchTime', 'sleep', 'boardNumber'
+        ],
+        keywords: [
+            'and', 'break', 'do', 'else', 'elseif', 'end', 'false', 'for', 'function', 'if', 'in',
+            'local', 'nil', 'not', 'or', 'repeat', 'return', 'then', 'true', 'until', 'while'
+        ],
         tokenizer: {
             root: [
-                // Pioneer Modules
-                [/\b(ap|Sensors|Timer|Ledbar|camera|Gpio|Uart|Spi|mailbox)\b/, "keyword.class"],
-                
-                // Pioneer Methods (generic matcher for simplicity, specific ones handled by autocomplete)
-                [/\b(push|goToLocalPoint|goToPoint|updateYaw|lpsPosition|lpsVelocity|lpsYaw|accel|gyro|orientation|range|battery|tof|altitude|rc|callLater|callAt|callAtGlobal|new|set|start|stop|read|write|reset|setFunction|bytesToRead|setBaudRate|exchange|connect|hasMessages|myHullNumber|receive|send|setHullNumber|requestMakeShot|checkRequestShot|requestRecordStart|requestRecordStop|checkRequestRecord|fromHSV|time|deltaTime|launchTime|sleep|boardNumber)\b/, "function.call"],
-                
                 // Constants
                 [/\b(Ev)\.[A-Z_]+\b/, "constant"],
                 [/\b(Ev)\b/, "constant"],
-                
-                // Lua Keywords
-                [/\b(and|break|do|else|elseif|end|false|for|function|if|in|local|nil|not|or|repeat|return|then|true|until|while)\b/, "keyword"],
-                
+
                 // Comments
                 [/--\[\[[\s\S]*?(?:\]\]|$)/, 'comment'],
                 [/--.*$/, "comment"],
-                
+
                 // Strings
                 [/"([^"\\]|\\.)*$/, 'string.invalid'],  // non-terminated string
                 [/"([^"\\]|\\.)*"/, 'string'],
                 [/'([^'\\]|\\.)*$/, 'string.invalid'],
                 [/'([^'\\]|\\.)*'/, 'string'],
-                
+
                 // Numbers
                 [/\d*\.\d+([eE][-+]?\d+)?/, "number.float"],
-                [/\d+/, "number"]
+                [/\d+/, "number"],
+
+                // Match a full Lua identifier before classifying it.
+                [/[a-zA-Z_]\w*/, {
+                    cases: {
+                        '@modules': 'keyword.class',
+                        '@methods': 'function.call',
+                        '@keywords': 'keyword',
+                        '@default': 'identifier'
+                    }
+                }]
             ]
         }
     });
