@@ -14,12 +14,17 @@ export type ScriptFailureError = Error & {
     scriptFailureLine?: number | null;
     scriptFailureColumn?: number | null;
     scriptFailureDetails?: string | null;
+    scriptFailurePhase?: string | null;
+    scriptFailureStack?: string | null;
+    scriptFailureContextLines?: string[] | null;
+    scriptFailureFsmHistory?: string[] | null;
 };
 
 type HumanizedScriptFailure = {
     summary: string;
     details?: string | null;
     rawDetails?: string | null;
+    suppressTechnicalDetails?: boolean;
 };
 
 type NoticeSuppressionState = {
@@ -40,6 +45,10 @@ export function createScriptFailureError(
         line?: number | null;
         column?: number | null;
         details?: string | null;
+        phase?: string | null;
+        stack?: string | null;
+        contextLines?: string[] | null;
+        fsmHistory?: string[] | null;
     }
 ): ScriptFailureError {
     const error = new Error(message) as ScriptFailureError;
@@ -48,6 +57,10 @@ export function createScriptFailureError(
     error.scriptFailureLine = options?.line ?? null;
     error.scriptFailureColumn = options?.column ?? null;
     error.scriptFailureDetails = options?.details ?? null;
+    error.scriptFailurePhase = options?.phase ?? null;
+    error.scriptFailureStack = options?.stack ?? null;
+    error.scriptFailureContextLines = options?.contextLines ?? null;
+    error.scriptFailureFsmHistory = options?.fsmHistory ?? null;
     return error;
 }
 
@@ -67,6 +80,63 @@ function getLastNonEmptyLine(value: string): string {
         .map((line) => line.trim())
         .filter(Boolean);
     return lines[lines.length - 1] || value.trim();
+}
+
+function humanizeLuaFsmRuntimeMessage(state: string, command: string, message: string): HumanizedScriptFailure {
+    const upperState = String(state || '').toUpperCase();
+    const upperCommand = String(command || '').toUpperCase();
+    const stateLabels: Record<string, string> = {
+        IDLE: 'на земле (`IDLE`)',
+        PREFLIGHT: 'в предполетной подготовке (`PREFLIGHT`)',
+        TAKEOFF_PROCESS: 'в процессе взлета (`TAKEOFF_PROCESS`)',
+        FLYING_HOVER: 'в режиме висения (`FLYING_HOVER`)',
+        FLYING_MOVING: 'в полете по маршруту (`FLYING_MOVING`)',
+        LANDING_PROCESS: 'в процессе посадки (`LANDING_PROCESS`)'
+    };
+    const commandLabels: Record<string, string> = {
+        MCE_PREFLIGHT: '`Ev.MCE_PREFLIGHT`',
+        MCE_TAKEOFF: '`Ev.MCE_TAKEOFF`',
+        MCE_LANDING: '`Ev.MCE_LANDING`',
+        GO_TO_LOCAL_POINT: '`ap.goToLocalPoint(...)`'
+    };
+    const stateLabel = stateLabels[upperState] || `в состоянии \`${upperState}\``;
+    const commandLabel = commandLabels[upperCommand] || `\`${upperCommand}\``;
+
+    if (upperCommand === 'MCE_PREFLIGHT' && upperState === 'PREFLIGHT') {
+        return {
+            summary: 'Повторный `Ev.MCE_PREFLIGHT`: предполетная подготовка уже запущена.',
+            details: 'Уберите повторную команду `Ev.MCE_PREFLIGHT`. После нее дождитесь события `Ev.ENGINES_STARTED` и только потом отправляйте `Ev.MCE_TAKEOFF`.',
+            rawDetails: message
+        };
+    }
+
+    if (upperCommand === 'MCE_TAKEOFF' && upperState === 'IDLE') {
+        return {
+            summary: 'Команда `Ev.MCE_TAKEOFF` отклонена: дрон еще не прошел предполетную подготовку.',
+            details: 'Сначала отправьте `Ev.MCE_PREFLIGHT`. Надежнее запускать `Ev.MCE_TAKEOFF` из `callback(event)` при событии `Ev.ENGINES_STARTED`.',
+            rawDetails: message
+        };
+    }
+
+    if (upperCommand === 'GO_TO_LOCAL_POINT' && upperState === 'TAKEOFF_PROCESS') {
+        return {
+            summary: 'Маршрут нельзя запускать во время взлета: дрон еще не достиг полетного режима.',
+            details: 'Перенесите `ap.goToLocalPoint(...)` в обработчик `callback(event)` и запускайте его по событию `Ev.TAKEOFF_COMPLETE`.',
+            rawDetails: message
+        };
+    }
+
+    const recommendations: Record<string, string> = {
+        MCE_PREFLIGHT: 'Команду `Ev.MCE_PREFLIGHT` отправляйте один раз, когда дрон находится на земле и еще не начал предполетную подготовку.',
+        MCE_TAKEOFF: 'Команду `Ev.MCE_TAKEOFF` отправляйте только после `Ev.MCE_PREFLIGHT`. Надежнее запускать ее из `callback(event)` при событии `Ev.ENGINES_STARTED`.',
+        MCE_LANDING: 'Команду `Ev.MCE_LANDING` отправляйте только когда дрон уже находится в воздухе. Не запускайте посадку во время взлета.',
+        GO_TO_LOCAL_POINT: 'Маршрут через `ap.goToLocalPoint(...)` запускайте только после завершения взлета. Надежнее делать это по событию `Ev.TAKEOFF_COMPLETE`.'
+    };
+    return {
+        summary: `Команда ${commandLabel} сейчас недоступна: дрон находится ${stateLabel}.`,
+        details: recommendations[upperCommand] || 'Проверьте порядок команд и дождитесь подходящего состояния полетного автомата.',
+        rawDetails: message
+    };
 }
 
 function humanizeLuaSyntaxMessage(message: string): HumanizedScriptFailure | null {
@@ -112,33 +182,71 @@ function humanizeLuaSyntaxMessage(message: string): HumanizedScriptFailure | nul
 }
 
 function humanizeLuaRuntimeMessage(message: string): HumanizedScriptFailure | null {
+    const fsmTransitionMatch = message.match(/fsm error:\s*invalid transition from\s+([A-Z_]+)\s+by command\s+([A-Z_]+)/i);
+    if (fsmTransitionMatch) {
+        return humanizeLuaFsmRuntimeMessage(fsmTransitionMatch[1], fsmTransitionMatch[2], message);
+    }
+    const simultaneousCommandsMatch = message.match(/команды миссии запущены одновременно без паузы:\s*([A-Z_,\s]+)\./i);
+    if (simultaneousCommandsMatch) {
+        const commands = simultaneousCommandsMatch[1]
+            .split(',')
+            .map((value) => value.trim().toUpperCase())
+            .filter(Boolean);
+        const uniqueCommands = Array.from(new Set(commands));
+
+        if (uniqueCommands.length === 1 && uniqueCommands[0] === 'PREFLIGHT') {
+            return {
+                summary: 'Предполетная подготовка запущена повторно.',
+                details: 'Вы отправили `Ev.MCE_PREFLIGHT` дважды без ожидания следующего этапа. Оставьте `Ev.MCE_PREFLIGHT` только один раз, а `Ev.MCE_TAKEOFF` запускайте после события `Ev.ENGINES_STARTED`.',
+                suppressTechnicalDetails: true
+            };
+        }
+
+        const labelMap: Record<string, string> = {
+            PREFLIGHT: '`Ev.MCE_PREFLIGHT`',
+            TAKEOFF: '`Ev.MCE_TAKEOFF`',
+            LANDING: '`Ev.MCE_LANDING`',
+            GOTOLOCALPOINT: '`ap.goToLocalPoint(...)`'
+        };
+        const renderedCommands = uniqueCommands.map((command) => labelMap[command] || `\`${command}\``);
+        return {
+            summary: 'Несколько команд миссии стартуют одновременно.',
+            details: `Не запускайте в одном шаге ${renderedCommands.join(', ')}. Между этапами добавьте \`sleep(...)\`, \`Timer.callLater(...)\` или переход через \`callback(event)\`.`,
+            suppressTechnicalDetails: true
+        };
+    }
     if (/attempt to call a nil value/.test(message)) {
         return {
-            summary: 'Вы вызываете функцию или метод, которых не существует.',
+            summary: 'Скрипт пытается вызвать функцию или метод, которых не существует.',
+            details: 'Проверьте имя функции, объекта и API-вызова. Часто это опечатка в имени или обращение к методу у неправильного объекта.',
             rawDetails: message
         };
     }
     if (/attempt to index a nil value/.test(message)) {
         return {
-            summary: 'Вы обращаетесь к полю или методу у значения `nil`.',
+            summary: 'Скрипт обращается к полю или методу у значения `nil`.',
+            details: 'Обычно это значит, что переменная не была создана, функция вернула `nil` или объект еще не инициализирован.',
             rawDetails: message
         };
     }
     if (/bad argument #\d+/.test(message)) {
         return {
             summary: 'В функцию передан аргумент неподходящего типа или формата.',
+            details: 'Проверьте порядок аргументов, их количество и типы. Например, вместо числа могло прийти `nil` или строка.',
             rawDetails: message
         };
     }
     if (/attempt to perform arithmetic on/.test(message)) {
         return {
             summary: 'Невозможно выполнить арифметическую операцию с текущими значениями.',
+            details: 'Проверьте, что в вычислениях участвуют числа, а не `nil`, строки или неинициализированные переменные.',
             rawDetails: message
         };
     }
     if (/fsm error:/i.test(message)) {
         return {
             summary: 'Команда конфликтует с текущим состоянием полетного автомата.',
+            details: 'Проверьте порядок этапов миссии: `PREFLIGHT` -> `TAKEOFF` -> полет по маршруту -> `LANDING`.',
             rawDetails: message
         };
     }
@@ -254,6 +362,9 @@ export function showScriptFailureNotice(
         ? 'Синтаксическая ошибка'
         : 'Ошибка выполнения';
     const message = humanized.summary;
+    const technicalDetails = humanized.suppressTechnicalDetails
+        ? null
+        : (resolved.scriptFailureDetails || humanized.rawDetails || null);
 
     log(
         kind === 'syntax'
@@ -279,7 +390,11 @@ export function showScriptFailureNotice(
             line: resolved.scriptFailureLine,
             column: resolved.scriptFailureColumn,
             note: humanized.details,
-            details: resolved.scriptFailureDetails || humanized.rawDetails || humanized.details
+            details: technicalDetails,
+            phase: resolved.scriptFailurePhase,
+            stack: resolved.scriptFailureStack,
+            contextLines: resolved.scriptFailureContextLines,
+            fsmHistory: resolved.scriptFailureFsmHistory
         }),
         level: 'error'
     });

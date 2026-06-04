@@ -5,6 +5,7 @@ import type {
     TickCommandSignature,
     TickFlightCommand
 } from '../core/state.js';
+import { rememberLuaFailureHint, recordLuaFsmTransition } from '../lua/diagnostics.js';
 import { log } from '../shared/logging/logger.js';
 import { MCECommands } from './mce-events.js';
 
@@ -71,9 +72,15 @@ export function setFsmStateAndSyncStatus(drone: DroneState, nextState: DroneFsmS
 export function failSimultaneousCommands(drone: DroneState, commands: TickFlightCommand[]): never {
     const labels = commands.map(getTickCommandLabel);
     const message = `CRITICAL ERROR: Commands ${labels.join(', ')} run at the same time. Split them with Timer.callLater(...) or callback(event).`;
+    rememberLuaFailureHint(
+        drone,
+        `Команды миссии запущены одновременно без паузы: ${labels.join(', ')}.`,
+        ['Разнесите эти команды по этапам через `Timer.callLater(...)`, `sleep(...)` или `callback(event)`.']
+    );
     showSimultaneousCommandsNotice(labels);
     drone.running = false;
     drone.status = '\u041e\u0428\u0418\u0411\u041a\u0410';
+    recordLuaFsmTransition(drone, drone.fsmState, 'IDLE', 'simultaneous mission commands', drone.currentCommandSource || 'system');
     drone.fsmState = 'IDLE';
     drone.command_queue = [];
     drone.pendingLocalPoint = false;

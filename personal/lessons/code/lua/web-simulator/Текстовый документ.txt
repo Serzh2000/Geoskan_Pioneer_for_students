@@ -1,6 +1,24 @@
-В иерархии в добавить элемент на сцену надо менять бизнес логику. нажатие кнопки добавить объект открывает каталог объктов в котором уже я выбираю элемент и нажимаю добавить
+Ошибка выполнения
+1
+Сводка
+<div>Скрипт стартовал, но остановился во время выполнения. Часто причина в `nil`, неверном аргументе или конфликте состояний FSM.</div>
+<div>Фаза выполнения: main chunk</div>
+<div class="is-critical">1</div>
+Контекст выполнения
+Фаза выполнения: main chunk.
+Последний вызов API: ap.push(event=1) из [string "..."]:94 [push]; FSM=IDLE; source=direct; t=0.000s.
+[DEBUG] ap.push: Аргументы: event=1; FSM=IDLE; source=direct @ [string "..."]:94 [push] (t=0.000s)
+[DEBUG] ap.push: Перед вызовом: 1 (Предполетная подготовка); FSM=IDLE @ [string "..."]:94 [push] (t=0.000s)
+[DEBUG] ap.push/js: Подготовка команды 1 (Предполетная подготовка); FSM=IDLE; source=direct (t=0.000s)
+[INFO] FSM: IDLE -> IDLE; reason=simultaneous mission commands; source=system (t=0.000s)
+История FSM
+t=0.000s: IDLE -> IDLE (simultaneous mission commands; source=system)
+Стек вызовов
+1
 
-Сначала найду текущую логику кнопки `Добавить объект на сцену` и каталог объектов в иерархии, чтобы поменять именно поведение: сначала открытие каталога, потом явное подтверждение `Добавить`.
+ну что то тут вообще не информатрвно как то
+
+Сначала доберу именно этот кейс с `1`: посмотрю, откуда в runtime прилетает числовое значение вместо текста ошибки, и затем сделаю деградацию умной, чтобы в попапе показывалась реальная причина, а не сырое число.
         
             
 toolName: todo_write
@@ -12,11 +30,12 @@ Todos updated: 3 items
 
         
             
-toolName: search_by_regex
+toolName: view_files
             
 status: success
           
-query: Добавить объект|scene-type-modal|catalog|add.*scene|scene-add|add-object|scene-type
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\lua\diagnostics.ts
           
 
         
@@ -26,4 +45,294 @@ toolName: view_files
 status: success
           
             
-filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\fragments\panels\manager\hierarchy.htmlRequest limited, please try again later (4008)
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\lua\runner.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\app\script-execution-notice.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\app\script-execution-notice-templates.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\tests\script-execution-notice.test.ts
+          
+Нашёл корень проблемы: в некоторых Lua/JS-пограничных сбоях до UI действительно доезжает не текст, а непрозрачное числовое значение вроде `1`, и текущий попап честно показывает этот мусор. Исправлю это на двух уровнях: сохраню “последнюю осмысленную причину” ещё в момент сбоя FSM и введу fallback, который подменяет такие `1` на нормальное объяснение.
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\core\state-types.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\core\state.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\autopilot\fsm-internals.ts
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\autopilot\fsm.ts
+          
+Сделаю ещё два точечных улучшения поверх fallback:
+- уберу дублирование `Фаза выполнения` между сводкой и контекстом;
+- перестану показывать историю вида `IDLE -> IDLE`, если это не переход, а аварийный сброс без смены состояния, и заменю на человеческую формулировку.
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\core\state-types.ts
+          
+changes: 
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\core\state.ts
+          
+changes: 
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\lua\diagnostics.ts
+          
+changes: 
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\autopilot\fsm-internals.ts
+          
+changes: 
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\autopilot\fsm.ts
+          
+changes: 
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\lua\diagnostics.ts
+          
+changes: 
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\app\script-execution-notice-templates.ts
+          
+changes: 
+          
+Добавляю целевой тест именно под ваш сценарий: когда runtime возвращает `1`, уведомление должно показывать осмысленную причину и не рендерить числовой “стек”. После этого ещё раз прогоню наборы.
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\tests\script-execution-notice.test.ts
+          
+changes: 
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: run_command
+            
+status: success
+          
+command: npm test -- script-execution-notice.test.ts fsm.test.ts undefined
+          
+Готово: числовой мусор больше не должен подменять смысл ошибки. Ещё раз прогнал тесты, теперь есть отдельная проверка именно на кейс `rawError = "1"` и она проходит.
+        
+            
+toolName: todo_write
+            
+status: success
+          
+Todos updated: 3 itemsRequest limited, please try again later (4008)

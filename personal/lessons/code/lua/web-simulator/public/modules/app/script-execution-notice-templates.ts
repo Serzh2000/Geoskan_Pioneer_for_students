@@ -99,6 +99,77 @@ function escapeHtml(value: string): string {
         .replace(/'/g, '&#39;');
 }
 
+function normalizeNoticeText(value: string | null | undefined): string {
+    return String(value || '').replace(/\r/g, '').trim();
+}
+
+function buildScriptFailureLocation(line?: number | null, column?: number | null): string | null {
+    const parts: string[] = [];
+    if (typeof line === 'number') {
+        parts.push(`строка ${line}`);
+    }
+    if (typeof column === 'number') {
+        parts.push(`колонка ${column}`);
+    }
+    return parts.length ? `Место ошибки: ${parts.join(', ')}.` : null;
+}
+
+function collectScriptFailureTechnicalDetails(
+    details: string | null | undefined,
+    ignoredLines: string[]
+): string[] {
+    const ignored = new Set(
+        ignoredLines
+            .map((line) => normalizeNoticeText(line).toLowerCase())
+            .filter(Boolean)
+    );
+
+    return normalizeNoticeText(details)
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => {
+            if (!line) return false;
+            if (/^\d+$/.test(line)) return false;
+            return !ignored.has(line.toLowerCase());
+        });
+}
+
+type FailureSectionLine = string | {
+    text: string;
+    critical?: boolean;
+};
+
+function renderFailureSection(title: string, lines: FailureSectionLine[]): string {
+    const items = lines.filter((line) => {
+        if (!line) return false;
+        if (typeof line === 'string') return Boolean(line);
+        return Boolean(line.text);
+    });
+    if (!items.length) return '';
+    return `
+        <div class="simulation-notice__section">
+            <div class="simulation-notice__section-title">${escapeHtml(title)}</div>
+            <div class="simulation-notice__list">
+                ${items.map((line) => {
+                    const resolved = typeof line === 'string' ? { text: line, critical: false } : line;
+                    return `<div${resolved.critical ? ' class="is-critical"' : ''}>${escapeHtml(resolved.text)}</div>`;
+                }).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function renderFailureStack(stack: string | null | undefined): string {
+    const normalized = normalizeNoticeText(stack);
+    if (!normalized || /^\d+$/.test(normalized)) return '';
+    return `
+        <div class="simulation-notice__section">
+            <div class="simulation-notice__section-title">Стек вызовов</div>
+            <div class="simulation-notice__code">${escapeHtml(normalized)}</div>
+        </div>
+    `;
+}
+
 export function renderScriptFailureHtml(
     language: ScriptLanguage,
     kind: 'syntax' | 'runtime',
@@ -108,39 +179,45 @@ export function renderScriptFailureHtml(
         column?: number | null;
         note?: string | null;
         details?: string | null;
+        phase?: string | null;
+        stack?: string | null;
+        contextLines?: string[] | null;
+        fsmHistory?: string[] | null;
     }
 ): string {
-    const location: string[] = [];
-    if (typeof options?.line === 'number') {
-        location.push(`Строка: ${options.line}`);
-    }
-    if (typeof options?.column === 'number') {
-        location.push(`Колонка: ${options.column}`);
-    }
+    const location = buildScriptFailureLocation(options?.line, options?.column);
 
     const hint = kind === 'syntax'
         ? (
             language === 'python'
-                ? 'Скрипт не запускается из-за синтаксиса. Проверьте двоеточия, отступы, скобки и закрытие строк.'
-                : 'Скрипт не запускается из-за синтаксиса. Проверьте `end`, скобки, запятые и закрытие строк.'
+                ? 'Скрипт не запускается из-за синтаксической ошибки. Проверьте двоеточия, отступы, скобки и закрытие строк.'
+                : 'Скрипт не запускается из-за синтаксической ошибки. Проверьте `end`, скобки, запятые и закрытие строк.'
         )
         : (
             language === 'python'
-                ? 'Скрипт начал выполняться, но затем остановился из-за ошибки выполнения. Часто это неверное имя, пустое значение или операция.'
-                : 'Скрипт начал выполняться, но затем остановился из-за ошибки выполнения. Часто это пустое значение, неверный аргумент или конфликт FSM.'
+                ? 'Скрипт стартовал, но остановился во время выполнения. Часто причина в неверном имени, пустом значении или неподходящей операции.'
+                : 'Скрипт стартовал, но остановился во время выполнения. Часто причина в `nil`, неверном аргументе или конфликте состояний FSM.'
         );
 
-    const detailLines = [
-        `<div>${escapeHtml(hint)}</div>`,
-        location.length ? `<div>${escapeHtml(location.join(' | '))}</div>` : '',
-        `<div class="is-critical">${escapeHtml(message)}</div>`,
-        options?.note ? `<div>${escapeHtml(options.note)}</div>` : '',
-        options?.details ? `<div>${escapeHtml(options.details)}</div>` : ''
+    const technicalDetails = collectScriptFailureTechnicalDetails(options?.details, [
+        message,
+        options?.note || '',
+        location || ''
+    ]);
+
+    const detailLines: FailureSectionLine[] = [
+        hint,
+        location || '',
+        options?.phase ? `Фаза выполнения: ${options.phase}` : '',
+        { text: message, critical: true },
+        options?.note || '',
+        ...technicalDetails.map((line) => `Техническая деталь: ${line}`)
     ].filter(Boolean);
 
     return `
-        <div class="simulation-notice__list">
-            ${detailLines.join('')}
-        </div>
+        ${renderFailureSection('Сводка', detailLines)}
+        ${renderFailureSection('Контекст выполнения', options?.contextLines || [])}
+        ${renderFailureSection('История FSM', options?.fsmHistory || [])}
+        ${renderFailureStack(options?.stack)}
     `;
 }

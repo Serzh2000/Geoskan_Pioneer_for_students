@@ -1,5 +1,6 @@
 import { getDroneFromLua } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
+import { pushLuaRuntimeLog } from './diagnostics.js';
 
 export const timer_callLater = function(L: any) {
     if (window.fengari.lua.lua_gettop(L) < 2) return 0;
@@ -17,6 +18,7 @@ export const timer_callLater = function(L: any) {
         kind: 'callback',
         sourceState: simState.fsmState
     });
+    pushLuaRuntimeLog(simState, 'info', 'Timer.callLater/js', `Таймер зарегистрирован: delay=${delay}s; sourceState=${simState.fsmState}`, null);
     log(`[Lua Timer] callLater(${delay}s) registered`, 'info');
     return 0;
 };
@@ -41,6 +43,7 @@ export const timer_new = function(L: any) {
     };
     
     simState.timers.push(timer_obj);
+    pushLuaRuntimeLog(simState, 'info', 'Timer.new/js', `Периодический таймер создан: period=${period}s; sourceState=${simState.fsmState}`, null);
     log(`[Lua Timer] new(${period}s) created`, 'info');
     
     window.fengari.lua.lua_newtable(L);
@@ -54,6 +57,7 @@ export const timer_new = function(L: any) {
         ptr.next_trigger = getDroneFromLua(L).current_time + ptr.period;
         ptr.trigger_time = ptr.next_trigger;
         ptr.sourceState = getDroneFromLua(L).fsmState;
+        pushLuaRuntimeLog(getDroneFromLua(L), 'debug', 'Timer.start/js', `Таймер запущен: next=${ptr.next_trigger.toFixed(3)}s`, null);
         log(`[Lua Timer] start()`, 'info');
         return 0;
     });
@@ -63,6 +67,7 @@ export const timer_new = function(L: any) {
         window.fengari.lua.lua_getfield(L, 1, "__ptr");
         const ptr = window.fengari.lua.lua_touserdata(L, -1);
         ptr.running = false;
+        pushLuaRuntimeLog(getDroneFromLua(L), 'debug', 'Timer.stop/js', 'Таймер остановлен пользователем', null);
         log(`[Lua Timer] stop()`, 'info');
         return 0;
     });
@@ -95,6 +100,7 @@ export const js_sleep = function(L: any) {
         kind: 'sleep',
         sourceState: simState.fsmState
     });
+    pushLuaRuntimeLog(simState, 'debug', 'sleep/js', `Сон зарегистрирован: delay=${delay}s; sourceState=${simState.fsmState}`, null);
     log(`[Lua Timer] sleep(${delay}s) registered`, 'info');
     return window.fengari.lua.lua_yield(L, 0);
 };

@@ -6,6 +6,7 @@ import type {
     Vector3
 } from '../core/state.js';
 import { showEarlyRouteNotice } from '../app/script-execution-notice.js';
+import { rememberLuaFailureHint, recordLuaFsmTransition } from '../lua/diagnostics.js';
 import { log } from '../shared/logging/logger.js';
 import {
     type CommandName,
@@ -21,7 +22,17 @@ import {
 const ERROR_STATUS = '\u041e\u0428\u0418\u0411\u041a\u0410';
 
 export function setDroneFsmState(drone: DroneState, nextState: DroneFsmState) {
+    const previousState = drone.fsmState;
     setFsmStateAndSyncStatus(drone, nextState);
+    if (previousState !== nextState) {
+        recordLuaFsmTransition(
+            drone,
+            previousState,
+            nextState,
+            `setDroneFsmState(${nextState})`,
+            drone.currentCommandSource || 'system'
+        );
+    }
 }
 
 export function getCurrentTickMs(drone: DroneState) {
@@ -85,6 +96,11 @@ export function beginEventCallbackPhase(drone: DroneState) {
 }
 
 export function throwFsmTransitionError(drone: DroneState, command: CommandName): never {
+    rememberLuaFailureHint(
+        drone,
+        `FSM-конфликт: команда ${command} недоступна в состоянии ${drone.fsmState}.`,
+        ['Проверьте порядок этапов миссии и дождитесь подходящего состояния перед следующим вызовом API.']
+    );
     throw new Error(`FSM error: invalid transition from ${drone.fsmState} by command ${command}`);
 }
 

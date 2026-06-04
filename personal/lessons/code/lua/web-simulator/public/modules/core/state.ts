@@ -7,6 +7,11 @@ export type {
     GamepadInputRef,
     GamepadModeRanges,
     LedColor,
+    LuaApiCallRecord,
+    LuaDiagnosticLevel,
+    LuaDiagnosticsState,
+    LuaFsmTransitionRecord,
+    LuaRuntimeLogEntry,
     Orientation,
     QueuedMceCommand,
     ScriptLanguage,
@@ -80,6 +85,18 @@ export const simSettings = {
         stabilize: { min: 1751, max: 2100, center: 2000 } as AuxChannelRange
     }
 };
+
+function createEmptyLuaDiagnosticsState() {
+    return {
+        currentPhase: null,
+        recentLogs: [],
+        recentApiCalls: [],
+        fsmTransitions: [],
+        lastErrorStack: null,
+        lastFailureReason: null,
+        lastFailureDetails: []
+    };
+}
 
 const STORAGE_KEY = 'geoskan_sim_gamepad_settings';
 
@@ -158,7 +175,8 @@ export function createDroneState(id: string, name: string, x: number = 0, y: num
         pythonScript: DEFAULT_PYTHON_SCRIPT,
         printBubbleText: '',
         printBubbleUntil: 0,
-        luaState: null
+        luaState: null,
+        luaDiagnostics: createEmptyLuaDiagnosticsState()
     };
     drones[id] = drone;
     return drone;
@@ -252,5 +270,6 @@ export function resetState(id: string = currentDroneId) {
     drone.traceSampleAccumulator = 0;
     drone.printBubbleText = '';
     drone.printBubbleUntil = 0;
+    drone.luaDiagnostics = createEmptyLuaDiagnosticsState();
     pathPoints[id] = [];
 }

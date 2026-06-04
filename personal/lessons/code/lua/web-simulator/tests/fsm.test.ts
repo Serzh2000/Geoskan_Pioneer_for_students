@@ -31,16 +31,31 @@ describe('drone FSM validation', () => {
                 logLines.push(captureLogLine(node));
             },
             querySelector: () => null,
+            replaceChildren(node: any) {
+                if (Array.isArray(node?.children)) {
+                    node.children.forEach((child: any) => logLines.push(captureLogLine(child)));
+                } else if (node) {
+                    logLines.push(captureLogLine(node));
+                }
+            },
             scrollTop: 0,
             scrollHeight: 0
+        };
+        const fragment = {
+            children: [] as any[],
+            appendChild(node: any) {
+                fragment.children.push(node);
+            }
         };
 
         (globalThis as any).window = {};
         (globalThis as any).document = {
             getElementById: (id: string) => (id === 'logs' ? logsEl : null),
+            createDocumentFragment: () => fragment,
             createElement: () => {
                 const node = {
                     className: '',
+                    dataset: {},
                     innerHTML: '',
                     textContent: '',
                     children: [] as any[],

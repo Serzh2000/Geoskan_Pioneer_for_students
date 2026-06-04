@@ -36,6 +36,43 @@ export interface TimerTask {
     sourceState?: DroneFsmState;
 }
 
+export type LuaDiagnosticLevel = 'debug' | 'info' | 'warn' | 'error';
+
+export interface LuaRuntimeLogEntry {
+    timeMs: number;
+    level: LuaDiagnosticLevel;
+    scope: string;
+    message: string;
+    location?: string | null;
+}
+
+export interface LuaApiCallRecord {
+    timeMs: number;
+    api: string;
+    location: string;
+    argumentsText: string;
+    fsmState: DroneFsmState;
+    commandSource: CommandSource | 'system';
+}
+
+export interface LuaFsmTransitionRecord {
+    timeMs: number;
+    from: DroneFsmState;
+    to: DroneFsmState;
+    reason: string;
+    source: CommandSource | 'system';
+}
+
+export interface LuaDiagnosticsState {
+    currentPhase: string | null;
+    recentLogs: LuaRuntimeLogEntry[];
+    recentApiCalls: LuaApiCallRecord[];
+    fsmTransitions: LuaFsmTransitionRecord[];
+    lastErrorStack: string | null;
+    lastFailureReason: string | null;
+    lastFailureDetails: string[];
+}
+
 export type GamepadInputRef = `a${number}` | `b${number}`;
 
 export interface AuxChannelRange {
@@ -90,6 +127,7 @@ export interface DroneState {
     printBubbleText: string;
     printBubbleUntil: number;
     luaState: any;
+    luaDiagnostics: LuaDiagnosticsState;
 }
 
 export type ScriptLanguage = 'lua' | 'python';

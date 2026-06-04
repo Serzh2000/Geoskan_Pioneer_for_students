@@ -1,15 +1,17 @@
 import { log } from '../shared/logging/logger.js';
 import { luaToStr } from './utils.js';
 import { drones } from '../core/state.js';
-import { createScriptFailureError, showScriptFailureNotice } from '../app/script-execution-notice.js';
+import { showScriptFailureNotice } from '../app/script-execution-notice.js';
+import { createLuaRuntimeFailureError, rememberLuaErrorStack, setLuaExecutionPhase } from './diagnostics.js';
 
-export function runCoroutine(L: any, T: any, nresults: any, id: string) {
+export function runCoroutine(L: any, T: any, nresults: any, id: string, phase: string = 'main chunk') {
     const drone = drones[id];
     if (!drone || !drone.running || !drone.luaState) return;
 
     const lua = window.fengari.lua;
     let status;
     try {
+        setLuaExecutionPhase(drone, phase);
         status = lua.lua_resume(T, L, nresults);
     } catch (e) {
         console.error(`[runCoroutine] lua_resume threw an error for drone ${id}:`, e);
@@ -21,11 +23,12 @@ export function runCoroutine(L: any, T: any, nresults: any, id: string) {
     } else if (status !== lua.LUA_OK) {
         const errVal = lua.lua_tostring(T, -1);
         const errorMsg = luaToStr(errVal, T);
+        rememberLuaErrorStack(drone, errorMsg);
         log(`Runtime Error (${id}): ${errorMsg}`, 'error');
         if (drone) {
             drone.running = false;
             drone.status = '\u041e\u0428\u0418\u0411\u041a\u0410';
         }
-        showScriptFailureNotice('lua', createScriptFailureError('runtime', errorMsg));
+        showScriptFailureNotice('lua', createLuaRuntimeFailureError(drone, phase, errorMsg));
     }
 }
