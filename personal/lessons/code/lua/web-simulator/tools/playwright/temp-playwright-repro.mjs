@@ -1,6 +1,8 @@
 import { chromium } from 'playwright';
 import fs from 'node:fs/promises';
 
+const outputFile = new URL('./artifacts/playwright-repro.json', import.meta.url);
+
 const out = {
   console: [],
   requests: [],
@@ -146,5 +148,5 @@ out.transitionDelta = {
   console: out.console.slice(split1.consoleStart)
 };
 
-await fs.writeFile('playwright-repro.json', JSON.stringify(out, null, 2), 'utf8');
+await fs.writeFile(outputFile, JSON.stringify(out, null, 2), 'utf8');
 await browser.close();

@@ -1,0 +1,91 @@
+﻿:root[data-theme='dark'] .rc-action-btn:hover,
+:root[data-theme='dark'] .rc-action-btn:focus-visible,
+:root[data-theme='dark'] .rc-nav-btn:hover,
+:root[data-theme='dark'] .rc-nav-btn:focus-visible,
+:root[data-theme='dark'] .rc-workspace-tab:hover,
+:root[data-theme='dark'] .rc-wizard-modal__choice:hover,
+:root[data-theme='dark'] .rc-wizard-modal__choice:focus-visible,
+:root[data-theme='dark'] .rc-mode-card:hover,
+:root[data-theme='dark'] .rc-mode-card:focus-visible,
+:root[data-theme='dark'] .rc-stick-mode-toggle__option:hover,
+:root[data-theme='dark'] .rc-stick-mode-toggle__option:focus-visible {
+    border-color: rgba(255, 107, 0, 0.3);
+    background: rgba(30, 41, 59, 0.96);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.14);
+}
+
+:root[data-theme='dark'] .rc-action-btn--active,
+:root[data-theme='dark'] .rc-mode-card--active,
+:root[data-theme='dark'] .rc-guided-step__focus--active,
+:root[data-theme='dark'] .rc-guided-progress__item--active,
+:root[data-theme='dark'] .rc-stick-mode-toggle__option--active,
+:root[data-theme='dark'] .rc-stick-monitor--focus,
+:root[data-theme='dark'] .rc-raw-chip--active,
+:root[data-theme='dark'] .rc-focus-card--listening,
+:root[data-theme='dark'] .rc-wizard-modal__instruction,
+:root[data-theme='dark'] .rc-live-panel__focus,
+:root[data-theme='dark'] .rc-listening-state,
+:root[data-theme='dark'] .rc-step-hint {
+    border-color: rgba(255, 107, 0, 0.24);
+    background: linear-gradient(135deg, rgba(255, 107, 0, 0.14), rgba(30, 41, 59, 0.96));
+    color: #ffb067;
+}
+
+:root[data-theme='dark'] .rc-setup-note--warning,
+:root[data-theme='dark'] .rc-raw-chip--warning {
+    border-color: rgba(245, 158, 11, 0.28);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(30, 41, 59, 0.96));
+    color: #fbbf24;
+}
+
+:root[data-theme='dark'] .rc-setup-note--error,
+:root[data-theme='dark'] .rc-conflict-panel,
+:root[data-theme='dark'] .rc-conflict-item {
+    border-color: rgba(248, 113, 113, 0.28);
+    background: linear-gradient(135deg, rgba(127, 29, 29, 0.18), rgba(30, 41, 59, 0.96));
+    color: #fecaca;
+}
+
+:root[data-theme='dark'] .rc-conflict-panel__header strong,
+:root[data-theme='dark'] .rc-nav-hint--error,
+:root[data-theme='dark'] .rc-conflict-item__text span,
+:root[data-theme='dark'] .rc-conflict-item--plain,
+:root[data-theme='dark'] .rc-conflict-panel__header span {
+    color: #fca5a5;
+}
+
+:root[data-theme='dark'] .rc-channel-badge,
+:root[data-theme='dark'] .rc-center-badge,
+:root[data-theme='dark'] .rc-live-panel__status,
+:root[data-theme='dark'] .rc-drone-viewport__focus {
+    background: rgba(255, 107, 0, 0.14);
+    color: #ffb067;
+}
+
+:root[data-theme='dark'] .rc-center-badge {
+    border: 1px solid rgba(74, 222, 128, 0.26);
+    background: rgba(34, 197, 94, 0.16);
+    color: #86efac;
+}
+
+:root[data-theme='dark'] .settings-field--centered select,
+:root[data-theme='dark'] .rc-wizard-modal__progress-item--done,
+:root[data-theme='dark'] .rc-guided-progress__item--done {
+    border-color: rgba(74, 222, 128, 0.26);
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.14), rgba(15, 23, 42, 0.96));
+    color: #86efac;
+}
+
+:root[data-theme='dark'] .rc-inline-link,
+:root[data-theme='dark'] .rc-wizard-modal__choice span,
+:root[data-theme='dark'] .rc-mode-card__step,
+:root[data-theme='dark'] .rc-guided-step__eyebrow,
+:root[data-theme='dark'] .rc-live-viewport__eyebrow,
+:root[data-theme='dark'] .rc-viewport-bridge__eyebrow {
+    color: #ffb067;
+}
+
+:root[data-theme='dark'] .rc-inline-link:hover,
+:root[data-theme='dark'] .rc-inline-link:focus-visible {
+    color: #ffd2a6;
+}

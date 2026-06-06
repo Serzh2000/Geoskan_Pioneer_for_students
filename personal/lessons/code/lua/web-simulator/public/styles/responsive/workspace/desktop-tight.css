@@ -1,0 +1,14 @@
+﻿@media (max-width: 1200px) {
+    .header {
+        gap: 10px;
+    }
+
+    .header-actions {
+        gap: 8px;
+    }
+
+    .container {
+        gap: 10px;
+        padding: 10px;
+    }
+}

@@ -1,0 +1,19 @@
+﻿@media (max-width: 820px) {
+    .container {
+        padding: 8px;
+    }
+
+    .header-controls-group {
+        gap: 6px;
+    }
+
+    .header-select,
+    .header-lang-select {
+        min-width: 96px;
+    }
+
+    .scene-viewport-header,
+    .dashboard-toolbar {
+        gap: 10px;
+    }
+}

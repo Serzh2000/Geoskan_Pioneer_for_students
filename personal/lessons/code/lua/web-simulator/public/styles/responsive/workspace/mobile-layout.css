@@ -1,0 +1,145 @@
+﻿@media (max-width: 640px) {
+    :root {
+        --header-height: 56px;
+    }
+
+    .header-brand-copy {
+        display: none;
+    }
+
+    .header-brand {
+        gap: 0;
+    }
+
+    .header-actions {
+        gap: 8px;
+    }
+
+    .header-controls-group {
+        gap: 8px;
+    }
+
+    .header-select,
+    .header-lang-select,
+    .header-theme-toggle,
+    .header-check,
+    .header-actions button {
+        width: 100%;
+        flex: 1 1 100%;
+    }
+
+    .header-controls-group--actions .btn-primary,
+    .header-controls-group--actions .btn-secondary {
+        min-width: 0;
+    }
+
+    .container {
+        gap: 8px;
+        padding: 6px;
+    }
+
+    .header-controls-group--actions .btn-primary,
+    .header-controls-group--actions .btn-secondary {
+        width: auto;
+        flex: 1 1 calc(33.333% - 6px);
+    }
+
+    .mobile-workspace-nav {
+        width: 100%;
+    }
+
+    .header-controls-group--actions .mobile-workspace-nav__tabs {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .header-controls-group--actions .mobile-workspace-nav .mobile-workspace-nav__tab {
+        width: auto;
+        flex: 1 1 0;
+        padding: 0 8px;
+        font-size: 10px;
+    }
+
+    .workspace-sidebar {
+        min-height: 220px;
+        border-radius: 14px;
+    }
+
+    .sidebar-tabs {
+        padding: 8px;
+    }
+
+    .sidebar-panels {
+        min-height: 220px;
+    }
+
+    .mobile-scene-page {
+        gap: 10px;
+    }
+
+    .panel-header {
+        padding: 12px 14px 10px;
+    }
+
+    .scene-viewport-card {
+        padding: 10px;
+        border-radius: 16px;
+    }
+
+    .scene-viewport-header {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .scene-viewport-title {
+        flex-wrap: wrap;
+    }
+
+    .scene-viewport-subtitle {
+        white-space: normal;
+    }
+
+    .scene-container {
+        height: min(44vh, 300px);
+        min-height: 220px;
+        border-radius: 16px;
+    }
+
+    .camera-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        inset: auto 10px 10px 10px;
+    }
+
+    .camera-controls button {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 110px;
+    }
+
+    .hud-side-column {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .dashboard-toolbar {
+        gap: 8px;
+    }
+
+    .hud-visibility-controls {
+        width: 100%;
+    }
+
+    .hud-visibility-btn {
+        flex: 1 1 0;
+        justify-content: center;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-item--status {
+        grid-column: auto;
+    }
+}

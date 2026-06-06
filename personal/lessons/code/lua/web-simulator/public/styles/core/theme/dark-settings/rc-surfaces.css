@@ -1,0 +1,32 @@
+﻿:root[data-theme='dark'] #rc-settings-panel .settings-group,
+:root[data-theme='dark'] .rc-channel-card,
+:root[data-theme='dark'] .rc-source-card,
+:root[data-theme='dark'] .rc-focus-card,
+:root[data-theme='dark'] .rc-calibration-card,
+:root[data-theme='dark'] .rc-setup-note,
+:root[data-theme='dark'] .rc-workspace-tab--active,
+:root[data-theme='dark'] .rc-wizard-shell__footer,
+:root[data-theme='dark'] .rc-wizard-modal__dialog,
+:root[data-theme='dark'] .rc-wizard-modal__choice,
+:root[data-theme='dark'] .rc-wizard-modal__progress-item,
+:root[data-theme='dark'] .rc-wizard-modal__review-row,
+:root[data-theme='dark'] .rc-mode-card,
+:root[data-theme='dark'] .rc-stepper,
+:root[data-theme='dark'] .rc-guided-step__focus,
+:root[data-theme='dark'] .rc-guided-progress__item,
+:root[data-theme='dark'] .rc-stick-mode-toggle,
+:root[data-theme='dark'] .rc-stick-mode-toggle__option,
+:root[data-theme='dark'] .rc-stick-monitor,
+:root[data-theme='dark'] .rc-live-switch,
+:root[data-theme='dark'] .rc-raw-chip,
+:root[data-theme='dark'] .rc-live-viewport__card,
+:root[data-theme='dark'] .rc-live-viewport__footer,
+:root[data-theme='dark'] .rc-viewport-bridge,
+:root[data-theme='dark'] .rc-viewport-bridge__card,
+:root[data-theme='dark'] .rc-viewport-bridge__footer,
+:root[data-theme='dark'] .rc-drone-telemetry__chip {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.96));
+    border-color: rgba(148, 163, 184, 0.14);
+    color: var(--text-color);
+    box-shadow: 0 12px 28px rgba(2, 6, 23, 0.22);
+}

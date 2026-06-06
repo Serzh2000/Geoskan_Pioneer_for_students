@@ -1,0 +1,111 @@
+﻿/*
+ * HUD-РѕРІРµСЂР»РµРё Рё Р±Р»РѕРєРё РЅР°СЃС‚СЂРѕРµРє.
+ * Р¤Р°Р№Р» РІС‹РґРµР»РµРЅ РёР· `public/style.css` РїСЂРё РґРµРєРѕРјРїРѕР·РёС†РёРё РѕР±С‰РµРіРѕ CSS.
+ */
+/* OVERLAYS */
+.hud-side-column {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 240px;
+    width: 240px;
+    gap: 12px;
+    min-width: 0;
+    min-height: 0;
+}
+
+.dashboard-toolbar,
+.dashboard-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 18px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+    box-shadow:
+        0 16px 30px rgba(15, 23, 42, 0.06),
+        0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.dashboard-toolbar {
+    justify-content: space-between;
+}
+
+.dashboard-card-title,
+.dashboard-panel__title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-strong);
+    letter-spacing: 0.01em;
+}
+
+.telemetry-overlay,
+.matrix-overlay {
+    position: relative;
+    width: 100%;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.dashboard-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-strong);
+}
+
+.dashboard-panel__badge {
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: rgba(255, 107, 0, 0.1);
+    color: var(--accent-color);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.telemetry-overlay.is-hidden,
+.matrix-overlay.is-hidden {
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    max-height: 0;
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+    border-width: 0;
+    box-shadow: none;
+}
+
+.hud-visibility-controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.hud-visibility-btn {
+    border: 1px solid rgba(9, 9, 11, 0.1);
+    background: #f8fafc;
+    color: var(--text-muted);
+    border-radius: 999px;
+    padding: 7px 11px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.hud-visibility-btn:hover,
+.hud-visibility-btn.active {
+    color: var(--text-strong);
+    border-color: rgba(255, 107, 0, 0.24);
+    background: rgba(255, 107, 0, 0.12);
+}

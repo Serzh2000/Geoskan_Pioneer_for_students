@@ -1,6 +1,8 @@
 import { chromium } from 'playwright';
 import fs from 'node:fs/promises';
 
+const outputFile = new URL('./artifacts/playwright-probe.json', import.meta.url);
+
 const out = {
   console: [],
   requests: [],
@@ -36,5 +38,5 @@ out.checkpoints.push(await page.evaluate(() => ({
   globals: Object.keys(window).filter((key) => /blockly|guide|mission/i.test(key)).slice(0, 30)
 })));
 
-await fs.writeFile('playwright-probe.json', JSON.stringify(out, null, 2), 'utf8');
+await fs.writeFile(outputFile, JSON.stringify(out, null, 2), 'utf8');
 await browser.close();

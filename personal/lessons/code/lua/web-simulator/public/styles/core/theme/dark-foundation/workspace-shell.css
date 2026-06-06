@@ -1,0 +1,67 @@
+﻿:root[data-theme='dark'] {
+    color-scheme: dark;
+}
+
+:root[data-theme='dark'] .workspace-sidebar {
+    border-color: rgba(148, 163, 184, 0.14);
+    background: rgba(15, 23, 42, 0.84);
+}
+
+:root[data-theme='dark'] .sidebar-tabs {
+    background: #0f172a;
+    border-right-color: rgba(148, 163, 184, 0.12);
+}
+
+:root[data-theme='dark'] .sidebar-tab-btn {
+    color: #94a3b8;
+    background: transparent;
+    border-color: transparent;
+}
+
+:root[data-theme='dark'] .sidebar-tab-btn:hover {
+    background: rgba(148, 163, 184, 0.08);
+    color: #f8fafc;
+    border-color: rgba(148, 163, 184, 0.08);
+}
+
+:root[data-theme='dark'] .sidebar-tab-btn.active {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(148, 163, 184, 0.12);
+    color: #f8fafc;
+}
+
+:root[data-theme='dark'] .sidebar-panels {
+    background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+    border-right-color: rgba(148, 163, 184, 0.1);
+}
+
+:root[data-theme='dark'] .panel-header {
+    border-bottom-color: rgba(148, 163, 184, 0.12);
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(17, 24, 39, 0.92) 100%);
+}
+
+:root[data-theme='dark'] .panel-title,
+:root[data-theme='dark'] .panel-header__lead--logs,
+:root[data-theme='dark'] .panel-header__lead--settings {
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .panel-close-btn {
+    color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .panel-close-btn:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(148, 163, 184, 0.12);
+}
+
+:root[data-theme='dark'] .settings-panel-content,
+:root[data-theme='dark'] .sidebar-panel#channel-monitor-panel .settings-panel-content {
+    background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+}
+
+:root[data-theme='dark'] .sidebar-panel#docs-panel .panel-content,
+:root[data-theme='dark'] .sidebar-panels.is-fullscreen {
+    background: #0b1220;
+}
+

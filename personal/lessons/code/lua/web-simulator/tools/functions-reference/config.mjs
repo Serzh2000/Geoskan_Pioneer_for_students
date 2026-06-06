@@ -10,9 +10,12 @@ export const ROOT_INDEX = path.join(ROOT, 'FUNCTIONS_REFERENCE.md');
 
 export const EXCLUDE_NAMES = new Set([
     '.git',
+    'artifacts',
     'dist',
+    'imported',
     'node_modules',
     'Python_files',
+    'scratch',
     'Описание методов API — документация Pioneer February update 2026_files'
 ]);
 

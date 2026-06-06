@@ -1,3 +1,7 @@
 /exe-dist/
 /exe-dist-*/
 node_modules/
+/playwright-probe.json
+/playwright-repro.json
+/temp-*.mjs
+/temp-*.cjs

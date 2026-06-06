@@ -1,0 +1,158 @@
+﻿:root[data-theme='dark'] .panel-content--scene-manager {
+    background: linear-gradient(180deg, #0b1220 0%, #111827 100%);
+}
+
+:root[data-theme='dark'] .scene-panel-card,
+:root[data-theme='dark'] .scene-details-card,
+:root[data-theme='dark'] .scene-details-empty,
+:root[data-theme='dark'] .scene-type-picker__selection,
+:root[data-theme='dark'] .scene-building-settings,
+:root[data-theme='dark'] .scene-map-settings,
+:root[data-theme='dark'] .scene-subsection {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.96));
+    border-color: rgba(148, 163, 184, 0.14);
+    box-shadow: 0 12px 28px rgba(2, 6, 23, 0.24);
+}
+
+:root[data-theme='dark'] .scene-manager-tabs,
+:root[data-theme='dark'] .scene-transform-modes {
+    background: rgba(15, 23, 42, 0.86);
+    border-color: rgba(148, 163, 184, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme='dark'] .scene-manager-tab,
+:root[data-theme='dark'] .scene-segmented-btn {
+    color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .scene-manager-tab:hover:not(:disabled),
+:root[data-theme='dark'] .scene-segmented-btn:hover:not(:disabled) {
+    color: var(--text-strong);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme='dark'] .scene-manager-tab.is-active,
+:root[data-theme='dark'] .scene-segmented-btn.is-active {
+    color: var(--text-strong);
+    background: rgba(30, 41, 59, 0.96);
+    box-shadow: 0 8px 18px rgba(2, 6, 23, 0.26);
+}
+
+:root[data-theme='dark'] .scene-panel-card__title,
+:root[data-theme='dark'] .scene-manager-item__title,
+:root[data-theme='dark'] .scene-type-picker__selection-content strong,
+:root[data-theme='dark'] .scene-details-row__value,
+:root[data-theme='dark'] .scene-details-empty__title,
+:root[data-theme='dark'] .scene-building-settings-title,
+:root[data-theme='dark'] .scene-map-settings-title,
+:root[data-theme='dark'] .scene-subsection__title,
+:root[data-theme='dark'] .scene-building-list-label,
+:root[data-theme='dark'] .scene-details-compass__readout-value {
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .scene-panel-card__description,
+:root[data-theme='dark'] .scene-panel-card__badge,
+:root[data-theme='dark'] .scene-manager-item__meta,
+:root[data-theme='dark'] .scene-field span,
+:root[data-theme='dark'] .scene-type-picker__selection-label,
+:root[data-theme='dark'] .scene-type-picker__selection-text,
+:root[data-theme='dark'] .scene-details-row__label,
+:root[data-theme='dark'] .scene-details-meta__item,
+:root[data-theme='dark'] .scene-details-empty__text,
+:root[data-theme='dark'] .scene-details-compass__title,
+:root[data-theme='dark'] .scene-details-compass__readout-label,
+:root[data-theme='dark'] .scene-building-settings-note,
+:root[data-theme='dark'] .scene-map-summary,
+:root[data-theme='dark'] .scene-transform-field span {
+    color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .scene-panel-card__badge {
+    background: rgba(15, 23, 42, 0.88);
+    border-color: rgba(148, 163, 184, 0.16);
+}
+
+:root[data-theme='dark'] #manager-panel .scene-manager-list,
+:root[data-theme='dark'] .scene-manager-list {
+    background:
+        radial-gradient(circle at top left, rgba(255, 107, 0, 0.05), transparent 38%),
+        linear-gradient(180deg, #0f172a 0%, #111827 100%);
+    border-color: rgba(148, 163, 184, 0.12);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.03),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+:root[data-theme='dark'] #manager-panel .scene-manager-item,
+:root[data-theme='dark'] .scene-manager-item,
+:root[data-theme='dark'] .scene-type-picker__selection-card,
+:root[data-theme='dark'] .scene-check {
+    background: rgba(15, 23, 42, 0.88);
+    border-color: rgba(148, 163, 184, 0.14);
+    color: var(--text-color);
+}
+
+:root[data-theme='dark'] #manager-panel .scene-manager-item:hover,
+:root[data-theme='dark'] .scene-manager-item:hover {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.96) 100%);
+    border-color: rgba(255, 107, 0, 0.18);
+    box-shadow: 0 14px 26px rgba(2, 6, 23, 0.22);
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] #manager-panel .scene-manager-item.active,
+:root[data-theme='dark'] .scene-manager-item.active {
+    background: linear-gradient(90deg, rgba(255, 122, 0, 0.14), rgba(30, 41, 59, 0.94) 38%, rgba(15, 23, 42, 0.98) 100%) !important;
+    border-color: rgba(255, 107, 0, 0.22) !important;
+    color: var(--text-strong) !important;
+    box-shadow:
+        inset 3px 0 0 #ff6b00,
+        0 16px 28px rgba(255, 107, 0, 0.1) !important;
+}
+
+:root[data-theme='dark'] #manager-panel .scene-manager-item__icon,
+:root[data-theme='dark'] .scene-manager-item__icon {
+    color: var(--text-muted);
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.94) 0%, rgba(15, 23, 42, 0.94) 100%);
+    border-color: rgba(148, 163, 184, 0.14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme='dark'] .scene-details-meta,
+:root[data-theme='dark'] .scene-details-compass {
+    border-top-color: rgba(148, 163, 184, 0.12);
+}
+
+:root[data-theme='dark'] .scene-details-compass__dial {
+    border-color: rgba(148, 163, 184, 0.16);
+    background:
+        linear-gradient(180deg, rgba(255, 107, 0, 0.08) 0%, rgba(255, 255, 255, 0) 32%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.94) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme='dark'] .scene-details-compass__dial::before {
+    border-color: rgba(148, 163, 184, 0.18);
+}
+
+:root[data-theme='dark'] .scene-details-compass__marker {
+    color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .scene-details-compass__center {
+    border-color: rgba(248, 250, 252, 0.8);
+    box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.28);
+}
+
+:root[data-theme='dark'] .scene-btn--neutral {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(148, 163, 184, 0.16);
+    color: var(--text-color);
+}
+
+:root[data-theme='dark'] .scene-btn--neutral:hover {
+    background: rgba(30, 41, 59, 0.96);
+    border-color: rgba(148, 163, 184, 0.24);
+}

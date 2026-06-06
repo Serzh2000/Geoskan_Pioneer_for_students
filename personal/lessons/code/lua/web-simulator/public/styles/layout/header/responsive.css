@@ -1,0 +1,26 @@
+﻿@media (max-width: 1420px) {
+    .header-brand {
+        gap: 10px;
+    }
+
+    .header-logo {
+        font-size: 13px;
+        gap: 3px;
+    }
+}
+
+@media (max-width: 1300px) {
+    .header-logo-simulator {
+        display: none;
+    }
+}
+
+@media (max-width: 1160px) {
+    .header-brand-copy {
+        display: none;
+    }
+
+    .header-brand {
+        gap: 0;
+    }
+}

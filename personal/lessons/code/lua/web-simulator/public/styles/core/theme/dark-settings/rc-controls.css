@@ -1,0 +1,45 @@
+﻿:root[data-theme='dark'] #rc-settings-panel .settings-group input[type="text"]:disabled,
+:root[data-theme='dark'] #rc-settings-panel .settings-group select,
+:root[data-theme='dark'] #rc-settings-panel .settings-group input[type="range"],
+:root[data-theme='dark'] .rc-action-btn,
+:root[data-theme='dark'] .rc-nav-btn,
+:root[data-theme='dark'] .rc-workspace-tabs,
+:root[data-theme='dark'] .rc-channel-meter,
+:root[data-theme='dark'] .rc-workspace-tab,
+:root[data-theme='dark'] .rc-stepper__dot,
+:root[data-theme='dark'] .rc-stick-scope,
+:root[data-theme='dark'] .rc-live-switch--active,
+:root[data-theme='dark'] .rc-raw-chip__flag,
+:root[data-theme='dark'] .rc-drone-stage,
+:root[data-theme='dark'] .rc-live-viewport__host,
+:root[data-theme='dark'] .rc-live-viewport__host.is-live,
+:root[data-theme='dark'] .rc-drone-viewport__status,
+:root[data-theme='dark'] .rc-drone-viewport__status--live,
+:root[data-theme='dark'] .rc-drone-viewport__status--caution,
+:root[data-theme='dark'] .rc-drone-viewport__status--offline {
+    border-color: rgba(148, 163, 184, 0.16);
+    background: rgba(15, 23, 42, 0.88);
+    color: var(--text-color);
+}
+
+:root[data-theme='dark'] #rc-settings-panel .settings-group select,
+:root[data-theme='dark'] #rc-settings-panel .settings-group input[type="text"]:disabled {
+    background: rgba(15, 23, 42, 0.92);
+    color: var(--text-color);
+}
+
+:root[data-theme='dark'] #rc-settings-panel .settings-group input[type="range"],
+:root[data-theme='dark'] #rc-settings-panel .settings-group input[type="range"]::-moz-range-track {
+    background: #334155;
+}
+
+:root[data-theme='dark'] #rc-settings-panel .settings-group input[type="range"]::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, #ff8c00, #ff8c00) left/var(--range-progress, 50%) 100% no-repeat, #334155;
+}
+
+:root[data-theme='dark'] #rc-settings-panel .settings-group input[type="range"]::-webkit-slider-thumb,
+:root[data-theme='dark'] #rc-settings-panel .settings-group input[type="range"]::-moz-range-thumb {
+    border-color: rgba(15, 23, 42, 0.96);
+    background: #e2e8f0;
+    box-shadow: 0 1px 6px rgba(2, 6, 23, 0.3);
+}

@@ -1,0 +1,53 @@
+﻿.scene-type-modal__selection {
+    display: grid;
+    position: sticky;
+    bottom: 0;
+    gap: 10px;
+    padding-top: 12px;
+    padding-bottom: 2px;
+    border-top: 1px solid #eef1f4;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), #ffffff);
+    box-shadow: 0 -12px 20px rgba(255, 255, 255, 0.96);
+}
+
+.scene-type-modal__selection-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    padding: 10px 12px;
+    border: 1px solid #e9ecef;
+    border-radius: 16px;
+    background: #f8f9fa;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.scene-type-modal__selection-content {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.scene-type-modal__selection-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #6c757d;
+}
+
+.scene-type-modal__selection-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.scene-type-modal__selection-text {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #6c757d;
+}
+
+.scene-type-modal__selection .scene-btn {
+    min-height: 42px;
+}

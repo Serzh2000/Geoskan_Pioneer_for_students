@@ -1,0 +1,19 @@
+﻿.scene-type-modal__preview[data-accent='route'] .scene-type-modal__preview-status {
+    background: rgba(37, 99, 235, 0.08);
+    color: #2563eb;
+}
+
+.scene-type-modal__preview[data-accent='marker'] .scene-type-modal__preview-status {
+    background: rgba(124, 58, 237, 0.08);
+    color: #7c3aed;
+}
+
+.scene-type-modal__preview[data-accent='terrain'] .scene-type-modal__preview-status {
+    background: rgba(22, 163, 74, 0.08);
+    color: #16a34a;
+}
+
+.scene-type-modal__preview[data-accent='service'] .scene-type-modal__preview-status {
+    background: rgba(15, 118, 110, 0.08);
+    color: #0f766e;
+}

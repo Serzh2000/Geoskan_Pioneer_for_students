@@ -1,0 +1,62 @@
+﻿.scene-type-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2200;
+    display: block;
+    padding: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+
+.scene-type-modal.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+body.scene-type-modal-open {
+    overflow: hidden;
+}
+
+.scene-type-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.46);
+    backdrop-filter: blur(4px);
+}
+
+.scene-type-modal__dialog {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 16px;
+    width: 100vw;
+    height: 100vh;
+    padding: 24px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.scene-type-modal__header,
+.scene-type-modal__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.scene-type-modal__title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.scene-type-modal__subtitle {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #6c757d;
+}

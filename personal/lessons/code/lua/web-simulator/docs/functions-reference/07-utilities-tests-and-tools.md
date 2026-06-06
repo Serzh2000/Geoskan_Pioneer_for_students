@@ -4,13 +4,8 @@
 
 ## Состав группы
 
-- [`Описание методов API — документация Pioneer February update 2026.html`](#api-pioneer-february-update-2026-html)
-- [`docs/imported/Описание методов API — документация Pioneer February update 2026.html`](#docs-imported-api-pioneer-february-update-2026-html)
-- [`docs/imported/Python.html`](#docs-imported-python-html)
 - [`jest.config.js`](#jest-config-js)
 - [`package-lock.json`](#package-lock-json)
-- [`playwright-probe.json`](#playwright-probe-json)
-- [`playwright-repro.json`](#playwright-repro-json)
 - [`public/fragments/layout/global-header.html`](#public-fragments-layout-global-header-html)
 - [`public/fragments/layout/main-scene.html`](#public-fragments-layout-main-scene-html)
 - [`public/fragments/layout/sidebar-panels.html`](#public-fragments-layout-sidebar-panels-html)
@@ -55,9 +50,6 @@
 - [`public/modules/docs/lua-api-docs.ts`](#public-modules-docs-lua-api-docs-ts)
 - [`public/modules/docs/python-api-docs.ts`](#public-modules-docs-python-api-docs-ts)
 - [`public/modules/shared/logging/logger.ts`](#public-modules-shared-logging-logger-ts)
-- [`Python.html`](#python-html)
-- [`temp-playwright-probe.mjs`](#temp-playwright-probe-mjs)
-- [`temp-playwright-repro.mjs`](#temp-playwright-repro-mjs)
 - [`tests/cargo-contact.test.ts`](#tests-cargo-contact-test-ts)
 - [`tests/editor-blockly-ui.test.ts`](#tests-editor-blockly-ui-test-ts)
 - [`tests/frames.test.ts`](#tests-frames-test-ts)
@@ -78,35 +70,12 @@
 - [`tools/functions-reference/scanner.mjs`](#tools-functions-reference-scanner-mjs)
 - [`tools/generate_functions_reference_index.mjs`](#tools-generate-functions-reference-index-mjs)
 - [`tools/generate_marker_dictionaries.mjs`](#tools-generate-marker-dictionaries-mjs)
-- [`tools/playwright/playwright-probe.json`](#tools-playwright-playwright-probe-json)
-- [`tools/playwright/playwright-repro.json`](#tools-playwright-playwright-repro-json)
 - [`tools/playwright/temp-playwright-probe.mjs`](#tools-playwright-temp-playwright-probe-mjs)
 - [`tools/playwright/temp-playwright-repro.mjs`](#tools-playwright-temp-playwright-repro-mjs)
 - [`tools/revert_lua.ts`](#tools-revert-lua-ts)
 - [`tools/run_tests.ts`](#tools-run-tests-ts)
 
 ## Файлы
-
-<a id="api-pioneer-february-update-2026-html"></a>
-### `Описание методов API — документация Pioneer February update 2026.html`
-
-- Исходник: [открыть файл](../../Описание методов API — документация Pioneer February update 2026.html)
-- Кратко: Файл проекта.
-- Обнаружено функций/методов: 0
-
-<a id="docs-imported-api-pioneer-february-update-2026-html"></a>
-### `docs/imported/Описание методов API — документация Pioneer February update 2026.html`
-
-- Исходник: [открыть файл](../imported/Описание методов API — документация Pioneer February update 2026.html)
-- Кратко: Файл проекта.
-- Обнаружено функций/методов: 0
-
-<a id="docs-imported-python-html"></a>
-### `docs/imported/Python.html`
-
-- Исходник: [открыть файл](../imported/Python.html)
-- Кратко: Файл проекта.
-- Обнаружено функций/методов: 0
 
 <a id="jest-config-js"></a>
 ### `jest.config.js`
@@ -119,20 +88,6 @@
 ### `package-lock.json`
 
 - Исходник: [открыть файл](../../package-lock.json)
-- Кратко: Файл проекта.
-- Обнаружено функций/методов: 0
-
-<a id="playwright-probe-json"></a>
-### `playwright-probe.json`
-
-- Исходник: [открыть файл](../../playwright-probe.json)
-- Кратко: Файл проекта.
-- Обнаружено функций/методов: 0
-
-<a id="playwright-repro-json"></a>
-### `playwright-repro.json`
-
-- Исходник: [открыть файл](../../playwright-repro.json)
 - Кратко: Файл проекта.
 - Обнаружено функций/методов: 0
 
@@ -462,28 +417,6 @@
 - Обнаружено функций/методов: 12
 - Ключевые символы: `classifyLogTone`, `countEntriesByCategory`, `createEmptyStateElement`, `createLogEntryElement`, `createTabButton`, `extractTagAndMessage`, `getEmptyMessage`, `log`, `renderLogStream`, `renderLogsUI`, `renderTabs`, `resolveLogCategory`
 
-<a id="python-html"></a>
-### `Python.html`
-
-- Исходник: [открыть файл](../../Python.html)
-- Кратко: Файл проекта.
-- Обнаружено функций/методов: 0
-
-<a id="temp-playwright-probe-mjs"></a>
-### `temp-playwright-probe.mjs`
-
-- Исходник: [открыть файл](../../temp-playwright-probe.mjs)
-- Кратко: Файл проекта.
-- Обнаружено функций/методов: 0
-
-<a id="temp-playwright-repro-mjs"></a>
-### `temp-playwright-repro.mjs`
-
-- Исходник: [открыть файл](../../temp-playwright-repro.mjs)
-- Кратко: Файл проекта.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `buildLesson1`, `buildLesson2`, `snapshot`
-
 <a id="tests-cargo-contact-test-ts"></a>
 ### `tests/cargo-contact.test.ts`
 
@@ -633,20 +566,6 @@
 - Кратко: Инженерный скрипт для генерации данных или обслуживания кода.
 - Обнаружено функций/методов: 5
 - Ключевые символы: `chunk`, `formatDataBlock`, `loadSources`, `main`, `parseSourceArrays`
-
-<a id="tools-playwright-playwright-probe-json"></a>
-### `tools/playwright/playwright-probe.json`
-
-- Исходник: [открыть файл](../../tools/playwright/playwright-probe.json)
-- Кратко: Инженерный скрипт для генерации данных или обслуживания кода.
-- Обнаружено функций/методов: 0
-
-<a id="tools-playwright-playwright-repro-json"></a>
-### `tools/playwright/playwright-repro.json`
-
-- Исходник: [открыть файл](../../tools/playwright/playwright-repro.json)
-- Кратко: Инженерный скрипт для генерации данных или обслуживания кода.
-- Обнаружено функций/методов: 0
 
 <a id="tools-playwright-temp-playwright-probe-mjs"></a>
 ### `tools/playwright/temp-playwright-probe.mjs`

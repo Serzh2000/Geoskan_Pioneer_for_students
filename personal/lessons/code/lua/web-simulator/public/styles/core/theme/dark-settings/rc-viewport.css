@@ -1,0 +1,94 @@
+﻿:root[data-theme='dark'] .rc-wizard-modal__header,
+:root[data-theme='dark'] .rc-wizard-modal__footer,
+:root[data-theme='dark'] .rc-raw-panel {
+    border-color: rgba(148, 163, 184, 0.14);
+}
+
+:root[data-theme='dark'] .rc-stepper__step::after,
+:root[data-theme='dark'] .rc-advanced-table th,
+:root[data-theme='dark'] .rc-advanced-table td {
+    border-color: rgba(148, 163, 184, 0.14);
+}
+
+:root[data-theme='dark'] .rc-advanced-table thead th {
+    background: rgba(15, 23, 42, 0.96);
+}
+
+:root[data-theme='dark'] .rc-stepper__dot {
+    color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .rc-stepper__step--active .rc-stepper__dot {
+    border-color: rgba(255, 107, 0, 0.28);
+    background: rgba(255, 107, 0, 0.14);
+    color: #ffb067;
+}
+
+:root[data-theme='dark'] .rc-stepper__step--completed .rc-stepper__dot,
+:root[data-theme='dark'] .rc-raw-chip--active .rc-raw-chip__flag {
+    border-color: rgba(74, 222, 128, 0.26);
+    background: rgba(34, 197, 94, 0.16);
+    color: #86efac;
+}
+
+:root[data-theme='dark'] .rc-stepper__step--completed::after {
+    background: rgba(74, 222, 128, 0.34);
+}
+
+:root[data-theme='dark'] .rc-stick-scope {
+    background:
+        radial-gradient(circle at center, rgba(255, 107, 0, 0.08), transparent 55%),
+        linear-gradient(rgba(148, 163, 184, 0.16), rgba(148, 163, 184, 0.16)) center/1px 100% no-repeat,
+        linear-gradient(90deg, rgba(148, 163, 184, 0.16), rgba(148, 163, 184, 0.16)) center/100% 1px no-repeat,
+        rgba(15, 23, 42, 0.92);
+}
+
+:root[data-theme='dark'] .rc-stick-scope__grid {
+    border-color: rgba(148, 163, 184, 0.24);
+}
+
+:root[data-theme='dark'] .rc-stick-scope__marker {
+    border-color: rgba(248, 250, 252, 0.9);
+    box-shadow: 0 10px 22px rgba(14, 165, 233, 0.28);
+}
+
+:root[data-theme='dark'] .rc-raw-chip__meter {
+    background: rgba(51, 65, 85, 0.82);
+}
+
+:root[data-theme='dark'] .rc-raw-chip__meter::before {
+    background: rgba(148, 163, 184, 0.22);
+}
+
+:root[data-theme='dark'] .rc-drone-stage {
+    background:
+        radial-gradient(circle at 50% 32%, rgba(56, 189, 248, 0.12), transparent 42%),
+        linear-gradient(180deg, #0f172a 0%, #111827 44%, #0b1220 44.5%, #0b1220 45%, #020617 100%);
+}
+
+:root[data-theme='dark'] .rc-live-viewport__host {
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.16);
+}
+
+:root[data-theme='dark'] .rc-viewport-bridge {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(11, 18, 32, 0.98));
+}
+
+:root[data-theme='dark'] .rc-live-switch--active,
+:root[data-theme='dark'] .rc-drone-viewport__status--live {
+    border-color: rgba(74, 222, 128, 0.26);
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.14), rgba(15, 23, 42, 0.96));
+    color: #86efac;
+}
+
+:root[data-theme='dark'] .rc-drone-viewport__status--caution {
+    border-color: rgba(245, 158, 11, 0.28);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(15, 23, 42, 0.96));
+    color: #fbbf24;
+}
+
+:root[data-theme='dark'] .rc-drone-viewport__status--offline {
+    border-color: rgba(248, 113, 113, 0.28);
+    background: linear-gradient(135deg, rgba(127, 29, 29, 0.18), rgba(15, 23, 42, 0.96));
+    color: #fca5a5;
+}
