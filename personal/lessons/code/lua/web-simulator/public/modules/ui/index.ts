@@ -20,6 +20,8 @@ import { initHudControls } from './controls/hud-controls.js';
 import { initSidebar } from './panels/sidebar.js';
 import { initCameraModeUI } from './controls/camera-mode.js';
 import { initFileControls } from './controls/file-controls.js';
+import { initMobileWorkspaceCarousel } from './mobile-workspace-carousel.js';
+import { initMobileEditorViewport } from './mobile-editor-viewport.js';
 import type { MarkerMapOptions } from '../environment/obstacles.js';
 
 export interface UICallbacks {
@@ -110,6 +112,8 @@ export function initUI(callbacks: UICallbacks) {
 
     initSidebar(callbacks);
     initCameraModeUI();
+    initMobileEditorViewport({ onEditorResize: callbacks.onEditorResize });
+    initMobileWorkspaceCarousel();
 
     const runBtn = document.getElementById('run-btn');
     const stopBtn = document.getElementById('stop-btn');

@@ -1,18 +1,29 @@
-﻿/*
+/*
  * Основная раскладка контейнера.
  * Файл выделен из `public/style.css` при декомпозиции общего CSS.
  */
 /* LAYOUT SHELL */
 .container {
     display: flex;
-    flex-direction: row;
-    gap: 14px;
+    flex-direction: column;
     height: calc(100vh - var(--header-height));
     margin-top: var(--header-height);
     position: relative;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: hidden;
     padding: 14px;
+    align-items: stretch;
+}
+
+.mobile-workspace-nav {
+    display: none;
+}
+
+.mobile-workspace-track {
+    display: flex;
+    flex: 1 1 auto;
+    gap: 14px;
+    min-width: 0;
+    min-height: 0;
     align-items: stretch;
 }
 
@@ -34,5 +45,13 @@
 .workspace-sidebar.is-collapsed {
     width: 64px;
     min-width: 64px;
+}
+
+.mobile-scene-page {
+    display: flex;
+    flex: 1 1 auto;
+    gap: 14px;
+    min-width: 0;
+    min-height: 0;
 }
 

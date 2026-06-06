@@ -13,7 +13,9 @@ export function initSidebar(callbacks: UICallbacks) {
     const DEFAULT_SIDEBAR_WIDTH = 320;
     const MIN_SIDEBAR_WIDTH = 320;
     const MAX_SIDEBAR_WIDTH = 1000;
+    const MOBILE_SIDEBAR_QUERY = '(max-width: 980px)';
     const fullscreenPanels = new Set(['gamepad-panel']);
+    const mobileSidebarQuery = window.matchMedia(MOBILE_SIDEBAR_QUERY);
     const shouldLogPanelDebug = localStorage.getItem('sidebar-debug') === '1';
     const loggablePanelNames: Record<string, string> = {
         'settings-panel': 'Settings'
@@ -28,6 +30,15 @@ export function initSidebar(callbacks: UICallbacks) {
         const parsed = Number.parseInt(value || '', 10);
         if (!Number.isFinite(parsed)) return `${DEFAULT_SIDEBAR_WIDTH}px`;
         return `${Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, parsed))}px`;
+    };
+
+    const isMobileSidebar = () => mobileSidebarQuery.matches;
+
+    const getOpenSidebarWidth = (panelId: string | null): string => {
+        if (!panelId) return '0px';
+        if (isMobileSidebar()) return '100%';
+        if (fullscreenPanels.has(panelId)) return '100%';
+        return normalizeSidebarWidth(localStorage.getItem('sidebar-width'));
     };
 
     const persistActivePanel = (panelId: string | null) => {
@@ -55,6 +66,19 @@ export function initSidebar(callbacks: UICallbacks) {
         const isCollapsed = panels.style.width === '0px';
         panels.classList.toggle('is-collapsed', isCollapsed);
         workspaceSidebar?.classList.toggle('is-collapsed', isCollapsed);
+    };
+
+    const syncResponsiveSidebarState = () => {
+        const activePanelId = document.querySelector('.sidebar-panel.active')?.id ?? null;
+        const isMobile = isMobileSidebar();
+        panels.classList.toggle('is-mobile', isMobile);
+        workspaceSidebar?.classList.toggle('is-mobile', isMobile);
+        if (!isMobile) return;
+        if (activePanelId && panels.style.width !== '0px') {
+            panels.style.width = '100%';
+        }
+        syncSidebarCollapsedState();
+        syncSidebarMode(activePanelId);
     };
 
     const syncSidebarMode = (panelId: string | null) => {
@@ -126,11 +150,12 @@ export function initSidebar(callbacks: UICallbacks) {
             return;
         }
 
-        panels.style.width = fullscreenPanels.has(panelId) ? '100%' : normalizeSidebarWidth(localStorage.getItem('sidebar-width'));
-        if (!fullscreenPanels.has(panelId)) {
+        panels.style.width = getOpenSidebarWidth(panelId);
+        if (!isMobileSidebar() && !fullscreenPanels.has(panelId)) {
             localStorage.setItem('sidebar-width', panels.style.width);
         }
         syncSidebarCollapsedState();
+        syncResponsiveSidebarState();
         syncSidebarMode(panelId);
         panel.classList.add('active');
         setActiveTabButton(panelId);
@@ -159,6 +184,7 @@ export function initSidebar(callbacks: UICallbacks) {
     };
 
     resizer.addEventListener('mousedown', () => {
+        if (isMobileSidebar()) return;
         isResizing = true;
         resizer.classList.add('dragging');
         document.body.style.cursor = 'col-resize';
@@ -189,6 +215,7 @@ export function initSidebar(callbacks: UICallbacks) {
     const restoreSidebarState = () => {
         const savedPanelId = localStorage.getItem(ACTIVE_PANEL_STORAGE_KEY);
         if (savedPanelId === null) {
+            syncResponsiveSidebarState();
             syncSidebarCollapsedState();
             syncSidebarMode(document.querySelector('.sidebar-panel.active')?.id ?? null);
             refreshViewportLayout();
@@ -217,19 +244,26 @@ export function initSidebar(callbacks: UICallbacks) {
             return;
         }
 
-        panels.style.width = fullscreenPanels.has(savedPanelId) ? '100%' : normalizeSidebarWidth(localStorage.getItem('sidebar-width'));
-        if (!fullscreenPanels.has(savedPanelId)) {
+        panels.style.width = getOpenSidebarWidth(savedPanelId);
+        if (!isMobileSidebar() && !fullscreenPanels.has(savedPanelId)) {
             localStorage.setItem('sidebar-width', panels.style.width);
         }
         panel.classList.add('active');
         setActiveTabButton(savedPanelId);
         syncSidebarCollapsedState();
+        syncResponsiveSidebarState();
         syncSidebarMode(savedPanelId);
         if (savedPanelId === 'editor-panel' && callbacks.onEditorResize) {
             setTimeout(callbacks.onEditorResize, 350);
         }
         refreshViewportLayout();
     };
+
+    if (typeof mobileSidebarQuery.addEventListener === 'function') {
+        mobileSidebarQuery.addEventListener('change', syncResponsiveSidebarState);
+    } else {
+        mobileSidebarQuery.addListener(syncResponsiveSidebarState);
+    }
 
     restoreSidebarState();
 }

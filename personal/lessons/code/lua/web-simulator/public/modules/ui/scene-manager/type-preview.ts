@@ -6,13 +6,9 @@ import { disposeObjectHierarchyResources } from '../../scene/objects/object-mana
 import { parsePointsText } from '../../scene/objects/object-catalog.js';
 import { getSceneTypePreviewConfig, readAddSceneObjectDraft } from './support.js';
 import type { SceneManagerDomRefs } from './types.js';
-
-const PREVIEW_FALLBACK_MESSAGE = '3D-превью недоступно в текущей сессии браузера. Закройте другие вкладки с WebGL или перезагрузите страницу.';
-type PreviewTheme = 'light' | 'dark';
-
-function getPreviewTheme(): PreviewTheme {
-    return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
-}
+import { fitPreviewCameraToObject } from './type-preview/camera.js';
+import { PREVIEW_FALLBACK_MESSAGE, renderPreviewFallback } from './type-preview/fallback.js';
+import { createPreviewGround, getPreviewTheme, type PreviewTheme } from './type-preview/theme.js';
 
 function getPreviewObjectOptions(elements: SceneManagerDomRefs, previewType: string): SceneObjectOptions {
     const draft = readAddSceneObjectDraft(elements);
@@ -44,20 +40,6 @@ function getPreviewObjectOptions(elements: SceneManagerDomRefs, previewType: str
     };
 }
 
-function createPreviewGround(size: number, theme: PreviewTheme) {
-    const geometry = new THREE.CircleGeometry(size, 64);
-    const material = new THREE.MeshStandardMaterial({
-        color: theme === 'dark' ? 0x1e293b : 0xffffff,
-        roughness: theme === 'dark' ? 0.94 : 0.98,
-        metalness: theme === 'dark' ? 0.06 : 0.02
-    });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.rotation.x = -Math.PI / 2;
-    mesh.position.z = -0.001;
-    mesh.receiveShadow = true;
-    return mesh;
-}
-
 export type SceneTypePreviewController = {
     sync: () => void;
     show: () => void;
@@ -76,20 +58,6 @@ function createNoopPreviewController(): SceneTypePreviewController {
         showForType() {},
         destroy() {}
     };
-}
-
-function renderPreviewFallback(host: HTMLDivElement, message: string) {
-    const fallback = document.createElement('div');
-    fallback.className = 'scene-type-modal__preview-fallback';
-
-    const title = document.createElement('strong');
-    title.textContent = '3D-превью недоступно';
-
-    const text = document.createElement('span');
-    text.textContent = message;
-
-    fallback.append(title, text);
-    host.replaceChildren(fallback);
 }
 
 export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePreviewController {
@@ -185,33 +153,6 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
         previewObject = null;
     };
 
-    const fitCameraToObject = (object: THREE.Object3D) => {
-        const box = new THREE.Box3().setFromObject(object);
-        if (box.isEmpty()) {
-            camera.position.set(7, -7, 6);
-            camera.lookAt(0, 0, 0.8);
-            return;
-        }
-
-        const center = box.getCenter(new THREE.Vector3());
-        object.position.sub(center);
-
-        const normalizedBox = new THREE.Box3().setFromObject(object);
-        object.position.z -= normalizedBox.min.z;
-
-        const finalBox = new THREE.Box3().setFromObject(object);
-        const size = finalBox.getSize(new THREE.Vector3());
-        const maxSize = Math.max(size.x, size.y, size.z, 1);
-        const distance = maxSize * 2.35 + 4.2;
-        const lookAtTarget = new THREE.Vector3(0, 0, Math.max(size.z * 0.4, 0.85));
-        const direction = new THREE.Vector3(1.65, -1.4, 1.28).normalize();
-
-        camera.position.copy(direction.multiplyScalar(distance));
-        camera.lookAt(lookAtTarget);
-
-        rebuildGround(Math.min(Math.max(Math.max(size.x, size.y) * 1.1, 5), 20));
-    };
-
     const updatePreviewMeta = (type: string, label?: string) => {
         const previewMeta = getSceneTypePreviewConfig(type, label);
         popup.dataset.accent = previewMeta.accent;
@@ -257,7 +198,7 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
         lastPreviewSignature = previewSignature;
         root.rotation.z = 0;
         root.add(previewObject);
-        fitCameraToObject(previewObject);
+        fitPreviewCameraToObject(camera, previewObject, rebuildGround);
         render();
     };
 

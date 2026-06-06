@@ -1,0 +1,254 @@
+:root[data-theme='dark'] .gamepad-hero,
+:root[data-theme='dark'] .gamepad-section,
+:root[data-theme='dark'] .gp-aux-card,
+:root[data-theme='dark'] .channel-monitor-toolbar-card,
+:root[data-theme='dark'] .channel-monitor-board-card {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.96));
+    border-color: rgba(148, 163, 184, 0.14);
+    box-shadow: 0 12px 26px rgba(2, 6, 23, 0.22);
+}
+
+:root[data-theme='dark'] .gamepad-panel-tabs {
+    background: linear-gradient(180deg, rgba(2, 6, 23, 0.62), rgba(15, 23, 42, 0.78));
+    border-color: rgba(148, 163, 184, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme='dark'] .gamepad-panel-tab {
+    color: #94a3b8;
+}
+
+:root[data-theme='dark'] .gamepad-panel-tab:hover {
+    color: #e2e8f0;
+    background: rgba(30, 41, 59, 0.92);
+}
+
+:root[data-theme='dark'] .gamepad-panel-tab.is-active {
+    background: linear-gradient(180deg, rgba(51, 65, 85, 0.96), rgba(30, 41, 59, 0.96));
+    color: #ff9a4d;
+    border-color: rgba(255, 107, 0, 0.28);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 8px 18px rgba(2, 6, 23, 0.22);
+}
+
+:root[data-theme='dark'] .gamepad-hero-title,
+:root[data-theme='dark'] .gamepad-section-title,
+:root[data-theme='dark'] .gp-aux-card-title,
+:root[data-theme='dark'] .channel-monitor-hero-title,
+:root[data-theme='dark'] .channel-monitor-label,
+:root[data-theme='dark'] .channel-monitor-value {
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .gamepad-hero-subtitle,
+:root[data-theme='dark'] .gamepad-status-pill,
+:root[data-theme='dark'] .gamepad-status-pill__label,
+:root[data-theme='dark'] .gamepad-status-pill__meta,
+:root[data-theme='dark'] .gamepad-auto-status,
+:root[data-theme='dark'] .gamepad-channel-status,
+:root[data-theme='dark'] .gamepad-section-caption,
+:root[data-theme='dark'] .gp-aux-card-subtitle,
+:root[data-theme='dark'] .gamepad-config-field span,
+:root[data-theme='dark'] .gp-aux-field span,
+:root[data-theme='dark'] .gp-aux-subfield span,
+:root[data-theme='dark'] .gp-channel-select span,
+:root[data-theme='dark'] .channel-monitor-hero-eyebrow,
+:root[data-theme='dark'] .channel-monitor-hero-subtitle,
+:root[data-theme='dark'] .channel-monitor-toolbar-note,
+:root[data-theme='dark'] .channel-monitor-value.is-muted {
+    color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .gamepad-status-pill,
+:root[data-theme='dark'] .gamepad-auto-status,
+:root[data-theme='dark'] .gamepad-channel-status,
+:root[data-theme='dark'] .gp-aux-card-badge,
+:root[data-theme='dark'] .channel-monitor-toolbar-btn,
+:root[data-theme='dark'] .channel-monitor-checkbox,
+:root[data-theme='dark'] .channel-monitor-cell,
+:root[data-theme='dark'] .channel-monitor-meter {
+    background: rgba(15, 23, 42, 0.88);
+    border-color: rgba(148, 163, 184, 0.16);
+    color: var(--text-color);
+}
+
+:root[data-theme='dark'] .channel-monitor-toolbar-btn:hover {
+    background: rgba(30, 41, 59, 0.94);
+    border-color: rgba(148, 163, 184, 0.24);
+}
+
+:root[data-theme='dark'] .channel-monitor-meter::before {
+    background: rgba(148, 163, 184, 0.24);
+}
+
+:root[data-theme='dark'] .channel-monitor-fill {
+    background: #475569;
+}
+
+:root[data-theme='dark'] .gp-channel-row,
+:root[data-theme='dark'] .gp-range-editor,
+:root[data-theme='dark'] .gp-wizard-drone-card,
+:root[data-theme='dark'] .gp-wizard-stick-card,
+:root[data-theme='dark'] .gp-wizard-summary-lead,
+:root[data-theme='dark'] .gp-wizard-summary-card,
+:root[data-theme='dark'] .modal-content {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.96));
+    border-color: rgba(148, 163, 184, 0.16);
+    box-shadow: 0 18px 36px rgba(2, 6, 23, 0.34);
+}
+
+:root[data-theme='dark'] .gp-channel-badge,
+:root[data-theme='dark'] .gp-invert-checkbox,
+:root[data-theme='dark'] .gp-channel-value,
+:root[data-theme='dark'] .gp-aux-value,
+:root[data-theme='dark'] .modal-header,
+:root[data-theme='dark'] .gp-wizard-invert-checkbox,
+:root[data-theme='dark'] .gp-wizard-stick-status,
+:root[data-theme='dark'] .gp-wizard-summary-badge {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(148, 163, 184, 0.18);
+    color: var(--text-color);
+}
+
+:root[data-theme='dark'] .gp-channel-title,
+:root[data-theme='dark'] .modal-title,
+:root[data-theme='dark'] .gp-wizard-axis-label,
+:root[data-theme='dark'] .gp-wizard-stick-title,
+:root[data-theme='dark'] .gp-wizard-summary-card-title,
+:root[data-theme='dark'] .gp-wizard-summary-row strong {
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .gp-channel-subtitle,
+:root[data-theme='dark'] .gp-range-values,
+:root[data-theme='dark'] .gp-range-meta,
+:root[data-theme='dark'] .gp-wizard-status,
+:root[data-theme='dark'] .gp-wizard-summary-lead,
+:root[data-theme='dark'] .gp-wizard-summary-row,
+:root[data-theme='dark'] .gp-wizard-summary-note,
+:root[data-theme='dark'] .modal-close-btn {
+    color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .gp-bar-bg,
+:root[data-theme='dark'] .gp-range-track {
+    background: rgba(51, 65, 85, 0.82);
+}
+
+:root[data-theme='dark'] .gp-bar-bg::after {
+    background: rgba(148, 163, 184, 0.26);
+}
+
+:root[data-theme='dark'] .gp-invert-checkbox:hover,
+:root[data-theme='dark'] .gp-wizard-invert-checkbox:hover,
+:root[data-theme='dark'] .modal-close-btn:hover {
+    background: rgba(30, 41, 59, 0.96);
+    border-color: rgba(255, 107, 0, 0.24);
+}
+
+:root[data-theme='dark'] .gp-checkmark {
+    background: rgba(15, 23, 42, 0.94);
+    border-color: rgba(148, 163, 184, 0.22);
+}
+
+:root[data-theme='dark'] .gp-channel-value,
+:root[data-theme='dark'] .gp-aux-value {
+    font-variant-numeric: tabular-nums;
+}
+
+:root[data-theme='dark'] .gp-range-marker,
+:root[data-theme='dark'] .gp-range-dual-slider input[type="range"]::-webkit-slider-thumb,
+:root[data-theme='dark'] .gp-range-dual-slider input[type="range"]::-moz-range-thumb {
+    background: #e2e8f0;
+    border-color: #ff6b00;
+    box-shadow: 0 0 0 1px rgba(51, 65, 85, 0.9), 0 0 10px rgba(255, 107, 0, 0.16);
+}
+
+:root[data-theme='dark'] .gamepad-action-btn--danger {
+    color: #fdba74;
+    border-color: rgba(251, 146, 60, 0.26);
+    background: rgba(124, 45, 18, 0.28);
+}
+
+:root[data-theme='dark'] .gamepad-action-btn--danger:hover,
+:root[data-theme='dark'] .gamepad-action-btn--danger:focus-visible {
+    color: #ffedd5;
+    border-color: rgba(251, 146, 60, 0.34);
+    background: rgba(154, 52, 18, 0.34);
+}
+
+:root[data-theme='dark'] .modal-overlay {
+    background: rgba(2, 6, 23, 0.72);
+}
+
+:root[data-theme='dark'] .modal-header {
+    border-bottom-color: rgba(148, 163, 184, 0.14);
+}
+
+:root[data-theme='dark'] .gp-wizard-body {
+    background: linear-gradient(180deg, #0b1220 0%, #111827 100%);
+}
+
+:root[data-theme='dark'] .gp-wizard-drone-stage {
+    background:
+        radial-gradient(circle at 50% 22%, rgba(255, 107, 0, 0.16), transparent 24%),
+        linear-gradient(180deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.98) 48%, rgba(11, 18, 32, 0.98) 100%);
+    border-color: rgba(96, 165, 250, 0.16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme='dark'] .gp-wizard-footer {
+    border-top-color: rgba(148, 163, 184, 0.14);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-card.is-active {
+    border-color: rgba(255, 107, 0, 0.28);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12), 0 16px 28px rgba(2, 6, 23, 0.24);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-shell {
+    background:
+        radial-gradient(circle at 50% 48%, #1e293b 0%, #0f172a 72%, #020617 100%);
+    border-color: rgba(148, 163, 184, 0.24);
+    box-shadow:
+        inset 0 10px 20px rgba(255, 255, 255, 0.04),
+        inset 0 -6px 18px rgba(2, 6, 23, 0.4),
+        0 12px 22px rgba(2, 6, 23, 0.28);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-shell::before {
+    border-color: rgba(148, 163, 184, 0.22);
+    background: radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.82) 0%, rgba(15, 23, 42, 0.92) 100%);
+    box-shadow: inset 0 0 18px rgba(2, 6, 23, 0.3);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-shell::after {
+    background: #475569;
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(148, 163, 184, 0.18);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-guides,
+:root[data-theme='dark'] .gp-wizard-stick-guides::before {
+    background: rgba(148, 163, 184, 0.18);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-knob {
+    background: radial-gradient(circle at 35% 35%, #f8fafc 0%, #94a3b8 28%, #334155 72%, #0f172a 100%);
+    box-shadow:
+        inset 0 -3px 8px rgba(2, 6, 23, 0.4),
+        inset 0 3px 6px rgba(255, 255, 255, 0.14),
+        0 10px 18px rgba(2, 6, 23, 0.3),
+        0 4px 8px rgba(2, 6, 23, 0.18);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-knob::before {
+    background:
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(148, 163, 184, 0.12) 2px, rgba(148, 163, 184, 0.12) 4px),
+        repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(148, 163, 184, 0.12) 2px, rgba(148, 163, 184, 0.12) 4px);
+}
+
+:root[data-theme='dark'] .gp-wizard-stick-knob::after {
+    background: radial-gradient(circle at 50% 50%, #94a3b8 0%, #475569 100%);
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.14), 0 1px 1px rgba(2, 6, 23, 0.12);
+}

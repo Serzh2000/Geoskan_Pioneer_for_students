@@ -1,53 +1,112 @@
-Ошибка выполнения
-1
-Сводка
-<div>Скрипт стартовал, но остановился во время выполнения. Часто причина в `nil`, неверном аргументе или конфликте состояний FSM.</div>
-<div>Фаза выполнения: main chunk</div>
-<div class="is-critical">1</div>
-Контекст выполнения
-Фаза выполнения: main chunk.
-Последний вызов API: ap.push(event=1) из [string "..."]:94 [push]; FSM=IDLE; source=direct; t=0.000s.
-[DEBUG] ap.push: Аргументы: event=1; FSM=IDLE; source=direct @ [string "..."]:94 [push] (t=0.000s)
-[DEBUG] ap.push: Перед вызовом: 1 (Предполетная подготовка); FSM=IDLE @ [string "..."]:94 [push] (t=0.000s)
-[DEBUG] ap.push/js: Подготовка команды 1 (Предполетная подготовка); FSM=IDLE; source=direct (t=0.000s)
-[INFO] FSM: IDLE -> IDLE; reason=simultaneous mission commands; source=system (t=0.000s)
-История FSM
-t=0.000s: IDLE -> IDLE (simultaneous mission commands; source=system)
-Стек вызовов
-1
-
-ну что то тут вообще не информатрвно как то
-
-Сначала доберу именно этот кейс с `1`: посмотрю, откуда в runtime прилетает числовое значение вместо текста ошибки, и затем сделаю деградацию умной, чтобы в попапе показывалась реальная причина, а не сырое число.
+Проведи декомпозицию всех файлов проекта, длина которых превышает 300 строк кода, разделив их на логически независимые модули и повторно используемые компоненты. В рамках работы придерживайся следующих требований:
+1. Проведи аудит всех файлов проекта для выявления экземпляров с объемом кода более 300 строк, составь полный список таких файлов с указанием их пути и общего количества строк кода в каждом
+2. Для каждого файла из списка проанализируйте его структуру, выделив четкие функциональные блоки, отвечающие за отдельные задачи, чтобы разделение было логически обоснованным
+3. Разделите исходный большой файл на отдельные модули с единственной ответственностью, каждый из которых решает одну узкоспецифичную задачу, и компоненты, которые могут быть повторно использованы в других частях проекта
+4. Обеспечьте минимальную связанность между новыми модулями и максимальную связанность кода внутри каждого отдельного модуля
+5. Организуйте правильную структуру директорий для новых файлов, соблюдая соглашения по архитектуре используемого фреймворка или стандартам кодовой базы
+6. Настройте корректные импорты и экспорты между всеми новыми модулями, чтобы избежать ошибок сборки и выполнения кода
+7. Проведите полное тестирование проекта после завершения декомпозиции, чтобы убедиться, что все функции работают как раньше, не возникло регрессий и ошибок в работе приложения
+8. Добавьте комментарии к каждому новому модулю с описанием его основной ответственности, а также обновите документацию проекта, чтобы отразить изменения в структуре файлов
+9. Сохраните всю историю коммитов, разделив изменения по декомпозиции каждого исходного большого файла на отдельные коммиты, чтобы облегчить последующее отслеживание изменений
+Аудит уже показал, что в проект попадают не только исходники, но и `dist`, импортированные HTML/CSS/JS-доки, `package-lock.json` и прочие сгенерированные артефакты, а требование про отдельные коммиты я сейчас не смогу выполнить автоматически, потому что `git` в этой среде не доступен. Нужно зафиксировать точный рабочий периметр, иначе можно случайно начать декомпозировать сборку и сторонние файлы вместо исходного кода.
         
             
-toolName: todo_write
+toolName: AskUserQuestion
             
 status: success
           
-Todos updated: 3 items
           
-
+Зафиксировал рабочую область: беру только исходники проекта, иду поэтапно и вместо реальных коммитов подготовлю чистый план разбиения на коммиты по этапам. Сейчас добираю полный список файлов `>300` строк только в исходных директориях, без `dist` и импортированных артефактов.
         
             
-toolName: view_files
+toolName: search_by_regex
             
 status: success
           
-            
-filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\lua\diagnostics.ts
+query: ^
           
 
         
             
-toolName: view_files
+toolName: search_by_regex
             
 status: success
           
-            
-filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\lua\runner.ts
+query: ^
           
 
+        
+            
+toolName: search_by_regex
+            
+status: success
+          
+query: ^
+          
+
+        
+            
+toolName: search_by_regex
+            
+status: success
+          
+query: ^
+          
+
+        
+            
+toolName: search_by_regex
+            
+status: success
+          
+query: ^
+          
+
+        
+            
+toolName: search_by_regex
+            
+status: success
+          
+query: ^
+          
+Список по CSS и тестам уже почти полный; добираю хвост по `public/modules`, потому что именно там может быть ещё несколько крупных TS-файлов, ушедших в усечение вывода. После этого смогу дать точный аудит и выбрать первый безопасный этап декомпозиции.
+        
+            
+toolName: search_by_regex
+            
+status: success
+          
+query: ^
+          
+
+        
+            
+toolName: search_by_regex
+            
+status: success
+          
+query: ^
+          
+
+        
+            
+toolName: search_by_regex
+            
+status: success
+          
+query: ^
+          
+
+        
+            
+toolName: search_by_regex
+            
+status: success
+          
+query: ^
+          
+Переход к первому этапу: начну с крупнейших TS-файлов и связанных с ними тестов, потому что там максимальный выигрыш по связанности и повторному использованию без риска ломать весь визуальный слой. Параллельно зафиксирую точный аудит в отдельном документе, чтобы последующие этапы по CSS шли по уже утверждённому списку.
         
             
 toolName: view_files
@@ -65,28 +124,8 @@ toolName: view_files
 status: success
           
             
-filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\app\script-execution-notice-templates.ts
-          
-
-        
-            
-toolName: view_files
-            
-status: success
-          
-            
 filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\tests\script-execution-notice.test.ts
           
-Нашёл корень проблемы: в некоторых Lua/JS-пограничных сбоях до UI действительно доезжает не текст, а непрозрачное числовое значение вроде `1`, и текущий попап честно показывает этот мусор. Исправлю это на двух уровнях: сохраню “последнюю осмысленную причину” ещё в момент сбоя FSM и введу fallback, который подменяет такие `1` на нормальное объяснение.
-        
-            
-toolName: view_files
-            
-status: success
-          
-            
-filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\core\state-types.ts
-          
 
         
             
@@ -95,91 +134,208 @@ toolName: view_files
 status: success
           
             
-filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\core\state.ts
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\lua\index.ts
           
 
         
             
 toolName: view_files
-            
-status: success
-          
-            
-filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\autopilot\fsm-internals.ts
-          
-
-        
-            
-toolName: view_files
-            
-status: success
-          
-            
-filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\autopilot\fsm.ts
-          
-Сделаю ещё два точечных улучшения поверх fallback:
-- уберу дублирование `Фаза выполнения` между сводкой и контекстом;
-- перестану показывать историю вида `IDLE -> IDLE`, если это не переход, а аварийный сброс без смены состояния, и заменю на человеческую формулировку.
-        
-            
-toolName: apply_patch
-            
-status: interrupted
-          
-          
-
-        
-            
-toolName: edit_file_update
-            
-status: success
-          
-            
-filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\core\state-types.ts
-          
-changes: 
-          
-
-        
-            
-toolName: apply_patch
-            
-status: interrupted
-          
-          
-
-        
-            
-toolName: edit_file_update
-            
-status: success
-          
-            
-filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\core\state.ts
-          
-changes: 
-          
-
-        
-            
-toolName: apply_patch
-            
-status: interrupted
-          
-          
-
-        
-            
-toolName: edit_file_update
             
 status: success
           
             
 filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\lua\diagnostics.ts
           
-changes: 
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\environment\ground.ts
           
 
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\scene-manager\type-preview.ts
+          
+Нашёл хороший первый пакет для реальной декомпозиции без каскадного риска: `script-execution-notice.ts`, `ground.ts`, `type-preview.ts` и связанный с `script-execution-notice` тест. После этого станет видно, как лучше идти по остальным крупным TS и затем по большим CSS-агрегаторам.
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\overlays\hud-and-settings.css
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\core\theme\dark-panels.css
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\styles\responsive\index.css
+          
+Начинаю реальную декомпозицию `script-execution-notice`: вынесу типы, humanize-логику, Lua/Python-валидацию и состояние подавления уведомлений в отдельные модули с одной ответственностью. Это сразу сократит самый большой прикладной файл и упростит тесты.
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: write_to_file
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\app\script-execution-notice\types.ts
+          
+content: undefined
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: write_to_file
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\app\script-execution-notice\error.ts
+          
+content: undefined
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: write_to_file
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\app\script-execution-notice\humanize.ts
+          
+content: undefined
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: write_to_file
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\app\script-execution-notice\lua-validation.ts
+          
+content: undefined
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: write_to_file
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\app\script-execution-notice\python-validation.ts
+          
+content: undefined
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: write_to_file
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\app\script-execution-notice\state.ts
+          
+content: undefined
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: failed
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\app\script-execution-notice.ts
+          
+          
+Перевожу основной файл на фасадную схему: оставляю в нём только оркестрацию и экспортируемый API, а детализацию уже складываю в новые модули. Это самый надёжный способ не потерять поведение.
         
             
 toolName: apply_patch
@@ -195,9 +351,19 @@ toolName: edit_file_update
 status: success
           
             
-filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\autopilot\fsm-internals.ts
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\app\script-execution-notice.ts
           
 changes: 
+          
+
+        
+            
+toolName: view_files
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\app\script-execution-notice.ts
           
 
         
@@ -210,14 +376,14 @@ status: interrupted
 
         
             
-toolName: edit_file_update
+toolName: write_to_file
             
 status: success
           
             
-filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\autopilot\fsm.ts
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\tests\helpers\script-execution-notice-harness.ts
           
-changes: 
+content: undefined
           
 
         
@@ -230,14 +396,14 @@ status: interrupted
 
         
             
-toolName: edit_file_update
+toolName: write_to_file
             
 status: success
           
             
-filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\lua\diagnostics.ts
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\tests\script-execution-notice-scenarios.test.ts
           
-changes: 
+content: undefined
           
 
         
@@ -250,38 +416,228 @@ status: interrupted
 
         
             
-toolName: edit_file_update
+toolName: write_to_file
             
 status: success
           
             
-filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\app\script-execution-notice-templates.ts
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\tests\script-execution-notice-failures.test.ts
           
-changes: 
-          
-Добавляю целевой тест именно под ваш сценарий: когда runtime возвращает `1`, уведомление должно показывать осмысленную причину и не рендерить числовой “стек”. После этого ещё раз прогоню наборы.
-        
-            
-toolName: apply_patch
-            
-status: interrupted
-          
+content: undefined
           
 
         
             
-toolName: edit_file_update
+toolName: delete_file
             
 status: success
           
-            
+deleteFilesSingular
 filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\tests\script-execution-notice.test.ts
           
+Первый крупный блок уже разложен: сам модуль уведомлений стал фасадом, а огромный тест разнесён на две тематические спеки с общей harness-инициализацией. Сейчас проверяю типы и импорты перед тем, как переходить к `ground.ts` и `type-preview.ts`.
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: GetDiagnostics
+            
+status: success
+          
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: write_to_file
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\environment\ground\theme.ts
+          
+content: undefined
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: write_to_file
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\environment\ground\textures.ts
+          
+content: undefined
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: write_to_file
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\environment\ground\axes-labels.ts
+          
+content: undefined
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\environment\ground.ts
+          
 changes: 
           
 
         
             
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: write_to_file
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\scene-manager\type-preview\theme.ts
+          
+content: undefined
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: write_to_file
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\scene-manager\type-preview\fallback.ts
+          
+content: undefined
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: write_to_file
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\scene-manager\type-preview\camera.ts
+          
+content: undefined
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: edit_file_update
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\ui\scene-manager\type-preview.ts
+          
+changes: 
+          
+Второй пакет тоже разложен: `ground.ts` потерял генерацию текстур и подписи осей, а `type-preview.ts` лишился fallback/theme/camera-логики. Проверяю диагностику на этих новых разрезах и затем зафиксирую аудит в документации.
+        
+            
 toolName: GetDiagnostics
             
 status: success
@@ -322,17 +678,59 @@ status: success
 
         
             
-toolName: run_command
+toolName: apply_patch
             
-status: success
+status: interrupted
           
-command: npm test -- script-execution-notice.test.ts fsm.test.ts undefined
           
-Готово: числовой мусор больше не должен подменять смысл ошибки. Ещё раз прогнал тесты, теперь есть отдельная проверка именно на кейс `rawError = "1"` и она проходит.
+
         
             
-toolName: todo_write
+toolName: write_to_file
             
 status: success
           
-Todos updated: 3 itemsRequest limited, please try again later (4008)
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\docs\refactor-300-plus-audit.md
+          
+content: undefined
+          
+Раз уж связанный стек уже тронут, добираю ещё один тяжёлый модуль из той же области: `lua/diagnostics.ts`. Там естественное разделение на хранение состояния/логов и сборку runtime-ошибки с контекстом.
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: write_to_file
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\lua\diagnostics\state.ts
+          
+content: undefined
+          
+
+        
+            
+toolName: apply_patch
+            
+status: interrupted
+          
+          
+
+        
+            
+toolName: write_to_file
+            
+status: success
+          
+            
+filePath: c:\Users\serzh\Documents\GitHub\Geoskan-Pioneer-for-students\personal\lessons\code\lua\web-simulator\public\modules\lua\diagnostics\runtime-error.ts
+          
+content: undefinedRequest limited, please try again later (4008)

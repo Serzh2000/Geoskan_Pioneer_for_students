@@ -63,3 +63,7 @@
     vector-effect: non-scaling-stroke;
 }
 
+.sidebar-tabs__spacer {
+    flex: 1 1 auto;
+}
+

@@ -69,6 +69,39 @@
                     <button id="run-btn" class="btn-primary">ЗАПУСТИТЬ</button>
                     <button id="stop-btn" class="btn-secondary header-danger-btn">СТОП</button>
                     <button id="restart-btn" class="btn-secondary">СБРОС</button>
+                    <div class="mobile-workspace-nav" aria-label="Мобильная навигация">
+                        <div class="mobile-workspace-nav__tabs" role="tablist" aria-label="Страницы рабочей области">
+                            <button
+                                type="button"
+                                class="mobile-workspace-nav__tab is-active"
+                                data-mobile-workspace-target="code"
+                                role="tab"
+                                aria-selected="true">
+                                Код
+                            </button>
+                            <button
+                                type="button"
+                                class="mobile-workspace-nav__tab"
+                                data-mobile-workspace-target="scene"
+                                role="tab"
+                                aria-selected="false">
+                                Сцена
+                            </button>
+                            <button
+                                type="button"
+                                class="mobile-workspace-nav__tab"
+                                data-mobile-workspace-target="controls"
+                                role="tab"
+                                aria-selected="false">
+                                Управление
+                            </button>
+                        </div>
+                        <div class="mobile-workspace-nav__pager">
+                            <button type="button" class="mobile-workspace-nav__arrow" data-mobile-workspace-action="prev">Назад</button>
+                            <span class="mobile-workspace-nav__label" data-mobile-workspace-label>Код</span>
+                            <button type="button" class="mobile-workspace-nav__arrow" data-mobile-workspace-action="next">Вперед</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>

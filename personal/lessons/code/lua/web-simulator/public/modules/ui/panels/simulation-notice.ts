@@ -15,10 +15,16 @@ export function initSimulationNotice() {
         notice.id = 'simulation-notice';
         notice.className = 'simulation-notice';
         notice.innerHTML = `
-            <div class="simulation-notice__title">Предупреждение по таймингам</div>
-            <div class="simulation-notice__message"></div>
-            <div class="simulation-notice__details"></div>
-            <button type="button" class="simulation-notice__close" aria-label="Скрыть">Понятно</button>
+            <div class="simulation-notice__header">
+                <div class="simulation-notice__title-wrap">
+                    <div class="simulation-notice__title">Предупреждение по таймингам</div>
+                </div>
+                <button type="button" class="simulation-notice__close" aria-label="Скрыть">Понятно</button>
+            </div>
+            <div class="simulation-notice__body">
+                <div class="simulation-notice__message"></div>
+                <div class="simulation-notice__details"></div>
+            </div>
         `;
         sceneContainer.appendChild(notice);
     }

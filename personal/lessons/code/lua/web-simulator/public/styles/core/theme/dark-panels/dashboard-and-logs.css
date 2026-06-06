@@ -1,0 +1,108 @@
+:root[data-theme='dark'] .dashboard-toolbar,
+:root[data-theme='dark'] .dashboard-panel {
+    border-color: rgba(148, 163, 184, 0.12);
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(17, 24, 39, 0.92));
+    box-shadow: 0 18px 34px rgba(2, 6, 23, 0.32), 0 6px 16px rgba(2, 6, 23, 0.24);
+}
+
+:root[data-theme='dark'] .stat-item {
+    background: rgba(15, 23, 42, 0.96);
+    border-color: rgba(148, 163, 184, 0.18);
+}
+
+:root[data-theme='dark'] .stat-item--primary {
+    background: rgba(18, 26, 41, 0.98);
+}
+
+:root[data-theme='dark'] .stat-value,
+:root[data-theme='dark'] .stat-item--status .stat-value {
+    border-color: rgba(148, 163, 184, 0.2);
+    background: rgba(30, 41, 59, 0.92);
+    color: #f8fafc;
+}
+
+:root[data-theme='dark'] .stat-value span:first-child,
+:root[data-theme='dark'] .stat-item--primary .stat-value span:first-child,
+:root[data-theme='dark'] .stat-item--status .stat-value span:first-child {
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .stat-item--status {
+    background: rgba(255, 107, 0, 0.12);
+    border-color: rgba(255, 176, 103, 0.2);
+}
+
+:root[data-theme='dark'] .stat-label {
+    color: #cbd5e1;
+}
+
+:root[data-theme='dark'] .stat-value span:last-child {
+    color: #cbd5e1;
+}
+
+:root[data-theme='dark'] .stat-item--primary .stat-value span:last-child {
+    color: #ffb067;
+}
+
+:root[data-theme='dark'] .stat-item--status .stat-value {
+    border-color: rgba(255, 176, 103, 0.2);
+    background: rgba(17, 24, 39, 0.96);
+}
+
+:root[data-theme='dark'] .panel-content--drones {
+    background:
+        radial-gradient(circle at top left, rgba(255, 107, 0, 0.08), transparent 32%),
+        linear-gradient(180deg, #0b1220 0%, #111827 100%);
+}
+
+:root[data-theme='dark'] .panel-content--logs {
+    background: linear-gradient(180deg, #0b1220 0%, #111827 100%);
+}
+
+:root[data-theme='dark'] .logs-console__stream {
+    border-color: rgba(148, 163, 184, 0.12);
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(17, 24, 39, 0.98) 100%);
+    box-shadow:
+        0 10px 24px rgba(2, 6, 23, 0.24),
+        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme='dark'] .log-entry {
+    background: rgba(15, 23, 42, 0.7);
+    color: var(--text-color);
+}
+
+:root[data-theme='dark'] .log-entry:hover {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(148, 163, 184, 0.12);
+    box-shadow: 0 8px 18px rgba(2, 6, 23, 0.18);
+}
+
+:root[data-theme='dark'] .log-entry__time {
+    color: #94a3b8;
+}
+
+:root[data-theme='dark'] .log-entry--info,
+:root[data-theme='dark'] .log-entry--info .log-entry__tag {
+    color: #cbd5e1;
+}
+
+:root[data-theme='dark'] .log-entry--action,
+:root[data-theme='dark'] .log-entry--action .log-entry__tag {
+    color: #a5b4c8;
+}
+
+:root[data-theme='dark'] .log-entry--warn,
+:root[data-theme='dark'] .log-entry--warn .log-entry__tag {
+    color: #fbbf24;
+}
+
+:root[data-theme='dark'] .log-entry--error,
+:root[data-theme='dark'] .log-entry--error .log-entry__tag {
+    color: #f87171;
+}
+
+:root[data-theme='dark'] .log-entry--success,
+:root[data-theme='dark'] .log-entry--success .log-entry__tag {
+    color: #4ade80;
+}

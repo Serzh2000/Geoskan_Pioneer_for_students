@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Pioneer Lua Web Simulator</title>
     <link rel="icon" href="data:,">
     <script>
@@ -26,14 +27,16 @@
 </head>
 <body>
     <!-- @include ./fragments/layout/global-header.html -->
-    <main class="container">
-        <aside class="workspace-sidebar">
-            <!-- @include ./fragments/layout/sidebar-tabs.html -->
-            <div class="sidebar-panels">
-                <!-- @include ./fragments/layout/sidebar-panels.html -->
-            </div>
-        </aside>
-        <!-- @include ./fragments/layout/main-scene.html -->
+    <main class="container" data-mobile-workspace-page="code">
+        <div class="mobile-workspace-track">
+            <aside class="workspace-sidebar" data-mobile-workspace-panel="code">
+                <!-- @include ./fragments/layout/sidebar-tabs.html -->
+                <div class="sidebar-panels">
+                    <!-- @include ./fragments/layout/sidebar-panels.html -->
+                </div>
+            </aside>
+            <!-- @include ./fragments/layout/main-scene.html -->
+        </div>
     </main>
 
     <!-- @include ./fragments/modals/gamepad-wizard.html -->
