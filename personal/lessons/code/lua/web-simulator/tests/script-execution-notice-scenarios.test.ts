@@ -45,6 +45,9 @@ ap.push(Ev.MCE_LANDING)`;
 
         expect(harness.getShownNotice()).not.toBeNull();
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('В одном шаге запускаются несколько команд миссии');
+        expect(String(harness.getShownNotice().detailsHtml || '')).toContain('Порядок состояний дрона');
+        expect(String(harness.getShownNotice().detailsHtml || '')).toContain('<code>IDLE</code> -> <code>PREFLIGHT</code> -> <code>TAKEOFF_PROCESS</code>');
+        expect(String(harness.getShownNotice().detailsHtml || '')).toContain('<code>Ev.ENGINES_STARTED</code> -> <code>Ev.TAKEOFF_COMPLETE</code> -> <code>Ev.POINT_REACHED</code>');
     });
 
     test('does not warn for lua mission separated by sleep calls', () => {

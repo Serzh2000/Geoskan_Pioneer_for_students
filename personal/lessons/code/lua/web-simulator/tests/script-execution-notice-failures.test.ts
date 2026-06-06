@@ -158,4 +158,28 @@ describe('lua script execution notice failure rendering', () => {
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('Затем: Повторно отправлена команда Ev.MCE_PREFLIGHT без ожидания следующего этапа.');
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('состояние осталось IDLE');
     });
+
+    test('suppresses runtime notice when simultaneous command warning was already shown before launch', () => {
+        const code = `ap.push(Ev.MCE_PREFLIGHT)
+Timer.callLater(0.5, function()
+    ap.push(Ev.MCE_TAKEOFF)
+end)
+Timer.callLater(0.5, function()
+    ap.push(Ev.MCE_TAKEOFF)
+end)`;
+
+        harness.showScenarioValidationNotice('lua', code);
+        const firstNotice = harness.getShownNotice();
+
+        expect(firstNotice).not.toBeNull();
+        expect(String(firstNotice.message || '')).toContain('Найдена проблема');
+
+        harness.showScriptFailureNotice('lua', harness.createScriptFailureError(
+            'runtime',
+            'Команды миссии запущены одновременно без паузы: TAKEOFF, TAKEOFF.'
+        ));
+
+        expect(harness.getShownNotice()).toBe(firstNotice);
+        expect(String(harness.getShownNotice().title || '')).toContain('Проверьте сценарий перед запуском');
+    });
 });

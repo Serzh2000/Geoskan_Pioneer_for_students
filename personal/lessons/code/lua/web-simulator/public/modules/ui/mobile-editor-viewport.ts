@@ -21,6 +21,28 @@ function isEditorFocused(): boolean {
     return isEditorElement(document.activeElement);
 }
 
+function getHeaderOffset(): number {
+    const header = document.querySelector('.header') as HTMLElement | null;
+    if (!header) return 0;
+    return Math.max(0, Math.round(header.getBoundingClientRect().height));
+}
+
+function scrollEditorPanelIntoView(editorPanel: HTMLElement): void {
+    const safeGap = 12;
+    const headerOffset = getHeaderOffset();
+    const panelTop = Math.round(editorPanel.getBoundingClientRect().top + window.scrollY);
+    const targetTop = Math.max(0, panelTop - headerOffset - safeGap);
+
+    if (Math.abs(window.scrollY - targetTop) <= 2) {
+        return;
+    }
+
+    window.scrollTo({
+        top: targetTop,
+        behavior: 'auto'
+    });
+}
+
 function updateViewportVariables(): { height: number; keyboardInset: number; offsetTop: number } {
     const viewport = window.visualViewport;
     const viewportHeight = Math.round(viewport?.height ?? window.innerHeight);
@@ -72,7 +94,9 @@ export function initMobileEditorViewport(options: EditorViewportOptions = {}): v
             blurTimer = 0;
         }
 
-        editorPanel.scrollIntoView({ block: 'start', inline: 'nearest' });
+        if (mediaQuery.matches) {
+            scrollEditorPanelIntoView(editorPanel);
+        }
         window.setTimeout(applyFocusedLayout, 60);
     };
 

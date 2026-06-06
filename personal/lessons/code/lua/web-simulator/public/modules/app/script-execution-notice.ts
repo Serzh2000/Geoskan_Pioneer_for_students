@@ -26,6 +26,22 @@ import type { ScenarioValidationResult, ScriptFailureError, ScriptFailureKind } 
 export type { ScenarioValidationResult, ScriptFailureError, ScriptFailureKind } from './script-execution-notice/types.js';
 export { createScriptFailureError, resetScriptExecutionNoticeState };
 
+function isSimultaneousCommandsFailureNotice(
+    language: ScriptLanguage,
+    kind: ScriptFailureKind,
+    message: string,
+    summary: string
+) {
+    if (language !== 'lua' || kind !== 'runtime') return false;
+    const combined = `${summary}\n${message}`.toLowerCase();
+    return (
+        combined.includes('команды миссии запущены одновременно')
+        || combined.includes('несколько команд миссии стартуют одновременно')
+        || combined.includes('simultaneous mission commands')
+        || combined.includes('run at the same time')
+    );
+}
+
 export function showScriptFailureNotice(
     language: ScriptLanguage,
     error: unknown,
@@ -55,6 +71,13 @@ export function showScriptFailureNotice(
             column: resolved.scriptFailureColumn,
             message: humanized.summary
         });
+    }
+
+    if (isSimultaneousCommandsFailureNotice(language, kind, resolved.message, humanized.summary)) {
+        if (shouldSuppressSimultaneousNotice()) {
+            return;
+        }
+        markSimultaneousNoticeAsShown();
     }
 
     if (!(window as any).showSimulationNotice) return;
@@ -165,6 +188,7 @@ export function warnAboutInstantExecution(language: ScriptLanguage) {
 
 export function showSimultaneousCommandsNotice(commands: string[]) {
     if (shouldSuppressSimultaneousNotice()) return;
+    markSimultaneousNoticeAsShown();
 
     const uniqueCommands = Array.from(new Set(commands));
     const message = uniqueCommands.length > 1

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Экспорт модели Pioneer</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111827;
+      color: #f9fafb;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+    }
+
+    .card {
+      width: min(560px, calc(100vw - 32px));
+      padding: 24px;
+      border-radius: 16px;
+      background: rgba(17, 24, 39, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 24px;
+    }
+
+    p {
+      margin: 0 0 16px;
+      line-height: 1.5;
+      color: #d1d5db;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #f59e0b;
+      color: #111827;
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .status {
+      margin-top: 16px;
+      white-space: pre-line;
+      min-height: 44px;
+      color: #93c5fd;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Экспорт модели дрона</h1>
+    <p>Страница собирает текущую модель `Pioneer` из кода симулятора и скачивает ее как `GLB` для ручной правки.</p>
+    <button id="export-drone-button" type="button">Скачать `pioneer-drone.glb`</button>
+    <div id="export-drone-status" class="status">Готово к экспорту.</div>
+  </main>
+  <script type="module" src="/modules/tools/export-drone.ts"></script>
+</body>
+</html>

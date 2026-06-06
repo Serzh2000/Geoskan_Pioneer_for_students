@@ -1,5 +1,18 @@
 import type { ScriptLanguage } from '../core/state.js';
 
+function renderLuaMissionStateGuideHtml(): string {
+    return `
+        <div class="simulation-notice__section">
+            <div class="simulation-notice__section-title">Порядок состояний дрона</div>
+            <div class="simulation-notice__list">
+                <div><code>IDLE</code> -> <code>PREFLIGHT</code> -> <code>TAKEOFF_PROCESS</code> -> <code>FLYING_HOVER</code> -> <code>FLYING_MOVING</code> -> <code>LANDING_PROCESS</code> -> <code>IDLE</code></div>
+                <div>Команды сценария должны идти в том же порядке: сначала <code>Ev.MCE_PREFLIGHT</code>, затем <code>Ev.MCE_TAKEOFF</code>, потом маршрут <code>ap.goToLocalPoint(...)</code>, и только после завершения полета <code>Ev.MCE_LANDING</code>.</div>
+                <div>Если нужно дождаться следующего этапа, продолжайте сценарий из <code>callback(event)</code>: <code>Ev.ENGINES_STARTED</code> -> <code>Ev.TAKEOFF_COMPLETE</code> -> <code>Ev.POINT_REACHED</code>.</div>
+            </div>
+        </div>
+    `;
+}
+
 export function renderIssuesHtml(language: ScriptLanguage, issues: string[]): string {
     const example = language === 'python'
         ? `if pioneer.arm():
@@ -31,6 +44,7 @@ end`;
         <div class="simulation-notice__list">
             ${issues.map((issue) => `<div>${issue}</div>`).join('')}
         </div>
+        ${language === 'lua' ? renderLuaMissionStateGuideHtml() : ''}
         <button type="button" class="simulation-notice__action" data-simulation-action="open-mission-guide">Открыть 5 шагов миссии</button>
         <div class="simulation-notice__code">${example}</div>
     `;
