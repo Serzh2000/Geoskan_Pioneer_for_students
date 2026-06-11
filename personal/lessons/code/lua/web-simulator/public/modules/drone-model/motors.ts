@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import motor1306Url from '../../assets/models/pioneer/motor-1306.stl?url';
-import { CAD_MM_TO_SCENE_SCALE, FRAME_PLATE_THICKNESS, MOTOR_ANCHOR_POSITIONS } from './layout.js';
+import { CAD_MM_TO_SCENE_SCALE, FRAME_COMPONENTS_Z_OFFSET, FRAME_PLATE_THICKNESS, MOTOR_ANCHOR_POSITIONS } from './layout.js';
 
-const MOTOR_MOUNT_Z = 0.024 - FRAME_PLATE_THICKNESS;
+const MOTOR_MOUNT_BASE_Z = 0.024 - FRAME_PLATE_THICKNESS;
+const MOTOR_MOUNT_Z = MOTOR_MOUNT_BASE_Z + FRAME_COMPONENTS_Z_OFFSET;
 const FALLBACK_MOTOR_CENTER_Z = MOTOR_MOUNT_Z + 0.01;
 const ROTOR_Z = MOTOR_MOUNT_Z + 18.1 * CAD_MM_TO_SCENE_SCALE;
 

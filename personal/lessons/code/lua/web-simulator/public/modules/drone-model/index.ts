@@ -8,6 +8,7 @@ import { createFrame } from './frame.js';
 import { createLEDs } from './leds.js';
 import { createCameraAndAntenna } from './camera-antenna.js';
 import { createMotors } from './motors.js';
+import { DRONE_MODEL_OFFSET } from './layout.js';
 
 export function createDroneModel() {
     const droneGroup = new THREE.Group();
@@ -21,7 +22,7 @@ export function createDroneModel() {
     const propMatCW = new THREE.MeshStandardMaterial({ color: 0xff6600, transparent: false, opacity: 1.0 });
     const propMatCCW = new THREE.MeshStandardMaterial({ color: 0xff6600, transparent: false, opacity: 1.0 });
 
-    const modelOffset = 0.125; // Increased to ensure legs touch ground properly
+    const modelOffset = DRONE_MODEL_OFFSET;
     
     const frame = createFrame(carbonMat, pcbMat, plasticMat);
     frame.position.z += modelOffset;

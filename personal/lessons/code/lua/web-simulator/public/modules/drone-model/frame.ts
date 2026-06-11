@@ -3,17 +3,23 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import frameMainUrl from '../../assets/models/pioneer/reference/frame-full.stl?url';
 import batteryPlateUrl from '../../assets/models/pioneer/reference/battery-bottom.stl?url';
 import batteryEndPlateUrl from '../../assets/models/pioneer/reference/battery-end.stl?url';
+import chassisTopUrl from '../../assets/models/pioneer/reference/chassis-top.stl?url';
+import chassisBottomUrl from '../../assets/models/pioneer/reference/chassis-bottom.stl?url';
 import guardArcUrl from '../../assets/models/pioneer/reference/guard-arc.stl?url';
 import guardBraceUrl from '../../assets/models/pioneer/reference/guard-brace.stl?url';
 import guardBridgeUrl from '../../assets/models/pioneer/reference/guard-bridge.stl?url';
 import {
+    BATTERY_COMPONENTS_Z_OFFSET,
     CAD_MM_TO_SCENE_SCALE,
     CAD_PART_PLACEMENTS,
+    FRAME_COMPONENTS_Z_OFFSET,
+    GUARD_Z,
     GUARD_ARC_INNER_Y,
     GUARD_ARC_MID_X,
     GUARD_ARC_TARGETS,
     GUARD_BRACE_PLACEMENTS,
     GUARD_BRIDGE_PLACEMENTS,
+    LANDING_GEAR_PART_PLACEMENTS,
     PlacementConfig,
     Vec3Tuple
 } from './layout.js';
@@ -32,28 +38,31 @@ type Placement = {
 export function createFrame(carbonMat: THREE.Material, pcbMat: THREE.Material, plasticMat: THREE.Material) {
     const frameGroup = new THREE.Group();
     const fallbackStructure = createFallbackStructure(carbonMat);
+    const fallbackLegs = createLegs(carbonMat);
     const fallbackGuard = createGuard();
 
     frameGroup.add(fallbackStructure);
     frameGroup.add(createElectronicsStack(pcbMat));
     frameGroup.add(createBatteryVolume());
-    frameGroup.add(createLegs(carbonMat));
+    frameGroup.add(fallbackLegs);
     frameGroup.add(fallbackGuard);
 
-    void plasticMat;
-    void attachCadAssembly(frameGroup, fallbackStructure, fallbackGuard, carbonMat);
+    void attachCadAssembly(frameGroup, fallbackStructure, fallbackLegs, fallbackGuard, carbonMat, plasticMat);
     return frameGroup;
 }
 
 async function attachCadAssembly(
     frameGroup: THREE.Group,
     fallbackStructure: THREE.Group,
+    fallbackLegs: THREE.Group,
     fallbackGuard: THREE.Group,
-    carbonMat: THREE.Material
+    carbonMat: THREE.Material,
+    plasticMat: THREE.Material
 ) {
     try {
-        const cadAssembly = await buildCadAssembly(carbonMat);
+        const cadAssembly = await buildCadAssembly(carbonMat, plasticMat);
         fallbackStructure.visible = false;
+        fallbackLegs.visible = false;
         fallbackGuard.visible = false;
         frameGroup.add(cadAssembly);
     } catch (error) {
@@ -61,11 +70,13 @@ async function attachCadAssembly(
     }
 }
 
-async function buildCadAssembly(carbonMat: THREE.Material) {
-    const [frameMain, batteryPlate, batteryEndPlate, guardArc, guardBrace, guardBridge] = await Promise.all([
+async function buildCadAssembly(carbonMat: THREE.Material, landingGearMat: THREE.Material) {
+    const [frameMain, batteryPlate, batteryEndPlate, chassisTop, chassisBottom, guardArc, guardBrace, guardBridge] = await Promise.all([
         loadCadGeometry(frameMainUrl),
         loadCadGeometry(batteryPlateUrl),
         loadCadGeometry(batteryEndPlateUrl),
+        loadCadGeometry(chassisTopUrl),
+        loadCadGeometry(chassisBottomUrl),
         loadCadGeometry(guardArcUrl, false),
         loadCadGeometry(guardBraceUrl, false),
         loadCadGeometry(guardBridgeUrl)
@@ -87,6 +98,10 @@ async function buildCadAssembly(carbonMat: THREE.Material) {
     standaloneParts.forEach(({ geometry, config }) => {
         assembly.add(createCadMesh(geometry, carbonMat, toPlacement(config)));
     });
+
+    // The landing gear STLs are thin plates that should stay vertical.
+    assembly.add(createCadMesh(chassisTop, landingGearMat, toPlacement(LANDING_GEAR_PART_PLACEMENTS.top)));
+    assembly.add(createCadMesh(chassisBottom, landingGearMat, toPlacement(LANDING_GEAR_PART_PLACEMENTS.bottom)));
 
     const guardMat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
@@ -219,12 +234,12 @@ function createFallbackStructure(carbonMat: THREE.Material) {
 
     const plateGeom = new THREE.BoxGeometry(0.14, 0.14, 0.002);
     const bottomPlate = new THREE.Mesh(plateGeom, carbonMat);
-    bottomPlate.position.z = -0.015;
+    bottomPlate.position.z = -0.015 + FRAME_COMPONENTS_Z_OFFSET;
     bottomPlate.castShadow = true;
     group.add(bottomPlate);
 
     const topPlate = new THREE.Mesh(plateGeom, carbonMat);
-    topPlate.position.z = 0.035;
+    topPlate.position.z = 0.035 + FRAME_COMPONENTS_Z_OFFSET;
     topPlate.castShadow = true;
     group.add(topPlate);
 
@@ -246,12 +261,12 @@ function createElectronicsStack(pcbMat: THREE.Material) {
     const stackGroup = new THREE.Group();
     const pcbGeom = new THREE.BoxGeometry(0.06, 0.06, 0.002);
     const pcb1 = new THREE.Mesh(pcbGeom, pcbMat);
-    pcb1.position.z = 0.005;
+    pcb1.position.z = 0.005 + FRAME_COMPONENTS_Z_OFFSET;
     pcb1.castShadow = true;
     stackGroup.add(pcb1);
 
     const pcb2 = new THREE.Mesh(pcbGeom, pcbMat);
-    pcb2.position.z = 0.025;
+    pcb2.position.z = 0.025 + FRAME_COMPONENTS_Z_OFFSET;
     pcb2.castShadow = true;
     stackGroup.add(pcb2);
 
@@ -259,7 +274,7 @@ function createElectronicsStack(pcbMat: THREE.Material) {
     const blackMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
     const chipGeom = new THREE.BoxGeometry(0.02, 0.02, 0.005);
     const chip = new THREE.Mesh(chipGeom, blackMat);
-    chip.position.z = 0.028;
+    chip.position.z = 0.028 + FRAME_COMPONENTS_Z_OFFSET;
     stackGroup.add(chip);
 
     const redCompGeom = new THREE.BoxGeometry(0.015, 0.008, 0.008);
@@ -271,7 +286,7 @@ function createElectronicsStack(pcbMat: THREE.Material) {
     ];
     redPositions.forEach((position) => {
         const component = new THREE.Mesh(redCompGeom, redMat);
-        component.position.set(position[0], position[1], position[2]);
+        component.position.set(position[0], position[1], position[2] + FRAME_COMPONENTS_Z_OFFSET);
         stackGroup.add(component);
     });
 
@@ -282,7 +297,7 @@ function createBatteryVolume() {
     const batGeom = new THREE.BoxGeometry(0.08, 0.035, 0.02);
     const batMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
     const battery = new THREE.Mesh(batGeom, batMat);
-    battery.position.z = -0.026;
+    battery.position.z = -0.026 + BATTERY_COMPONENTS_Z_OFFSET;
     battery.castShadow = true;
     return battery;
 }
@@ -299,7 +314,7 @@ function createLegs(mat: THREE.Material) {
 
     offsets.forEach(offset => {
         const pivot = new THREE.Group();
-        pivot.position.set(offset[0], offset[1], -0.015);
+        pivot.position.set(offset[0], offset[1], -0.015 + FRAME_COMPONENTS_Z_OFFSET);
         pivot.rotation.z = Math.atan2(offset[1], offset[0]);
 
         const mesh = new THREE.Mesh(legGeom, mat);
@@ -330,6 +345,7 @@ function createGuard() {
     
     // We'll use 4 overlapping rings to form the clover shape.
     const ringGeom = new THREE.TorusGeometry(ringRadius, 0.005, 8, 32);
+    const guardColumnCenterZ = GUARD_Z - 0.02;
     const offsets = [
         [armLen, -armLen],
         [-armLen, armLen],
@@ -339,7 +355,7 @@ function createGuard() {
 
     offsets.forEach(offset => {
         const ring = new THREE.Mesh(ringGeom, guardMat);
-        ring.position.set(offset[0], offset[1], 0.04);
+        ring.position.set(offset[0], offset[1], GUARD_Z);
         guardGroup.add(ring);
 
         // Add 4 spokes (ribs) per ring
@@ -350,7 +366,7 @@ function createGuard() {
             spoke.position.set(
                 offset[0] + Math.cos(angle) * ringRadius/2,
                 offset[1] + Math.sin(angle) * ringRadius/2,
-                0.04
+                GUARD_Z
             );
             spoke.rotation.z = angle;
             guardGroup.add(spoke);
@@ -363,7 +379,7 @@ function createGuard() {
             col.position.set(
                 offset[0] + Math.cos(angle) * ringRadius * 0.9,
                 offset[1] + Math.sin(angle) * ringRadius * 0.9,
-                0.02
+                guardColumnCenterZ
             );
             col.rotation.x = Math.PI / 2;
             guardGroup.add(col);
@@ -380,7 +396,7 @@ function createGuard() {
     ];
     bridges.forEach(b => {
         const bridge = new THREE.Mesh(bridgeGeom, guardMat);
-        bridge.position.set(b.x, b.y, 0.04);
+        bridge.position.set(b.x, b.y, GUARD_Z);
         bridge.rotation.z = b.rot;
         guardGroup.add(bridge);
     });

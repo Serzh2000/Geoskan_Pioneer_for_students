@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { FRAME_COMPONENTS_Z_OFFSET } from './layout.js';
 
 export function createLEDs() {
     const ledGroup = new THREE.Group();
@@ -15,7 +16,7 @@ export function createLEDs() {
         const ledMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
         const ledMesh = new THREE.Mesh(ledGeom, ledMat);
         ledMesh.name = `base_led_${i}`;
-        ledMesh.position.set(offset[0], offset[1], 0.038);
+        ledMesh.position.set(offset[0], offset[1], 0.038 + FRAME_COMPONENTS_Z_OFFSET);
         ledGroup.add(ledMesh);
         
         // Add a small light to each base LED
@@ -26,7 +27,7 @@ export function createLEDs() {
 
     // LED Matrix 5x5 Module (Top)
     const ledMatrixGroup = new THREE.Group();
-    ledMatrixGroup.position.z = 0.045; // Above the top plate
+    ledMatrixGroup.position.z = 0.045 + FRAME_COMPONENTS_Z_OFFSET; // Above the top plate
     const matrixBoardGeom = new THREE.BoxGeometry(0.07, 0.07, 0.002);
     const matrixBoardMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
     const matrixBoard = new THREE.Mesh(matrixBoardGeom, matrixBoardMat);

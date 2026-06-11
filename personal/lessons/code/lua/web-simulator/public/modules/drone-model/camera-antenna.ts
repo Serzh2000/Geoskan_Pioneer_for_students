@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { FRAME_COMPONENTS_Z_OFFSET } from './layout.js';
 
 export function createCameraAndAntenna() {
     const group = new THREE.Group();
@@ -6,7 +7,7 @@ export function createCameraAndAntenna() {
     // Camera Module (Front - now pointing along Y)
     const camGroup = new THREE.Group();
     // Move to front along Y
-    camGroup.position.set(0, 0.07, 0.02);
+    camGroup.position.set(0, 0.07, 0.02 + FRAME_COMPONENTS_Z_OFFSET);
     
     // Body should be wide along X now
     const camBody = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.01, 0.03), new THREE.MeshStandardMaterial({ color: 0x000000 }));
@@ -38,6 +39,7 @@ export function createCameraAndAntenna() {
         new THREE.MeshStandardMaterial({ color: 0x000000 })
     );
     ant.position.set(0, -0.05, 0.08);
+    ant.position.z += FRAME_COMPONENTS_Z_OFFSET;
     ant.rotation.x = -0.2;
     group.add(ant);
 
@@ -61,7 +63,7 @@ export function createCameraAndAntenna() {
     arrowHead.rotation.z = 0; // Point along Y
     arrowHelper.add(arrowHead);
     
-    arrowHelper.position.z = 0.15;
+    arrowHelper.position.z = 0.15 + FRAME_COMPONENTS_Z_OFFSET;
     group.add(arrowHelper);
     
     return group;
