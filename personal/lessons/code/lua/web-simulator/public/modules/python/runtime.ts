@@ -60,15 +60,16 @@ import json
 source = ${JSON.stringify(code)}
 try:
     compile(source, "<user-script>", "exec")
-    json.dumps({"ok": True})
+    __sim_validation_result = json.dumps({"ok": True})
 except SyntaxError as e:
-    json.dumps({
+    __sim_validation_result = json.dumps({
         "ok": False,
         "message": e.msg or "invalid syntax",
         "line": e.lineno,
         "column": e.offset,
         "details": (e.text or "").strip()
     })
+__sim_validation_result
 `);
     const payload = JSON.parse(String(payloadJson));
     if (payload?.ok) return;

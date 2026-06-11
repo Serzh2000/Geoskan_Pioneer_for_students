@@ -3,27 +3,31 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import frameMainUrl from '../../assets/models/pioneer/reference/frame-full.stl?url';
 import batteryPlateUrl from '../../assets/models/pioneer/reference/battery-bottom.stl?url';
 import batteryEndPlateUrl from '../../assets/models/pioneer/reference/battery-end.stl?url';
-import motorClampUrl from '../../assets/models/pioneer/reference/motor-clamp-ref.stl?url';
 import guardArcUrl from '../../assets/models/pioneer/reference/guard-arc.stl?url';
 import guardBraceUrl from '../../assets/models/pioneer/reference/guard-brace.stl?url';
 import guardBridgeUrl from '../../assets/models/pioneer/reference/guard-bridge.stl?url';
-
-const CAD_MM_TO_SCENE_SCALE = 0.002;
-const MOTOR_ARM_OFFSET = 79.675 * CAD_MM_TO_SCENE_SCALE;
-const MOTOR_CLAMP_CENTER_TO_MOUNT_OFFSET = (15.491 - 12.5) * CAD_MM_TO_SCENE_SCALE;
-const MOTOR_CLAMP_Z = 0;
-const GUARD_Z = 0.04;
-const GUARD_ARC_MID_X = 62.815 * CAD_MM_TO_SCENE_SCALE;
-const GUARD_ARC_INNER_Y = 37.183 * CAD_MM_TO_SCENE_SCALE;
-const MOTOR_OFFSETS = [
-    [MOTOR_ARM_OFFSET, -MOTOR_ARM_OFFSET],
-    [-MOTOR_ARM_OFFSET, MOTOR_ARM_OFFSET],
-    [MOTOR_ARM_OFFSET, MOTOR_ARM_OFFSET],
-    [-MOTOR_ARM_OFFSET, -MOTOR_ARM_OFFSET]
-] as const;
+import {
+    CAD_MM_TO_SCENE_SCALE,
+    CAD_PART_PLACEMENTS,
+    GUARD_ARC_INNER_Y,
+    GUARD_ARC_MID_X,
+    GUARD_ARC_TARGETS,
+    GUARD_BRACE_PLACEMENTS,
+    GUARD_BRIDGE_PLACEMENTS,
+    PlacementConfig,
+    Vec3Tuple
+} from './layout.js';
 
 const cadLoader = new STLLoader();
 const cadGeometryCache = new Map<string, Promise<THREE.BufferGeometry>>();
+
+type Placement = {
+    position: THREE.Vector3;
+    rotationX?: number;
+    rotationY?: number;
+    rotationZ?: number;
+};
+
 
 export function createFrame(carbonMat: THREE.Material, pcbMat: THREE.Material, plasticMat: THREE.Material) {
     const frameGroup = new THREE.Group();
@@ -36,7 +40,8 @@ export function createFrame(carbonMat: THREE.Material, pcbMat: THREE.Material, p
     frameGroup.add(createLegs(carbonMat));
     frameGroup.add(fallbackGuard);
 
-    void attachCadAssembly(frameGroup, fallbackStructure, fallbackGuard, carbonMat, plasticMat);
+    void plasticMat;
+    void attachCadAssembly(frameGroup, fallbackStructure, fallbackGuard, carbonMat);
     return frameGroup;
 }
 
@@ -44,11 +49,10 @@ async function attachCadAssembly(
     frameGroup: THREE.Group,
     fallbackStructure: THREE.Group,
     fallbackGuard: THREE.Group,
-    carbonMat: THREE.Material,
-    plasticMat: THREE.Material
+    carbonMat: THREE.Material
 ) {
     try {
-        const cadAssembly = await buildCadAssembly(carbonMat, plasticMat);
+        const cadAssembly = await buildCadAssembly(carbonMat);
         fallbackStructure.visible = false;
         fallbackGuard.visible = false;
         frameGroup.add(cadAssembly);
@@ -57,12 +61,11 @@ async function attachCadAssembly(
     }
 }
 
-async function buildCadAssembly(carbonMat: THREE.Material, plasticMat: THREE.Material) {
-    const [frameMain, batteryPlate, batteryEndPlate, motorClamp, guardArc, guardBrace, guardBridge] = await Promise.all([
+async function buildCadAssembly(carbonMat: THREE.Material) {
+    const [frameMain, batteryPlate, batteryEndPlate, guardArc, guardBrace, guardBridge] = await Promise.all([
         loadCadGeometry(frameMainUrl),
         loadCadGeometry(batteryPlateUrl),
         loadCadGeometry(batteryEndPlateUrl),
-        loadCadGeometry(motorClampUrl),
         loadCadGeometry(guardArcUrl, false),
         loadCadGeometry(guardBraceUrl, false),
         loadCadGeometry(guardBridgeUrl)
@@ -71,35 +74,18 @@ async function buildCadAssembly(carbonMat: THREE.Material, plasticMat: THREE.Mat
     const assembly = new THREE.Group();
     assembly.name = 'pioneer_cad_frame';
 
-    const mainFrame = createCadMesh(frameMain, carbonMat, {
-        position: new THREE.Vector3(0, 0, 0.004),
-        rotationX: Math.PI / 2
-    });
-    assembly.add(mainFrame);
+    // Placement algorithm for the CAD assembly:
+    // 1. Read coordinates from the config block at the top of the file.
+    // 2. Place standalone parts directly by their world position and rotation.
+    // 3. Place guard parts from their own explicit config arrays.
+    const standaloneParts = [
+        { geometry: frameMain, config: CAD_PART_PLACEMENTS.mainFrame },
+        { geometry: batteryPlate, config: CAD_PART_PLACEMENTS.lowerBatteryPlate },
+        { geometry: batteryEndPlate, config: CAD_PART_PLACEMENTS.batteryBackPlate }
+    ] satisfies Array<{ geometry: THREE.BufferGeometry; config: PlacementConfig }>;
 
-    const lowerBatteryPlate = createCadMesh(batteryPlate, carbonMat, {
-        position: new THREE.Vector3(0, 0, -0.031),
-        rotationX: Math.PI / 2
-    });
-    assembly.add(lowerBatteryPlate);
-
-    const batteryBackPlate = createCadMesh(batteryEndPlate, carbonMat, {
-        position: new THREE.Vector3(0, -0.056, -0.03)
-    });
-    assembly.add(batteryBackPlate);
-
-    MOTOR_OFFSETS.forEach(([x, y]) => {
-        const clampRotation = Math.atan2(y, x) + Math.PI / 2;
-        const clampPosition = new THREE.Vector3(
-            x - Math.sin(clampRotation) * MOTOR_CLAMP_CENTER_TO_MOUNT_OFFSET,
-            y + Math.cos(clampRotation) * MOTOR_CLAMP_CENTER_TO_MOUNT_OFFSET,
-            MOTOR_CLAMP_Z
-        );
-        const clamp = createCadMesh(motorClamp, plasticMat, {
-            position: clampPosition,
-            rotationZ: clampRotation
-        });
-        assembly.add(clamp);
+    standaloneParts.forEach(({ geometry, config }) => {
+        assembly.add(createCadMesh(geometry, carbonMat, toPlacement(config)));
     });
 
     const guardMat = new THREE.MeshStandardMaterial({
@@ -124,51 +110,51 @@ function buildCadGuardAssembly(
     const guardGroup = new THREE.Group();
     guardGroup.name = 'pioneer_cad_guard';
 
-    MOTOR_OFFSETS.forEach(([x, y]) => {
-        const rowRotation = Math.atan2(y, x);
-
-        const brace = createCadMesh(guardBrace, guardMat, {
-            position: new THREE.Vector3(x, y, GUARD_Z),
-            rotationZ: rowRotation
-        });
+    GUARD_BRACE_PLACEMENTS.forEach((config) => {
+        const brace = createCadMesh(guardBrace, guardMat, toPlacement(config));
         guardGroup.add(brace);
     });
 
-    const arcConfigs = [
-        { midpoint: new THREE.Vector3(0, MOTOR_ARM_OFFSET, GUARD_Z), rotationZ: 0 },
-        { midpoint: new THREE.Vector3(MOTOR_ARM_OFFSET, 0, GUARD_Z), rotationZ: -Math.PI / 2 },
-        { midpoint: new THREE.Vector3(0, -MOTOR_ARM_OFFSET, GUARD_Z), rotationZ: Math.PI },
-        { midpoint: new THREE.Vector3(-MOTOR_ARM_OFFSET, 0, GUARD_Z), rotationZ: Math.PI / 2 }
-    ];
-
-    arcConfigs.forEach(({ midpoint, rotationZ }) => {
-        const rotation = new THREE.Euler(0, 0, rotationZ);
-        const localAnchor = new THREE.Vector3(GUARD_ARC_MID_X, GUARD_ARC_INNER_Y, 0);
-        const worldOffset = localAnchor.clone().applyEuler(rotation);
-        const arc = createCadMesh(guardArc, guardMat, {
-            position: midpoint.clone().sub(worldOffset),
-            rotationZ
-        });
+    GUARD_ARC_TARGETS.forEach((config) => {
+        const arc = createCadMesh(guardArc, guardMat, createArcPlacement(config));
         guardGroup.add(arc);
     });
 
-    const bridgeConfigs = [
-        { position: new THREE.Vector3(0, MOTOR_ARM_OFFSET, GUARD_Z), rotationZ: Math.PI / 2 },
-        { position: new THREE.Vector3(MOTOR_ARM_OFFSET, 0, GUARD_Z), rotationZ: 0 },
-        { position: new THREE.Vector3(0, -MOTOR_ARM_OFFSET, GUARD_Z), rotationZ: Math.PI / 2 },
-        { position: new THREE.Vector3(-MOTOR_ARM_OFFSET, 0, GUARD_Z), rotationZ: 0 }
-    ];
-
-    bridgeConfigs.forEach(({ position, rotationZ }) => {
-        const bridge = createCadMesh(guardBridge, guardMat, {
-            position,
-            rotationX: Math.PI / 2,
-            rotationZ
-        });
+    GUARD_BRIDGE_PLACEMENTS.forEach((config) => {
+        const bridge = createCadMesh(guardBridge, guardMat, toPlacement(config));
         guardGroup.add(bridge);
     });
 
     return guardGroup;
+}
+
+function toPlacement(config: PlacementConfig): Placement {
+    const rotation = config.rotation || [0, 0, 0];
+
+    return {
+        position: vec3(config.position),
+        rotationX: rotation[0],
+        rotationY: rotation[1],
+        rotationZ: rotation[2]
+    };
+}
+
+function createArcPlacement(config: PlacementConfig): Placement {
+    // `guardArc` STL uses its own local anchor, so we rotate that anchor first
+    // and then subtract it from the target midpoint in world space.
+    const midpoint = vec3(config.position);
+    const rotationZ = config.rotation?.[2] || 0;
+    const localAnchor = new THREE.Vector3(GUARD_ARC_MID_X, GUARD_ARC_INNER_Y, 0);
+    const worldOffset = localAnchor.clone().applyEuler(new THREE.Euler(0, 0, rotationZ));
+
+    return {
+        position: midpoint.clone().sub(worldOffset),
+        rotationZ
+    };
+}
+
+function vec3([x, y, z]: Vec3Tuple) {
+    return new THREE.Vector3(x, y, z);
 }
 
 function createCadMesh(

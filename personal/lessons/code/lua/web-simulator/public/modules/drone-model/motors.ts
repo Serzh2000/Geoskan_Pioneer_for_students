@@ -1,18 +1,11 @@
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import motor1306Url from '../../assets/models/pioneer/motor-1306.stl?url';
+import { CAD_MM_TO_SCENE_SCALE, FRAME_PLATE_THICKNESS, MOTOR_ANCHOR_POSITIONS } from './layout.js';
 
-const CAD_MM_TO_SCENE_SCALE = 0.002;
-const MOTOR_ARM_OFFSET = 79.675 * CAD_MM_TO_SCENE_SCALE;
-const MOTOR_MOUNT_Z = 0.024;
+const MOTOR_MOUNT_Z = 0.024 - FRAME_PLATE_THICKNESS;
 const FALLBACK_MOTOR_CENTER_Z = MOTOR_MOUNT_Z + 0.01;
 const ROTOR_Z = MOTOR_MOUNT_Z + 18.1 * CAD_MM_TO_SCENE_SCALE;
-const MOTOR_OFFSETS = [
-    [MOTOR_ARM_OFFSET, -MOTOR_ARM_OFFSET],
-    [-MOTOR_ARM_OFFSET, MOTOR_ARM_OFFSET],
-    [MOTOR_ARM_OFFSET, MOTOR_ARM_OFFSET],
-    [-MOTOR_ARM_OFFSET, -MOTOR_ARM_OFFSET]
-] as const;
 
 const cadLoader = new STLLoader();
 const cadGeometryCache = new Map<string, Promise<THREE.BufferGeometry>>();
@@ -29,7 +22,7 @@ export function createMotors(
     const fallbackMotors = createFallbackMotors(motorMat);
     motorsGroup.add(fallbackMotors);
 
-    MOTOR_OFFSETS.forEach((offset, i) => {
+    MOTOR_ANCHOR_POSITIONS.forEach((offset, i) => {
         const propGroup = new THREE.Group();
         propGroup.name = `rotor_${i}`;
         propGroup.position.set(offset[0], offset[1], ROTOR_Z);
@@ -57,7 +50,7 @@ function createFallbackMotors(motorMat: THREE.Material) {
     const fallbackGroup = new THREE.Group();
     const motorGeom = new THREE.CylinderGeometry(0.015, 0.015, 0.02, 16);
 
-    MOTOR_OFFSETS.forEach(([x, y]) => {
+    MOTOR_ANCHOR_POSITIONS.forEach(([x, y]) => {
         const motor = new THREE.Mesh(motorGeom, motorMat);
         motor.position.set(x, y, FALLBACK_MOTOR_CENTER_Z);
         motor.rotation.x = Math.PI / 2;
@@ -88,7 +81,7 @@ async function buildCadMotors(motorMat: THREE.Material) {
     const cadMotors = new THREE.Group();
     cadMotors.name = 'pioneer_cad_motors';
 
-    MOTOR_OFFSETS.forEach(([x, y]) => {
+    MOTOR_ANCHOR_POSITIONS.forEach(([x, y]) => {
         const motor = new THREE.Mesh(geometry.clone(), motorMat);
         motor.scale.setScalar(CAD_MM_TO_SCENE_SCALE);
         motor.position.set(x, y, MOTOR_MOUNT_Z);
