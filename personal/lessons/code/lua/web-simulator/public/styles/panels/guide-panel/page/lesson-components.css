@@ -150,6 +150,38 @@
     justify-content: flex-start;
 }
 
+.guide-workspace-health {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.guide-workspace-health__item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(56, 189, 248, 0.12);
+    background: rgba(2, 6, 23, 0.44);
+}
+
+.guide-workspace-health__label {
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.guide-workspace-health__value {
+    color: #f8fafc;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
 .guide-portal-switcher {
     display: inline-flex;
     gap: 8px;
@@ -164,6 +196,10 @@
 }
 
 @media (max-width: 860px) {
+    .guide-workspace-health {
+        grid-template-columns: 1fr;
+    }
+
     .guide-selector-meta {
         justify-content: flex-start;
     }

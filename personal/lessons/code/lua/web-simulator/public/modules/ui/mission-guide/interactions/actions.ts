@@ -76,36 +76,60 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
 
             if (evaluation.solved) {
                 setLessonCompleted(language, lesson.id, true);
-                logGuideEvent('check_decision_launch_solved', buildGuideEventContext(context), 'success');
-                launchLesson(language, lesson, rerender, getGuideWorkspace(), {
-                    kind: 'info',
-                    message: 'Сценарий запущен. Сверьте живую сцену с ожидаемым результатом.'
+                setLessonBanner(language, lesson.id, {
+                    kind: 'success',
+                    message: 'Проверка пройдена. Урок засчитан. Теперь можно запустить сценарий и сравнить результат со сценой.'
                 });
+                rerender(language);
                 return;
             }
 
-            if (canLaunchLesson(sequenceIds, evaluation.diagnostics)) {
-                logGuideEvent('check_decision_launch_with_warnings', {
-                    ...buildGuideEventContext(context),
-                    diagnostics: summarizeGuideDiagnostics(evaluation.diagnostics)
-                }, 'warn');
-                launchLesson(language, lesson, rerender, getGuideWorkspace(), {
-                    kind: 'warning',
-                    message: 'Сценарий запущен, но решение не прошло учебную проверку. Живая сцена открыта, замечания показаны справа.'
-                });
-                return;
-            }
-
-            logGuideEvent('check_decision_block_launch', {
+            logGuideEvent('check_decision_keep_editing', {
                 ...buildGuideEventContext(context),
                 diagnostics: summarizeGuideDiagnostics(evaluation.diagnostics)
             }, 'warn');
-            resetGuideRuntimeView();
             setLessonBanner(language, lesson.id, {
                 kind: 'warning',
-                message: 'Проверка завершена, но запуск отменен: рабочая область пока пуста. Добавьте хотя бы одну команду и нажмите «Проверить и запустить» еще раз.'
+                message: canLaunchLesson(sequenceIds, evaluation.diagnostics)
+                    ? 'Проверка завершена: в решении есть замечания. Исправьте их или запустите текущую версию отдельно для эксперимента.'
+                    : 'Проверка завершена, но рабочая область пока пуста. Добавьте хотя бы одну команду.'
             });
             rerender(language);
+        });
+    });
+
+    container.querySelectorAll<HTMLElement>('[data-guide-launch]').forEach((element) => {
+        element.addEventListener('click', () => {
+            const sequenceIds = getLessonSequence(language, lesson.id);
+            const workspaceXml = getLessonWorkspaceState(language, lesson.id);
+            const evaluation = evaluateLesson(lesson, sequenceIds, workspaceXml);
+            const hasChecked = element.dataset.guideLaunch === 'checked';
+
+            logGuideEvent('launch_button_clicked', {
+                ...buildGuideEventContext(context),
+                sequenceLength: sequenceIds.length,
+                checkedBeforeLaunch: hasChecked
+            });
+
+            if (!canLaunchLesson(sequenceIds, evaluation.diagnostics)) {
+                resetGuideRuntimeView();
+                setLessonBanner(language, lesson.id, {
+                    kind: 'warning',
+                    message: 'Сначала соберите хотя бы минимальную рабочую цепочку, и только потом запускайте сцену.'
+                });
+                rerender(language);
+                return;
+            }
+
+            launchLesson(language, lesson, rerender, getGuideWorkspace(), evaluation.solved
+                ? {
+                    kind: 'info',
+                    message: 'Сценарий запущен. Сравните живую сцену с ожидаемым результатом урока.'
+                }
+                : {
+                    kind: 'warning',
+                    message: 'Сценарий запущен для эксперимента. Урок пока не засчитан, замечания по проверке остаются справа.'
+                });
         });
     });
 

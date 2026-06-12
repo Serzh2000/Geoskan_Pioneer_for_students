@@ -42,6 +42,7 @@ export function renderGuide(state: GuideLessonState, language: ScriptLanguage): 
     const hasPrev = Boolean(previousLesson);
     const hasNext = Boolean(nextLesson);
     const canOpenNext = Boolean(nextLesson) && isLessonCompleted(language, lesson.id);
+    const hasWorkspaceContent = sequenceIds.length > 0;
     const portalProgress = `${completedCount} / ${state.lessons.length}`;
     const progressPercent = Math.round((completedCount / Math.max(state.lessons.length, 1)) * 100);
     const lessonIndex = state.lessons.findIndex((item) => item.id === lesson.id);
@@ -53,14 +54,25 @@ export function renderGuide(state: GuideLessonState, language: ScriptLanguage): 
             : lessonProgressState === 'available'
                 ? 'Доступен'
                 : 'Закрыт';
+    const buildStatusLabel = hasWorkspaceContent ? `${sequenceIds.length} блоков в рабочей области` : 'Решение еще не собрано';
+    const validationStatusLabel = !hasChecked
+        ? 'Проверка еще не запускалась'
+        : evaluation.solved
+            ? 'Проверка пройдена'
+            : `Найдено замечаний: ${evaluation.diagnostics.length}`;
+    const launchStatusLabel = previewActive
+        ? 'Сцена открыта и готова к сравнению'
+        : hasWorkspaceContent
+            ? 'Можно запускать текущую версию'
+            : 'Запуск станет доступен после сборки цепочки';
 
     return `
         <div class="guide-modal-layout" data-guide-language="${language}">
             <section class="guide-hero">
                 <div class="guide-hero__eyebrow">${escapeHtml(state.heroEyebrow)}</div>
                 <div class="guide-hero__title">${escapeHtml(state.heroTitle)}</div>
-                <div class="guide-hero__text">Портал ведет по линейному сценарию: вводная, цель урока, теория, практика, проверка и только потом переход дальше.</div>
-                <div class="guide-hero__flow">Маршрут: вводная -> страница урока -> проверка -> кнопка «Далее»</div>
+                <div class="guide-hero__text">Учебник должен помогать быстро понять задачу, собрать решение, проверить его и запустить симуляцию без лишней путаницы между этими шагами.</div>
+                <div class="guide-hero__flow">Поток урока: понять цель -> собрать логику -> проверить -> запустить -> улучшить результат</div>
                 <div class="guide-hero__progress">Пройдено уроков: ${portalProgress}</div>
             </section>
 
@@ -101,15 +113,30 @@ export function renderGuide(state: GuideLessonState, language: ScriptLanguage): 
                             <div class="guide-panel-card__top">
                                 <div>
                                     <div class="guide-panel-card__title">Практика урока</div>
-                                    <div class="guide-panel-card__text">Соберите решение в Blockly, затем запустите его и сразу сравните с ожидаемым результатом.</div>
+                                    <div class="guide-panel-card__text">Соберите решение в Blockly. Проверка отвечает за прогресс по уроку, а запуск нужен для визуальной проверки поведения в сцене.</div>
                                 </div>
-                                <div class="guide-panel-card__badge">Шаг 1</div>
+                                <div class="guide-panel-card__badge">Сборка</div>
+                            </div>
+                            <div class="guide-workspace-health">
+                                <div class="guide-workspace-health__item">
+                                    <div class="guide-workspace-health__label">Сборка</div>
+                                    <div class="guide-workspace-health__value">${escapeHtml(buildStatusLabel)}</div>
+                                </div>
+                                <div class="guide-workspace-health__item">
+                                    <div class="guide-workspace-health__label">Проверка</div>
+                                    <div class="guide-workspace-health__value">${escapeHtml(validationStatusLabel)}</div>
+                                </div>
+                                <div class="guide-workspace-health__item">
+                                    <div class="guide-workspace-health__label">Запуск</div>
+                                    <div class="guide-workspace-health__value">${escapeHtml(launchStatusLabel)}</div>
+                                </div>
                             </div>
                             <div class="guide-blockly-shell">
                                 <div id="blocklyDiv" class="guide-blockly-stage"></div>
                             </div>
                             <div class="guide-actions guide-actions--primary">
-                                <button type="button" class="guide-primary-action" data-guide-check="${escapeHtml(lesson.id)}">Проверить и запустить</button>
+                                <button type="button" class="guide-primary-action" data-guide-check="${escapeHtml(lesson.id)}">Проверить решение</button>
+                                <button type="button" class="guide-lesson__action" data-guide-launch="${hasChecked ? 'checked' : 'unchecked'}" ${hasWorkspaceContent ? '' : 'disabled'}>Запустить в сцене</button>
                                 <button type="button" class="guide-lesson__action" data-guide-reset="${escapeHtml(lesson.id)}">Очистить страницу</button>
                             </div>
                             ${renderRunBanner(language, lesson.id)}
@@ -119,9 +146,9 @@ export function renderGuide(state: GuideLessonState, language: ScriptLanguage): 
                             <div class="guide-panel-card__top">
                                 <div>
                                     <div class="guide-panel-card__title">Проверка и разбор</div>
-                                    <div class="guide-panel-card__text">После запуска здесь остается понятный статус и список замечаний, если урок еще не завершен.</div>
+                                    <div class="guide-panel-card__text">Здесь хранится учебный вердикт: что уже хорошо, что не хватает для зачета и что именно нужно исправить.</div>
                                 </div>
-                                <div class="guide-panel-card__badge">Шаг 2</div>
+                                <div class="guide-panel-card__badge">Фидбек</div>
                             </div>
                             ${renderResultHero(hasChecked, evaluation.solved, evaluation.diagnostics.length, launchedWithWarnings)}
                             <div id="guide-check-summary">
@@ -140,12 +167,12 @@ export function renderGuide(state: GuideLessonState, language: ScriptLanguage): 
                             <div class="guide-panel-card__top">
                                 <div>
                                     <div class="guide-panel-card__title">Живая сцена</div>
-                                    <div class="guide-panel-card__text">Симуляция остается на странице урока и подтверждает, что теория и практика действительно связаны.</div>
+                                    <div class="guide-panel-card__text">Сцена показывает, как ведет себя текущая версия программы. Ее удобно использовать и после успешной проверки, и во время отладки.</div>
                                 </div>
                                 <div class="guide-panel-card__badge">3D</div>
                             </div>
                             <div id="mission-guide-scene-preview-host" class="guide-scene-preview-host ${previewActive ? 'is-active' : ''}">
-                                ${previewActive ? '' : '<div class="guide-scene-preview__placeholder">Нажмите "Проверить и запустить", чтобы открыть live-просмотр симуляции в этом окне.</div>'}
+                                ${previewActive ? '' : '<div class="guide-scene-preview__placeholder">Нажмите "Запустить в сцене", чтобы посмотреть текущую версию программы прямо в окне урока.</div>'}
                             </div>
                         </section>
                     </div>

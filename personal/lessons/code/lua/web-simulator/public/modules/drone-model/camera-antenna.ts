@@ -33,16 +33,6 @@ export function createCameraAndAntenna() {
     
     group.add(camGroup);
 
-    // Antenna
-    const ant = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.002, 0.002, 0.08, 8),
-        new THREE.MeshStandardMaterial({ color: 0x000000 })
-    );
-    ant.position.set(0, -0.05, 0.08);
-    ant.position.z += FRAME_COMPONENTS_Z_OFFSET;
-    ant.rotation.x = -0.2;
-    group.add(ant);
-
     // Orientation Arrow - Points along Y axis (Forward)
     const arrowHelper = new THREE.Group();
     arrowHelper.name = 'orientation_arrow';

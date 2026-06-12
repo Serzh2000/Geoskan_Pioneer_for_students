@@ -54,13 +54,13 @@ export function updateGeneratedCodePreview(language: ScriptLanguage, activeWorks
 export function renderUncheckedSummary(): string {
     return `
         <div class="guide-check-status guide-check-status--info">
-            Цепочка изменилась. Нажмите «Проверить и запустить», чтобы заново проверить решение.
+            Цепочка изменилась. Запустите проверку еще раз, чтобы обновить учебный статус решения.
         </div>
     `;
 }
 
 export function renderUncheckedDiagnostics(): string {
-    return '<div class="guide-empty-state">После изменений старая проверка скрыта. Запустите новую проверку, когда закончите правки.</div>';
+    return '<div class="guide-empty-state">После изменений предыдущий результат скрыт. Когда закончите правки, снова нажмите «Проверить решение».</div>';
 }
 
 export function canLaunchLesson(sequenceIds: string[], diagnostics: Array<{ kind: string }>): boolean {

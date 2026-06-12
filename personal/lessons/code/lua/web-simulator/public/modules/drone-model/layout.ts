@@ -41,6 +41,20 @@ export const BATTERY_COMPONENTS_Z_OFFSET = LOWER_BATTERY_PLATE_Z_ADJUST;
 export const BATTERY_BACK_PLATE_Y_OFFSET = BATTERY_BACK_PLATE_Y_ADJUST;
 export const BATTERY_BACK_PLATE_Z_OFFSET = BATTERY_BACK_PLATE_Z_ADJUST;
 export const GUARD_Z = GUARD_BASE_Z + FRAME_COMPONENTS_Z_OFFSET;
+export const MAIN_FRAME_PANEL_Z = MAIN_FRAME_Z + 0.0025;
+const BASE_LED_ROTATION: Vec3Tuple = [0, 0, 0];
+const LED_MATRIX_PANEL_ROTATION: Vec3Tuple = [0, 0, 0];
+
+export const BASE_LED_PLACEMENTS = [
+    { position: [0.045, 0.025, MAIN_FRAME_PANEL_Z], rotation: BASE_LED_ROTATION },
+    { position: [0.045, -0.025, MAIN_FRAME_PANEL_Z], rotation: BASE_LED_ROTATION },
+    { position: [-0.045, -0.025, MAIN_FRAME_PANEL_Z], rotation: BASE_LED_ROTATION },
+    { position: [-0.045, 0.025, MAIN_FRAME_PANEL_Z], rotation: BASE_LED_ROTATION }
+] satisfies PlacementConfig[];
+export const LED_MATRIX_PANEL_PLACEMENT: PlacementConfig = {
+    position: [0, 0, MAIN_FRAME_PANEL_Z],
+    rotation: LED_MATRIX_PANEL_ROTATION
+};
 
 export const CAD_PART_PLACEMENTS = {
     mainFrame: {

@@ -35,14 +35,13 @@ type Placement = {
 };
 
 
-export function createFrame(carbonMat: THREE.Material, pcbMat: THREE.Material, plasticMat: THREE.Material) {
+export function createFrame(carbonMat: THREE.Material, plasticMat: THREE.Material) {
     const frameGroup = new THREE.Group();
     const fallbackStructure = createFallbackStructure(carbonMat);
     const fallbackLegs = createLegs(carbonMat);
     const fallbackGuard = createGuard();
 
     frameGroup.add(fallbackStructure);
-    frameGroup.add(createElectronicsStack(pcbMat));
     frameGroup.add(createBatteryVolume());
     frameGroup.add(fallbackLegs);
     frameGroup.add(fallbackGuard);
@@ -257,47 +256,12 @@ function createFallbackStructure(carbonMat: THREE.Material) {
     return group;
 }
 
-function createElectronicsStack(pcbMat: THREE.Material) {
-    const stackGroup = new THREE.Group();
-    const pcbGeom = new THREE.BoxGeometry(0.06, 0.06, 0.002);
-    const pcb1 = new THREE.Mesh(pcbGeom, pcbMat);
-    pcb1.position.z = 0.005 + FRAME_COMPONENTS_Z_OFFSET;
-    pcb1.castShadow = true;
-    stackGroup.add(pcb1);
-
-    const pcb2 = new THREE.Mesh(pcbGeom, pcbMat);
-    pcb2.position.z = 0.025 + FRAME_COMPONENTS_Z_OFFSET;
-    pcb2.castShadow = true;
-    stackGroup.add(pcb2);
-
-    const redMat = new THREE.MeshStandardMaterial({ color: 0xef4444 });
-    const blackMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
-    const chipGeom = new THREE.BoxGeometry(0.02, 0.02, 0.005);
-    const chip = new THREE.Mesh(chipGeom, blackMat);
-    chip.position.z = 0.028 + FRAME_COMPONENTS_Z_OFFSET;
-    stackGroup.add(chip);
-
-    const redCompGeom = new THREE.BoxGeometry(0.015, 0.008, 0.008);
-    const redPositions = [
-        [0.02, 0.01, 0.03],
-        [0.02, -0.01, 0.03],
-        [-0.02, 0.01, 0.03],
-        [-0.02, -0.01, 0.03]
-    ];
-    redPositions.forEach((position) => {
-        const component = new THREE.Mesh(redCompGeom, redMat);
-        component.position.set(position[0], position[1], position[2] + FRAME_COMPONENTS_Z_OFFSET);
-        stackGroup.add(component);
-    });
-
-    return stackGroup;
-}
-
 function createBatteryVolume() {
     const batGeom = new THREE.BoxGeometry(0.08, 0.035, 0.02);
     const batMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
     const battery = new THREE.Mesh(batGeom, batMat);
     battery.position.z = -0.026 + BATTERY_COMPONENTS_Z_OFFSET;
+    battery.rotation.z = Math.PI / 2;
     battery.castShadow = true;
     return battery;
 }
