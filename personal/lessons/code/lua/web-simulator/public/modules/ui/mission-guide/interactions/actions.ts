@@ -21,6 +21,43 @@ import {
     setLessonWorkspaceState
 } from '../state.js';
 
+function executeLessonLaunch(
+    context: GuideInteractionContext,
+    evaluation: ReturnType<typeof evaluateLesson>,
+    checkedBeforeLaunch: boolean,
+    emptyWorkspaceMessage = 'Сначала соберите хотя бы минимальную рабочую цепочку.'
+): boolean {
+    const { language, lesson, rerender } = context;
+    const sequenceIds = getLessonSequence(language, lesson.id);
+
+    logGuideEvent('launch_button_clicked', {
+        ...buildGuideEventContext(context),
+        sequenceLength: sequenceIds.length,
+        checkedBeforeLaunch
+    });
+
+    if (!canLaunchLesson(sequenceIds, evaluation.diagnostics)) {
+        resetGuideRuntimeView();
+        setLessonBanner(language, lesson.id, {
+            kind: 'warning',
+            message: emptyWorkspaceMessage
+        });
+        rerender(language);
+        return false;
+    }
+
+    launchLesson(language, lesson, rerender, getGuideWorkspace(), evaluation.solved
+        ? {
+            kind: 'info',
+            message: 'Проверка выполнена, сценарий сразу запущен. Сравните сцену с целью урока.'
+        }
+        : {
+            kind: 'warning',
+            message: 'Проверка выполнена, сценарий запущен с замечаниями. Ошибки рантайма покажет стандартный обработчик.'
+        });
+    return true;
+}
+
 export function attachGuideActionBindings(context: GuideInteractionContext): void {
     const { container, language, lesson, rerender } = context;
 
@@ -76,11 +113,8 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
 
             if (evaluation.solved) {
                 setLessonCompleted(language, lesson.id, true);
-                setLessonBanner(language, lesson.id, {
-                    kind: 'success',
-                    message: 'Проверка пройдена. Урок засчитан. Теперь можно запустить сценарий и сравнить результат со сценой.'
-                });
-                rerender(language);
+                logGuideEvent('check_passed_autolaunch', buildGuideEventContext(context), 'success');
+                executeLessonLaunch(context, evaluation, true);
                 return;
             }
 
@@ -88,48 +122,21 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
                 ...buildGuideEventContext(context),
                 diagnostics: summarizeGuideDiagnostics(evaluation.diagnostics)
             }, 'warn');
-            setLessonBanner(language, lesson.id, {
-                kind: 'warning',
-                message: canLaunchLesson(sequenceIds, evaluation.diagnostics)
-                    ? 'Проверка завершена: в решении есть замечания. Исправьте их или запустите текущую версию отдельно для эксперимента.'
-                    : 'Проверка завершена, но рабочая область пока пуста. Добавьте хотя бы одну команду.'
-            });
-            rerender(language);
+            executeLessonLaunch(
+                context,
+                evaluation,
+                true,
+                'Проверка завершена, но рабочая область пока пуста. Добавьте хотя бы одну команду.'
+            );
         });
     });
 
     container.querySelectorAll<HTMLElement>('[data-guide-launch]').forEach((element) => {
         element.addEventListener('click', () => {
-            const sequenceIds = getLessonSequence(language, lesson.id);
             const workspaceXml = getLessonWorkspaceState(language, lesson.id);
-            const evaluation = evaluateLesson(lesson, sequenceIds, workspaceXml);
+            const evaluation = evaluateLesson(lesson, getLessonSequence(language, lesson.id), workspaceXml);
             const hasChecked = element.dataset.guideLaunch === 'checked';
-
-            logGuideEvent('launch_button_clicked', {
-                ...buildGuideEventContext(context),
-                sequenceLength: sequenceIds.length,
-                checkedBeforeLaunch: hasChecked
-            });
-
-            if (!canLaunchLesson(sequenceIds, evaluation.diagnostics)) {
-                resetGuideRuntimeView();
-                setLessonBanner(language, lesson.id, {
-                    kind: 'warning',
-                    message: 'Сначала соберите хотя бы минимальную рабочую цепочку, и только потом запускайте сцену.'
-                });
-                rerender(language);
-                return;
-            }
-
-            launchLesson(language, lesson, rerender, getGuideWorkspace(), evaluation.solved
-                ? {
-                    kind: 'info',
-                    message: 'Сценарий запущен. Сравните живую сцену с ожидаемым результатом урока.'
-                }
-                : {
-                    kind: 'warning',
-                    message: 'Сценарий запущен для эксперимента. Урок пока не засчитан, замечания по проверке остаются справа.'
-                });
+            executeLessonLaunch(context, evaluation, hasChecked);
         });
     });
 

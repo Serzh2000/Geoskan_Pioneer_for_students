@@ -15,20 +15,20 @@ export function getLuaLedLessons(): GuideLesson[] {
             chapterId: GUIDE_CHAPTER_IDS.foundations,
             badge: 'Задание 1',
             title: 'Включить красную подсветку',
-            goal: 'Соберите минимальный Lua-сценарий, который инициализирует `Ledbar.new(29)` и зажигает красный цвет.',
+            goal: 'Соберите минимальный Lua-сценарий, который инициализирует `Ledbar.new(29)` и включает красный только на первом светодиоде.',
             summary: 'Первый шаг знакомит с объектом Ledbar и линейным выполнением скрипта в Pioneer.',
-            lessonIntro: 'В Lua нужно сначала создать объект Ledbar, указав количество светодиодов (29), а затем вызвать метод `set`.',
-            expectedOutcome: 'Создается `leds = Ledbar.new(29)` и вызывается `leds:set(0, 1, 0, 0)`.',
-            builderHint: 'Не забудьте сначала добавить блок инициализации Ledbar, а затем уже команду включения цвета.',
+            lessonIntro: 'В Lua сначала создайте объект Ledbar на 29 светодиодов, а затем вызовите `set`. Нумерация начинается с нуля, поэтому первый светодиод имеет индекс `0`.',
+            expectedOutcome: 'Создается `leds = Ledbar.new(29)` и вызывается `leds:set(0, 1, 0, 0)` для первого светодиода.',
+            builderHint: 'Без циклов: в этом уроке нужен только один вызов `leds:set` для диода `0`.',
             apiFocus: [
                 apiFocus('Ledbar.new(count)', 'Инициализирует ленту на заданное количество светодиодов.', 'local leds = Ledbar.new(29)'),
-                apiFocus('leds:set(index, r, g, b)', 'Меняет цвет. В этом уроке нужен красный сигнал (1, 0, 0).', 'leds:set(0, 1, 0, 0)')
+                apiFocus('leds:set(index, r, g, b)', 'Меняет цвет светодиода по индексу. В этом уроке нужен только первый светодиод: индекс `0`, цвет `(1, 0, 0)`.', 'leds:set(0, 1, 0, 0)')
             ],
             targetBlockIds: ['lua_ledbar', 'lua_led_set'],
             blocks: [
-                createStatementBlock('lua1-ledbar', 'создать Ledbar', 'local leds = Ledbar.new(29)', 'Инициализация объекта.', 'setup', 'local leds = Ledbar.new(29)'),
-                createStatementBlock('lua1-red', 'красный LED', 'leds:set(0, 1, 0, 0)', 'Включение красного цвета.', 'action', 'leds:set(0, 1, 0, 0)'),
-                createStatementBlock('lua1-blue', 'синий LED', 'leds:set(0, 0, 0, 1)', 'Включение синего цвета.', 'action', 'leds:set(0, 0, 0, 1)')
+                createStatementBlock('lua1-ledbar', 'local leds = Ledbar.new(ledNumber)', 'local leds = Ledbar.new(29)', 'Инициализация объекта.', 'setup', 'local leds = Ledbar.new(29)'),
+                createStatementBlock('lua1-red', 'красный LED', 'leds:set(0, 1, 0, 0)', 'Включение красного цвета на первом светодиоде.', 'action', 'leds:set(0, 1, 0, 0)'),
+                createStatementBlock('lua1-blue', 'синий LED', 'leds:set(0, 0, 0, 1)', 'Включение синего цвета на первом светодиоде.', 'action', 'leds:set(0, 0, 0, 1)')
             ],
             links: [
                 { label: 'Ledbar.new', query: 'Ledbar.new Ledbar' },
@@ -50,13 +50,13 @@ export function getLuaLedLessons(): GuideLesson[] {
                     kind: 'error',
                     title: 'Нет инициализации Ledbar',
                     reason: 'Не создан объект Ledbar.',
-                    fix: 'Добавьте блок `создать Ledbar`.'
+                    fix: 'Добавьте блок `local leds = Ledbar.new(ledNumber)`.'
                 },
                 'lua1-red': {
                     kind: 'error',
                     title: 'Нет команды включения красного',
-                    reason: 'Не вызывается метод `leds:set` с красным цветом.',
-                    fix: 'Добавьте блок `красный LED`.'
+                    reason: 'Не вызывается `leds:set(0, 1, 0, 0)` для первого светодиода.',
+                    fix: 'Добавьте блок `красный LED` и оставьте индекс `0`.'
                 }
             },
             extraBlockDiagnostics: {
@@ -93,7 +93,7 @@ export function getLuaLedLessons(): GuideLesson[] {
             ],
             targetBlockIds: ['lua_ledbar', 'lua_callback_open', 'lua_callback_end', 'lua_timer', 'lua_led_set', 'lua_timer', 'lua_led_set', 'lua_timer', 'lua_led_set'],
             blocks: [
-                createStatementBlock('lua2-ledbar', 'создать Ledbar', 'local leds = Ledbar.new(29)', 'Инициализация.', 'setup', 'local leds = Ledbar.new(29)'),
+                createStatementBlock('lua2-ledbar', 'local leds = Ledbar.new(ledNumber)', 'local leds = Ledbar.new(29)', 'Инициализация.', 'setup', 'local leds = Ledbar.new(29)'),
                 createTimerBlock('lua2-wait-a', 'подождать 1 с', 'Timer.callLater(1.0, ...)', 'Пауза 1с.', 1),
                 createStatementBlock('lua2-blue', 'синий LED', 'leds:set(0, 0, 0, 1)', 'Включение синего.', 'action', 'leds:set(0, 0, 0, 1)'),
                 createTimerBlock('lua2-wait-b', 'подождать 2 с', 'Timer.callLater(2.0, ...)', 'Пауза 2с.', 2),

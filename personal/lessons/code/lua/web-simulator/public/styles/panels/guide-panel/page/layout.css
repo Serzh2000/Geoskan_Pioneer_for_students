@@ -61,6 +61,25 @@
     line-height: 1.6;
 }
 
+.guide-modal-layout[data-guide-portal-page='intro'] .guide-hero {
+    gap: 8px;
+    padding: 16px 18px;
+}
+
+.guide-modal-layout[data-guide-portal-page='intro'] .guide-hero__title {
+    font-size: 22px;
+}
+
+.guide-modal-layout[data-guide-portal-page='intro'] .guide-hero__text {
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.guide-modal-layout[data-guide-portal-page='intro'] .guide-hero__progress {
+    padding: 8px 10px;
+    font-size: 12px;
+}
+
 .guide-top-tabs {
     display: inline-flex;
     gap: 10px;

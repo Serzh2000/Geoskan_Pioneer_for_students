@@ -12,9 +12,10 @@
     --guide-success: #0f9d58;
     --guide-info: #2563eb;
     --guide-shadow: 0 16px 40px rgba(17, 24, 39, 0.08);
-    max-width: 1520px;
-    margin: 0 auto;
-    gap: 10px;
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    gap: 12px;
     color: var(--guide-text);
 }
 
@@ -28,8 +29,8 @@
 }
 
 .guide-hero {
-    gap: 8px;
-    padding: 14px 16px;
+    gap: 10px;
+    padding: 18px 20px;
     background: linear-gradient(180deg, #ffffff 0%, #fffaf5 100%);
     border-left: 4px solid var(--guide-accent);
 }
@@ -87,7 +88,7 @@
 .guide-hero__progress {
     align-items: center;
     min-height: 34px;
-    padding: 6px 10px;
+    padding: 7px 11px;
     font-weight: 700;
 }
 
@@ -96,16 +97,28 @@
     border: 1px solid var(--guide-border);
     box-shadow: 0 8px 18px rgba(17, 24, 39, 0.04);
     align-items: end;
-    grid-template-columns: 180px minmax(280px, 1fr) minmax(280px, 1fr) auto;
-    gap: 10px 12px;
-    padding: 10px 12px;
-    border-radius: 12px;
+    grid-template-columns: 110px minmax(220px, 1fr) minmax(220px, 1fr) auto;
+    gap: 6px 8px;
+    padding: 8px 10px;
+    border-radius: 10px;
 }
 
 .guide-selector {
     border: 1px solid var(--guide-border-strong);
     background: var(--guide-bg);
     color: var(--guide-text);
+    min-height: 38px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.guide-selector-field {
+    gap: 4px;
+}
+
+.guide-selector-field__label {
+    font-size: 10px;
 }
 
 .guide-selector:focus {
@@ -131,6 +144,12 @@
     color: var(--guide-text);
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(17, 24, 39, 0.03);
+}
+
+.guide-selector-meta__item {
+    min-height: 28px;
+    padding: 4px 8px;
+    font-size: 11px;
 }
 
 .guide-chapter-tab:hover,

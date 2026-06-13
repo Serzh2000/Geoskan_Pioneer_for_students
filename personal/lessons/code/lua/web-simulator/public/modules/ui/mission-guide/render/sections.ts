@@ -10,7 +10,6 @@ import type { GuideLessonState } from '../types.js';
 import {
     escapeHtml,
     renderApiFocusItem,
-    renderDocLink,
     renderTargetRoute
 } from './support.js';
 
@@ -28,7 +27,7 @@ export function renderLessonOverview(
             <div class="guide-lesson-overview__head">
                 <div>
                     <div class="guide-panel-card__title">Краткий обзор урока</div>
-                    <div class="guide-panel-card__text">Минимум декоративных слоев: сверху только ключевая информация, ниже сразу теория и практика.</div>
+                    <div class="guide-panel-card__text">Только ключевая информация по текущему шагу.</div>
                 </div>
                 <div class="guide-lesson-overview__percent">${percent}%</div>
             </div>
@@ -55,7 +54,7 @@ export function renderLessonOverview(
             </div>
             <div class="guide-lesson-overview__meta">
                 <span>Завершено: ${completedCount} из ${totalLessons}</span>
-                <span>Следующий шаг открывается только после статуса «выполнен»</span>
+                <span>Следующий шаг откроется после выполнения</span>
             </div>
         </section>
     `;
@@ -66,7 +65,7 @@ export function renderLessonTheory(lesson: GuideLessonState['lessons'][number]):
         <section class="guide-lesson-section">
             <div class="guide-lesson-section__header">
                 <div class="guide-panel-card__title">Теория урока</div>
-                <div class="guide-panel-card__text">Короткий смысловой блок перед практикой, чтобы урок читался как единая страница.</div>
+                <div class="guide-panel-card__text">Короткая база перед практикой.</div>
             </div>
 
             <div class="guide-lesson-section__grid">
@@ -83,25 +82,21 @@ export function renderLessonTheory(lesson: GuideLessonState['lessons'][number]):
             <article class="guide-panel-card">
                 <div class="guide-panel-card__top">
                     <div>
-                        <div class="guide-panel-card__title">API-фокус урока</div>
-                        <div class="guide-panel-card__text">Сначала поймите опорные методы и события, затем собирайте сценарий в Blockly.</div>
+                        <div class="guide-panel-card__title">Что собрать</div>
+                        <div class="guide-panel-card__text">Минимальный набор блоков для текущего шага.</div>
                     </div>
                 </div>
-                <div class="guide-api-grid">
-                    ${lesson.apiFocus.map(renderApiFocusItem).join('')}
-                </div>
+                ${renderTargetRoute(lesson)}
             </article>
 
             <article class="guide-panel-card">
                 <div class="guide-panel-card__top">
                     <div>
-                        <div class="guide-panel-card__title">Опорная логика урока</div>
-                        <div class="guide-panel-card__text">Эти шаги должны читаться в итоговом решении и проверяются автоматически.</div>
+                        <div class="guide-panel-card__title">Что понадобится</div>
                     </div>
                 </div>
-                ${renderTargetRoute(lesson)}
-                <div class="guide-link-chips">
-                    ${lesson.links.map(renderDocLink).join('')}
+                <div class="guide-api-grid">
+                    ${lesson.apiFocus.map(renderApiFocusItem).join('')}
                 </div>
             </article>
         </section>
@@ -114,15 +109,32 @@ export function renderPortalIntro(state: GuideLessonState, language: ScriptLangu
     const completedCount = getCompletedLessonsCount(state, language);
     const courseProgress = Math.round((completedCount / Math.max(state.lessons.length, 1)) * 100);
     const currentLessonId = isLessonCompleted(language, activeLesson.id) ? firstLesson.id : activeLesson.id;
+    const remainingCount = Math.max(state.lessons.length - completedCount, 0);
 
     return `
         <section class="guide-portal-intro">
-            <div class="guide-portal-intro__hero">
-                <div class="guide-portal-intro__eyebrow">Вводная страница</div>
-                <div class="guide-portal-intro__title">Образовательный практикум Pioneer</div>
-                <div class="guide-portal-intro__text">
-                    Практикум объединяет краткую теорию, демонстрации API и проверяемые задания. Каждый следующий урок открывается
-                    только после корректного завершения текущего, поэтому движение по курсу остается линейным и прозрачным.
+            <div class="guide-portal-intro__top">
+                <div class="guide-portal-intro__hero">
+                    <div class="guide-portal-intro__eyebrow">Быстрый старт</div>
+                    <div class="guide-portal-intro__title">Практикум Pioneer</div>
+                    <div class="guide-portal-intro__text">Открывайте первый доступный урок или переходите к нужному шагу в дорожной карте ниже.</div>
+                </div>
+                <div class="guide-portal-stats">
+                    <article class="guide-portal-stat">
+                        <div class="guide-portal-stat__label">Прогресс</div>
+                        <div class="guide-portal-stat__value">${courseProgress}%</div>
+                        <div class="guide-portal-stat__meta">${completedCount} из ${state.lessons.length} уроков</div>
+                    </article>
+                    <article class="guide-portal-stat">
+                        <div class="guide-portal-stat__label">Следующий шаг</div>
+                        <div class="guide-portal-stat__value">#${state.lessons.findIndex((item) => item.id === currentLessonId) + 1}</div>
+                        <div class="guide-portal-stat__meta">${escapeHtml(state.lessons.find((item) => item.id === currentLessonId)?.title || firstLesson.title)}</div>
+                    </article>
+                    <article class="guide-portal-stat">
+                        <div class="guide-portal-stat__label">Осталось</div>
+                        <div class="guide-portal-stat__value">${remainingCount}</div>
+                        <div class="guide-portal-stat__meta">до завершения текущего маршрута</div>
+                    </article>
                 </div>
                 <div class="guide-portal-intro__actions">
                     <button type="button" class="guide-primary-action" data-guide-open-lesson="${escapeHtml(firstLesson.id)}">Начать обучение</button>
@@ -130,40 +142,13 @@ export function renderPortalIntro(state: GuideLessonState, language: ScriptLangu
                 </div>
             </div>
 
-            <div class="guide-portal-grid">
-                <article class="guide-portal-card">
-                    <div class="guide-portal-card__title">Цели практикума</div>
-                    <div class="guide-portal-card__text">
-                        Пользователь пошагово осваивает логику миссий, событийную модель, безопасный запуск маршрутов
-                        и базовые сценарии работы с Pioneer API в симуляторе.
-                    </div>
-                </article>
-                <article class="guide-portal-card">
-                    <div class="guide-portal-card__title">Структура курса</div>
-                    <div class="guide-portal-card__text">
-                        Курс делится на тематические уроки: вводные основы, управление полетом, событийная логика,
-                        навигация и итоговые практические сценарии.
-                    </div>
-                </article>
-                <article class="guide-portal-card">
-                    <div class="guide-portal-card__title">Правила прохождения</div>
-                    <div class="guide-portal-card__text">
-                        Для перехода дальше нужно собрать рабочую логику, пройти автоматическую проверку и получить статус выполнения
-                        по текущему уроку.
-                    </div>
-                </article>
-                <article class="guide-portal-card">
-                    <div class="guide-portal-card__title">Ваш прогресс</div>
-                    <div class="guide-portal-card__text">
-                        Завершено уроков: ${completedCount} из ${state.lessons.length}. Текущий прогресс по курсу: ${courseProgress}%.
-                    </div>
-                </article>
-            </div>
-
             <section class="guide-portal-roadmap">
                 <div class="guide-portal-roadmap__header">
-                    <div class="guide-panel-card__title">Дорожная карта практикума</div>
-                    <div class="guide-panel-card__text">Каждый урок является отдельной страницей с теорией и практикой.</div>
+                    <div>
+                        <div class="guide-panel-card__title">Дорожная карта</div>
+                        <div class="guide-panel-card__text">Только доступные уроки кликабельны. Закрытые откроются после завершения предыдущих.</div>
+                    </div>
+                    <div class="guide-portal-roadmap__meta">${completedCount}/${state.lessons.length}</div>
                 </div>
                 <div class="guide-portal-roadmap__list">
                     ${state.lessons.map((item, index) => {
@@ -192,7 +177,6 @@ export function renderPortalIntro(state: GuideLessonState, language: ScriptLangu
                                 <span class="guide-roadmap-item__index">${index + 1}</span>
                                 <span class="guide-roadmap-item__body">
                                     <span class="guide-roadmap-item__title">${escapeHtml(item.title)}</span>
-                                    <span class="guide-roadmap-item__summary">${escapeHtml(item.summary)}</span>
                                     <span class="guide-roadmap-item__status">${stateLabel}</span>
                                 </span>
                             </button>

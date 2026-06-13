@@ -15,7 +15,7 @@ import {
 export function attachGuideNavigationBindings(context: GuideInteractionContext): void {
     const { container, language, state, lesson, rerender } = context;
 
-    container.querySelectorAll<HTMLElement>('[data-guide-portal-page]').forEach((element) => {
+    container.querySelectorAll<HTMLButtonElement>('button[data-guide-portal-page]').forEach((element) => {
         element.addEventListener('click', () => {
             const nextPage = element.dataset.guidePortalPage;
             if (nextPage !== 'intro' && nextPage !== 'lesson') return;

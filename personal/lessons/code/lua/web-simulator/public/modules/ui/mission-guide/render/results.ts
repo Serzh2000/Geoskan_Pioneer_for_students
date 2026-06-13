@@ -2,7 +2,7 @@ export function renderCheckSummary(hasChecked: boolean, solved: boolean, diagnos
     if (!hasChecked) {
         return `
             <div class="guide-check-status guide-check-status--info">
-                Сначала соберите решение, затем отдельно запустите проверку. Симуляцию можно запускать независимо, когда цепочка уже собрана.
+                Соберите цепочку и запустите проверку. Сцена откроется автоматически.
             </div>
         `;
     }
@@ -10,7 +10,7 @@ export function renderCheckSummary(hasChecked: boolean, solved: boolean, diagnos
     if (solved) {
         return `
             <div class="guide-check-status guide-check-status--success">
-                Решение прошло проверку. Урок засчитан, а сценарий можно безопасно запускать и сравнивать с ожидаемым результатом.
+                Решение принято. Сценарий уже запущен.
             </div>
         `;
     }
@@ -18,14 +18,14 @@ export function renderCheckSummary(hasChecked: boolean, solved: boolean, diagnos
     if (launchedWithWarnings) {
         return `
             <div class="guide-check-status guide-check-status--warning">
-                Найдено замечаний: ${diagnosticsCount}. Сценарий можно запускать для эксперимента, но урок пока не засчитан.
+                Замечаний: ${diagnosticsCount}. Сцена уже показывает текущую версию.
             </div>
         `;
     }
 
     return `
         <div class="guide-check-status guide-check-status--warning">
-            Проверка завершена: в решении еще есть замечания. Исправьте их или запустите сценарий отдельно, чтобы посмотреть текущее поведение.
+            Проверка завершена: есть замечания.
         </div>
     `;
 }
@@ -36,7 +36,7 @@ export function renderResultHero(hasChecked: boolean, solved: boolean, diagnosti
             <div class="guide-result-hero guide-result-hero--idle">
                 <div class="guide-result-hero__label">Статус</div>
                 <div class="guide-result-hero__title">Пока не проверено</div>
-                <div class="guide-result-hero__text">Сначала соберите сценарий. Потом запустите проверку, чтобы понять, засчитывается ли урок, и при желании отдельно откройте живую сцену.</div>
+                <div class="guide-result-hero__text">Проверка покажет вердикт и сразу откроет сцену.</div>
             </div>
         `;
     }
@@ -46,7 +46,7 @@ export function renderResultHero(hasChecked: boolean, solved: boolean, diagnosti
             <div class="guide-result-hero guide-result-hero--success">
                 <div class="guide-result-hero__label">Статус</div>
                 <div class="guide-result-hero__title">Решение принято</div>
-                <div class="guide-result-hero__text">Проверка пройдена. Урок засчитан, и теперь можно спокойно смотреть сцену, сравнивать результат и переходить дальше.</div>
+                <div class="guide-result-hero__text">Урок засчитан. Сравните сцену с ожидаемым результатом.</div>
             </div>
         `;
     }
@@ -56,7 +56,7 @@ export function renderResultHero(hasChecked: boolean, solved: boolean, diagnosti
             <div class="guide-result-hero guide-result-hero--warning">
                 <div class="guide-result-hero__label">Статус</div>
                 <div class="guide-result-hero__title">Есть замечания</div>
-                <div class="guide-result-hero__text">Сценарий исполнимый и его можно смотреть в сцене, но решение пока не совпадает с целью задания.</div>
+                <div class="guide-result-hero__text">Сценарий уже запущен, но решение пока не совпадает с целью задания.</div>
             </div>
         `;
     }
@@ -65,7 +65,7 @@ export function renderResultHero(hasChecked: boolean, solved: boolean, diagnosti
         <div class="guide-result-hero guide-result-hero--warning">
             <div class="guide-result-hero__label">Статус</div>
             <div class="guide-result-hero__title">Нужно исправить</div>
-            <div class="guide-result-hero__text">Проверка показала проблемы в логике решения. Исправьте замечания или запустите текущую версию отдельно, чтобы увидеть поведение в симуляции.</div>
+            <div class="guide-result-hero__text">Проверка показала проблемы в логике. Исправьте замечания ниже.</div>
         </div>
     `;
 }

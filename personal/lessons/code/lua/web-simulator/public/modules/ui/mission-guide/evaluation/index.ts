@@ -3,6 +3,10 @@ import {
     hasNumericFieldValue,
     parseWorkspaceXml
 } from './xml.js';
+import { buildTargetWorkspaceXml } from '../support/workspace-xml.js';
+import {
+    validateLuaLedSingleWorkspace
+} from './lua-led-single.js';
 import {
     getStructureDiagnostics,
     matchesLuaLedSequenceWorkspace,
@@ -23,7 +27,7 @@ function uniqueDiagnostics(diagnostics: GuideDiagnostic[]): GuideDiagnostic[] {
 function solvedDiagnostic(outcome: string): GuideDiagnostic {
     return {
         kind: 'success',
-        title: 'Последовательность собрана верно',
+        title: 'Решение собрано верно',
         reason: outcome,
         fix: 'Можно запускать сценарий: код уже собирается в настоящий пример Pioneer API.'
     };
@@ -102,8 +106,31 @@ function getCallbackDiagnostics(sequenceIds: string[], lesson: GuideLesson): Gui
 }
 
 export function evaluateLesson(lesson: GuideLesson, sequenceIds: string[], workspaceXml?: string | null): GuideEvaluation {
+    if (!sequenceIds.length) {
+        return {
+            solved: false,
+            complete: false,
+            diagnostics: [{
+                kind: 'info',
+                title: 'Рабочая область пока пустая',
+                reason: 'Перетащите паззл-блоки в центральную цепочку. Проверка обновляется сразу после каждого шага.',
+                fix: `Начните с блока "${lesson.blocks.find((block) => block.id === lesson.targetBlockIds[0])?.label || 'первого шага'}".`
+            }]
+        };
+    }
+
+    if (lesson.id === 'lua-led-single') {
+        const diagnostics = validateLuaLedSingleWorkspace(workspaceXml || buildTargetWorkspaceXml(lesson.id, sequenceIds));
+        const solved = diagnostics.length === 0;
+        return {
+            solved,
+            complete: solved,
+            diagnostics: uniqueDiagnostics(solved ? [solvedDiagnostic(lesson.expectedOutcome)] : diagnostics)
+        };
+    }
+
     if (lesson.id === 'lua-led-sequence') {
-        const diagnostics = validateLuaLedSequenceWorkspace(workspaceXml);
+        const diagnostics = validateLuaLedSequenceWorkspace(workspaceXml || buildTargetWorkspaceXml(lesson.id, sequenceIds));
         const solved = diagnostics.length === 0;
         return {
             solved,
@@ -118,20 +145,6 @@ export function evaluateLesson(lesson: GuideLesson, sequenceIds: string[], works
     const hasAcceptedLedSequenceStructure = lesson.id === 'lua-led-sequence' && matchesLuaLedSequenceWorkspace(workspaceXml);
     const callbackOpenIndex = positions.get('lua_callback_open');
     const callbackEndIndex = positions.get('lua_callback_end');
-
-    if (!sequenceIds.length) {
-        diagnostics.push({
-            kind: 'info',
-            title: 'Рабочая область пока пустая',
-            reason: 'Перетащите паззл-блоки в центральную цепочку. Проверка обновляется сразу после каждого шага.',
-            fix: `Начните с блока "${lesson.blocks.find((block) => block.id === lesson.targetBlockIds[0])?.label || 'первого шага'}".`
-        });
-        return {
-            solved: false,
-            complete: false,
-            diagnostics
-        };
-    }
 
     for (const blockId of lesson.targetBlockIds) {
         if (positions.has(blockId)) continue;

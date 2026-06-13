@@ -5,9 +5,7 @@ import {
 import { getGuideLessonState } from './lessons.js';
 import { logGuideEvent } from './support/logging.js';
 import { buildGuideEventContext, type GuideInteractionContext } from './interactions/context.js';
-import { attachGuideActionBindings } from './interactions/actions.js';
 import { attachGuideNavigationBindings } from './interactions/navigation.js';
-import { attachGuideWorkspace } from './interactions/workspace.js';
 import type { RenderMissionGuidePanel } from './types.js';
 import type { ScriptLanguage } from '../api-docs/sections.js';
 
@@ -29,7 +27,31 @@ export function attachGuideInteractions(
     };
 
     logGuideEvent('interactions_attached', buildGuideEventContext(context));
-    attachGuideWorkspace(context);
     attachGuideNavigationBindings(context);
-    attachGuideActionBindings(context);
+
+    const hasLessonActions = Boolean(
+        container.querySelector(
+            '[data-guide-reset], [data-guide-fill], [data-guide-check], [data-guide-launch], [data-guide-toggle-code], [data-guide-toggle-solution]'
+        )
+    );
+
+    if (hasLessonActions) {
+        void import('./interactions/actions.js')
+            .then(({ attachGuideActionBindings }) => {
+                attachGuideActionBindings(context);
+            })
+            .catch((error) => {
+                console.error('Failed to load guide actions', error);
+            });
+    }
+
+    if (container.querySelector('#blocklyDiv')) {
+        void import('./interactions/workspace.js')
+            .then(({ attachGuideWorkspace }) => {
+                attachGuideWorkspace(context);
+            })
+            .catch((error) => {
+                console.error('Failed to load guide workspace', error);
+            });
+    }
 }

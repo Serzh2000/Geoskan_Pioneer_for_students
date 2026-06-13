@@ -48,7 +48,7 @@ export function renderDiagnosticCard(diagnostic: GuideDiagnostic): string {
                 <div class="guide-diagnostic__title">${escapeHtml(diagnostic.title)}</div>
             </div>
             <div class="guide-diagnostic__reason">${escapeHtml(diagnostic.reason)}</div>
-            <div class="guide-diagnostic__fix"><strong>Как исправить:</strong> ${escapeHtml(diagnostic.fix)}</div>
+            <div class="guide-diagnostic__fix"><strong>Исправить:</strong> ${escapeHtml(diagnostic.fix)}</div>
         </article>
     `;
 }
@@ -69,7 +69,7 @@ export function renderApiFocusItem(item: GuideApiFocusItem): string {
     return `
         <article class="guide-api-card">
             <div class="guide-api-card__title">${escapeHtml(item.title)}</div>
-            <div class="guide-api-card__summary">${escapeHtml(item.summary)}</div>
+            ${item.summary ? `<div class="guide-api-card__summary">${escapeHtml(item.summary)}</div>` : ''}
             ${item.example ? `<pre class="guide-api-card__example">${escapeHtml(item.example)}</pre>` : ''}
         </article>
     `;

@@ -23,7 +23,7 @@ export function getLuaExpandedFoundationLessons(): GuideLesson[] {
             ],
             targetBlockIds: ['lua_ledbar_new', 'lua_led_set', 'lua_print', 'lua_callback_open', 'lua_callback_end'],
             blocks: [
-                createStatementBlock('lua6-ledbar', 'создать Ledbar', 'local leds = Ledbar.new(29)', 'Готовит объект светодиодной ленты через `Ledbar.new(29)`.', 'setup', 'local leds = Ledbar.new(29)'),
+                createStatementBlock('lua6-ledbar', 'local leds = Ledbar.new(ledNumber)', 'local leds = Ledbar.new(29)', 'Готовит объект светодиодной ленты через `Ledbar.new(29)`.', 'setup', 'local leds = Ledbar.new(29)'),
                 createStatementBlock('lua6-green', 'включить зеленый', 'leds:set(0, 0, 1, 0)', 'Целевой сигнал урока.', 'action', 'leds:set(0, 0, 1, 0)'),
                 createStatementBlock('lua6-print', 'сообщить о сигнале', 'print("Сигнал готов")', 'Текстовое подтверждение выполнения.', 'check', 'print("Сигнал готов")'),
                 createTimerBlock('lua6-wait', 'подождать 1 c', 'Timer.callLater(1.0, ...)', 'Таймер здесь не обязателен и только усложняет сценарий.', 1),
@@ -56,7 +56,7 @@ end`,
                     kind: 'error',
                     title: 'Не создан объект `Ledbar`',
                     reason: 'Без инициализации ленты урок не показывает работу периферии.',
-                    fix: 'Добавьте блок создания `Ledbar` в начало.'
+                    fix: 'Добавьте блок `local leds = Ledbar.new(ledNumber)` в начало.'
                 },
                 lua_led_set: {
                     kind: 'error',
@@ -125,7 +125,7 @@ end`,
             ],
             targetBlockIds: ['lua_ledbar_new', 'lua_timer_calllater', 'lua_led_set', 'lua_print', 'lua_callback_open', 'lua_callback_end'],
             blocks: [
-                createStatementBlock('lua7-ledbar', 'создать Ledbar', 'local leds = Ledbar.new(29)', 'Подготавливает периферию через `Ledbar.new(29)`.', 'setup', 'local leds = Ledbar.new(29)'),
+                createStatementBlock('lua7-ledbar', 'local leds = Ledbar.new(ledNumber)', 'local leds = Ledbar.new(29)', 'Подготавливает периферию через `Ledbar.new(29)`.', 'setup', 'local leds = Ledbar.new(29)'),
                 createTimerBlock('lua7-timer', 'сработать через 1 c', 'Timer.callLater(1.0, ...)', 'Контейнер для отложенных действий.', 1),
                 createStatementBlock('lua7-blue', 'включить синий', 'leds:set(1, 0, 0, 1)', 'LED-индикация внутри callback.', 'action', 'leds:set(1, 0, 0, 1)'),
                 createStatementBlock('lua7-print', 'сообщить о таймере', 'print("Таймер сработал")', 'Текстовое подтверждение события.', 'check', 'print("Таймер сработал")'),

@@ -59,7 +59,7 @@
 .guide-lesson-page {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
     padding: 0;
 }
 
@@ -71,10 +71,51 @@
     gap: 14px;
 }
 
+.guide-lesson-page__header-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.guide-lesson-page__header-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.guide-lesson-page__header-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 9px 14px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.56);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.guide-lesson-page__header {
+    padding: 18px 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 107, 0, 0.14);
+    background:
+        radial-gradient(circle at top right, rgba(255, 107, 0, 0.08), transparent 34%),
+        linear-gradient(180deg, #ffffff 0%, #fffaf5 100%);
+    box-shadow: 0 10px 24px rgba(17, 24, 39, 0.05);
+}
+
 .guide-lesson-page__badge {
     display: inline-flex;
     align-self: flex-start;
-    padding: 7px 12px;
+    padding: 8px 12px;
     border-radius: 999px;
     background: rgba(14, 165, 233, 0.12);
     border: 1px solid rgba(56, 189, 248, 0.22);
@@ -83,14 +124,14 @@
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin-bottom: 10px;
+    margin-bottom: 0;
 }
 
 .guide-lesson-page__title {
     color: #f8fafc;
-    font-size: 28px;
+    font-size: 34px;
     font-weight: 800;
-    line-height: 1.25;
+    line-height: 1.15;
 }
 
 .guide-lesson-page__summary,
@@ -99,8 +140,28 @@
 .guide-workspace__hint,
 .guide-library__empty {
     color: #cbd5e1;
-    font-size: 14px;
-    line-height: 1.7;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.guide-lesson-page__summary {
+    max-width: 78ch;
+}
+
+.guide-lesson-page__route {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.guide-lesson-page__route-label {
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .guide-lesson-page__meta {
@@ -110,8 +171,8 @@
 }
 
 .guide-lesson-page__meta-item {
-    padding: 16px;
-    border-radius: 16px;
+    padding: 10px 12px;
+    border-radius: 10px;
     border: 1px solid rgba(56, 189, 248, 0.14);
     background: rgba(2, 6, 23, 0.4);
 }
@@ -121,7 +182,7 @@
 }
 
 .guide-lesson-page__meta-label {
-    margin-bottom: 10px;
+    margin-bottom: 6px;
     color: #7dd3fc;
     font-size: 11px;
     font-weight: 800;
@@ -135,9 +196,9 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
-    padding: 12px 14px;
-    border-radius: 12px;
+    gap: 4px;
+    padding: 8px 9px;
+    border-radius: 10px;
     border: 1px solid rgba(56, 189, 248, 0.14);
     background: rgba(2, 6, 23, 0.4);
 }
@@ -148,7 +209,7 @@
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 10px;
+    gap: 8px;
 }
 
 .guide-lesson-overview__percent {
@@ -168,15 +229,15 @@
 .guide-lesson-overview__stats {
     display: grid;
     grid-template-columns: repeat(4, minmax(180px, 1fr));
-    gap: 8px;
+    gap: 4px;
 }
 
 .guide-overview-item {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     min-width: 0;
-    padding: 10px 12px;
+    padding: 8px 10px;
     border-radius: 10px;
     border: 1px solid rgba(56, 189, 248, 0.12);
     background: rgba(15, 23, 42, 0.04);
@@ -212,6 +273,12 @@
     .guide-lesson-footer__actions,
     .guide-lesson-page__header {
         flex-direction: column;
+    }
+
+    .guide-lesson-page__header-actions {
+        width: 100%;
+        align-items: flex-start;
+        justify-content: flex-start;
     }
 
     .guide-lesson-overview__stats,

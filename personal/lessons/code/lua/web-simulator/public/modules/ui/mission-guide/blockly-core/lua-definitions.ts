@@ -4,7 +4,7 @@ import { luaGenerator } from 'blockly/lua';
 export function registerLuaBlocklyDefinitions(): void {
     Blockly.Blocks['lua_ledbar_new'] = {
         init: function() {
-            this.appendDummyInput().appendField('создать Ledbar(').appendField(new Blockly.FieldNumber(29, 1, 100), 'COUNT').appendField(')');
+            this.appendDummyInput().appendField('local leds = Ledbar.new(').appendField(new Blockly.FieldNumber(29, 1, 100), 'COUNT').appendField(')');
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
             this.setColour(160);

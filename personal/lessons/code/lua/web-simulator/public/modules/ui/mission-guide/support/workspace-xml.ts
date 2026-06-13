@@ -1,4 +1,22 @@
 export function buildTargetWorkspaceXml(lessonId: string, targetBlockIds: string[]): string {
+    if (lessonId === 'lua-led-single') {
+        return `
+            <xml>
+                <block type="lua_ledbar_new">
+                    <field name="COUNT">29</field>
+                    <next>
+                        <block type="lua_led_set">
+                            <field name="INDEX">0</field>
+                            <field name="R">1</field>
+                            <field name="G">0</field>
+                            <field name="B">0</field>
+                        </block>
+                    </next>
+                </block>
+            </xml>
+        `;
+    }
+
     if (lessonId === 'lua-led-sequence') {
         return `
             <xml>

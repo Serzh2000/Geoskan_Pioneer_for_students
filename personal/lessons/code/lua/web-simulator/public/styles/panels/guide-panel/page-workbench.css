@@ -128,25 +128,25 @@
  */
 
 .guide-workbench-layout {
-    grid-template-columns: minmax(640px, 1.22fr) minmax(320px, 0.78fr);
-    gap: 12px;
+    grid-template-columns: minmax(720px, 1.5fr) minmax(360px, 0.92fr);
+    gap: 14px;
 }
 
 .guide-workbench-layout__main {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
 }
 
 .guide-workbench-layout__scene {
     position: sticky;
-    top: 12px;
+    top: 10px;
 }
 
 .guide-panel-card--workspace,
 .guide-panel-card--result,
 .guide-panel-card--scene {
-    gap: 16px;
+    gap: 14px;
 }
 
 .guide-blockly-shell {
@@ -157,7 +157,7 @@
 }
 
 .guide-blockly-stage {
-    height: 380px;
+    height: 360px;
     width: 100%;
     border-radius: 12px;
     border: 1px solid var(--guide-border-strong);
@@ -232,7 +232,7 @@
 }
 
 .guide-scene-preview-host {
-    min-height: 360px;
+    min-height: 320px;
     border-radius: 12px;
     border: 1px solid var(--guide-border);
     background: #ffffff;
@@ -248,13 +248,13 @@
 
 .guide-scene-preview-host > .scene-container,
 .guide-scene-preview__placeholder {
-    min-height: 360px;
+    min-height: 320px;
 }
 
 .guide-scene-preview__placeholder {
     color: var(--guide-text-muted);
-    font-size: 14px;
-    line-height: 1.7;
+    font-size: 12px;
+    line-height: 1.5;
 }
 
 .guide-scene-preview-host > .scene-container,

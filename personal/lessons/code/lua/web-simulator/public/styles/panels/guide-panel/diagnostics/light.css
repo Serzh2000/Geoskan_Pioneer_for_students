@@ -3,18 +3,20 @@
  */
 
 .guide-diagnostics {
-    gap: 8px;
+    gap: 6px;
 }
 
 .guide-check-status,
 .guide-empty-state,
 .guide-run-banner {
-    padding: 12px 14px;
+    padding: 10px 12px;
     border-radius: 12px;
     border: 1px solid var(--guide-border);
     border-left-width: 4px;
     background: var(--guide-bg);
     color: var(--guide-text);
+    font-size: 12px;
+    line-height: 1.45;
 }
 
 .guide-check-status--info,
@@ -37,9 +39,9 @@
 }
 
 .guide-result-hero {
-    gap: 6px;
-    padding: 16px 18px;
-    border-radius: 16px;
+    gap: 5px;
+    padding: 12px 14px;
+    border-radius: 14px;
     border: 1px solid var(--guide-border);
     background: var(--guide-bg-muted);
     box-shadow: none;
@@ -69,23 +71,23 @@
 
 .guide-result-hero__title {
     color: var(--guide-text);
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 800;
     line-height: 1.2;
 }
 
 .guide-result-hero__text {
     color: var(--guide-text-muted);
-    font-size: 14px;
-    line-height: 1.6;
+    font-size: 12px;
+    line-height: 1.45;
     max-width: none;
 }
 
 .guide-diagnostic {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 12px 14px;
+    gap: 6px;
+    padding: 10px 12px;
     border-radius: 12px;
     border: 1px solid var(--guide-border);
     background: var(--guide-bg);
@@ -117,7 +119,7 @@
 .guide-diagnostic__badge {
     display: inline-flex;
     align-items: center;
-    padding: 4px 8px;
+    padding: 3px 7px;
     border-radius: 999px;
     background: var(--guide-bg-muted);
     border: 1px solid var(--guide-border);
@@ -131,11 +133,14 @@
 .guide-diagnostic__title {
     margin-bottom: 0;
     color: var(--guide-text);
+    font-size: 13px;
 }
 
 .guide-diagnostic__reason,
 .guide-diagnostic__fix {
     color: var(--guide-text-muted);
+    font-size: 12px;
+    line-height: 1.45;
 }
 
 .guide-lesson__code {

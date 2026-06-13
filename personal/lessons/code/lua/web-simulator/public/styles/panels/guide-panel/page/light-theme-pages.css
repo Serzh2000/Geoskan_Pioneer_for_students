@@ -1,11 +1,19 @@
+.guide-portal-intro__top,
 .guide-portal-intro__hero,
-.guide-portal-card,
+.guide-portal-stat,
 .guide-portal-roadmap,
 .guide-lesson-overview,
 .guide-overview-item {
     background: var(--guide-bg);
     border: 1px solid var(--guide-border);
     box-shadow: 0 6px 16px rgba(17, 24, 39, 0.04);
+}
+
+.guide-portal-intro__top {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
 }
 
 .guide-portal-intro__hero {
@@ -20,18 +28,32 @@
 }
 
 .guide-portal-intro__title,
-.guide-portal-card__title,
+.guide-portal-stat__value,
 .guide-roadmap-item__title {
     color: var(--guide-text);
 }
 
 .guide-portal-intro__text,
-.guide-portal-card__text,
+.guide-portal-stat__meta,
 .guide-roadmap-item__summary,
 .guide-lesson-overview__meta,
 .guide-theory-card__list,
-.guide-practice-card .guide-panel-card__text {
+.guide-practice-card .guide-panel-card__text,
+.guide-lesson-page__header-pill,
+.guide-lesson-page__summary,
+.guide-lesson-page__route-label,
+.guide-scene-preview__placeholder {
     color: var(--guide-text-muted);
+}
+
+.guide-portal-stat__label,
+.guide-portal-roadmap__meta {
+    color: var(--guide-accent);
+}
+
+.guide-portal-roadmap__meta {
+    background: var(--guide-accent-soft);
+    border: 1px solid rgba(255, 107, 0, 0.18);
 }
 
 .guide-roadmap-item {
@@ -78,6 +100,38 @@
     background: linear-gradient(90deg, #ff6b00 0%, #0f9d58 100%);
 }
 
+.guide-lesson-page__header-pill,
+.guide-lesson-page__badge,
+.guide-panel-card__badge {
+    background: var(--guide-accent-soft);
+    border-color: rgba(255, 107, 0, 0.18);
+    color: var(--guide-accent);
+}
+
+.guide-lesson-page__header-pill {
+    background: var(--guide-bg-muted);
+    border-color: var(--guide-border);
+}
+
+.guide-lesson-page__meta-item,
+.guide-workspace-health__item {
+    background: var(--guide-bg);
+    border-color: var(--guide-border);
+    box-shadow: 0 4px 10px rgba(17, 24, 39, 0.03);
+}
+
+.guide-lesson-section__grid {
+    gap: 6px;
+}
+
+.guide-workspace-health__label {
+    color: var(--guide-accent);
+}
+
+.guide-workspace-health__value {
+    color: var(--guide-text);
+}
+
 .guide-lesson__action.is-active {
     background: var(--guide-accent-soft);
     border-color: rgba(255, 107, 0, 0.28);
@@ -96,7 +150,7 @@
 .guide-panel-card,
 .guide-lesson-page,
 .guide-theory-page__hero {
-    gap: 12px;
+    gap: 8px;
 }
 
 .guide-lesson-page {
@@ -106,11 +160,11 @@
 }
 
 .guide-panel-card {
-    padding: 14px;
+    padding: 12px;
 }
 
 .guide-lesson-overview {
-    padding: 12px 14px;
+    padding: 10px 12px;
 }
 
 .guide-lesson-section,
@@ -125,6 +179,122 @@
     background: var(--guide-bg-muted);
     border-color: var(--guide-border);
     box-shadow: none;
+}
+
+.guide-lesson-section {
+    gap: 6px;
+}
+
+.guide-lesson-overview .guide-panel-card__text,
+.guide-lesson-section__header .guide-panel-card__text {
+    display: none;
+}
+
+.guide-page-tabs {
+    gap: 6px;
+}
+
+.guide-page-tab {
+    gap: 6px;
+    padding: 8px 10px;
+}
+
+.guide-page-tab__step {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+}
+
+.guide-page-tab__text {
+    font-size: 11px;
+}
+
+.guide-lesson-page__title {
+    font-size: 34px;
+}
+
+.guide-panel-card__title {
+    font-size: 15px;
+}
+
+.guide-panel-card__text,
+.guide-lesson-page__summary,
+.guide-lesson-page__goal,
+.guide-scene-preview__placeholder {
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.guide-panel-card__top .guide-panel-card__text,
+.guide-api-card__summary {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+}
+
+.guide-panel-card__top .guide-panel-card__text {
+    -webkit-line-clamp: 1;
+}
+
+.guide-api-card__summary {
+    -webkit-line-clamp: 2;
+}
+
+.guide-api-card {
+    gap: 6px;
+    padding: 8px;
+}
+
+.guide-api-card__example {
+    padding: 6px 8px;
+    font-size: 10px;
+    line-height: 1.3;
+}
+
+.guide-target-chip {
+    padding: 4px 8px;
+    font-size: 10px;
+}
+
+.guide-lesson-page__route {
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.guide-lesson-page__route-label {
+    color: var(--guide-accent);
+}
+
+.guide-workspace-health__item {
+    gap: 4px;
+    padding: 10px;
+}
+
+.guide-workspace-health__value {
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.guide-workbench-layout {
+    grid-template-columns: minmax(0, 1.5fr) minmax(340px, 0.9fr);
+    gap: 14px;
+}
+
+.guide-workbench-layout__main {
+    gap: 14px;
+}
+
+.guide-blockly-stage {
+    height: 360px;
+}
+
+.guide-scene-preview-host {
+    min-height: 320px;
+}
+
+.guide-scene-preview-host > .scene-container,
+.guide-scene-preview__placeholder {
+    min-height: 320px;
 }
 
 .guide-theory-card__list li::marker {
@@ -149,6 +319,6 @@
     .guide-hero__title,
     .guide-lesson-page__title,
     .guide-theory-page__title {
-        font-size: 24px;
+        font-size: 22px;
     }
 }
