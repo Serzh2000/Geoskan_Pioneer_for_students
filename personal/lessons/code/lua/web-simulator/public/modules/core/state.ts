@@ -33,6 +33,12 @@ import type {
     GamepadInputRef,
     ScriptLanguage
 } from './state-types.js';
+import {
+    createDroneRecord,
+    createEmptyLuaDiagnosticsState,
+    isDroneArmed,
+    resetDroneRuntimeState
+} from './state-drone.js';
 
 /**
  * Модуль глобального состояния симулятора.
@@ -86,18 +92,6 @@ export const simSettings = {
     }
 };
 
-function createEmptyLuaDiagnosticsState() {
-    return {
-        currentPhase: null,
-        recentLogs: [],
-        recentApiCalls: [],
-        fsmTransitions: [],
-        lastErrorStack: null,
-        lastFailureReason: null,
-        lastFailureDetails: []
-    };
-}
-
 const STORAGE_KEY = 'geoskan_sim_gamepad_settings';
 
 export function saveGamepadSettings() {
@@ -139,45 +133,7 @@ export function matchesAuxRange(value: number, range: AuxChannelRange): boolean 
 }
 
 export function createDroneState(id: string, name: string, x: number = 0, y: number = 0, z: number = 0): DroneState {
-    const drone: DroneState = {
-        id, name,
-        running: false,
-        current_time: 0,
-        pos: { x, y, z },
-        vel: { x: 0, y: 0, z: 0 },
-        accel: { x: 0, y: 0, z: 9.81 },
-        gyro: { x: 0, y: 0, z: 0 },
-        orientation: { roll: 0, pitch: 0, yaw: 0 },
-        battery: 100,
-        status: 'IDLE',
-        fsmState: 'IDLE',
-        flightMode: 'AUTO',
-        rcChannels: [1500, 1500, 1000, 1500, 1000, 1000, 1000, 1000],
-        magnetGripper: {
-            active: false,
-            attachedObjectId: null
-        },
-        target_alt: z,
-        target_pos: { x, y, z },
-        target_yaw: 0,
-        pendingLocalPoint: false,
-        pendingLocalPointSource: null,
-        pointReachedFlag: false,
-        traceSampleAccumulator: 0,
-        command_queue: [],
-        preflightDeadlineMs: null,
-        currentCommandSource: null,
-        lastAcceptedGoToTickMs: null,
-        tickCommandSignature: null,
-        timers: [],
-        leds: Array.from({ length: 29 }, () => ({ r: 0, g: 0, b: 0, w: 0 })),
-        script: DEFAULT_LUA_SCRIPT,
-        pythonScript: DEFAULT_PYTHON_SCRIPT,
-        printBubbleText: '',
-        printBubbleUntil: 0,
-        luaState: null,
-        luaDiagnostics: createEmptyLuaDiagnosticsState()
-    };
+    const drone = createDroneRecord(id, name, x, y, z);
     drones[id] = drone;
     return drone;
 }
@@ -204,17 +160,6 @@ export function setCurrentDrone(id: string) {
 
 export const MAX_PATH_POINTS = 2000;
 export const pathPoints: Record<string, Vector3[]> = { 'drone_1': [] };
-
-const DISARMED_STATUSES = new Set([
-    'IDLE',
-    'ОШИБКА',
-    'CRASHED',
-    'DISARMED_FALL'
-]);
-
-export function isDroneArmed(drone: DroneState): boolean {
-    return !DISARMED_STATUSES.has(drone.status);
-}
 
 export function resetRuntimeStatePreservePose(id: string = currentDroneId) {
     const drone = drones[id];
@@ -246,30 +191,6 @@ export function getDroneFromLua(L: any): DroneState {
 export function resetState(id: string = currentDroneId) {
     const drone = drones[id];
     if (!drone) return;
-    drone.running = false;
-    drone.current_time = 0;
-    drone.vel = { x: 0, y: 0, z: 0 };
-    drone.accel = { x: 0, y: 0, z: 9.81 };
-    drone.gyro = { x: 0, y: 0, z: 0 };
-    drone.battery = 100;
-    drone.status = 'IDLE';
-    drone.fsmState = 'IDLE';
-    drone.command_queue = [];
-    drone.preflightDeadlineMs = null;
-    drone.currentCommandSource = null;
-    drone.lastAcceptedGoToTickMs = null;
-    drone.tickCommandSignature = null;
-    drone.timers = [];
-    drone.leds = Array.from({ length: 29 }, () => ({ r: 0, g: 0, b: 0, w: 0 }));
-    drone.rcChannels = [1500, 1500, 1000, 1500, 1000, 1000, 1000, 1000];
-    drone.magnetGripper.active = false;
-    drone.magnetGripper.attachedObjectId = null;
-    drone.pendingLocalPoint = false;
-    drone.pendingLocalPointSource = null;
-    drone.pointReachedFlag = false;
-    drone.traceSampleAccumulator = 0;
-    drone.printBubbleText = '';
-    drone.printBubbleUntil = 0;
-    drone.luaDiagnostics = createEmptyLuaDiagnosticsState();
+    resetDroneRuntimeState(drone);
     pathPoints[id] = [];
 }

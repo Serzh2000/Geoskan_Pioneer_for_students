@@ -10,6 +10,7 @@ import { handlePreflightTimeout } from '../autopilot/fsm.js';
 import { updateTimers } from '../lua/index.js';
 import { getObstacles } from '../drone/index.js';
 import { checkPhysicsEvents } from './events.js';
+import { updateBatteryState } from './battery.js';
 import { updateDetachedCargoPhysics, updateMagnetGripper } from './magnet-gripper.js';
 import { processCommandQueue } from './commands.js';
 import { updateActiveFlight } from './flight-update.js';
@@ -54,5 +55,7 @@ export function updatePhysics(dt: number) {
         if (simState.status !== 'CRASHED') {
             checkPhysicsEvents(simState, prevPos);
         }
+
+        updateBatteryState(simState, id, dt);
     }
 }

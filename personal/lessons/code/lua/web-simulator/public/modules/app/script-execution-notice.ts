@@ -220,3 +220,21 @@ export function showEarlyRouteNotice() {
         level: 'warn'
     });
 }
+
+export function showMissionGamepadOverrideNotice() {
+    const message = 'Подключенный пульт переведен в ручной режим, поэтому на время активной миссии RC override отключен.';
+
+    log(message, 'warn');
+
+    if (!(window as any).showSimulationNotice) return;
+    (window as any).showSimulationNotice({
+        title: 'Миссия получила приоритет над RC',
+        message,
+        detailsHtml: renderIssuesHtml('lua', [
+            'Пока миссия выполняет взлет, маршрут или посадку, симулятор принудительно ведет дрон в AUTO.',
+            'После завершения миссии ручное управление с пульта снова начнет влиять на полет.',
+            'Если нужен ручной полет прямо сейчас, остановите сценарий или переведите CH5 в подходящее положение.'
+        ]),
+        level: 'warn'
+    });
+}

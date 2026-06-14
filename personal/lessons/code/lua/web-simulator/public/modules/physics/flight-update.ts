@@ -1,5 +1,6 @@
 import type * as THREE from 'three';
 import type { DroneState } from '../core/state.js';
+import { showMissionGamepadOverrideNotice } from '../app/script-execution-notice.js';
 import { enterPreflight, enterTakeoffProcess, setDroneFsmState } from '../autopilot/fsm.js';
 import { matchesAuxRange, simSettings } from '../core/state.js';
 import { triggerLuaCallback } from '../lua/index.js';
@@ -21,6 +22,15 @@ import {
 } from './helpers.js';
 
 type ObstacleProvider = () => THREE.Object3D[];
+
+function isAutonomousMissionControlling(simState: DroneState) {
+    return simState.running && (
+        simState.fsmState === 'TAKEOFF_PROCESS'
+        || simState.fsmState === 'FLYING_HOVER'
+        || simState.fsmState === 'FLYING_MOVING'
+        || simState.fsmState === 'LANDING_PROCESS'
+    );
+}
 
 function updateFlightModeFromRc(simState: DroneState, id: string, isFlying: boolean) {
     if (!simSettings.gamepadConnected) return;
@@ -189,7 +199,20 @@ export function updateActiveFlight(
 
     if (!isFlying) return;
 
-    if (simSettings.gamepadConnected && simState.flightMode !== 'AUTO') {
+    const autonomousMissionControlling = isAutonomousMissionControlling(simState);
+    if (!autonomousMissionControlling) {
+        simState.missionRcOverrideNoticeShown = false;
+    }
+
+    if (autonomousMissionControlling) {
+        if (simSettings.gamepadConnected && simState.flightMode !== 'AUTO' && !simState.missionRcOverrideNoticeShown) {
+            simState.missionRcOverrideNoticeShown = true;
+            showMissionGamepadOverrideNotice();
+        }
+        simState.flightMode = 'AUTO';
+    }
+
+    if (!autonomousMissionControlling && simSettings.gamepadConnected && simState.flightMode !== 'AUTO') {
         updateManualFlight(simState, dt, getObstacles);
         return;
     }

@@ -100,6 +100,12 @@ export interface DroneState {
     gyro: Vector3;
     orientation: Orientation;
     battery: number;
+    batteryVoltage: number;
+    batteryChargeMah: number;
+    batteryLowVoltage1Notified: boolean;
+    batteryLowVoltage2Notified: boolean;
+    batteryDepletedNotified: boolean;
+    missionRcOverrideNoticeShown: boolean;
     status: string;
     fsmState: DroneFsmState;
     flightMode: FlightMode;

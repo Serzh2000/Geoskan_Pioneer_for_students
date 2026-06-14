@@ -48,7 +48,7 @@ export const sensors_range = function(L: any) {
 
 export const sensors_battery = function(L: any) {
     const simState = getDroneFromLua(L);
-    window.fengari.lua.lua_pushnumber(L, simState.battery);
+    window.fengari.lua.lua_pushnumber(L, simState.batteryVoltage);
     return 1;
 };
 
@@ -97,4 +97,3 @@ export const sensors_rc = function(L: any) {
     window.fengari.lua.lua_pushnumber(L, ch8);
     return 8;
 };
-

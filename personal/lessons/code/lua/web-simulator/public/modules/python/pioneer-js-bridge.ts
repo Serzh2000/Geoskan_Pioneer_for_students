@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { drones } from '../core/state.js';
 import {
     applyGoToLocalPointRequest,
@@ -147,7 +147,7 @@ export function installJsRuntimeAPI() {
     w.pioneer_get_battery_status = (id: string) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
-        return d.battery;
+        return d.batteryVoltage;
     };
 
     w.pioneer_get_autopilot_state = (id: string) => {
