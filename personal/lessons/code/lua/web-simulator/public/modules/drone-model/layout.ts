@@ -99,6 +99,30 @@ export const MOTOR_ANCHOR_POSITIONS: Vec2Tuple[] = [
     [-MOTOR_ARM_OFFSET + 0.005, -MOTOR_ARM_OFFSET + 0.005]
 ];
 
+const PROPELLER_BASE_Z = 0.024 - FRAME_PLATE_THICKNESS + 18.1 * CAD_MM_TO_SCENE_SCALE;
+const PROPELLER_Z = PROPELLER_BASE_Z + FRAME_COMPONENTS_Z_OFFSET;
+const PROPELLER_BASE_ROTATION: Vec3Tuple = [0, 0, 0];
+const PROPELLER_Z_INSET = 0.015;
+
+const HUB_BASE_Z = PROPELLER_Z;
+const HUB_BASE_ROTATION: Vec3Tuple = [Math.PI / 2, 0, 0];
+
+// Propellers use their own placements so they can be fine-tuned independently
+// from the motor mounts in the same way as other CAD parts.
+export const PROPELLER_PLACEMENTS = [
+    { position: [MOTOR_ARM_OFFSET - 0.01, -MOTOR_ARM_OFFSET + 0.027, PROPELLER_Z - PROPELLER_Z_INSET], rotation: PROPELLER_BASE_ROTATION },
+    { position: [-MOTOR_ARM_OFFSET , MOTOR_ARM_OFFSET + 0.017, PROPELLER_Z - PROPELLER_Z_INSET], rotation: PROPELLER_BASE_ROTATION },
+    { position: [MOTOR_ARM_OFFSET + 0.0025, MOTOR_ARM_OFFSET + 0.017, PROPELLER_Z - PROPELLER_Z_INSET], rotation: PROPELLER_BASE_ROTATION },
+    { position: [-MOTOR_ARM_OFFSET + 0.01, -MOTOR_ARM_OFFSET + 0.027, PROPELLER_Z - PROPELLER_Z_INSET], rotation: PROPELLER_BASE_ROTATION }
+] satisfies PlacementConfig[];
+
+export const HUB_PLACEMENTS = [
+    { position: [MOTOR_ARM_OFFSET - 0.005, -MOTOR_ARM_OFFSET + 0.005, HUB_BASE_Z], rotation: HUB_BASE_ROTATION },
+    { position: [-MOTOR_ARM_OFFSET + 0.005, MOTOR_ARM_OFFSET - 0.005, HUB_BASE_Z], rotation: HUB_BASE_ROTATION },
+    { position: [MOTOR_ARM_OFFSET - 0.005, MOTOR_ARM_OFFSET - 0.005, HUB_BASE_Z], rotation: HUB_BASE_ROTATION },
+    { position: [-MOTOR_ARM_OFFSET + 0.005, -MOTOR_ARM_OFFSET + 0.005, HUB_BASE_Z], rotation: HUB_BASE_ROTATION }
+] satisfies PlacementConfig[];
+
 const GUARD_LOWER_TIER_Z = GUARD_Z - 0.05;
 const GUARD_UPPER_TIER_Z = GUARD_Z;
 

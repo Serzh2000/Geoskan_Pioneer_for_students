@@ -1,12 +1,21 @@
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import motor1306Url from '../../assets/models/pioneer/motor-1306.stl?url';
-import { CAD_MM_TO_SCENE_SCALE, FRAME_COMPONENTS_Z_OFFSET, FRAME_PLATE_THICKNESS, MOTOR_ANCHOR_POSITIONS } from './layout.js';
+import prop5030CcwUrl from '../../assets/models/pioneer/prop-5030-ccw.stl?url';
+import prop5030CwUrl from '../../assets/models/pioneer/prop-5030-cw.stl?url';
+import {
+    CAD_MM_TO_SCENE_SCALE,
+    FRAME_COMPONENTS_Z_OFFSET,
+    FRAME_PLATE_THICKNESS,
+    HUB_PLACEMENTS,
+    MOTOR_ANCHOR_POSITIONS,
+    PROPELLER_PLACEMENTS
+} from './layout.js';
 
 const MOTOR_MOUNT_BASE_Z = 0.024 - FRAME_PLATE_THICKNESS;
 const MOTOR_MOUNT_Z = MOTOR_MOUNT_BASE_Z + FRAME_COMPONENTS_Z_OFFSET;
 const FALLBACK_MOTOR_CENTER_Z = MOTOR_MOUNT_Z + 0.01;
-const ROTOR_Z = MOTOR_MOUNT_Z + 18.1 * CAD_MM_TO_SCENE_SCALE;
+const FALLBACK_PROPELLER_TILT = 0.1;
 
 const cadLoader = new STLLoader();
 const cadGeometryCache = new Map<string, Promise<THREE.BufferGeometry>>();
@@ -26,10 +35,14 @@ export function createMotors(
     MOTOR_ANCHOR_POSITIONS.forEach((offset, i) => {
         const propGroup = new THREE.Group();
         propGroup.name = `rotor_${i}`;
-        propGroup.position.set(offset[0], offset[1], ROTOR_Z);
+        const propPlacement = PROPELLER_PLACEMENTS[i];
+        const hubPlacement = HUB_PLACEMENTS[i];
+        propGroup.position.set(...hubPlacement.position);
 
         const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.015, 8), hubMat);
-        hub.rotation.x = Math.PI / 2;
+        if (hubPlacement.rotation) {
+            hub.rotation.set(...hubPlacement.rotation);
+        }
         propGroup.add(hub);
 
         const isDiag1 = i === 0 || i === 1;
@@ -37,13 +50,25 @@ export function createMotors(
         const bladeGeom = new THREE.BoxGeometry(0.12, 0.015, 0.001);
 
         const blade = new THREE.Mesh(bladeGeom, bladeMat);
-        blade.rotation.x = 0.1 * (isDiag1 ? 1 : -1);
+        blade.name = `rotor_fallback_blade_${i}`;
+        blade.position.set(
+            propPlacement.position[0] - hubPlacement.position[0],
+            propPlacement.position[1] - hubPlacement.position[1],
+            propPlacement.position[2] - hubPlacement.position[2]
+        );
+        blade.rotation.x = FALLBACK_PROPELLER_TILT * (isDiag1 ? 1 : -1);
+        if (propPlacement.rotation) {
+            blade.rotation.x += propPlacement.rotation[0];
+            blade.rotation.y = propPlacement.rotation[1];
+            blade.rotation.z = propPlacement.rotation[2];
+        }
         propGroup.add(blade);
 
         motorsGroup.add(propGroup);
     });
 
     void attachCadMotors(motorsGroup, fallbackMotors, motorMat);
+    void attachCadPropellers(motorsGroup, propMatCW, propMatCCW);
     return motorsGroup;
 }
 
@@ -74,6 +99,52 @@ async function attachCadMotors(
         motorsGroup.add(cadMotors);
     } catch (error) {
         console.warn('[DroneModel] Failed to load motor CAD asset.', error);
+    }
+}
+
+async function attachCadPropellers(
+    motorsGroup: THREE.Group,
+    propMatCW: THREE.Material,
+    propMatCCW: THREE.Material
+) {
+    try {
+        const [propGeometryCW, propGeometryCCW] = await Promise.all([
+            loadCadGeometry(prop5030CwUrl),
+            loadCadGeometry(prop5030CcwUrl)
+        ]);
+
+        for (let i = 0; i < PROPELLER_PLACEMENTS.length; i += 1) {
+            const rotor = motorsGroup.getObjectByName(`rotor_${i}`) as THREE.Group | undefined;
+            if (!rotor) continue;
+            const propPlacement = PROPELLER_PLACEMENTS[i];
+            const hubPlacement = HUB_PLACEMENTS[i];
+
+            const fallbackBlade = rotor.getObjectByName(`rotor_fallback_blade_${i}`);
+            if (fallbackBlade) {
+                fallbackBlade.visible = false;
+            }
+
+            const isDiag1 = i === 0 || i === 1;
+            const propMesh = new THREE.Mesh(
+                (isDiag1 ? propGeometryCW : propGeometryCCW).clone(),
+                isDiag1 ? propMatCW : propMatCCW
+            );
+            propMesh.name = `rotor_prop_${i}`;
+            propMesh.scale.setScalar(CAD_MM_TO_SCENE_SCALE);
+            propMesh.position.set(
+                propPlacement.position[0] - hubPlacement.position[0],
+                propPlacement.position[1] - hubPlacement.position[1],
+                propPlacement.position[2] - hubPlacement.position[2]
+            );
+            if (propPlacement.rotation) {
+                propMesh.rotation.set(...propPlacement.rotation);
+            }
+            propMesh.castShadow = true;
+            propMesh.receiveShadow = true;
+            rotor.add(propMesh);
+        }
+    } catch (error) {
+        console.warn('[DroneModel] Failed to load propeller CAD assets.', error);
     }
 }
 
