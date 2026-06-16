@@ -1,2 +1,1 @@
-export { initPythonRuntime, runPythonScript, stopPythonScript } from './runtime.js';
-
+export { disposePythonRunState, initPythonRuntime, runPythonScript, stopPythonScript } from './runtime.js';

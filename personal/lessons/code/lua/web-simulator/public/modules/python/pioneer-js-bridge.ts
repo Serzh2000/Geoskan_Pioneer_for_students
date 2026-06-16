@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { drones } from '../core/state.js';
 import {
     applyGoToLocalPointRequest,

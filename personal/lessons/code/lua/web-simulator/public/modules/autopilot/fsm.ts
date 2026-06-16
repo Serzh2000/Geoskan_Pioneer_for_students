@@ -11,6 +11,7 @@ import { log } from '../shared/logging/logger.js';
 import {
     type CommandName,
     failSimultaneousCommands,
+    canRunInSameTick,
     getCommandName,
     makeSignature,
     MOVEMENT_REACHED_EPSILON,
@@ -81,7 +82,7 @@ export function recordTickCommand(drone: DroneState, command: TickFlightCommand)
         ? makeSignature(tickMs)
         : drone.tickCommandSignature;
 
-    if (signature.commands.length > 0) {
+    if (signature.commands.length > 0 && !canRunInSameTick(signature.commands, command)) {
         signature.commands.push(command);
         failSimultaneousCommands(drone, signature.commands);
     }

@@ -59,7 +59,7 @@ export const ap_goToLocalPoint = function(L: any) {
         z: localFrameOrigin.z + z
     };
     const accepted = applyGoToLocalPointRequest(simState, target);
-    if (accepted) {
+    if (accepted && getCommandSource(simState) !== 'timer') {
         log(`[Lua AP] ap.goToLocalPoint(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}) -> глобально (${target.x.toFixed(2)}, ${target.y.toFixed(2)}, ${target.z.toFixed(2)})${time > 0 ? ' за ' + time + 'с' : ''}; FSM=${simState.fsmState}`, 'info');
     }
     return 0;
@@ -70,6 +70,8 @@ export const ap_updateYaw = function(L: any) {
     const yaw = window.fengari.lua.lua_tonumber(L, 1);
     const simState = getDroneFromLua(L);
     simState.target_yaw = yaw;
-    log(`[Lua AP] ap.updateYaw(${yaw.toFixed(2)} рад)`, 'info');
+    if (getCommandSource(simState) !== 'timer') {
+        log(`[Lua AP] ap.updateYaw(${yaw.toFixed(2)} рад)`, 'info');
+    }
     return 0;
 };

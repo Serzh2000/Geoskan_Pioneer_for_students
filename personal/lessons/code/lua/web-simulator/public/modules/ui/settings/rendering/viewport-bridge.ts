@@ -29,7 +29,7 @@ export type RcPreviewValues = {
     blockedByConflict: boolean;
 };
 
-let lastRawInputs = new Map<string, number>();
+const lastRawInputs = new Map<string, number>();
 let lastActivityAt = 0;
 
 function clampSigned(value: number): number {

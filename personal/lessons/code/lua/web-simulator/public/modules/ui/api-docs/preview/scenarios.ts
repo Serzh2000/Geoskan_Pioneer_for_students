@@ -101,7 +101,6 @@ function renderFsmScenario(
     }
 
     const cycle = elapsed % 8.2;
-    let title = 'FSM: ожидание команды';
     let detail = 'Конечный автомат разрешает только те команды, которые соответствуют текущему состоянию дрона.';
     let altitude = 0.02;
     let x = 0;
@@ -110,39 +109,50 @@ function renderFsmScenario(
     let roll = 0;
     let yaw = 0;
     let rotorSpeed = 0;
-    let phase = 'Фаза: ожидание команды';
+    let status: PreviewStatus;
 
     if (cycle < 1.3) {
-        title = 'IDLE: дрон на земле';
-        phase = 'Фаза: IDLE';
+        status = {
+            title: 'IDLE: дрон на земле',
+            detail,
+            phase: 'Фаза: IDLE'
+        };
     } else if (cycle < 2.6) {
-        title = 'PREFLIGHT: предполетная подготовка';
         detail = 'На этом этапе автопилот раскручивает моторы и готовит аппарат к взлету.';
         rotorSpeed = 11;
         setFloorGlowOpacity(ctx, 0.22);
-        phase = 'Фаза: PREFLIGHT';
+        status = {
+            title: 'PREFLIGHT: предполетная подготовка',
+            detail,
+            phase: 'Фаза: PREFLIGHT'
+        };
     } else if (cycle < 4) {
         const lift = ctx.easeInOut((cycle - 2.6) / 1.4);
-        title = 'TAKEOFF_PROCESS: набор высоты';
         detail = 'После разрешенной команды взлета автомат переводит дрон из земли в устойчивое зависание.';
         altitude = 0.02 + lift * 0.35;
         pitch = -0.05;
         rotorSpeed = 15 + lift * 8;
         setFloorGlowOpacity(ctx, 0.25);
-        phase = 'Фаза: TAKEOFF_PROCESS';
         ctx.updateGuideLine([
             new THREE.Vector3(0, 0, 0.02),
             new THREE.Vector3(0, 0, 0.38)
         ], ctx.guideLine);
+        status = {
+            title: 'TAKEOFF_PROCESS: набор высоты',
+            detail,
+            phase: 'Фаза: TAKEOFF_PROCESS'
+        };
     } else if (cycle < 5.4) {
-        title = compact ? 'FLYING_HOVER: состояние автопилота' : 'FLYING_HOVER: зависание';
         detail = 'В воздухе уже можно переходить к командам движения или разворота.';
         altitude = 0.37;
         rotorSpeed = 21;
-        phase = 'Фаза: FLYING_HOVER';
+        status = {
+            title: compact ? 'FLYING_HOVER: состояние автопилота' : 'FLYING_HOVER: зависание',
+            detail,
+            phase: 'Фаза: FLYING_HOVER'
+        };
     } else if (cycle < 7) {
         const travel = ctx.easeInOut((cycle - 5.4) / 1.6);
-        title = 'FLYING_MOVING: полет к точке';
         detail = 'Именно здесь команды полета к точке допустимы и соответствуют состоянию конечного автомата.';
         altitude = 0.37;
         x = 0.45 * travel;
@@ -165,10 +175,13 @@ function renderFsmScenario(
             new THREE.Vector3(x, y, 0.37),
             new THREE.Vector3(0.45, 0.16, 0.37)
         ]);
-        phase = 'Фаза: FLYING_MOVING';
+        status = {
+            title: 'FLYING_MOVING: полет к точке',
+            detail,
+            phase: 'Фаза: FLYING_MOVING'
+        };
     } else {
         const landProgress = ctx.easeInOut((cycle - 7) / 1.2);
-        title = 'LANDING_PROCESS: снижение и посадка';
         detail = 'Только после воздушных состояний команда посадки считается корректным переходом автомата.';
         x = 0.45;
         y = 0.16;
@@ -182,7 +195,6 @@ function renderFsmScenario(
             ctx.targetMarker.position.set(0.45, 0.16, 0);
             ctx.targetMarker.scale.setScalar(1.04);
         }
-        phase = 'Фаза: LANDING_PROCESS';
         ctx.updatePathLine([
             new THREE.Vector3(0, 0, 0.37),
             new THREE.Vector3(0.45, 0.16, 0.37)
@@ -191,11 +203,16 @@ function renderFsmScenario(
             new THREE.Vector3(0.45, 0.16, 0.37),
             new THREE.Vector3(0.45, 0.16, 0.02)
         ], ctx.guideLine);
+        status = {
+            title: 'LANDING_PROCESS: снижение и посадка',
+            detail,
+            phase: 'Фаза: LANDING_PROCESS'
+        };
     }
 
     ctx.setDronePose(x, y, altitude, pitch, roll, yaw);
     ctx.spinRotors(rotorSpeed, dt);
-    return { title, detail, phase };
+    return status;
 }
 
 export function renderPreviewScenario(

@@ -54,12 +54,32 @@ export interface SceneObjectInfo {
     metaLines?: string[];
 }
 
+export interface RcPreviewOverride {
+    active: boolean;
+    droneId: string;
+    rotation: {
+        x: number;
+        y: number;
+        z: number;
+    };
+    rotorSpeed: number;
+}
+
 const PRINT_BUBBLE_LIFETIME_MS = 4200;
 const PRINT_BUBBLE_MAX_LENGTH = 180;
 const bubbleWorldPosition = new THREE.Vector3();
 const bubbleScreenPosition = new THREE.Vector3();
 let printBubbleOverlay: HTMLDivElement | null = null;
 const printBubbleElements: Record<string, HTMLDivElement> = {};
+let rcPreviewOverride: RcPreviewOverride | null = null;
+
+export function setRcPreviewOverride(override: RcPreviewOverride): void {
+    rcPreviewOverride = override.active ? { ...override } : null;
+}
+
+export function clearRcPreviewOverride(): void {
+    rcPreviewOverride = null;
+}
 
 function ensurePrintBubbleOverlay(): HTMLDivElement | null {
     if (printBubbleOverlay?.isConnected) return printBubbleOverlay;
@@ -242,10 +262,29 @@ export function updateDrone3D(dt: number) {
         } else {
             resetDroneVisuals(id, mesh);
             updateLEDs(mesh, drone);
-            animateRotors(mesh, dt, drone);
+            const previewOverride = rcPreviewOverride?.active && rcPreviewOverride.droneId === id ? rcPreviewOverride : null;
+            if (!previewOverride) {
+                animateRotors(mesh, dt, drone);
+            }
             
             mesh.position.set(drone.pos.x, drone.pos.y, drone.pos.z);
             mesh.rotation.set(drone.orientation.pitch, drone.orientation.roll, drone.orientation.yaw, 'ZYX');
+
+            if (previewOverride) {
+                mesh.rotation.set(
+                    previewOverride.rotation.x,
+                    previewOverride.rotation.y,
+                    previewOverride.rotation.z,
+                    'XYZ'
+                );
+
+                for (let rotorIndex = 0; rotorIndex < 4; rotorIndex += 1) {
+                    const rotor = mesh.getObjectByName(`rotor_${rotorIndex}`);
+                    if (!rotor) continue;
+                    const direction = rotorIndex === 0 || rotorIndex === 1 ? 1 : -1;
+                    rotor.rotation.z += previewOverride.rotorSpeed * direction * dt;
+                }
+            }
         }
 
         updateTrailForDrone(id);

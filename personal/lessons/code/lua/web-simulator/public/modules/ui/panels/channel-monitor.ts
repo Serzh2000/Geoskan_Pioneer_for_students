@@ -1,4 +1,4 @@
-﻿import { simSettings } from '../../core/state.js';
+import { simSettings } from '../../core/state.js';
 import { normalizeCenteredAxis } from '../settings/input/calibration.js';
 import { clamp, clampRc } from '../settings/constants.js';
 import { getConnectedGamepads, getGamepadName } from '../settings/mapping.js';
@@ -30,7 +30,10 @@ type MonitorState = {
 };
 
 function escapeHtml(value: string): string {
-    return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
 }
 
 function toTrackPercent(value: number): number {

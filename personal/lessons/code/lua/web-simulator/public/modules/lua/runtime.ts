@@ -11,19 +11,30 @@ import { runCoroutine } from './runner.js';
 import { createScriptFailureError, showScriptFailureNotice } from '../app/script-execution-notice.js';
 import { extractLuaSyntaxLine, setupLuaBridgeForDrone } from './bridge.js';
 
+function disposeLuaRuntime(id: string) {
+    const drone = drones[id];
+    if (!drone) return;
+
+    const luaState = drone.luaState;
+    drone.luaState = null;
+    drone.timers = [];
+    setLuaExecutionPhase(drone, null);
+
+    if (!luaState) return;
+    try {
+        window.fengari.lua.lua_close(luaState);
+    } catch (e) {
+        console.error('Error closing lua state:', e);
+    }
+}
+
 export function runLuaScript(id: string, scriptContent: string) {
     const drone = drones[id];
     if (!drone) return;
     rememberLuaErrorStack(drone, null);
     setLuaExecutionPhase(drone, 'main chunk');
 
-    if (drone.luaState) {
-        try {
-            window.fengari.lua.lua_close(drone.luaState);
-        } catch (e) {
-            console.error('Error closing lua state:', e);
-        }
-    }
+    disposeLuaRuntime(id);
 
     let L;
     try {
@@ -64,11 +75,7 @@ export function runLuaScript(id: string, scriptContent: string) {
 }
 
 export function stopLuaScript(id: string) {
-    const drone = drones[id];
-    if (drone && drone.luaState) {
-        window.fengari.lua.lua_close(drone.luaState);
-        drone.luaState = null;
-    }
+    disposeLuaRuntime(id);
 }
 
 export function updateTimers() {

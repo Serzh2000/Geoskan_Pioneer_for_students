@@ -21,7 +21,7 @@ export class DroneOrbitControls {
     private previousMouse: {x: number, y: number} = {x: 0, y: 0};
     private mouseButton: number = -1;
     
-    private listeners: { [key: string]: Function[] } = {};
+    private listeners: Record<string, Array<() => void>> = {};
     private pendingObjectBounds: THREE.Box3 = new THREE.Box3();
     private pendingObjectCenter: THREE.Vector3 = new THREE.Vector3();
     private projectedCenter: THREE.Vector3 = new THREE.Vector3();
@@ -126,7 +126,7 @@ export class DroneOrbitControls {
         this.update();
     }
     
-    addEventListener(type: string, listener: Function) {
+    addEventListener(type: string, listener: () => void) {
         if (!this.listeners[type]) this.listeners[type] = [];
         this.listeners[type].push(listener);
     }

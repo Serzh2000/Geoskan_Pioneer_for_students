@@ -11,12 +11,15 @@ if (!button || !statusEl) {
     throw new Error('Export page elements are missing.');
 }
 
-button.addEventListener('click', () => {
+const exportButton = button;
+const exportStatusEl = statusEl;
+
+exportButton.addEventListener('click', () => {
     void exportDroneModel();
 });
 
 async function exportDroneModel() {
-    button.disabled = true;
+    exportButton.disabled = true;
     setStatus('Собираю модель...');
 
     try {
@@ -31,7 +34,7 @@ async function exportDroneModel() {
         console.error('[DroneExport] Failed to export drone model.', error);
         setStatus(`Ошибка экспорта: ${formatError(error)}`);
     } finally {
-        button.disabled = false;
+        exportButton.disabled = false;
     }
 }
 
@@ -84,7 +87,7 @@ function delay(ms: number) {
 }
 
 function setStatus(text: string) {
-    statusEl.textContent = text;
+    exportStatusEl.textContent = text;
 }
 
 function formatError(error: unknown) {

@@ -97,10 +97,18 @@ export function updateCrashedState(simState: DroneState, dt: number) {
 
 export function updateGroundedState(simState: DroneState, dt: number) {
     if (simState.pos.z > 0) {
-        simState.pos.z -= 9.81 * dt * dt;
-        if (simState.pos.z < 0) simState.pos.z = 0;
+        simState.vel.z -= 9.81 * dt;
+        simState.pos.z += simState.vel.z * dt;
+        if (simState.pos.z <= 0) {
+            simState.pos.z = 0;
+            simState.vel.z = 0;
+        }
+    } else {
+        simState.pos.z = 0;
+        simState.vel.z = 0;
     }
-    simState.vel = { x: 0, y: 0, z: 0 };
+    simState.vel.x = 0;
+    simState.vel.y = 0;
     simState.orientation.pitch = 0;
     simState.orientation.roll = 0;
 }

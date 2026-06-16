@@ -6,8 +6,10 @@
  * Сохраняет и восстанавливает скрипты в редакторе при переключении.
  */
 import { log } from '../../shared/logging/logger.js';
-import { currentDroneId, currentScriptLanguage, drones, createDroneState, setCurrentDrone } from '../../core/state.js';
+import { currentDroneId, currentScriptLanguage, drones, createDroneState, removeDroneState, setCurrentDrone } from '../../core/state.js';
 import { getEditorValue, setEditorValue } from '../../editor/index.js';
+import { stopLuaScript } from '../../lua/index.js';
+import { disposePythonRunState, stopPythonScript } from '../../python/index.js';
 
 export function initDroneManager(onSceneUpdate?: () => void) {
     const list = document.getElementById('drone-list') as HTMLDivElement | null;
@@ -18,6 +20,8 @@ export function initDroneManager(onSceneUpdate?: () => void) {
     if (!list || !addBtn || !delBtn) {
         return;
     }
+
+    const listEl = list;
 
     const getActiveDroneId = () => {
         if (currentDroneId && drones[currentDroneId]) return currentDroneId;
@@ -55,7 +59,7 @@ export function initDroneManager(onSceneUpdate?: () => void) {
 
     function updateList() {
         const droneIds = Object.keys(drones);
-        list.innerHTML = '';
+        listEl.innerHTML = '';
 
         if (listCount) {
             listCount.textContent = `${droneIds.length} ${droneIds.length === 1 ? 'дрон' : droneIds.length < 5 ? 'дрона' : 'дронов'}`;
@@ -65,7 +69,7 @@ export function initDroneManager(onSceneUpdate?: () => void) {
             const emptyState = document.createElement('div');
             emptyState.className = 'swarm-list__empty';
             emptyState.textContent = 'Список роя пуст. Добавьте первый дрон, чтобы начать работу.';
-            list.appendChild(emptyState);
+            listEl.appendChild(emptyState);
             updateActionsState();
             return;
         }
@@ -99,19 +103,19 @@ export function initDroneManager(onSceneUpdate?: () => void) {
             main.appendChild(name);
             item.appendChild(main);
             item.appendChild(badge);
-            list.appendChild(item);
+            listEl.appendChild(item);
         });
 
         const activeDroneId = getActiveDroneId();
         if (activeDroneId) {
-            list.setAttribute('aria-activedescendant', `drone-list-item-${activeDroneId}`);
+            listEl.setAttribute('aria-activedescendant', `drone-list-item-${activeDroneId}`);
         } else {
-            list.removeAttribute('aria-activedescendant');
+            listEl.removeAttribute('aria-activedescendant');
         }
         updateActionsState();
     }
 
-    list.addEventListener('click', (event) => {
+    listEl.addEventListener('click', (event) => {
         const target = event.target as HTMLElement | null;
         const item = target?.closest('.swarm-list__item') as HTMLButtonElement | null;
         const nextDroneId = item?.dataset.droneId;
@@ -120,27 +124,24 @@ export function initDroneManager(onSceneUpdate?: () => void) {
         updateList();
     });
 
-    list.addEventListener('keydown', (event) => {
+    listEl.addEventListener('keydown', (event) => {
         const droneIds = Object.keys(drones);
         if (droneIds.length === 0) return;
 
         const currentIndex = Math.max(0, droneIds.indexOf(currentDroneId));
-        let nextIndex = currentIndex;
-
-        if (event.key === 'ArrowDown') {
-            nextIndex = Math.min(droneIds.length - 1, currentIndex + 1);
-        } else if (event.key === 'ArrowUp') {
-            nextIndex = Math.max(0, currentIndex - 1);
-        } else {
-            return;
-        }
+        const nextIndex = event.key === 'ArrowDown'
+            ? Math.min(droneIds.length - 1, currentIndex + 1)
+            : event.key === 'ArrowUp'
+                ? Math.max(0, currentIndex - 1)
+                : -1;
+        if (nextIndex < 0) return;
 
         event.preventDefault();
         const nextDroneId = droneIds[nextIndex];
         switchDrone(nextDroneId);
         updateList();
 
-        const nextItem = list.querySelector(`[data-drone-id="${nextDroneId}"]`) as HTMLButtonElement | null;
+        const nextItem = listEl.querySelector(`[data-drone-id="${nextDroneId}"]`) as HTMLButtonElement | null;
         nextItem?.focus();
     });
 
@@ -164,7 +165,10 @@ export function initDroneManager(onSceneUpdate?: () => void) {
         }
         const id = getActiveDroneId();
         if (id) {
-            delete drones[id];
+            stopLuaScript(id);
+            stopPythonScript(id);
+            disposePythonRunState(id);
+            removeDroneState(id);
             const nextDroneId = Object.keys(drones)[0] || null;
             if (!nextDroneId) {
                 setEditorValue('');

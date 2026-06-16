@@ -1,4 +1,3 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { envGroup } from '../environment/index.js';
 import { getDroneOrDefault } from './runtime-shared.js';
 

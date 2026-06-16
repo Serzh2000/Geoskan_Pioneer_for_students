@@ -15,6 +15,7 @@ export type {
     Orientation,
     QueuedMceCommand,
     ScriptLanguage,
+    TickFlightCommand,
     TickCommandSignature,
     TimerTask,
     Vector3
@@ -31,7 +32,8 @@ import type {
     AuxChannelRange,
     DroneState,
     GamepadInputRef,
-    ScriptLanguage
+    ScriptLanguage,
+    Vector3
 } from './state-types.js';
 import {
     createDroneRecord,
@@ -48,6 +50,8 @@ import {
  */
 export const drones: Record<string, DroneState> = {};
 export let currentDroneId: string = 'drone_1';
+export const MAX_PATH_POINTS = 2000;
+export const pathPoints: Record<string, Vector3[]> = { 'drone_1': [] };
 
 export let currentScriptLanguage: ScriptLanguage = 'lua';
 
@@ -135,6 +139,7 @@ export function matchesAuxRange(value: number, range: AuxChannelRange): boolean 
 export function createDroneState(id: string, name: string, x: number = 0, y: number = 0, z: number = 0): DroneState {
     const drone = createDroneRecord(id, name, x, y, z);
     drones[id] = drone;
+    pathPoints[id] = [];
     return drone;
 }
 
@@ -157,9 +162,6 @@ export const simState = new Proxy({} as DroneState, {
 export function setCurrentDrone(id: string) {
     if (drones[id]) currentDroneId = id;
 }
-
-export const MAX_PATH_POINTS = 2000;
-export const pathPoints: Record<string, Vector3[]> = { 'drone_1': [] };
 
 export function resetRuntimeStatePreservePose(id: string = currentDroneId) {
     const drone = drones[id];
@@ -193,4 +195,9 @@ export function resetState(id: string = currentDroneId) {
     if (!drone) return;
     resetDroneRuntimeState(drone);
     pathPoints[id] = [];
+}
+
+export function removeDroneState(id: string) {
+    delete pathPoints[id];
+    delete drones[id];
 }

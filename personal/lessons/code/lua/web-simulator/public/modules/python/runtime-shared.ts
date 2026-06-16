@@ -7,3 +7,9 @@ export const lastManualSpeedUpdateMs: Record<string, number> = {};
 export function getDroneOrDefault(id: string) {
     return drones[id] || drones[currentDroneId];
 }
+
+export function cleanupPythonRuntimeState(droneId: string) {
+    delete cancelledRuns[droneId];
+    delete localOriginByDrone[droneId];
+    delete lastManualSpeedUpdateMs[droneId];
+}

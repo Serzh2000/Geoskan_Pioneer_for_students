@@ -7,7 +7,9 @@ export default [
       ignores: [
           "**/node_modules/**",
           "**/dist/**",
+          "**/docs/imported/**",
           "**/Описание методов API — документация Pioneer February update 2026_files/**",
+          "**/tools/scratch/**",
           "**/vendor/**",
           "**/dist/assets/*.js",
           "**/*.min.js"

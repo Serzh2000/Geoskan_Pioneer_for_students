@@ -86,6 +86,10 @@ export function pushLuaRuntimeLog(
     };
     appendLimited(getLuaDiagnosticsState(drone).recentLogs, entry, MAX_RUNTIME_LOGS);
 
+    if (level === 'debug') {
+        return;
+    }
+
     const locationSuffix = location ? ` @ ${location}` : '';
     log(`[Lua ${level.toUpperCase()}] ${scope}: ${message} (${formatTickMs(timeMs)})${locationSuffix}`, mapLuaLogLevel(level));
 }

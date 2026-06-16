@@ -24,8 +24,6 @@ import type { GuideLesson, RenderMissionGuidePanel } from '../types.js';
 import { Blockly, compileMissionGuideWorkspace, extractMissionGuideSequence, initBlocklyDefinitions } from '../blockly.js';
 import { evaluateLesson } from '../evaluation/index.js';
 
-let workspace: Blockly.WorkspaceSvg | null = null;
-let blocklyInitialized = false;
 const blocklyTheme = Blockly.Theme.defineTheme('pioneer-light-blockly', {
     name: 'pioneer-light-blockly',
     base: Blockly.Themes.Classic,

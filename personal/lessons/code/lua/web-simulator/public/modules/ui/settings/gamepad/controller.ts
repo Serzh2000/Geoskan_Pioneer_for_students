@@ -38,7 +38,10 @@ export function createGamepadSettingsController(dom: SettingsDomRefs, state: Set
     const getObservedStatsForRef = (ref: GamepadInputRef) => getObservedStats(state.observedInputStats, ref);
     const getModePositions = () => getModeObservedPositions(state.observedInputStats, getMappingRef('mode'));
     const escapeHtml = (value: string): string =>
-        value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+        value
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
     const findCurrentActiveGamepad = (): Gamepad | null =>
         findActiveMappedGamepad(state.activeGamepadIndex, state.activeGamepadId);
     const setAutoStatusState = (mode: 'idle' | 'listening' | 'success', text: string): void => {

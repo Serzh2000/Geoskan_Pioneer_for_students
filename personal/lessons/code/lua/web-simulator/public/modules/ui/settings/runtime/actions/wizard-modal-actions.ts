@@ -73,7 +73,7 @@ export function applyWizardModalConfig(): void {
             binding.sourceId = null;
         }
 
-        const assignRole = (role: ChannelMapping['role'], sourceId: string | undefined, controlType: InputControlType, channel: number) => {
+        const assignRole = (role: ChannelMapping['role'], sourceId: string | null | undefined, controlType: InputControlType, channel: number) => {
             if (!sourceId) return;
             const mapping = profile.channelMappings.find((item) => item.channel === channel && item.role === role);
             if (!mapping) return;

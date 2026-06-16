@@ -114,7 +114,7 @@ function getWizardModalFocus(snapshot: RcRuntimeSnapshot): ViewportFocus {
     return { role: null, stickId: null, axis: null, title };
 }
 
-function getWizardModalSourceLabel(snapshot: RcRuntimeSnapshot, sourceId: string | undefined): string {
+function getWizardModalSourceLabel(snapshot: RcRuntimeSnapshot, sourceId: string | null | undefined): string {
     if (!sourceId) return 'Ожидает захвата';
     const source = snapshot.activeProfile.inputSources.find((item) => item.id === sourceId);
     return source ? `${localizeSourceLabel(source.label)} · ${localizeSourceGroup(source.group)}` : sourceId;

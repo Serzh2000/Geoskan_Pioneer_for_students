@@ -1,4 +1,4 @@
-﻿import * as THREE from 'three';
+import * as THREE from 'three';
 import {
     pointerDownPos,
     transformControl,
@@ -89,7 +89,7 @@ export function onPointerUp(event: PointerEvent) {
                 if (isDroneObject(rootObject) || isTransformableObject(rootObject)) {
                     toggleMultiSelectObject(rootObject);
                     multiSelectedObjects.forEach(obj => updateObjectSelectionVisuals(obj, true));
-                    (window as any).updateSceneManager && (window as any).updateSceneManager();
+                    (window as any).updateSceneManager?.();
                 }
                 return;
             }

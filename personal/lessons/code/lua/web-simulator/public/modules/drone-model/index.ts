@@ -127,7 +127,7 @@ function applyLedMaterialState(ledObject: THREE.Object3D, color: THREE.Color, st
 }
 
 export function animateRotors(droneMesh: THREE.Object3D, dt: number, droneState: any) {
-    if (shouldSpinRotors(droneState)) {
+    if (shouldAnimateRotors(droneState)) {
         for (let i = 0; i < 4; i++) {
             const rotor = droneMesh.getObjectByName(`rotor_${i}`);
             if (rotor) {
@@ -137,4 +137,14 @@ export function animateRotors(droneMesh: THREE.Object3D, dt: number, droneState:
             }
         }
     }
+}
+
+function shouldAnimateRotors(droneState: any) {
+    if (shouldSpinRotors(droneState)) return true;
+
+    return (
+        droneState?.status === 'IDLE'
+        && (droneState?.pos?.z ?? 0) > 0.05
+        && (droneState?.target_pos?.z ?? droneState?.target_alt ?? 0) <= 0
+    );
 }

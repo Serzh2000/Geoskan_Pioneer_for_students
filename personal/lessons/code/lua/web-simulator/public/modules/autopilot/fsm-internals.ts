@@ -9,7 +9,9 @@ import { rememberLuaFailureHint, recordLuaFsmTransition } from '../lua/diagnosti
 import { log } from '../shared/logging/logger.js';
 import { MCECommands } from './mce-events.js';
 
-export const PREFLIGHT_TIMEOUT_MS = 3000;
+// Educational missions often keep LED/setup delays between PREFLIGHT and TAKEOFF.
+// Keep the arming window long enough for those scenarios before auto-reset to IDLE.
+export const PREFLIGHT_TIMEOUT_MS = 8000;
 export const MOVEMENT_REACHED_EPSILON = 0.15;
 export const TAKEOFF_MIN_ALTITUDE = 1.0;
 
@@ -41,6 +43,13 @@ export function getTickCommandLabel(command: TickFlightCommand): string {
         default:
             return command;
     }
+}
+
+function isCompatibleSameTickPair(left: TickFlightCommand, right: TickFlightCommand): boolean {
+    return (
+        (left === 'takeoff' && right === 'goToLocalPoint')
+        || (left === 'goToLocalPoint' && right === 'takeoff')
+    );
 }
 
 export function getCommandName(commandId: number): CommandName {
@@ -89,4 +98,8 @@ export function failSimultaneousCommands(drone: DroneState, commands: TickFlight
     drone.tickCommandSignature = null;
     log(message, 'error');
     throw new Error(message);
+}
+
+export function canRunInSameTick(existing: TickFlightCommand[], incoming: TickFlightCommand): boolean {
+    return existing.every((command) => isCompatibleSameTickPair(command, incoming));
 }

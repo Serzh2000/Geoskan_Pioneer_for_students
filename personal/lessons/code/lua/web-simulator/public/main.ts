@@ -99,7 +99,6 @@ async function startSimulation() {
     (window as any).clearEditorProblemHighlight?.();
     
     // Run all drones
-    let anyStarted = false;
     let anyAttempted = false;
 
     // First save current editor code to the currently selected drone
@@ -126,7 +125,6 @@ async function startSimulation() {
             log('Python: скрипт пустой. Нечего запускать.', 'warn');
             return;
         }
-        anyAttempted = true;
         showScenarioValidationNotice('python', code);
 
         // Stop any previous runtime before starting the new one.
@@ -139,7 +137,6 @@ async function startSimulation() {
 
         try {
             await runPythonScript(id, code);
-            anyStarted = true;
             log(`Python-скрипт запущен для ${drone.name}`, 'success');
         } catch (e: any) {
             drone.running = false;
@@ -186,7 +183,6 @@ async function startSimulation() {
                 throw errCb;
             }
             
-            anyStarted = true;
         } catch (e: any) {
             drone.running = false;
             drone.status = 'ОШИБКА';

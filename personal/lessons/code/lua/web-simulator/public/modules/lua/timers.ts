@@ -2,10 +2,18 @@ import { getDroneFromLua } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 import { pushLuaRuntimeLog } from './diagnostics.js';
 
+const MIN_LUA_TIMER_DELAY_SECONDS = 0.05;
+
+function normalizeLuaDelay(value: number) {
+    if (!Number.isFinite(value)) return MIN_LUA_TIMER_DELAY_SECONDS;
+    if (value <= 0) return MIN_LUA_TIMER_DELAY_SECONDS;
+    return Math.max(MIN_LUA_TIMER_DELAY_SECONDS, value);
+}
+
 export const timer_callLater = function(L: any) {
     if (window.fengari.lua.lua_gettop(L) < 2) return 0;
     const requestedDelay = window.fengari.lua.lua_tonumber(L, 1);
-    const delay = Number.isFinite(requestedDelay) ? Math.max(0, requestedDelay) : 0;
+    const delay = normalizeLuaDelay(requestedDelay);
     window.fengari.lua.lua_pushvalue(L, 2);
     const func_ref = window.fengari.lauxlib.luaL_ref(L, window.fengari.lua.LUA_REGISTRYINDEX);
     const simState = getDroneFromLua(L);
@@ -26,7 +34,7 @@ export const timer_callLater = function(L: any) {
 export const timer_new = function(L: any) {
     if (window.fengari.lua.lua_gettop(L) < 2) return 0;
     const requestedPeriod = window.fengari.lua.lua_tonumber(L, 1);
-    const period = Number.isFinite(requestedPeriod) ? Math.max(0, requestedPeriod) : 0;
+    const period = normalizeLuaDelay(requestedPeriod);
     window.fengari.lua.lua_pushvalue(L, 2);
     const func_ref = window.fengari.lauxlib.luaL_ref(L, window.fengari.lua.LUA_REGISTRYINDEX);
     const simState = getDroneFromLua(L);
@@ -38,7 +46,7 @@ export const timer_new = function(L: any) {
         trigger_time: simState.current_time + period,
         one_shot: false,
         running: false,
-        kind: 'callback',
+        kind: 'callback' as const,
         sourceState: simState.fsmState
     };
     
@@ -89,7 +97,7 @@ export const sys_deltaTime = function(L: any) {
 
 export const js_sleep = function(L: any) {
     const requestedDelay = window.fengari.lua.lua_tonumber(L, 1);
-    const delay = Number.isFinite(requestedDelay) ? Math.max(0, requestedDelay) : 0;
+    const delay = normalizeLuaDelay(requestedDelay);
     const simState = getDroneFromLua(L);
 
     simState.timers.push({

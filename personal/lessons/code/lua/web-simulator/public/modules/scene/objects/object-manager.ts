@@ -7,7 +7,7 @@ import { MarkerMapOptions, SceneObjectOptions, ScenePathPoint } from '../../envi
 import { handleDeselection, deselectObject } from '../interaction/selection.js';
 import { handleSelection, updateObjectSelectionVisuals } from '../interaction/input.js';
 import { findSceneObjectById, getSceneTopLevelObjects, isTransformableObject, listSceneObjects, normalizePoints, parsePointsText } from './object-catalog.js';
-import type { TransformMode } from './object-transform.js';
+import type { RotationAxis, TransformMode } from './object-transform.js';
 import { activateTransformMode, clearSelectedObjectInitialTransform, getRotationStepDegrees, getRotationStepOptions, rememberSelectedObjectInitialTransform, resetSelectedObjectToInitialTransform, rotateSelectedObjectByDegrees, setRotationStepDegrees } from './object-transform.js';
 import { finishLinearFeatureEditing, getLinearFeatureEditingTargetId, isLinearFeatureEditingActive, startLinearFeatureEditing } from '../interaction/linear-editing.js';
 import {

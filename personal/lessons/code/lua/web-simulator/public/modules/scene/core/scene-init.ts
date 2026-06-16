@@ -18,19 +18,19 @@ export let mouse: THREE.Vector2;
 export let selectionHelper: THREE.BoxHelper;
 
 export let canvasContainer: HTMLElement;
-export let droneMeshes: Record<string, THREE.Object3D> = {};
+export const droneMeshes: Record<string, THREE.Object3D> = {};
 export interface DroneTrailVisuals {
     path: THREE.Line;
     particles: THREE.Points;
     lineGeometry: THREE.BufferGeometry;
     pointsGeometry: THREE.BufferGeometry;
 }
-export let droneTrails: Record<string, DroneTrailVisuals> = {};
+export const droneTrails: Record<string, DroneTrailVisuals> = {};
 
 export let is3DActive = false;
 export let selectedObject: THREE.Object3D | null = null;
 export let multiSelectedObjects: THREE.Object3D[] = [];
-export let pointerDownPos = new THREE.Vector2();
+export const pointerDownPos = new THREE.Vector2();
 export let isHittingGizmo = false;
 let canvasResizeObserver: ResizeObserver | null = null;
 let sceneThemeListenerAttached = false;

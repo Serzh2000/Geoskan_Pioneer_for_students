@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { drones } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 import { installPioneerSdkModule } from './pioneer-sdk-module.js';
-import { cancelledRuns, lastManualSpeedUpdateMs, localOriginByDrone } from './runtime-shared.js';
+import { cancelledRuns, cleanupPythonRuntimeState, lastManualSpeedUpdateMs, localOriginByDrone } from './runtime-shared.js';
 import { createScriptFailureError, showScriptFailureNotice } from '../app/script-execution-notice.js';
 
 let pyodideInstance: any = null;
@@ -49,10 +48,23 @@ async function ensurePyodide(): Promise<any> {
     return pyodideLoadPromise;
 }
 type ActivePythonRun = {
+    token: symbol;
     promise: Promise<any>;
 };
 
 const activeRuns: Record<string, ActivePythonRun> = {};
+
+function clearActivePythonRun(droneId: string, token?: symbol) {
+    const activeRun = activeRuns[droneId];
+    if (!activeRun) return;
+    if (token && activeRun.token !== token) return;
+    delete activeRuns[droneId];
+}
+
+export function disposePythonRunState(droneId: string): void {
+    clearActivePythonRun(droneId);
+    cleanupPythonRuntimeState(droneId);
+}
 
 async function validatePythonSyntax(pyodide: any, code: string): Promise<void> {
     const payloadJson = pyodide.runPython(`
@@ -144,28 +156,33 @@ except Exception as e:
 `;
 
     const promise = pyodide.runPythonAsync(wrapped);
-    activeRuns[droneId] = { promise };
+    const token = Symbol(`python-run:${droneId}`);
+    activeRuns[droneId] = { token, promise };
 
     promise.then(() => {
-        if (activeRuns[droneId]) {
+        if (activeRuns[droneId]?.token === token && drones[droneId]) {
             drones[droneId].running = false;
         }
+        clearActivePythonRun(droneId, token);
     }).catch((e: any) => {
         // Если пользователь нажал Stop — JS bridge выбросит PYTHON_CANCELLED.
         const msg = e instanceof Error ? e.message : String(e);
         log(`Python run error (${droneId}): ${msg}`, 'error');
         if (msg.includes('PYTHON_CANCELLED')) {
+            clearActivePythonRun(droneId, token);
             return;
         }
-        if (drones[droneId]) {
+        if (activeRuns[droneId]?.token === token && drones[droneId]) {
             drones[droneId].running = false;
             drones[droneId].status = 'ОШИБКА';
         }
+        clearActivePythonRun(droneId, token);
         showScriptFailureNotice('python', createScriptFailureError('runtime', msg));
     });
 }
 
 export function stopPythonScript(droneId: string): void {
+    const hasActiveRun = Boolean(activeRuns[droneId]);
     cancelledRuns[droneId] = true;
     const d = drones[droneId];
     if (d) {
@@ -173,6 +190,9 @@ export function stopPythonScript(droneId: string): void {
         d.status = 'ОСТАНОВЛЕН';
         d.pendingLocalPoint = false;
         d.pointReachedFlag = false;
+    }
+    if (!hasActiveRun) {
+        disposePythonRunState(droneId);
     }
 }
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { installJsRuntimeAPI } from './pioneer-js-bridge.js';
 
 const PIONEER_SDK_PRELUDE = `

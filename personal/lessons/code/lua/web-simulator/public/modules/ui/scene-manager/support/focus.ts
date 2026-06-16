@@ -1,4 +1,4 @@
-import type { SceneManagerDomRefs } from './dom.js';
+import type { SceneManagerDomRefs } from '../types.js';
 import { getMapInputs } from './maps.js';
 
 export function isSceneEditorFocused(elements: SceneManagerDomRefs) {

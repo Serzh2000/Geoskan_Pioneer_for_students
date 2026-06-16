@@ -31,9 +31,11 @@ const LOG_CATEGORY_DEFINITIONS: LogCategoryDefinition[] = [
 
 const ALL_LOGS_LABEL = 'Все';
 const DEFAULT_EMPTY_MESSAGE = 'Журнал ожидает первые события симулятора.';
+const MAX_LOG_ENTRIES = 400;
 
-let logEntries: LogRecord[] = [];
+const logEntries: LogRecord[] = [];
 let activeCategory: LogCategoryKey = 'all';
+let renderScheduled = false;
 
 export function extractTagAndMessage(rawMessage: string): ParsedLogMessage {
     const trimmedMessage = rawMessage.trim();
@@ -162,6 +164,8 @@ function renderLogStream(logs: HTMLElement) {
 }
 
 function renderLogsUI() {
+    renderScheduled = false;
+
     const logs = document.getElementById('logs');
     if (!logs) return;
 
@@ -173,6 +177,17 @@ function renderLogsUI() {
     }
 
     renderLogStream(logs);
+}
+
+function scheduleLogsRender() {
+    if (renderScheduled) return;
+    renderScheduled = true;
+
+    const schedule = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
+        ? window.requestAnimationFrame.bind(window)
+        : (cb: FrameRequestCallback) => window.setTimeout(() => cb(performance.now()), 16);
+
+    schedule(() => renderLogsUI());
 }
 
 export function resolveLogCategory(rawMessage: string, parsedMessage: ParsedLogMessage): Exclude<LogCategoryKey, 'all'> {
@@ -206,5 +221,9 @@ export function log(msg: string, type: LogLevel = 'info') {
         category
     });
 
-    renderLogsUI();
+    if (logEntries.length > MAX_LOG_ENTRIES) {
+        logEntries.splice(0, logEntries.length - MAX_LOG_ENTRIES);
+    }
+
+    scheduleLogsRender();
 }

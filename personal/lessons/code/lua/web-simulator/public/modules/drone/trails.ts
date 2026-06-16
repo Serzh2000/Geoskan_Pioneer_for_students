@@ -28,6 +28,10 @@ export function initTrailForDrone(id: string) {
     const lineGeometry = new THREE.BufferGeometry();
     log(`[3D-INIT] Инициализация трейла для ${id}`, 'info');
 
+    const linePositions = new Float32Array(MAX_PATH_POINTS * 3);
+    lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+    lineGeometry.setDrawRange(0, 0);
+
     const pointsGeometry = new THREE.BufferGeometry();
     const positions = new Float32Array(MAX_PATH_POINTS * 3);
     pointsGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -94,13 +98,12 @@ export function updateTrailForDrone(id: string) {
     const trail = droneTrails[id];
 
     if (simSettings.showTracer && pts.length > 1) {
+        const linePositions = trail.lineGeometry.attributes.position.array as Float32Array;
         const pointPositions = trail.pointsGeometry.attributes.position.array as Float32Array;
+        writePositions(linePositions, pts);
         writePositions(pointPositions, pts);
-        trail.lineGeometry.setAttribute(
-            'position',
-            new THREE.Float32BufferAttribute(pts.flatMap((pt) => [pt.x, pt.y, pt.z]), 3)
-        );
         trail.lineGeometry.setDrawRange(0, pts.length);
+        trail.lineGeometry.attributes.position.needsUpdate = true;
         trail.lineGeometry.computeBoundingSphere();
 
         trail.pointsGeometry.setDrawRange(0, pts.length);
@@ -125,4 +128,6 @@ export function updateTrailForDrone(id: string) {
 
     trail.path.visible = false;
     trail.particles.visible = false;
+    trail.lineGeometry.setDrawRange(0, 0);
+    trail.pointsGeometry.setDrawRange(0, 0);
 }
