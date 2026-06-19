@@ -121,6 +121,12 @@ function classifyEntry(name: string, language: ScriptLanguage): ApiCategoryId {
 }
 
 function buildSearchText(name: string, doc: ApiDoc, scopeLabel: string): string {
+    const directionSearchTerms = doc.direction === 'to-autopilot'
+        ? ['в автопилот', 'автопилоту', 'отправить', 'команда']
+        : doc.direction === 'from-autopilot'
+            ? ['от автопилота', 'из автопилота', 'приходит', 'событие']
+            : [];
+
     return [
         name,
         scopeLabel,
@@ -129,7 +135,9 @@ function buildSearchText(name: string, doc: ApiDoc, scopeLabel: string): string 
         doc.params,
         doc.returns,
         doc.example,
-        doc.kind
+        doc.kind,
+        ...(doc.aliases || []),
+        ...directionSearchTerms
     ]
         .filter(Boolean)
         .join(' ')

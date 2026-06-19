@@ -93,6 +93,9 @@ export interface DroneState {
     id: string;
     name: string;
     running: boolean;
+    luaHasEventCallback: boolean;
+    luaMissionCommandsAcceptedWithoutCallback: number;
+    luaMissingCallbackNoticeShown: boolean;
     current_time: number;
     pos: Vector3;
     vel: Vector3;

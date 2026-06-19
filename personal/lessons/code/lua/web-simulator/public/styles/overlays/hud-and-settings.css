@@ -1,4 +1,4 @@
-﻿/* Split into focused partials to keep the entrypoint stable. */
+/* Split into focused partials to keep the entrypoint stable. */
 @import url('./hud-and-settings/hud-shell.css');
 @import url('./hud-and-settings/simulation-notice-overlay.css');
 @import url('./hud-and-settings/settings-groups.css');

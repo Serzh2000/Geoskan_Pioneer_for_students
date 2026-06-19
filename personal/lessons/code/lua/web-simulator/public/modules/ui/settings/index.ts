@@ -10,6 +10,7 @@ import { bindGamepadSettingsControls, bindGeneralSettingsControls, syncInversion
 import { collectSettingsDomRefs } from './dom.js';
 import { createGamepadSettingsController } from './gamepad/controller.js';
 import { setMappingRef } from './mapping.js';
+import { initAutopilotParamsUI } from './autopilot-params-ui.js';
 import { createSettingsRuntimeState } from './runtime-state.js';
 import { initWizard } from './wizard.js';
 
@@ -18,6 +19,7 @@ export function initSettingsUI() {
     const state = createSettingsRuntimeState();
     const controller = createGamepadSettingsController(dom, state);
 
+    initAutopilotParamsUI();
     initWizard();
     bindGeneralSettingsControls(dom);
     bindGamepadSettingsControls({

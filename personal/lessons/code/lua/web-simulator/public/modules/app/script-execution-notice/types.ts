@@ -25,6 +25,7 @@ export type HumanizedScriptFailure = {
 export type NoticeSuppressionState = {
     simultaneousCommands: boolean;
     earlyRoute: boolean;
+    missingCallback: boolean;
 };
 
 export type ScenarioValidationResult = {

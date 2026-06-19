@@ -2,13 +2,15 @@ import type { ApiDoc } from './api-docs-types.js';
 
 export const luaApiDocsFlight: Record<string, ApiDoc> = {
     'ap.push': {
-        desc: 'Добавляет команду в очередь автопилота.',
+        desc: 'Добавляет команду или событие в очередь автопилота.',
         syntax: 'ap.push(event)',
         params: 'event (число или константа Ev.*)',
         returns: 'nil',
         example: 'ap.push(Ev.MCE_TAKEOFF)',
         kind: 'Method',
-        insertText: 'push(${1:event})'
+        insertText: 'push(${1:event})',
+        aliases: ['команда', 'событие', 'очередь команд', 'отправить автопилоту'],
+        direction: 'to-autopilot'
     },
     'ap.goToLocalPoint': {
         desc: 'Полет в точку в локальной системе координат (метры).',
@@ -17,7 +19,9 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         returns: 'nil',
         example: 'ap.goToLocalPoint(1.5, 0, 1.0, 5)',
         kind: 'Method',
-        insertText: 'goToLocalPoint(${1:x}, ${2:y}, ${3:z}, ${4:time})'
+        insertText: 'goToLocalPoint(${1:x}, ${2:y}, ${3:z}, ${4:time})',
+        aliases: ['лететь в точку', 'полет к точке', 'перелет', 'goto local point'],
+        direction: 'to-autopilot'
     },
     'ap.goToPoint': {
         desc: 'Полет в глобальные координаты (GPS).',
@@ -26,7 +30,9 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         returns: 'nil',
         example: 'ap.goToPoint(600859810, 304206500, 50)',
         kind: 'Method',
-        insertText: 'goToPoint(${1:lat}, ${2:lon}, ${3:alt})'
+        insertText: 'goToPoint(${1:lat}, ${2:lon}, ${3:alt})',
+        aliases: ['gps точка', 'глобальная точка', 'координаты gps'],
+        direction: 'to-autopilot'
     },
     'ap.updateYaw': {
         desc: 'Установка угла рыскания (курса).',
@@ -35,7 +41,9 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         returns: 'nil',
         example: 'ap.updateYaw(Math.PI / 2)',
         kind: 'Method',
-        insertText: 'updateYaw(${1:angle})'
+        insertText: 'updateYaw(${1:angle})',
+        aliases: ['курс', 'рыскание', 'yaw', 'поворот'],
+        direction: 'to-autopilot'
     },
 
     'Timer.callLater': {
@@ -150,7 +158,7 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
     },
 
     'camera.requestMakeShot': {
-        desc: 'Запрос на создание снимка.',
+        desc: 'Создает снимок с FPV-камеры дрона и сразу скачивает PNG в браузере.',
         syntax: 'camera.requestMakeShot()',
         params: 'none',
         returns: 'nil',
@@ -168,7 +176,7 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         insertText: 'checkRequestShot()'
     },
     'camera.requestRecordStart': {
-        desc: 'Запрос на старт записи видео.',
+        desc: 'Запускает запись видео с FPV-камеры дрона.',
         syntax: 'camera.requestRecordStart()',
         params: 'none',
         returns: 'nil',
@@ -177,7 +185,7 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         insertText: 'requestRecordStart()'
     },
     'camera.requestRecordStop': {
-        desc: 'Запрос на остановку записи видео.',
+        desc: 'Останавливает FPV-запись и сразу скачивает готовое видео в браузере.',
         syntax: 'camera.requestRecordStop()',
         params: 'none',
         returns: 'nil',

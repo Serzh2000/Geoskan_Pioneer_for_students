@@ -2,9 +2,26 @@ import { getDroneFromLua } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 import { pushCommand } from '../autopilot/mce-events.js';
 import { applyGoToLocalPointRequest, getCommandSource, queueMceCommand } from '../autopilot/fsm.js';
+import { showMissingCallbackMissionNotice } from '../app/script-execution-notice.js';
 import { describeCommandId, pushLuaRuntimeLog } from './diagnostics.js';
+import { allowLuaMissionCommand } from './mission-guard.js';
 
 let localFrameOrigin = { x: 0, y: 0, z: 0 };
+
+function ensureLuaMissionCommandAllowed(simState: ReturnType<typeof getDroneFromLua>, apiName: string) {
+    if (allowLuaMissionCommand(simState)) return true;
+
+    const warning = `В сценарии нет function callback(event), поэтому после первой команды миссии вызов ${apiName} проигнорирован. Автопилот не сможет доставить подтверждающие события обратно в Lua.`;
+    pushLuaRuntimeLog(simState, 'warn', apiName, warning, null);
+    log(`[Lua AP] ${warning}`, 'warn');
+
+    if (!simState.luaMissingCallbackNoticeShown) {
+        simState.luaMissingCallbackNoticeShown = true;
+        showMissingCallbackMissionNotice(apiName);
+    }
+
+    return false;
+}
 
 export function setLocalFrameOrigin(x: number, y: number, z: number) {
     localFrameOrigin = { x, y, z };
@@ -15,6 +32,7 @@ export const ap_push = function(L: any) {
     if (window.fengari.lua.lua_gettop(L) < 1) return 0;
     const event = window.fengari.lua.lua_tointeger(L, 1);
     const simState = getDroneFromLua(L);
+    if (!ensureLuaMissionCommandAllowed(simState, `ap.push(${describeCommandId(event)})`)) return 0;
     pushLuaRuntimeLog(
         simState,
         'debug',
@@ -34,6 +52,7 @@ export const ap_goToPoint = function(L: any) {
     const lon = window.fengari.lua.lua_tonumber(L, 2);
     const alt = window.fengari.lua.lua_tonumber(L, 3);
     const simState = getDroneFromLua(L);
+    if (!ensureLuaMissionCommandAllowed(simState, 'ap.goToPoint(...)')) return 0;
     const accepted = applyGoToLocalPointRequest(simState, {
         x: (lon - 304206500) * 0.01,
         y: (lat - 600859810) * 0.01,
@@ -53,6 +72,7 @@ export const ap_goToLocalPoint = function(L: any) {
     const time = (window.fengari.lua.lua_gettop(L) >= 4) ? window.fengari.lua.lua_tonumber(L, 4) : 0;
     
     const simState = getDroneFromLua(L);
+    if (!ensureLuaMissionCommandAllowed(simState, 'ap.goToLocalPoint(...)')) return 0;
     const target = {
         x: localFrameOrigin.x + x,
         y: localFrameOrigin.y + y,

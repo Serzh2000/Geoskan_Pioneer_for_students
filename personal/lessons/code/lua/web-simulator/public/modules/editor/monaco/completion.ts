@@ -1,4 +1,6 @@
-﻿import { apiDocs, evConstants, pythonApiDocs } from '../../docs/api-docs.js';
+﻿import { getLineTextBeforeCursor, getTextBeforeCursor } from './completion/context.js';
+import { getLuaCompletionEntries, getPythonCompletionEntries } from './completion/entries.js';
+import { dedupeSuggestions, type CompletionDocEntry } from './completion/types.js';
 
 let completionProvidersRegistered = false;
 
@@ -9,22 +11,17 @@ function ensureLanguageRegistered(monaco: any, id: string): void {
     }
 }
 
-function parseApiMemberKey(key: string): { owner: string; separator: '.' | ':'; member: string } | null {
-    const match = key.match(/^(.*?)([.:])([^.:]+)$/);
-    if (!match) return null;
-    const [, owner, separator, member] = match;
-    if (separator !== '.' && separator !== ':') return null;
-    return { owner, separator, member };
-}
+export { getLuaCompletionEntries, getPythonCompletionEntries } from './completion/entries.js';
 
-function dedupeSuggestions(suggestions: any[]) {
-    const seen = new Set<string>();
-    return suggestions.filter((item) => {
-        const key = `${String(item.label)}|${String(item.insertText ?? '')}|${String(item.kind ?? '')}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-    });
+function toMonacoSuggestions(monaco: any, entries: CompletionDocEntry[], range: any): any[] {
+    return entries.map((entry) => ({
+        label: entry.label,
+        kind: (monaco.languages.CompletionItemKind as any)[entry.kind] || monaco.languages.CompletionItemKind.Method,
+        insertText: entry.insertText,
+        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+        documentation: { value: entry.documentation },
+        range
+    }));
 }
 
 export function setupCompletionProvider(monaco: any) {
@@ -34,7 +31,7 @@ export function setupCompletionProvider(monaco: any) {
     ensureLanguageRegistered(monaco, 'python');
 
     monaco.languages.registerCompletionItemProvider('lua', {
-        provideCompletionItems: function(model: any, position: any) {
+        provideCompletionItems(model: any, position: any) {
             const word = model.getWordUntilPosition(position);
             const range = {
                 startLineNumber: position.lineNumber,
@@ -42,72 +39,17 @@ export function setupCompletionProvider(monaco: any) {
                 startColumn: word.startColumn,
                 endColumn: word.endColumn
             };
-            
-            const suggestions: any[] = [];
-            const lineContent = model.getLineContent(position.lineNumber);
-            const textBeforeCursor = lineContent.substring(0, position.column - 1);
 
-            // API Methods suggestions
-            for (const [key, doc] of Object.entries(apiDocs as any)) {
-                const docObj = doc as any;
-                const parsed = parseApiMemberKey(key);
-                if (parsed) {
-                    if (textBeforeCursor.trim().endsWith(`${parsed.owner}${parsed.separator}`)) {
-                         suggestions.push({
-                            label: parsed.member,
-                            kind: (monaco.languages.CompletionItemKind as any)[docObj.kind] || monaco.languages.CompletionItemKind.Method,
-                            insertText: docObj.insertText || parsed.member,
-                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                            documentation: { value: docObj.desc },
-                            range: range
-                        });
-                    }
-                } else {
-                    // Global functions or Modules
-                    suggestions.push({
-                        label: key,
-                        kind: (monaco.languages.CompletionItemKind as any)[docObj.kind] || monaco.languages.CompletionItemKind.Function,
-                        insertText: docObj.insertText || key,
-                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                        documentation: { value: docObj.desc },
-                        range: range
-                    });
-                }
-            }
-
-            // Suggest Modules if typing fresh
-            const modules = ['ap', 'Sensors', 'Timer', 'Ledbar', 'camera', 'Gpio', 'Uart', 'Spi', 'mailbox', 'Ev'];
-            modules.forEach((mod) => {
-                suggestions.push({
-                    label: mod,
-                    kind: monaco.languages.CompletionItemKind.Module,
-                    insertText: mod,
-                    documentation: "Pioneer Module",
-                    range: range
-                });
-            });
-            
-            // Suggest Ev constants
-            if (textBeforeCursor.trim().endsWith('Ev.')) {
-                evConstants.forEach(ev => {
-                     suggestions.push({
-                        label: ev,
-                        kind: monaco.languages.CompletionItemKind.EnumMember,
-                        insertText: ev,
-                        documentation: "Event Constant",
-                        range: range
-                    });
-                });
-            }
-
+            const documentText = getTextBeforeCursor(model, position);
+            const textBeforeCursor = getLineTextBeforeCursor(model, position);
+            const suggestions = toMonacoSuggestions(monaco, getLuaCompletionEntries(documentText, textBeforeCursor), range);
             return { suggestions: dedupeSuggestions(suggestions) };
         },
         triggerCharacters: ['.', ':']
     });
 
-    // Python completion: подсказываем методы Pioneer/Camera при вводе после точки.
     monaco.languages.registerCompletionItemProvider('python', {
-        provideCompletionItems: function(model: any, position: any) {
+        provideCompletionItems(model: any, position: any) {
             const word = model.getWordUntilPosition(position);
             const range = {
                 startLineNumber: position.lineNumber,
@@ -116,54 +58,9 @@ export function setupCompletionProvider(monaco: any) {
                 endColumn: word.endColumn
             };
 
-            const suggestions: any[] = [];
-            const lineContent = model.getLineContent(position.lineNumber);
-            const textBeforeCursor = lineContent.substring(0, position.column - 1);
-            const normalized = textBeforeCursor.trim();
-
-            const methodDocs = Object.entries(pythonApiDocs as Record<string, any>)
-                .filter(([key]) => key.includes('.'))
-                .map(([key, doc]: [string, any]) => {
-                    const method = key.split('.').slice(-1)[0];
-                    return { method, key, doc };
-                });
-
-            // Если курсор после точки (пример: "pioneer_mini.")
-            if (normalized.endsWith('.')) {
-                methodDocs.forEach(({ method, doc }) => {
-                    suggestions.push({
-                        label: method,
-                        kind: (monaco.languages.CompletionItemKind as any)[doc.kind] || monaco.languages.CompletionItemKind.Method,
-                        insertText: doc.insertText || method,
-                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-                        documentation: { value: doc.desc || '' },
-                        range: range
-                    });
-                });
-            } else {
-                // Предложим ключевые классы.
-                ['Pioneer', 'Camera', 'VideoStream', 'time'].forEach((cls) => {
-                    suggestions.push({
-                        label: cls,
-                        kind: monaco.languages.CompletionItemKind.Module,
-                        insertText: cls,
-                        documentation: 'Pioneer SDK',
-                        range: range
-                    });
-                });
-
-                // И чуть-чуть подсказок для конструктора/часто используемых функций.
-                if (normalized.length === 0) {
-                    suggestions.push({
-                        label: 'pioneer',
-                        kind: monaco.languages.CompletionItemKind.Variable,
-                        insertText: 'pioneer',
-                        documentation: 'Instance of Pioneer',
-                        range: range
-                    });
-                }
-            }
-
+            const documentText = getTextBeforeCursor(model, position);
+            const textBeforeCursor = getLineTextBeforeCursor(model, position);
+            const suggestions = toMonacoSuggestions(monaco, getPythonCompletionEntries(documentText, textBeforeCursor), range);
             return { suggestions: dedupeSuggestions(suggestions) };
         },
         triggerCharacters: ['.']

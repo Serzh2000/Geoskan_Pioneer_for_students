@@ -204,7 +204,7 @@ export const LUA_SETUP_SCRIPT = `
             checkRequestShot = js_camera_checkRequestShot,
             requestRecordStart = js_camera_requestRecordStart,
             requestRecordStop = js_camera_requestRecordStop,
-            checkRequestRecord = js_camera_checkRequestShot
+            checkRequestRecord = js_camera_checkRequestRecord
         }
         Gpio = { new = js_gpio_new, A=1, B=2, C=3, D=4, E=5, INPUT=0, OUTPUT=1, ALTFU=2 }
         Uart = { new = js_uart_new, PARITY_NONE=0, PARITY_EVEN=1, PARITY_ODD=2, ONE_STOP=1, TWO_STOP=2 }
@@ -234,5 +234,4 @@ export const LUA_SETUP_SCRIPT = `
         function Ledbar:set(index, r, g, b, w)
             js_ledbar_set(index, r or 0, g or 0, b or 0, w or 0)
         end
-        function callback(event) end
     `;

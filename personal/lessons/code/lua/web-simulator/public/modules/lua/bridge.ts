@@ -11,7 +11,7 @@ import {
 import { ap_push, ap_goToPoint, ap_goToLocalPoint, ap_updateYaw } from './autopilot.js';
 import { sensors_pos, sensors_vel, sensors_accel, sensors_gyro, sensors_orientation, sensors_range, sensors_battery, sensors_tof, sensors_rc } from './sensors.js';
 import { timer_callLater, timer_new, sys_time, sys_deltaTime, js_sleep } from './timers.js';
-import { camera_requestMakeShot, camera_checkRequestShot, camera_requestRecordStart, camera_requestRecordStop, gpio_new, uart_new, spi_new } from './hardware.js';
+import { camera_requestMakeShot, camera_checkRequestShot, camera_requestRecordStart, camera_requestRecordStop, camera_checkRequestRecord, gpio_new, uart_new, spi_new } from './hardware.js';
 import { ledbar_fromHSV, js_init_leds, js_ledbar_set } from './leds.js';
 import { LUA_SETUP_SCRIPT } from './setup-script.js';
 
@@ -51,6 +51,7 @@ function registerLuaBridgeFunctions(luaState: any) {
     lua.lua_register(luaState, 'js_camera_checkRequestShot', camera_checkRequestShot);
     lua.lua_register(luaState, 'js_camera_requestRecordStart', camera_requestRecordStart);
     lua.lua_register(luaState, 'js_camera_requestRecordStop', camera_requestRecordStop);
+    lua.lua_register(luaState, 'js_camera_checkRequestRecord', camera_checkRequestRecord);
     lua.lua_register(luaState, 'js_gpio_new', gpio_new);
     lua.lua_register(luaState, 'js_uart_new', uart_new);
     lua.lua_register(luaState, 'js_spi_new', spi_new);

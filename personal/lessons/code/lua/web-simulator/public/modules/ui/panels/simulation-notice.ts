@@ -5,9 +5,27 @@ type SimulationNoticePayload = string | {
     level?: 'warn' | 'info' | 'error';
 };
 
-export function initSimulationNotice() {
+function resolveSimulationNoticeHost() {
+    const editorPanelContent = document.querySelector('#editor-panel .panel-content--editor') as HTMLElement | null;
+    if (editorPanelContent) {
+        return {
+            element: editorPanelContent,
+            mode: 'editor' as const
+        };
+    }
+
     const sceneContainer = document.querySelector('.scene-container') as HTMLElement | null;
-    if (!sceneContainer) return;
+    return sceneContainer
+        ? {
+            element: sceneContainer,
+            mode: 'scene' as const
+        }
+        : null;
+}
+
+export function initSimulationNotice() {
+    const host = resolveSimulationNoticeHost();
+    if (!host?.element) return;
 
     let notice = document.getElementById('simulation-notice') as HTMLDivElement | null;
     if (!notice) {
@@ -26,8 +44,11 @@ export function initSimulationNotice() {
                 <div class="simulation-notice__details"></div>
             </div>
         `;
-        sceneContainer.appendChild(notice);
     }
+    if (notice.parentElement !== host.element) {
+        host.element.appendChild(notice);
+    }
+    notice.classList.toggle('simulation-notice--editor-docked', host.mode === 'editor');
 
     const messageEl = notice.querySelector('.simulation-notice__message') as HTMLDivElement | null;
     const detailsEl = notice.querySelector('.simulation-notice__details') as HTMLDivElement | null;

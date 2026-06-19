@@ -10,6 +10,10 @@ describe('lua script execution notice scenario validation', () => {
     beforeEach(() => {
         harness.setShownNotice(null);
         harness.resetScriptExecutionNoticeState();
+        (globalThis as any).window.setTimeout = (cb: () => void) => {
+            cb();
+            return 0;
+        };
         (globalThis as any).window.showSimulationNotice = (payload: any) => {
             harness.setShownNotice(payload);
         };
@@ -35,6 +39,20 @@ end`;
         expect(harness.getShownNotice()).toBeNull();
     });
 
+    test('explains that only the first mission command will run without callback(event)', () => {
+        const code = `ap.push(Ev.MCE_PREFLIGHT)
+Timer.callLater(2, function()
+    ap.push(Ev.MCE_TAKEOFF)
+end)`;
+
+        const result = harness.showScenarioValidationNotice('lua', code);
+
+        expect(result.shouldBlock).toBe(false);
+        expect(harness.getShownNotice()).not.toBeNull();
+        expect(String(harness.getShownNotice().detailsHtml || '')).toContain('только первую команду миссии');
+        expect(String(harness.getShownNotice().detailsHtml || '')).toContain('подтверждающие события');
+    });
+
     test('warns for immediate lua mission commands', () => {
         const code = `ap.push(Ev.MCE_PREFLIGHT)
 ap.push(Ev.MCE_TAKEOFF)
@@ -50,7 +68,7 @@ ap.push(Ev.MCE_LANDING)`;
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('<code>Ev.ENGINES_STARTED</code> -> <code>Ev.TAKEOFF_COMPLETE</code> -> <code>Ev.POINT_REACHED</code>');
     });
 
-    test('does not warn for lua mission separated by sleep calls', () => {
+    test('warns for lua mission separated by sleep calls when callback(event) is absent', () => {
         const code = `ap.push(Ev.MCE_PREFLIGHT)
 sleep(1)
 ap.push(Ev.MCE_TAKEOFF)
@@ -61,7 +79,8 @@ ap.push(Ev.MCE_LANDING)`;
 
         harness.showScenarioValidationNotice('lua', code);
 
-        expect(harness.getShownNotice()).toBeNull();
+        expect(harness.getShownNotice()).not.toBeNull();
+        expect(String(harness.getShownNotice().detailsHtml || '')).toContain('только первую команду миссии');
     });
 
     test('warns when Timer.callLater receives an expression result', () => {

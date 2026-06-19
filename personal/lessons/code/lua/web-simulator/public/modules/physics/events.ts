@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { getAutopilotRuntimeConfig } from '../autopilot/params-runtime.js';
 import type { DroneState } from '../core/state.js';
 import { completePointReached, completeTakeoff, isMovementReached } from '../autopilot/fsm.js';
 import { triggerLuaCallback } from '../lua/index.js';
@@ -30,9 +31,13 @@ export function beginDisarmedFall(simState: DroneState, id: string, reason: stri
 export function shouldCrashOnGroundImpact(fallHeight: number, verticalSpeed: number, totalSpeed: number) {
     if (fallHeight < GROUND_IMPACT_MIN_HEIGHT) return false;
 
+    const shockAccel = getAutopilotRuntimeConfig().safety.shockAccel;
+    const effectiveVerticalThreshold = GROUND_IMPACT_VERTICAL_SPEED_THRESHOLD * Math.max(0.35, shockAccel / 2);
+    const effectiveTotalThreshold = GROUND_IMPACT_TOTAL_SPEED_THRESHOLD * Math.max(0.35, shockAccel / 2);
+
     return (
-        verticalSpeed >= GROUND_IMPACT_VERTICAL_SPEED_THRESHOLD
-        || totalSpeed >= GROUND_IMPACT_TOTAL_SPEED_THRESHOLD
+        verticalSpeed >= effectiveVerticalThreshold
+        || totalSpeed >= effectiveTotalThreshold
     );
 }
 

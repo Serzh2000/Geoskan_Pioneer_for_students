@@ -104,6 +104,12 @@ function renderEntry(entry: ApiEntryView): string {
         : 'class="api-header"';
     const scopeTag = escapeHtml(entry.scopeLabel);
     const kind = escapeHtml(entry.doc.kind || 'Method');
+    const directionLabel = entry.doc.direction === 'to-autopilot'
+        ? 'В автопилот'
+        : entry.doc.direction === 'from-autopilot'
+            ? 'От автопилота'
+            : '';
+    const aliases = (entry.doc.aliases || []).slice(0, 6);
 
     return `
         <div class="api-entry ${isInteractive ? 'api-entry--interactive' : ''}">
@@ -112,6 +118,7 @@ function renderEntry(entry: ApiEntryView): string {
                     <span class="api-name">${escapeHtml(entry.name)}</span>
                     <span class="api-tags">
                         <span class="api-tag">${scopeTag}</span>
+                        ${directionLabel ? `<span class="api-tag api-tag--accent">${escapeHtml(directionLabel)}</span>` : ''}
                         ${isInteractive ? '<span class="api-tag api-tag--accent">3D</span>' : ''}
                     </span>
                 </span>
@@ -125,6 +132,8 @@ function renderEntry(entry: ApiEntryView): string {
                 ${entry.doc.syntax ? `<div class="api-details-row"><span class="api-details-label">Синтаксис:</span><span class="api-details-value">${highlightApiCode(entry.doc.syntax)}</span></div>` : ''}
                 ${entry.doc.params ? `<div class="api-details-row"><span class="api-details-label">Аргументы:</span><span class="api-details-value">${highlightApiCode(entry.doc.params)}</span></div>` : ''}
                 ${entry.doc.returns ? `<div class="api-details-row"><span class="api-details-label">Возвращает:</span><span class="api-details-value">${highlightApiCode(entry.doc.returns)}</span></div>` : ''}
+                ${directionLabel ? `<div class="api-details-row"><span class="api-details-label">Направление:</span><span class="api-details-value">${escapeHtml(directionLabel)}</span></div>` : ''}
+                ${aliases.length ? `<div class="api-details-row"><span class="api-details-label">Поиск:</span><span class="api-details-value">${escapeHtml(aliases.join(', '))}</span></div>` : ''}
             </div>
             ${entry.doc.example ? `<div class="api-example">${highlightApiCode(entry.doc.example)}</div>` : ''}
             ${isOpen ? renderPreviewShell(entry) : ''}

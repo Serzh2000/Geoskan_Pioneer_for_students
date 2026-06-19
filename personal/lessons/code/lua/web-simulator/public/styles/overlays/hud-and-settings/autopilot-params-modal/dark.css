@@ -1,0 +1,112 @@
+:root[data-theme='dark'] .autopilot-params-sidebar {
+    background: rgba(15, 23, 42, 0.86);
+    border-right-color: rgba(148, 163, 184, 0.14);
+}
+
+:root[data-theme='dark'] .autopilot-params-modal__header,
+:root[data-theme='dark'] .autopilot-toolbar {
+    background: rgba(15, 23, 42, 0.92);
+    border-color: rgba(148, 163, 184, 0.14);
+}
+
+:root[data-theme='dark'] .autopilot-summary-card,
+:root[data-theme='dark'] .autopilot-section,
+:root[data-theme='dark'] .autopilot-group,
+:root[data-theme='dark'] .autopilot-param,
+:root[data-theme='dark'] .autopilot-flash,
+:root[data-theme='dark'] .autopilot-params-main__note,
+:root[data-theme='dark'] .autopilot-empty-state {
+    background: rgba(15, 23, 42, 0.88);
+    border-color: rgba(148, 163, 184, 0.14);
+}
+
+:root[data-theme='dark'] .autopilot-param.is-invalid {
+    background: rgba(69, 10, 10, 0.72);
+    border-color: rgba(248, 113, 113, 0.28);
+}
+
+:root[data-theme='dark'] .autopilot-param.is-changed {
+    background: rgba(120, 53, 15, 0.38);
+    border-color: rgba(251, 191, 36, 0.22);
+}
+
+:root[data-theme='dark'] .autopilot-params-sidebar input,
+:root[data-theme='dark'] .autopilot-params-sidebar select,
+:root[data-theme='dark'] .autopilot-param__input,
+:root[data-theme='dark'] .autopilot-toolbar__search-wrap input {
+    background: rgba(15, 23, 42, 0.96);
+    border-color: rgba(148, 163, 184, 0.18);
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .autopilot-action-btn,
+:root[data-theme='dark'] .settings-primary-btn,
+:root[data-theme='dark'] .autopilot-toolbar__clear,
+:root[data-theme='dark'] .autopilot-toolbar__action,
+:root[data-theme='dark'] .autopilot-filter-chip {
+    background: rgba(30, 41, 59, 0.96);
+    border-color: rgba(255, 107, 0, 0.24);
+    color: #fdba74;
+}
+
+:root[data-theme='dark'] .autopilot-action-btn--ghost {
+    color: var(--text-muted);
+    border-color: rgba(148, 163, 184, 0.18);
+}
+
+:root[data-theme='dark'] .autopilot-group__title,
+:root[data-theme='dark'] .autopilot-section__title,
+:root[data-theme='dark'] .autopilot-summary-card__title,
+:root[data-theme='dark'] .autopilot-params-modal__title,
+:root[data-theme='dark'] .autopilot-param__key {
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .autopilot-group__meta,
+:root[data-theme='dark'] .autopilot-section__meta,
+:root[data-theme='dark'] .autopilot-group__description,
+:root[data-theme='dark'] .autopilot-section__description,
+:root[data-theme='dark'] .autopilot-summary-card__meta,
+:root[data-theme='dark'] .autopilot-summary-card__item span,
+:root[data-theme='dark'] .autopilot-summary-card__metric span,
+:root[data-theme='dark'] .autopilot-params-sidebar__hint,
+:root[data-theme='dark'] .autopilot-toolbar__hint,
+:root[data-theme='dark'] .autopilot-toolbar__meta,
+:root[data-theme='dark'] .autopilot-param__details,
+:root[data-theme='dark'] .autopilot-param__support,
+:root[data-theme='dark'] .autopilot-param__status,
+:root[data-theme='dark'] .autopilot-param__input-label,
+:root[data-theme='dark'] .autopilot-params-modal__subtitle,
+:root[data-theme='dark'] .autopilot-params-sidebar__label {
+    color: var(--text-muted);
+}
+
+:root[data-theme='dark'] .autopilot-summary-card__metric,
+:root[data-theme='dark'] .autopilot-param__fact,
+:root[data-theme='dark'] .autopilot-param__chip {
+    background: rgba(30, 41, 59, 0.92);
+    border-color: rgba(148, 163, 184, 0.14);
+}
+
+:root[data-theme='dark'] .autopilot-param__chip--accent {
+    background: rgba(124, 45, 18, 0.42);
+    color: #fdba74;
+}
+
+:root[data-theme='dark'] .autopilot-status-pill {
+    background: rgba(20, 83, 45, 0.52);
+    border-color: rgba(74, 222, 128, 0.22);
+    color: #bbf7d0;
+}
+
+:root[data-theme='dark'] .autopilot-status-pill.is-dirty {
+    background: rgba(120, 53, 15, 0.52);
+    border-color: rgba(251, 191, 36, 0.22);
+    color: #fde68a;
+}
+
+:root[data-theme='dark'] .autopilot-status-pill.is-busy {
+    background: rgba(30, 64, 175, 0.44);
+    border-color: rgba(96, 165, 250, 0.22);
+    color: #bfdbfe;
+}

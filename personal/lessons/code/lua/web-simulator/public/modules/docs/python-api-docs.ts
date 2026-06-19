@@ -26,7 +26,8 @@ export const pythonApiDocs: Record<string, ApiDoc> = {
         returns: 'bool',
         example: 'pioneer.takeoff()',
         kind: 'Method',
-        insertText: 'takeoff()'
+        insertText: 'takeoff()',
+        aliases: ['взлет', 'взлететь', 'старт', 'takeoff']
     },
     'Pioneer.land': {
         desc: 'Команда посадки.',
@@ -35,7 +36,8 @@ export const pythonApiDocs: Record<string, ApiDoc> = {
         returns: 'bool',
         example: 'pioneer.land()',
         kind: 'Method',
-        insertText: 'land()'
+        insertText: 'land()',
+        aliases: ['посадка', 'приземление', 'сесть', 'landing', 'land']
     },
     'Pioneer.close_connection': {
         desc: 'Закрыть MAVLink-соединение. В симуляторе может быть заглушкой.',
@@ -53,7 +55,8 @@ export const pythonApiDocs: Record<string, ApiDoc> = {
         returns: 'bool',
         example: 'pioneer.go_to_local_point(x=1, y=1, z=1, yaw=0)',
         kind: 'Method',
-        insertText: 'go_to_local_point(x=${1:x}, y=${2:y}, z=${3:z}, yaw=${4:yaw})'
+        insertText: 'go_to_local_point(x=${1:x}, y=${2:y}, z=${3:z}, yaw=${4:yaw})',
+        aliases: ['лететь в точку', 'точка', 'маршрут', 'goto']
     },
     'Pioneer.go_to_local_point_body_fixed': {
         desc: 'Полет в точку в системе координат самого дрона, body-fixed.',

@@ -14,6 +14,7 @@ describe('drone FSM validation', () => {
     let resetState: typeof import('../public/modules/core/state.js').resetState;
     let simSettings: typeof import('../public/modules/core/state.js').simSettings;
     let processCommandQueue: typeof import('../public/modules/physics/commands.js').processCommandQueue;
+    let syncAutopilotRuntimeFromValues: typeof import('../public/modules/autopilot/params-runtime.js').syncAutopilotRuntimeFromValues;
     let drone: ReturnType<typeof import('../public/modules/core/state.js').createDroneState>;
     const logLines: string[] = [];
     const ERROR_STATUS = '\u041e\u0428\u0418\u0411\u041a\u0410';
@@ -83,6 +84,7 @@ describe('drone FSM validation', () => {
             setDroneFsmState,
             withCommandSource
         } = await import('../public/modules/autopilot/fsm.js'));
+        ({ syncAutopilotRuntimeFromValues } = await import('../public/modules/autopilot/params-runtime.js'));
         ({ updateActiveFlight } = await import('../public/modules/physics/flight-update.js'));
         ({ createDroneState, resetState, simSettings } = await import('../public/modules/core/state.js'));
         ({ processCommandQueue } = await import('../public/modules/physics/commands.js'));
@@ -93,6 +95,7 @@ describe('drone FSM validation', () => {
         resetState(drone.id);
         drone.running = true;
         simSettings.gamepadConnected = false;
+        syncAutopilotRuntimeFromValues({});
         logLines.length = 0;
     });
 
@@ -146,6 +149,16 @@ describe('drone FSM validation', () => {
         expect(handlePreflightTimeout(drone)).toBe(true);
         expect(drone.fsmState).toBe('IDLE');
         expect(logLines.some((line) => line.includes('WARNING: Preflight timeout expired. The drone is returned to IDLE.'))).toBe(true);
+    });
+
+    test('blocks PREFLIGHT without RC when Copter_flyWithoutRc requires a radio link', () => {
+        syncAutopilotRuntimeFromValues({
+            Copter_flyWithoutRc: 1
+        });
+
+        expect(enterPreflight(drone)).toBe(false);
+        expect(drone.fsmState).toBe('IDLE');
+        expect(logLines.some((line) => line.includes('Copter_flyWithoutRc requires an active RC link.'))).toBe(true);
     });
 
     test('keeps manual RC arming latched without PREFLIGHT timeout while arm switch stays active', () => {
@@ -208,5 +221,40 @@ describe('drone FSM validation', () => {
         processCommandQueue(drone, drone.id);
         expect(drone.fsmState).toBe('TAKEOFF_PROCESS');
         expect(drone.target_pos.z).toBeGreaterThanOrEqual(1);
+    });
+
+    test('limits climb rate during TAKEOFF_PROCESS by Copter_pos_vTakeoff', () => {
+        syncAutopilotRuntimeFromValues({
+            Copter_pos_vUp: 3,
+            Copter_pos_vTakeoff: 0.2
+        });
+        drone.fsmState = 'TAKEOFF_PROCESS';
+        drone.pos.z = 0;
+        drone.target_pos.z = 2;
+        drone.target_alt = 2;
+        drone.vel.z = 0;
+
+        updateActiveFlight(drone, drone.id, 1, true, () => []);
+
+        expect(drone.vel.z).toBeCloseTo(0.2, 5);
+        expect(drone.pos.z).toBeCloseTo(0.2, 5);
+    });
+
+    test('limits descent rate near ground during LANDING_PROCESS by Copter_pos_vLanding', () => {
+        syncAutopilotRuntimeFromValues({
+            Copter_pos_vDown: 3,
+            Copter_pos_vLanding: 0.1,
+            Flight_com_landingAlt: 0.3
+        });
+        drone.fsmState = 'LANDING_PROCESS';
+        drone.pos.z = 0.2;
+        drone.target_pos.z = 0;
+        drone.target_alt = 0;
+        drone.vel.z = 0;
+
+        updateActiveFlight(drone, drone.id, 1, true, () => []);
+
+        expect(drone.vel.z).toBeCloseTo(-0.1, 5);
+        expect(drone.pos.z).toBeCloseTo(0.1, 5);
     });
 });

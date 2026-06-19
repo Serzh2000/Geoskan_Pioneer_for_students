@@ -1,4 +1,4 @@
-﻿.simulation-notice {
+.simulation-notice {
     position: absolute;
     left: 50%;
     top: 24px;
@@ -11,10 +11,29 @@
     transition: opacity 0.24s ease, transform 0.24s ease;
 }
 
+.panel-content--editor {
+    position: relative;
+}
+
+.simulation-notice.simulation-notice--editor-docked {
+    left: 12px;
+    right: auto;
+    top: 12px;
+    width: min(560px, calc(100% - 24px));
+    max-width: calc(100% - 24px);
+    max-height: min(560px, calc(100% - 24px));
+    transform: translateY(-12px);
+    z-index: 20;
+}
+
 .simulation-notice.visible {
     opacity: 1;
     pointer-events: auto;
     transform: translateX(-50%) translateY(0);
+}
+
+.simulation-notice.simulation-notice--editor-docked.visible {
+    transform: translateY(0);
 }
 
 .simulation-notice::before {
@@ -175,6 +194,15 @@
         padding: 12px;
     }
 
+    .simulation-notice.simulation-notice--editor-docked {
+        left: 8px;
+        right: auto;
+        top: 8px;
+        width: min(560px, calc(100% - 16px));
+        max-width: calc(100% - 16px);
+        max-height: min(520px, calc(100% - 16px));
+    }
+
     .simulation-notice__header {
         gap: 10px;
     }
@@ -218,6 +246,15 @@
         max-height: calc(100% - 16px);
         padding: 10px;
         border-radius: 14px;
+    }
+
+    .simulation-notice.simulation-notice--editor-docked {
+        left: 6px;
+        right: auto;
+        top: 6px;
+        width: calc(100% - 12px);
+        max-width: calc(100% - 12px);
+        max-height: calc(100% - 12px);
     }
 
     .simulation-notice::before {

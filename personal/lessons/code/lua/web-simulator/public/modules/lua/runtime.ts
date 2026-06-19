@@ -10,6 +10,7 @@ import {
 import { runCoroutine } from './runner.js';
 import { createScriptFailureError, showScriptFailureNotice } from '../app/script-execution-notice.js';
 import { extractLuaSyntaxLine, setupLuaBridgeForDrone } from './bridge.js';
+import { resetLuaMissionGuard } from './mission-guard.js';
 
 function disposeLuaRuntime(id: string) {
     const drone = drones[id];
@@ -32,6 +33,7 @@ export function runLuaScript(id: string, scriptContent: string) {
     const drone = drones[id];
     if (!drone) return;
     rememberLuaErrorStack(drone, null);
+    resetLuaMissionGuard(drone, scriptContent);
     setLuaExecutionPhase(drone, 'main chunk');
 
     disposeLuaRuntime(id);

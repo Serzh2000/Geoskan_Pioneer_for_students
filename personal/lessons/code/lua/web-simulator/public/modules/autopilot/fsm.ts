@@ -5,9 +5,14 @@ import type {
     TickFlightCommand,
     Vector3
 } from '../core/state.js';
+import { simSettings } from '../core/state.js';
 import { showEarlyRouteNotice } from '../app/script-execution-notice.js';
 import { rememberLuaFailureHint, recordLuaFsmTransition } from '../lua/diagnostics.js';
 import { log } from '../shared/logging/logger.js';
+import {
+    getAutopilotRuntimeConfig,
+    rememberAutopilotHomePosition
+} from './params-runtime.js';
 import {
     type CommandName,
     failSimultaneousCommands,
@@ -173,9 +178,19 @@ export function enterPreflight(drone: DroneState) {
         throwFsmTransitionError(drone, 'MCE_PREFLIGHT');
     }
 
+    const config = getAutopilotRuntimeConfig();
+    if (config.failsafe.flyWithoutRc === 1 && !simSettings.gamepadConnected) {
+        return rejectCommandByFsm(
+            drone,
+            'MCE_PREFLIGHT',
+            'WARNING: PREFLIGHT command is blocked because Copter_flyWithoutRc requires an active RC link.'
+        );
+    }
+
     drone.pendingLocalPoint = false;
     drone.pendingLocalPointSource = null;
     drone.preflightDeadlineMs = getCurrentTickMs(drone) + PREFLIGHT_TIMEOUT_MS;
+    rememberAutopilotHomePosition(drone);
     setDroneFsmState(drone, 'PREFLIGHT');
     return true;
 }
@@ -196,10 +211,26 @@ export function enterTakeoffProcess(drone: DroneState) {
         );
     }
 
+    const config = getAutopilotRuntimeConfig();
+    if (
+        config.motors.motorCheckTime > 0
+        && (
+            config.motors.startRpmMin > config.motors.startRpmMax
+            || config.motors.startRpmSigma > Math.max(1, config.motors.startRpmMax - config.motors.startRpmMin)
+            || config.motors.stallRpm < config.motors.startRpmMax
+        )
+    ) {
+        return rejectCommandByFsm(
+            drone,
+            'MCE_TAKEOFF',
+            'WARNING: TAKEOFF command is blocked by invalid motor check parameters.'
+        );
+    }
+
     drone.preflightDeadlineMs = null;
     drone.target_pos.x = drone.pos.x;
     drone.target_pos.y = drone.pos.y;
-    drone.target_pos.z = Math.max(drone.pos.z + TAKEOFF_MIN_ALTITUDE, TAKEOFF_MIN_ALTITUDE);
+    drone.target_pos.z = Math.max(config.mission.takeoffAlt, TAKEOFF_MIN_ALTITUDE);
     drone.target_alt = drone.target_pos.z;
     drone.pointReachedFlag = false;
     setDroneFsmState(drone, 'TAKEOFF_PROCESS');

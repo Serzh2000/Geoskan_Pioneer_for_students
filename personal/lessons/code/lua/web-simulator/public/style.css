@@ -17,6 +17,7 @@
 @import url('./styles/panels/guide-panel.css');
 @import url('./styles/panels/settings.css');
 @import url('./styles/overlays/hud-and-settings.css');
+@import url('./styles/overlays/hud-and-settings/autopilot-params-modal.css');
 @import url('./styles/scene/camera-controls.css');
 @import url('./styles/core/forms.css');
 @import url('./styles/panels/telemetry.css');

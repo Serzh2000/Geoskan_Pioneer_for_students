@@ -16,9 +16,11 @@ import { collectLuaBlockingIssues, collectLuaIssues, detectLuaEarlyRouteIssue } 
 import { collectPythonIssues } from './script-execution-notice/python-validation.js';
 import {
     markEarlyRouteNoticeAsShown,
+    markMissingCallbackNoticeAsShown,
     markSimultaneousNoticeAsShown,
     resetScriptExecutionNoticeState,
     shouldSuppressEarlyRouteNotice,
+    shouldSuppressMissingCallbackNotice,
     shouldSuppressSimultaneousNotice
 } from './script-execution-notice/state.js';
 import type { ScenarioValidationResult, ScriptFailureError, ScriptFailureKind } from './script-execution-notice/types.js';
@@ -111,6 +113,13 @@ function hasLuaEarlyRouteIssue(code: string) {
     return detectLuaEarlyRouteIssue(code);
 }
 
+function hasLuaMissingCallbackIssue(issues: string[]) {
+    return issues.some((issue) =>
+        issue.includes('function callback(event)')
+        && issue.includes('только первую команду миссии')
+    );
+}
+
 function collectScenarioValidationResult(language: ScriptLanguage, code: string): ScenarioValidationResult {
     const issues = Array.from(new Set(language === 'python' ? collectPythonIssues(code) : collectLuaIssues(code)));
     const blockingIssues = Array.from(new Set(language === 'lua' ? collectLuaBlockingIssues(code) : []));
@@ -140,6 +149,9 @@ export function showScenarioValidationNotice(language: ScriptLanguage, code: str
         }
         if (hasLuaEarlyRouteIssue(code)) {
             markEarlyRouteNoticeAsShown();
+        }
+        if (hasLuaMissingCallbackIssue(issues)) {
+            markMissingCallbackNoticeAsShown();
         }
     }
 
@@ -217,6 +229,31 @@ export function showEarlyRouteNotice() {
         title: 'Маршрут запущен слишком рано',
         message,
         detailsHtml: renderEarlyRouteHtml(),
+        level: 'warn'
+    });
+}
+
+export function showMissingCallbackMissionNotice(apiName?: string) {
+    if (shouldSuppressMissingCallbackNotice()) return;
+    markMissingCallbackNoticeAsShown();
+
+    const message = 'В сценарии нет `function callback(event) ... end`, поэтому симулятор выполнит только первую команду миссии.';
+    const ignoredCall = apiName
+        ? `Текущий вызов \`${apiName}\` пропущен.`
+        : 'Следующая команда автопилота пропущена.';
+
+    log(message, 'warn');
+
+    if (!(window as any).showSimulationNotice) return;
+    (window as any).showSimulationNotice({
+        title: 'Отсутствует callback(event)',
+        message,
+        detailsHtml: renderIssuesHtml('lua', [
+            'События `Ev.ENGINES_STARTED`, `Ev.TAKEOFF_COMPLETE` и `Ev.POINT_REACHED` должны обрабатываться внутри `callback(event)`.',
+            'Если `callback(event)` отсутствует, автопилот не может передать подтверждение следующему этапу Lua-сценария.',
+            'Поэтому без `callback(event)` симулятор принимает только первую команду миссии, а остальные команды автопилота игнорирует.',
+            ignoredCall
+        ]),
         level: 'warn'
     });
 }

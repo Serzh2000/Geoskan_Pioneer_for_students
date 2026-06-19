@@ -124,7 +124,7 @@ export function initSidebar(callbacks: UICallbacks) {
         }, 220);
     };
 
-    (window as any).openPanel = function(panelId: string) {
+    const openPanel = function(panelId: string) {
         const panel = document.getElementById(panelId);
         if (!panel) {
             console.warn('[Sidebar][Debug] openPanel target not found', { panelId });
@@ -179,6 +179,9 @@ export function initSidebar(callbacks: UICallbacks) {
         refreshViewportLayout();
     };
 
+    (window as any).openPanel = openPanel;
+    (globalThis as any).openPanel = openPanel;
+
     (window as any).closePanel = function() {
         closePanelWithAnimation();
     };
@@ -208,7 +211,7 @@ export function initSidebar(callbacks: UICallbacks) {
         document.body.style.cursor = '';
     });
 
-    (window as any).switchTab = (window as any).openPanel;
+    (window as any).switchTab = openPanel;
     panels.style.width = normalizeSidebarWidth(localStorage.getItem('sidebar-width'));
     localStorage.setItem('sidebar-width', panels.style.width);
 

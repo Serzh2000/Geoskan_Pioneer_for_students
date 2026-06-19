@@ -12,7 +12,8 @@ function getNoticeSuppressionState(): NoticeSuppressionState {
 
     const nextState: NoticeSuppressionState = {
         simultaneousCommands: false,
-        earlyRoute: false
+        earlyRoute: false,
+        missingCallback: false
     };
     (window as any).__simulationNoticeSuppression = nextState;
     return nextState;
@@ -36,4 +37,12 @@ export function markEarlyRouteNoticeAsShown() {
 
 export function shouldSuppressEarlyRouteNotice() {
     return getNoticeSuppressionState().earlyRoute;
+}
+
+export function markMissingCallbackNoticeAsShown() {
+    getNoticeSuppressionState().missingCallback = true;
+}
+
+export function shouldSuppressMissingCallbackNotice() {
+    return getNoticeSuppressionState().missingCallback;
 }

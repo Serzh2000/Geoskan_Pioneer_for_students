@@ -115,6 +115,7 @@ declare global {
         js_camera_checkRequestShot: (L: any) => number;
         js_camera_requestRecordStart: (L: any) => number;
         js_camera_requestRecordStop: (L: any) => number;
+        js_camera_checkRequestRecord: (L: any) => number;
         
         js_gpio_new: (L: any) => number;
         js_uart_new: (L: any) => number;

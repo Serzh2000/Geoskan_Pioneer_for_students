@@ -2,6 +2,8 @@
  * Эвристики валидации учебных Lua-сценариев перед запуском.
  * Собирает только предметные проблемы, без показа UI.
  */
+import { scriptHasLuaEventCallback } from '../../lua/mission-guard.js';
+
 function hasLuaEarlyRouteIssue(code: string) {
     const normalized = (code || '').toLowerCase();
     const hasTakeoff = normalized.includes('ev.mce_takeoff');
@@ -83,6 +85,16 @@ function collectLuaDelayedMissionCommands(code: string): Map<string, string[]> {
     return grouped;
 }
 
+function hasLuaAutopilotMissionApiUsage(code: string) {
+    const normalized = (code || '').toLowerCase();
+    return (
+        /ap\.push\s*\(/.test(normalized)
+        || /ap\.gotopoint\s*\(/.test(normalized)
+        || /ap\.gotolocalpoint\s*\(/.test(normalized)
+        || /ap\.updateyaw\s*\(/.test(normalized)
+    );
+}
+
 function collectLuaMissionCommandGroups(fragment: string): string[][] {
     const groups: string[][] = [];
     let currentGroup: string[] = [];
@@ -119,7 +131,7 @@ export function collectLuaIssues(code: string): string[] {
     const hasTakeoff = normalized.includes('ev.mce_takeoff');
     const hasLanding = normalized.includes('ev.mce_landing');
     const hasGoTo = normalized.includes('ap.gotolocalpoint');
-    const hasCallback = /function\s+callback\s*\(/.test(normalized);
+    const hasCallback = scriptHasLuaEventCallback(code);
     const hasTimer = /timer\.(calllater|new)\s*\(/.test(normalized);
     const hasSleep = /\bsleep\s*\(/.test(normalized);
     const hasLedbar = /ledbar\.new\s*\(/.test(normalized);
@@ -127,6 +139,11 @@ export function collectLuaIssues(code: string): string[] {
 
     if (hasLedbar && !hasLedSet) {
         issues.push('Лента светодиодов создана, но `leds:set(...)` ни разу не вызывается.');
+    }
+    if (hasLuaAutopilotMissionApiUsage(code) && !hasCallback) {
+        issues.push(
+            'В сценарии нет `function callback(event) ... end`. Симулятор выполнит только первую команду миссии, а следующие команды автопилота проигнорирует, потому что подтверждающие события некому обработать в Lua.'
+        );
     }
     if (hasTakeoff && !hasPreflight) {
         issues.push('Команда взлета используется без `Ev.MCE_PREFLIGHT`. Начните со стадии предполета.');

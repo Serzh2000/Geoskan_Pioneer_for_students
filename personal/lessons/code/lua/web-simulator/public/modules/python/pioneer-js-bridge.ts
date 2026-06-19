@@ -1,4 +1,5 @@
 import { drones } from '../core/state.js';
+import { getAutopilotRuntimeConfig } from '../autopilot/params-runtime.js';
 import {
     applyGoToLocalPointRequest,
     enterLandingProcess,
@@ -140,7 +141,8 @@ export function installJsRuntimeAPI() {
     w.pioneer_get_dist_sensor_data = (id: string) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
-        return d.pos.z;
+        const minHeight = getAutopilotRuntimeConfig().sensors.altMinHeight;
+        return d.pos.z >= minHeight ? d.pos.z : 0;
     };
 
     w.pioneer_get_battery_status = (id: string) => {

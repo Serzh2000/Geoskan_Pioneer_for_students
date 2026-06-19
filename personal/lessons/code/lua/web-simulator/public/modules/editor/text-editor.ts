@@ -109,7 +109,8 @@ export function createTextEditorInstance(options: TextEditorCreateOptions): any 
         scrollbar: { verticalScrollbarSize: 10, horizontalScrollbarSize: 10 },
         fixedOverflowWidgets: true,
         suggest: {
-            snippetsPreventQuickSuggestions: false
+            snippetsPreventQuickSuggestions: false,
+            showWords: false
         }
     });
 

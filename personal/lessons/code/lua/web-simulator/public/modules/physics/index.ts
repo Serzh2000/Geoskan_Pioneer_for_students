@@ -6,6 +6,7 @@
  * а также обработку столкновений с объектами сцены (препятствиями).
  */
 import { drones } from '../core/state.js';
+import { updateAutopilotParameterEffects } from '../autopilot/params-effects.js';
 import { handlePreflightTimeout } from '../autopilot/fsm.js';
 import { updateTimers } from '../lua/index.js';
 import { getObstacles } from '../drone/index.js';
@@ -39,6 +40,7 @@ export function updatePhysics(dt: number) {
         }
 
         updateActiveFlight(simState, id, dt, isFlying, getObstacles);
+        updateAutopilotParameterEffects(simState, id);
         updateMagnetGripper(simState, getObstacles);
         updateTracePath(id, simState, dt, isFlying);
 

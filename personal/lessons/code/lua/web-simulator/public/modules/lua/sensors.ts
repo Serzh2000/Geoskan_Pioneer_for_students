@@ -1,4 +1,5 @@
 import { getDroneFromLua, simSettings } from '../core/state.js';
+import { getAutopilotRuntimeConfig } from '../autopilot/params-runtime.js';
 
 export const sensors_pos = function(L: any) {
     const simState = getDroneFromLua(L);
@@ -42,7 +43,8 @@ export const sensors_orientation = function(L: any) {
 
 export const sensors_range = function(L: any) {
     const simState = getDroneFromLua(L);
-    window.fengari.lua.lua_pushnumber(L, simState.pos.z); 
+    const minHeight = getAutopilotRuntimeConfig().sensors.altMinHeight;
+    window.fengari.lua.lua_pushnumber(L, simState.pos.z >= minHeight ? simState.pos.z : 0);
     return 1;
 };
 
@@ -54,7 +56,9 @@ export const sensors_battery = function(L: any) {
 
 export const sensors_tof = function(L: any) {
     const simState = getDroneFromLua(L);
-    window.fengari.lua.lua_pushnumber(L, simState.pos.z * 1000); 
+    const minHeight = getAutopilotRuntimeConfig().sensors.altMinHeight;
+    const rangeMeters = simState.pos.z >= minHeight ? simState.pos.z : 0;
+    window.fengari.lua.lua_pushnumber(L, rangeMeters * 1000);
     return 1;
 };
 

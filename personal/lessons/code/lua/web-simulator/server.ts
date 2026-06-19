@@ -59,12 +59,17 @@ function resolveExamplesPath(): string {
     ]);
 }
 
+function resolveAutopilotParametersPath(): string {
+    return path.join(projectRoot, 'pio-classic-newopt-stable-1.6.7178-1.properties');
+}
+
 function createApp(options: StartServerOptions): express.Express {
     const app = express();
     const vitePort = options.vitePort ?? 3001;
     const packagedRuntime = options.packaged ?? (Boolean(processWithPackaging.pkg) || Boolean(resourcesDir));
     const publicPath = resolvePublicPath();
     const luaExamplesPath = resolveExamplesPath();
+    const autopilotParametersPath = resolveAutopilotParametersPath();
     const shouldServeStaticUi = isDistBuild || packagedRuntime;
 
     app.use(cors());
@@ -101,6 +106,44 @@ function createApp(options: StartServerOptions): express.Express {
 
         const content = fs.readFileSync(filePath, 'utf8');
         res.json({ content });
+    });
+
+    app.get('/api/autopilot-parameters', (_req: express.Request, res: express.Response) => {
+        try {
+            if (!fs.existsSync(autopilotParametersPath)) {
+                return res.status(404).json({ error: 'Файл параметров автопилота не найден.' });
+            }
+
+            const content = fs.readFileSync(autopilotParametersPath, 'utf8');
+            return res.json({
+                fileName: path.basename(autopilotParametersPath),
+                filePath: autopilotParametersPath,
+                content
+            });
+        } catch (error) {
+            console.error('Failed to read autopilot parameters:', error);
+            return res.status(500).json({ error: 'Не удалось прочитать файл параметров автопилота.' });
+        }
+    });
+
+    app.put('/api/autopilot-parameters', (req: express.Request, res: express.Response) => {
+        const content = typeof req.body?.content === 'string' ? req.body.content : null;
+        if (!content) {
+            return res.status(400).json({ error: 'Тело запроса должно содержать строковое поле content.' });
+        }
+
+        try {
+            fs.writeFileSync(autopilotParametersPath, content, 'utf8');
+            return res.json({
+                ok: true,
+                fileName: path.basename(autopilotParametersPath),
+                filePath: autopilotParametersPath,
+                updatedAt: new Date().toISOString()
+            });
+        } catch (error) {
+            console.error('Failed to save autopilot parameters:', error);
+            return res.status(500).json({ error: 'Не удалось сохранить файл параметров автопилота.' });
+        }
     });
 
     app.get('/api-docs', (_req: express.Request, res: express.Response) => {

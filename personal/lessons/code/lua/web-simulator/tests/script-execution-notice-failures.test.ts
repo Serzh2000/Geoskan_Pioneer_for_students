@@ -172,12 +172,34 @@ end)`;
         const firstNotice = harness.getShownNotice();
 
         expect(firstNotice).not.toBeNull();
-        expect(String(firstNotice.message || '')).toContain('Найдена проблема');
+        expect(String(firstNotice.message || '')).toContain('Проверьте код перед запуском');
 
         harness.showScriptFailureNotice('lua', harness.createScriptFailureError(
             'runtime',
             'Команды миссии запущены одновременно без паузы: TAKEOFF, TAKEOFF.'
         ));
+
+        expect(harness.getShownNotice()).toBe(firstNotice);
+        expect(String(harness.getShownNotice().title || '')).toContain('Проверьте сценарий перед запуском');
+    });
+
+    test('suppresses runtime missing callback notice when it was already shown before launch', () => {
+        const code = `ap.push(Ev.MCE_PREFLIGHT)
+Timer.callLater(2, function()
+    ap.push(Ev.MCE_TAKEOFF)
+end)
+Timer.callLater(7, function()
+    ap.goToLocalPoint(1, 1, 1)
+end)`;
+
+        harness.showScenarioValidationNotice('lua', code);
+        const firstNotice = harness.getShownNotice();
+
+        expect(firstNotice).not.toBeNull();
+        expect(String(firstNotice.message || '')).toContain('Проверьте код перед запуском');
+        expect(String(firstNotice.detailsHtml || '')).toContain('только первую команду миссии');
+
+        harness.showMissingCallbackMissionNotice('ap.push(2 (Взлет))');
 
         expect(harness.getShownNotice()).toBe(firstNotice);
         expect(String(harness.getShownNotice().title || '')).toContain('Проверьте сценарий перед запуском');

@@ -11,6 +11,7 @@ export type ScriptExecutionNoticeHarness = {
     rememberLuaFailureHint: typeof import('../../public/modules/lua/diagnostics.js').rememberLuaFailureHint;
     recordLuaApiCall: typeof import('../../public/modules/lua/diagnostics.js').recordLuaApiCall;
     showScenarioValidationNotice: typeof import('../../public/modules/app/script-execution-notice.js').showScenarioValidationNotice;
+    showMissingCallbackMissionNotice: typeof import('../../public/modules/app/script-execution-notice.js').showMissingCallbackMissionNotice;
     showScriptFailureNotice: typeof import('../../public/modules/app/script-execution-notice.js').showScriptFailureNotice;
     resetScriptExecutionNoticeState: typeof import('../../public/modules/app/script-execution-notice.js').resetScriptExecutionNoticeState;
 };
@@ -29,6 +30,11 @@ export async function createScriptExecutionNoticeHarness(): Promise<ScriptExecut
     };
 
     (globalThis as any).window = {
+        setTimeout: (cb: () => void) => {
+            cb();
+            return 0;
+        },
+        clearTimeout: () => {},
         showSimulationNotice: (payload: any) => {
             shownNotice = payload;
         }
@@ -61,6 +67,7 @@ export async function createScriptExecutionNoticeHarness(): Promise<ScriptExecut
         rememberLuaFailureHint: diagnosticsModule.rememberLuaFailureHint,
         recordLuaApiCall: diagnosticsModule.recordLuaApiCall,
         showScenarioValidationNotice: noticeModule.showScenarioValidationNotice,
+        showMissingCallbackMissionNotice: noticeModule.showMissingCallbackMissionNotice,
         showScriptFailureNotice: noticeModule.showScriptFailureNotice,
         resetScriptExecutionNoticeState: noticeModule.resetScriptExecutionNoticeState
     };

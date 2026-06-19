@@ -40,6 +40,9 @@ export function createDroneRecord(
         id,
         name,
         running: false,
+        luaHasEventCallback: false,
+        luaMissionCommandsAcceptedWithoutCallback: 0,
+        luaMissingCallbackNoticeShown: false,
         current_time: 0,
         pos: { x, y, z },
         vel: { x: 0, y: 0, z: 0 },
@@ -86,6 +89,9 @@ export function createDroneRecord(
 
 export function resetDroneRuntimeState(drone: DroneState) {
     drone.running = false;
+    drone.luaHasEventCallback = false;
+    drone.luaMissionCommandsAcceptedWithoutCallback = 0;
+    drone.luaMissingCallbackNoticeShown = false;
     drone.current_time = 0;
     drone.vel = { x: 0, y: 0, z: 0 };
     drone.accel = { x: 0, y: 0, z: 9.81 };

@@ -1,0 +1,48 @@
+@media (max-width: 1180px) {
+    .autopilot-params-modal {
+        width: calc(100vw - 32px);
+        height: calc(100vh - 32px);
+        max-height: calc(100vh - 32px);
+    }
+
+    .autopilot-params-modal__shell {
+        grid-template-columns: 1fr;
+    }
+
+    .autopilot-params-sidebar {
+        border-right: none;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    }
+}
+
+@media (max-width: 860px) {
+    .autopilot-params-overlay {
+        padding: 10px;
+    }
+
+    .autopilot-params-modal__header {
+        padding: 16px;
+    }
+
+    .autopilot-params-main,
+    .autopilot-params-sidebar {
+        padding: 14px;
+    }
+
+    .autopilot-param {
+        grid-template-columns: 1fr;
+    }
+
+    .autopilot-params-modal__title {
+        font-size: 22px;
+    }
+
+    .autopilot-summary-card__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .autopilot-toolbar__search-wrap,
+    .autopilot-toolbar__actions {
+        flex-direction: column;
+    }
+}
