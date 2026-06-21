@@ -189,6 +189,8 @@ export function stopPythonScript(droneId: string): void {
         d.running = false;
         d.status = 'ОСТАНОВЛЕН';
         d.pendingLocalPoint = false;
+        d.pendingLocalPointSource = null;
+        d.pendingLocalPointTarget = null;
         d.pointReachedFlag = false;
     }
     if (!hasActiveRun) {

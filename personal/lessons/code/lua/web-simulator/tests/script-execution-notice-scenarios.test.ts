@@ -83,6 +83,28 @@ ap.push(Ev.MCE_LANDING)`;
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('только первую команду миссии');
     });
 
+    test('does not warn for timer-driven route during takeoff when callback(event) exists', () => {
+        const code = `ap.push(Ev.MCE_PREFLIGHT)
+
+function callback(event)
+    if event == Ev.ENGINES_STARTED then
+        ap.push(Ev.MCE_TAKEOFF)
+    end
+    if event == Ev.POINT_REACHED then
+        ap.push(Ev.MCE_LANDING)
+    end
+end
+
+Timer.callLater(4, function()
+    ap.goToLocalPoint(1, 1, 1)
+end)`;
+
+        const result = harness.showScenarioValidationNotice('lua', code);
+
+        expect(result.shouldBlock).toBe(false);
+        expect(harness.getShownNotice()).toBeNull();
+    });
+
     test('warns when Timer.callLater receives an expression result', () => {
         const code = `local function changeColor(col)
     return col

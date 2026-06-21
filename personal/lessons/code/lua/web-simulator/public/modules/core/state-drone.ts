@@ -69,6 +69,7 @@ export function createDroneRecord(
         target_yaw: 0,
         pendingLocalPoint: false,
         pendingLocalPointSource: null,
+        pendingLocalPointTarget: null,
         pointReachedFlag: false,
         traceSampleAccumulator: 0,
         command_queue: [],
@@ -117,6 +118,7 @@ export function resetDroneRuntimeState(drone: DroneState) {
     drone.magnetGripper.attachedObjectId = null;
     drone.pendingLocalPoint = false;
     drone.pendingLocalPointSource = null;
+    drone.pendingLocalPointTarget = null;
     drone.pointReachedFlag = false;
     drone.traceSampleAccumulator = 0;
     drone.printBubbleText = '';

@@ -94,6 +94,7 @@ export function failSimultaneousCommands(drone: DroneState, commands: TickFlight
     drone.command_queue = [];
     drone.pendingLocalPoint = false;
     drone.pendingLocalPointSource = null;
+    drone.pendingLocalPointTarget = null;
     drone.preflightDeadlineMs = null;
     drone.tickCommandSignature = null;
     log(message, 'error');

@@ -140,6 +140,23 @@ export function applyGoToLocalPointRequest(
 ) {
     recordTickCommand(drone, 'goToLocalPoint');
 
+    if (drone.fsmState === 'TAKEOFF_PROCESS' && getCommandSource(drone) === 'timer') {
+        drone.target_pos = {
+            x: target.x,
+            y: target.y,
+            z: drone.target_pos.z
+        };
+        if (typeof options?.yaw === 'number') {
+            drone.target_yaw = options.yaw;
+        }
+        drone.pointReachedFlag = false;
+        drone.pendingLocalPoint = true;
+        drone.pendingLocalPointSource = 'timer';
+        drone.pendingLocalPointTarget = { ...target };
+        drone.lastAcceptedGoToTickMs = getCurrentTickMs(drone);
+        return true;
+    }
+
     if (drone.fsmState === 'PREFLIGHT' || drone.fsmState === 'TAKEOFF_PROCESS' || drone.fsmState === 'LANDING_PROCESS') {
         if (getCommandSource(drone) === 'timer') {
             showEarlyRouteNotice();
@@ -164,6 +181,7 @@ export function applyGoToLocalPointRequest(
     drone.pointReachedFlag = false;
     drone.pendingLocalPoint = false;
     drone.pendingLocalPointSource = null;
+    drone.pendingLocalPointTarget = null;
     drone.lastAcceptedGoToTickMs = getCurrentTickMs(drone);
     setDroneFsmState(drone, 'FLYING_MOVING');
     return true;
@@ -189,6 +207,7 @@ export function enterPreflight(drone: DroneState) {
 
     drone.pendingLocalPoint = false;
     drone.pendingLocalPointSource = null;
+    drone.pendingLocalPointTarget = null;
     drone.preflightDeadlineMs = getCurrentTickMs(drone) + PREFLIGHT_TIMEOUT_MS;
     rememberAutopilotHomePosition(drone);
     setDroneFsmState(drone, 'PREFLIGHT');
@@ -233,6 +252,9 @@ export function enterTakeoffProcess(drone: DroneState) {
     drone.target_pos.z = Math.max(config.mission.takeoffAlt, TAKEOFF_MIN_ALTITUDE);
     drone.target_alt = drone.target_pos.z;
     drone.pointReachedFlag = false;
+    drone.pendingLocalPoint = false;
+    drone.pendingLocalPointSource = null;
+    drone.pendingLocalPointTarget = null;
     setDroneFsmState(drone, 'TAKEOFF_PROCESS');
     return true;
 }
@@ -261,6 +283,7 @@ export function enterLandingProcess(drone: DroneState) {
     drone.target_alt = 0;
     drone.pendingLocalPoint = false;
     drone.pendingLocalPointSource = null;
+    drone.pendingLocalPointTarget = null;
     drone.pointReachedFlag = false;
     setDroneFsmState(drone, 'LANDING_PROCESS');
     return true;
@@ -273,6 +296,7 @@ export function handlePreflightTimeout(drone: DroneState) {
     drone.preflightDeadlineMs = null;
     drone.pendingLocalPoint = false;
     drone.pendingLocalPointSource = null;
+    drone.pendingLocalPointTarget = null;
     setDroneFsmState(drone, 'IDLE');
     log('WARNING: Preflight timeout expired. The drone is returned to IDLE.', 'warn');
     return true;
@@ -280,6 +304,21 @@ export function handlePreflightTimeout(drone: DroneState) {
 
 export function completeTakeoff(drone: DroneState) {
     if (drone.fsmState !== 'TAKEOFF_PROCESS') return false;
+    const pendingTarget = drone.pendingLocalPointTarget;
+    drone.pendingLocalPoint = false;
+    drone.pendingLocalPointSource = null;
+    drone.pendingLocalPointTarget = null;
+
+    if (pendingTarget) {
+        drone.target_pos = { ...pendingTarget };
+        if (isMovementReached(drone)) {
+            setDroneFsmState(drone, 'FLYING_HOVER');
+        } else {
+            setDroneFsmState(drone, 'FLYING_MOVING');
+        }
+        return true;
+    }
+
     setDroneFsmState(drone, 'FLYING_HOVER');
     return true;
 }
@@ -295,6 +334,7 @@ export function completeLanding(drone: DroneState) {
     drone.preflightDeadlineMs = null;
     drone.pendingLocalPoint = false;
     drone.pendingLocalPointSource = null;
+    drone.pendingLocalPointTarget = null;
     setDroneFsmState(drone, 'IDLE');
 }
 

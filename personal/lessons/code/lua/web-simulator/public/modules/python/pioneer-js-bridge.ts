@@ -52,6 +52,7 @@ export function installJsRuntimeAPI() {
             setDroneFsmState(d, 'IDLE');
             d.pendingLocalPoint = false;
             d.pendingLocalPointSource = null;
+            d.pendingLocalPointTarget = null;
             d.pointReachedFlag = false;
             d.vel = { x: 0, y: 0, z: 0 };
             d.target_pos = { ...d.pos, z: 0 };
@@ -117,6 +118,7 @@ export function installJsRuntimeAPI() {
         setDroneFsmState(d, isDroneMovingState(d) ? 'FLYING_MOVING' : 'FLYING_HOVER');
         d.pendingLocalPoint = false;
         d.pendingLocalPointSource = null;
+        d.pendingLocalPointTarget = null;
         d.target_pos = {
             x: d.pos.x + vxn * dt,
             y: d.pos.y + vyn * dt,

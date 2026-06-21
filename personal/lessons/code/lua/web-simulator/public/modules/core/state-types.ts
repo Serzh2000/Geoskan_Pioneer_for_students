@@ -122,6 +122,7 @@ export interface DroneState {
     target_yaw: number;
     pendingLocalPoint?: boolean;
     pendingLocalPointSource?: CommandSource | null;
+    pendingLocalPointTarget?: Vector3 | null;
     pointReachedFlag?: boolean;
     traceSampleAccumulator: number;
     command_queue: QueuedMceCommand[];

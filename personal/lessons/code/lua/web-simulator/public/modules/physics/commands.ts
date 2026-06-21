@@ -42,6 +42,7 @@ export function processCommandQueue(simState: DroneState, id: string): CommandQu
                 setDroneFsmState(simState, 'IDLE');
                 simState.pendingLocalPoint = false;
                 simState.pendingLocalPointSource = null;
+                simState.pendingLocalPointTarget = null;
                 simState.pointReachedFlag = false;
                 simState.vel = { x: 0, y: 0, z: 0 };
                 simState.target_pos = { ...simState.pos, z: 0 };

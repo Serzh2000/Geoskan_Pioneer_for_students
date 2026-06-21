@@ -20,6 +20,7 @@ export function beginDisarmedFall(simState: DroneState, id: string, reason: stri
     simState.running = false;
     simState.pendingLocalPoint = false;
     simState.pendingLocalPointSource = null;
+    simState.pendingLocalPointTarget = null;
     simState.pointReachedFlag = false;
     simState.command_queue = [];
     simState.target_pos = { ...simState.pos };
@@ -57,6 +58,7 @@ export function applyCrashState(simState: DroneState, id: string, reason: string
     simState.running = false;
     simState.pendingLocalPoint = false;
     simState.pendingLocalPointSource = null;
+    simState.pendingLocalPointTarget = null;
     simState.pointReachedFlag = false;
     simState.command_queue = [];
     simState.target_pos = { ...simState.pos };

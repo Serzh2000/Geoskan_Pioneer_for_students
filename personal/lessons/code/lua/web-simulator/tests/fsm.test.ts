@@ -2,6 +2,7 @@ describe('drone FSM validation', () => {
     let MCECommands: typeof import('../public/modules/autopilot/mce-events.js').MCECommands;
     let applyGoToLocalPointRequest: typeof import('../public/modules/autopilot/fsm.js').applyGoToLocalPointRequest;
     let beginEventCallbackPhase: typeof import('../public/modules/autopilot/fsm.js').beginEventCallbackPhase;
+    let completeTakeoff: typeof import('../public/modules/autopilot/fsm.js').completeTakeoff;
     let enterLandingProcess: typeof import('../public/modules/autopilot/fsm.js').enterLandingProcess;
     let enterPreflight: typeof import('../public/modules/autopilot/fsm.js').enterPreflight;
     let enterTakeoffProcess: typeof import('../public/modules/autopilot/fsm.js').enterTakeoffProcess;
@@ -76,6 +77,7 @@ describe('drone FSM validation', () => {
         ({
             applyGoToLocalPointRequest,
             beginEventCallbackPhase,
+            completeTakeoff,
             enterLandingProcess,
             enterPreflight,
             enterTakeoffProcess,
@@ -200,6 +202,37 @@ describe('drone FSM validation', () => {
         expect(accepted).toBe(true);
         expect(drone.fsmState).toBe('FLYING_MOVING');
         expect(drone.target_pos).toEqual({ x: 1, y: 1, z: 1 });
+    });
+
+    test('accepts goToLocalPoint from timer during takeoff and starts planar movement early', () => {
+        setDroneFsmState(drone, 'TAKEOFF_PROCESS');
+        drone.target_pos = { x: 0, y: 0, z: 1.5 };
+
+        const accepted = withCommandSource(drone, 'timer', () => applyGoToLocalPointRequest(drone, { x: 1, y: 1, z: 1 }));
+
+        expect(accepted).toBe(true);
+        expect(drone.fsmState).toBe('TAKEOFF_PROCESS');
+        expect(drone.target_pos).toEqual({ x: 1, y: 1, z: 1.5 });
+        expect(drone.pendingLocalPoint).toBe(true);
+        expect(drone.pendingLocalPointSource).toBe('timer');
+        expect(drone.pendingLocalPointTarget).toEqual({ x: 1, y: 1, z: 1 });
+    });
+
+    test('continues pending timer route after takeoff completes', () => {
+        setDroneFsmState(drone, 'TAKEOFF_PROCESS');
+        drone.pos = { x: 0.2, y: 0.1, z: 1 };
+        drone.target_pos = { x: 1, y: 1, z: 1 };
+        drone.pendingLocalPoint = true;
+        drone.pendingLocalPointSource = 'timer';
+        drone.pendingLocalPointTarget = { x: 2, y: 2, z: 1 };
+
+        expect(completeTakeoff(drone)).toBe(true);
+
+        expect(drone.fsmState).toBe('FLYING_MOVING');
+        expect(drone.target_pos).toEqual({ x: 2, y: 2, z: 1 });
+        expect(drone.pendingLocalPoint).toBe(false);
+        expect(drone.pendingLocalPointSource).toBeNull();
+        expect(drone.pendingLocalPointTarget).toBeNull();
     });
 
     test('throws detailed FSM error for TAKEOFF from flying state', () => {

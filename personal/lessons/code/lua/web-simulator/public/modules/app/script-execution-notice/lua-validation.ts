@@ -5,12 +5,9 @@
 import { scriptHasLuaEventCallback } from '../../lua/mission-guard.js';
 
 function hasLuaEarlyRouteIssue(code: string) {
-    const normalized = (code || '').toLowerCase();
-    const hasTakeoff = normalized.includes('ev.mce_takeoff');
-    const hasGoTo = normalized.includes('ap.gotolocalpoint');
-    const hasTakeoffCompleteRouteHandler = /if\s+event\s*==\s*ev\.takeoff_complete[\s\S]*?ap\.gotolocalpoint\s*\(/.test(normalized);
-    const hasTimerBasedRoute = /timer\.calllater\s*\(\s*[0-9]*\.?[0-9]+\s*,\s*function\s*\([^)]*\)\s*[\s\S]*?ap\.gotolocalpoint\s*\(/.test(normalized);
-    return hasTakeoff && hasGoTo && hasTimerBasedRoute && !hasTakeoffCompleteRouteHandler;
+    // Timer-driven route start during TAKEOFF_PROCESS is intentionally supported.
+    void code;
+    return false;
 }
 
 function countLuaBlockOpeners(line: string) {
@@ -156,9 +153,6 @@ export function collectLuaIssues(code: string): string[] {
     }
     if ((hasTakeoff || hasGoTo || hasLanding) && !hasTimer && !hasCallback && !hasSleep) {
         issues.push('Команды миссии запускаются подряд без пауз. Добавьте между этапами `sleep(...)`, `Timer.callLater(...)` или `callback(event)`.');
-    }
-    if (hasLuaEarlyRouteIssue(code)) {
-        issues.push('Маршрут привязан к `Timer.callLater(...)`, а не к `TAKEOFF_COMPLETE`, поэтому `goToLocalPoint(...)` может выполниться, пока FSM взлета еще активен.');
     }
     if (/timer\.calllater\s*\(\s*[^,]+,\s*(?!function\b)[a-z_][\w.:]*\s*\(/i.test(code || '')) {
         issues.push('В `Timer.callLater(...)` передан результат вызова функции, поэтому она выполняется сразу. Передайте сам callback, например `blinkGreen` или `function() ... end`.');

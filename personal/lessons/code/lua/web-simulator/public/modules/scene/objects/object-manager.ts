@@ -152,6 +152,8 @@ export function resetDroneToOrigin() {
     droneState.target_pos = { x: 0, y: 0, z: 0 };
     droneState.target_yaw = 0;
     droneState.pendingLocalPoint = false;
+    droneState.pendingLocalPointSource = null;
+    droneState.pendingLocalPointTarget = null;
     currentDrone.position.set(0, 0, 0);
     currentDrone.rotation.set(0, 0, 0, 'ZYX');
     log(`Дрон ${currentDroneId} возвращен в начало системы координат`, 'success');
