@@ -123,12 +123,12 @@ export const pythonApiDocs: Record<string, ApiDoc> = {
     },
     'Pioneer.led_control': {
         desc: 'Управление RGB-светодиодами.',
-        syntax: 'pioneer.led_control(r=0, g=0, b=0) -> bool',
-        params: 'r,g,b (0..255)',
+        syntax: 'pioneer.led_control(led_id=255, r=0, g=0, b=0) -> bool',
+        params: 'led_id (255 = все; 0..3 = LED 1..4), r,g,b (0..255)',
         returns: 'bool',
-        example: 'pioneer.led_control(r=255, g=0, b=0)',
+        example: 'pioneer.led_control(led_id=255, r=255, g=0, b=0)',
         kind: 'Method',
-        insertText: 'led_control(r=${1:r}, g=${2:g}, b=${3:b})'
+        insertText: 'led_control(led_id=${1:255}, r=${2:r}, g=${3:g}, b=${4:b})'
     },
     'Pioneer.send_rc_channels': {
         desc: 'Имитация приема значений по каналам пульта управления.',
@@ -138,6 +138,15 @@ export const pythonApiDocs: Record<string, ApiDoc> = {
         example: 'pioneer.send_rc_channels(channel_1=1500, channel_2=1500, channel_3=1500, channel_4=1500)',
         kind: 'Method',
         insertText: 'send_rc_channels(channel_1=${1:1500}, channel_2=${2:1500}, channel_3=${3:1500}, channel_4=${4:1500})'
+    },
+    'Pioneer.lua_script_control': {
+        desc: 'Запуск или остановка сохраненного Lua-скрипта на выбранном дроне.',
+        syntax: 'pioneer.lua_script_control(command) -> bool',
+        params: 'command ("Start" | "Stop")',
+        returns: 'bool',
+        example: 'pioneer.lua_script_control("Start")',
+        kind: 'Method',
+        insertText: 'lua_script_control(${1:"Start"})'
     },
 
     // Camera
@@ -183,6 +192,33 @@ export const pythonApiDocs: Record<string, ApiDoc> = {
         params: 'none',
         returns: 'bool',
         example: 'camera.connected()',
+        kind: 'Method',
+        insertText: 'connected()'
+    },
+    'VideoStream.start': {
+        desc: 'Запустить совместимый video-stream wrapper поверх камеры симулятора.',
+        syntax: 'await stream.start()',
+        params: 'none',
+        returns: 'None',
+        example: 'stream.start()',
+        kind: 'Method',
+        insertText: 'start()'
+    },
+    'VideoStream.stop': {
+        desc: 'Остановить video-stream wrapper.',
+        syntax: 'await stream.stop()',
+        params: 'none',
+        returns: 'None',
+        example: 'stream.stop()',
+        kind: 'Method',
+        insertText: 'stop()'
+    },
+    'VideoStream.connected': {
+        desc: 'Проверить состояние подключения video-stream wrapper.',
+        syntax: 'stream.connected() -> bool',
+        params: 'none',
+        returns: 'bool',
+        example: 'stream.connected()',
         kind: 'Method',
         insertText: 'connected()'
     }

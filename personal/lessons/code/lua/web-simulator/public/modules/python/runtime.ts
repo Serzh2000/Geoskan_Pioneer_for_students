@@ -1,7 +1,13 @@
 import { drones } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 import { installPioneerSdkModule } from './pioneer-sdk-module.js';
-import { cancelledRuns, cleanupPythonRuntimeState, lastManualSpeedUpdateMs, localOriginByDrone } from './runtime-shared.js';
+import {
+    cancelledRuns,
+    cleanupPythonRuntimeState,
+    lastManualSpeedUpdateMs,
+    localOriginByDrone,
+    resetPythonDroneBindings
+} from './runtime-shared.js';
 import { createScriptFailureError, showScriptFailureNotice } from '../app/script-execution-notice.js';
 
 let pyodideInstance: any = null;
@@ -104,6 +110,7 @@ export async function runPythonScript(droneId: string, code: string): Promise<vo
     cancelledRuns[droneId] = false;
     lastManualSpeedUpdateMs[droneId] = 0;
     localOriginByDrone[droneId] = { x: drones[droneId].pos.x, y: drones[droneId].pos.y, z: drones[droneId].pos.z };
+    resetPythonDroneBindings(droneId);
 
     (window as any).SIM_DRONE_ID = droneId;
 
@@ -112,24 +119,13 @@ export async function runPythonScript(droneId: string, code: string): Promise<vo
 
     await validatePythonSyntax(pyodide, normalizedUserCode);
 
-    // Минимальная трансформация под web-runtime:
-    // - запускаем код внутри async функции
-    // - заменяем time.sleep(x) -> await asyncio.sleep(x)
-    // Это позволяет не "убивать" UI, т.к. sleep становится кооперативным.
-    const transformedUserCode = normalizedUserCode
-        .replace(/\btime\.sleep\s*\(/g, 'await asyncio.sleep(');
-
-    const indentedUserCode = transformedUserCode
-        .replace(/\r\n/g, '\n')
-        .split('\n')
-        .map((line) => `    ${line}`)
-        .join('\n');
-
-    // Исполняем в async контексте, чтобы await asyncio.sleep(...) работал.
     const wrapped = `
-import asyncio, builtins, js
+import ast, asyncio, builtins, js
 
-__sim_original_print = builtins.print
+if not hasattr(builtins, "__sim_base_print"):
+    builtins.__sim_base_print = builtins.print
+if not hasattr(builtins, "__sim_base_input"):
+    builtins.__sim_base_input = builtins.input
 
 def __sim_print(*args, **kwargs):
     sep = kwargs.get("sep", " ")
@@ -138,12 +134,103 @@ def __sim_print(*args, **kwargs):
     if end and end != "\\n":
         text += end.rstrip("\\n")
     js.pioneer_print(js.SIM_DRONE_ID, text)
-    return __sim_original_print(*args, **kwargs)
+    return builtins.__sim_base_print(*args, **kwargs)
+
+def __sim_input(prompt=""):
+    return js.pioneer_input(prompt)
 
 builtins.print = __sim_print
+builtins.input = __sim_input
 
-async def __user_main():
-${indentedUserCode}
+__sim_source = ${JSON.stringify(normalizedUserCode)}
+
+class __SimAsyncify(ast.NodeTransformer):
+    def __init__(self):
+        self.user_functions = set()
+        self.user_methods = set()
+        self.awaitable_attrs = {"start", "join", "wait", "stop"}
+
+    def collect(self, tree):
+        for node in tree.body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                self.user_functions.add(node.name)
+            elif isinstance(node, ast.ClassDef):
+                for part in node.body:
+                    if isinstance(part, (ast.FunctionDef, ast.AsyncFunctionDef)) and part.name != "__init__":
+                        self.user_methods.add(part.name)
+
+    def visit_FunctionDef(self, node):
+        node = self.generic_visit(node)
+        if node.name == "__init__":
+            return node
+        return ast.AsyncFunctionDef(
+            name=node.name,
+            args=node.args,
+            body=node.body,
+            decorator_list=node.decorator_list,
+            returns=node.returns,
+            type_comment=node.type_comment,
+            type_params=getattr(node, "type_params", [])
+        )
+
+    def visit_While(self, node):
+        node = self.generic_visit(node)
+        node.body.insert(0, ast.Expr(
+            value=ast.Await(
+                value=ast.Call(
+                    func=ast.Attribute(value=ast.Name(id="asyncio", ctx=ast.Load()), attr="sleep", ctx=ast.Load()),
+                    args=[ast.Constant(value=0.001)],
+                    keywords=[]
+                )
+            )
+        ))
+        return node
+
+    def visit_Call(self, node):
+        if (
+            isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "time"
+            and node.func.attr == "sleep"
+        ):
+            awaited_sleep = ast.Call(
+                func=ast.Attribute(value=ast.Name(id="asyncio", ctx=ast.Load()), attr="sleep", ctx=ast.Load()),
+                args=[self.visit(arg) for arg in node.args],
+                keywords=[ast.keyword(arg=kw.arg, value=self.visit(kw.value)) for kw in node.keywords]
+            )
+            return ast.Await(value=awaited_sleep)
+
+        node = self.generic_visit(node)
+        should_await = False
+        if isinstance(node.func, ast.Name) and node.func.id in self.user_functions:
+            should_await = True
+        elif isinstance(node.func, ast.Attribute) and (
+            node.func.attr in self.user_methods
+            or node.func.attr in self.awaitable_attrs
+        ):
+            should_await = True
+
+        if should_await:
+            return ast.Await(value=node)
+        return node
+
+__sim_tree = ast.parse(__sim_source, "<user-script>", "exec")
+__sim_transformer = __SimAsyncify()
+__sim_transformer.collect(__sim_tree)
+__sim_body = __sim_transformer.visit(__sim_tree).body
+__sim_module = ast.Module(
+    body=[
+        ast.AsyncFunctionDef(
+            name="__user_main",
+            args=ast.arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[]),
+            body=__sim_body if __sim_body else [ast.Pass()],
+            decorator_list=[]
+        )
+    ],
+    type_ignores=[]
+)
+ast.fix_missing_locations(__sim_module)
+exec(compile(__sim_module, "<user-script>", "exec"), globals(), globals())
 
 try:
     await __user_main()
@@ -153,6 +240,9 @@ except Exception as e:
         pass
     else:
         raise
+finally:
+    builtins.print = builtins.__sim_base_print
+    builtins.input = builtins.__sim_base_input
 `;
 
     const promise = pyodide.runPythonAsync(wrapped);

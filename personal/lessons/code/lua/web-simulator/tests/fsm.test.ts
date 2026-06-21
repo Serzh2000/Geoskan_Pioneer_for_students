@@ -218,6 +218,20 @@ describe('drone FSM validation', () => {
         expect(drone.pendingLocalPointTarget).toEqual({ x: 1, y: 1, z: 1 });
     });
 
+    test('accepts goToLocalPoint from python during takeoff for SDK-compatible missions', () => {
+        setDroneFsmState(drone, 'TAKEOFF_PROCESS');
+        drone.target_pos = { x: 0, y: 0, z: 1 };
+
+        const accepted = withCommandSource(drone, 'python', () => applyGoToLocalPointRequest(drone, { x: 0, y: 0, z: 1 }));
+
+        expect(accepted).toBe(true);
+        expect(drone.fsmState).toBe('TAKEOFF_PROCESS');
+        expect(drone.target_pos).toEqual({ x: 0, y: 0, z: 1 });
+        expect(drone.pendingLocalPoint).toBe(true);
+        expect(drone.pendingLocalPointSource).toBe('python');
+        expect(drone.pendingLocalPointTarget).toEqual({ x: 0, y: 0, z: 1 });
+    });
+
     test('continues pending timer route after takeoff completes', () => {
         setDroneFsmState(drone, 'TAKEOFF_PROCESS');
         drone.pos = { x: 0.2, y: 0.1, z: 1 };
@@ -230,6 +244,24 @@ describe('drone FSM validation', () => {
 
         expect(drone.fsmState).toBe('FLYING_MOVING');
         expect(drone.target_pos).toEqual({ x: 2, y: 2, z: 1 });
+        expect(drone.pendingLocalPoint).toBe(false);
+        expect(drone.pendingLocalPointSource).toBeNull();
+        expect(drone.pendingLocalPointTarget).toBeNull();
+    });
+
+    test('marks point reached when pending target is already satisfied at takeoff completion', () => {
+        setDroneFsmState(drone, 'TAKEOFF_PROCESS');
+        drone.pos = { x: 0, y: 0, z: 1 };
+        drone.target_pos = { x: 0, y: 0, z: 1 };
+        drone.pendingLocalPoint = true;
+        drone.pendingLocalPointSource = 'python';
+        drone.pendingLocalPointTarget = { x: 0, y: 0, z: 1 };
+        drone.pointReachedFlag = false;
+
+        expect(completeTakeoff(drone)).toBe(true);
+
+        expect(drone.fsmState).toBe('FLYING_HOVER');
+        expect(drone.pointReachedFlag).toBe(true);
         expect(drone.pendingLocalPoint).toBe(false);
         expect(drone.pendingLocalPointSource).toBeNull();
         expect(drone.pendingLocalPointTarget).toBeNull();

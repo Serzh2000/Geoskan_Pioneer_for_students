@@ -84,7 +84,7 @@ export function setupSyntaxHighlighting(monaco: any) {
                 [/\b(Pioneer|Camera|VideoStream)\b/, "keyword.class"],
 
                 // Common Pioneer SDK methods (minimal subset)
-                [/\b(arm|disarm|takeoff|land|close_connection|go_to_local_point|go_to_local_point_body_fixed|point_reached|set_manual_speed|set_manual_speed_body_fixed|get_local_position_lps|get_dist_sensor_data|get_battery_status|get_autopilot_state|led_control|send_rc_channels|connect|disconnect|connected|get_frame|get_cv_frame)\b/, "function.call"],
+                [/\b(arm|disarm|takeoff|land|close_connection|go_to_local_point|go_to_local_point_body_fixed|point_reached|set_manual_speed|set_manual_speed_body_fixed|get_local_position_lps|get_dist_sensor_data|get_battery_status|get_autopilot_state|led_control|send_rc_channels|lua_script_control|connect|disconnect|connected|get_frame|get_cv_frame|start|stop|join|wait)\b/, "function.call"],
 
                 // Python comments
                 [/#.*$/, 'comment'],

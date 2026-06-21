@@ -104,6 +104,9 @@ export function checkPhysicsEvents(simState: DroneState, prevPos: { x: number; y
     if (simState.fsmState === 'TAKEOFF_PROCESS' && Math.abs(simState.pos.z - simState.target_pos.z) < 0.1) {
         completeTakeoff(simState);
         triggerLuaCallback(id, 6);
+        if (simState.pointReachedFlag) {
+            triggerLuaCallback(id, 10);
+        }
     }
 
     if (simState.fsmState === 'FLYING_MOVING' && isMovementReached(simState)) {

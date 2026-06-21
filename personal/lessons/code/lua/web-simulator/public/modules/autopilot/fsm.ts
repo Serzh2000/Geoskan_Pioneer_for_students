@@ -139,8 +139,10 @@ export function applyGoToLocalPointRequest(
     options?: { yaw?: number | null }
 ) {
     recordTickCommand(drone, 'goToLocalPoint');
+    const commandSource = getCommandSource(drone);
+    const canQueueDuringTakeoff = commandSource === 'timer' || commandSource === 'python';
 
-    if (drone.fsmState === 'TAKEOFF_PROCESS' && getCommandSource(drone) === 'timer') {
+    if (drone.fsmState === 'TAKEOFF_PROCESS' && canQueueDuringTakeoff) {
         drone.target_pos = {
             x: target.x,
             y: target.y,
@@ -151,14 +153,14 @@ export function applyGoToLocalPointRequest(
         }
         drone.pointReachedFlag = false;
         drone.pendingLocalPoint = true;
-        drone.pendingLocalPointSource = 'timer';
+        drone.pendingLocalPointSource = commandSource;
         drone.pendingLocalPointTarget = { ...target };
         drone.lastAcceptedGoToTickMs = getCurrentTickMs(drone);
         return true;
     }
 
     if (drone.fsmState === 'PREFLIGHT' || drone.fsmState === 'TAKEOFF_PROCESS' || drone.fsmState === 'LANDING_PROCESS') {
-        if (getCommandSource(drone) === 'timer') {
+        if (commandSource === 'timer') {
             showEarlyRouteNotice();
             log('WARNING: Delayed command was rejected because FSM state has already changed.', 'warn');
             return false;
@@ -312,6 +314,7 @@ export function completeTakeoff(drone: DroneState) {
     if (pendingTarget) {
         drone.target_pos = { ...pendingTarget };
         if (isMovementReached(drone)) {
+            drone.pointReachedFlag = true;
             setDroneFsmState(drone, 'FLYING_HOVER');
         } else {
             setDroneFsmState(drone, 'FLYING_MOVING');
