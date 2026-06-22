@@ -1,141 +1,20 @@
-import { createDroneState, drones, ensureDronePythonConnectionSettings } from '../core/state.js';
+import { drones } from '../core/state.js';
 import { installJsRuntimeAPI } from './pioneer-js-bridge.js';
 import { captureDroneCameraFrameDataUrl, isDroneCameraConnected } from './pioneer-js-bridge-camera.js';
 import { localOriginByDrone } from './runtime-shared.js';
-
-type ExternalPythonBridgeEvent = {
-    id: number;
-    sessionId: string;
-    timestamp: string;
-    droneName: string;
-    droneIp: string;
-    mavlinkPort: number;
-    connectionMethod: 'udpin' | 'udpout' | 'serial';
-    device: string;
-    baud: number;
-    method: string;
-    args: unknown[];
-    kwargs: Record<string, unknown>;
-};
-
-type ExternalDroneBinding = {
-    bindingKey: string;
-    sessionId: string;
-    droneId: string;
-    droneIp: string;
-    mavlinkPort: number;
-    connectionMethod: 'udpin' | 'udpout' | 'serial';
-};
-
-type ExternalBridgeState = {
-    nextAfterId: number;
-    timerId: number | null;
-    bindings: Map<string, ExternalDroneBinding>;
-};
+import {
+    type ExternalBridgeState,
+    type ExternalDroneBinding,
+    type ExternalPythonBridgeEvent,
+    resolveExternalDroneId
+} from './external-bridge-binding.js';
 
 const state: ExternalBridgeState = {
     nextAfterId: 0,
     timerId: null,
     bindings: new Map<string, ExternalDroneBinding>()
 };
-
-function sanitizeKeyPart(value: string): string {
-    return value
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9_-]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        || 'pioneer';
-}
-
-function buildExternalDroneId(event: ExternalPythonBridgeEvent): string {
-    return `external_${sanitizeKeyPart(event.sessionId)}_${sanitizeKeyPart(event.connectionMethod)}_${sanitizeKeyPart(event.droneIp || event.droneName || 'pioneer')}_${String(event.mavlinkPort || 8001)}`;
-}
-
-function buildBindingKey(event: ExternalPythonBridgeEvent): string {
-    return [
-        sanitizeKeyPart(event.sessionId),
-        sanitizeKeyPart(event.connectionMethod || 'udpout'),
-        sanitizeKeyPart(event.droneIp || ''),
-        String(event.mavlinkPort || 8001)
-    ].join('::');
-}
-
-function matchesConfiguredDrone(event: ExternalPythonBridgeEvent, droneId: string): boolean {
-    const drone = drones[droneId];
-    if (!drone) return false;
-    const connection = ensureDronePythonConnectionSettings(droneId);
-    return sanitizeKeyPart(connection.ip || '') === sanitizeKeyPart(event.droneIp || '')
-        && Number(connection.mavlinkPort || 8001) === Number(event.mavlinkPort || 8001)
-        && sanitizeKeyPart(connection.connectionMethod || 'udpout') === sanitizeKeyPart(event.connectionMethod || 'udpout');
-}
-
-function findConfiguredDroneId(event: ExternalPythonBridgeEvent): string | null {
-    for (const droneId of Object.keys(drones)) {
-        if (matchesConfiguredDrone(event, droneId)) {
-            return droneId;
-        }
-    }
-    return null;
-}
-
-function applyConnectionMetadata(droneId: string, event: ExternalPythonBridgeEvent): void {
-    const drone = drones[droneId];
-    if (!drone) return;
-    const connection = ensureDronePythonConnectionSettings(droneId);
-    drone.name = event.droneName || drone.name;
-    connection.name = event.droneName || connection.name;
-    connection.ip = event.droneIp || connection.ip;
-    connection.mavlinkPort = Number(event.mavlinkPort || connection.mavlinkPort || 8001);
-    connection.connectionMethod = event.connectionMethod || connection.connectionMethod;
-    connection.device = event.device || connection.device;
-    connection.baud = Number(event.baud || connection.baud || 115200);
-}
-
-function resolveExternalDroneId(event: ExternalPythonBridgeEvent): string {
-    const bindingKey = buildBindingKey(event);
-    const existingBinding = state.bindings.get(bindingKey);
-    if (existingBinding && drones[existingBinding.droneId]) {
-        applyConnectionMetadata(existingBinding.droneId, event);
-        return existingBinding.droneId;
-    }
-
-    const configuredDroneId = findConfiguredDroneId(event);
-    if (configuredDroneId) {
-        applyConnectionMetadata(configuredDroneId, event);
-        state.bindings.set(bindingKey, {
-            bindingKey,
-            sessionId: event.sessionId,
-            droneId: configuredDroneId,
-            droneIp: event.droneIp,
-            mavlinkPort: Number(event.mavlinkPort || 8001),
-            connectionMethod: event.connectionMethod || 'udpout'
-        });
-        return configuredDroneId;
-    }
-
-    const nextId = buildExternalDroneId(event);
-    if (!drones[nextId]) {
-        createDroneState(nextId, event.droneName || `External ${event.droneIp || 'Pioneer'}`);
-        window.dispatchEvent(new CustomEvent('external-drone-state-changed', {
-            detail: {
-                droneId: nextId,
-                sessionId: event.sessionId
-            }
-        }));
-    }
-
-    applyConnectionMetadata(nextId, event);
-    state.bindings.set(bindingKey, {
-        bindingKey,
-        sessionId: event.sessionId,
-        droneId: nextId,
-        droneIp: event.droneIp,
-        mavlinkPort: Number(event.mavlinkPort || 8001),
-        connectionMethod: event.connectionMethod || 'udpout'
-    });
-    return nextId;
-}
+let bridgeConnectionSyncTimerId: number | null = null;
 
 function asNumber(value: unknown, fallback: number | null = null): number | null {
     if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -147,12 +26,55 @@ function asNumber(value: unknown, fallback: number | null = null): number | null
     return fallback;
 }
 
-function callPioneerApi(methodName: string, ...args: unknown[]): void {
+function callPioneerApi(methodName: string, ...args: unknown[]): unknown {
     const runtime = window as unknown as Record<string, (...callArgs: unknown[]) => unknown>;
     const fn = runtime[methodName];
     if (typeof fn === 'function') {
-        fn(...args);
+        return fn(...args);
     }
+    return null;
+}
+
+function buildConfiguredConnectionKey(parts: Array<string | number>): string {
+    return parts.map((value) => String(value ?? '').trim().toLowerCase()).join('::');
+}
+
+async function syncConfiguredBridgeConnections(): Promise<void> {
+    const uniqueConnections = new Map<string, Record<string, unknown>>();
+    for (const [droneId, drone] of Object.entries(drones)) {
+        const connectionMethod = drone.pythonConnection?.connectionMethod === 'serial' || drone.pythonConnection?.connectionMethod === 'udpin'
+            ? drone.pythonConnection.connectionMethod
+            : 'udpout';
+        const droneIp = String(drone.pythonConnection?.ip || '127.0.0.1').trim() || '127.0.0.1';
+        const mavlinkPort = Number(drone.pythonConnection?.mavlinkPort || 8001);
+        const cameraPort = Number(drone.pythonConnection?.cameraPort || (mavlinkPort + 10000));
+        const key = buildConfiguredConnectionKey([connectionMethod, droneIp, mavlinkPort, cameraPort]);
+        uniqueConnections.set(key, {
+            droneId,
+            droneName: drone.name || 'pioneer',
+            droneIp,
+            mavlinkPort,
+            cameraPort,
+            connectionMethod,
+            device: drone.pythonConnection?.device || '/dev/serial0',
+            baud: Number(drone.pythonConnection?.baud || 115200)
+        });
+    }
+
+    await fetch('/api/mavlink-bridge/connections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            connections: Array.from(uniqueConnections.values())
+        })
+    }).catch(() => undefined);
+}
+
+async function pollConfiguredBridgeConnections(): Promise<void> {
+    await syncConfiguredBridgeConnections();
+    bridgeConnectionSyncTimerId = window.setTimeout(() => {
+        void pollConfiguredBridgeConnections();
+    }, 1500);
 }
 
 function setExternalDroneRuntimeState(droneId: string, active: boolean): void {
@@ -181,7 +103,7 @@ function syncExternalDroneLocalOrigin(droneId: string): void {
 }
 
 function applyExternalEvent(event: ExternalPythonBridgeEvent): void {
-    const droneId = resolveExternalDroneId(event);
+    const droneId = resolveExternalDroneId(state, event);
     const drone = drones[droneId];
     if (drone) {
         drone.name = event.droneName || drone.name;
@@ -304,6 +226,18 @@ async function syncExternalBridgeStates(): Promise<void> {
         if (!drone) return;
         const cameraConnected = isDroneCameraConnected(binding.droneId);
         const cameraFrameDataUrl = cameraConnected ? captureDroneCameraFrameDataUrl(binding.droneId) : null;
+        const autopilotState = String(callPioneerApi('pioneer_get_autopilot_state', binding.droneId) ?? '') || null;
+        const rawLocalPosition = callPioneerApi('pioneer_get_local_position_lps', binding.droneId);
+        const localPosition = Array.isArray(rawLocalPosition) && rawLocalPosition.length >= 3
+            ? {
+                x: Number(rawLocalPosition[0]),
+                y: Number(rawLocalPosition[1]),
+                z: Number(rawLocalPosition[2])
+            }
+            : null;
+        // #region debug-point B:browser-camera-state-sync
+        fetch('http://127.0.0.1:7778/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'camera-udp-timeout', runId: 'pre-fix', hypothesisId: 'B', location: 'public/modules/python/external-bridge.ts:syncExternalBridgeStates', msg: '[DEBUG] Browser external bridge state sync', data: { sessionId: binding.sessionId, droneId: binding.droneId, droneIp: binding.droneIp, mavlinkPort: binding.mavlinkPort, connectionMethod: binding.connectionMethod, cameraConnected, hasCameraFrameDataUrl: Boolean(cameraFrameDataUrl), cameraFrameDataUrlLength: cameraFrameDataUrl?.length ?? 0, autopilotState }, ts: Date.now() }) }).catch(() => undefined);
+        // #endregion
 
         await fetch('/api/external-python-bridge/state', {
             method: 'POST',
@@ -316,7 +250,9 @@ async function syncExternalBridgeStates(): Promise<void> {
                 connectionMethod: binding.connectionMethod,
                 pointReached: Boolean(drone.pointReachedFlag),
                 cameraConnected,
-                cameraFrameDataUrl
+                cameraFrameDataUrl,
+                autopilotState,
+                localPosition
             })
         }).catch(() => undefined);
     });
@@ -353,5 +289,8 @@ export function initExternalPythonBridge(): void {
         return;
     }
 
+    if (bridgeConnectionSyncTimerId === null) {
+        void pollConfiguredBridgeConnections();
+    }
     void pollExternalBridge();
 }

@@ -8,6 +8,7 @@ type HardwarePythonDom = {
     nameEl: HTMLInputElement | null;
     ipEl: HTMLInputElement | null;
     mavlinkPortEl: HTMLInputElement | null;
+    cameraPortEl: HTMLInputElement | null;
     connectionMethodEl: HTMLSelectElement | null;
     deviceEl: HTMLInputElement | null;
     baudEl: HTMLInputElement | null;
@@ -25,6 +26,7 @@ function collectDom(): HardwarePythonDom {
         nameEl: document.getElementById('python-connection-name') as HTMLInputElement | null,
         ipEl: document.getElementById('python-connection-ip') as HTMLInputElement | null,
         mavlinkPortEl: document.getElementById('python-connection-mavlink-port') as HTMLInputElement | null,
+        cameraPortEl: document.getElementById('python-connection-camera-port') as HTMLInputElement | null,
         connectionMethodEl: document.getElementById('python-connection-method') as HTMLSelectElement | null,
         deviceEl: document.getElementById('python-connection-device') as HTMLInputElement | null,
         baudEl: document.getElementById('python-connection-baud') as HTMLInputElement | null,
@@ -50,6 +52,7 @@ function syncDisabledState(dom: HardwarePythonDom, mode: PythonExecutionTarget):
         dom.nameEl,
         dom.ipEl,
         dom.mavlinkPortEl,
+        dom.cameraPortEl,
         dom.connectionMethodEl,
         dom.deviceEl,
         dom.baudEl,
@@ -87,6 +90,9 @@ function render(dom: HardwarePythonDom): void {
     }
     if (dom.mavlinkPortEl) {
         dom.mavlinkPortEl.value = String(connection.mavlinkPort);
+    }
+    if (dom.cameraPortEl) {
+        dom.cameraPortEl.value = String(connection.cameraPort);
     }
     if (dom.connectionMethodEl) {
         dom.connectionMethodEl.value = connection.connectionMethod;
@@ -150,6 +156,13 @@ export function initHardwarePythonSettingsUI(): void {
         applyToCurrentDrone(() => {
             const nextValue = Number.parseInt(dom.mavlinkPortEl?.value ?? '8001', 10);
             drones[currentDroneId].pythonConnection.mavlinkPort = Number.isFinite(nextValue) ? nextValue : 8001;
+        });
+    });
+
+    dom.cameraPortEl?.addEventListener('input', () => {
+        applyToCurrentDrone(() => {
+            const nextValue = Number.parseInt(dom.cameraPortEl?.value ?? '18001', 10);
+            drones[currentDroneId].pythonConnection.cameraPort = Number.isFinite(nextValue) ? nextValue : 18001;
         });
     });
 

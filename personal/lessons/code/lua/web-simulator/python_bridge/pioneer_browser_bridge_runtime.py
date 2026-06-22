@@ -64,7 +64,7 @@ _CAMERA_INIT_KEYS = [
 _CAMERA_CONNECTION_DEFAULTS = {
     "name": "pioneer",
     "ip": "192.168.4.1",
-    "port": 8888,
+    "port": 18001,
     "timeout": 0.5,
     "video_buffer_size": 65000,
     "log_connection": True,
@@ -111,6 +111,8 @@ def _resolve_camera_connection_settings(args: tuple[Any, ...], kwargs: dict[str,
             break
         resolved[_CAMERA_INIT_KEYS[index]] = value
     resolved.update(kwargs)
+    resolved["bridge_port"] = int(resolved.get("port", _CAMERA_CONNECTION_DEFAULTS["port"]))
+    resolved["bridge_connection_method"] = "camera"
     return resolved
 
 
@@ -132,12 +134,14 @@ def _get_connection_settings(instance: Any) -> dict[str, Any]:
 
 
 def _build_bridge_payload(connection: dict[str, Any], method: str, args: tuple[Any, ...], kwargs: dict[str, Any]) -> dict[str, Any]:
+    bridge_port = int(connection.get("bridge_port", connection.get("mavlink_port", _PIONEER_CONNECTION_DEFAULTS["mavlink_port"])))
+    bridge_connection_method = str(connection.get("bridge_connection_method", connection.get("connection_method", _PIONEER_CONNECTION_DEFAULTS["connection_method"])) or "udpout")
     return {
         "sessionId": SESSION_ID,
         "droneName": str(connection.get("name", "pioneer") or "pioneer"),
         "droneIp": str(connection.get("ip", "") or ""),
-        "mavlinkPort": int(connection.get("mavlink_port", _PIONEER_CONNECTION_DEFAULTS["mavlink_port"])),
-        "connectionMethod": str(connection.get("connection_method", _PIONEER_CONNECTION_DEFAULTS["connection_method"]) or "udpout"),
+        "mavlinkPort": bridge_port,
+        "connectionMethod": bridge_connection_method,
         "device": str(connection.get("device", _PIONEER_CONNECTION_DEFAULTS["device"]) or ""),
         "baud": int(connection.get("baud", _PIONEER_CONNECTION_DEFAULTS["baud"])),
         "method": method,
@@ -209,12 +213,14 @@ def _safe_post_event(instance: Any, method: str, args: tuple[Any, ...], kwargs: 
 
 def _safe_get_external_state(instance: Any) -> dict[str, Any] | None:
     connection = _get_connection_settings(instance)
+    bridge_port = int(connection.get("bridge_port", connection.get("mavlink_port", _PIONEER_CONNECTION_DEFAULTS["mavlink_port"])))
+    bridge_connection_method = str(connection.get("bridge_connection_method", connection.get("connection_method", _PIONEER_CONNECTION_DEFAULTS["connection_method"])) or "udpout")
     query = urllib.parse.urlencode(
         {
             "sessionId": SESSION_ID,
             "droneIp": str(connection.get("ip", "") or ""),
-            "mavlinkPort": int(connection.get("mavlink_port", _PIONEER_CONNECTION_DEFAULTS["mavlink_port"])),
-            "connectionMethod": str(connection.get("connection_method", _PIONEER_CONNECTION_DEFAULTS["connection_method"]) or "udpout"),
+            "mavlinkPort": bridge_port,
+            "connectionMethod": bridge_connection_method,
         }
     )
 
@@ -379,7 +385,7 @@ def _build_browser_mirrored_camera(original_class: type) -> type:
             self.timeout = connection["timeout"]
             self.VIDEO_BUFFER_SIZE = connection["video_buffer_size"]
             self.log_connection = connection["log_connection"]
-            self.connected = False
+            self._connected = False
             _report_debug(
                 "H1",
                 "python_bridge/pioneer_browser_bridge_runtime.py:Camera.__init__",
@@ -395,34 +401,37 @@ def _build_browser_mirrored_camera(original_class: type) -> type:
         def connect(self, *args: Any, **kwargs: Any):
             _safe_post_bridge_event(self._browser_bridge_connection, "camera_connect", args, kwargs)
             state = _poll_external_camera_state(self._browser_bridge_connection)
-            self.connected = bool(state.get("cameraConnected")) if state else False
+            self._connected = bool(state.get("cameraConnected")) if state else False
             _report_debug(
                 "H2",
                 "python_bridge/pioneer_browser_bridge_runtime.py:Camera.connect",
                 "External Python called Camera.connect()",
                 {
-                    "connected": self.connected,
+                    "connected": self._connected,
                     "hasFrame": bool(state and state.get("cameraFrameDataUrl")),
                 },
             )
-            return self.connected
+            return self._connected
 
         def disconnect(self, *args: Any, **kwargs: Any):
             _safe_post_bridge_event(self._browser_bridge_connection, "camera_disconnect", args, kwargs)
-            self.connected = False
+            self._connected = False
             _report_debug(
                 "H2",
                 "python_bridge/pioneer_browser_bridge_runtime.py:Camera.disconnect",
                 "External Python called Camera.disconnect()",
                 {
-                    "connected": self.connected,
+                    "connected": self._connected,
                 },
             )
             return True
 
+        def connected(self):
+            return self._connected
+
         def get_frame(self, *args: Any, **kwargs: Any):
             state = _poll_external_camera_state(self._browser_bridge_connection)
-            self.connected = bool(state.get("cameraConnected")) if state else False
+            self._connected = bool(state.get("cameraConnected")) if state else False
             result = _decode_data_url_bytes(state.get("cameraFrameDataUrl") if state else None)
             _report_debug(
                 "H4",
@@ -458,10 +467,38 @@ def _build_browser_mirrored_camera(original_class: type) -> type:
     return BrowserMirroredCamera
 
 
+def _build_browser_mirrored_video_stream(camera_class: type, original_class: type | None) -> type:
+    class BrowserMirroredVideoStream:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            self.camera = camera_class(*args, **kwargs)
+            self.running = False
+
+        def start(self, *args: Any, **kwargs: Any):
+            self.running = True
+            return self.camera.connect(*args, **kwargs)
+
+        def stop(self, *args: Any, **kwargs: Any):
+            self.running = False
+            return self.camera.disconnect(*args, **kwargs)
+
+        def connected(self):
+            return self.camera.connected()
+
+    if original_class is not None:
+        BrowserMirroredVideoStream.__name__ = original_class.__name__
+        BrowserMirroredVideoStream.__qualname__ = original_class.__qualname__
+        BrowserMirroredVideoStream.__module__ = original_class.__module__
+    else:
+        BrowserMirroredVideoStream.__name__ = "VideoStream"
+        BrowserMirroredVideoStream.__qualname__ = "VideoStream"
+    return BrowserMirroredVideoStream
+
+
 def patch_pioneer_sdk_module(module: Any) -> None:
     original_class = getattr(module, "Pioneer", None)
     original_camera_class = getattr(module, "Camera", None)
-    if original_class is None and original_camera_class is None:
+    original_video_stream_class = getattr(module, "VideoStream", None)
+    if original_class is None and original_camera_class is None and original_video_stream_class is None:
         return
 
     _report_debug(
@@ -480,5 +517,7 @@ def patch_pioneer_sdk_module(module: Any) -> None:
         setattr(module, PATCH_MARKER, True)
     if original_camera_class is not None and not getattr(module, CAMERA_PATCH_MARKER, False):
         setattr(module, CAMERA_ORIGINAL_MARKER, original_camera_class)
-        setattr(module, "Camera", _build_browser_mirrored_camera(original_camera_class))
+        browser_camera_class = _build_browser_mirrored_camera(original_camera_class)
+        setattr(module, "Camera", browser_camera_class)
+        setattr(module, "VideoStream", _build_browser_mirrored_video_stream(browser_camera_class, original_video_stream_class))
         setattr(module, CAMERA_PATCH_MARKER, True)

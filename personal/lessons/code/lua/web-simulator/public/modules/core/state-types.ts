@@ -9,6 +9,7 @@ export interface PioneerConnectionSettings {
     name: string;
     ip: string;
     mavlinkPort: number;
+    cameraPort: number;
     connectionMethod: PioneerConnectionMethod;
     device: string;
     baud: number;

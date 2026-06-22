@@ -26,6 +26,7 @@ export function resetPythonDroneBindings(rootDroneId: string) {
         const connection = rootDrone.pythonConnection;
         pythonDroneBindings.set(makeBindingKey(rootDrone.name, '', connection?.mavlinkPort, connection?.connectionMethod), rootDroneId);
         pythonDroneBindings.set(makeBindingKey(rootDrone.name, rootDroneId, connection?.mavlinkPort, connection?.connectionMethod), rootDroneId);
+        pythonDroneBindings.set(makeBindingKey('camera', connection?.ip, connection?.cameraPort, 'camera'), rootDroneId);
     }
 }
 
@@ -50,13 +51,18 @@ export function resolvePythonDroneId(
     const exactMatch = candidates.find((id) => {
         const drone = drones[id];
         const connection = drone?.pythonConnection;
+        const isCameraBinding = normalizedConnectionMethod === 'camera';
         return id === normalizedIp
             || id === normalizedName
             || drone?.name === normalizedName
             || (
                 String(connection?.ip || '').trim() === normalizedIp
-                && String(connection?.mavlinkPort ?? '') === normalizedPort
-                && String(connection?.connectionMethod || '').trim() === normalizedConnectionMethod
+                && String(isCameraBinding ? connection?.cameraPort ?? '' : connection?.mavlinkPort ?? '') === normalizedPort
+                && (
+                    isCameraBinding
+                        ? normalizedConnectionMethod === 'camera'
+                        : String(connection?.connectionMethod || '').trim() === normalizedConnectionMethod
+                )
             );
     });
 

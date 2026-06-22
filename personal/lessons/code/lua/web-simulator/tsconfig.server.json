@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "types": ["node", "express"]
   },
-  "include": ["server.ts"]
+  "include": ["server.ts", "server-dev.ts", "server/**/*.ts"]
 }

@@ -223,7 +223,9 @@ class Pioneer:
         return bool(js.pioneer_lua_script_control(self._id, command))
 
 class Camera:
-    def __init__(self, timeout=0.5, ip='192.168.4.1', port=8888, video_buffer_size=65000, log_connection=True):
+    def __init__(self, timeout=0.5, ip='192.168.4.1', port=None, video_buffer_size=65000, log_connection=True):
+        if port is None:
+            port = js.pioneer_get_default_camera_port(js.SIM_DRONE_ID)
         self._id = js.pioneer_resolve_drone_id('camera', ip, port, 'camera')
         self._ip = ip
         self._port = port

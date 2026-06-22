@@ -5,7 +5,7 @@
   "scripts": {
     "start": "concurrently \"npm run server\" \"npm run vite\"",
     "prod": "npm run build && node dist/server.js",
-    "server": "ts-node server.ts",
+    "server": "tsc -p tsconfig.server.json && node dist/server-dev.js",
     "vite": "vite",
     "build": "vite build && tsc -p tsconfig.server.json",
     "preview": "vite preview",

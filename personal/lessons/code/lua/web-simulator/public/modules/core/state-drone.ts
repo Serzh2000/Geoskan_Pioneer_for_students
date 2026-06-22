@@ -25,6 +25,7 @@ export function createDefaultPioneerConnectionSettings(): PioneerConnectionSetti
         name: 'pioneer',
         ip: '192.168.4.1',
         mavlinkPort: 8001,
+        cameraPort: 18001,
         connectionMethod: 'udpout',
         device: '/dev/serial0',
         baud: 115200,

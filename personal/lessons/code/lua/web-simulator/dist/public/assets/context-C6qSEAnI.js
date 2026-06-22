@@ -1,1 +1,0 @@
-import{P as e,n as t}from"./simulation-controls-DIhM_Gtc.js";function n(e){return{language:e.language,lessonId:e.lesson.id,chapterId:e.activeChapter.id}}function r(){e(),t()}export{r as n,n as t};

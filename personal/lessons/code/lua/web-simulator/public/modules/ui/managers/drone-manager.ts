@@ -40,10 +40,10 @@ function reportDroneManagerDebug(hypothesisId: string, message: string, data: Re
     // #endregion
 }
 
-function getNextAvailableMavlinkPort(preferredPort: number): number {
+function getNextAvailablePort(preferredPort: number, selector: (droneId: string) => number): number {
     const usedPorts = new Set(
-        Object.values(drones)
-            .map((drone) => Number(drone.pythonConnection?.mavlinkPort))
+        Object.keys(drones)
+            .map((droneId) => Number(selector(droneId)))
             .filter((port) => Number.isFinite(port) && port > 0)
     );
 
@@ -54,13 +54,21 @@ function getNextAvailableMavlinkPort(preferredPort: number): number {
     return nextPort;
 }
 
+function getNextAvailableMavlinkPort(preferredPort: number): number {
+    return getNextAvailablePort(preferredPort, (droneId) => drones[droneId]?.pythonConnection?.mavlinkPort);
+}
+
+function getNextAvailableCameraPort(preferredPort: number): number {
+    return getNextAvailablePort(preferredPort, (droneId) => drones[droneId]?.pythonConnection?.cameraPort);
+}
+
 function getDroneTransportSummary(droneId: string): string {
     const connection = ensureDronePythonConnectionSettings(droneId);
     if (connection.connectionMethod === 'serial') {
-        return `${connection.connectionMethod} ${connection.device}`;
+        return `${connection.connectionMethod} ${connection.device} · camera:${connection.cameraPort}`;
     }
 
-    return `${connection.connectionMethod} ${connection.ip}:${connection.mavlinkPort}`;
+    return `${connection.connectionMethod} ${connection.ip}:${connection.mavlinkPort} · camera:${connection.cameraPort}`;
 }
 
 export function initDroneManager(onSceneUpdate?: () => void) {
@@ -122,6 +130,7 @@ export function initDroneManager(onSceneUpdate?: () => void) {
                     name: drones[id]?.name,
                     ip: drones[id]?.pythonConnection?.ip,
                     mavlinkPort: drones[id]?.pythonConnection?.mavlinkPort,
+                    cameraPort: drones[id]?.pythonConnection?.cameraPort,
                     connectionMethod: drones[id]?.pythonConnection?.connectionMethod
                 }))
             }
@@ -229,6 +238,8 @@ export function initDroneManager(onSceneUpdate?: () => void) {
         const sourceDroneId = getActiveDroneId() || currentDroneId;
         const sourceConnection = ensureDronePythonConnectionSettings(sourceDroneId);
         const nextPort = getNextAvailableMavlinkPort(sourceConnection.mavlinkPort || 8001);
+        const preferredCameraPort = sourceConnection.cameraPort || ((sourceConnection.mavlinkPort || 8001) + 10000);
+        const nextCameraPort = getNextAvailableCameraPort(preferredCameraPort);
         // Random offset for new drones
         const x = (Math.random() - 0.5) * 4;
         const y = (Math.random() - 0.5) * 4;
@@ -239,6 +250,7 @@ export function initDroneManager(onSceneUpdate?: () => void) {
         createdConnection.name = name;
         createdConnection.ip = sourceConnection.ip;
         createdConnection.mavlinkPort = nextPort;
+        createdConnection.cameraPort = nextCameraPort;
         createdConnection.connectionMethod = sourceConnection.connectionMethod;
         createdConnection.device = sourceConnection.device;
         createdConnection.baud = sourceConnection.baud;
@@ -248,7 +260,7 @@ export function initDroneManager(onSceneUpdate?: () => void) {
         reportDroneManagerDebug('H5', 'Created drone from manager', { id, name });
         switchDrone(id);
         updateList();
-        log(`Добавлен новый дрон: ${name} (${createdConnection.ip}:${createdConnection.mavlinkPort}, ${createdConnection.connectionMethod})`, 'success');
+        log(`Добавлен новый дрон: ${name} (${createdConnection.ip}:${createdConnection.mavlinkPort}, camera:${createdConnection.cameraPort}, ${createdConnection.connectionMethod})`, 'success');
     });
 
     delBtn.addEventListener('click', () => {
