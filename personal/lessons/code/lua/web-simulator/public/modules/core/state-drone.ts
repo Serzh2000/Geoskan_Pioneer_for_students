@@ -4,7 +4,8 @@ import {
 } from './state-types.js';
 import type {
     DroneState,
-    LuaDiagnosticsState
+    LuaDiagnosticsState,
+    PioneerConnectionSettings
 } from './state-types.js';
 
 const DISARMED_STATUSES = new Set([
@@ -16,6 +17,22 @@ const DISARMED_STATUSES = new Set([
 
 const BATTERY_CAPACITY_MAH = 1800;
 const BATTERY_FULL_VOLTAGE = 8.4;
+
+export function createDefaultPioneerConnectionSettings(): PioneerConnectionSettings {
+    return {
+        executionTarget: 'browser',
+        simulator: false,
+        name: 'pioneer',
+        ip: '192.168.4.1',
+        mavlinkPort: 8001,
+        connectionMethod: 'udpout',
+        device: '/dev/serial0',
+        baud: 115200,
+        logger: true,
+        logConnection: true,
+        pythonExecutable: 'python'
+    };
+}
 
 export function createEmptyLuaDiagnosticsState(): LuaDiagnosticsState {
     return {
@@ -81,6 +98,7 @@ export function createDroneRecord(
         leds: Array.from({ length: 29 }, () => ({ r: 0, g: 0, b: 0, w: 0 })),
         script: DEFAULT_LUA_SCRIPT,
         pythonScript: DEFAULT_PYTHON_SCRIPT,
+        pythonConnection: createDefaultPioneerConnectionSettings(),
         printBubbleText: '',
         printBubbleUntil: 0,
         luaState: null,

@@ -1,6 +1,21 @@
 export interface Vector3 { x: number; y: number; z: number; }
 export interface Orientation { roll: number; pitch: number; yaw: number; }
 export interface LedColor { r: number; g: number; b: number; w: number; }
+export type PythonExecutionTarget = 'browser' | 'local';
+export type PioneerConnectionMethod = 'udpin' | 'udpout' | 'serial';
+export interface PioneerConnectionSettings {
+    executionTarget: PythonExecutionTarget;
+    simulator: boolean;
+    name: string;
+    ip: string;
+    mavlinkPort: number;
+    connectionMethod: PioneerConnectionMethod;
+    device: string;
+    baud: number;
+    logger: boolean;
+    logConnection: boolean;
+    pythonExecutable: string;
+}
 export type DroneFsmState =
     | 'IDLE'
     | 'PREFLIGHT'
@@ -134,6 +149,7 @@ export interface DroneState {
     leds: LedColor[];
     script: string;
     pythonScript: string;
+    pythonConnection: PioneerConnectionSettings;
     printBubbleText: string;
     printBubbleUntil: number;
     luaState: any;
@@ -156,7 +172,7 @@ export const DEFAULT_PYTHON_SCRIPT = [
     'from pioneer_sdk import Pioneer',
     'import time',
     '',
-    'pioneer = Pioneer(simulator=True)',
+    'pioneer = Pioneer()',
     '',
     'pioneer.arm()',
     'pioneer.takeoff()',

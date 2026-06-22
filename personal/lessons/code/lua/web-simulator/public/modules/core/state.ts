@@ -13,6 +13,9 @@ export type {
     LuaFsmTransitionRecord,
     LuaRuntimeLogEntry,
     Orientation,
+    PioneerConnectionMethod,
+    PioneerConnectionSettings,
+    PythonExecutionTarget,
     QueuedMceCommand,
     ScriptLanguage,
     TickFlightCommand,
@@ -37,6 +40,7 @@ import type {
 } from './state-types.js';
 import {
     createDroneRecord,
+    createDefaultPioneerConnectionSettings,
     createEmptyLuaDiagnosticsState,
     isDroneArmed,
     resetDroneRuntimeState
@@ -160,7 +164,28 @@ export const simState = new Proxy({} as DroneState, {
 });
 
 export function setCurrentDrone(id: string) {
-    if (drones[id]) currentDroneId = id;
+    if (!drones[id]) return;
+    currentDroneId = id;
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('drone-selection-changed', {
+            detail: {
+                droneId: id
+            }
+        }));
+    }
+}
+
+export function ensureDronePythonConnectionSettings(id: string = currentDroneId) {
+    const drone = drones[id];
+    if (!drone) {
+        return createDefaultPioneerConnectionSettings();
+    }
+
+    if (!drone.pythonConnection) {
+        drone.pythonConnection = createDefaultPioneerConnectionSettings();
+    }
+
+    return drone.pythonConnection;
 }
 
 export function resetRuntimeStatePreservePose(id: string = currentDroneId) {

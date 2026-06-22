@@ -199,8 +199,19 @@ export function installJsRuntimeAPI() {
         }
         return '';
     };
-    w.pioneer_resolve_drone_id = (requestedName: string, requestedIp: string) => {
-        return resolvePythonDroneId(String(w.SIM_DRONE_ID || ''), requestedName, requestedIp);
+    w.pioneer_resolve_drone_id = (
+        requestedName: string,
+        requestedIp: string,
+        requestedPort?: number | string,
+        requestedConnectionMethod?: string
+    ) => {
+        return resolvePythonDroneId(
+            String(w.SIM_DRONE_ID || ''),
+            requestedName,
+            requestedIp,
+            requestedPort,
+            requestedConnectionMethod
+        );
     };
     w.pioneer_print = (id: string, text: string) => {
         showDronePrintBubble(id, String(text ?? ''));

@@ -7,6 +7,7 @@ import { simState, resetState, resetRuntimeStatePreservePose, drones, currentDro
 import { init3D, updateDrone3D, is3DActive, addObject, appendPointToSelectedLinearObject, clearSceneSelection, deleteSelectedObject, finishSelectedLinearObjectEditing, getSelectedSceneObjectId, isSelectedLinearObjectEditingActive, listSceneObjects, resetDroneToOrigin, resetSelectedSceneObjectTransform, rotateSelectedSceneObjectByDegrees, selectSceneObjectById, setSceneObjectTransformMode, startSelectedLinearObjectEditing, updateSelectedSceneObject, deleteSceneObjectById } from './modules/drone/index.js';
 import { runLuaScript, stopLuaScript, triggerLuaCallback } from './modules/lua/index.js';
 import { setLocalFrameOrigin } from './modules/lua/autopilot.js';
+import { initExternalPythonBridge } from './modules/python/external-bridge.js';
 import { runPythonScript, stopPythonScript } from './modules/python/index.js';
 /**
  * Main browser entry point for the simulator.
@@ -39,6 +40,7 @@ function init() {
         stop: stopSimulation,
         reset: resetSimulation
     });
+    initExternalPythonBridge();
 
     // Initialize UI with callbacks
     initUI({

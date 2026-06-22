@@ -9,8 +9,13 @@ export function getDroneOrDefault(id: string) {
     return drones[id] || drones[currentDroneId];
 }
 
-function makeBindingKey(name?: string, ip?: string) {
-    return `${String(name || '').trim().toLowerCase()}::${String(ip || '').trim().toLowerCase()}`;
+function makeBindingKey(name?: string, ip?: string, mavlinkPort?: number | string, connectionMethod?: string) {
+    return [
+        String(name || '').trim().toLowerCase(),
+        String(ip || '').trim().toLowerCase(),
+        String(mavlinkPort ?? '').trim().toLowerCase(),
+        String(connectionMethod || '').trim().toLowerCase()
+    ].join('::');
 }
 
 export function resetPythonDroneBindings(rootDroneId: string) {
@@ -18,15 +23,24 @@ export function resetPythonDroneBindings(rootDroneId: string) {
     pythonDroneBindings.set(makeBindingKey(rootDroneId, rootDroneId), rootDroneId);
     const rootDrone = drones[rootDroneId];
     if (rootDrone) {
-        pythonDroneBindings.set(makeBindingKey(rootDrone.name, ''), rootDroneId);
-        pythonDroneBindings.set(makeBindingKey(rootDrone.name, rootDroneId), rootDroneId);
+        const connection = rootDrone.pythonConnection;
+        pythonDroneBindings.set(makeBindingKey(rootDrone.name, '', connection?.mavlinkPort, connection?.connectionMethod), rootDroneId);
+        pythonDroneBindings.set(makeBindingKey(rootDrone.name, rootDroneId, connection?.mavlinkPort, connection?.connectionMethod), rootDroneId);
     }
 }
 
-export function resolvePythonDroneId(rootDroneId: string, requestedName?: string, requestedIp?: string) {
+export function resolvePythonDroneId(
+    rootDroneId: string,
+    requestedName?: string,
+    requestedIp?: string,
+    requestedPort?: number | string,
+    requestedConnectionMethod?: string
+) {
     const normalizedName = String(requestedName || '').trim();
     const normalizedIp = String(requestedIp || '').trim();
-    const bindingKey = makeBindingKey(normalizedName, normalizedIp);
+    const normalizedPort = String(requestedPort ?? '').trim();
+    const normalizedConnectionMethod = String(requestedConnectionMethod || '').trim();
+    const bindingKey = makeBindingKey(normalizedName, normalizedIp, normalizedPort, normalizedConnectionMethod);
     const boundId = pythonDroneBindings.get(bindingKey);
     if (boundId && drones[boundId]) {
         return boundId;
@@ -35,9 +49,15 @@ export function resolvePythonDroneId(rootDroneId: string, requestedName?: string
     const candidates = Object.keys(drones);
     const exactMatch = candidates.find((id) => {
         const drone = drones[id];
+        const connection = drone?.pythonConnection;
         return id === normalizedIp
             || id === normalizedName
-            || drone?.name === normalizedName;
+            || drone?.name === normalizedName
+            || (
+                String(connection?.ip || '').trim() === normalizedIp
+                && String(connection?.mavlinkPort ?? '') === normalizedPort
+                && String(connection?.connectionMethod || '').trim() === normalizedConnectionMethod
+            );
     });
 
     if (exactMatch) {

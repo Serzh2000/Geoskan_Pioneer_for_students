@@ -1,6 +1,7 @@
 import { drones } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 import { installPioneerSdkModule } from './pioneer-sdk-module.js';
+import { disposeLocalPythonRunState, runLocalPythonScript, stopLocalPythonScript } from './local-runtime.js';
 import {
     cancelledRuns,
     cleanupPythonRuntimeState,
@@ -9,6 +10,7 @@ import {
     resetPythonDroneBindings
 } from './runtime-shared.js';
 import { createScriptFailureError, showScriptFailureNotice } from '../app/script-execution-notice.js';
+import { ensureDronePythonConnectionSettings } from '../core/state.js';
 
 let pyodideInstance: any = null;
 let pyodideLoadPromise: Promise<any> | null = null;
@@ -69,6 +71,7 @@ function clearActivePythonRun(droneId: string, token?: symbol) {
 
 export function disposePythonRunState(droneId: string): void {
     clearActivePythonRun(droneId);
+    disposeLocalPythonRunState(droneId);
     cleanupPythonRuntimeState(droneId);
 }
 
@@ -104,6 +107,12 @@ export async function initPythonRuntime(): Promise<void> {
 }
 
 export async function runPythonScript(droneId: string, code: string): Promise<void> {
+    const connection = ensureDronePythonConnectionSettings(droneId);
+    if (connection.executionTarget === 'local') {
+        await runLocalPythonScript(droneId, code);
+        return;
+    }
+
     const pyodide = await ensurePyodide();
     if (!drones[droneId]) return;
 
@@ -272,6 +281,21 @@ finally:
 }
 
 export function stopPythonScript(droneId: string): void {
+    const connection = ensureDronePythonConnectionSettings(droneId);
+    if (connection.executionTarget === 'local') {
+        stopLocalPythonScript(droneId);
+        const drone = drones[droneId];
+        if (drone) {
+            drone.running = false;
+            drone.status = 'ОСТАНОВЛЕН';
+            drone.pendingLocalPoint = false;
+            drone.pendingLocalPointSource = null;
+            drone.pendingLocalPointTarget = null;
+            drone.pointReachedFlag = false;
+        }
+        return;
+    }
+
     const hasActiveRun = Boolean(activeRuns[droneId]);
     cancelledRuns[droneId] = true;
     const d = drones[droneId];

@@ -6,10 +6,62 @@
  * Сохраняет и восстанавливает скрипты в редакторе при переключении.
  */
 import { log } from '../../shared/logging/logger.js';
-import { currentDroneId, currentScriptLanguage, drones, createDroneState, removeDroneState, setCurrentDrone } from '../../core/state.js';
+import {
+    currentDroneId,
+    currentScriptLanguage,
+    drones,
+    createDroneState,
+    ensureDronePythonConnectionSettings,
+    removeDroneState,
+    setCurrentDrone
+} from '../../core/state.js';
 import { getEditorValue, setEditorValue } from '../../editor/index.js';
 import { stopLuaScript } from '../../lua/index.js';
 import { disposePythonRunState, stopPythonScript } from '../../python/index.js';
+
+function reportDroneManagerDebug(hypothesisId: string, message: string, data: Record<string, unknown>): void {
+    // #region debug-point drone-manager-port-identity
+    const debugUrl = (window as typeof window & { DEBUG_SERVER_URL?: string }).DEBUG_SERVER_URL;
+    if (!debugUrl) {
+        return;
+    }
+    fetch(debugUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            sessionId: 'pioneer-port-manager',
+            runId: 'pre-fix',
+            hypothesisId,
+            location: 'public/modules/ui/managers/drone-manager.ts',
+            msg: message,
+            data
+        })
+    }).catch(() => undefined);
+    // #endregion
+}
+
+function getNextAvailableMavlinkPort(preferredPort: number): number {
+    const usedPorts = new Set(
+        Object.values(drones)
+            .map((drone) => Number(drone.pythonConnection?.mavlinkPort))
+            .filter((port) => Number.isFinite(port) && port > 0)
+    );
+
+    let nextPort = Math.max(1, Math.trunc(preferredPort || 8001));
+    while (usedPorts.has(nextPort)) {
+        nextPort += 1;
+    }
+    return nextPort;
+}
+
+function getDroneTransportSummary(droneId: string): string {
+    const connection = ensureDronePythonConnectionSettings(droneId);
+    if (connection.connectionMethod === 'serial') {
+        return `${connection.connectionMethod} ${connection.device}`;
+    }
+
+    return `${connection.connectionMethod} ${connection.ip}:${connection.mavlinkPort}`;
+}
 
 export function initDroneManager(onSceneUpdate?: () => void) {
     const list = document.getElementById('drone-list') as HTMLDivElement | null;
@@ -60,6 +112,20 @@ export function initDroneManager(onSceneUpdate?: () => void) {
     function updateList() {
         const droneIds = Object.keys(drones);
         listEl.innerHTML = '';
+        reportDroneManagerDebug(
+            'H1',
+            'Rendering drone manager list',
+            {
+                currentDroneId,
+                drones: droneIds.map((id) => ({
+                    id,
+                    name: drones[id]?.name,
+                    ip: drones[id]?.pythonConnection?.ip,
+                    mavlinkPort: drones[id]?.pythonConnection?.mavlinkPort,
+                    connectionMethod: drones[id]?.pythonConnection?.connectionMethod
+                }))
+            }
+        );
 
         if (listCount) {
             listCount.textContent = `${droneIds.length} ${droneIds.length === 1 ? 'дрон' : droneIds.length < 5 ? 'дрона' : 'дронов'}`;
@@ -75,6 +141,7 @@ export function initDroneManager(onSceneUpdate?: () => void) {
         }
 
         droneIds.forEach((id, index) => {
+            const connection = ensureDronePythonConnectionSettings(id);
             const item = document.createElement('button');
             item.type = 'button';
             item.id = `drone-list-item-${id}`;
@@ -95,14 +162,24 @@ export function initDroneManager(onSceneUpdate?: () => void) {
             name.className = 'swarm-list__item-name';
             name.textContent = drones[id].name;
 
+            const text = document.createElement('span');
+            text.className = 'swarm-list__item-text';
+
+            const meta = document.createElement('span');
+            meta.className = 'swarm-list__item-meta';
+            meta.textContent = getDroneTransportSummary(id);
+
             const badge = document.createElement('span');
             badge.className = 'swarm-list__item-badge';
-            badge.textContent = String(index + 1);
+            badge.textContent = String(connection.mavlinkPort || index + 1);
 
+            text.appendChild(name);
+            text.appendChild(meta);
             main.appendChild(icon);
-            main.appendChild(name);
+            main.appendChild(text);
             item.appendChild(main);
             item.appendChild(badge);
+            item.title = `${drones[id].name} · ${getDroneTransportSummary(id)}`;
             listEl.appendChild(item);
         });
 
@@ -149,13 +226,29 @@ export function initDroneManager(onSceneUpdate?: () => void) {
         const num = Object.keys(drones).length + 1;
         const id = `drone_${num}_${Date.now()}`;
         const name = `Pioneer ${num}`;
+        const sourceDroneId = getActiveDroneId() || currentDroneId;
+        const sourceConnection = ensureDronePythonConnectionSettings(sourceDroneId);
+        const nextPort = getNextAvailableMavlinkPort(sourceConnection.mavlinkPort || 8001);
         // Random offset for new drones
         const x = (Math.random() - 0.5) * 4;
         const y = (Math.random() - 0.5) * 4;
         createDroneState(id, name, x, y, 0);
+        const createdConnection = ensureDronePythonConnectionSettings(id);
+        createdConnection.executionTarget = sourceConnection.executionTarget;
+        createdConnection.simulator = sourceConnection.simulator;
+        createdConnection.name = name;
+        createdConnection.ip = sourceConnection.ip;
+        createdConnection.mavlinkPort = nextPort;
+        createdConnection.connectionMethod = sourceConnection.connectionMethod;
+        createdConnection.device = sourceConnection.device;
+        createdConnection.baud = sourceConnection.baud;
+        createdConnection.logger = sourceConnection.logger;
+        createdConnection.logConnection = sourceConnection.logConnection;
+        createdConnection.pythonExecutable = sourceConnection.pythonExecutable;
+        reportDroneManagerDebug('H5', 'Created drone from manager', { id, name });
         switchDrone(id);
         updateList();
-        log(`Добавлен новый дрон: ${name}`, 'success');
+        log(`Добавлен новый дрон: ${name} (${createdConnection.ip}:${createdConnection.mavlinkPort}, ${createdConnection.connectionMethod})`, 'success');
     });
 
     delBtn.addEventListener('click', () => {
@@ -185,6 +278,11 @@ export function initDroneManager(onSceneUpdate?: () => void) {
             if (onSceneUpdate) onSceneUpdate();
             log(`Удалён дрон: ${id}`, 'info');
         }
+    });
+
+    window.addEventListener('external-drone-state-changed', () => {
+        updateList();
+        if (onSceneUpdate) onSceneUpdate();
     });
 
     updateList();

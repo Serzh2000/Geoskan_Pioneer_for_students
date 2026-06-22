@@ -150,9 +150,13 @@ sys.modules['threading'] = threading_mod
 
 class Pioneer:
     def __init__(self, simulator=True, name='pioneer', ip='192.168.4.1', mavlink_port=8001, connection_method='udpout', device='/dev/serial0', baud=115200, logger=True, log_connection=True, **kwargs):
-        self._id = js.pioneer_resolve_drone_id(name, ip)
+        self._id = js.pioneer_resolve_drone_id(name, ip, mavlink_port, connection_method)
         self.name = name
         self.ip = ip
+        self.mavlink_port = mavlink_port
+        self.connection_method = connection_method
+        self.device = device
+        self.baud = baud
 
     def connected(self):
         return True
@@ -220,7 +224,7 @@ class Pioneer:
 
 class Camera:
     def __init__(self, timeout=0.5, ip='192.168.4.1', port=8888, video_buffer_size=65000, log_connection=True):
-        self._id = js.pioneer_resolve_drone_id('camera', ip)
+        self._id = js.pioneer_resolve_drone_id('camera', ip, port, 'camera')
         self._ip = ip
         self._port = port
         self.connect()

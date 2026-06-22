@@ -23,9 +23,9 @@
     <!-- Three.js and modules loaded via Vite -->
     <!-- Fengari for Lua in browser -->
     <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
-  <script type="module" crossorigin src="/assets/index-CCQREnlm.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/simulation-controls-CErsatck.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-DGgww3Yn.css">
+  <script type="module" crossorigin src="/assets/index-Bhc21SIy.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/simulation-controls-DIhM_Gtc.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-DgJual6a.css">
 </head>
 <body>
             <header class="header">
@@ -1238,6 +1238,122 @@
                                         <span class="settings-alert__icon" aria-hidden="true">i</span>
                                         <span class="settings-alert__text">Настройки и калибровка пульта перенесены в отдельную вкладку слева, чтобы не перегружать основное окно настроек.</span>
                                     </div>
+                                </div>
+                            </section>
+                            <section class="settings-card">
+                                <div class="settings-card__header">
+                                    <div class="settings-card__title-wrap">
+                                        <span class="settings-card__accent" aria-hidden="true"></span>
+                                        <div class="settings-card__heading">
+                                            <div class="settings-card__title">Параметры автопилота</div>
+                                            <p class="settings-card__description">Импортируйте `.properties`, редактируйте параметры автопилота и отслеживайте историю изменений.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="settings-card__body settings-card__body--stack">
+                                    <div class="settings-alert settings-alert--info">
+                                        <span class="settings-alert__icon" aria-hidden="true">AP</span>
+                                        <span class="settings-alert__text">Дополнительное окно содержит полный список параметров из шаблонного профиля, описания из документации и журнал интеграции изменений.</span>
+                                    </div>
+                                    <button type="button" id="open-autopilot-params-btn" class="settings-primary-btn" aria-expanded="false">
+                                        Открыть окно параметров автопилота
+                                    </button>
+                                </div>
+                            </section>
+                            <section class="settings-card">
+                                <div class="settings-card__header">
+                                    <div class="settings-card__title-wrap">
+                                        <span class="settings-card__accent" aria-hidden="true"></span>
+                                        <div class="settings-card__heading">
+                                            <div class="settings-card__title">Python и реальный дрон</div>
+                                            <p class="settings-card__description">Настройте, где исполняется Python-код: в браузере для симулятора или локально для подключения к Pioneer по `serial`/`udp`.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="settings-card__body settings-card__body--stack">
+                                    <div class="settings-alert settings-alert--info">
+                                        <span class="settings-alert__icon" aria-hidden="true">Py</span>
+                                        <span class="settings-alert__text" id="python-connection-hint">Код исполняется в браузере через Pyodide и управляет только симулятором.</span>
+                                    </div>
+                                    <div class="settings-alert settings-alert--info">
+                                        <span class="settings-alert__icon" aria-hidden="true">D</span>
+                                        <span class="settings-alert__text" id="python-connection-scope">Активный дрон: Pioneer 1</span>
+                                    </div>
+                                    <label class="settings-field settings-control">
+                                        <span class="settings-field__label">Режим выполнения Python</span>
+                                        <span class="settings-field__hint">`Browser` использует встроенный Pyodide, `Local backend` запускает системный Python на вашей машине.</span>
+                                        <span class="settings-select-wrap">
+                                            <select id="python-execution-target">
+                                                <option value="browser">Browser simulator</option>
+                                                <option value="local">Local backend</option>
+                                            </select>
+                                        </span>
+                                    </label>
+                                    <label class="settings-toggle settings-control settings-control--full">
+                                        <input type="checkbox" id="python-connection-simulator">
+                                        <span class="settings-toggle__box" aria-hidden="true"></span>
+                                        <span class="settings-toggle__content">
+                                            <span class="settings-toggle__title">Передавать `simulator=True` в Pioneer</span>
+                                            <span class="settings-toggle__hint">Отключите для реального дрона, включите только если локальный Python должен подключаться к внешнему симулятору.</span>
+                                        </span>
+                                    </label>
+                                    <label class="settings-field settings-control">
+                                        <span class="settings-field__label">Параметр `name`</span>
+                                        <span class="settings-field__hint">Значение по умолчанию для конструктора `Pioneer(...)`.</span>
+                                        <input type="text" id="python-connection-name" value="pioneer" placeholder="pioneer">
+                                    </label>
+                                    <label class="settings-field settings-control">
+                                        <span class="settings-field__label">IP адрес</span>
+                                        <span class="settings-field__hint">Используется для `udpin`/`udpout`.</span>
+                                        <input type="text" id="python-connection-ip" value="192.168.4.1" placeholder="192.168.4.1">
+                                    </label>
+                                    <label class="settings-field settings-control">
+                                        <span class="settings-field__label">MAVLink порт</span>
+                                        <span class="settings-field__hint">Порт обмена MAVLink сообщениями.</span>
+                                        <input type="number" id="python-connection-mavlink-port" value="8001" min="1" step="1">
+                                    </label>
+                                    <label class="settings-field settings-control">
+                                        <span class="settings-field__label">Метод подключения</span>
+                                        <span class="settings-field__hint">Поддерживаются `udpin`, `udpout` и `serial`.</span>
+                                        <span class="settings-select-wrap">
+                                            <select id="python-connection-method">
+                                                <option value="udpout">udpout</option>
+                                                <option value="udpin">udpin</option>
+                                                <option value="serial">serial</option>
+                                            </select>
+                                        </span>
+                                    </label>
+                                    <label class="settings-field settings-control">
+                                        <span class="settings-field__label">Устройство / порт</span>
+                                        <span class="settings-field__hint">Например `COM5` в Windows или `/dev/serial0` в Linux.</span>
+                                        <input type="text" id="python-connection-device" value="/dev/serial0" placeholder="COM5">
+                                    </label>
+                                    <label class="settings-field settings-control">
+                                        <span class="settings-field__label">Baud rate</span>
+                                        <span class="settings-field__hint">Скорость последовательного соединения.</span>
+                                        <input type="number" id="python-connection-baud" value="115200" min="1" step="1">
+                                    </label>
+                                    <label class="settings-field settings-control">
+                                        <span class="settings-field__label">Python executable</span>
+                                        <span class="settings-field__hint">Оставьте `python`, либо укажите полный путь до `python.exe`.</span>
+                                        <input type="text" id="python-executable" value="python" placeholder="python">
+                                    </label>
+                                    <label class="settings-toggle settings-control settings-control--full">
+                                        <input type="checkbox" id="python-connection-logger" checked>
+                                        <span class="settings-toggle__box" aria-hidden="true"></span>
+                                        <span class="settings-toggle__content">
+                                            <span class="settings-toggle__title">`logger=True`</span>
+                                            <span class="settings-toggle__hint">Выводить логи MAVLink сообщений в локальный Python stdout.</span>
+                                        </span>
+                                    </label>
+                                    <label class="settings-toggle settings-control settings-control--full">
+                                        <input type="checkbox" id="python-connection-log-connection" checked>
+                                        <span class="settings-toggle__box" aria-hidden="true"></span>
+                                        <span class="settings-toggle__content">
+                                            <span class="settings-toggle__title">`log_connection=True`</span>
+                                            <span class="settings-toggle__hint">Показывать технические логи соединения при подключении к дрону.</span>
+                                        </span>
+                                    </label>
                                 </div>
                             </section>
                         </div>

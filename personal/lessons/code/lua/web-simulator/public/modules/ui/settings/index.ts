@@ -12,6 +12,7 @@ import { createGamepadSettingsController } from './gamepad/controller.js';
 import { setMappingRef } from './mapping.js';
 import { initAutopilotParamsUI } from './autopilot-params-ui.js';
 import { createSettingsRuntimeState } from './runtime-state.js';
+import { initHardwarePythonSettingsUI } from './hardware-python.js';
 import { initWizard } from './wizard.js';
 
 export function initSettingsUI() {
@@ -20,6 +21,7 @@ export function initSettingsUI() {
     const controller = createGamepadSettingsController(dom, state);
 
     initAutopilotParamsUI();
+    initHardwarePythonSettingsUI();
     initWizard();
     bindGeneralSettingsControls(dom);
     bindGamepadSettingsControls({
