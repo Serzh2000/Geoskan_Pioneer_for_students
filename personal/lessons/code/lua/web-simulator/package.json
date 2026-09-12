@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "type-check": "tsc --noEmit",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint . --ext .ts --max-warnings=653",
     "docs:functions": "node tools/generate_functions_reference_index.mjs"
   },
   "keywords": [],

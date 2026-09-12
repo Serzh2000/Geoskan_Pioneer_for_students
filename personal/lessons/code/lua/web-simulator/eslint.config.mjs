@@ -21,12 +21,13 @@ export default [
   ...tseslint.configs.recommended,
   {
       rules: {
-          "@typescript-eslint/no-explicit-any": "off",
+          "@typescript-eslint/no-explicit-any": "warn",
           "@typescript-eslint/no-var-requires": "off",
           "no-undef": "off", // TypeScript handles this
-          "@typescript-eslint/no-unused-vars": "off",
+          "@typescript-eslint/no-unused-vars": "warn",
           "no-unused-vars": "off",
-          "no-empty": "off"
+          "no-empty": "error",
+          "max-lines": ["warn", { max: 300, skipBlankLines: true, skipComments: true }]
       }
   },
   {
