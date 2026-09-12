@@ -66,11 +66,6 @@ export const MCECommandDesc: { [key: number]: string } = {
 };
 
 export const MCEEventDesc: { [key: number]: string } = {
-    [MCECommands.MCE_PREFLIGHT]: 'Предполетная подготовка',
-    [MCECommands.MCE_TAKEOFF]: 'Взлет',
-    [MCECommands.MCE_LANDING]: 'Посадка',
-    [MCECommands.ENGINES_ARM]: 'Взвод двигателей',
-    [MCECommands.ENGINES_DISARM]: 'Отключение двигателей',
     [MCEEvents.ENGINES_STARTED]: 'Двигатели запущены',
     [MCEEvents.COPTER_LANDED]: 'Коптер приземлился',
     [MCEEvents.TAKEOFF_COMPLETE]: 'Взлет завершен',

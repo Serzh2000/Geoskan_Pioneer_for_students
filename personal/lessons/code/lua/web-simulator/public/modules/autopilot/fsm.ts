@@ -250,3 +250,13 @@ export function isMovementReached(drone: DroneState) {
         + (drone.target_pos.z - drone.pos.z) ** 2
     ) < MOVEMENT_REACHED_EPSILON;
 }
+
+export function isPointReached(drone: DroneState): boolean {
+    if (drone.fsmState === 'FLYING_HOVER' && drone.pointReachedFlag) {
+        return true;
+    }
+    if (drone.fsmState === 'FLYING_MOVING' && drone.target_pos && isMovementReached(drone)) {
+        return true;
+    }
+    return false;
+}

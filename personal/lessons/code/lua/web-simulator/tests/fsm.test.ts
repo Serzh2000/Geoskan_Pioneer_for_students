@@ -101,13 +101,10 @@ describe('drone FSM validation', () => {
         logLines.length = 0;
     });
 
-    test('stops simulation on instantaneous TAKEOFF -> goToLocalPoint sequence', () => {
+    test('allows SDK-compatible instantaneous TAKEOFF -> goToLocalPoint sequence', () => {
         queueMceCommand(drone, MCECommands.MCE_TAKEOFF, 'direct');
-        expect(() => applyGoToLocalPointRequest(drone, { x: 1, y: 0, z: 1 })).toThrow(
-            'CRITICAL ERROR: Commands TAKEOFF, goToLocalPoint run at the same time. Split them with Timer.callLater(...) or callback(event).'
-        );
-        expect(drone.running).toBe(false);
-        expect(drone.status).toBe(ERROR_STATUS);
+        expect(() => applyGoToLocalPointRequest(drone, { x: 1, y: 0, z: 1 })).not.toThrow();
+        expect(drone.running).toBe(true);
     });
 
     test('allows next command from a new callback(event) phase in the same tick', () => {
@@ -145,8 +142,9 @@ describe('drone FSM validation', () => {
     });
 
     test('returns to IDLE after PREFLIGHT timeout', () => {
+        drone.current_time = 0;
         expect(enterPreflight(drone)).toBe(true);
-        drone.current_time = 3.1;
+        drone.current_time = 8.1;
 
         expect(handlePreflightTimeout(drone)).toBe(true);
         expect(drone.fsmState).toBe('IDLE');

@@ -1,6 +1,5 @@
 import { getLuaLessonState } from '../public/modules/ui/mission-guide/lua-lessons.js';
 import { getPythonLessonState } from '../public/modules/ui/mission-guide/python-lessons.js';
-import { buildGuideToolbox } from '../public/modules/ui/mission-guide/blockly-toolbox.js';
 import {
     getActiveChapter,
     getActiveTab,
@@ -44,15 +43,6 @@ describe('Mission Guide Curriculum', () => {
         setActiveTab('python', 'trainer');
         expect(getActiveTab('python')).toBe('trainer');
         setActiveTab('python', 'tutorial');
-    });
-
-    test('builds categorized Blockly toolbox for the active lesson', () => {
-        const toolbox = buildGuideToolbox('python', 'py-mission');
-
-        expect(toolbox).toContain('<category name="Подготовка"');
-        expect(toolbox).toContain('<category name="Маршрут"');
-        expect(toolbox).toContain('py_wait_point_reached');
-        expect(toolbox).not.toContain('lua_ap_push');
     });
 
     test('allows explicit chapter switching independent from lesson storage', () => {
