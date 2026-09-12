@@ -33,6 +33,26 @@
                             </div>
                             <div id="drone-list" class="swarm-list" role="listbox" aria-label="Список дронов"></div>
                         </section>
+                        <section class="swarm-bridge-card" aria-labelledby="swarm-bridge-title">
+                            <div class="swarm-bridge-card__header">
+                                <div>
+                                    <div id="swarm-bridge-title" class="swarm-bridge-card__title">Подключение из Python IDLE</div>
+                                    <div class="swarm-bridge-card__subtitle" id="swarm-bridge-drone-name">Активный дрон не выбран</div>
+                                </div>
+                                <span class="swarm-bridge-card__status" id="swarm-bridge-status">Выключен</span>
+                            </div>
+                            <div class="swarm-bridge-card__description" id="swarm-bridge-summary">
+                                Выберите дрон, нажмите Разрешить внешние команды и запустите скрипт в IDLE. Вкладку симулятора не закрывайте. Backend запускается только <code>npm start</code>.
+                            </div>
+                            <div class="swarm-bridge-card__details">
+                                <div class="swarm-bridge-card__detail" id="swarm-bridge-transport">Подключение: -</div>
+                                <div class="swarm-bridge-card__detail" id="swarm-bridge-target">Источник: bridge запрещён</div>
+                            </div>
+                            <div class="swarm-bridge-card__actions">
+                                <button id="enable-external-bridge-btn" class="swarm-action-btn swarm-action-btn--bridge-on" type="button">Разрешить внешние команды</button>
+                                <button id="disable-external-bridge-btn" class="swarm-action-btn swarm-action-btn--bridge-off" type="button">Запретить внешние команды</button>
+                            </div>
+                        </section>
                         <div class="swarm-actions">
                             <button id="add-drone-btn" class="swarm-action-btn swarm-action-btn--add" type="button">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

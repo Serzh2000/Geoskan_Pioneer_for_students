@@ -1,3 +1,4 @@
+/* Блок-лид заголовка настроек: заголовок и подзаголовок в колонку. */
 .panel-header__lead--settings {
     display: flex;
     flex-direction: column;
@@ -6,14 +7,10 @@
     min-width: 0;
 }
 
-.settings-panel-subtitle {
-    font-size: 11px;
-    line-height: 1.4;
-    color: var(--text-muted);
-}
+/* Подзаголовок — общий класс .panel-header__subtitle (layout/panel-shell.css). */
 
 .settings-panel-content--general {
-    padding: 16px;
+    padding: var(--panel-pad-x);
     background: linear-gradient(180deg, #f8f9fa 0%, #f1f3f5 100%);
     overflow-y: auto;
 }

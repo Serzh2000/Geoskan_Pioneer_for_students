@@ -1,5 +1,6 @@
 import express from 'express';
 import type { PioneerConnectionMethod } from './pioneer-connection.js';
+import { FsmStatus, isPointReachedFromFsmStatus } from '../public/modules/autopilot/fsm-status.js';
 
 export interface ExternalPythonBridgeEvent {
     id: number;
@@ -45,6 +46,17 @@ function normalizeExternalBridgeKeyPart(value: string): string {
     return value.trim().toLowerCase();
 }
 
+function normalizeExternalBridgeIp(value: string): string {
+    const normalized = normalizeExternalBridgeKeyPart(value);
+    if (!normalized) {
+        return '';
+    }
+    if (normalized === '127.0.0.1' || normalized === 'localhost' || normalized === '192.168.4.1') {
+        return 'simulator-default';
+    }
+    return normalized;
+}
+
 function buildExternalBridgeStateKey(input: {
     sessionId: string;
     droneIp: string;
@@ -54,7 +66,7 @@ function buildExternalBridgeStateKey(input: {
     return [
         normalizeExternalBridgeKeyPart(input.sessionId),
         normalizeExternalBridgeKeyPart(input.connectionMethod),
-        normalizeExternalBridgeKeyPart(input.droneIp),
+        normalizeExternalBridgeIp(input.droneIp),
         String(Number.isFinite(input.mavlinkPort) ? input.mavlinkPort : 8001)
     ].join('::');
 }
@@ -93,6 +105,12 @@ export function getExternalPythonBridgeState(input: {
     return externalPythonBridgeStates.get(buildExternalBridgeStateKey(input)) ?? null;
 }
 
+export function clearExternalPythonBridgeStore(): void {
+    externalPythonBridgeEvents.length = 0;
+    externalPythonBridgeStates.clear();
+    nextExternalBridgeEventId = 0;
+}
+
 function parsePositionPayload(value: unknown): ExternalPythonBridgePosition | null {
     if (typeof value !== 'object' || !value) {
         return null;
@@ -110,9 +128,6 @@ function parsePositionPayload(value: unknown): ExternalPythonBridgePosition | nu
 
 export function registerExternalPythonBridgeRoutes(app: express.Express): void {
     app.post('/api/external-python-bridge/event', (req: express.Request, res: express.Response) => {
-        // #region debug-point B:external-bridge-event-route
-        void import('node:fs').then((fs) => { let u = 'http://127.0.0.1:7777/event', s = 'camera-mavlink-reset'; try { const e = fs.readFileSync('.dbg/camera-mavlink-reset.env', 'utf8'); u = e.match(/DEBUG_SERVER_URL=(.+)/)?.[1] || u; s = e.match(/DEBUG_SESSION_ID=(.+)/)?.[1] || s; } catch {} return fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: s, runId: 'pre-fix', hypothesisId: 'B', location: 'server/external-python-bridge.ts:event', msg: '[DEBUG] external bridge event route hit', data: { method: req.body?.method ?? null, sessionId: req.body?.sessionId ?? null, droneIp: req.body?.droneIp ?? null, mavlinkPort: req.body?.mavlinkPort ?? null, connectionMethod: req.body?.connectionMethod ?? null }, ts: Date.now() }) }).catch(() => undefined); });
-        // #endregion
         const sessionId = typeof req.body?.sessionId === 'string' ? req.body.sessionId.trim() : '';
         const droneName = typeof req.body?.droneName === 'string' ? req.body.droneName.trim() : 'Pioneer';
         const droneIp = typeof req.body?.droneIp === 'string' ? req.body.droneIp.trim() : '';
@@ -207,16 +222,19 @@ export function registerExternalPythonBridgeRoutes(app: express.Express): void {
             return res.status(400).json({ ok: false, error: 'sessionId обязателен.' });
         }
 
-        const state = externalPythonBridgeStates.get(buildExternalBridgeStateKey({
+        const state = getExternalPythonBridgeState({
             sessionId,
             droneIp,
             mavlinkPort,
             connectionMethod
-        }));
+        });
+
+        const fsmState = state?.autopilotState ?? null;
+        const fsmStatus = fsmState === null ? null : (fsmState as FsmStatus);
 
         return res.json({
             ok: true,
-            pointReached: state?.pointReached ?? false,
+            pointReached: isPointReachedFromFsmStatus(fsmStatus, state?.pointReached),
             cameraConnected: state?.cameraConnected ?? false,
             cameraFrameDataUrl: state?.cameraFrameDataUrl ?? null,
             autopilotState: state?.autopilotState ?? null,
@@ -231,6 +249,14 @@ export function registerExternalPythonBridgeRoutes(app: express.Express): void {
         return res.json({
             ok: true,
             events: externalPythonBridgeEvents.filter((event) => event.id > afterId),
+            latestId: nextExternalBridgeEventId
+        });
+    });
+
+    app.post('/api/external-python-bridge/clear', (_req: express.Request, res: express.Response) => {
+        clearExternalPythonBridgeStore();
+        return res.json({
+            ok: true,
             latestId: nextExternalBridgeEventId
         });
     });

@@ -192,9 +192,6 @@ export async function startServer(options: StartServerOptions = {}): Promise<Sta
     const urlHost = host ?? 'localhost';
     const url = `http://${urlHost}:${actualPort}`;
     console.log(`Server running at ${url}`);
-    // #region debug-point A:http-server-listen
-    void import('node:fs').then((fs) => { let u = 'http://127.0.0.1:7777/event', s = 'camera-mavlink-reset'; try { const e = fs.readFileSync('.dbg/camera-mavlink-reset.env', 'utf8'); u = e.match(/DEBUG_SERVER_URL=(.+)/)?.[1] || u; s = e.match(/DEBUG_SESSION_ID=(.+)/)?.[1] || s; } catch {} return fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: s, runId: 'pre-fix', hypothesisId: 'A', location: 'server.ts:startServer', msg: '[DEBUG] HTTP server listening', data: { port: actualPort, host: urlHost, url }, ts: Date.now() }) }).catch(() => undefined); });
-    // #endregion
 
     return {
         app,

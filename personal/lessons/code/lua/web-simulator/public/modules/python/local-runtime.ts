@@ -90,7 +90,8 @@ async function pollRuntimeStatus(droneId: string): Promise<void> {
         const status = await fetchRuntimeStatus(droneId, state.nextSeq);
         logRuntimeOutput(droneId, status.output);
 
-        const lastSeq = status.output.at(-1)?.seq;
+        const lastEntry = status.output.length > 0 ? status.output[status.output.length - 1] : null;
+        const lastSeq = lastEntry?.seq;
         if (typeof lastSeq === 'number') {
             state.nextSeq = lastSeq;
         }

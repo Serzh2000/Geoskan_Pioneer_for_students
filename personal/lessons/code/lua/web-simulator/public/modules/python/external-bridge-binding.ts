@@ -1,4 +1,4 @@
-import { createDroneState, drones, ensureDronePythonConnectionSettings } from '../core/state.js';
+import { drones, ensureDronePythonConnectionSettings } from '../core/state.js';
 
 export type ExternalPythonBridgeEvent = {
     id: number;
@@ -30,6 +30,10 @@ export type ExternalBridgeState = {
     bindings: Map<string, ExternalDroneBinding>;
 };
 
+type ResolveExternalDroneOptions = {
+    allowDroneId?: (droneId: string) => boolean;
+};
+
 function sanitizeKeyPart(value: string): string {
     return value
         .trim()
@@ -37,6 +41,15 @@ function sanitizeKeyPart(value: string): string {
         .replace(/[^a-z0-9_-]+/g, '-')
         .replace(/^-+|-+$/g, '')
         || 'pioneer';
+}
+
+function normalizeBridgeIp(value: string): string {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) return '';
+    if (normalized === '127.0.0.1' || normalized === 'localhost' || normalized === '192.168.4.1') {
+        return 'simulator-default';
+    }
+    return normalized;
 }
 
 function buildExternalDroneId(event: ExternalPythonBridgeEvent): string {
@@ -47,7 +60,7 @@ export function buildBindingKey(event: ExternalPythonBridgeEvent): string {
     return [
         sanitizeKeyPart(event.sessionId),
         sanitizeKeyPart(event.connectionMethod || 'udpout'),
-        sanitizeKeyPart(event.droneIp || ''),
+        sanitizeKeyPart(normalizeBridgeIp(event.droneIp || '')),
         String(event.mavlinkPort || 8001)
     ].join('::');
 }
@@ -56,7 +69,7 @@ function matchesConfiguredDrone(event: ExternalPythonBridgeEvent, droneId: strin
     const drone = drones[droneId];
     if (!drone) return false;
     const connection = ensureDronePythonConnectionSettings(droneId);
-    if (sanitizeKeyPart(connection.ip || '') !== sanitizeKeyPart(event.droneIp || '')) {
+    if (normalizeBridgeIp(connection.ip || '') !== normalizeBridgeIp(event.droneIp || '')) {
         return false;
     }
     if (event.connectionMethod === 'camera') {
@@ -81,7 +94,15 @@ function applyConnectionMetadata(droneId: string, event: ExternalPythonBridgeEve
     const connection = ensureDronePythonConnectionSettings(droneId);
     drone.name = event.droneName || drone.name;
     connection.name = event.droneName || connection.name;
-    connection.ip = event.droneIp || connection.ip;
+    if (event.droneIp) {
+        const eventIp = event.droneIp.trim();
+        const currentIp = String(connection.ip || '').trim();
+        const sameSimulatorAlias = normalizeBridgeIp(currentIp) && normalizeBridgeIp(currentIp) === normalizeBridgeIp(eventIp);
+        const currentIsLoopback = currentIp === '127.0.0.1' || currentIp.toLowerCase() === 'localhost';
+        if (!sameSimulatorAlias || currentIsLoopback || !currentIp) {
+            connection.ip = eventIp;
+        }
+    }
     if (event.connectionMethod === 'camera') {
         connection.cameraPort = Number(event.mavlinkPort || connection.cameraPort || 18001);
         return;
@@ -92,16 +113,27 @@ function applyConnectionMetadata(droneId: string, event: ExternalPythonBridgeEve
     connection.baud = Number(event.baud || connection.baud || 115200);
 }
 
-export function resolveExternalDroneId(state: ExternalBridgeState, event: ExternalPythonBridgeEvent): string {
+export function resolveExternalDroneId(
+    state: ExternalBridgeState,
+    event: ExternalPythonBridgeEvent,
+    options: ResolveExternalDroneOptions = {}
+): string | null {
     const bindingKey = buildBindingKey(event);
     const existingBinding = state.bindings.get(bindingKey);
-    if (existingBinding && drones[existingBinding.droneId]) {
+    const isAllowedDroneId = typeof options.allowDroneId === 'function'
+        ? options.allowDroneId
+        : () => true;
+    if (existingBinding && drones[existingBinding.droneId] && isAllowedDroneId(existingBinding.droneId)) {
         applyConnectionMetadata(existingBinding.droneId, event);
         return existingBinding.droneId;
     }
 
+    if (existingBinding && !isAllowedDroneId(existingBinding.droneId)) {
+        state.bindings.delete(bindingKey);
+    }
+
     const configuredDroneId = findConfiguredDroneId(event);
-    if (configuredDroneId) {
+    if (configuredDroneId && isAllowedDroneId(configuredDroneId)) {
         applyConnectionMetadata(configuredDroneId, event);
         state.bindings.set(bindingKey, {
             bindingKey,
@@ -113,26 +145,5 @@ export function resolveExternalDroneId(state: ExternalBridgeState, event: Extern
         });
         return configuredDroneId;
     }
-
-    const nextId = buildExternalDroneId(event);
-    if (!drones[nextId]) {
-        createDroneState(nextId, event.droneName || `External ${event.droneIp || 'Pioneer'}`);
-        window.dispatchEvent(new CustomEvent('external-drone-state-changed', {
-            detail: {
-                droneId: nextId,
-                sessionId: event.sessionId
-            }
-        }));
-    }
-
-    applyConnectionMetadata(nextId, event);
-    state.bindings.set(bindingKey, {
-        bindingKey,
-        sessionId: event.sessionId,
-        droneId: nextId,
-        droneIp: event.droneIp,
-        mavlinkPort: Number(event.mavlinkPort || 8001),
-        connectionMethod: event.connectionMethod || 'udpout'
-    });
-    return nextId;
+    return null;
 }

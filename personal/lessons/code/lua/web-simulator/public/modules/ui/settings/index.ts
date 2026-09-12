@@ -12,16 +12,19 @@ import { createGamepadSettingsController } from './gamepad/controller.js';
 import { setMappingRef } from './mapping.js';
 import { initAutopilotParamsUI } from './autopilot-params-ui.js';
 import { createSettingsRuntimeState } from './runtime-state.js';
-import { initHardwarePythonSettingsUI } from './hardware-python.js';
 import { initWizard } from './wizard.js';
+
+const GAMEPAD_UI_POLL_INTERVAL_MS = 50;
 
 export function initSettingsUI() {
     const dom = collectSettingsDomRefs();
     const state = createSettingsRuntimeState();
     const controller = createGamepadSettingsController(dom, state);
+    const gamepadPanel = document.getElementById('gamepad-panel');
+    let panelIsIntersecting = true;
+    let updateFrameId = 0;
 
     initAutopilotParamsUI();
-    initHardwarePythonSettingsUI();
     initWizard();
     bindGeneralSettingsControls(dom);
     bindGamepadSettingsControls({
@@ -71,7 +74,45 @@ export function initSettingsUI() {
     window.addEventListener('gamepadconnected', refreshConnectionState);
     window.addEventListener('gamepaddisconnected', refreshConnectionState);
 
-    const updateGamepadState = (): void => {
+    let lastPollAt = 0;
+    let wasDisconnectedIdle = false;
+    const isGamepadUiVisible = (): boolean => !!gamepadPanel
+        && document.visibilityState !== 'hidden'
+        && gamepadPanel.isConnected
+        && gamepadPanel.getClientRects().length > 0
+        && panelIsIntersecting;
+    const stopUpdateLoop = (): void => {
+        if (updateFrameId !== 0) {
+            window.cancelAnimationFrame(updateFrameId);
+            updateFrameId = 0;
+        }
+    };
+    const ensureUpdateLoop = (resetTiming = false): void => {
+        if (!isGamepadUiVisible()) {
+            stopUpdateLoop();
+            return;
+        }
+
+        if (resetTiming) {
+            lastPollAt = 0;
+        }
+
+        if (updateFrameId === 0) {
+            updateFrameId = window.requestAnimationFrame(updateGamepadState);
+        }
+    };
+    const updateGamepadState = (time: number): void => {
+        updateFrameId = 0;
+        if (!isGamepadUiVisible()) {
+            return;
+        }
+
+        if (time - lastPollAt < GAMEPAD_UI_POLL_INTERVAL_MS) {
+            ensureUpdateLoop();
+            return;
+        }
+        lastPollAt = time;
+
         const activeGamepad = controller.findCurrentActiveGamepad();
         const connectionChanged =
             (activeGamepad?.index ?? null) !== state.activeGamepadIndex ||
@@ -91,13 +132,31 @@ export function initSettingsUI() {
             });
             controller.updateCalibrationProgress(activeGamepad);
             controller.updateDroneChannels(activeGamepad);
+            wasDisconnectedIdle = false;
         } else {
-            controller.resetDroneChannelsToSafeValues();
-            controller.renderChannelDefaultsState();
+            if (!wasDisconnectedIdle || connectionChanged) {
+                controller.resetDroneChannelsToSafeValues();
+                controller.renderChannelDefaultsState();
+                wasDisconnectedIdle = true;
+            }
         }
 
-        requestAnimationFrame(updateGamepadState);
+        ensureUpdateLoop();
     };
+
+    if (gamepadPanel && typeof IntersectionObserver === 'function') {
+        const visibilityObserver = new IntersectionObserver((entries) => {
+            const entry = entries.find((candidate) => candidate.target === gamepadPanel);
+            if (!entry) return;
+            panelIsIntersecting = entry.isIntersecting && entry.intersectionRatio > 0;
+            ensureUpdateLoop(true);
+        }, {
+            threshold: 0.01
+        });
+        visibilityObserver.observe(gamepadPanel);
+    }
+
+    document.addEventListener('visibilitychange', () => ensureUpdateLoop(true));
 
     controller.resetCalibration();
     controller.renderChannelDefaultsState();
@@ -106,5 +165,5 @@ export function initSettingsUI() {
     controller.renderMappingControlsStateView();
     controller.renderCalibrationStateView();
     controller.syncConnectionState(controller.findCurrentActiveGamepad());
-    updateGamepadState();
+    ensureUpdateLoop(true);
 }

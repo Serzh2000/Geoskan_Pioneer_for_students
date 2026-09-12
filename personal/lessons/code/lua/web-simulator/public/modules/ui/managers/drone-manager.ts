@@ -1,301 +1,71 @@
-/**
- * Модуль управления роем (Менеджер дронов) в UI.
- * Позволяет переключаться между различными дронами в симуляции,
- * добавлять новые дроны на сцену со случайным смещением, а также
- * удалять дроны из симуляции (если их больше одного).
- * Сохраняет и восстанавливает скрипты в редакторе при переключении.
- */
-import { log } from '../../shared/logging/logger.js';
-import {
-    currentDroneId,
-    currentScriptLanguage,
-    drones,
-    createDroneState,
-    ensureDronePythonConnectionSettings,
-    removeDroneState,
-    setCurrentDrone
-} from '../../core/state.js';
-import { getEditorValue, setEditorValue } from '../../editor/index.js';
-import { stopLuaScript } from '../../lua/index.js';
-import { disposePythonRunState, stopPythonScript } from '../../python/index.js';
-
-function reportDroneManagerDebug(hypothesisId: string, message: string, data: Record<string, unknown>): void {
-    // #region debug-point drone-manager-port-identity
-    const debugUrl = (window as typeof window & { DEBUG_SERVER_URL?: string }).DEBUG_SERVER_URL;
-    if (!debugUrl) {
-        return;
-    }
-    fetch(debugUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            sessionId: 'pioneer-port-manager',
-            runId: 'pre-fix',
-            hypothesisId,
-            location: 'public/modules/ui/managers/drone-manager.ts',
-            msg: message,
-            data
-        })
-    }).catch(() => undefined);
-    // #endregion
-}
-
-function getNextAvailablePort(preferredPort: number, selector: (droneId: string) => number): number {
-    const usedPorts = new Set(
-        Object.keys(drones)
-            .map((droneId) => Number(selector(droneId)))
-            .filter((port) => Number.isFinite(port) && port > 0)
-    );
-
-    let nextPort = Math.max(1, Math.trunc(preferredPort || 8001));
-    while (usedPorts.has(nextPort)) {
-        nextPort += 1;
-    }
-    return nextPort;
-}
-
-function getNextAvailableMavlinkPort(preferredPort: number): number {
-    return getNextAvailablePort(preferredPort, (droneId) => drones[droneId]?.pythonConnection?.mavlinkPort);
-}
-
-function getNextAvailableCameraPort(preferredPort: number): number {
-    return getNextAvailablePort(preferredPort, (droneId) => drones[droneId]?.pythonConnection?.cameraPort);
-}
-
-function getDroneTransportSummary(droneId: string): string {
-    const connection = ensureDronePythonConnectionSettings(droneId);
-    if (connection.connectionMethod === 'serial') {
-        return `${connection.connectionMethod} ${connection.device} · camera:${connection.cameraPort}`;
-    }
-
-    return `${connection.connectionMethod} ${connection.ip}:${connection.mavlinkPort} · camera:${connection.cameraPort}`;
-}
+import { currentDroneId, drones } from '../../core/state.js';
+import { createConnectionPanel } from './drone-manager/connection-panel.js';
+import { collectDroneManagerDom } from './drone-manager/dom.js';
+import { createDroneListPanel } from './drone-manager/list-panel.js';
 
 export function initDroneManager(onSceneUpdate?: () => void) {
-    const list = document.getElementById('drone-list') as HTMLDivElement | null;
-    const listCount = document.getElementById('drone-list-count') as HTMLElement | null;
-    const addBtn = document.getElementById('add-drone-btn') as HTMLButtonElement;
-    const delBtn = document.getElementById('del-drone-btn') as HTMLButtonElement;
-
-    if (!list || !addBtn || !delBtn) {
+    const dom = collectDroneManagerDom();
+    if (!dom.list || !dom.addBtn || !dom.delBtn) {
         return;
     }
 
-    const listEl = list;
-
     const getActiveDroneId = () => {
-        if (currentDroneId && drones[currentDroneId]) return currentDroneId;
+        if (currentDroneId && drones[currentDroneId]) {
+            return currentDroneId;
+        }
         return Object.keys(drones)[0] || null;
     };
 
-    function updateActionsState() {
-        const droneIds = Object.keys(drones);
-        const hasSelection = !!getActiveDroneId();
-        delBtn.disabled = droneIds.length <= 1 || !hasSelection;
-    }
+    const emitConnectionSettingsChanged = (droneId: string) => {
+        window.dispatchEvent(new CustomEvent('drone-connection-settings-changed', {
+            detail: { droneId }
+        }));
+    };
 
-    function switchDrone(nextDroneId: string) {
-        if (!drones[nextDroneId] || nextDroneId === currentDroneId) return;
+    const emitDroneSelectionChanged = (droneId: string) => {
+        window.dispatchEvent(new CustomEvent('drone-selection-changed', {
+            detail: { droneId }
+        }));
+    };
 
-        // Save current script before switching
-        const previousDroneId = getActiveDroneId();
-        if (previousDroneId && drones[previousDroneId]) {
-            const currentCode = getEditorValue();
-            if (currentScriptLanguage === 'lua') {
-                drones[previousDroneId].script = currentCode;
-            } else {
-                drones[previousDroneId].pythonScript = currentCode;
-            }
-        }
-
-        setCurrentDrone(nextDroneId);
-        const nextCode = currentScriptLanguage === 'lua'
-            ? drones[nextDroneId].script
-            : drones[nextDroneId].pythonScript;
-        setEditorValue(nextCode);
-
-        if (onSceneUpdate) onSceneUpdate();
-    }
-
-    function updateList() {
-        const droneIds = Object.keys(drones);
-        listEl.innerHTML = '';
-        reportDroneManagerDebug(
-            'H1',
-            'Rendering drone manager list',
-            {
-                currentDroneId,
-                drones: droneIds.map((id) => ({
-                    id,
-                    name: drones[id]?.name,
-                    ip: drones[id]?.pythonConnection?.ip,
-                    mavlinkPort: drones[id]?.pythonConnection?.mavlinkPort,
-                    cameraPort: drones[id]?.pythonConnection?.cameraPort,
-                    connectionMethod: drones[id]?.pythonConnection?.connectionMethod
-                }))
-            }
-        );
-
-        if (listCount) {
-            listCount.textContent = `${droneIds.length} ${droneIds.length === 1 ? 'дрон' : droneIds.length < 5 ? 'дрона' : 'дронов'}`;
-        }
-
-        if (droneIds.length === 0) {
-            const emptyState = document.createElement('div');
-            emptyState.className = 'swarm-list__empty';
-            emptyState.textContent = 'Список роя пуст. Добавьте первый дрон, чтобы начать работу.';
-            listEl.appendChild(emptyState);
-            updateActionsState();
-            return;
-        }
-
-        droneIds.forEach((id, index) => {
-            const connection = ensureDronePythonConnectionSettings(id);
-            const item = document.createElement('button');
-            item.type = 'button';
-            item.id = `drone-list-item-${id}`;
-            item.className = `swarm-list__item${id === currentDroneId ? ' is-active' : ''}`;
-            item.dataset.droneId = id;
-            item.setAttribute('role', 'option');
-            item.setAttribute('aria-selected', id === currentDroneId ? 'true' : 'false');
-
-            const main = document.createElement('span');
-            main.className = 'swarm-list__item-main';
-
-            const icon = document.createElement('span');
-            icon.className = 'swarm-list__item-icon';
-            icon.setAttribute('aria-hidden', 'true');
-            icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="2.05"></circle><circle cx="17" cy="7" r="2.05"></circle><circle cx="7" cy="17" r="2.05"></circle><circle cx="17" cy="17" r="2.05"></circle><rect x="9.5" y="9.5" width="5" height="5" rx="1.5"></rect><path d="M8.6 8.6 10 10"></path><path d="M15.4 8.6 14 10"></path><path d="M8.6 15.4 10 14"></path><path d="M15.4 15.4 14 14"></path></svg>';
-
-            const name = document.createElement('span');
-            name.className = 'swarm-list__item-name';
-            name.textContent = drones[id].name;
-
-            const text = document.createElement('span');
-            text.className = 'swarm-list__item-text';
-
-            const meta = document.createElement('span');
-            meta.className = 'swarm-list__item-meta';
-            meta.textContent = getDroneTransportSummary(id);
-
-            const badge = document.createElement('span');
-            badge.className = 'swarm-list__item-badge';
-            badge.textContent = String(connection.mavlinkPort || index + 1);
-
-            text.appendChild(name);
-            text.appendChild(meta);
-            main.appendChild(icon);
-            main.appendChild(text);
-            item.appendChild(main);
-            item.appendChild(badge);
-            item.title = `${drones[id].name} · ${getDroneTransportSummary(id)}`;
-            listEl.appendChild(item);
-        });
-
-        const activeDroneId = getActiveDroneId();
-        if (activeDroneId) {
-            listEl.setAttribute('aria-activedescendant', `drone-list-item-${activeDroneId}`);
-        } else {
-            listEl.removeAttribute('aria-activedescendant');
-        }
-        updateActionsState();
-    }
-
-    listEl.addEventListener('click', (event) => {
-        const target = event.target as HTMLElement | null;
-        const item = target?.closest('.swarm-list__item') as HTMLButtonElement | null;
-        const nextDroneId = item?.dataset.droneId;
-        if (!nextDroneId) return;
-        switchDrone(nextDroneId);
-        updateList();
+    let droneListPanel: ReturnType<typeof createDroneListPanel>;
+    const connectionPanel = createConnectionPanel({
+        dom,
+        getActiveDroneId,
+        emitConnectionSettingsChanged,
+        onSceneUpdate,
+        refreshUi: () => droneListPanel.updateList()
     });
 
-    listEl.addEventListener('keydown', (event) => {
-        const droneIds = Object.keys(drones);
-        if (droneIds.length === 0) return;
-
-        const currentIndex = Math.max(0, droneIds.indexOf(currentDroneId));
-        const nextIndex = event.key === 'ArrowDown'
-            ? Math.min(droneIds.length - 1, currentIndex + 1)
-            : event.key === 'ArrowUp'
-                ? Math.max(0, currentIndex - 1)
-                : -1;
-        if (nextIndex < 0) return;
-
-        event.preventDefault();
-        const nextDroneId = droneIds[nextIndex];
-        switchDrone(nextDroneId);
-        updateList();
-
-        const nextItem = listEl.querySelector(`[data-drone-id="${nextDroneId}"]`) as HTMLButtonElement | null;
-        nextItem?.focus();
-    });
-
-    addBtn.addEventListener('click', () => {
-        const num = Object.keys(drones).length + 1;
-        const id = `drone_${num}_${Date.now()}`;
-        const name = `Pioneer ${num}`;
-        const sourceDroneId = getActiveDroneId() || currentDroneId;
-        const sourceConnection = ensureDronePythonConnectionSettings(sourceDroneId);
-        const nextPort = getNextAvailableMavlinkPort(sourceConnection.mavlinkPort || 8001);
-        const preferredCameraPort = sourceConnection.cameraPort || ((sourceConnection.mavlinkPort || 8001) + 10000);
-        const nextCameraPort = getNextAvailableCameraPort(preferredCameraPort);
-        // Random offset for new drones
-        const x = (Math.random() - 0.5) * 4;
-        const y = (Math.random() - 0.5) * 4;
-        createDroneState(id, name, x, y, 0);
-        const createdConnection = ensureDronePythonConnectionSettings(id);
-        createdConnection.executionTarget = sourceConnection.executionTarget;
-        createdConnection.simulator = sourceConnection.simulator;
-        createdConnection.name = name;
-        createdConnection.ip = sourceConnection.ip;
-        createdConnection.mavlinkPort = nextPort;
-        createdConnection.cameraPort = nextCameraPort;
-        createdConnection.connectionMethod = sourceConnection.connectionMethod;
-        createdConnection.device = sourceConnection.device;
-        createdConnection.baud = sourceConnection.baud;
-        createdConnection.logger = sourceConnection.logger;
-        createdConnection.logConnection = sourceConnection.logConnection;
-        createdConnection.pythonExecutable = sourceConnection.pythonExecutable;
-        reportDroneManagerDebug('H5', 'Created drone from manager', { id, name });
-        switchDrone(id);
-        updateList();
-        log(`Добавлен новый дрон: ${name} (${createdConnection.ip}:${createdConnection.mavlinkPort}, camera:${createdConnection.cameraPort}, ${createdConnection.connectionMethod})`, 'success');
-    });
-
-    delBtn.addEventListener('click', () => {
-        if (Object.keys(drones).length <= 1) {
-            log('Нельзя удалить последний дрон.', 'error');
-            return;
-        }
-        const id = getActiveDroneId();
-        if (id) {
-            stopLuaScript(id);
-            stopPythonScript(id);
-            disposePythonRunState(id);
-            removeDroneState(id);
-            const nextDroneId = Object.keys(drones)[0] || null;
-            if (!nextDroneId) {
-                setEditorValue('');
-                updateList();
-                if (onSceneUpdate) onSceneUpdate();
-                return;
-            }
-            setCurrentDrone(nextDroneId);
-            const nextCode = currentScriptLanguage === 'lua'
-                ? drones[nextDroneId].script
-                : drones[nextDroneId].pythonScript;
-            setEditorValue(nextCode);
-            updateList();
-            if (onSceneUpdate) onSceneUpdate();
-            log(`Удалён дрон: ${id}`, 'info');
+    droneListPanel = createDroneListPanel({
+        dom,
+        getActiveDroneId,
+        emitConnectionSettingsChanged,
+        emitDroneSelectionChanged,
+        focusConnectionCard: connectionPanel.focusConnectionCard,
+        onSceneUpdate,
+        refreshActionsState: connectionPanel.updateActionsState,
+        renderConnectionDetails: () => {
+            connectionPanel.renderConnectionForm();
+            connectionPanel.renderBridgeCard();
         }
     });
+
+    connectionPanel.bind();
+    droneListPanel.bind();
 
     window.addEventListener('external-drone-state-changed', () => {
-        updateList();
+        droneListPanel.updateList();
         if (onSceneUpdate) onSceneUpdate();
     });
 
-    updateList();
+    window.addEventListener('drone-connection-settings-changed', () => {
+        droneListPanel.updateList();
+    });
+
+    window.addEventListener('external-bridge-queue-cleared', () => {
+        droneListPanel.updateList();
+    });
+
+    droneListPanel.updateList();
 }

@@ -22,6 +22,7 @@ export function createDefaultPioneerConnectionSettings(): PioneerConnectionSetti
     return {
         executionTarget: 'browser',
         simulator: false,
+        allowExternalBridge: false,
         name: 'pioneer',
         ip: '192.168.4.1',
         mavlinkPort: 8001,

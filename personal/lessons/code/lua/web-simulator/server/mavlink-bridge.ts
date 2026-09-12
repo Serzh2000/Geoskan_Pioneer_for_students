@@ -156,7 +156,7 @@ function sanitizeRegistration(input: Partial<BridgeConnectionRegistration>): Bri
 }
 
 function buildMavlinkRegistrationKey(connection: BridgeConnectionRegistration): string {
-    return `${connection.connectionMethod}:${connection.mavlinkPort}`;
+    return `mavlink:${connection.mavlinkPort}`;
 }
 
 function buildCameraRegistrationKey(connection: BridgeConnectionRegistration): string {
@@ -708,9 +708,6 @@ class CameraTcpBridge {
     private handleSocket(socket: net.Socket): void {
         const remoteAddress = socket.remoteAddress || '127.0.0.1';
         const remotePort = socket.remotePort || 0;
-        // #region debug-point C:camera-tcp-accept
-        void import('node:fs').then((fs) => { let u = 'http://127.0.0.1:7778/event', s = 'camera-udp-timeout'; try { const e = fs.readFileSync('.dbg/camera-udp-timeout.env', 'utf8'); u = e.match(/DEBUG_SERVER_URL=(.+)/)?.[1] || u; s = e.match(/DEBUG_SESSION_ID=(.+)/)?.[1] || s; } catch {} return fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: s, runId: 'pre-fix', hypothesisId: 'C', location: 'server/mavlink-bridge.ts:handleSocket', msg: '[DEBUG] Camera TCP accepted', data: { remoteAddress, remotePort, localPort: this.connection.cameraPort }, ts: Date.now() }) }).catch(() => undefined); });
-        // #endregion
         if (!remotePort) {
             socket.destroy();
             return;
@@ -746,9 +743,6 @@ class CameraTcpBridge {
     }
 
     private stopClient(client: CameraClientSession, destroySocket: boolean): void {
-        // #region debug-point C:camera-stop-client
-        void import('node:fs').then((fs) => { let u = 'http://127.0.0.1:7778/event', s = 'camera-udp-timeout'; try { const e = fs.readFileSync('.dbg/camera-udp-timeout.env', 'utf8'); u = e.match(/DEBUG_SERVER_URL=(.+)/)?.[1] || u; s = e.match(/DEBUG_SESSION_ID=(.+)/)?.[1] || s; } catch {} return fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: s, runId: 'pre-fix', hypothesisId: 'C', location: 'server/mavlink-bridge.ts:stopClient', msg: '[DEBUG] Camera client stopped', data: { remoteAddress: client.remoteAddress, remotePort: client.remotePort, destroySocket }, ts: Date.now() }) }).catch(() => undefined); });
-        // #endregion
         if (client.frameTimer) {
             clearInterval(client.frameTimer);
             client.frameTimer = null;
@@ -766,24 +760,15 @@ class CameraTcpBridge {
             mavlinkPort: this.connection.cameraPort,
             connectionMethod: 'camera'
         });
-        // #region debug-point A:camera-flush-state
-        void import('node:fs').then((fs) => { let u = 'http://127.0.0.1:7778/event', s = 'camera-udp-timeout'; try { const e = fs.readFileSync('.dbg/camera-udp-timeout.env', 'utf8'); u = e.match(/DEBUG_SERVER_URL=(.+)/)?.[1] || u; s = e.match(/DEBUG_SESSION_ID=(.+)/)?.[1] || s; } catch {} return fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: s, runId: 'pre-fix', hypothesisId: 'A', location: 'server/mavlink-bridge.ts:flushFrame', msg: '[DEBUG] Camera flush tick', data: { sessionId: client.sessionId, remoteAddress: client.remoteAddress, remotePort: client.remotePort, hasState: Boolean(state), cameraConnected: Boolean(state?.cameraConnected), hasFrameDataUrl: Boolean(state?.cameraFrameDataUrl), frameDataUrlLength: state?.cameraFrameDataUrl?.length ?? 0 }, ts: Date.now() }) }).catch(() => undefined); });
-        // #endregion
         if (!state?.cameraConnected) {
             return;
         }
 
         const jpegBuffer = decodeDataUrlToBuffer(state.cameraFrameDataUrl);
-        // #region debug-point D:camera-jpeg-buffer
-        void import('node:fs').then((fs) => { let u = 'http://127.0.0.1:7778/event', s = 'camera-udp-timeout'; try { const e = fs.readFileSync('.dbg/camera-udp-timeout.env', 'utf8'); u = e.match(/DEBUG_SERVER_URL=(.+)/)?.[1] || u; s = e.match(/DEBUG_SESSION_ID=(.+)/)?.[1] || s; } catch {} return fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: s, runId: 'pre-fix', hypothesisId: 'D', location: 'server/mavlink-bridge.ts:flushFrame', msg: '[DEBUG] Camera JPEG decode result', data: { hasJpegBuffer: Boolean(jpegBuffer?.length), jpegBytes: jpegBuffer?.length ?? 0 }, ts: Date.now() }) }).catch(() => undefined); });
-        // #endregion
         if (!jpegBuffer?.length) {
             return;
         }
 
-        // #region debug-point C:camera-udp-send
-        void import('node:fs').then((fs) => { let u = 'http://127.0.0.1:7778/event', s = 'camera-udp-timeout'; try { const e = fs.readFileSync('.dbg/camera-udp-timeout.env', 'utf8'); u = e.match(/DEBUG_SERVER_URL=(.+)/)?.[1] || u; s = e.match(/DEBUG_SESSION_ID=(.+)/)?.[1] || s; } catch {} return fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: s, runId: 'pre-fix', hypothesisId: 'C', location: 'server/mavlink-bridge.ts:flushFrame', msg: '[DEBUG] Camera UDP send', data: { remoteAddress: client.remoteAddress, remotePort: client.remotePort, jpegBytes: jpegBuffer.length }, ts: Date.now() }) }).catch(() => undefined); });
-        // #endregion
         this.udpSocket.send(jpegBuffer, client.remotePort, client.remoteAddress);
     }
 }
@@ -814,8 +799,12 @@ export function registerMavlinkBridgeRoutes(app: express.Express): void {
         return res.json({
             ok: true,
             connections: Array.from(registeredConnections.values()),
-            mavlinkPorts: Array.from(mavlinkBridges.keys()).map((key) => Number(key.split(':').pop() ?? 0)).filter(Boolean),
-            cameraPorts: Array.from(cameraBridges.keys()).map((key) => Number(key.split(':').pop() ?? 0)).filter(Boolean)
+            mavlinkPorts: Array.from(new Set(
+                Array.from(registeredConnections.values())
+                    .filter((connection) => connection.connectionMethod === 'udpout' || connection.connectionMethod === 'udpin')
+                    .map((connection) => connection.mavlinkPort)
+            )),
+            cameraPorts: Array.from(cameraBridges.keys()).map((key) => Number(key.slice('camera:'.length))).filter(Boolean)
         });
     });
 }

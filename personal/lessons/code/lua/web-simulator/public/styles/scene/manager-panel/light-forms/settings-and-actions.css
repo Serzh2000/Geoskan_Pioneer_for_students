@@ -180,6 +180,22 @@
     font-weight: 600;
 }
 
+:root[data-theme="dark"] .scene-segmented-btn.is-active {
+    color: #e9ecef;
+    background: #2d3748;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme="dark"] .scene-transform-field span {
+    color: #94a3b8;
+}
+
+:root[data-theme="dark"] .scene-transform-field input[readonly] {
+    background: #1a2332;
+    border-color: #2d3748;
+    color: #e9ecef;
+}
+
 .scene-inspector-actions {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

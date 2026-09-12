@@ -6,6 +6,7 @@ export type PioneerConnectionMethod = 'udpin' | 'udpout' | 'serial';
 export interface PioneerConnectionSettings {
     executionTarget: PythonExecutionTarget;
     simulator: boolean;
+    allowExternalBridge: boolean;
     name: string;
     ip: string;
     mavlinkPort: number;

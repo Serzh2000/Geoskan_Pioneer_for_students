@@ -35,6 +35,14 @@ const WIZARD_CAPTURE_MIN_TICKS = 2;
 const WIZARD_AXIS_CAPTURE_THRESHOLD = 0.55;
 const WIZARD_AUX_CAPTURE_THRESHOLD = 0.6;
 
+function stopRcRuntimePolling(): void {
+    if (typeof window === 'undefined') return;
+    const frameId = getPollFrameId();
+    if (!frameId) return;
+    window.cancelAnimationFrame(frameId);
+    setPollFrameId(0);
+}
+
 function formatConnectionStatus(snapshotDevice: RcRuntimeSnapshot['devices'][number] | null): string {
     if (!snapshotDevice?.connected) {
         return 'Radiomaster USB HID: не обнаружен';
@@ -167,13 +175,17 @@ function captureWizardInput(rawInputs: Record<string, number>, profile: RcRuntim
 }
 
 function ensureRcRuntimePolling(): void {
-    if (typeof window === 'undefined' || getPollFrameId()) return;
+    if (typeof window === 'undefined' || getPollFrameId() || !listeners.size) return;
     let lastTick = 0;
     const tick = (time: number) => {
+        if (!listeners.size) {
+            setPollFrameId(0);
+            return;
+        }
+
         setPollFrameId(window.requestAnimationFrame(tick));
         if (time - lastTick < RC_POLL_INTERVAL_MS) return;
         lastTick = time;
-        if (!listeners.size) return;
         updateRcInputRuntime();
     };
     setPollFrameId(window.requestAnimationFrame(tick));
@@ -195,12 +207,21 @@ export function initRcSetupRuntime(): void {
 }
 
 export function subscribeRcRuntime(listener: RuntimeListener): () => void {
+    initRcSetupRuntime();
     listeners.add(listener);
+    ensureRcRuntimePolling();
     const snapshot = getLatestSnapshot();
     if (snapshot) {
         listener(snapshot);
+    } else {
+        updateRcInputRuntime();
     }
-    return () => listeners.delete(listener);
+    return () => {
+        listeners.delete(listener);
+        if (!listeners.size) {
+            stopRcRuntimePolling();
+        }
+    };
 }
 
 export function getRcRuntimeSnapshot(): RcRuntimeSnapshot {

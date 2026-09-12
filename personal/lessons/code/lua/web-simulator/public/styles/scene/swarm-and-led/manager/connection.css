@@ -1,0 +1,105 @@
+.swarm-connection-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid rgba(9, 9, 11, 0.08);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.88);
+}
+
+.swarm-connection-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.swarm-connection-card__header-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    min-width: min(100%, 360px);
+}
+
+.swarm-connection-card__title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #212529;
+}
+
+.swarm-connection-card__subtitle {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.swarm-connection-card__form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.swarm-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.swarm-field--full {
+    grid-column: 1 / -1;
+}
+
+.swarm-field__label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #4b5563;
+}
+
+.swarm-field input,
+.swarm-field select {
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(9, 9, 11, 0.1);
+    background: #fff;
+    color: #212529;
+    font: inherit;
+}
+
+.swarm-field input:focus,
+.swarm-field select:focus {
+    outline: none;
+    border-color: rgba(255, 107, 0, 0.22);
+    box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.12);
+}
+
+.swarm-connection-card__toggles {
+    display: grid;
+    gap: 8px;
+}
+
+.swarm-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(9, 9, 11, 0.06);
+    background: rgba(248, 250, 252, 0.9);
+    font-size: 12px;
+    color: #374151;
+}
+
+.swarm-check input {
+    margin: 0;
+}
+
+.swarm-connection-card__hint {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--text-muted);
+}

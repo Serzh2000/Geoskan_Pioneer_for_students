@@ -64,3 +64,47 @@
     background: rgba(255, 247, 237, 0.96);
     border-color: rgba(180, 83, 9, 0.22);
 }
+
+.swarm-action-btn--bridge-on {
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(22, 163, 74, 0.18);
+    color: #166534;
+}
+
+.swarm-action-btn--bridge-on:hover:not(:disabled) {
+    background: rgba(34, 197, 94, 0.16);
+    border-color: rgba(22, 163, 74, 0.26);
+}
+
+.swarm-action-btn--bridge-off {
+    background: rgba(255, 255, 255, 0.9);
+    color: #8b5e34;
+    border-color: rgba(180, 83, 9, 0.16);
+}
+
+.swarm-action-btn--bridge-off:hover:not(:disabled) {
+    background: rgba(255, 247, 237, 0.96);
+    border-color: rgba(180, 83, 9, 0.22);
+}
+
+.swarm-action-btn--clear {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(37, 99, 235, 0.16);
+    color: #1d4ed8;
+}
+
+.swarm-action-btn--clear:hover:not(:disabled) {
+    background: rgba(59, 130, 246, 0.14);
+    border-color: rgba(37, 99, 235, 0.22);
+}
+
+.swarm-action-btn--stop {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(220, 38, 38, 0.16);
+    color: #b91c1c;
+}
+
+.swarm-action-btn--stop:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.14);
+    border-color: rgba(220, 38, 38, 0.22);
+}

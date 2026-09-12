@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import os
-import time
 import base64
 import threading
 import urllib.error
@@ -150,46 +149,10 @@ def _build_bridge_payload(connection: dict[str, Any], method: str, args: tuple[A
     }
 
 
-def _report_debug(hypothesis_id: str, location: str, message: str, data: dict[str, Any]) -> None:
-    # #region debug-point sdk-ports-python
-    try:
-        debug_url = os.environ.get("DEBUG_SERVER_URL", "http://127.0.0.1:7777/event")
-        debug_payload = {
-            "sessionId": os.environ.get("DEBUG_SESSION_ID", "pioneer-sdk-ports"),
-            "runId": os.environ.get("DEBUG_RUN_ID", "pre-fix"),
-            "hypothesisId": hypothesis_id,
-            "location": location,
-            "msg": message,
-            "data": data,
-        }
-        debug_request = urllib.request.Request(
-            debug_url,
-            data=json.dumps(debug_payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(debug_request, timeout=0.2):
-            pass
-    except Exception:
-        pass
-    # #endregion
-
-
 def _safe_post_bridge_event(connection: dict[str, Any], method: str, args: tuple[Any, ...], kwargs: dict[str, Any]) -> None:
     payload = _build_bridge_payload(connection, method, args, kwargs)
     encoded = json.dumps(payload).encode("utf-8")
     global _resolved_bridge_url
-    _report_debug(
-        "H1",
-        "python_bridge/pioneer_browser_bridge_runtime.py:_safe_post_bridge_event",
-        "Preparing mirrored browser bridge event payload",
-        {
-            "method": method,
-            "payload": payload,
-            "candidateBridgeUrls": _candidate_bridge_urls(),
-        },
-    )
-
     with _post_lock:
         for bridge_url in _candidate_bridge_urls():
             request = urllib.request.Request(
@@ -237,25 +200,6 @@ def _safe_get_external_state(instance: Any) -> dict[str, Any] | None:
     return None
 
 
-def _summarize_camera_result(result: Any) -> dict[str, Any]:
-    summary: dict[str, Any] = {
-        "type": type(result).__name__ if result is not None else "NoneType",
-        "isNone": result is None,
-    }
-    if isinstance(result, (bytes, bytearray)):
-        summary["length"] = len(result)
-    elif isinstance(result, dict):
-        summary["keys"] = sorted(str(key) for key in result.keys())[:20]
-    else:
-        payload = getattr(result, "payload", None)
-        if isinstance(payload, dict):
-            summary["payloadKeys"] = sorted(str(key) for key in payload.keys())[:20]
-        shape = getattr(result, "shape", None)
-        if shape is not None:
-            summary["shape"] = list(shape) if isinstance(shape, tuple) else shape
-    return summary
-
-
 def _decode_data_url_bytes(data_url: str | None) -> bytes | None:
     if not data_url or "," not in data_url:
         return None
@@ -265,14 +209,18 @@ def _decode_data_url_bytes(data_url: str | None) -> bytes | None:
         return None
 
 
-def _poll_external_camera_state(connection: dict[str, Any], attempts: int = 8, delay_seconds: float = 0.05) -> dict[str, Any] | None:
-    for attempt in range(attempts):
-        state = _safe_get_external_state(type("_CameraStateProxy", (), {"_browser_bridge_connection": connection})())
-        if state and (state.get("cameraConnected") or state.get("cameraFrameDataUrl")):
-            return state
-        if attempt + 1 < attempts:
-            time.sleep(delay_seconds)
+def _poll_external_camera_state(connection: dict[str, Any], attempts: int = 1) -> dict[str, Any] | None:
     return _safe_get_external_state(type("_CameraStateProxy", (), {"_browser_bridge_connection": connection})())
+
+
+def _is_point_reached_from_autopilot_state(autopilot_state: str | None, point_reached: bool | None) -> bool:
+    if autopilot_state is None:
+        return False
+
+    if autopilot_state in ("TAKEOFF", "MISSION", "LANDING") and bool(point_reached):
+        return True
+
+    return False
 
 
 def _build_browser_mirrored_pioneer(original_class: type) -> type:
@@ -286,88 +234,91 @@ def _build_browser_mirrored_pioneer(original_class: type) -> type:
             self.connection_method = connection["connection_method"]
             self.device = connection["device"]
             self.baud = connection["baud"]
-            self._browser_bridge_point_reached_seen = False
-            super().__init__(*args, **kwargs)
+            self.logger = connection["logger"]
+            self.log_connection = connection["log_connection"]
+            self._logger = self.logger
+            self._log_connection = self.log_connection
+            self._last_point_reached_state = False
             _safe_post_event(self, "__init__", args, kwargs)
 
         def arm(self, *args: Any, **kwargs: Any):
-            result = super().arm(*args, **kwargs)
             _safe_post_event(self, "arm", args, kwargs)
-            return result
+            return True
 
         def disarm(self, *args: Any, **kwargs: Any):
-            result = super().disarm(*args, **kwargs)
             _safe_post_event(self, "disarm", args, kwargs)
-            return result
+            return True
 
         def takeoff(self, *args: Any, **kwargs: Any):
-            result = super().takeoff(*args, **kwargs)
+            self._last_point_reached_state = False
             _safe_post_event(self, "takeoff", args, kwargs)
-            return result
+            return True
 
         def land(self, *args: Any, **kwargs: Any):
-            result = super().land(*args, **kwargs)
             _safe_post_event(self, "land", args, kwargs)
-            return result
+            return True
 
         def go_to_local_point(self, *args: Any, **kwargs: Any):
-            result = super().go_to_local_point(*args, **kwargs)
-            self._browser_bridge_point_reached_seen = False
+            self._last_point_reached_state = False
             _safe_post_event(self, "go_to_local_point", args, kwargs)
-            return result
+            return True
 
         def go_to_local_point_body_fixed(self, *args: Any, **kwargs: Any):
-            result = super().go_to_local_point_body_fixed(*args, **kwargs)
-            self._browser_bridge_point_reached_seen = False
+            self._last_point_reached_state = False
             _safe_post_event(self, "go_to_local_point_body_fixed", args, kwargs)
-            return result
+            return True
 
         def point_reached(self, *args: Any, **kwargs: Any):
             state = _safe_get_external_state(self)
             if state is not None:
-                point_reached = bool(state.get("pointReached"))
-                if not point_reached:
-                    self._browser_bridge_point_reached_seen = False
-                    return False
-                if getattr(self, "_browser_bridge_point_reached_seen", False):
-                    return False
+                point_reached = _is_point_reached_from_autopilot_state(
+                    state.get("autopilotState"),
+                    state.get("pointReached"),
+                )
 
-                self._browser_bridge_point_reached_seen = True
-                return True
+                if point_reached and not getattr(self, "_last_point_reached_state", False):
+                    self._last_point_reached_state = True
+                    return True
 
-            return super().point_reached(*args, **kwargs)
+                self._last_point_reached_state = point_reached
+                return point_reached
+
+            return False
 
         def set_manual_speed(self, *args: Any, **kwargs: Any):
-            result = super().set_manual_speed(*args, **kwargs)
             _safe_post_event(self, "set_manual_speed", args, kwargs)
-            return result
+            return True
 
         def set_manual_speed_body_fixed(self, *args: Any, **kwargs: Any):
-            result = super().set_manual_speed_body_fixed(*args, **kwargs)
             _safe_post_event(self, "set_manual_speed_body_fixed", args, kwargs)
-            return result
+            return True
 
         def led_control(self, *args: Any, **kwargs: Any):
-            result = super().led_control(*args, **kwargs)
             _safe_post_event(self, "led_control", args, kwargs)
-            return result
+            return True
 
         def send_rc_channels(self, *args: Any, **kwargs: Any):
-            result = super().send_rc_channels(*args, **kwargs)
             _safe_post_event(self, "send_rc_channels", args, kwargs)
-            return result
+            return True
 
         def lua_script_control(self, *args: Any, **kwargs: Any):
-            result = super().lua_script_control(*args, **kwargs)
             _safe_post_event(self, "lua_script_control", args, kwargs)
-            return result
+            return True
+
+        def get_local_position_lps(self, *args: Any, **kwargs: Any):
+            state = _safe_get_external_state(self)
+            position = state.get("localPosition") if state else None
+            if isinstance(position, dict):
+                return [position.get("x", 0.0), position.get("y", 0.0), position.get("z", 0.0)]
+            return [0.0, 0.0, 0.0]
+
+        def get_autopilot_state(self, *args: Any, **kwargs: Any):
+            state = _safe_get_external_state(self)
+            return state.get("autopilotState") if state else None
 
         def close_connection(self, *args: Any, **kwargs: Any):
-            try:
-                result = super().close_connection(*args, **kwargs)
-            finally:
-                _safe_post_event(self, "close_connection", args, kwargs)
-            return result
+            _safe_post_event(self, "close_connection", args, kwargs)
+            return True
 
     BrowserMirroredPioneer.__name__ = original_class.__name__
     BrowserMirroredPioneer.__qualname__ = original_class.__qualname__
@@ -386,44 +337,17 @@ def _build_browser_mirrored_camera(original_class: type) -> type:
             self.VIDEO_BUFFER_SIZE = connection["video_buffer_size"]
             self.log_connection = connection["log_connection"]
             self._connected = False
-            _report_debug(
-                "H1",
-                "python_bridge/pioneer_browser_bridge_runtime.py:Camera.__init__",
-                "External Python instantiated pioneer_sdk.Camera",
-                {
-                    "args": list(args),
-                    "kwargs": kwargs,
-                    "resolvedConnection": connection,
-                },
-            )
             self.connect()
 
         def connect(self, *args: Any, **kwargs: Any):
             _safe_post_bridge_event(self._browser_bridge_connection, "camera_connect", args, kwargs)
             state = _poll_external_camera_state(self._browser_bridge_connection)
             self._connected = bool(state.get("cameraConnected")) if state else False
-            _report_debug(
-                "H2",
-                "python_bridge/pioneer_browser_bridge_runtime.py:Camera.connect",
-                "External Python called Camera.connect()",
-                {
-                    "connected": self._connected,
-                    "hasFrame": bool(state and state.get("cameraFrameDataUrl")),
-                },
-            )
             return self._connected
 
         def disconnect(self, *args: Any, **kwargs: Any):
             _safe_post_bridge_event(self._browser_bridge_connection, "camera_disconnect", args, kwargs)
             self._connected = False
-            _report_debug(
-                "H2",
-                "python_bridge/pioneer_browser_bridge_runtime.py:Camera.disconnect",
-                "External Python called Camera.disconnect()",
-                {
-                    "connected": self._connected,
-                },
-            )
             return True
 
         def connected(self):
@@ -432,14 +356,7 @@ def _build_browser_mirrored_camera(original_class: type) -> type:
         def get_frame(self, *args: Any, **kwargs: Any):
             state = _poll_external_camera_state(self._browser_bridge_connection)
             self._connected = bool(state.get("cameraConnected")) if state else False
-            result = _decode_data_url_bytes(state.get("cameraFrameDataUrl") if state else None)
-            _report_debug(
-                "H4",
-                "python_bridge/pioneer_browser_bridge_runtime.py:Camera.get_frame",
-                "External Python called Camera.get_frame()",
-                _summarize_camera_result(result),
-            )
-            return result
+            return _decode_data_url_bytes(state.get("cameraFrameDataUrl") if state else None)
 
         def get_cv_frame(self, *args: Any, **kwargs: Any):
             raw_bytes = self.get_frame(*args, **kwargs)
@@ -453,12 +370,6 @@ def _build_browser_mirrored_camera(original_class: type) -> type:
                     result = cv2.imdecode(buffer, cv2.IMREAD_COLOR)
                 except Exception:
                     result = raw_bytes
-            _report_debug(
-                "H5",
-                "python_bridge/pioneer_browser_bridge_runtime.py:Camera.get_cv_frame",
-                "External Python called Camera.get_cv_frame()",
-                _summarize_camera_result(result),
-            )
             return result
 
     BrowserMirroredCamera.__name__ = original_class.__name__
@@ -501,16 +412,6 @@ def patch_pioneer_sdk_module(module: Any) -> None:
     if original_class is None and original_camera_class is None and original_video_stream_class is None:
         return
 
-    _report_debug(
-        "H1",
-        "python_bridge/pioneer_browser_bridge_runtime.py:patch_pioneer_sdk_module",
-        "Patching pioneer_sdk module for browser bridge",
-        {
-            "hasPioneer": original_class is not None,
-            "hasCamera": getattr(module, "Camera", None) is not None,
-            "module": getattr(module, "__name__", "pioneer_sdk"),
-        },
-    )
     if original_class is not None and not getattr(module, PATCH_MARKER, False):
         setattr(module, ORIGINAL_MARKER, original_class)
         setattr(module, "Pioneer", _build_browser_mirrored_pioneer(original_class))

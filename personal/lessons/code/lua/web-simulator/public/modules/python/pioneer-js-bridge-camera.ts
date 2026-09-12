@@ -1,199 +1,16 @@
-import * as THREE from 'three';
-import type { PerspectiveCamera, WebGLRenderer } from 'three';
-import { envGroup } from '../environment/index.js';
-import { droneMeshes, renderer as mainRenderer, scene } from '../scene/core/scene-init.js';
 import { getDroneOrDefault } from './runtime-shared.js';
+import { captureDroneCameraFrameDataUrl as captureDroneCameraFrameImageDataUrl } from './pioneer-js-bridge-camera-render.js';
+import {
+    cameraConnectionsByDrone,
+    encodeFramePayload,
+    findClosestVideoTower,
+    getTowerStreamAnchor,
+    getVideoTowerObjects,
+    reportCameraBridgeDebug,
+    resolveConnectedCameraFeed
+} from './pioneer-js-bridge-camera-shared.js';
 
 const VIDEO_TOWER_TYPE = 'Видеомачта';
-const DEFAULT_VIDEO_TOWER_CONNECT_RADIUS = 8;
-const VIDEO_TOWER_STREAM_MAX_DISTANCE = 12;
-
-type CameraConnectionMode = 'fpv-direct' | 'video-tower';
-
-type CameraConnection = {
-    towerId: string | null;
-    connectedAt: number;
-    mode: CameraConnectionMode;
-};
-
-type ResolvedCameraFeed = {
-    drone: any;
-    tower: any | null;
-    distance: number | null;
-    connection: CameraConnection;
-};
-
-const cameraConnectionsByDrone: Record<string, CameraConnection> = {};
-let captureRenderer: WebGLRenderer | null = null;
-
-function reportCameraBridgeDebug(hypothesisId: string, message: string, data: Record<string, unknown>) {
-    // #region debug-point camera-bridge-browser
-    const debugUrl = (window as typeof window & { DEBUG_SERVER_URL?: string }).DEBUG_SERVER_URL;
-    if (!debugUrl) return;
-    fetch(debugUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            sessionId: 'camera-video-stream',
-            runId: 'pre-fix',
-            hypothesisId,
-            location: 'public/modules/python/pioneer-js-bridge-camera.ts',
-            msg: message,
-            data
-        })
-    }).catch(() => undefined);
-    // #endregion
-}
-
-function getVideoTowerObjects() {
-    if (!envGroup) return [];
-    return envGroup.children.filter((obj) => obj.userData?.type === VIDEO_TOWER_TYPE);
-}
-
-function getTowerConnectionRadius(tower: any) {
-    const rawRadius = Number(tower?.userData?.connectionRadius);
-    return Number.isFinite(rawRadius) && rawRadius > 0 ? rawRadius : DEFAULT_VIDEO_TOWER_CONNECT_RADIUS;
-}
-
-function getTowerStreamAnchor(tower: any) {
-    const streamHeight = Number(tower?.userData?.streamHeight);
-    const z = tower.position.z + (Number.isFinite(streamHeight) ? streamHeight : 3.1);
-    return { x: tower.position.x, y: tower.position.y, z };
-}
-
-function measureTowerDistance(drone: any, tower: any) {
-    const anchor = getTowerStreamAnchor(tower);
-    return Math.hypot(
-        drone.pos.x - anchor.x,
-        drone.pos.y - anchor.y,
-        drone.pos.z - anchor.z
-    );
-}
-
-function findClosestVideoTower(drone: any, maxDistance = DEFAULT_VIDEO_TOWER_CONNECT_RADIUS) {
-    let bestTower: any = null;
-    let bestDistance = Infinity;
-    for (const tower of getVideoTowerObjects()) {
-        const distance = measureTowerDistance(drone, tower);
-        const limit = Math.min(maxDistance, getTowerConnectionRadius(tower));
-        if (distance <= limit && distance < bestDistance) {
-            bestTower = tower;
-            bestDistance = distance;
-        }
-    }
-    return bestTower ? { tower: bestTower, distance: bestDistance } : null;
-}
-
-function resolveConnectedCameraFeed(droneId: string): ResolvedCameraFeed | null {
-    const connection = cameraConnectionsByDrone[droneId];
-    if (!connection) return null;
-
-    const drone = getDroneOrDefault(droneId);
-    if (!drone) {
-        delete cameraConnectionsByDrone[droneId];
-        return null;
-    }
-
-    if (!connection.towerId) {
-        return {
-            drone,
-            tower: null,
-            distance: null,
-            connection
-        };
-    }
-
-    const tower = getVideoTowerObjects().find((obj) => obj.uuid === connection.towerId);
-    if (!tower) {
-        delete cameraConnectionsByDrone[droneId];
-        return null;
-    }
-
-    const distance = measureTowerDistance(drone, tower);
-    if (distance > Math.max(getTowerConnectionRadius(tower), VIDEO_TOWER_STREAM_MAX_DISTANCE)) {
-        if (connection.mode === 'video-tower') {
-            // Keep the logical camera session alive and fall back to direct FPV.
-            connection.towerId = null;
-            connection.mode = 'fpv-direct';
-            return {
-                drone,
-                tower: null,
-                distance: null,
-                connection
-            };
-        }
-        delete cameraConnectionsByDrone[droneId];
-        return null;
-    }
-
-    return { tower, drone, distance, connection };
-}
-
-function encodeFramePayload(payload: Record<string, unknown>) {
-    const encoded = new TextEncoder().encode(JSON.stringify(payload));
-    return Array.from(encoded);
-}
-
-function getRendererCanvas(): HTMLCanvasElement | null {
-    const canvas = mainRenderer?.domElement;
-    if (canvas instanceof HTMLCanvasElement) return canvas;
-    return document.querySelector('#canvas-container canvas');
-}
-
-function syncCaptureRendererSize(renderer: WebGLRenderer) {
-    const sourceCanvas = getRendererCanvas();
-    const width = Math.max(1, sourceCanvas?.width || sourceCanvas?.clientWidth || 640);
-    const height = Math.max(1, sourceCanvas?.height || sourceCanvas?.clientHeight || 360);
-    renderer.setSize(width, height, false);
-}
-
-function ensureCaptureRenderer() {
-    if (captureRenderer) {
-        syncCaptureRendererSize(captureRenderer);
-        return captureRenderer;
-    }
-
-    const canvas = document.createElement('canvas');
-    captureRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
-    captureRenderer.shadowMap.enabled = true;
-    captureRenderer.outputColorSpace = THREE.SRGBColorSpace;
-    captureRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-    captureRenderer.toneMappingExposure = 1.18;
-    syncCaptureRendererSize(captureRenderer);
-    return captureRenderer;
-}
-
-function getDroneFpvCamera(droneId: string): PerspectiveCamera | null {
-    const mesh = droneMeshes[droneId];
-    if (!mesh) return null;
-    return mesh.getObjectByName('fpv_camera') as PerspectiveCamera | null;
-}
-
-function renderDroneFpvFrame(droneId: string): HTMLCanvasElement | null {
-    const renderer = ensureCaptureRenderer();
-    const fpvCamera = getDroneFpvCamera(droneId);
-    const droneMesh = droneMeshes[droneId];
-    if (!renderer || !scene || !fpvCamera || !droneMesh) {
-        return null;
-    }
-
-    syncCaptureRendererSize(renderer);
-    const canvas = renderer.domElement;
-    fpvCamera.aspect = Math.max(1, canvas.width) / Math.max(1, canvas.height);
-    fpvCamera.updateProjectionMatrix();
-
-    droneMesh.updateMatrixWorld(true);
-    scene.updateMatrixWorld(true);
-
-    const previousVisibility = droneMesh.visible;
-    droneMesh.visible = false;
-    try {
-        renderer.render(scene, fpvCamera);
-    } finally {
-        droneMesh.visible = previousVisibility;
-    }
-    return canvas;
-}
 
 export function closeDroneCameraConnection(id: string) {
     delete cameraConnectionsByDrone[id];
@@ -316,28 +133,6 @@ export function getDroneCameraCvFrame(id: string) {
 }
 
 export function captureDroneCameraFrameDataUrl(id: string) {
-    const resolved = resolveConnectedCameraFeed(id);
-    // #region debug-point E:camera-frame-capture-entry
-    fetch('http://127.0.0.1:7778/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'camera-udp-timeout', runId: 'pre-fix', hypothesisId: 'E', location: 'public/modules/python/pioneer-js-bridge-camera.ts:captureDroneCameraFrameDataUrl', msg: '[DEBUG] Camera frame capture entry', data: { droneId: id, hasResolvedFeed: Boolean(resolved) }, ts: Date.now() }) }).catch(() => undefined);
-    // #endregion
-    if (!resolved) return null;
-    const canvas = renderDroneFpvFrame(id);
-    if (!canvas) {
-        reportCameraBridgeDebug('H5', 'FPV frame capture failed because render dependencies are unavailable', {
-            droneId: id,
-            hasScene: Boolean(scene),
-            hasMesh: Boolean(droneMeshes[id]),
-            hasFpvCamera: Boolean(getDroneFpvCamera(id))
-        });
-        // #region debug-point E:camera-frame-capture-failed
-        fetch('http://127.0.0.1:7778/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'camera-udp-timeout', runId: 'pre-fix', hypothesisId: 'E', location: 'public/modules/python/pioneer-js-bridge-camera.ts:captureDroneCameraFrameDataUrl', msg: '[DEBUG] Camera frame capture failed', data: { droneId: id, hasScene: Boolean(scene), hasMesh: Boolean(droneMeshes[id]), hasFpvCamera: Boolean(getDroneFpvCamera(id)) }, ts: Date.now() }) }).catch(() => undefined);
-        // #endregion
-        return null;
-    }
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
-    // #region debug-point E:camera-frame-capture-success
-    fetch('http://127.0.0.1:7778/event', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: 'camera-udp-timeout', runId: 'pre-fix', hypothesisId: 'E', location: 'public/modules/python/pioneer-js-bridge-camera.ts:captureDroneCameraFrameDataUrl', msg: '[DEBUG] Camera frame capture success', data: { droneId: id, dataUrlLength: dataUrl.length }, ts: Date.now() }) }).catch(() => undefined);
-    // #endregion
-    return dataUrl;
+    return captureDroneCameraFrameImageDataUrl(id);
 }
 
