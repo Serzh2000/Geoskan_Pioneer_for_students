@@ -1,0 +1,41 @@
+name: web-simulator CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'personal/lessons/code/lua/web-simulator/**'
+      - '.github/workflows/web-simulator-ci.yml'
+  pull_request:
+    paths:
+      - 'personal/lessons/code/lua/web-simulator/**'
+      - '.github/workflows/web-simulator-ci.yml'
+
+defaults:
+  run:
+    working-directory: personal/lessons/code/lua/web-simulator
+
+jobs:
+  check:
+    name: type-check, lint, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: personal/lessons/code/lua/web-simulator/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
