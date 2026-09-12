@@ -28,5 +28,11 @@ export default [
           "no-unused-vars": "off",
           "no-empty": "off"
       }
+  },
+  {
+      files: ["**/*.cjs"],
+      rules: {
+          "@typescript-eslint/no-require-imports": "off"
+      }
   }
 ];

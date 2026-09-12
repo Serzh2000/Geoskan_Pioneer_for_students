@@ -80,8 +80,8 @@ function updateManualFlight(simState: DroneState, dt: number, getObstacles: Obst
     const throttleCentered = config.manual.throttleMode === 0 ? throttleInput : Math.max(0, Math.min(1, (throttleInput - 0.5) * 2));
     const throttle = Math.max(0, Math.min(1, throttleCentered));
 
-    let maxBodySpeed = PHYSICS_TUNING.STABILIZE_MAX_BODY_SPEED;
-    let maxClimbRate = PHYSICS_TUNING.STABILIZE_MAX_CLIMB_RATE;
+    let maxBodySpeed: number;
+    let maxClimbRate: number;
     let bodyAccel = PHYSICS_TUNING.STABILIZE_BODY_ACCEL;
     let targetTiltLimit = PHYSICS_TUNING.STABILIZE_MAX_TILT;
 
