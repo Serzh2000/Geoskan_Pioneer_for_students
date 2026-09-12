@@ -224,9 +224,6 @@ export function initScene(container: HTMLElement) {
     selectionHelper.renderOrder = 9999;
     scene.add(selectionHelper);
     (window as any).selectionHelper = selectionHelper;
-    (window as any).scene = scene;
-    (window as any).camera = camera;
-    (window as any).controls = controls;
 
     setupEnvironment(scene);
 

@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+let lastCameraMode: string | null = null;
+
 function syncOrbitControlsFromCamera(camera: THREE.PerspectiveCamera, controls: any) {
     if (!controls) return;
     const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
@@ -75,7 +77,7 @@ export function updateCamera(camera: THREE.PerspectiveCamera, droneMesh: THREE.O
         if (controls) {
             // При переходе в свободный режим ставим камеру слева относительно прежнего
             // ракурса так, чтобы она смотрела вдоль оси Y на текущий объект.
-            if ((window as any).lastCameraMode !== 'free') {
+            if (lastCameraMode !== 'free') {
                 const targetPos = droneMesh.position.clone();
                 controls.target.copy(droneMesh.position);
                 camera.position.copy(targetPos.add(new THREE.Vector3(0, -9, 6)));
@@ -87,5 +89,5 @@ export function updateCamera(camera: THREE.PerspectiveCamera, droneMesh: THREE.O
         }
     }
     
-    (window as any).lastCameraMode = mode;
+    lastCameraMode = mode;
 }

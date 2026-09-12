@@ -162,7 +162,7 @@ export function mountMissionGuideScenePreview(): void {
     }
     (window as any).setCameraMode?.('free');
     debugPreviewZoom(
-        `preview mounted previousMode=${String(originalCameraMode)} currentMode=${String((window as any).cameraMode)} controlsEnabled=${String((window as any).controls?.enabled)} canvas=${String(Boolean(sceneContainer.querySelector('#canvas-container')))} sceneParent=guide-preview`,
+        `preview mounted previousMode=${String(originalCameraMode)} currentMode=${String((window as any).cameraMode)} controlsEnabled=${String(controls?.enabled)} canvas=${String(Boolean(sceneContainer.querySelector('#canvas-container')))} sceneParent=guide-preview`,
         true
     );
 
@@ -180,7 +180,7 @@ export function restoreMissionGuideScenePreview(): void {
         (window as any).setCameraMode?.(originalCameraMode);
     }
     debugPreviewZoom(
-        `preview restored mode=${String((window as any).cameraMode)} controlsEnabled=${String((window as any).controls?.enabled)}`,
+        `preview restored mode=${String((window as any).cameraMode)} controlsEnabled=${String(controls?.enabled)}`,
         true
     );
     originalCameraMode = null;

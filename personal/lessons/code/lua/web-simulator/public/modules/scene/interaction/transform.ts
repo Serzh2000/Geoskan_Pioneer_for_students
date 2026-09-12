@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { drones } from '../../core/state.js';
-import { droneMeshes, selectedObject, transformControl, controls } from '../core/scene-init.js';
+import { droneMeshes, selectedObject, transformControl, controls, selectionHelper } from '../core/scene-init.js';
 import { envGroup } from '../../environment/index.js';
 import { snapMarkerToSurface } from '../../environment/obstacles.js';
 import { AXIS_COLORS } from '../core/transform-controls-style-helpers.js';
@@ -129,7 +129,7 @@ export function updateTransformModeDecorations(mode: 'translate' | 'rotate' | 's
 
 export function setupTransformControlListeners() {
     transformControl.addEventListener('change', () => {
-        if ((window as any).selectionHelper) (window as any).selectionHelper.update();
+        if (selectionHelper) selectionHelper.update();
         syncRotationGuide();
         
         if (selectedObject) {

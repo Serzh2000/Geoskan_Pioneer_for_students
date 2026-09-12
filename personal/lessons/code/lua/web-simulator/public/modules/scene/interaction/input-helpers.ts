@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { log } from '../../shared/logging/logger.js';
 import { envGroup } from '../../environment/index.js';
-import { droneMeshes, raycaster } from '../core/scene-init.js';
+import { droneMeshes, raycaster, scene } from '../core/scene-init.js';
 
 const groundPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 const CLICK_TRACE_PREFIX = '[3D-CLICK]';
@@ -15,7 +15,7 @@ export function traceClick(message: string, level: 'info' | 'warn' = 'info') {
 
 export function getRootSceneObject(object: THREE.Object3D) {
     let current: THREE.Object3D | null = object;
-    while (current?.parent && current.parent !== (window as any).scene && current.parent !== envGroup) {
+    while (current?.parent && current.parent !== scene && current.parent !== envGroup) {
         current = current.parent;
     }
     return current || object;
@@ -57,7 +57,7 @@ export function collectPointerTargets() {
             if (child.visible) targets.push(child);
         }
     }
-    const ground = (window as any).scene ? (window as any).scene.getObjectByName('Ground') : null;
+    const ground = scene ? scene.getObjectByName('Ground') : null;
     if (ground) targets.push(ground);
     return targets;
 }

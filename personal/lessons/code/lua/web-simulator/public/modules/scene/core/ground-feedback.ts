@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { log } from '../../shared/logging/logger.js';
+import { scene } from './scene-init.js';
 
 function createGroundPointLabel(text: string) {
     const canvas = document.createElement('canvas');
@@ -45,11 +46,11 @@ export function showGroundPoint(point: THREE.Vector3) {
     const marker = new THREE.Mesh(markerGeom, markerMat);
     marker.position.copy(point);
     marker.renderOrder = 9500;
-    (window as any).scene.add(marker);
+    scene.add(marker);
 
     const { sprite, texture, material } = createGroundPointLabel(labelText);
     sprite.position.copy(point).add(new THREE.Vector3(0, 0, 0.45));
-    (window as any).scene.add(sprite);
+    scene.add(sprite);
 
     const startedAt = performance.now();
     const visibleMs = 5000;

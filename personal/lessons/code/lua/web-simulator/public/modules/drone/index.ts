@@ -20,10 +20,6 @@ import { explodeDrone, resetDroneVisuals, updateDebrisVisuals } from './crash-vi
 import { registerScenePointerHandlers, handleSceneKeyDown } from './scene-events.js';
 import { initTrailForDrone, disposeTrailForDrone, updateTrailForDrone } from './trails.js';
 
-(window as any).scene = scene;
-(window as any).camera = camera;
-(window as any).setSelectedObject = setSelectedObject;
-
 export { is3DActive, selectedObject, droneMeshes, envGroup, scene };
 export { 
     addObject, deleteSelectedObject, duplicateObject, resetDroneToOrigin,

@@ -3,6 +3,8 @@ import {
     controls,
     focusOrbitControlsOnObject,
     selectedObject,
+    selectionHelper,
+    setSelectedObject,
     transformControl
 } from '../core/scene-init.js';
 import { simState } from '../../core/state.js';
@@ -78,9 +80,9 @@ export function updateObjectSelectionVisuals(obj: THREE.Object3D, selected: bool
         }
     });
 
-    if (selected && (window as any).selectionHelper) {
-        (window as any).selectionHelper.setFromObject(obj);
-        (window as any).selectionHelper.visible = true;
+    if (selected && selectionHelper) {
+        selectionHelper.setFromObject(obj);
+        selectionHelper.visible = true;
     }
 }
 
@@ -91,7 +93,7 @@ export function handleSelection(obj: THREE.Object3D | null, x: number, y: number
     if (selectedObject && !isSameObject) deselectObject();
     if (obj && !isSameObject) rememberSelectedObjectInitialTransform(obj);
 
-    (window as any).setSelectedObject(obj);
+    setSelectedObject(obj);
     if (obj) updateObjectSelectionVisuals(obj, true);
     if (focusCamera && obj) focusOrbitControlsOnObject(obj);
 
