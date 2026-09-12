@@ -268,9 +268,6 @@ function startLocalPythonRun(droneId: string, code: string, projectRoot: string,
 
 export function registerPythonRuntimeRoutes(app: express.Express, projectRoot: string): void {
     app.post('/api/python-runtime/run', (req: express.Request, res: express.Response) => {
-        // #region debug-point C:python-runtime-run-route
-        void import('node:fs').then((fs) => { let u = 'http://127.0.0.1:7777/event', s = 'camera-mavlink-reset'; try { const e = fs.readFileSync('.dbg/camera-mavlink-reset.env', 'utf8'); u = e.match(/DEBUG_SERVER_URL=(.+)/)?.[1] || u; s = e.match(/DEBUG_SESSION_ID=(.+)/)?.[1] || s; } catch {} return fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: s, runId: 'pre-fix', hypothesisId: 'C', location: 'server/python-runtime.ts:run', msg: '[DEBUG] local python runtime route hit', data: { droneId: req.body?.droneId ?? null, codeSize: typeof req.body?.code === 'string' ? req.body.code.length : null, hasConfig: Boolean(req.body?.config) }, ts: Date.now() }) }).catch(() => undefined); });
-        // #endregion
         const droneId = typeof req.body?.droneId === 'string' ? req.body.droneId.trim() : '';
         const code = typeof req.body?.code === 'string' ? req.body.code : '';
         const config = (req.body?.config ?? null) as PioneerConnectionConfig | null;
