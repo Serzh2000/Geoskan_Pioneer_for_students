@@ -520,28 +520,28 @@ luaGenerator.forBlock['lua_get_autopilot_state'] = () => '-- TODO: get_autopilot
 Blockly.Blocks['lua_get_time_alias'] = Blockly.Blocks['lua_get_time'];
 luaGenerator.forBlock['lua_get_time_alias'] = luaGenerator.forBlock['lua_get_time'];
 
-// Алиас print (уже есть lua_print, но нужен алиас)
-Blockly.Blocks['lua_print_alias'] = Blockly.Blocks['lua_print'];
-luaGenerator.forBlock['lua_print_alias'] = luaGenerator.forBlock['lua_print'];
-
 // Алиас sleep (уже есть lua_sleep, но нужен алиас)
 Blockly.Blocks['lua_time_sleep'] = Blockly.Blocks['lua_sleep'];
 luaGenerator.forBlock['lua_time_sleep'] = luaGenerator.forBlock['lua_sleep'];
-
-// Алиасы переменных
-Blockly.Blocks['lua_variables_set_alias'] = Blockly.Blocks['lua_variables_set'];
-luaGenerator.forBlock['lua_variables_set_alias'] = luaGenerator.forBlock['lua_variables_set'];
-
-Blockly.Blocks['lua_variables_get_alias'] = Blockly.Blocks['lua_variables_get'];
-luaGenerator.forBlock['lua_variables_get_alias'] = luaGenerator.forBlock['lua_variables_get'];
 
 // ============================================================================
 // ЭКСПОРТ ФУНКЦИИ РЕГИСТРАЦИИ (для использования в index.ts)
 // ============================================================================
 
 export function registerLuaEditorBlocklyDefinitions(): void {
-    // Все блоки уже зарегистрированы выше через Blockly.Blocks[...]
-    // Эта функция нужна для явного вызова из index.ts
+    // Большинство блоков уже зарегистрировано выше через Blockly.Blocks[...],
+    // на момент импорта этого модуля. Но lua_print/lua_variables_set/lua_variables_get
+    // регистрируются лениво, внутри initBlocklyDefinitions() (mission-guide/blockly-core),
+    // которая вызывается только здесь, из index.ts — до этого момента их ещё нет.
+    // Поэтому алиасы к ним нельзя создавать на верхнем уровне модуля, только здесь.
+    Blockly.Blocks['lua_print_alias'] = Blockly.Blocks['lua_print'];
+    luaGenerator.forBlock['lua_print_alias'] = luaGenerator.forBlock['lua_print'];
+
+    Blockly.Blocks['lua_variables_set_alias'] = Blockly.Blocks['lua_variables_set'];
+    luaGenerator.forBlock['lua_variables_set_alias'] = luaGenerator.forBlock['lua_variables_set'];
+
+    Blockly.Blocks['lua_variables_get_alias'] = Blockly.Blocks['lua_variables_get'];
+    luaGenerator.forBlock['lua_variables_get_alias'] = luaGenerator.forBlock['lua_variables_get'];
 }
 
 // Список всех типов Lua-блоков для тестов и валидации

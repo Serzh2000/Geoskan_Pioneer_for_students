@@ -555,13 +555,6 @@ export function registerPythonBlocklyDefinitions(): void {
     };
     pythonGenerator.forBlock['py_get_autopilot_state'] = () => ['pioneer.get_autopilot_state()', 0];
 
-    // py_wait_point_reached & py_point_reached
-    Blockly.Blocks['py_wait_point_reached'] = Blockly.Blocks['waiting_for_point'];
-    pythonGenerator.forBlock['py_wait_point_reached'] = pythonGenerator.forBlock['waiting_for_point'];
-
-    Blockly.Blocks['py_point_reached'] = Blockly.Blocks['point_reached'];
-    pythonGenerator.forBlock['py_point_reached'] = pythonGenerator.forBlock['point_reached'];
-
     // py_get_time
     Blockly.Blocks['py_get_time'] = Blockly.Blocks['get_time'];
     pythonGenerator.forBlock['py_get_time'] = pythonGenerator.forBlock['get_time'];
@@ -642,8 +635,17 @@ export function registerPythonBlocklyDefinitions(): void {
         }
     };
     pythonGenerator.forBlock['py_variables_get'] = (block: any) => {
-        const varName = block.getFieldValue('VAR');
+        const varName = pythonGenerator.getVariableName(block.getFieldValue('VAR'));
         return [varName, 0];
     };
     registerPioneerSdk2Definitions();
+
+    // py_wait_point_reached — алиас на waiting_for_point, которое registerPioneerSdk2Definitions()
+    // выше только что переопределила (у неё своя, более новая версия с time.sleep вместо pass).
+    // Алиас должен копироваться ПОСЛЕ этого переопределения, иначе застрянет на старой реализации.
+    Blockly.Blocks['py_wait_point_reached'] = Blockly.Blocks['waiting_for_point'];
+    pythonGenerator.forBlock['py_wait_point_reached'] = pythonGenerator.forBlock['waiting_for_point'];
+
+    Blockly.Blocks['py_point_reached'] = Blockly.Blocks['point_reached'];
+    pythonGenerator.forBlock['py_point_reached'] = pythonGenerator.forBlock['point_reached'];
 }

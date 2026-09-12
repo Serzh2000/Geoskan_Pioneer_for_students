@@ -347,7 +347,7 @@ export function registerLuaBlocklyDefinitions(): void {
         }
     };
     luaGenerator.forBlock.lua_variables_set = (block: any) => {
-        const varName = block.getFieldValue('VAR');
+        const varName = luaGenerator.getVariableName(block.getFieldValue('VAR'));
         const valueCode = luaGenerator.valueToCode(block, 'VALUE', 2) || '';
         return `${varName} = ${valueCode}\n`;
     };

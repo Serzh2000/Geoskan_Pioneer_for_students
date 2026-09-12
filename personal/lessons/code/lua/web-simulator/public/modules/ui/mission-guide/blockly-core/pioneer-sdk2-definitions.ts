@@ -54,7 +54,7 @@ export function registerPioneerSdk2Definitions(): void {
     statement('take_off', 'Взлет', FLIGHT, 'pioneer.takeoff()');
     statement('landing', 'Посадка', FLIGHT, 'pioneer.land()');
     statement('engines_disarm', 'Заглушить двигатели', FLIGHT, 'pioneer.disarm()');
-    statement('waiting_for_point', 'Ожидать достижения точки', FLIGHT, 'while not pioneer.point_reached():\n    pass');
+    statement('waiting_for_point', 'Ожидать достижения точки', FLIGHT, 'while not pioneer.point_reached():\n    time.sleep(0.05)');
 
     Blockly.Blocks.start_block = {
         init() {
@@ -135,7 +135,7 @@ export function registerPioneerSdk2Definitions(): void {
     };
     pythonGenerator.forBlock.update_yaw = (block) => `pioneer.set_yaw(${value(block, 'YAW')})\n`;
 
-    getter('not_point_reached', 'Достигнута точка', 'Boolean', FLIGHT, 'pioneer.point_reached()');
+    getter('not_point_reached', 'Достигнута точка', 'Boolean', FLIGHT, 'not pioneer.point_reached()');
     getter('get_dist_sensor_data', 'Получить данные от датчика расстояния', 'Number', SENSOR, 'pioneer.get_dist_sensor_data()');
     getter('get_local_position_lps', 'Получить текущие локальные координаты дрона', 'Point3D', SENSOR, 'pioneer.get_local_position_lps()');
     getter('get_local_velocity_lps', 'Получить текущие скорости дрона в локальной системе координат', 'Velocity3D', SENSOR, 'pioneer.get_local_velocity_lps()');
