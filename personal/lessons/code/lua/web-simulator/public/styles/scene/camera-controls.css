@@ -5,8 +5,8 @@
 /* CAMERA CONTROLS POLISH */
 .camera-controls {
     position: absolute;
-    bottom: 18px;
-    left: 18px;
+    bottom: var(--panel-pad-x);
+    left: var(--panel-pad-x);
     display: flex;
     gap: 4px;
     background: rgba(255, 255, 255, 0.94);

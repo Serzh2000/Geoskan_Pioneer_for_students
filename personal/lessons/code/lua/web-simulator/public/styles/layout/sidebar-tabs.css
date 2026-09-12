@@ -1,29 +1,30 @@
 /*
  * Боковые вкладки.
  * Файл выделен из `public/style.css` при декомпозиции общего CSS.
+ * Размеры подчиняются единой системе дизайна (токены --rail-* в core/base.css).
  */
 /* SIDEBAR TABS */
 .sidebar-tabs {
-    width: 60px;
+    width: var(--rail-width);
     background: #f7f8fa;
     border-right: 1px solid rgba(9, 9, 11, 0.08);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    padding: 12px 0 14px;
+    gap: var(--panel-gap-sm);
+    padding: var(--panel-gap-sm) 0;
     z-index: 100;
     flex-shrink: 0;
 }
 
 .sidebar-tab-btn {
     position: relative;
-    width: 42px;
-    height: 42px;
+    width: var(--rail-btn-size);
+    height: var(--rail-btn-size);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
+    border-radius: var(--panel-radius-inner);
     cursor: pointer;
     color: #667085;
     transition:
@@ -66,4 +67,3 @@
 .sidebar-tabs__spacer {
     flex: 1 1 auto;
 }
-

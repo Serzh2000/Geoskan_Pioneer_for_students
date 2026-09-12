@@ -7,16 +7,45 @@ import type { ActionAuxChannelKey, ChannelKey, ObservedInputPosition, ObservedIn
 export { renderAuxRangeEditors } from './rendering/aux-ranges.js';
 import { renderAuxRangeEditors } from './rendering/aux-ranges.js';
 
+function setTextIfChanged(element: HTMLElement | null, value: string): void {
+    if (element && element.textContent !== value) {
+        element.textContent = value;
+    }
+}
+
+function setDisabledIfChanged(
+    element: HTMLButtonElement | HTMLInputElement | HTMLSelectElement | null,
+    disabled: boolean
+): void {
+    if (element && element.disabled !== disabled) {
+        element.disabled = disabled;
+    }
+}
+
+function setClassPresence(element: HTMLElement | null, className: string, enabled: boolean): void {
+    if (!element) return;
+    const hasClass = element.classList.contains(className);
+    if (hasClass !== enabled) {
+        element.classList.toggle(className, enabled);
+    }
+}
+
+function setStyleIfChanged(element: HTMLElement | null, property: 'left' | 'width' | 'color', value: string): void {
+    if (element && element.style[property] !== value) {
+        element.style[property] = value;
+    }
+}
+
 export function renderChannelValue(dom: SettingsDomRefs, key: ChannelKey, value: number): void {
     const el = dom.valueEls[key];
-    if (el) el.textContent = String(value);
+    setTextIfChanged(el, String(value));
 }
 
 export function renderAutoStatus(dom: SettingsDomRefs, state: SettingsRuntimeState): void {
     if (!dom.autoStatusEl) return;
-    dom.autoStatusEl.textContent = state.autoStatusText;
-    dom.autoStatusEl.classList.toggle('is-listening', state.autoStatusMode === 'listening');
-    dom.autoStatusEl.classList.toggle('is-success', state.autoStatusMode === 'success');
+    setTextIfChanged(dom.autoStatusEl, state.autoStatusText);
+    setClassPresence(dom.autoStatusEl, 'is-listening', state.autoStatusMode === 'listening');
+    setClassPresence(dom.autoStatusEl, 'is-success', state.autoStatusMode === 'success');
 }
 
 export function renderAutoButtons(dom: SettingsDomRefs, state: SettingsRuntimeState, allowAssignment: boolean): void {
@@ -24,9 +53,9 @@ export function renderAutoButtons(dom: SettingsDomRefs, state: SettingsRuntimeSt
         const button = dom.autoButtons[key];
         if (!button) continue;
         const listening = state.autoDetectState?.channel === key;
-        button.textContent = listening ? '\u0416\u0434\u0443' : '\u0410\u0432\u0442\u043e';
-        button.classList.toggle('is-listening', listening);
-        button.disabled = !allowAssignment;
+        setTextIfChanged(button, listening ? '\u0416\u0434\u0443' : '\u0410\u0432\u0442\u043e');
+        setClassPresence(button, 'is-listening', listening);
+        setDisabledIfChanged(button, !allowAssignment);
     }
 }
 
@@ -79,22 +108,22 @@ export function renderChannelDataState(dom: SettingsDomRefs, state: SettingsRunt
     if (!dom.channelDataStatusEl) return;
 
     if (!simSettings.gamepadConnected) {
-        dom.channelDataStatusEl.textContent = '\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u0435 \u043f\u0443\u043b\u044c\u0442, \u0447\u0442\u043e\u0431\u044b \u043e\u0442\u043a\u0440\u044b\u0442\u044c \u043a\u0430\u043d\u0430\u043b\u044b.';
-        dom.channelDataStatusEl.classList.remove('is-ready');
-        dom.channelDataStatusEl.classList.add('is-waiting');
+        setTextIfChanged(dom.channelDataStatusEl, '\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u0442\u0435 \u043f\u0443\u043b\u044c\u0442, \u0447\u0442\u043e\u0431\u044b \u043e\u0442\u043a\u0440\u044b\u0442\u044c \u043a\u0430\u043d\u0430\u043b\u044b.');
+        setClassPresence(dom.channelDataStatusEl, 'is-ready', false);
+        setClassPresence(dom.channelDataStatusEl, 'is-waiting', true);
         return;
     }
 
     if (!state.activeGamepadHasChannelData) {
-        dom.channelDataStatusEl.textContent = '\u0416\u0434\u0443 \u043f\u0435\u0440\u0432\u044b\u0435 \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f \u043e\u0442 \u0442\u0435\u043a\u0443\u0449\u0435\u0433\u043e \u043f\u0443\u043b\u044c\u0442\u0430.';
-        dom.channelDataStatusEl.classList.remove('is-ready');
-        dom.channelDataStatusEl.classList.add('is-waiting');
+        setTextIfChanged(dom.channelDataStatusEl, '\u0416\u0434\u0443 \u043f\u0435\u0440\u0432\u044b\u0435 \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f \u043e\u0442 \u0442\u0435\u043a\u0443\u0449\u0435\u0433\u043e \u043f\u0443\u043b\u044c\u0442\u0430.');
+        setClassPresence(dom.channelDataStatusEl, 'is-ready', false);
+        setClassPresence(dom.channelDataStatusEl, 'is-waiting', true);
         return;
     }
 
-    dom.channelDataStatusEl.textContent = '\u0421\u0438\u0433\u043d\u0430\u043b \u043f\u043e\u043b\u0443\u0447\u0435\u043d, \u043c\u043e\u0436\u043d\u043e \u043d\u0430\u0437\u043d\u0430\u0447\u0430\u0442\u044c \u043a\u0430\u043d\u0430\u043b\u044b.';
-    dom.channelDataStatusEl.classList.remove('is-waiting');
-    dom.channelDataStatusEl.classList.add('is-ready');
+    setTextIfChanged(dom.channelDataStatusEl, '\u0421\u0438\u0433\u043d\u0430\u043b \u043f\u043e\u043b\u0443\u0447\u0435\u043d, \u043c\u043e\u0436\u043d\u043e \u043d\u0430\u0437\u043d\u0430\u0447\u0430\u0442\u044c \u043a\u0430\u043d\u0430\u043b\u044b.');
+    setClassPresence(dom.channelDataStatusEl, 'is-waiting', false);
+    setClassPresence(dom.channelDataStatusEl, 'is-ready', true);
 }
 
 export function renderMappingControlsState(dom: SettingsDomRefs, state: SettingsRuntimeState): void {
@@ -102,7 +131,7 @@ export function renderMappingControlsState(dom: SettingsDomRefs, state: Settings
     for (const key of ALL_CHANNELS) {
         const select = dom.mappingSelects[key];
         if (!select) continue;
-        select.disabled = !allowAssignment || select.options.length === 0;
+        setDisabledIfChanged(select, !allowAssignment || select.options.length === 0);
     }
     renderAutoButtons(dom, state, allowAssignment);
 }
@@ -115,17 +144,17 @@ export function renderModeMeta(
 ): void {
     if (!dom.modeMetaEl) return;
     if (!simSettings.gamepadConnected) {
-        dom.modeMetaEl.textContent = '\u041f\u0443\u043b\u044c\u0442 \u043d\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d.';
+        setTextIfChanged(dom.modeMetaEl, '\u041f\u0443\u043b\u044c\u0442 \u043d\u0435 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d.');
         return;
     }
     if (!state.activeGamepadHasChannelData) {
-        dom.modeMetaEl.textContent = '\u0416\u0434\u0443 \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f \u043a\u0430\u043d\u0430\u043b\u0430 \u0440\u0435\u0436\u0438\u043c\u0430.';
+        setTextIfChanged(dom.modeMetaEl, '\u0416\u0434\u0443 \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f \u043a\u0430\u043d\u0430\u043b\u0430 \u0440\u0435\u0436\u0438\u043c\u0430.');
         return;
     }
 
     const positions = getModePositions();
     if (positions.length === 0) {
-        dom.modeMetaEl.textContent = '\u0412\u043e \u0432\u0440\u0435\u043c\u044f \u043a\u0430\u043b\u0438\u0431\u0440\u043e\u0432\u043a\u0438 \u043f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0438\u0442\u0435 \u0432\u0441\u0435 \u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u044f \u0442\u0443\u043c\u0431\u043b\u0435\u0440\u0430.';
+        setTextIfChanged(dom.modeMetaEl, '\u0412\u043e \u0432\u0440\u0435\u043c\u044f \u043a\u0430\u043b\u0438\u0431\u0440\u043e\u0432\u043a\u0438 \u043f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0438\u0442\u0435 \u0432\u0441\u0435 \u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u044f \u0442\u0443\u043c\u0431\u043b\u0435\u0440\u0430.');
         return;
     }
 
@@ -133,7 +162,7 @@ export function renderModeMeta(
     const description = positions
         .map((position, index) => `${labels[index] ?? `P${index + 1}`}: ${position.centerRc}`)
         .join(' | ');
-    dom.modeMetaEl.textContent = `\u041f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u0439: ${positions.length}. ${description}. LIVE ${liveValue}.`;
+    setTextIfChanged(dom.modeMetaEl, `\u041f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u0439: ${positions.length}. ${description}. LIVE ${liveValue}.`);
 }
 
 export function updateBar(dom: SettingsDomRefs, key: PrimaryChannelKey, value: number): void {
@@ -141,17 +170,17 @@ export function updateBar(dom: SettingsDomRefs, key: PrimaryChannelKey, value: n
     if (!bar) return;
     if (key === 'throttle') {
         const percent = clamp((value - 1000) / 10, 0, 100);
-        bar.style.left = '0%';
-        bar.style.width = `${percent}%`;
+        setStyleIfChanged(bar, 'left', '0%');
+        setStyleIfChanged(bar, 'width', `${percent}%`);
         return;
     }
     const centered = clamp((value - 1500) / 10, -50, 50);
     if (centered >= 0) {
-        bar.style.left = '50%';
-        bar.style.width = `${centered}%`;
+        setStyleIfChanged(bar, 'left', '50%');
+        setStyleIfChanged(bar, 'width', `${centered}%`);
     } else {
-        bar.style.left = `${50 + centered}%`;
-        bar.style.width = `${Math.abs(centered)}%`;
+        setStyleIfChanged(bar, 'left', `${50 + centered}%`);
+        setStyleIfChanged(bar, 'width', `${Math.abs(centered)}%`);
     }
 }
 
@@ -188,14 +217,14 @@ export function renderCalibrationState(dom: SettingsDomRefs, state: SettingsRunt
         const remainingSeconds = state.isCalibrating
             ? Math.max(1, Math.ceil((CALIBRATION_DURATION_MS - (Date.now() - state.calibrationStartedAt)) / 1000))
             : 0;
-        dom.gpBtnCalibrate.textContent = state.isCalibrating
+        setTextIfChanged(dom.gpBtnCalibrate, state.isCalibrating
             ? `\u041a\u0410\u041b. ${remainingSeconds}\u0441`
-            : '\u041a\u0410\u041b\u0418\u0411\u0420\u041e\u0412\u041a\u0410';
-        dom.gpBtnCalibrate.style.color = state.isCalibrating ? '#f87171' : '';
-        dom.gpBtnCalibrate.disabled = !simSettings.gamepadConnected;
+            : '\u041a\u0410\u041b\u0418\u0411\u0420\u041e\u0412\u041a\u0410');
+        setStyleIfChanged(dom.gpBtnCalibrate, 'color', state.isCalibrating ? '#f87171' : '');
+        setDisabledIfChanged(dom.gpBtnCalibrate, !simSettings.gamepadConnected);
     }
     if (dom.gpBtnResetCal) {
-        dom.gpBtnResetCal.disabled = state.isCalibrating || !simSettings.gamepadCalibration.isCalibrated;
+        setDisabledIfChanged(dom.gpBtnResetCal, state.isCalibrating || !simSettings.gamepadCalibration.isCalibrated);
     }
 }
 

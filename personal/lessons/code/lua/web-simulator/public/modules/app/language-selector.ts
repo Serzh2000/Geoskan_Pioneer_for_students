@@ -6,6 +6,11 @@ import { getEditorValue, getSavedEditorDraft, setEditorLanguage, setEditorValue 
 
 const SCRIPT_LANGUAGE_STORAGE_KEY = 'geoskan_script_language_v1';
 
+function updateEditorPanelTitle(language: ScriptLanguage): void {
+    const title = document.querySelector('#editor-panel .panel-title');
+    if (title) title.textContent = `РЕДАКТОР ${language.toUpperCase()}`;
+}
+
 function getSavedScriptLanguage(): ScriptLanguage | null {
     if (typeof window === 'undefined') return null;
 
@@ -30,6 +35,7 @@ export function initScriptLanguageSelector(): void {
             getSavedEditorDraft(currentScriptLanguage) ||
             (currentScriptLanguage === 'lua' ? drone.script : drone.pythonScript);
         setEditorValue(initialCode);
+        updateEditorPanelTitle(currentScriptLanguage);
         renderApiDocs(currentScriptLanguage);
         renderMissionGuidePanel(currentScriptLanguage);
     }
@@ -51,6 +57,7 @@ export function initScriptLanguageSelector(): void {
         setEditorLanguage(lang);
         const code = getSavedEditorDraft(lang) || (lang === 'lua' ? selectedDrone.script : selectedDrone.pythonScript);
         setEditorValue(code);
+        updateEditorPanelTitle(lang);
         renderApiDocs(lang);
         renderMissionGuidePanel(lang);
         log(`Язык скрипта: ${lang.toUpperCase()}`, 'info');

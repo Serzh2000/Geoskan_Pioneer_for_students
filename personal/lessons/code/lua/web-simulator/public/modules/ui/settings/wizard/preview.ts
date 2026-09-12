@@ -5,6 +5,8 @@ import { getPrimaryChannelStickSlot, readRefNormalizedValue } from '../input/val
 import type { ChannelKey, PrimaryChannelKey } from '../types.js';
 import type { WizardStep } from './types.js';
 
+const PREVIEW_FRAME_INTERVAL_MS = 33;
+
 type PreviewResolvers = {
     getCurrentStep: () => WizardStep;
     getDetectedRef: (channel: ChannelKey) => GamepadInputRef | null;
@@ -18,11 +20,17 @@ export class WizardPreviewController {
     private camera: THREE.PerspectiveCamera | null = null;
     private drone: THREE.Group | null = null;
     private rotors: THREE.Object3D[] = [];
+    private viewportEl: HTMLElement | null = null;
+    private leftStickEl: HTMLElement | null = null;
+    private rightStickEl: HTMLElement | null = null;
+    private lastRenderAt = 0;
+    private lastLeftStickTransform = '';
+    private lastRightStickTransform = '';
 
     constructor(private readonly resolvers: PreviewResolvers) {}
 
     ensureScene(): void {
-        const viewport = document.getElementById('gp-wizard-drone-viewport');
+        const viewport = this.getViewportEl();
         if (!viewport || this.renderer) {
             this.syncSize();
             return;
@@ -67,7 +75,7 @@ export class WizardPreviewController {
     }
 
     syncSize(): void {
-        const viewport = document.getElementById('gp-wizard-drone-viewport');
+        const viewport = this.getViewportEl();
         if (!viewport || !this.renderer || !this.camera) return;
         const width = Math.max(180, viewport.clientWidth);
         const height = Math.max(180, viewport.clientHeight);
@@ -77,6 +85,16 @@ export class WizardPreviewController {
     }
 
     update(gp: Gamepad): void {
+        if (document.visibilityState === 'hidden') {
+            return;
+        }
+
+        const now = performance.now();
+        if (now - this.lastRenderAt < PREVIEW_FRAME_INTERVAL_MS) {
+            return;
+        }
+        this.lastRenderAt = now;
+
         this.ensureScene();
         if (!this.renderer || !this.scene || !this.camera || !this.drone) return;
 
@@ -117,6 +135,27 @@ export class WizardPreviewController {
         this.updateStickVisuals({ roll, pitch, yaw, throttle });
     }
 
+    private getViewportEl(): HTMLElement | null {
+        if (!this.viewportEl?.isConnected) {
+            this.viewportEl = document.getElementById('gp-wizard-drone-viewport');
+        }
+        return this.viewportEl;
+    }
+
+    private getLeftStickEl(): HTMLElement | null {
+        if (!this.leftStickEl?.isConnected) {
+            this.leftStickEl = document.getElementById('gp-wizard-stick-left');
+        }
+        return this.leftStickEl;
+    }
+
+    private getRightStickEl(): HTMLElement | null {
+        if (!this.rightStickEl?.isConnected) {
+            this.rightStickEl = document.getElementById('gp-wizard-stick-right');
+        }
+        return this.rightStickEl;
+    }
+
     private getCenteredPreviewValue(gp: Gamepad, channel: PrimaryChannelKey, liveOverride: GamepadInputRef | null): number {
         const ref = liveOverride ?? this.resolvers.getPreviewRef(channel);
         if (!ref) return 0;
@@ -130,8 +169,8 @@ export class WizardPreviewController {
     }
 
     private updateStickVisuals(values: { roll: number; pitch: number; yaw: number; throttle: number }): void {
-        const leftStick = document.getElementById('gp-wizard-stick-left');
-        const rightStick = document.getElementById('gp-wizard-stick-right');
+        const leftStick = this.getLeftStickEl();
+        const rightStick = this.getRightStickEl();
         if (!leftStick || !rightStick) return;
 
         const slots = {
@@ -165,7 +204,17 @@ export class WizardPreviewController {
         else if (slots.throttle === 'left-y') leftY = (0.5 - values.throttle) * 70;
         else if (slots.throttle === 'right-y') rightY = (0.5 - values.throttle) * 70;
 
-        leftStick.style.transform = `translate(${leftX}px, ${leftY}px)`;
-        rightStick.style.transform = `translate(${rightX}px, ${rightY}px)`;
+        const leftTransform = `translate(${leftX}px, ${leftY}px)`;
+        const rightTransform = `translate(${rightX}px, ${rightY}px)`;
+
+        if (this.lastLeftStickTransform !== leftTransform) {
+            leftStick.style.transform = leftTransform;
+            this.lastLeftStickTransform = leftTransform;
+        }
+
+        if (this.lastRightStickTransform !== rightTransform) {
+            rightStick.style.transform = rightTransform;
+            this.lastRightStickTransform = rightTransform;
+        }
     }
 }

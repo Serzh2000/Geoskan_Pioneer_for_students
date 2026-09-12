@@ -31,6 +31,9 @@ export type RcPreviewValues = {
 
 const lastRawInputs = new Map<string, number>();
 let lastActivityAt = 0;
+let rcSettingsPanelEl: HTMLElement | null = null;
+let isViewportRestored = true;
+let lastPreviewSignature = '';
 
 function clampSigned(value: number): number {
     return Math.max(-1, Math.min(1, value));
@@ -52,11 +55,19 @@ function getWizardModalPreviewSourceId(snapshot: RcRuntimeSnapshot, role: RcWiza
 }
 
 function isRcSettingsPanelActive(): boolean {
-    return document.getElementById('rc-settings-panel')?.classList.contains('active') ?? false;
+    if (!rcSettingsPanelEl?.isConnected) {
+        rcSettingsPanelEl = document.getElementById('rc-settings-panel');
+    }
+    return rcSettingsPanelEl?.classList.contains('active') ?? false;
 }
 
 export function restoreRcSettingsViewport(): void {
+    if (isViewportRestored) {
+        return;
+    }
     clearRcPreviewOverride();
+    isViewportRestored = true;
+    lastPreviewSignature = '';
 }
 
 function getRoleMapping(snapshot: RcRuntimeSnapshot, role: ChannelRole) {
@@ -209,15 +220,26 @@ export function syncRcSettingsViewport(snapshot: RcRuntimeSnapshot): void {
     const values = getRcPreviewValues(snapshot);
     const hasPrimarySignal = Math.abs(values.roll) > 0.01 || Math.abs(values.pitch) > 0.01 || Math.abs(values.yaw) > 0.01 || values.throttle > 0.01;
     const shouldLevel = values.blockedByConflict || !hasPrimarySignal;
+    const rotationX = shouldLevel ? 0 : values.roll * PREVIEW_ROLL_LIMIT_RAD;
+    const rotationY = shouldLevel ? 0 : values.yaw * PREVIEW_YAW_LIMIT_RAD;
+    const rotationZ = shouldLevel ? 0 : values.pitch * PREVIEW_PITCH_LIMIT_RAD;
+    const rotorSpeed = shouldLevel ? 0 : values.throttle * PREVIEW_ROTOR_SPEED_MAX;
+    const previewSignature = `${currentDroneId}|${rotationX}|${rotationY}|${rotationZ}|${rotorSpeed}`;
+
+    if (!isViewportRestored && lastPreviewSignature === previewSignature) {
+        return;
+    }
 
     setRcPreviewOverride({
         active: true,
         droneId: currentDroneId,
         rotation: {
-            x: shouldLevel ? 0 : values.roll * PREVIEW_ROLL_LIMIT_RAD,
-            y: shouldLevel ? 0 : values.yaw * PREVIEW_YAW_LIMIT_RAD,
-            z: shouldLevel ? 0 : values.pitch * PREVIEW_PITCH_LIMIT_RAD
+            x: rotationX,
+            y: rotationY,
+            z: rotationZ
         },
-        rotorSpeed: shouldLevel ? 0 : values.throttle * PREVIEW_ROTOR_SPEED_MAX
+        rotorSpeed
     });
+    isViewportRestored = false;
+    lastPreviewSignature = previewSignature;
 }

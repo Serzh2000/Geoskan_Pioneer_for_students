@@ -50,6 +50,7 @@ export function initThemeToggle(): void {
     const initialTheme = resolveTheme();
 
     updateThemeToggleButton(initialTheme);
+    document.documentElement.dataset.theme = initialTheme;
     document.documentElement.style.colorScheme = initialTheme;
     setEditorTheme(initialTheme);
 

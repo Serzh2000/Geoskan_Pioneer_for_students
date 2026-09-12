@@ -111,6 +111,8 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
     let previewTypeOverride: { type: string; label?: string } | null = null;
     let isVisible = false;
     let lastPreviewSignature: string | null = null;
+    let lastRenderWidth = 0;
+    let lastRenderHeight = 0;
 
     const rebuildGround = (size: number) => {
         groundRadius = size;
@@ -138,11 +140,17 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
 
     const render = () => {
         if (!renderer || !isRendererAvailable) return;
+        if (!isVisible || host.getClientRects().length === 0) return;
+
         const width = Math.max(host.clientWidth, 320);
         const height = Math.max(host.clientHeight, 320);
-        renderer.setSize(width, height, false);
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
+        if (width !== lastRenderWidth || height !== lastRenderHeight) {
+            lastRenderWidth = width;
+            lastRenderHeight = height;
+            renderer.setSize(width, height, false);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+        }
         renderer.render(scene, camera);
     };
 
@@ -246,6 +254,8 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
             window.removeEventListener('app-theme-change', handleThemeChange);
             clearPreviewObject();
             lastPreviewSignature = null;
+            lastRenderWidth = 0;
+            lastRenderHeight = 0;
             ground.geometry.dispose();
             (ground.material as THREE.Material).dispose();
             renderer?.dispose();

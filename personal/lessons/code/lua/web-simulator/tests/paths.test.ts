@@ -6,8 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 describe('Path Resolution Tests', () => {
-    test('Examples directory should exist', () => {
-        const examplesDir = path.resolve(__dirname, '../../../../../../lessons/code/lua/examples');
+    test('Imported examples directory should exist', () => {
+        const examplesDir = path.resolve(__dirname, '../docs/imported');
         const stat = fs.statSync(examplesDir);
         expect(stat.isDirectory()).toBe(true);
     });
@@ -21,7 +21,7 @@ describe('Path Resolution Tests', () => {
         const assets = [
             '../public/index.html',
             '../public/main.ts',
-            '../public/modules/drone.ts'
+            '../public/modules/core/state.ts'
         ];
 
         assets.forEach(asset => {

@@ -1,21 +1,19 @@
 import type { UICallbacks } from '../index.js';
-import type { SceneManagerDomRefs } from './types.js';
+import type { SceneManagerDomRefs, SceneManagerEntry, TransformMode } from './types.js';
 import { isSceneEditorFocused } from './support.js';
-import type { TransformMode } from './types.js';
 import { renderEmptyState, renderSelectedDetails, syncSelectedInputs, updateSelectedControls } from './render/details.js';
 import { renderObjectList } from './render/list.js';
 
 export function renderSceneManager(
     callbacks: UICallbacks,
     elements: SceneManagerDomRefs,
+    objects: SceneManagerEntry[],
+    selectedId: string | null,
     lastSelectedId: string | null,
     rerender: () => void,
     activeTransformMode: TransformMode
 ) {
     if (!elements.listEl || !elements.detailsEl || !callbacks.sceneManager) return lastSelectedId;
-
-    const objects = callbacks.sceneManager.list();
-    const selectedId = callbacks.sceneManager.getSelectedId();
 
     renderObjectList(callbacks, elements, objects, selectedId, rerender);
 

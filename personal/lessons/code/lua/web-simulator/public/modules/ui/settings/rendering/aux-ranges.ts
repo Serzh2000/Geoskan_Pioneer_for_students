@@ -7,6 +7,50 @@ import type { ActionAuxChannelKey, ChannelKey, ObservedInputStats } from '../typ
 
 const RANGE_EDGE_PADDING_PERCENT = 3;
 
+function setTextIfChanged(element: HTMLElement | null, value: string): void {
+    if (element && element.textContent !== value) {
+        element.textContent = value;
+    }
+}
+
+function setDisabledIfChanged(
+    element: HTMLSelectElement | HTMLInputElement | null,
+    disabled: boolean
+): void {
+    if (element && element.disabled !== disabled) {
+        element.disabled = disabled;
+    }
+}
+
+function setValueIfChanged(
+    element: HTMLSelectElement | HTMLInputElement | null,
+    value: string
+): void {
+    if (element && element.value !== value) {
+        element.value = value;
+    }
+}
+
+function setHtmlIfChanged(element: HTMLElement | null, value: string): void {
+    if (element && element.innerHTML !== value) {
+        element.innerHTML = value;
+    }
+}
+
+function setClassPresence(element: HTMLElement | null, className: string, enabled: boolean): void {
+    if (!element) return;
+    const hasClass = element.classList.contains(className);
+    if (hasClass !== enabled) {
+        element.classList.toggle(className, enabled);
+    }
+}
+
+function setStyleIfChanged(element: HTMLElement | null, property: 'left' | 'width', value: string): void {
+    if (element && element.style[property] !== value) {
+        element.style[property] = value;
+    }
+}
+
 function toRangePercent(value: number): number {
     return clamp(((value - 1000) / 1000) * 100, 0, 100);
 }
@@ -32,31 +76,32 @@ export function renderAuxRangePresetOptions(params: {
     if (!controls.presetSelect) return;
 
     if (!simSettings.gamepadConnected || !state.activeGamepadHasChannelData) {
-        controls.presetSelect.innerHTML = '<option value="">Нет сигнала</option>';
-        controls.presetSelect.disabled = true;
+        setHtmlIfChanged(controls.presetSelect, '<option value="">Нет сигнала</option>');
+        setDisabledIfChanged(controls.presetSelect, true);
         return;
     }
 
     const ranges = buildRangesFromPositions(getObservedPositions(state.observedInputStats, getMappingRef(key)));
     if (ranges.length === 0) {
-        controls.presetSelect.innerHTML = '<option value="">Нет положений</option>';
-        controls.presetSelect.disabled = true;
+        setHtmlIfChanged(controls.presetSelect, '<option value="">Нет положений</option>');
+        setDisabledIfChanged(controls.presetSelect, true);
         return;
     }
 
-    controls.presetSelect.innerHTML = ranges
+    const optionsHtml = ranges
         .map((range, index) => {
             const center = range.center ?? Math.round((range.min + range.max) / 2);
             return `<option value="${index}">Положение ${index + 1} (${center})</option>`;
         })
         .join('');
+    setHtmlIfChanged(controls.presetSelect, optionsHtml);
 
     const current = findClosestRangeByCenter(ranges, getAuxRange(key).center);
     const currentIndex = current
         ? ranges.findIndex((range) => range.min === current.min && range.max === current.max && range.center === current.center)
         : 0;
-    controls.presetSelect.value = String(Math.max(0, currentIndex));
-    controls.presetSelect.disabled = false;
+    setValueIfChanged(controls.presetSelect, String(Math.max(0, currentIndex)));
+    setDisabledIfChanged(controls.presetSelect, false);
 }
 
 export function renderAuxRangeEditor(params: {
@@ -73,43 +118,45 @@ export function renderAuxRangeEditor(params: {
     const range = getAuxRange(key);
     const mappedRef = getMappingRef(key);
     const stats = getObservedStats(mappedRef);
+    const positions = getObservedPositions(state.observedInputStats, mappedRef);
     const isReady = simSettings.gamepadConnected && state.activeGamepadHasChannelData && Boolean(stats);
     const minValue = Math.min(range.min, range.max);
     const maxValue = Math.max(range.min, range.max);
 
-    if (controls.card) {
-        controls.card.classList.toggle('is-disabled', !isReady);
-    }
+    setClassPresence(controls.card, 'is-disabled', !isReady);
     renderAuxRangePresetOptions({ dom, state, key, getMappingRef, getAuxRange });
     if (controls.minSlider) {
-        controls.minSlider.value = String(minValue);
-        controls.minSlider.disabled = !isReady;
+        setValueIfChanged(controls.minSlider, String(minValue));
+        setDisabledIfChanged(controls.minSlider, !isReady);
     }
     if (controls.maxSlider) {
-        controls.maxSlider.value = String(maxValue);
-        controls.maxSlider.disabled = !isReady;
+        setValueIfChanged(controls.maxSlider, String(maxValue));
+        setDisabledIfChanged(controls.maxSlider, !isReady);
     }
-    if (controls.minValueEl) controls.minValueEl.textContent = String(minValue);
-    if (controls.maxValueEl) controls.maxValueEl.textContent = String(maxValue);
-    if (controls.liveValueEl) controls.liveValueEl.textContent = `LIVE ${liveValue}`;
+    setTextIfChanged(controls.minValueEl, String(minValue));
+    setTextIfChanged(controls.maxValueEl, String(maxValue));
+    setTextIfChanged(controls.liveValueEl, `LIVE ${liveValue}`);
     if (controls.fillEl) {
         const minPercent = toRangeVisualPercent(minValue);
         const maxPercent = toRangeVisualPercent(maxValue);
-        controls.fillEl.style.left = `${minPercent}%`;
-        controls.fillEl.style.width = `${Math.max(0, maxPercent - minPercent)}%`;
+        setStyleIfChanged(controls.fillEl, 'left', `${minPercent}%`);
+        setStyleIfChanged(controls.fillEl, 'width', `${Math.max(0, maxPercent - minPercent)}%`);
     }
     if (controls.markerEl) {
-        controls.markerEl.style.left = `${toRangeVisualPercent(liveValue)}%`;
+        setStyleIfChanged(controls.markerEl, 'left', `${toRangeVisualPercent(liveValue)}%`);
     }
     if (controls.metaEl) {
         if (!simSettings.gamepadConnected) {
-            controls.metaEl.textContent = 'Пульт не подключен.';
+            setTextIfChanged(controls.metaEl, 'Пульт не подключен.');
         } else if (!state.activeGamepadHasChannelData) {
-            controls.metaEl.textContent = 'Нет данных текущего пульта. Жду первый пакет значений.';
+            setTextIfChanged(controls.metaEl, 'Нет данных текущего пульта. Жду первый пакет значений.');
         } else if (!stats) {
-            controls.metaEl.textContent = `Для ${mappedRef.toUpperCase()} ещё нет наблюдаемых значений.`;
+            setTextIfChanged(controls.metaEl, `Для ${mappedRef.toUpperCase()} ещё нет наблюдаемых значений.`);
         } else {
-            controls.metaEl.textContent = `Источник ${mappedRef.toUpperCase()}. Замеченный диапазон ${stats.minRc}-${stats.maxRc}, положений ${getObservedPositions(state.observedInputStats, mappedRef).length}, сейчас ${stats.lastRc}.`;
+            setTextIfChanged(
+                controls.metaEl,
+                `Источник ${mappedRef.toUpperCase()}. Замеченный диапазон ${stats.minRc}-${stats.maxRc}, положений ${positions.length}, сейчас ${stats.lastRc}.`
+            );
         }
     }
 }

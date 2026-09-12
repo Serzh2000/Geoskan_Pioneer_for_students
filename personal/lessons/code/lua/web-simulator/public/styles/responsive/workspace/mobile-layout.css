@@ -1,6 +1,8 @@
-﻿@media (max-width: 640px) {
+@media (max-width: 640px) {
     :root {
         --header-height: 56px;
+        /* На узких экранах заголовки панелей компактнее, остальное — общие токены. */
+        --panel-header-height: 44px;
     }
 
     .header-brand-copy {
@@ -66,7 +68,7 @@
     }
 
     .sidebar-tabs {
-        padding: 8px;
+        padding: var(--panel-gap-sm);
     }
 
     .sidebar-panels {
@@ -75,15 +77,6 @@
 
     .mobile-scene-page {
         gap: 10px;
-    }
-
-    .panel-header {
-        padding: 12px 14px 10px;
-    }
-
-    .scene-viewport-card {
-        padding: 10px;
-        border-radius: 16px;
     }
 
     .scene-viewport-header {
@@ -102,14 +95,13 @@
     .scene-container {
         height: min(44vh, 300px);
         min-height: 220px;
-        border-radius: 16px;
     }
 
     .camera-controls {
         flex-wrap: wrap;
         justify-content: center;
-        gap: 8px;
-        inset: auto 10px 10px 10px;
+        gap: var(--panel-gap-sm);
+        inset: auto var(--panel-pad-x) var(--panel-pad-x) var(--panel-pad-x);
     }
 
     .camera-controls button {

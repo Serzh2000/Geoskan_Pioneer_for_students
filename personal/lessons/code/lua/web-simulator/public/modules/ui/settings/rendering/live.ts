@@ -3,6 +3,9 @@ import { getSwitchLabel } from './helpers.js';
 import type { ChannelRole, RcRuntimeSnapshot } from '../types.js';
 import { getRcPreviewValues, getRcSignalStatus, syncRcSettingsViewport } from './viewport-bridge.js';
 
+const selectorCache = new Map<string, HTMLElement[]>();
+const singleSelectorCache = new Map<string, HTMLElement | null>();
+
 export function buildRenderKey(snapshot: RcRuntimeSnapshot): string {
     return JSON.stringify({
         profileId: snapshot.activeProfile.id,
@@ -25,32 +28,61 @@ export function buildRenderKey(snapshot: RcRuntimeSnapshot): string {
     });
 }
 
+function getElements(selector: string): HTMLElement[] {
+    const cached = selectorCache.get(selector);
+    if (cached) return cached;
+    const elements = Array.from(document.querySelectorAll<HTMLElement>(selector));
+    selectorCache.set(selector, elements);
+    return elements;
+}
+
+function getElement(selector: string): HTMLElement | null {
+    if (singleSelectorCache.has(selector)) {
+        return singleSelectorCache.get(selector) ?? null;
+    }
+    const element = document.querySelector<HTMLElement>(selector);
+    singleSelectorCache.set(selector, element);
+    return element;
+}
+
 function setTextContent(selector: string, value: string): void {
-    document.querySelectorAll<HTMLElement>(selector).forEach((element) => {
-        element.textContent = value;
+    getElements(selector).forEach((element) => {
+        if (element.textContent !== value) {
+            element.textContent = value;
+        }
     });
 }
 
 function setElementWidth(selector: string, width: string): void {
-    document.querySelectorAll<HTMLElement>(selector).forEach((element) => {
-        element.style.width = width;
+    getElements(selector).forEach((element) => {
+        if (element.style.width !== width) {
+            element.style.width = width;
+        }
     });
 }
 
 function setStyleProperty(selector: string, property: string, value: string): void {
-    document.querySelectorAll<HTMLElement>(selector).forEach((element) => {
-        element.style.setProperty(property, value);
+    getElements(selector).forEach((element) => {
+        if (element.style.getPropertyValue(property) !== value) {
+            element.style.setProperty(property, value);
+        }
     });
 }
 
 function toggleClass(selector: string, className: string, enabled: boolean): void {
-    document.querySelectorAll<HTMLElement>(selector).forEach((element) => {
-        element.classList.toggle(className, enabled);
+    getElements(selector).forEach((element) => {
+        const hasClass = element.classList.contains(className);
+        if (hasClass !== enabled) {
+            element.classList.toggle(className, enabled);
+        }
     });
 }
 
 function setStatusKind(selector: string, kind: 'live' | 'caution' | 'offline'): void {
-    document.querySelectorAll<HTMLElement>(selector).forEach((element) => {
+    getElements(selector).forEach((element) => {
+        if (element.dataset.statusKind === kind) {
+            return;
+        }
         element.classList.remove(
             'rc-drone-viewport__status--live',
             'rc-drone-viewport__status--caution',
@@ -86,12 +118,18 @@ export function updateLiveValues(snapshot: RcRuntimeSnapshot): void {
         setElementWidth(`[data-rc-channel-bar="${mapping.channel}"]`, `${percent}%`);
     });
 
-    document.querySelectorAll<HTMLElement>('[data-stick-marker]').forEach((element) => {
+    getElements('[data-stick-marker]').forEach((element) => {
         const xRole = element.dataset.stickRoleX as ChannelRole | undefined;
         const yRole = element.dataset.stickRoleY as ChannelRole | undefined;
         if (!xRole || !yRole) return;
-        element.style.setProperty('--stick-x', String(getRoleNormalizedValue(snapshot, xRole)));
-        element.style.setProperty('--stick-y', String(getRoleNormalizedValue(snapshot, yRole)));
+        const stickX = String(getRoleNormalizedValue(snapshot, xRole));
+        const stickY = String(getRoleNormalizedValue(snapshot, yRole));
+        if (element.style.getPropertyValue('--stick-x') !== stickX) {
+            element.style.setProperty('--stick-x', stickX);
+        }
+        if (element.style.getPropertyValue('--stick-y') !== stickY) {
+            element.style.setProperty('--stick-y', stickY);
+        }
     });
 
     const roleReadouts: Array<{ key: string; role: ChannelRole }> = [
@@ -107,10 +145,13 @@ export function updateLiveValues(snapshot: RcRuntimeSnapshot): void {
     });
 
     Object.values(snapshot.samples).forEach((sample) => {
-        const sourceEl = document.querySelector<HTMLElement>(`[data-live-source="${sample.source.id}"]`);
+        const sourceEl = getElement(`[data-live-source="${sample.source.id}"]`);
         if (!sourceEl) return;
         const isActive = Boolean(sample.active || sample.normalizedValue >= 0.5);
-        sourceEl.classList.toggle('rc-live-switch--active', isActive);
+        const hasClass = sourceEl.classList.contains('rc-live-switch--active');
+        if (hasClass !== isActive) {
+            sourceEl.classList.toggle('rc-live-switch--active', isActive);
+        }
         setTextContent(
             `[data-live-source-state="${sample.source.id}"]`,
             getSwitchLabel(sample.source.controlType, sample.pwmValue)

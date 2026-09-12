@@ -183,9 +183,14 @@ function scheduleLogsRender() {
     if (renderScheduled) return;
     renderScheduled = true;
 
+    if (typeof document === 'undefined' || typeof document.getElementById !== 'function' || typeof document.createDocumentFragment !== 'function') {
+        renderScheduled = false;
+        return;
+    }
+
     const schedule = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
         ? window.requestAnimationFrame.bind(window)
-        : (cb: FrameRequestCallback) => window.setTimeout(() => cb(performance.now()), 16);
+        : (cb: FrameRequestCallback) => cb(performance.now());
 
     schedule(() => renderLogsUI());
 }

@@ -1,5 +1,7 @@
 import { simState, simSettings } from '../../core/state.js';
 
+const STATS_UPDATE_INTERVAL_MS = 50;
+
 const stateAlt = document.getElementById('state-alt') as HTMLElement | null;
 const stateSpd = document.getElementById('state-spd') as HTMLElement | null;
 const stateBat = document.getElementById('state-bat') as HTMLElement | null;
@@ -10,107 +12,181 @@ const hudStatMode = document.getElementById('hud-stat-mode') as HTMLElement | nu
 const camParams = document.getElementById('cam-params') as HTMLElement | null;
 const runBtn = document.getElementById('run-btn') as HTMLButtonElement | null;
 const stopBtn = document.getElementById('stop-btn') as HTMLButtonElement | null;
+const ledElements = Array.from({ length: 29 }, (_unused, index) => {
+    if (index < 4) {
+        return document.getElementById(`led-base-${index}`) as HTMLElement | null;
+    }
+    return document.getElementById(`led-pixel-${index}`) as HTMLElement | null;
+});
 
-export function updateStats() {
-    const speed = Math.sqrt(simState.vel.x**2 + simState.vel.y**2 + simState.vel.z**2);
-    const isDarkTheme = document.documentElement.dataset.theme === 'dark';
+let lastAltText = '';
+let lastSpeedText = '';
+let lastBatteryText = '';
+let lastStatusText = '';
+let lastStatusColor = '';
+let lastTimeText = '';
+let lastFlightModeText = '';
+let lastHudModeVisible: boolean | null = null;
+let lastCamParamsVisible: boolean | null = null;
+let lastRunButtonDisabled: boolean | null = null;
+let lastStopButtonDisabled: boolean | null = null;
+const lastLedStyles = Array.from({ length: 29 }, () => '');
+let lastStatsUpdateAt = 0;
 
-    // Update Telemetry Panel
-    if (stateAlt) stateAlt.textContent = simState.pos.z.toFixed(2);
-    if (stateSpd) stateSpd.textContent = speed.toFixed(1);
-    if (stateBat) stateBat.textContent = Math.floor(simState.battery).toString();
-    if (stateStatus) {
+function getStatusColor(isDarkTheme: boolean): string {
+    if (
+        simState.fsmState === 'TAKEOFF_PROCESS'
+        || simState.fsmState === 'FLYING_HOVER'
+        || simState.fsmState === 'FLYING_MOVING'
+        || simState.fsmState === 'LANDING_PROCESS'
+    ) {
+        return isDarkTheme ? '#4ade80' : '#15803d';
+    }
+
+    if (simState.fsmState === 'PREFLIGHT') {
+        return isDarkTheme ? '#fbbf24' : '#b45309';
+    }
+
+    if (simState.status === 'ОШИБКА' || simState.status === 'CRASHED') {
+        return isDarkTheme ? '#f87171' : '#c2410c';
+    }
+
+    return isDarkTheme ? '#f8fafc' : '#151515';
+}
+
+function updateTelemetry(speed: number, isDarkTheme: boolean): void {
+    const altText = simState.pos.z.toFixed(2);
+    const speedText = speed.toFixed(1);
+    const batteryText = Math.floor(simState.battery).toString();
+    const timeText = simState.current_time.toFixed(1);
+    const statusColor = getStatusColor(isDarkTheme);
+
+    if (stateAlt && lastAltText !== altText) {
+        stateAlt.textContent = altText;
+        lastAltText = altText;
+    }
+
+    if (stateSpd && lastSpeedText !== speedText) {
+        stateSpd.textContent = speedText;
+        lastSpeedText = speedText;
+    }
+
+    if (stateBat && lastBatteryText !== batteryText) {
+        stateBat.textContent = batteryText;
+        lastBatteryText = batteryText;
+    }
+
+    if (stateStatus && lastStatusText !== simState.status) {
         stateStatus.textContent = simState.status;
-        // Color coding for status
-        if (
-            simState.fsmState === 'TAKEOFF_PROCESS'
-            || simState.fsmState === 'FLYING_HOVER'
-            || simState.fsmState === 'FLYING_MOVING'
-            || simState.fsmState === 'LANDING_PROCESS'
-        ) {
-            stateStatus.style.color = isDarkTheme ? '#4ade80' : '#15803d';
-        } else if (simState.fsmState === 'PREFLIGHT') {
-            stateStatus.style.color = isDarkTheme ? '#fbbf24' : '#b45309';
-        } else if (simState.status === 'ОШИБКА' || simState.status === 'CRASHED') {
-            stateStatus.style.color = isDarkTheme ? '#f87171' : '#c2410c';
-        } else {
-            stateStatus.style.color = isDarkTheme ? '#f8fafc' : '#151515';
-        }
-    }
-    if (stateTime) stateTime.textContent = simState.current_time.toFixed(1);
-
-    // Update Flight Mode display (only when gamepad is connected)
-    if (hudStatMode) {
-        if (simSettings.gamepadConnected) {
-            hudStatMode.style.display = 'flex';
-            if (stateMode) {
-                stateMode.textContent = simState.flightMode;
-            }
-        } else {
-            hudStatMode.style.display = 'none';
-        }
+        lastStatusText = simState.status;
     }
 
-    // Update Camera Params Visibility
-    if (window.cameraMode === 'fpv') {
-        if (camParams) camParams.style.display = 'flex';
-    } else {
-        if (camParams) camParams.style.display = 'none';
+    if (stateStatus && lastStatusColor !== statusColor) {
+        stateStatus.style.color = statusColor;
+        lastStatusColor = statusColor;
     }
 
-    // Update Button States
-    if (simState.running) {
-        if (runBtn) {
-            runBtn.disabled = true;
-            runBtn.style.opacity = '0.5';
-            runBtn.style.cursor = 'not-allowed';
-        }
-        if (stopBtn) {
-            stopBtn.disabled = false;
-            stopBtn.style.opacity = '1';
-            stopBtn.style.cursor = 'pointer';
-        }
-    } else {
-        if (runBtn) {
-            runBtn.disabled = false;
-            runBtn.style.opacity = '1';
-            runBtn.style.cursor = 'pointer';
-        }
-        if (stopBtn) {
-            stopBtn.disabled = true;
-            stopBtn.style.opacity = '0.5';
-            stopBtn.style.cursor = 'not-allowed';
-        }
-    }
-
-    // Update LED Matrix Debug UI
-    if (simState.leds) {
-        for (let i = 0; i < simState.leds.length; i++) {
-            const led = simState.leds[i];
-            if (!led) continue;
-            const r = Math.round(led.r || 0);
-            const g = Math.round(led.g || 0);
-            const b = Math.round(led.b || 0);
-            const colorStr = `rgb(${r},${g},${b})`;
-            
-            if (i < 4) {
-                // Base LEDs
-                const baseLedEl = document.getElementById(`led-base-${i}`);
-                if (baseLedEl) {
-                    baseLedEl.style.backgroundColor = colorStr;
-                    baseLedEl.style.boxShadow = (r+g+b > 0) ? `0 0 8px ${colorStr}` : 'none';
-                    baseLedEl.title = `Базовый светодиод ${i}\nRGB: ${r}, ${g}, ${b}`;
-                }
-            } else if (i < 29) {
-                // Matrix LEDs
-                const pixelEl = document.getElementById(`led-pixel-${i}`);
-                if (pixelEl) {
-                    pixelEl.style.backgroundColor = colorStr;
-                    pixelEl.style.boxShadow = (r+g+b > 0) ? `0 0 8px ${colorStr}` : 'none';
-                    pixelEl.title = `Светодиод матрицы ${i}\nRGB: ${r}, ${g}, ${b}`;
-                }
-            }
-        }
+    if (stateTime && lastTimeText !== timeText) {
+        stateTime.textContent = timeText;
+        lastTimeText = timeText;
     }
 }
 
+function updateFlightMode(): void {
+    const shouldShowHudMode = simSettings.gamepadConnected;
+
+    if (hudStatMode && lastHudModeVisible !== shouldShowHudMode) {
+        hudStatMode.style.display = shouldShowHudMode ? 'flex' : 'none';
+        lastHudModeVisible = shouldShowHudMode;
+    }
+
+    if (shouldShowHudMode && stateMode && lastFlightModeText !== simState.flightMode) {
+        stateMode.textContent = simState.flightMode;
+        lastFlightModeText = simState.flightMode;
+    }
+}
+
+function updateCameraParamsVisibility(): void {
+    const shouldShowCamParams = window.cameraMode === 'fpv';
+    if (camParams && lastCamParamsVisible !== shouldShowCamParams) {
+        camParams.style.display = shouldShowCamParams ? 'flex' : 'none';
+        lastCamParamsVisible = shouldShowCamParams;
+    }
+}
+
+function updateButtons(): void {
+    const runDisabled = simState.running;
+    const stopDisabled = !simState.running;
+
+    if (runBtn && lastRunButtonDisabled !== runDisabled) {
+        runBtn.disabled = runDisabled;
+        runBtn.style.opacity = runDisabled ? '0.5' : '1';
+        runBtn.style.cursor = runDisabled ? 'not-allowed' : 'pointer';
+        lastRunButtonDisabled = runDisabled;
+    }
+
+    if (stopBtn && lastStopButtonDisabled !== stopDisabled) {
+        stopBtn.disabled = stopDisabled;
+        stopBtn.style.opacity = stopDisabled ? '0.5' : '1';
+        stopBtn.style.cursor = stopDisabled ? 'not-allowed' : 'pointer';
+        lastStopButtonDisabled = stopDisabled;
+    }
+}
+
+function updateLeds(): void {
+    if (!simState.leds) return;
+
+    for (let i = 0; i < simState.leds.length; i += 1) {
+        const led = simState.leds[i];
+        if (!led || i >= ledElements.length) continue;
+
+        const r = Math.round(led.r || 0);
+        const g = Math.round(led.g || 0);
+        const b = Math.round(led.b || 0);
+        const signature = `${r},${g},${b}`;
+        if (lastLedStyles[i] === signature) continue;
+
+        const colorStr = `rgb(${r},${g},${b})`;
+        const ledEl = ledElements[i];
+        if (!ledEl) continue;
+
+        ledEl.style.backgroundColor = colorStr;
+        ledEl.style.boxShadow = (r + g + b > 0) ? `0 0 8px ${colorStr}` : 'none';
+        ledEl.title = i < 4
+            ? `Базовый светодиод ${i}\nRGB: ${r}, ${g}, ${b}`
+            : `Светодиод матрицы ${i}\nRGB: ${r}, ${g}, ${b}`;
+        lastLedStyles[i] = signature;
+    }
+
+    for (let i = simState.leds.length; i < ledElements.length; i += 1) {
+        if (!lastLedStyles[i]) continue;
+        const ledEl = ledElements[i];
+        if (!ledEl) continue;
+
+        ledEl.style.backgroundColor = 'rgb(0,0,0)';
+        ledEl.style.boxShadow = 'none';
+        ledEl.title = '';
+        lastLedStyles[i] = '';
+    }
+}
+
+export function updateStats() {
+    if (document.visibilityState === 'hidden') {
+        return;
+    }
+
+    const now = performance.now();
+    if (lastStatsUpdateAt && now - lastStatsUpdateAt < STATS_UPDATE_INTERVAL_MS) {
+        return;
+    }
+    lastStatsUpdateAt = now;
+
+    const speed = Math.sqrt(simState.vel.x**2 + simState.vel.y**2 + simState.vel.z**2);
+    const isDarkTheme = document.documentElement.dataset.theme === 'dark';
+
+    updateTelemetry(speed, isDarkTheme);
+    updateFlightMode();
+    updateCameraParamsVisibility();
+    updateButtons();
+    updateLeds();
+}

@@ -30,6 +30,9 @@ import type {
     WizardStep
 } from './wizard/types.js';
 
+const WIZARD_UI_RENDER_INTERVAL_MS = 120;
+const WIZARD_LOOP_INTERVAL_MS = 50;
+
 let currentStepIdx = 0;
 let isWizardActive = false;
 let showingSummary = false;
@@ -42,6 +45,10 @@ let stepSwitchTransitions = new Map<GamepadInputRef, number>();
 let detectedMapping: Partial<Record<ChannelKey, GamepadInputRef>> = {};
 let auxResults: Partial<Record<WizardAuxChannelKey, AuxDetectionResult>> = {};
 let wizardDraftInversion = createWizardDraftInversion();
+let lastWizardUiRenderAt = 0;
+let lastWizardLoopAt = 0;
+let wizardFrameId = 0;
+let wizardOverlayEl: HTMLElement | null = null;
 
 const previewController = new WizardPreviewController({
     getCurrentStep,
@@ -59,6 +66,7 @@ export function initWizard() {
     const invertCheckbox = document.getElementById('gp-wizard-invert') as HTMLInputElement | null;
 
     if (!btn || !overlay || !closeBtn || !nextBtn || !prevBtn || !invertCheckbox) return;
+    wizardOverlayEl = overlay;
 
     btn.onclick = () => {
         overlay.style.display = 'flex';
@@ -111,24 +119,33 @@ export function initWizard() {
     };
 
     window.addEventListener('resize', () => previewController.syncSize());
+    document.addEventListener('visibilitychange', () => ensureWizardLoop(true));
 }
 
 function startWizard() {
     isWizardActive = true;
     showingSummary = false;
     currentStepIdx = 0;
+    lastWizardUiRenderAt = 0;
+    lastWizardLoopAt = 0;
     detectedMapping = {};
     auxResults = {};
     wizardDraftInversion = createWizardDraftInversion();
     previewController.ensureScene();
     prepareCurrentStep();
     renderWizardState();
-    requestAnimationFrame(wizardLoop);
+    ensureWizardLoop(true);
 }
 
 function stopWizard() {
     isWizardActive = false;
     showingSummary = false;
+    lastWizardUiRenderAt = 0;
+    lastWizardLoopAt = 0;
+    if (wizardFrameId !== 0) {
+        window.cancelAnimationFrame(wizardFrameId);
+        wizardFrameId = 0;
+    }
 }
 
 function prepareCurrentStep() {
@@ -140,7 +157,13 @@ function prepareCurrentStep() {
     stepSwitchTransitions = new Map<GamepadInputRef, number>();
 }
 
-function renderWizardState() {
+function renderWizardState(force = true) {
+    const now = performance.now();
+    if (!force && now - lastWizardUiRenderAt < WIZARD_UI_RENDER_INTERVAL_MS) {
+        return;
+    }
+    lastWizardUiRenderAt = now;
+
     renderWizardUi({
         currentStepIdx,
         showingSummary,
@@ -200,8 +223,41 @@ function getResolvedPrimaryRef(channel: PrimaryChannelKey): GamepadInputRef | nu
     return getResolvedPrimaryWizardRef(channel, detectedMapping);
 }
 
-function wizardLoop() {
-    if (!isWizardActive) return;
+function isWizardVisible(): boolean {
+    return isWizardActive
+        && document.visibilityState !== 'hidden'
+        && !!wizardOverlayEl
+        && wizardOverlayEl.isConnected
+        && wizardOverlayEl.getClientRects().length > 0;
+}
+
+function ensureWizardLoop(resetTiming = false): void {
+    if (!isWizardVisible()) {
+        if (wizardFrameId !== 0) {
+            window.cancelAnimationFrame(wizardFrameId);
+            wizardFrameId = 0;
+        }
+        return;
+    }
+
+    if (resetTiming) {
+        lastWizardLoopAt = 0;
+    }
+
+    if (wizardFrameId === 0) {
+        wizardFrameId = window.requestAnimationFrame(wizardLoop);
+    }
+}
+
+function wizardLoop(time: number) {
+    wizardFrameId = 0;
+    if (!isWizardVisible()) return;
+
+    if (time - lastWizardLoopAt < WIZARD_LOOP_INTERVAL_MS) {
+        ensureWizardLoop();
+        return;
+    }
+    lastWizardLoopAt = time;
 
     const gp = getFirstConnectedGamepad();
     if (gp) {
@@ -217,13 +273,13 @@ function wizardLoop() {
 
         if (!showingSummary) {
             sampleCurrentStep(gp);
-            renderWizardState();
+            renderWizardState(false);
         }
 
         previewController.update(gp);
     }
 
-    requestAnimationFrame(wizardLoop);
+    ensureWizardLoop();
 }
 
 function sampleCurrentStep(gp: Gamepad) {

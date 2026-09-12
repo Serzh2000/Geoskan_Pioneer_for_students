@@ -7,8 +7,11 @@
     display: flex;
     flex-direction: column;
     height: calc(100vh - var(--header-height));
-    margin-top: var(--header-height);
-    position: relative;
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
     overflow: hidden;
     padding: 14px;
     align-items: stretch;

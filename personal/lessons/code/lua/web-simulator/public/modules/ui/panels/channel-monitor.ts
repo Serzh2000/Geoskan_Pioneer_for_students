@@ -8,6 +8,7 @@ const NEUTRAL_PWM = 1500;
 const ACTIVE_OFFSET_PWM = 80;
 const MOTION_THRESHOLD_PWM = 6;
 const LIVE_HOLD_MS = 220;
+const MONITOR_POLL_INTERVAL_MS = 50;
 
 type ChannelUi = {
     root: HTMLDivElement;
@@ -27,6 +28,7 @@ type MonitorState = {
     maxValues: number[];
     lastLiveValues: Array<number | null>;
     lastMotionAt: number[];
+    lastRenderSignature: string;
 };
 
 function escapeHtml(value: string): string {
@@ -141,6 +143,31 @@ function renderBoardStatus(element: HTMLElement, gamepad: Gamepad | null, active
     element.textContent = `${stateText} · активны ${activeCount} из 16 каналов`;
 }
 
+function isMonitorVisible(panel: HTMLElement): boolean {
+    return document.visibilityState !== 'hidden' && panel.getClientRects().length > 0;
+}
+
+function buildRenderSignature(state: MonitorState, gamepad: Gamepad | null, activeCount: number): string {
+    const now = Date.now();
+    const liveFlags = state.currentValues.map((currentValue, index) => (
+        currentValue !== null && (
+            Math.abs(currentValue - NEUTRAL_PWM) >= ACTIVE_OFFSET_PWM
+            || now - state.lastMotionAt[index] <= LIVE_HOLD_MS
+        )
+    ));
+
+    return JSON.stringify({
+        gamepadKey: gamepad ? `${gamepad.index}:${gamepad.id}` : null,
+        frozen: state.frozen,
+        showPeaks: state.showPeaks,
+        activeCount,
+        values: state.currentValues,
+        minValues: state.minValues,
+        maxValues: state.maxValues,
+        liveFlags
+    });
+}
+
 function pickGamepad(previousKey: string | null): Gamepad | null {
     const connected = getConnectedGamepads();
     if (connected.length === 0) return null;
@@ -183,7 +210,7 @@ export function initChannelMonitor(): void {
 
     if (!panel || !grid || !statusEl || !boardStatusEl || !freezeBtn || !resetBtn || !peaksToggle) return;
 
-    const cells = Array.from({ length: TOTAL_CHANNELS }, (_, index) => buildChannelCell(index + 1));
+    const cells = Array.from({ length: TOTAL_CHANNELS }, (_unused, index) => buildChannelCell(index + 1));
     grid.replaceChildren(...cells.map((cell) => cell.root));
 
     const state: MonitorState = {
@@ -194,10 +221,54 @@ export function initChannelMonitor(): void {
         minValues: Array.from({ length: TOTAL_CHANNELS }, () => NEUTRAL_PWM),
         maxValues: Array.from({ length: TOTAL_CHANNELS }, () => NEUTRAL_PWM),
         lastLiveValues: Array.from({ length: TOTAL_CHANNELS }, () => null),
-        lastMotionAt: Array.from({ length: TOTAL_CHANNELS }, () => 0)
+        lastMotionAt: Array.from({ length: TOTAL_CHANNELS }, () => 0),
+        lastRenderSignature: ''
+    };
+    let frameId = 0;
+    let panelIsIntersecting = true;
+
+    const stopTickLoop = (): void => {
+        if (frameId !== 0) {
+            window.cancelAnimationFrame(frameId);
+            frameId = 0;
+        }
+    };
+    const isMonitorActive = (): boolean => isMonitorVisible(panel) && panelIsIntersecting;
+    const ensureTickLoop = (resetTiming = false, forceRender = false): void => {
+        if (!isMonitorActive()) {
+            stopTickLoop();
+            return;
+        }
+
+        if (resetTiming) {
+            lastTickAt = 0;
+            state.lastRenderSignature = '';
+        }
+
+        if (forceRender) {
+            renderSnapshot(
+                pickGamepad(state.activeGamepadKey),
+                state.currentValues.filter((value) => value !== null).length,
+                true
+            );
+        }
+
+        if (frameId === 0) {
+            frameId = window.requestAnimationFrame(tick);
+        }
     };
 
-    const renderSnapshot = (gamepad: Gamepad | null, activeCount: number): void => {
+    const renderSnapshot = (gamepad: Gamepad | null, activeCount: number, force = false): void => {
+        if (!isMonitorActive()) {
+            return;
+        }
+
+        const signature = buildRenderSignature(state, gamepad, activeCount);
+        if (!force && signature === state.lastRenderSignature) {
+            return;
+        }
+        state.lastRenderSignature = signature;
+
         const now = Date.now();
         cells.forEach((cell, index) => {
             const currentValue = state.currentValues[index];
@@ -217,20 +288,35 @@ export function initChannelMonitor(): void {
 
     freezeBtn.addEventListener('click', () => {
         state.frozen = !state.frozen;
-        renderSnapshot(pickGamepad(state.activeGamepadKey), state.currentValues.filter((value) => value !== null).length);
+        state.lastRenderSignature = '';
+        renderSnapshot(pickGamepad(state.activeGamepadKey), state.currentValues.filter((value) => value !== null).length, true);
     });
 
     resetBtn.addEventListener('click', () => {
         resetPeaks(state);
-        renderSnapshot(pickGamepad(state.activeGamepadKey), state.currentValues.filter((value) => value !== null).length);
+        state.lastRenderSignature = '';
+        renderSnapshot(pickGamepad(state.activeGamepadKey), state.currentValues.filter((value) => value !== null).length, true);
     });
 
     peaksToggle.addEventListener('change', () => {
         state.showPeaks = peaksToggle.checked;
-        grid.classList.toggle('show-peaks', state.showPeaks);
+        state.lastRenderSignature = '';
+        renderSnapshot(pickGamepad(state.activeGamepadKey), state.currentValues.filter((value) => value !== null).length, true);
     });
 
-    const tick = (): void => {
+    let lastTickAt = 0;
+    const tick = (time: number): void => {
+        frameId = 0;
+        if (!isMonitorActive()) {
+            return;
+        }
+
+        if (time - lastTickAt < MONITOR_POLL_INTERVAL_MS) {
+            ensureTickLoop();
+            return;
+        }
+        lastTickAt = time;
+
         const gamepad = pickGamepad(state.activeGamepadKey);
         const gamepadKey = gamepad ? `${gamepad.index}:${gamepad.id}` : null;
 
@@ -240,8 +326,7 @@ export function initChannelMonitor(): void {
             state.lastLiveValues.fill(null);
             state.lastMotionAt.fill(0);
             resetPeaks(state);
-        } else if (state.frozen) {
-            state.activeGamepadKey = gamepadKey;
+            state.lastRenderSignature = '';
         } else {
             state.activeGamepadKey = gamepadKey;
         }
@@ -273,10 +358,23 @@ export function initChannelMonitor(): void {
         }
 
         renderSnapshot(gamepad, activeCount);
-        window.requestAnimationFrame(tick);
+        ensureTickLoop();
     };
 
-    renderSnapshot(null, 0);
-    tick();
-}
+    if (typeof IntersectionObserver === 'function') {
+        const visibilityObserver = new IntersectionObserver((entries) => {
+            const entry = entries.find((candidate) => candidate.target === panel);
+            if (!entry) return;
+            panelIsIntersecting = entry.isIntersecting && entry.intersectionRatio > 0;
+            ensureTickLoop(true, panelIsIntersecting);
+        }, {
+            threshold: 0.01
+        });
+        visibilityObserver.observe(panel);
+    }
 
+    document.addEventListener('visibilitychange', () => ensureTickLoop(true, true));
+
+    renderSnapshot(null, 0, true);
+    ensureTickLoop(true);
+}

@@ -11,6 +11,30 @@ import type {
     WizardStep
 } from './types.js';
 
+type WizardDomRefs = {
+    instruction: HTMLElement | null;
+    status: HTMLElement | null;
+    nextBtn: HTMLButtonElement | null;
+    prevBtn: HTMLButtonElement | null;
+    stepContainer: HTMLElement | null;
+    summaryContainer: HTMLElement | null;
+    summaryContent: HTMLElement | null;
+    axisLabel: HTMLElement | null;
+    axisHint: HTMLElement | null;
+    primaryControls: HTMLElement | null;
+    invertCheckbox: HTMLInputElement | null;
+    leftStickCard: HTMLElement | null;
+    rightStickCard: HTMLElement | null;
+    leftStickShell: HTMLElement | null;
+    rightStickShell: HTMLElement | null;
+    leftStickLegend: HTMLElement | null;
+    rightStickLegend: HTMLElement | null;
+    leftStickStatus: HTMLElement | null;
+    rightStickStatus: HTMLElement | null;
+};
+
+let wizardDomRefs: WizardDomRefs | null = null;
+
 type WizardRenderParams = {
     currentStepIdx: number;
     showingSummary: boolean;
@@ -26,6 +50,86 @@ type WizardRenderParams = {
     getResolvedPrimaryRef: (channel: PrimaryChannelKey) => GamepadInputRef | null;
     isCurrentStepResolved: () => boolean;
 };
+
+function getWizardDomRefs(): WizardDomRefs {
+    if (wizardDomRefs?.instruction?.isConnected) {
+        return wizardDomRefs;
+    }
+
+    wizardDomRefs = {
+        instruction: document.getElementById('gp-wizard-instruction'),
+        status: document.getElementById('gp-wizard-status'),
+        nextBtn: document.getElementById('gp-wizard-next') as HTMLButtonElement | null,
+        prevBtn: document.getElementById('gp-wizard-prev') as HTMLButtonElement | null,
+        stepContainer: document.getElementById('gp-wizard-step-container'),
+        summaryContainer: document.getElementById('gp-wizard-summary'),
+        summaryContent: document.getElementById('gp-wizard-summary-content'),
+        axisLabel: document.getElementById('gp-wizard-axis-label'),
+        axisHint: document.getElementById('gp-wizard-axis-hint'),
+        primaryControls: document.getElementById('gp-wizard-primary-controls'),
+        invertCheckbox: document.getElementById('gp-wizard-invert') as HTMLInputElement | null,
+        leftStickCard: document.getElementById('gp-wizard-stick-card-left'),
+        rightStickCard: document.getElementById('gp-wizard-stick-card-right'),
+        leftStickShell: document.getElementById('gp-wizard-stick-shell-left'),
+        rightStickShell: document.getElementById('gp-wizard-stick-shell-right'),
+        leftStickLegend: document.getElementById('gp-wizard-stick-legend-left'),
+        rightStickLegend: document.getElementById('gp-wizard-stick-legend-right'),
+        leftStickStatus: document.getElementById('gp-wizard-stick-status-left'),
+        rightStickStatus: document.getElementById('gp-wizard-stick-status-right')
+    };
+
+    return wizardDomRefs;
+}
+
+function setTextIfChanged(element: HTMLElement | null, value: string): void {
+    if (element && element.textContent !== value) {
+        element.textContent = value;
+    }
+}
+
+function setHtmlIfChanged(element: HTMLElement | null, value: string): void {
+    if (element && element.innerHTML !== value) {
+        element.innerHTML = value;
+    }
+}
+
+function setDisplayIfChanged(element: HTMLElement | null, value: string): void {
+    if (element && element.style.display !== value) {
+        element.style.display = value;
+    }
+}
+
+function setDisabledIfChanged(element: HTMLButtonElement | null, disabled: boolean): void {
+    if (element && element.disabled !== disabled) {
+        element.disabled = disabled;
+    }
+}
+
+function setHiddenIfChanged(element: HTMLElement | null, hidden: boolean): void {
+    if (element && element.hidden !== hidden) {
+        element.hidden = hidden;
+    }
+}
+
+function setCheckedIfChanged(element: HTMLInputElement | null, checked: boolean): void {
+    if (element && element.checked !== checked) {
+        element.checked = checked;
+    }
+}
+
+function setClassPresence(element: HTMLElement | null, className: string, enabled: boolean): void {
+    if (!element) return;
+    const hasClass = element.classList.contains(className);
+    if (hasClass !== enabled) {
+        element.classList.toggle(className, enabled);
+    }
+}
+
+function setDatasetIfChanged(element: HTMLElement | null, key: 'activeAxis', value: string): void {
+    if (element && element.dataset[key] !== value) {
+        element.dataset[key] = value;
+    }
+}
 
 export function renderWizardState(params: WizardRenderParams): void {
     const {
@@ -44,25 +148,27 @@ export function renderWizardState(params: WizardRenderParams): void {
         isCurrentStepResolved
     } = params;
 
-    const instruction = document.getElementById('gp-wizard-instruction');
-    const status = document.getElementById('gp-wizard-status');
-    const nextBtn = document.getElementById('gp-wizard-next') as HTMLButtonElement | null;
-    const prevBtn = document.getElementById('gp-wizard-prev') as HTMLButtonElement | null;
-    const stepContainer = document.getElementById('gp-wizard-step-container');
-    const summaryContainer = document.getElementById('gp-wizard-summary');
-    const summaryContent = document.getElementById('gp-wizard-summary-content');
-    const axisLabel = document.getElementById('gp-wizard-axis-label');
-    const axisHint = document.getElementById('gp-wizard-axis-hint');
-    const primaryControls = document.getElementById('gp-wizard-primary-controls');
-    const invertCheckbox = document.getElementById('gp-wizard-invert') as HTMLInputElement | null;
-    const leftStickCard = document.getElementById('gp-wizard-stick-card-left');
-    const rightStickCard = document.getElementById('gp-wizard-stick-card-right');
-    const leftStickShell = document.getElementById('gp-wizard-stick-shell-left');
-    const rightStickShell = document.getElementById('gp-wizard-stick-shell-right');
-    const leftStickLegend = document.getElementById('gp-wizard-stick-legend-left');
-    const rightStickLegend = document.getElementById('gp-wizard-stick-legend-right');
-    const leftStickStatus = document.getElementById('gp-wizard-stick-status-left');
-    const rightStickStatus = document.getElementById('gp-wizard-stick-status-right');
+    const {
+        instruction,
+        status,
+        nextBtn,
+        prevBtn,
+        stepContainer,
+        summaryContainer,
+        summaryContent,
+        axisLabel,
+        axisHint,
+        primaryControls,
+        invertCheckbox,
+        leftStickCard,
+        rightStickCard,
+        leftStickShell,
+        rightStickShell,
+        leftStickLegend,
+        rightStickLegend,
+        leftStickStatus,
+        rightStickStatus
+    } = getWizardDomRefs();
 
     if (
         !instruction || !status || !nextBtn || !prevBtn || !stepContainer || !summaryContainer || !summaryContent
@@ -70,41 +176,41 @@ export function renderWizardState(params: WizardRenderParams): void {
         || !leftStickShell || !rightStickShell || !leftStickLegend || !rightStickLegend || !leftStickStatus || !rightStickStatus
     ) return;
 
-    leftStickLegend.textContent = getStickLegend('left', getResolvedPrimaryRef);
-    rightStickLegend.textContent = getStickLegend('right', getResolvedPrimaryRef);
-    leftStickStatus.textContent = getStickStatus('left', getCurrentStep, getResolvedPrimaryRef);
-    rightStickStatus.textContent = getStickStatus('right', getCurrentStep, getResolvedPrimaryRef);
+    setTextIfChanged(leftStickLegend, getStickLegend('left', getResolvedPrimaryRef));
+    setTextIfChanged(rightStickLegend, getStickLegend('right', getResolvedPrimaryRef));
+    setTextIfChanged(leftStickStatus, getStickStatus('left', getCurrentStep, getResolvedPrimaryRef));
+    setTextIfChanged(rightStickStatus, getStickStatus('right', getCurrentStep, getResolvedPrimaryRef));
 
     if (showingSummary) {
-        stepContainer.style.display = 'none';
-        summaryContainer.style.display = 'block';
-        summaryContent.innerHTML = buildSummaryHtml({
+        setDisplayIfChanged(stepContainer, 'none');
+        setDisplayIfChanged(summaryContainer, 'block');
+        setHtmlIfChanged(summaryContent, buildSummaryHtml({
             detectedMapping,
             auxResults,
             getChannelInversion
-        });
-        instruction.textContent = 'Сводка по найденным каналам';
-        status.textContent = 'Проверьте найденные каналы и нажмите "Применить".';
-        prevBtn.disabled = false;
-        nextBtn.disabled = false;
-        nextBtn.textContent = 'Применить';
-        axisLabel.textContent = 'Проверка каналов';
-        axisHint.textContent = 'Итоговые инверсии и сопоставления будут сохранены и сразу применены к управлению.';
-        primaryControls.hidden = true;
-        leftStickCard.classList.remove('is-active');
-        rightStickCard.classList.remove('is-active');
-        leftStickShell.dataset.activeAxis = 'none';
-        rightStickShell.dataset.activeAxis = 'none';
+        }));
+        setTextIfChanged(instruction, 'Сводка по найденным каналам');
+        setTextIfChanged(status, 'Проверьте найденные каналы и нажмите "Применить".');
+        setDisabledIfChanged(prevBtn, false);
+        setDisabledIfChanged(nextBtn, false);
+        setTextIfChanged(nextBtn, 'Применить');
+        setTextIfChanged(axisLabel, 'Проверка каналов');
+        setTextIfChanged(axisHint, 'Итоговые инверсии и сопоставления будут сохранены и сразу применены к управлению.');
+        setHiddenIfChanged(primaryControls, true);
+        setClassPresence(leftStickCard, 'is-active', false);
+        setClassPresence(rightStickCard, 'is-active', false);
+        setDatasetIfChanged(leftStickShell, 'activeAxis', 'none');
+        setDatasetIfChanged(rightStickShell, 'activeAxis', 'none');
         return;
     }
 
-    stepContainer.style.display = 'block';
-    summaryContainer.style.display = 'none';
+    setDisplayIfChanged(stepContainer, 'block');
+    setDisplayIfChanged(summaryContainer, 'none');
 
     const step = getCurrentStep();
     const channelState = getCurrentChannelState();
-    instruction.textContent = step.instruction;
-    status.textContent = getStepStatusText({
+    setTextIfChanged(instruction, step.instruction);
+    setTextIfChanged(status, getStepStatusText({
         step,
         getDetectedRef,
         getFirstConnectedGamepad,
@@ -112,22 +218,22 @@ export function renderWizardState(params: WizardRenderParams): void {
         stepObservedStats,
         stepSwitchTransitions,
         auxResults
-    });
-    prevBtn.disabled = currentStepIdx === 0;
-    nextBtn.disabled = !isCurrentStepResolved();
-    nextBtn.textContent = currentStepIdx === STEPS.length - 1 ? 'Показать сводку' : 'Далее';
-    axisLabel.textContent = CHANNEL_LABELS[step.channel];
-    axisHint.textContent = step.type === 'primary'
+    }));
+    setDisabledIfChanged(prevBtn, currentStepIdx === 0);
+    setDisabledIfChanged(nextBtn, !isCurrentStepResolved());
+    setTextIfChanged(nextBtn, currentStepIdx === STEPS.length - 1 ? 'Показать сводку' : 'Далее');
+    setTextIfChanged(axisLabel, CHANNEL_LABELS[step.channel]);
+    setTextIfChanged(axisHint, step.type === 'primary'
         ? `Если ${CHANNEL_LABELS[step.channel].toLowerCase()} на модели и на стиках движется наоборот, включите инверсию канала.`
-        : `Если положения канала ${CHANNEL_LABELS[step.channel].toLowerCase()} идут в обратном порядке, включите инверсию до перехода дальше.`;
-    primaryControls.hidden = false;
-    invertCheckbox.checked = channelState?.inverted ?? false;
+        : `Если положения канала ${CHANNEL_LABELS[step.channel].toLowerCase()} идут в обратном порядке, включите инверсию до перехода дальше.`);
+    setHiddenIfChanged(primaryControls, false);
+    setCheckedIfChanged(invertCheckbox, channelState?.inverted ?? false);
     const targetStick = getCurrentStepTargetStick(getCurrentStep, getResolvedPrimaryRef);
     const targetAxis = getCurrentStepTargetAxis(getCurrentStep, getResolvedPrimaryRef);
-    leftStickCard.classList.toggle('is-active', targetStick === 'L' || targetStick === 'both');
-    rightStickCard.classList.toggle('is-active', targetStick === 'R' || targetStick === 'both');
-    leftStickShell.dataset.activeAxis = targetStick === 'L' ? targetAxis : 'none';
-    rightStickShell.dataset.activeAxis = targetStick === 'R' ? targetAxis : 'none';
+    setClassPresence(leftStickCard, 'is-active', targetStick === 'L' || targetStick === 'both');
+    setClassPresence(rightStickCard, 'is-active', targetStick === 'R' || targetStick === 'both');
+    setDatasetIfChanged(leftStickShell, 'activeAxis', targetStick === 'L' ? targetAxis : 'none');
+    setDatasetIfChanged(rightStickShell, 'activeAxis', targetStick === 'R' ? targetAxis : 'none');
 }
 
 function getCurrentStepTargetStick(
