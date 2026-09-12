@@ -2,7 +2,7 @@ import type { ScriptLanguage } from '../api-docs/sections.js';
 import { getLuaLessonState } from './lessons/catalog/lua.js';
 import { getPythonLessonState } from './lessons/catalog/python.js';
 
-export { evaluateLesson, getLessonCode } from './evaluation/index.js';
+export { evaluateLesson } from './evaluation/index.js';
 export type {
     DragPayload,
     GuideBlock,

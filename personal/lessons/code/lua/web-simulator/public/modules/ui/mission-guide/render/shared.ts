@@ -15,6 +15,10 @@ export function escapeHtml(value: string): string {
         .replace(/'/g, '&#39;');
 }
 
+export function renderInline(value: string): string {
+    return escapeHtml(value).replace(/`([^`]+)`/g, '<code class="guide-inline-code">$1</code>');
+}
+
 function getBlockMap(lesson: GuideLesson): Map<string, GuideBlock> {
     return new Map(lesson.blocks.map((block) => [block.id, block] as const));
 }
@@ -45,10 +49,10 @@ export function renderDiagnosticCard(diagnostic: GuideDiagnostic): string {
         <article class="guide-diagnostic guide-diagnostic--${diagnostic.kind}">
             <div class="guide-diagnostic__head">
                 <div class="guide-diagnostic__badge">${diagnosticKindLabel}</div>
-                <div class="guide-diagnostic__title">${escapeHtml(diagnostic.title)}</div>
+                <div class="guide-diagnostic__title">${renderInline(diagnostic.title)}</div>
             </div>
-            <div class="guide-diagnostic__reason">${escapeHtml(diagnostic.reason)}</div>
-            <div class="guide-diagnostic__fix"><strong>Исправить:</strong> ${escapeHtml(diagnostic.fix)}</div>
+            <div class="guide-diagnostic__reason">${renderInline(diagnostic.reason)}</div>
+            <div class="guide-diagnostic__fix"><strong>Исправить:</strong> ${renderInline(diagnostic.fix)}</div>
         </article>
     `;
 }
@@ -68,8 +72,8 @@ export function renderTargetRoute(lesson: GuideLesson): string {
 export function renderApiFocusItem(item: GuideApiFocusItem): string {
     return `
         <article class="guide-api-card">
-            <div class="guide-api-card__title">${escapeHtml(item.title)}</div>
-            ${item.summary ? `<div class="guide-api-card__summary">${escapeHtml(item.summary)}</div>` : ''}
+            <div class="guide-api-card__title">${renderInline(item.title)}</div>
+            ${item.summary ? `<div class="guide-api-card__summary">${renderInline(item.summary)}</div>` : ''}
             ${item.example ? `<pre class="guide-api-card__example">${escapeHtml(item.example)}</pre>` : ''}
         </article>
     `;

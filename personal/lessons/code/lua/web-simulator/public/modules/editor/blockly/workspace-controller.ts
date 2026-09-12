@@ -97,12 +97,12 @@ export function ensureBlocklyWorkspace(
         });
 
         blocklyWorkspace.addChangeListener(() => {
-            saveBlocklyWorkspaceState(controller, currentScriptLanguage);
+            saveBlocklyWorkspaceState(controller, language);
             controller.textDraftByKey.set(
-                controller.getEditorStateKey(currentScriptLanguage),
-                controller.compileMainEditorWorkspace(currentScriptLanguage, blocklyWorkspace)
+                controller.getEditorStateKey(language),
+                controller.compileMainEditorWorkspace(language, blocklyWorkspace)
             );
-            controller.updateBlocklyPreview(currentScriptLanguage);
+            controller.updateBlocklyPreview(language);
         });
 
         controller.setBlocklyWorkspace(blocklyWorkspace);

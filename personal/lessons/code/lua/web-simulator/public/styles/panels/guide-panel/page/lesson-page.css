@@ -3,23 +3,23 @@
     align-items: center;
     gap: 8px;
     padding: 10px 12px;
-    border-radius: 12px;
-    border: 1px solid rgba(56, 189, 248, 0.16);
-    background: rgba(15, 23, 42, 0.72);
-    color: #cbd5e1;
+    border-radius: var(--guide-radius-inner);
+    border: 1px solid var(--guide-border);
+    background: var(--guide-bg);
+    color: var(--guide-text-muted);
     cursor: pointer;
     transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
 .guide-page-tab:hover {
     transform: translateY(-1px);
-    border-color: rgba(56, 189, 248, 0.38);
-    background: rgba(15, 23, 42, 0.92);
+    border-color: rgba(255, 107, 0, 0.32);
+    background: var(--guide-bg);
 }
 
 .guide-page-tab.is-active {
-    border-color: rgba(125, 211, 252, 0.72);
-    background: rgba(14, 165, 233, 0.14);
+    border-color: rgba(255, 107, 0, 0.4);
+    background: var(--guide-accent-soft);
 }
 
 .guide-page-tab.is-solved {
@@ -42,8 +42,8 @@
     width: 22px;
     height: 22px;
     border-radius: 999px;
-    background: rgba(14, 165, 233, 0.16);
-    color: #7dd3fc;
+    background: var(--guide-accent-soft);
+    color: var(--guide-accent);
     font-size: 11px;
     font-weight: 800;
     flex-shrink: 0;
@@ -94,9 +94,9 @@
     min-height: 40px;
     padding: 9px 14px;
     border-radius: 999px;
-    background: rgba(15, 23, 42, 0.56);
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    color: #cbd5e1;
+    background: var(--guide-bg-muted);
+    border: 1px solid var(--guide-border);
+    color: var(--guide-text-muted);
     font-size: 12px;
     font-weight: 700;
     white-space: nowrap;
@@ -104,11 +104,11 @@
 
 .guide-lesson-page__header {
     padding: 18px 20px;
-    border-radius: 16px;
+    border-radius: var(--guide-radius);
     border: 1px solid rgba(255, 107, 0, 0.14);
     background:
         radial-gradient(circle at top right, rgba(255, 107, 0, 0.08), transparent 34%),
-        linear-gradient(180deg, #ffffff 0%, #fffaf5 100%);
+        linear-gradient(180deg, var(--guide-bg) 0%, var(--guide-accent-soft) 100%);
     box-shadow: 0 10px 24px rgba(17, 24, 39, 0.05);
 }
 
@@ -117,9 +117,9 @@
     align-self: flex-start;
     padding: 8px 12px;
     border-radius: 999px;
-    background: rgba(14, 165, 233, 0.12);
-    border: 1px solid rgba(56, 189, 248, 0.22);
-    color: #7dd3fc;
+    background: var(--guide-accent-soft);
+    border: 1px solid rgba(255, 107, 0, 0.18);
+    color: var(--guide-accent);
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -128,7 +128,7 @@
 }
 
 .guide-lesson-page__title {
-    color: #f8fafc;
+    color: var(--guide-text);
     font-size: 34px;
     font-weight: 800;
     line-height: 1.15;
@@ -139,7 +139,7 @@
 .guide-panel-card__text,
 .guide-workspace__hint,
 .guide-library__empty {
-    color: #cbd5e1;
+    color: var(--guide-text-muted);
     font-size: 13px;
     line-height: 1.6;
 }
@@ -157,7 +157,7 @@
 }
 
 .guide-lesson-page__route-label {
-    color: #7dd3fc;
+    color: var(--guide-accent);
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -172,9 +172,9 @@
 
 .guide-lesson-page__meta-item {
     padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid rgba(56, 189, 248, 0.14);
-    background: rgba(2, 6, 23, 0.4);
+    border-radius: var(--guide-radius-inner);
+    border: 1px solid var(--guide-border);
+    background: var(--guide-bg-muted);
 }
 
 .guide-lesson-page__meta-item--wide {
@@ -183,7 +183,7 @@
 
 .guide-lesson-page__meta-label {
     margin-bottom: 6px;
-    color: #7dd3fc;
+    color: var(--guide-accent);
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -198,9 +198,9 @@
     align-items: stretch;
     gap: 4px;
     padding: 8px 9px;
-    border-radius: 10px;
-    border: 1px solid rgba(56, 189, 248, 0.14);
-    background: rgba(2, 6, 23, 0.4);
+    border-radius: var(--guide-radius-inner);
+    border: 1px solid var(--guide-border);
+    background: var(--guide-bg-muted);
 }
 
 .guide-lesson-overview__head,
@@ -219,9 +219,9 @@
     min-width: 56px;
     padding: 6px 10px;
     border-radius: 999px;
-    background: rgba(14, 165, 233, 0.16);
-    border: 1px solid rgba(56, 189, 248, 0.22);
-    color: #7dd3fc;
+    background: var(--guide-accent-soft);
+    border: 1px solid rgba(255, 107, 0, 0.18);
+    color: var(--guide-accent);
     font-size: 12px;
     font-weight: 800;
 }
@@ -238,9 +238,9 @@
     gap: 4px;
     min-width: 0;
     padding: 8px 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(56, 189, 248, 0.12);
-    background: rgba(15, 23, 42, 0.04);
+    border-radius: var(--guide-radius-inner);
+    border: 1px solid var(--guide-border);
+    background: var(--guide-bg-emphasis);
 }
 
 .guide-lesson-overview__bar {
@@ -248,21 +248,21 @@
     overflow: hidden;
     height: 8px;
     border-radius: 999px;
-    background: rgba(15, 23, 42, 0.72);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--guide-bg-emphasis);
+    border: 1px solid var(--guide-border);
 }
 
 .guide-lesson-overview__fill {
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, #0ea5e9 0%, #22c55e 100%);
+    background: linear-gradient(90deg, var(--guide-accent) 0%, var(--guide-success) 100%);
 }
 
 .guide-lesson-overview__meta {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    color: #cbd5e1;
+    color: var(--guide-text-muted);
     font-size: 12px;
     line-height: 1.5;
 }

@@ -53,10 +53,18 @@ function clampSidebarWidth(width: number): number {
     return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, Math.ceil(width)));
 }
 
+/* В мобильном режиме (is-mobile) ширина панелей всегда 100% (CSS !important):
+   любая запись px в style.width ломает восстановление (parseInt('100%') === 100). */
+function isMobileSidebarLayout(panels?: HTMLElement | null): boolean {
+    const el = panels ?? getSidebarPanelsElement();
+    return !!el?.classList.contains('is-mobile');
+}
+
 function applySidebarAutofitWidth(requiredWidth: number): void {
     const panels = getSidebarPanelsElement();
     const activePanelId = document.querySelector('.sidebar-panel.active')?.id || null;
     if (!panels || activePanelId !== 'editor-panel' || panels.classList.contains('is-fullscreen')) return;
+    if (isMobileSidebarLayout(panels)) return;
 
     const currentWidth = getSidebarCurrentWidth(panels);
     const nextWidth = clampSidebarWidth(requiredWidth);
@@ -171,6 +179,7 @@ export function expandEditorPanelForBlockly(
     if (!panels || activePanelId !== 'editor-panel' || panels.classList.contains('is-fullscreen')) {
         return previousSidebarWidthBeforeBlockly;
     }
+    if (isMobileSidebarLayout(panels)) return previousSidebarWidthBeforeBlockly;
 
     if (!previousSidebarWidthBeforeBlockly) {
         previousSidebarWidthBeforeBlockly = panels.style.width || `${getSidebarCurrentWidth(panels)}px`;
@@ -185,6 +194,7 @@ export function restoreEditorPanelWidthAfterBlockly(previousSidebarWidthBeforeBl
     if (!panels || activePanelId !== 'editor-panel' || !previousSidebarWidthBeforeBlockly) {
         return previousSidebarWidthBeforeBlockly;
     }
+    if (isMobileSidebarLayout(panels)) return null;
 
     const currentWidth = getSidebarCurrentWidth(panels);
     const previousWidth = Number.parseInt(previousSidebarWidthBeforeBlockly, 10);

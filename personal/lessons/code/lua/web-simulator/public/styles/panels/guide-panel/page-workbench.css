@@ -33,18 +33,16 @@
 .guide-scene-preview-host {
     position: relative;
     min-height: 320px;
-    border-radius: 16px;
-    border: 1px dashed rgba(56, 189, 248, 0.24);
-    background:
-        radial-gradient(circle at top, rgba(14, 165, 233, 0.14), transparent 48%),
-        rgba(2, 6, 23, 0.62);
+    border-radius: var(--guide-radius);
+    border: 1px dashed var(--guide-border-strong);
+    background: var(--guide-bg-muted);
     overflow: hidden;
     overscroll-behavior: contain;
 }
 
 .guide-scene-preview-host.is-active {
     border-style: solid;
-    border-color: rgba(125, 211, 252, 0.3);
+    border-color: rgba(255, 107, 0, 0.32);
 }
 
 .guide-scene-preview-host > .scene-container {
@@ -71,7 +69,7 @@
     place-items: center;
     min-height: 320px;
     padding: 20px;
-    color: #cbd5e1;
+    color: var(--guide-text-muted);
     font-size: 14px;
     line-height: 1.7;
     text-align: center;
@@ -149,86 +147,39 @@
     gap: 14px;
 }
 
-.guide-blockly-shell {
-    padding: 8px;
+.guide-editor-bridge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px;
     border-radius: 12px;
     background: var(--guide-bg-muted);
-    border: 1px solid var(--guide-border);
+    border: 1px dashed var(--guide-border-strong);
 }
 
-.guide-blockly-stage {
-    height: 360px;
-    width: 100%;
-    border-radius: 12px;
-    border: 1px solid var(--guide-border-strong);
-    background-color: #f8f9fa;
-    background-image:
-        radial-gradient(circle, rgba(26, 26, 26, 0.08) 1px, transparent 1.2px);
-    background-size: 18px 18px;
-    overflow: hidden;
+.guide-editor-bridge__text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-.guide-blockly-stage .blocklySvg {
-    font-family: var(--font-sans);
-    background: transparent !important;
+.guide-editor-bridge__title {
+    font-weight: 700;
+    font-size: 13px;
 }
 
-.guide-blockly-stage .blocklyMainBackground {
-    fill: transparent !important;
-    stroke: none !important;
+.guide-editor-bridge__hint {
+    color: var(--guide-text-muted);
+    font-size: 12px;
+    line-height: 1.5;
 }
 
-.guide-blockly-stage .blocklyToolboxDiv {
-    background: #ffffff !important;
-    border-right: 1px solid var(--guide-border);
-    box-shadow: inset -1px 0 0 rgba(17, 24, 39, 0.02);
-}
-
-.guide-blockly-stage .blocklyTreeRow {
-    margin: 4px 8px;
-    border-radius: 10px;
-}
-
-.guide-blockly-stage .blocklyTreeRow:hover {
-    background: rgba(255, 107, 0, 0.08);
-}
-
-.guide-blockly-stage .blocklyTreeSelected,
-.guide-blockly-stage .blocklyTreeSelected:hover {
-    background: rgba(255, 107, 0, 0.12) !important;
-    box-shadow: inset 0 0 0 1px rgba(255, 107, 0, 0.2);
-}
-
-.guide-blockly-stage .blocklyTreeLabel,
-.guide-blockly-stage .blocklyFlyoutLabelText,
-.guide-blockly-stage .blocklyText {
-    fill: #1a1a1a !important;
-    color: #1a1a1a !important;
-    font-family: var(--font-sans) !important;
-    font-weight: 600;
-}
-
-.guide-blockly-stage .blocklyFlyoutBackground {
-    fill: #f8f9fa !important;
-    stroke: #e5e7eb;
-    stroke-width: 1px;
-}
-
-.guide-blockly-stage .blocklyScrollbarHandle {
-    fill: rgba(148, 163, 184, 0.6) !important;
-}
-
-.guide-blockly-stage .blocklyScrollbarBackground:hover + .blocklyScrollbarHandle,
-.guide-blockly-stage .blocklyScrollbarHandle:hover {
-    fill: rgba(255, 107, 0, 0.45) !important;
-}
-
-.guide-blockly-stage .blocklyHighlightedConnectionPath {
-    stroke: #ff6b00;
-}
-
-.guide-blockly-stage .blocklyTrash {
-    opacity: 0.76;
+.guide-editor-bridge__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .guide-scene-preview-host {

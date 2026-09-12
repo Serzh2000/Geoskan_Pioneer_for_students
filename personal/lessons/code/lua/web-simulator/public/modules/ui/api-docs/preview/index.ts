@@ -6,6 +6,8 @@ import type { ApiPreviewRenderContext, ApiPreviewScenario, ApiPreviewViewMode } 
 
 export type { ApiPreviewScenario } from './types.js';
 
+const PREVIEW_FRAME_INTERVAL_MS = 33;
+
 export class ApiMethodPreview {
     private readonly stage: HTMLElement | null;
     private readonly statusEl: HTMLElement | null;
@@ -26,9 +28,27 @@ export class ApiMethodPreview {
     private animationFrameId = 0;
     private lastFrameTs = 0;
     private startTs = 0;
+    private lastWidth = 0;
+    private lastHeight = 0;
+    private lastStatusTitle = '';
+    private lastStatusDetail = '';
+    private lastStatusPhase = '';
     private destroyed = false;
+    private isIntersecting = true;
+    private visibilityObserver: IntersectionObserver | null = null;
     private viewMode: ApiPreviewViewMode = 'angled';
-    private readonly handleResize = () => this.syncSize();
+    private readonly handleResize = () => {
+        this.syncSize();
+        this.renderFrame(performance.now(), 1 / 60);
+        this.ensureAnimationState();
+    };
+    private readonly handleVisibilityChange = () => this.ensureAnimationState(true);
+    private readonly handleIntersection: IntersectionObserverCallback = (entries) => {
+        const entry = entries.find((candidate) => candidate.target === this.root || candidate.target === this.stage);
+        if (!entry) return;
+        this.isIntersecting = entry.isIntersecting && entry.intersectionRatio > 0;
+        this.ensureAnimationState(true);
+    };
 
     constructor(
         private readonly root: HTMLElement,
@@ -43,8 +63,11 @@ export class ApiMethodPreview {
 
     destroy(): void {
         this.destroyed = true;
-        window.cancelAnimationFrame(this.animationFrameId);
+        this.stopAnimation();
         window.removeEventListener('resize', this.handleResize);
+        document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+        this.visibilityObserver?.disconnect();
+        this.visibilityObserver = null;
         disposeSceneResources(this.scene);
         this.renderer?.dispose();
         this.root.querySelector('[data-api-preview-stage]')?.replaceChildren();
@@ -131,7 +154,10 @@ export class ApiMethodPreview {
 
         this.syncSize();
         window.addEventListener('resize', this.handleResize);
-        this.animate();
+        document.addEventListener('visibilitychange', this.handleVisibilityChange);
+        this.initVisibilityObserver();
+        this.renderFrame(performance.now(), 1 / 60);
+        this.ensureAnimationState(true);
     }
 
     private syncSize(): void {
@@ -139,6 +165,12 @@ export class ApiMethodPreview {
 
         const width = Math.max(220, this.stage.clientWidth);
         const height = Math.max(180, this.stage.clientHeight);
+        if (width === this.lastWidth && height === this.lastHeight) {
+            return;
+        }
+
+        this.lastWidth = width;
+        this.lastHeight = height;
         this.renderer.setSize(width, height, false);
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
@@ -164,23 +196,93 @@ export class ApiMethodPreview {
         this.camera.updateProjectionMatrix();
     }
 
-    private animate = (): void => {
-        if (this.destroyed || !this.renderer || !this.scene || !this.camera || !this.drone) return;
+    private initVisibilityObserver(): void {
+        if (typeof IntersectionObserver !== 'function') {
+            this.isIntersecting = true;
+            return;
+        }
 
-        const now = performance.now();
+        this.visibilityObserver = new IntersectionObserver(this.handleIntersection, {
+            threshold: 0.01
+        });
+        this.visibilityObserver.observe(this.stage ?? this.root);
+    }
+
+    private shouldAnimate(): boolean {
+        return !this.destroyed
+            && !!this.renderer
+            && !!this.scene
+            && !!this.camera
+            && !!this.drone
+            && document.visibilityState !== 'hidden'
+            && this.root.isConnected
+            && this.root.getClientRects().length > 0
+            && this.isIntersecting;
+    }
+
+    private ensureAnimationState(resetTiming = false): void {
+        if (!this.shouldAnimate()) {
+            this.stopAnimation();
+            return;
+        }
+
+        if (resetTiming) {
+            this.lastFrameTs = 0;
+        }
+
+        if (this.animationFrameId === 0) {
+            this.animationFrameId = window.requestAnimationFrame(this.animate);
+        }
+    }
+
+    private stopAnimation(): void {
+        if (this.animationFrameId !== 0) {
+            window.cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = 0;
+        }
+    }
+
+    private renderFrame(now: number, dt: number): void {
+        if (!this.renderer || !this.scene || !this.camera || !this.drone) return;
+
         if (!this.startTs) this.startTs = now;
-        const dt = this.lastFrameTs ? Math.min((now - this.lastFrameTs) / 1000, 0.05) : 1 / 60;
-        this.lastFrameTs = now;
         const elapsed = (now - this.startTs) / 1000;
-
         const status = renderPreviewScenario(this.getRenderContext(), this.scenario, elapsed, dt);
-        if (this.statusEl) this.statusEl.textContent = status.title;
-        if (this.hintEl) this.hintEl.textContent = status.detail;
-        if (this.phaseEl) this.phaseEl.textContent = status.phase || status.title;
+        const phaseText = status.phase || status.title;
+
+        if (this.statusEl && this.lastStatusTitle !== status.title) {
+            this.statusEl.textContent = status.title;
+            this.lastStatusTitle = status.title;
+        }
+        if (this.hintEl && this.lastStatusDetail !== status.detail) {
+            this.hintEl.textContent = status.detail;
+            this.lastStatusDetail = status.detail;
+        }
+        if (this.phaseEl && this.lastStatusPhase !== phaseText) {
+            this.phaseEl.textContent = phaseText;
+            this.lastStatusPhase = phaseText;
+        }
 
         this.syncSize();
         this.renderer.render(this.scene, this.camera);
-        this.animationFrameId = window.requestAnimationFrame(this.animate);
+    }
+
+    private animate = (): void => {
+        this.animationFrameId = 0;
+        if (!this.shouldAnimate()) {
+            return;
+        }
+
+        const now = performance.now();
+        if (this.lastFrameTs && now - this.lastFrameTs < PREVIEW_FRAME_INTERVAL_MS) {
+            this.ensureAnimationState();
+            return;
+        }
+
+        const dt = this.lastFrameTs ? Math.min((now - this.lastFrameTs) / 1000, 0.05) : 1 / 60;
+        this.lastFrameTs = now;
+        this.renderFrame(now, dt);
+        this.ensureAnimationState();
     };
 
     private getRenderContext(): ApiPreviewRenderContext {

@@ -9,7 +9,7 @@ import {
     getLessonsForChapter,
     isLessonCompleted
 } from '../state.js';
-import type { GuideLessonState } from '../types.js';
+import type { GuideLessonState, GuideLessonStepId } from '../types.js';
 import { escapeHtml } from './shared.js';
 
 export function renderGuideTopTabs(language: ScriptLanguage): string {
@@ -116,6 +116,38 @@ export function renderPageTabs(state: GuideLessonState, language: ScriptLanguage
                     </button>
                 `;
             }).join('')}
+        </div>
+    `;
+}
+
+const LESSON_STEPS: Array<{ id: GuideLessonStepId; label: string }> = [
+    { id: 'theory', label: 'Теория' },
+    { id: 'build', label: 'Собрать' },
+    { id: 'check', label: 'Проверка' }
+];
+
+export function renderLessonSteps(activeStep: GuideLessonStepId, hasChecked: boolean, solved: boolean): string {
+    return `
+        <div class="guide-page-tabs" role="tablist" aria-label="Шаги урока">
+            ${LESSON_STEPS.map((step, index) => {
+        const isActive = activeStep === step.id;
+        const isSolvedStep = step.id === 'check' && solved;
+        const suffix = step.id === 'check' && hasChecked
+            ? (solved ? ' · принято' : ' · есть замечания')
+            : '';
+        return `
+                    <button
+                        type="button"
+                        class="guide-page-tab ${isActive ? 'is-active' : ''} ${isSolvedStep ? 'is-solved' : ''}"
+                        data-guide-step="${step.id}"
+                        role="tab"
+                        aria-selected="${isActive}"
+                    >
+                        <span class="guide-page-tab__step">${index + 1}</span>
+                        <span class="guide-page-tab__text">${escapeHtml(step.label)}${suffix}</span>
+                    </button>
+                `;
+    }).join('')}
         </div>
     `;
 }

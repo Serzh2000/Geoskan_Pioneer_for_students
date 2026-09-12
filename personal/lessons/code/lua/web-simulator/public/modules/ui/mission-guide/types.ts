@@ -47,16 +47,27 @@ export type GuideOrderRule = {
 
 export type GuideTabId = 'tutorial' | 'trainer';
 
+export type GuideLessonStepId = 'theory' | 'build' | 'check';
+
 export type GuideThemeId = 'dark' | 'light';
 
 export type GuidePortalPageId = 'intro' | 'lesson';
 
 export type GuideLessonProgressState = 'locked' | 'available' | 'in_progress' | 'completed';
 
+export type GuideTheorySpoiler = {
+    label: string;
+    paragraphs?: string[];
+    bullets?: string[];
+    ordered?: string[];
+};
+
 export type GuideTheorySection = {
     title: string;
     paragraphs: string[];
     bullets?: string[];
+    ordered?: string[];
+    spoilers?: GuideTheorySpoiler[];
     takeaway?: string;
 };
 

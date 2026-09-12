@@ -20,7 +20,7 @@ export function getPythonExpandedFoundationLessons(): GuideLesson[] {
                 apiFocus('pioneer.led_control(r, g, b)', 'Меняет цвет подсветки дрона и дает мгновенный визуальный отклик.', 'pioneer.led_control(r=0, g=255, b=0)'),
                 apiFocus('print(...)', 'Позволяет явно обозначить этап миссии в текстовом логе.', 'print("Сигнал готов")')
             ],
-            targetBlockIds: ['py_led_control', 'py_print'],
+            targetBlockIds: ['py_led_control', 'py_print'], 
             blocks: [
                 createStatementBlock('py6-led', 'зеленый LED', 'pioneer.led_control(r=0, g=255, b=0)', 'Целевой световой сигнал.', 'action', 'pioneer.led_control(r=0, g=255, b=0)'),
                 createStatementBlock('py6-print', 'сообщить о сигнале', 'print("Сигнал готов")', 'Подтверждает шаг текстом.', 'check', 'print("Сигнал готов")'),

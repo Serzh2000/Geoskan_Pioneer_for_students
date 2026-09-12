@@ -1,34 +1,38 @@
 import { summarizeGuideDiagnostics, logGuideEvent } from '../support/logging.js';
 import { buildGuideEventContext, resetGuideRuntimeView, type GuideInteractionContext } from './context.js';
 import { canLaunchLesson, launchLesson } from './launch.js';
-import {
-    buildTargetWorkspaceXml,
-    clearGuideWorkspace,
-    fillGuideWorkspace,
-    getGuideWorkspace
-} from './workspace.js';
+import { buildTargetWorkspaceXml, extractMissionGuideSequence, serializeWorkspaceXml } from '../support/workspace-xml.js';
 import { evaluateLesson } from '../evaluation/index.js';
+import { getMainBlocklyWorkspace, loadMainBlocklyXml, setBlocklyEditorEnabled } from '../../../editor/index.js';
 import {
-    getLessonSequence,
-    getLessonWorkspaceState,
-    isLessonGeneratedCodeVisible,
-    isLessonSolutionVisible,
     setLessonBanner,
     setLessonChecked,
     setLessonCompleted,
-    setLessonGeneratedCodeVisible,
-    setLessonSolutionVisible,
-    setLessonWorkspaceState
+    setActiveGuideStep
 } from '../state.js';
+
+function getMainWorkspaceSnapshot(): {
+    sequenceIds: string[];
+    workspaceXml: string;
+} | null {
+    const workspace = getMainBlocklyWorkspace();
+    if (!workspace) return null;
+
+    return {
+        sequenceIds: extractMissionGuideSequence(workspace),
+        workspaceXml: serializeWorkspaceXml(workspace)
+    };
+}
 
 function executeLessonLaunch(
     context: GuideInteractionContext,
     evaluation: ReturnType<typeof evaluateLesson>,
     checkedBeforeLaunch: boolean,
-    emptyWorkspaceMessage = 'Сначала соберите хотя бы минимальную рабочую цепочку.'
+    emptyWorkspaceMessage = 'Сначала соберите хотя бы минимальную рабочую цепочку в редакторе Blockly.'
 ): boolean {
     const { language, lesson, rerender } = context;
-    const sequenceIds = getLessonSequence(language, lesson.id);
+    const snapshot = getMainWorkspaceSnapshot();
+    const sequenceIds = snapshot ? snapshot.sequenceIds : [];
 
     logGuideEvent('launch_button_clicked', {
         ...buildGuideEventContext(context),
@@ -46,7 +50,7 @@ function executeLessonLaunch(
         return false;
     }
 
-    launchLesson(language, lesson, rerender, getGuideWorkspace(), evaluation.solved
+    launchLesson(language, lesson, rerender, evaluation.solved
         ? {
             kind: 'info',
             message: 'Проверка выполнена, сценарий сразу запущен. Сравните сцену с целью урока.'
@@ -63,10 +67,8 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
 
     container.querySelectorAll<HTMLElement>('[data-guide-reset]').forEach((element) => {
         element.addEventListener('click', () => {
-            logGuideEvent('workspace_reset', buildGuideEventContext(context), 'warn');
+            logGuideEvent('lesson_state_reset', buildGuideEventContext(context), 'warn');
             resetGuideRuntimeView();
-            clearGuideWorkspace();
-            setLessonWorkspaceState(language, lesson.id, null);
             setLessonChecked(language, lesson.id, false);
             setLessonBanner(language, lesson.id, null);
             rerender(language);
@@ -76,11 +78,11 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
     container.querySelectorAll<HTMLElement>('[data-guide-fill]').forEach((element) => {
         element.addEventListener('click', () => {
             logGuideEvent('solution_fill_requested', buildGuideEventContext(context));
-            fillGuideWorkspace(buildTargetWorkspaceXml(lesson.id, lesson.targetBlockIds));
+            loadMainBlocklyXml(buildTargetWorkspaceXml(lesson.id, lesson.targetBlockIds));
             setLessonChecked(language, lesson.id, true);
             setLessonBanner(language, lesson.id, {
                 kind: 'info',
-                message: 'В рабочую область подставлена эталонная последовательность.'
+                message: 'Эталонная последовательность загружена в редактор Blockly.'
             });
             logGuideEvent('solution_fill_applied', {
                 ...buildGuideEventContext(context),
@@ -90,16 +92,36 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
         });
     });
 
+    container.querySelectorAll<HTMLElement>('[data-guide-open-editor]').forEach((element) => {
+        element.addEventListener('click', () => {
+            logGuideEvent('open_main_editor_requested', buildGuideEventContext(context));
+            (window as any).closeMissionGuideModal?.();
+            setBlocklyEditorEnabled(true);
+            logGuideEvent('open_main_editor_applied', buildGuideEventContext(context), 'success');
+        });
+    });
+
     container.querySelectorAll<HTMLElement>('[data-guide-check]').forEach((element) => {
         element.addEventListener('click', () => {
-            const sequenceIds = getLessonSequence(language, lesson.id);
-            const workspaceXml = getLessonWorkspaceState(language, lesson.id);
+            const snapshot = getMainWorkspaceSnapshot();
+            const sequenceIds = snapshot ? snapshot.sequenceIds : [];
+            const workspaceXml = snapshot ? snapshot.workspaceXml : null;
             logGuideEvent('check_clicked', {
                 ...buildGuideEventContext(context),
                 sequenceLength: sequenceIds.length,
                 sequence: sequenceIds,
                 workspaceXmlLength: workspaceXml?.length || 0
             });
+
+            if (!snapshot) {
+                setLessonChecked(language, lesson.id, false);
+                setLessonBanner(language, lesson.id, {
+                    kind: 'warning',
+                    message: 'Включите редактор Blockly (кнопка «Blockly» над редактором) и соберите цепочку команд.'
+                });
+                rerender(language);
+                return;
+            }
 
             const evaluation = evaluateLesson(lesson, sequenceIds, workspaceXml);
             logGuideEvent('check_evaluated', {
@@ -110,6 +132,7 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
                 diagnostics: summarizeGuideDiagnostics(evaluation.diagnostics)
             }, evaluation.solved ? 'success' : evaluation.diagnostics.some((diagnostic) => diagnostic.kind === 'error') ? 'warn' : 'info');
             setLessonChecked(language, lesson.id, true);
+            setActiveGuideStep(language, lesson.id, 'check');
 
             if (evaluation.solved) {
                 setLessonCompleted(language, lesson.id, true);
@@ -133,32 +156,14 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
 
     container.querySelectorAll<HTMLElement>('[data-guide-launch]').forEach((element) => {
         element.addEventListener('click', () => {
-            const workspaceXml = getLessonWorkspaceState(language, lesson.id);
-            const evaluation = evaluateLesson(lesson, getLessonSequence(language, lesson.id), workspaceXml);
+            const snapshot = getMainWorkspaceSnapshot();
+            const evaluation = evaluateLesson(
+                lesson,
+                snapshot ? snapshot.sequenceIds : [],
+                snapshot ? snapshot.workspaceXml : null
+            );
             const hasChecked = element.dataset.guideLaunch === 'checked';
             executeLessonLaunch(context, evaluation, hasChecked);
-        });
-    });
-
-    container.querySelectorAll<HTMLElement>('[data-guide-toggle-code]').forEach((element) => {
-        element.addEventListener('click', () => {
-            logGuideEvent('toggle_generated_code', {
-                ...buildGuideEventContext(context),
-                nextVisible: !isLessonGeneratedCodeVisible(language, lesson.id)
-            });
-            setLessonGeneratedCodeVisible(language, lesson.id, !isLessonGeneratedCodeVisible(language, lesson.id));
-            rerender(language);
-        });
-    });
-
-    container.querySelectorAll<HTMLElement>('[data-guide-toggle-solution]').forEach((element) => {
-        element.addEventListener('click', () => {
-            logGuideEvent('toggle_solution', {
-                ...buildGuideEventContext(context),
-                nextVisible: !isLessonSolutionVisible(language, lesson.id)
-            });
-            setLessonSolutionVisible(language, lesson.id, !isLessonSolutionVisible(language, lesson.id));
-            rerender(language);
         });
     });
 }

@@ -217,6 +217,46 @@
     border-left-color: #ff6b00;
 }
 
+:root[data-theme='dark'] .guide-inline-code {
+    background: rgba(255, 107, 0, 0.14);
+    border-color: rgba(255, 176, 103, 0.28);
+    color: #ffb067;
+}
+
+:root[data-theme='dark'] .guide-theory-card__index {
+    border-color: rgba(255, 176, 103, 0.28);
+    color: #ffb067;
+}
+
+:root[data-theme='dark'] .guide-theory-card__takeaway {
+    background: rgba(255, 107, 0, 0.1);
+    border-color: rgba(255, 176, 103, 0.24);
+    border-left-color: #ff6b00;
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .guide-theory-card__takeaway-label {
+    color: #ffb067;
+}
+
+:root[data-theme='dark'] .guide-theory-card__spoiler {
+    background: rgba(15, 23, 42, 0.88);
+    border-color: rgba(148, 163, 184, 0.16);
+}
+
+:root[data-theme='dark'] .guide-theory-card__spoiler summary {
+    color: var(--text-strong);
+}
+
+:root[data-theme='dark'] .guide-theory-card__spoiler summary:hover {
+    background: rgba(255, 107, 0, 0.14);
+    color: #ffb067;
+}
+
+:root[data-theme='dark'] .guide-theory-card__spoiler-body {
+    color: var(--text-muted);
+}
+
 :root[data-theme='dark'] .guide-api-card__example {
     color: #dbe4f0;
 }
@@ -229,17 +269,9 @@
     border-left-color: #ff6b00;
 }
 
-:root[data-theme='dark'] .guide-blockly-stage {
-    border-color: rgba(148, 163, 184, 0.22);
-    background-color: #0f172a;
-    background-image: radial-gradient(circle, rgba(148, 163, 184, 0.18) 1px, transparent 1.2px);
-}
-
-:root[data-theme='dark'] .guide-blockly-stage .blocklyToolbox,
-:root[data-theme='dark'] .guide-blockly-stage .blocklyToolboxDiv {
-    background: #0f172a !important;
-    border-right: 1px solid rgba(148, 163, 184, 0.14);
-    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.04);
+:root[data-theme='dark'] .guide-editor-bridge {
+    background: rgba(15, 23, 42, 0.6);
+    border-color: rgba(148, 163, 184, 0.28);
 }
 
 :root[data-theme='dark'] .guide-scene-preview-host {

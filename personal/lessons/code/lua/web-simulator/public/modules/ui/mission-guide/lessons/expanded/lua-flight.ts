@@ -20,7 +20,7 @@ export function getLuaExpandedFlightLessons(): GuideLesson[] {
                 apiFocus('Ev.TAKEOFF_COMPLETE', 'Это событие подтверждает, что взлет завершен и дрон может перейти к маршруту.', 'if event == Ev.TAKEOFF_COMPLETE then ... end'),
                 apiFocus('ap.goToLocalPoint(x, y, z)', 'Запускает реальное перемещение дрона к локальной координате.', 'ap.goToLocalPoint(1, 0, 1)')
             ],
-            targetBlockIds: ['lua_ap_push', 'lua_event_callback', 'lua_ap_push', 'lua_event_callback', 'lua_goto_local_point', 'lua_callback_open', 'lua_callback_end'],
+            targetBlockIds: ['lua_ap_push', 'lua_callback_open', 'lua_event_callback', 'lua_ap_push', 'lua_event_callback', 'lua_goto_local_point', 'lua_callback_end'], 
             blocks: [
                 createStatementBlock('lua8-preflight', 'PREFLIGHT', 'ap.push(Ev.MCE_PREFLIGHT)', 'Старт миссии.', 'setup', 'ap.push(Ev.MCE_PREFLIGHT)'),
                 createEventBlock('lua8-engines', 'ждать ENGINES_STARTED', 'if event == Ev.ENGINES_STARTED', 'Открывает ветку взлета.', 'Ev.ENGINES_STARTED'),
@@ -122,7 +122,7 @@ end`,
                 apiFocus('Ev.POINT_REACHED', 'Подтверждает, что маршрут действительно выполнен.', 'if event == Ev.POINT_REACHED then ... end'),
                 apiFocus('print(...)', 'В этом уроке лог нужен как подтверждение достижения навигационной цели.', 'print("Точка достигнута")')
             ],
-            targetBlockIds: ['lua_ap_push', 'lua_event_callback', 'lua_ap_push', 'lua_event_callback', 'lua_goto_local_point', 'lua_event_callback', 'lua_print', 'lua_callback_open', 'lua_callback_end'],
+            targetBlockIds: ['lua_ap_push', 'lua_callback_open', 'lua_event_callback', 'lua_ap_push', 'lua_event_callback', 'lua_goto_local_point', 'lua_event_callback', 'lua_print', 'lua_callback_end'], 
             blocks: [
                 createStatementBlock('lua9-preflight', 'PREFLIGHT', 'ap.push(Ev.MCE_PREFLIGHT)', 'Старт миссии.', 'setup', 'ap.push(Ev.MCE_PREFLIGHT)'),
                 createEventBlock('lua9-engines', 'ждать ENGINES_STARTED', 'if event == Ev.ENGINES_STARTED', 'Стартовая ветка FSM.', 'Ev.ENGINES_STARTED'),
@@ -208,7 +208,7 @@ end`,
                 apiFocus('Ev.MCE_LANDING', 'Завершает миссию и должен отправляться только после подтверждения конца маршрута.', 'ap.push(Ev.MCE_LANDING)'),
                 apiFocus('Ev.POINT_REACHED', 'Сигнал, который разрешает завершить маршрут посадкой.', 'if event == Ev.POINT_REACHED then ... end')
             ],
-            targetBlockIds: ['lua_ap_push', 'lua_event_callback', 'lua_ap_push', 'lua_event_callback', 'lua_goto_local_point', 'lua_event_callback', 'lua_ap_push', 'lua_callback_open', 'lua_callback_end'],
+            targetBlockIds: ['lua_ap_push', 'lua_callback_open', 'lua_event_callback', 'lua_ap_push', 'lua_event_callback', 'lua_goto_local_point', 'lua_event_callback', 'lua_ap_push', 'lua_callback_end'],
             blocks: [
                 createStatementBlock('lua10-preflight', 'PREFLIGHT', 'ap.push(Ev.MCE_PREFLIGHT)', 'Старт подготовки.', 'setup', 'ap.push(Ev.MCE_PREFLIGHT)'),
                 createEventBlock('lua10-engines', 'ждать ENGINES_STARTED', 'if event == Ev.ENGINES_STARTED', 'Ветка запуска двигателей.', 'Ev.ENGINES_STARTED'),

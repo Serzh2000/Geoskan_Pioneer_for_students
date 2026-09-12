@@ -3,7 +3,6 @@ import {
     hasNumericFieldValue,
     parseWorkspaceXml
 } from './xml.js';
-import { buildTargetWorkspaceXml } from '../support/workspace-xml.js';
 import {
     validateLuaLedSingleWorkspace
 } from './lua-led-single.js';
@@ -31,6 +30,20 @@ function solvedDiagnostic(outcome: string): GuideDiagnostic {
         reason: outcome,
         fix: 'Можно запускать сценарий: код уже собирается в настоящий пример Pioneer API.'
     };
+}
+
+function hasRequiredBlockOccurrences(sequenceIds: string[], targetBlockIds: string[]): boolean {
+    const available = new Map<string, number>();
+    for (const blockId of sequenceIds) {
+        available.set(blockId, (available.get(blockId) || 0) + 1);
+    }
+
+    return targetBlockIds.every((blockId) => {
+        const count = available.get(blockId) || 0;
+        if (count === 0) return false;
+        available.set(blockId, count - 1);
+        return true;
+    });
 }
 
 function getCallbackDiagnostics(sequenceIds: string[], lesson: GuideLesson): GuideDiagnostic[] {
@@ -119,22 +132,40 @@ export function evaluateLesson(lesson: GuideLesson, sequenceIds: string[], works
         };
     }
 
+    const hasExactTargetSequence = sequenceIds.length === lesson.targetBlockIds.length
+        && sequenceIds.every((blockId, index) => blockId === lesson.targetBlockIds[index]);
+    const hasAllTargetBlocks = hasRequiredBlockOccurrences(sequenceIds, lesson.targetBlockIds);
+
     if (lesson.id === 'lua-led-single') {
-        const diagnostics = validateLuaLedSingleWorkspace(workspaceXml || buildTargetWorkspaceXml(lesson.id, sequenceIds));
-        const solved = diagnostics.length === 0;
+        const diagnostics = workspaceXml
+            ? validateLuaLedSingleWorkspace(workspaceXml)
+            : [{
+                kind: 'error' as const,
+                title: 'Рабочая область не сохранена',
+                reason: 'Для проверки параметров `Ledbar` и `leds:set(...)` нужен XML фактической рабочей области.',
+                fix: 'Откройте задание в редакторе Blockly и соберите последовательность блоков.'
+            }];
+        const solved = hasExactTargetSequence && diagnostics.length === 0;
         return {
             solved,
-            complete: solved,
+            complete: hasExactTargetSequence,
             diagnostics: uniqueDiagnostics(solved ? [solvedDiagnostic(lesson.expectedOutcome)] : diagnostics)
         };
     }
 
     if (lesson.id === 'lua-led-sequence') {
-        const diagnostics = validateLuaLedSequenceWorkspace(workspaceXml || buildTargetWorkspaceXml(lesson.id, sequenceIds));
-        const solved = diagnostics.length === 0;
+        const diagnostics = workspaceXml
+            ? validateLuaLedSequenceWorkspace(workspaceXml)
+            : [{
+                kind: 'error' as const,
+                title: 'Рабочая область не сохранена',
+                reason: 'Для проверки структуры таймеров и их параметров нужен XML фактической рабочей области.',
+                fix: 'Откройте задание в редакторе Blockly и соберите последовательность блоков.'
+            }];
+        const solved = hasExactTargetSequence && diagnostics.length === 0;
         return {
             solved,
-            complete: solved,
+            complete: hasExactTargetSequence,
             diagnostics: uniqueDiagnostics(solved ? [solvedDiagnostic(lesson.expectedOutcome)] : diagnostics)
         };
     }
@@ -142,12 +173,11 @@ export function evaluateLesson(lesson: GuideLesson, sequenceIds: string[], works
     const diagnostics: GuideDiagnostic[] = [];
     const targetSet = new Set(lesson.targetBlockIds);
     const positions = new Map(sequenceIds.map((blockId, index) => [blockId, index] as const));
-    const hasAcceptedLedSequenceStructure = lesson.id === 'lua-led-sequence' && matchesLuaLedSequenceWorkspace(workspaceXml);
     const callbackOpenIndex = positions.get('lua_callback_open');
     const callbackEndIndex = positions.get('lua_callback_end');
 
     for (const blockId of lesson.targetBlockIds) {
-        if (positions.has(blockId)) continue;
+        if (sequenceIds.includes(blockId)) continue;
         const diagnostic = lesson.missingBlockDiagnostics[blockId];
         if (diagnostic) diagnostics.push(diagnostic);
     }
@@ -155,7 +185,7 @@ export function evaluateLesson(lesson: GuideLesson, sequenceIds: string[], works
     if (lesson.targetBlockIds.includes('lua_ledbar_new')) {
         const xmlRoot = parseWorkspaceXml(workspaceXml);
         const ledbarBlock = findFirstBlockByType(xmlRoot, 'lua_ledbar_new');
-        if (ledbarBlock && !hasNumericFieldValue(ledbarBlock, 'COUNT', 29)) {
+        if (ledbarBlock && hasNumericFieldValue(ledbarBlock, 'COUNT', 29)) {
             diagnostics.push({
                 kind: 'error',
                 title: 'Указано неверное количество светодиодов',
@@ -183,6 +213,10 @@ export function evaluateLesson(lesson: GuideLesson, sequenceIds: string[], works
     }
 
     for (const rule of lesson.orderRules || []) {
+        const beforeOccurrences = lesson.targetBlockIds.filter((blockId) => blockId === rule.before).length;
+        const afterOccurrences = lesson.targetBlockIds.filter((blockId) => blockId === rule.after).length;
+        if (beforeOccurrences > 1 || afterOccurrences > 1) continue;
+
         const beforeIndex = positions.get(rule.before);
         const afterIndex = positions.get(rule.after);
         if (beforeIndex == null || afterIndex == null) continue;
@@ -208,9 +242,8 @@ export function evaluateLesson(lesson: GuideLesson, sequenceIds: string[], works
 
     diagnostics.push(...getStructureDiagnostics(lesson, workspaceXml));
 
-    const complete = hasAcceptedLedSequenceStructure || lesson.targetBlockIds.every((blockId) => positions.has(blockId));
-    const solved = complete
-        && (hasAcceptedLedSequenceStructure || sequenceIds.length === lesson.targetBlockIds.length)
+    const complete = hasAllTargetBlocks;
+    const solved = hasExactTargetSequence
         && !diagnostics.some((diagnostic) => diagnostic.kind === 'error' || diagnostic.kind === 'warning');
 
     const finalDiagnostics = uniqueDiagnostics(
@@ -222,9 +255,4 @@ export function evaluateLesson(lesson: GuideLesson, sequenceIds: string[], works
         complete,
         diagnostics: finalDiagnostics
     };
-}
-
-export function getLessonCode(lesson: GuideLesson, sequenceIds: string[]): string {
-    const code = lesson.compile(sequenceIds, lesson.blocks);
-    return code || lesson.solutionCode;
 }

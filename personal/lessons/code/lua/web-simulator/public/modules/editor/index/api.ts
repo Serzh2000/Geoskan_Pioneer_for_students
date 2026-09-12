@@ -22,7 +22,7 @@ import {
     restoreEditorPanelWidthAfterBlockly as restoreEditorPanelWidthAfterBlocklyAutofit,
     scheduleEditorPanelAutofit as scheduleEditorPanelAutofitAutofit
 } from '../autofit.js';
-import { blocklyTheme } from '../runtime.js';
+import { getBlocklyTheme } from '../runtime.js';
 import {
     ensureBlocklyWorkspace as ensureBlocklyWorkspaceController,
     loadBlocklyWorkspace as loadBlocklyWorkspaceController,
@@ -56,7 +56,7 @@ import { editorIndexState, getEditorIndexCollections, getEditorIndexShellState }
 
 function getEditorControllers() {
     return createEditorIndexControllers(editorIndexState, getEditorIndexCollections(), {
-        theme: blocklyTheme,
+        theme: getBlocklyTheme(),
         buildMainEditorToolbox,
         compileMainEditorWorkspace,
         createStarterWorkspaceXml,
@@ -201,6 +201,43 @@ export function isBlocklyEditorEnabled(): boolean {
 
 export function initBlocklyEditorToggle(): void {
     initBlocklyEditorToggleController(getEditorControllers().toggleController);
+}
+
+export function getMainBlocklyWorkspace(): Blockly.WorkspaceSvg | null {
+    if (editorIndexState.blocklyEnabled && editorIndexState.blocklyWorkspace) {
+        return editorIndexState.blocklyWorkspace;
+    }
+
+    return null;
+}
+
+export function loadMainBlocklyXml(xml: string): void {
+    if (!editorIndexState.blocklyEnabled) {
+        setBlocklyEditorEnabled(true);
+    }
+
+    ensureBlocklyWorkspace(currentScriptLanguage);
+    const workspace = editorIndexState.blocklyWorkspace;
+    if (!workspace) {
+        return;
+    }
+
+    workspace.clear();
+
+    try {
+        const dom = Blockly.utils.xml.textToDom(xml);
+        Blockly.Xml.domToWorkspace(dom, workspace);
+    } catch (error) {
+        console.error('[Editor] Failed to load Blockly workspace', error);
+    }
+
+    resizeBlocklyWorkspaceViewportSupport(
+        editorIndexState.blocklyCanvasHost,
+        editorIndexState.blocklyCanvas,
+        workspace
+    );
+    scheduleEditorPanelAutofitAutofit('blockly', createEditorAutofitContext(getEditorIndexShellState()));
+    layoutEditor();
 }
 
 export function getSavedEditorDraft(language: ScriptLanguage = currentScriptLanguage): string | null {

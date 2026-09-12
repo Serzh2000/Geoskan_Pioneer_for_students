@@ -104,6 +104,24 @@ export function humanizeLuaRuntimeMessage(message: string): HumanizedScriptFailu
     if (fsmTransitionMatch) {
         return humanizeLuaFsmRuntimeMessage(fsmTransitionMatch[1], fsmTransitionMatch[2], message);
     }
+    const missingPrefixMatch = message.match(/константа [`"]?([A-Z0-9_]+)[`"]? должна использоваться с префиксом [`"]?Ev\.[`"]?/i);
+    if (missingPrefixMatch) {
+        const constantName = missingPrefixMatch[1].toUpperCase();
+        return {
+            summary: `Константа \`Ev.${constantName}\` вызвана без префикса \`Ev.\`.`,
+            details: `Замените \`${constantName}\` на \`Ev.${constantName}\` во всех условиях и вызовах автопилота.`,
+            rawDetails: message
+        };
+    }
+    const unknownApiConstantMatch = message.match(/событие или команда [`"]?([A-Z0-9_]+)[`"]? отсутствует в справочнике lua api/i);
+    if (unknownApiConstantMatch) {
+        const constantName = unknownApiConstantMatch[1].toUpperCase();
+        return {
+            summary: `Событие или команда \`${constantName}\` отсутствует в Lua API.`,
+            details: 'Проверьте название по справочнику и используйте только поддерживаемые константы вида `Ev.NAME`.',
+            rawDetails: message
+        };
+    }
     const simultaneousCommandsMatch = message.match(/команды миссии запущены одновременно без паузы:\s*([A-Z_,\s]+)\./i);
     if (simultaneousCommandsMatch) {
         const commands = simultaneousCommandsMatch[1]

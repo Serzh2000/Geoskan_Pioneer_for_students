@@ -24,7 +24,7 @@ export function getLuaLedLessons(): GuideLesson[] {
                 apiFocus('Ledbar.new(count)', 'Инициализирует ленту на заданное количество светодиодов.', 'local leds = Ledbar.new(29)'),
                 apiFocus('leds:set(index, r, g, b)', 'Меняет цвет светодиода по индексу. В этом уроке нужен только первый светодиод: индекс `0`, цвет `(1, 0, 0)`.', 'leds:set(0, 1, 0, 0)')
             ],
-            targetBlockIds: ['lua_ledbar', 'lua_led_set'],
+            targetBlockIds: ['lua_ledbar_new', 'lua_led_set'],
             blocks: [
                 createStatementBlock('lua1-ledbar', 'local leds = Ledbar.new(ledNumber)', 'local leds = Ledbar.new(29)', 'Инициализация объекта.', 'setup', 'local leds = Ledbar.new(29)'),
                 createStatementBlock('lua1-red', 'красный LED', 'leds:set(0, 1, 0, 0)', 'Включение красного цвета на первом светодиоде.', 'action', 'leds:set(0, 1, 0, 0)'),
@@ -46,30 +46,23 @@ export function getLuaLedLessons(): GuideLesson[] {
                 }
             ],
             missingBlockDiagnostics: {
-                'lua1-ledbar': {
+                lua_ledbar_new: {
                     kind: 'error',
                     title: 'Нет инициализации Ledbar',
                     reason: 'Не создан объект Ledbar.',
                     fix: 'Добавьте блок `local leds = Ledbar.new(ledNumber)`.'
                 },
-                'lua1-red': {
+                lua_led_set: {
                     kind: 'error',
                     title: 'Нет команды включения красного',
                     reason: 'Не вызывается `leds:set(0, 1, 0, 0)` для первого светодиода.',
                     fix: 'Добавьте блок `красный LED` и оставьте индекс `0`.'
                 }
             },
-            extraBlockDiagnostics: {
-                'lua1-blue': {
-                    kind: 'warning',
-                    title: 'Выбран другой цвет',
-                    reason: 'В задании требуется включить красный цвет.',
-                    fix: 'Удалите синий блок и оставьте красный.'
-                }
-            },
+            extraBlockDiagnostics: {},
             orderRules: [
                 {
-                    before: 'lua_ledbar',
+                    before: 'lua_ledbar_new',
                     after: 'lua_led_set',
                     title: 'Порядок инициализации',
                     reason: 'Сначала нужно создать Ledbar.',
@@ -91,7 +84,7 @@ export function getLuaLedLessons(): GuideLesson[] {
             apiFocus: [
                 apiFocus('Timer.callLater(delay, func)', 'Выполняет функцию через delay секунд.', 'Timer.callLater(1.0, function() ... end)')
             ],
-            targetBlockIds: ['lua_ledbar', 'lua_callback_open', 'lua_callback_end', 'lua_timer', 'lua_led_set', 'lua_timer', 'lua_led_set', 'lua_timer', 'lua_led_set'],
+            targetBlockIds: ['lua_ledbar_new', 'lua_timer_calllater', 'lua_led_set', 'lua_timer_calllater', 'lua_led_set', 'lua_timer_calllater', 'lua_led_set'],
             blocks: [
                 createStatementBlock('lua2-ledbar', 'local leds = Ledbar.new(ledNumber)', 'local leds = Ledbar.new(29)', 'Инициализация.', 'setup', 'local leds = Ledbar.new(29)'),
                 createTimerBlock('lua2-wait-a', 'подождать 1 с', 'Timer.callLater(1.0, ...)', 'Пауза 1с.', 1),
@@ -119,15 +112,9 @@ export function getLuaLedLessons(): GuideLesson[] {
                 }
             ],
             missingBlockDiagnostics: {
-                'lua2-ledbar': { kind: 'error', title: 'Нет инициализации Ledbar', reason: 'Нужен объект Ledbar.', fix: 'Добавьте Ledbar.new(29).' },
-                'lua2-wait-a': { kind: 'error', title: 'Нет таймера 1с', reason: 'Пропущен таймер.', fix: 'Добавьте таймер.' },
-                'lua2-blue': { kind: 'error', title: 'Нет синего', reason: 'Пропущен синий цвет.', fix: 'Добавьте синий.' },
-                'lua2-wait-b': { kind: 'error', title: 'Нет таймера 2с', reason: 'Пропущен таймер.', fix: 'Добавьте таймер.' },
-                'lua2-green': { kind: 'error', title: 'Нет зеленого', reason: 'Пропущен зеленый цвет.', fix: 'Добавьте зеленый.' },
-                'lua2-wait-c': { kind: 'error', title: 'Нет таймера 3с', reason: 'Пропущен таймер.', fix: 'Добавьте таймер.' },
-                'lua2-red': { kind: 'error', title: 'Нет красного', reason: 'Пропущен красный цвет.', fix: 'Добавьте красный.' },
-                'lua_callback_open': { kind: 'error', title: 'Нет функции callback', reason: 'Нужен callback.', fix: 'Добавьте функцию callback.' },
-                'lua_callback_end': { kind: 'error', title: 'Нет конца callback', reason: 'Callback не закрыт.', fix: 'Добавьте end.' }
+                lua_ledbar_new: { kind: 'error', title: 'Нет инициализации Ledbar', reason: 'Нужен объект Ledbar.', fix: 'Добавьте Ledbar.new(29).' },
+                lua_timer_calllater: { kind: 'error', title: 'Нет таймера', reason: 'Пропущен таймер.', fix: 'Добавьте таймер.' },
+                lua_led_set: { kind: 'error', title: 'Нет светового действия', reason: 'Пропущен цвет.', fix: 'Добавьте блок LED.' }
             },
             extraBlockDiagnostics: {},
             orderRules: [],

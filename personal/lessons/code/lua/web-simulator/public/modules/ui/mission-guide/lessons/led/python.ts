@@ -59,7 +59,7 @@ export function getPythonLedLessons(): GuideLesson[] {
                 }
             ],
             missingBlockDiagnostics: {
-                'py1-red': {
+                py_led_control: {
                     kind: 'error',
                     title: 'Нет целевого вызова `led_control(...)`',
                     reason: 'Без команды `pioneer.led_control(r=255, g=0, b=0)` задание не выполняет красную подсветку.',
@@ -151,13 +151,13 @@ export function getPythonLedLessons(): GuideLesson[] {
                     reason: 'Последовательность цветов неполная.',
                     fix: 'Добавьте блок `зеленый LED` после первой паузы.'
                 },
-                'py2-wait-b': {
+                py_time_sleep: {
                     kind: 'error',
                     title: 'Пропущена вторая пауза',
                     reason: 'Без второй задержки красный цвет включится слишком быстро после зеленого.',
                     fix: 'Добавьте вторую паузу перед красным кадром.'
                 },
-                'py2-red': {
+                py_led_control: {
                     kind: 'error',
                     title: 'Нет финального красного кадра',
                     reason: 'Анимация не завершается контрольным цветом урока.',

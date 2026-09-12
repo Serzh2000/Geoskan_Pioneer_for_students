@@ -15,9 +15,9 @@
     display: flex;
     flex-direction: column;
     background:
-        radial-gradient(circle at top right, rgba(14, 165, 233, 0.2), transparent 30%),
+        radial-gradient(circle at top right, rgba(255, 107, 0, 0.12), transparent 30%),
         linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.98));
-    border: 1px solid rgba(56, 189, 248, 0.22);
+    border: 1px solid rgba(255, 176, 103, 0.18);
     border-radius: 20px;
     overflow: hidden;
 }
@@ -93,7 +93,7 @@
     height: calc(100vh - 8px);
     background: #f8f9fa;
     border: 1px solid #e5e7eb;
-    border-radius: 14px;
+    border-radius: var(--guide-radius);
     box-shadow: 0 20px 48px rgba(17, 24, 39, 0.12);
 }
 
@@ -141,8 +141,8 @@
 }
 
 .guide-modal__close:hover {
-    color: #ff6b00;
-    background: #fffaf5;
+    color: var(--guide-accent);
+    background: var(--guide-accent-soft);
     border-color: rgba(255, 107, 0, 0.3);
     transform: translateY(-1px);
 }

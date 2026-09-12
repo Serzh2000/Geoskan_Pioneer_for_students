@@ -31,7 +31,7 @@ export function attachGuideInteractions(
 
     const hasLessonActions = Boolean(
         container.querySelector(
-            '[data-guide-reset], [data-guide-fill], [data-guide-check], [data-guide-launch], [data-guide-toggle-code], [data-guide-toggle-solution]'
+            '[data-guide-reset], [data-guide-fill], [data-guide-check], [data-guide-launch], [data-guide-open-editor]'
         )
     );
 
@@ -42,16 +42,6 @@ export function attachGuideInteractions(
             })
             .catch((error) => {
                 console.error('Failed to load guide actions', error);
-            });
-    }
-
-    if (container.querySelector('#blocklyDiv')) {
-        void import('./interactions/workspace.js')
-            .then(({ attachGuideWorkspace }) => {
-                attachGuideWorkspace(context);
-            })
-            .catch((error) => {
-                console.error('Failed to load guide workspace', error);
             });
     }
 }

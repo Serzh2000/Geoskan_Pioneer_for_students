@@ -23,8 +23,15 @@ function hasOnlySingleRawCodeBlock(language: ScriptLanguage, workspace: Blockly.
 
 function compileGeneratorWorkspace(language: ScriptLanguage, workspace: Blockly.WorkspaceSvg): string {
     const generator = getBlocklyGenerator(language);
-    const code = String(generator.workspaceToCode(workspace) || '').trim();
-    if (language === 'lua') return code;
+    const code = String(generator?.workspaceToCode(workspace) || '').trim();
+
+    if (language === 'lua') {
+        // Префикс: Lua-скрипт выполняется в Fengari-рантайме, который уже
+        // инициализирует глобальные функции (ap, Sensors, Timer, camera и т.д.)
+        // через LUA_SETUP_SCRIPT в setup-script.ts. Поэтому префикс не нужен.
+        // Возвращаем чистый сгенерированный код.
+        return code;
+    }
 
     const prefix = [
         '# Pioneer Python Script',
@@ -71,16 +78,22 @@ export function createStarterWorkspaceXml(language: ScriptLanguage): string {
     if (language === 'lua') {
         return `
             <xml xmlns="https://developers.google.com/blockly/xml">
-                <block type="lua_ap_push" x="32" y="32">
-                    <field name="EVENT">Ev.MCE_PREFLIGHT</field>
+                <block type="lua_preflight" x="32" y="32">
                     <next>
-                        <block type="lua_timer_calllater">
-                            <field name="DELAY">0.5</field>
-                            <statement name="CALLBACK">
-                                <block type="lua_ap_push">
-                                    <field name="EVENT">Ev.MCE_TAKEOFF</field>
+                        <block type="lua_callback_open">
+                            <next>
+                                <block type="lua_event_callback">
+                                    <field name="EVENT">Ev.ENGINES_STARTED</field>
+                                    <statement name="DO">
+                                        <block type="lua_ap_push">
+                                            <field name="EVENT">Ev.MCE_TAKEOFF</field>
+                                        </block>
+                                    </statement>
+                                    <next>
+                                        <block type="lua_callback_end"></block>
+                                    </next>
                                 </block>
-                            </statement>
+                            </next>
                         </block>
                     </next>
                 </block>

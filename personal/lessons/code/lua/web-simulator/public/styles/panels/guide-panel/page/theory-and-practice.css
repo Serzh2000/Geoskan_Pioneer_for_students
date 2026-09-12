@@ -9,10 +9,10 @@
     flex-direction: column;
     gap: 10px;
     padding: 22px;
-    border-radius: 18px;
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.84));
-    border: 1px solid rgba(56, 189, 248, 0.16);
-    box-shadow: 0 12px 32px rgba(2, 6, 23, 0.24);
+    border-radius: var(--guide-radius);
+    background: var(--guide-bg);
+    border: 1px solid var(--guide-border);
+    box-shadow: var(--guide-shadow);
 }
 
 .guide-theory-page__meta {
@@ -32,16 +32,16 @@
     flex-direction: column;
     gap: 12px;
     padding: 18px;
-    border-radius: 18px;
-    border: 1px solid rgba(56, 189, 248, 0.14);
-    background: rgba(2, 6, 23, 0.44);
+    border-radius: var(--guide-radius-inner);
+    border: 1px solid var(--guide-border);
+    background: var(--guide-bg);
 }
 
 .guide-theory-card__content {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    color: #cbd5e1;
+    color: var(--guide-text-muted);
     font-size: 14px;
     line-height: 1.75;
 }
@@ -57,6 +57,123 @@
     gap: 8px;
 }
 
+.guide-theory-card__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.guide-theory-card__index {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    background: var(--guide-accent-soft);
+    border: 1px solid rgba(255, 107, 0, 0.22);
+    color: var(--guide-accent-strong);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.guide-inline-code {
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: rgba(255, 107, 0, 0.1);
+    border: 1px solid rgba(255, 107, 0, 0.16);
+    color: var(--guide-accent-strong);
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, Menlo, monospace;
+    font-size: 0.92em;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.guide-theory-card__list--ordered li::marker {
+    color: var(--guide-accent);
+    font-weight: 800;
+}
+
+.guide-theory-card__takeaway {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    border-radius: var(--guide-radius-inner);
+    border: 1px solid rgba(255, 107, 0, 0.22);
+    border-left: 3px solid var(--guide-accent);
+    background: var(--guide-accent-soft);
+    color: var(--guide-text);
+}
+
+.guide-theory-card__takeaway-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--guide-accent-strong);
+}
+
+.guide-theory-card__takeaway-text {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.guide-theory-card__spoiler {
+    border: 1px solid var(--guide-border);
+    border-radius: var(--guide-radius-inner);
+    background: var(--guide-bg-muted);
+    overflow: hidden;
+}
+
+.guide-theory-card__spoiler summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    color: var(--guide-text);
+    font-weight: 700;
+    font-size: 13px;
+    list-style: none;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.guide-theory-card__spoiler summary::-webkit-details-marker {
+    display: none;
+}
+
+.guide-theory-card__spoiler summary::before {
+    content: '\25B8';
+    color: var(--guide-accent);
+    font-size: 12px;
+    transition: transform 0.15s ease;
+}
+
+.guide-theory-card__spoiler[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.guide-theory-card__spoiler summary:hover {
+    color: var(--guide-accent-strong);
+    background: var(--guide-accent-soft);
+}
+
+.guide-theory-card__spoiler-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 2px 14px 12px;
+    color: var(--guide-text-muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.guide-theory-card__spoiler-body p {
+    margin: 0;
+}
+
 .guide-practice-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -68,9 +185,9 @@
     align-self: flex-start;
     padding: 6px 10px;
     border-radius: 999px;
-    background: rgba(14, 165, 233, 0.12);
-    border: 1px solid rgba(56, 189, 248, 0.22);
-    color: #7dd3fc;
+    background: var(--guide-accent-soft);
+    border: 1px solid rgba(255, 107, 0, 0.18);
+    color: var(--guide-accent);
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -78,7 +195,7 @@
 }
 
 .guide-practice-card__title {
-    color: #f8fafc;
+    color: var(--guide-text);
     font-size: 16px;
     font-weight: 800;
     line-height: 1.45;
@@ -93,12 +210,12 @@
 
 .guide-practice-card--selectable:hover {
     transform: translateY(-1px);
-    border-color: rgba(56, 189, 248, 0.36);
+    border-color: rgba(255, 107, 0, 0.32);
 }
 
 .guide-practice-card--selectable.is-active {
-    background: rgba(14, 165, 233, 0.12);
-    border-color: rgba(125, 211, 252, 0.52);
+    background: var(--guide-accent-soft);
+    border-color: rgba(255, 107, 0, 0.32);
 }
 
 .guide-practice-card--selectable.is-solved {

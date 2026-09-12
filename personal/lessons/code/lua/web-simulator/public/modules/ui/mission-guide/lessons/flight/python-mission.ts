@@ -74,7 +74,7 @@ export function getPythonMissionLessons(): GuideLesson[] {
                 }
             ],
             missingBlockDiagnostics: {
-                'py5-arm': {
+                py_arm: {
                     kind: 'error',
                     title: 'Нет `arm()`',
                     reason: 'Миссия начинается без подготовки двигателей.',
@@ -86,7 +86,7 @@ export function getPythonMissionLessons(): GuideLesson[] {
                     reason: 'Учебный сценарий теряет наглядность и команды выполняются слишком плотно.',
                     fix: 'Вставьте `time.sleep(1)` между `arm()` и `takeoff()`.'
                 },
-                'py5-takeoff': {
+                py_takeoff: {
                     kind: 'error',
                     title: 'Нет `takeoff()`',
                     reason: 'Без взлета маршрут к точке нелогичен.',
@@ -98,7 +98,7 @@ export function getPythonMissionLessons(): GuideLesson[] {
                     reason: 'Маршрут к точке лучше отправлять после набора высоты.',
                     fix: 'Добавьте блок `подождать 3 c` перед `go_to_local_point(...)`.'
                 },
-                'py5-goto': {
+                py_goto_local_point: {
                     kind: 'error',
                     title: 'Нет команды полета к точке',
                     reason: 'Миссия не выполняет маршрутную часть.',
@@ -110,7 +110,7 @@ export function getPythonMissionLessons(): GuideLesson[] {
                     reason: 'Сценарий не проверяет, что точка реально достигнута.',
                     fix: 'Добавьте блок `ждать point_reached()` перед посадкой.'
                 },
-                'py5-land': {
+                py_land: {
                     kind: 'error',
                     title: 'Нет `land()`',
                     reason: 'Маршрут выполнен не до конца: отсутствует безопасное завершение полета.',

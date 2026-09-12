@@ -1,3 +1,5 @@
+import { Blockly } from '../blockly-core/definitions.js';
+
 export function buildTargetWorkspaceXml(lessonId: string, targetBlockIds: string[]): string {
     if (lessonId === 'lua-led-single') {
         return `
@@ -75,4 +77,30 @@ export function buildTargetWorkspaceXml(lessonId: string, targetBlockIds: string
     }
 
     return `<xml>${blockMarkup}</xml>`;
+}
+
+export function serializeWorkspaceXml(workspace: Blockly.WorkspaceSvg): string {
+    return Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace));
+}
+
+function collectWorkspaceSequence(block: Blockly.Block | null, sequence: string[]): void {
+    let current = block;
+    while (current) {
+        sequence.push(current.type);
+        current.inputList.forEach((input) => {
+            const child = input.connection?.targetBlock() || null;
+            if (child) {
+                collectWorkspaceSequence(child, sequence);
+            }
+        });
+        current = current.getNextBlock();
+    }
+}
+
+export function extractMissionGuideSequence(workspace: Blockly.WorkspaceSvg): string[] {
+    const sequence: string[] = [];
+    workspace.getTopBlocks(true).forEach((topBlock) => {
+        collectWorkspaceSequence(topBlock, sequence);
+    });
+    return sequence;
 }

@@ -12,6 +12,35 @@ export function log(msg: string, type: 'info' | 'error' | 'warn' | 'success' = '
     logs.scrollTop = logs.scrollHeight;
 }
 
+function decodeLuaByteLikeValue(luaVal: any): string | null {
+    try {
+        if (typeof luaVal === 'string') {
+            return luaVal;
+        }
+
+        if (ArrayBuffer.isView(luaVal)) {
+            return new TextDecoder('utf-8').decode(
+                new Uint8Array(luaVal.buffer, luaVal.byteOffset, luaVal.byteLength)
+            );
+        }
+
+        if (Array.isArray(luaVal) && luaVal.every((value) => Number.isInteger(value) && value >= 0 && value <= 255)) {
+            return new TextDecoder('utf-8').decode(Uint8Array.from(luaVal));
+        }
+
+        const values = typeof luaVal?.length === 'number'
+            ? Array.from({ length: luaVal.length }, (_unused, index) => luaVal[index])
+            : null;
+        if (values && values.length > 0 && values.every((value) => Number.isInteger(value) && value >= 0 && value <= 255)) {
+            return new TextDecoder('utf-8').decode(Uint8Array.from(values));
+        }
+    } catch {
+        return null;
+    }
+
+    return null;
+}
+
 export function luaToStr(luaVal: any, L: any): string {
     if (luaVal === null || luaVal === undefined) {
         if (L) {
@@ -27,6 +56,10 @@ export function luaToStr(luaVal: any, L: any): string {
         const str = window.fengari.to_jsstring(luaVal);
         return str || "Empty Lua Error message";
     } catch (e) {
+        const decoded = decodeLuaByteLikeValue(luaVal);
+        if (decoded) {
+            return decoded;
+        }
         return "Lua Error (type: " + typeof luaVal + "): " + String(luaVal);
     }
 }

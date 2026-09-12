@@ -12,10 +12,14 @@
     --guide-success: #0f9d58;
     --guide-info: #2563eb;
     --guide-shadow: 0 16px 40px rgba(17, 24, 39, 0.08);
+    --guide-radius: var(--panel-radius, 16px);
+    --guide-radius-inner: var(--panel-radius-inner, 12px);
+    --guide-gap: var(--panel-gap, 10px);
+    --guide-gap-sm: var(--panel-gap-sm, 6px);
     max-width: none;
     width: 100%;
     margin: 0;
-    gap: 12px;
+    gap: var(--guide-gap);
     color: var(--guide-text);
 }
 
@@ -31,7 +35,7 @@
 .guide-hero {
     gap: 10px;
     padding: 18px 20px;
-    background: linear-gradient(180deg, #ffffff 0%, #fffaf5 100%);
+    background: linear-gradient(180deg, var(--guide-bg) 0%, var(--guide-accent-soft) 100%);
     border-left: 4px solid var(--guide-accent);
 }
 
@@ -98,9 +102,9 @@
     box-shadow: 0 8px 18px rgba(17, 24, 39, 0.04);
     align-items: end;
     grid-template-columns: 110px minmax(220px, 1fr) minmax(220px, 1fr) auto;
-    gap: 6px 8px;
+    gap: var(--guide-gap-sm) var(--guide-gap-sm);
     padding: 8px 10px;
-    border-radius: 10px;
+    border-radius: var(--guide-radius-inner);
 }
 
 .guide-selector {
@@ -109,7 +113,7 @@
     color: var(--guide-text);
     min-height: 38px;
     padding: 8px 10px;
-    border-radius: 10px;
+    border-radius: var(--guide-radius-inner);
     font-size: 13px;
 }
 
@@ -142,7 +146,7 @@
     background: var(--guide-bg);
     border: 1px solid var(--guide-border);
     color: var(--guide-text);
-    border-radius: 12px;
+    border-radius: var(--guide-radius-inner);
     box-shadow: 0 4px 10px rgba(17, 24, 39, 0.03);
 }
 
@@ -162,7 +166,7 @@
 .guide-chapter-tab.is-active,
 .guide-page-tab.is-active,
 .guide-practice-card--selectable.is-active {
-    background: #fffaf5;
+    background: var(--guide-accent-soft);
     border-color: rgba(255, 107, 0, 0.32);
 }
 
@@ -192,13 +196,13 @@
 }
 
 .guide-panel-note {
-    background: #fffaf5;
+    background: var(--guide-accent-soft);
     border: 1px solid rgba(255, 107, 0, 0.18);
     border-left: 4px solid var(--guide-accent);
 }
 
 .guide-api-card__example {
-    background: #fffaf5;
+    background: var(--guide-accent-soft);
     border: 1px solid rgba(255, 107, 0, 0.18);
     color: var(--guide-text);
 }

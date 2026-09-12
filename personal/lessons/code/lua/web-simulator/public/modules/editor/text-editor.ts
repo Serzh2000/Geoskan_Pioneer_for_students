@@ -222,12 +222,36 @@ export function getTextEditorValue(): string {
     return getTextEditorValueFromInstance(editorRuntime.editorInstance);
 }
 
+function normalizeEditorText(value: string): string {
+    return value.replace(/\r\n?/g, '\n');
+}
+
 export function setTextEditorValueOnInstance(editorInstance: any, value: string): boolean {
     if (!editorInstance) {
         return false;
     }
 
-    editorInstance.setValue(value);
+    const model = editorInstance.getModel ? editorInstance.getModel() : null;
+    if (!model) {
+        editorInstance.setValue(value);
+        return true;
+    }
+
+    // Значение не изменилось — не трогаем редактор, чтобы не сбрасывать курсор, скролл и undo.
+    if (normalizeEditorText(model.getValue()) === normalizeEditorText(value)) {
+        return true;
+    }
+
+    // Заменяем содержимое правкой вместо setValue, чтобы не терять позицию курсора и скролл.
+    const previousViewState = editorInstance.saveViewState();
+    model.pushEditOperations(
+        [],
+        [{ range: model.getFullModelRange(), text: value, forceMoveMarkers: true }],
+        () => null
+    );
+    if (previousViewState) {
+        editorInstance.restoreViewState(previousViewState);
+    }
     return true;
 }
 

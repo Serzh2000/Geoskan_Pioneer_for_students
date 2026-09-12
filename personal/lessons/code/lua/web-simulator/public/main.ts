@@ -7,7 +7,6 @@ import { simState, resetState, resetRuntimeStatePreservePose, drones, currentDro
 import { init3D, updateDrone3D, is3DActive, addObject, appendPointToSelectedLinearObject, clearSceneSelection, deleteSelectedObject, finishSelectedLinearObjectEditing, getSelectedSceneObjectId, isSelectedLinearObjectEditingActive, listSceneObjects, resetDroneToOrigin, resetSelectedSceneObjectTransform, rotateSelectedSceneObjectByDegrees, selectSceneObjectById, setSceneObjectTransformMode, startSelectedLinearObjectEditing, updateSelectedSceneObject, deleteSceneObjectById } from './modules/drone/index.js';
 import { runLuaScript, stopLuaScript, triggerLuaCallback } from './modules/lua/index.js';
 import { setLocalFrameOrigin } from './modules/lua/autopilot.js';
-import { initExternalPythonBridge } from './modules/python/external-bridge.js';
 import { runPythonScript, stopPythonScript } from './modules/python/index.js';
 /**
  * Main browser entry point for the simulator.
@@ -40,7 +39,6 @@ function init() {
         stop: stopSimulation,
         reset: resetSimulation
     });
-    initExternalPythonBridge();
 
     // Initialize UI with callbacks
     initUI({
@@ -179,7 +177,10 @@ async function startSimulation() {
             log(`Скрипт запущен для ${drone.name}`, 'success');
             
             try {
-                triggerLuaCallback(id, 1); // Ev.MCE_PREFLIGHT
+                // MCE_PREFLIGHT (1) — это команда ap.push, а не входящее событие от AP.
+                // Для запуска сценария достаточно, что скрипт уже выполнил ap.push(Ev.MCE_PREFLIGHT).
+                // Входящие события (ENGINES_STARTED=11, TAKEOFF_COMPLETE=6, POINT_REACHED=10)
+                // triggerятся только симуляцией при смене состояний дрона.
             } catch (errCb) {
                 console.error("Error in triggerLuaCallback:", errCb);
                 throw errCb;

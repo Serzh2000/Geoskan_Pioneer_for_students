@@ -9,11 +9,26 @@ import {
     isLessonUnlocked,
     setActivePortalPage,
     setActiveChapterId,
-    setActiveLessonId
+    setActiveLessonId,
+    setActiveGuideStep
 } from '../state.js';
 
 export function attachGuideNavigationBindings(context: GuideInteractionContext): void {
     const { container, language, state, lesson, rerender } = context;
+
+    container.querySelectorAll<HTMLElement>('[data-guide-step]').forEach((element) => {
+        element.addEventListener('click', () => {
+            const step = element.dataset.guideStep;
+            if (step !== 'theory' && step !== 'build' && step !== 'check') return;
+
+            logGuideEvent('lesson_step_change', {
+                ...buildGuideEventContext(context),
+                step
+            });
+            setActiveGuideStep(language, lesson.id, step);
+            rerender(language);
+        });
+    });
 
     container.querySelectorAll<HTMLButtonElement>('button[data-guide-portal-page]').forEach((element) => {
         element.addEventListener('click', () => {

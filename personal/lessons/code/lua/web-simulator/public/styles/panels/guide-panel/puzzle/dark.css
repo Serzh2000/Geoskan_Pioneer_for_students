@@ -39,17 +39,17 @@
     justify-content: center;
     min-height: 42px;
     border-radius: 14px;
-    border: 1px dashed rgba(56, 189, 248, 0.22);
+    border: 1px dashed rgba(255, 107, 0, 0.28);
     background: rgba(15, 23, 42, 0.46);
-    color: #7dd3fc;
+    color: var(--guide-accent);
     font-size: 12px;
     font-weight: 700;
     transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
 }
 
 .guide-drop-zone.is-hovered {
-    border-color: rgba(125, 211, 252, 0.84);
-    background: rgba(14, 165, 233, 0.12);
+    border-color: rgba(255, 176, 103, 0.84);
+    background: var(--guide-accent-soft);
     transform: scale(1.01);
 }
 
@@ -62,7 +62,7 @@
     padding: 18px 18px 22px;
     border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 18px;
-    color: #eff6ff;
+    color: var(--guide-text);
     cursor: grab;
     user-select: none;
     overflow: visible;
@@ -120,7 +120,7 @@
 }
 
 .guide-puzzle--action {
-    background: linear-gradient(180deg, rgba(14, 165, 233, 0.28), rgba(8, 145, 178, 0.22));
+    background: linear-gradient(180deg, rgba(255, 107, 0, 0.30), rgba(230, 95, 0, 0.22));
 }
 
 .guide-puzzle--wait {
@@ -145,7 +145,7 @@
 }
 
 .guide-puzzle__code {
-    color: #f8fafc;
+    color: var(--guide-text);
     font-family: var(--font-mono);
     font-size: 11px;
     line-height: 1.5;
@@ -162,7 +162,7 @@
 }
 
 .guide-puzzle:hover .guide-puzzle__code {
-    color: #e0f2fe;
+    color: var(--guide-accent);
 }
 
 .guide-puzzle__main {
@@ -177,9 +177,9 @@
     width: min(320px, calc(100vw - 64px));
     padding: 10px 12px;
     border-radius: 12px;
-    border: 1px solid rgba(125, 211, 252, 0.28);
+    border: 1px solid rgba(255, 176, 103, 0.24);
     background: rgba(15, 23, 42, 0.96);
-    color: #dbeafe;
+    color: var(--guide-text-muted);
     font-size: 12px;
     font-weight: 500;
     line-height: 1.55;
@@ -199,12 +199,11 @@
 }
 
 .guide-workspace__remove,
-.guide-lesson__action,
 .guide-method-chip,
 .guide-primary-action {
-    border: 1px solid rgba(56, 189, 248, 0.24);
-    background: rgba(14, 165, 233, 0.1);
-    color: #bae6fd;
+    border: 1px solid rgba(255, 176, 103, 0.24);
+    background: rgba(255, 107, 0, 0.10);
+    color: var(--guide-accent-strong);
     cursor: pointer;
     transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
@@ -218,23 +217,37 @@
     font-weight: 700;
 }
 
+.guide-lesson__action {
+    border: 1px solid var(--guide-border-strong);
+    background: var(--guide-bg-muted);
+    color: var(--guide-text);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
 .guide-primary-action {
-    background: linear-gradient(180deg, rgba(14, 165, 233, 0.34), rgba(2, 132, 199, 0.28));
-    color: #eff6ff;
-    border-color: rgba(125, 211, 252, 0.42);
+    background: linear-gradient(180deg, rgba(255, 107, 0, 0.38), rgba(230, 95, 0, 0.30));
+    color: #ffffff;
+    border-color: rgba(255, 176, 103, 0.5);
 }
 
 .guide-workspace__remove:hover,
-.guide-lesson__action:hover,
 .guide-method-chip:hover,
 .guide-primary-action:hover {
-    background: rgba(14, 165, 233, 0.18);
-    border-color: rgba(56, 189, 248, 0.46);
+    background: rgba(255, 107, 0, 0.20);
+    border-color: rgba(255, 176, 103, 0.5);
+    transform: translateY(-1px);
+}
+
+.guide-lesson__action:hover {
+    background: var(--guide-bg-emphasis);
+    border-color: var(--guide-accent);
+    color: var(--guide-text);
     transform: translateY(-1px);
 }
 
 .guide-primary-action:hover {
-    background: linear-gradient(180deg, rgba(14, 165, 233, 0.44), rgba(2, 132, 199, 0.36));
+    background: linear-gradient(180deg, rgba(255, 107, 0, 0.48), rgba(230, 95, 0, 0.40));
 }
 
 .guide-lesson__action:disabled,

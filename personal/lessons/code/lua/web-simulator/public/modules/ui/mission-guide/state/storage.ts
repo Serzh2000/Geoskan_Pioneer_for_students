@@ -9,8 +9,6 @@ export type GuidePersistedSessionState = {
     activeChapterByLanguage?: Partial<Record<ScriptLanguage, string>>;
     activeTabByLanguage?: Partial<Record<ScriptLanguage, GuideTabId>>;
     activePortalPageByLanguage?: Partial<Record<ScriptLanguage, GuidePortalPageId>>;
-    lessonSequences?: Record<string, string[]>;
-    lessonWorkspaceXml?: Record<string, string>;
 };
 
 export type GuideLoadedSessionState = {
@@ -18,8 +16,6 @@ export type GuideLoadedSessionState = {
     activeChapterByLanguage: Record<ScriptLanguage, string>;
     activeTabByLanguage: Record<ScriptLanguage, GuideTabId>;
     activePortalPageByLanguage: Record<ScriptLanguage, GuidePortalPageId>;
-    lessonSequences: Map<string, string[]>;
-    lessonWorkspaceXml: Map<string, string>;
 };
 
 export function createDefaultSessionState(): GuideLoadedSessionState {
@@ -39,9 +35,7 @@ export function createDefaultSessionState(): GuideLoadedSessionState {
         activePortalPageByLanguage: {
             lua: 'intro',
             python: 'intro'
-        },
-        lessonSequences: new Map<string, string[]>(),
-        lessonWorkspaceXml: new Map<string, string>()
+        }
     };
 }
 
@@ -69,17 +63,7 @@ export function loadGuideSessionState(): GuideLoadedSessionState {
             activePortalPageByLanguage: {
                 lua: parsed.activePortalPageByLanguage?.lua === 'lesson' ? 'lesson' : 'intro',
                 python: parsed.activePortalPageByLanguage?.python === 'lesson' ? 'lesson' : 'intro'
-            },
-            lessonSequences: new Map<string, string[]>(
-                Object.entries(parsed.lessonSequences || {})
-                    .filter(([, sequence]) => Array.isArray(sequence))
-                    .map(([key, sequence]) => [key, [...sequence]])
-            ),
-            lessonWorkspaceXml: new Map<string, string>(
-                Object.entries(parsed.lessonWorkspaceXml || {})
-                    .filter(([, xml]) => typeof xml === 'string' && xml.length > 0)
-                    .map(([key, xml]) => [key, xml])
-            )
+            }
         };
     } catch {
         return defaultState;
@@ -121,17 +105,13 @@ export function persistGuideSessionState(params: {
     activeChapterByLanguage: Record<ScriptLanguage, string>;
     activeTabByLanguage: Record<ScriptLanguage, GuideTabId>;
     activePortalPageByLanguage: Record<ScriptLanguage, GuidePortalPageId>;
-    lessonSequences: Map<string, string[]>;
-    lessonWorkspaceXml: Map<string, string>;
 }): void {
     try {
         window.localStorage.setItem(GUIDE_SESSION_STORAGE_KEY, JSON.stringify({
             activeLessonByLanguage: params.activeLessonByLanguage,
             activeChapterByLanguage: params.activeChapterByLanguage,
             activeTabByLanguage: params.activeTabByLanguage,
-            activePortalPageByLanguage: params.activePortalPageByLanguage,
-            lessonSequences: Object.fromEntries(params.lessonSequences.entries()),
-            lessonWorkspaceXml: Object.fromEntries(params.lessonWorkspaceXml.entries())
+            activePortalPageByLanguage: params.activePortalPageByLanguage
         } satisfies GuidePersistedSessionState));
     } catch {
         // Ignore storage failures in embedded/private browsing contexts.

@@ -5,6 +5,8 @@ import { droneMeshes, renderer as mainRenderer, scene } from '../../scene/core/s
 
 declare const THREE: any;
 
+const CAMERA_CAPTURE_FRAME_INTERVAL_MS = 33;
+
 type CameraCaptureState = {
     shotPending: boolean;
     isRecording: boolean;
@@ -14,6 +16,9 @@ type CameraCaptureState = {
     captureRenderer: WebGLRenderer | null;
     captureFrameId: number | null;
     recordingDroneId: string | null;
+    lastCaptureFrameAt: number;
+    lastRendererWidth: number;
+    lastRendererHeight: number;
 };
 
 const cameraCaptureState: CameraCaptureState = {
@@ -24,7 +29,10 @@ const cameraCaptureState: CameraCaptureState = {
     videoChunks: [],
     captureRenderer: null,
     captureFrameId: null,
-    recordingDroneId: null
+    recordingDroneId: null,
+    lastCaptureFrameAt: 0,
+    lastRendererWidth: 0,
+    lastRendererHeight: 0
 };
 
 function buildTimestampSlug() {
@@ -52,7 +60,24 @@ function syncCaptureRendererSize(captureRenderer: WebGLRenderer) {
     const sourceCanvas = getRendererCanvas();
     const width = Math.max(1, sourceCanvas?.width || sourceCanvas?.clientWidth || 1280);
     const height = Math.max(1, sourceCanvas?.height || sourceCanvas?.clientHeight || 720);
+    if (width === cameraCaptureState.lastRendererWidth && height === cameraCaptureState.lastRendererHeight) {
+        return;
+    }
+
+    cameraCaptureState.lastRendererWidth = width;
+    cameraCaptureState.lastRendererHeight = height;
     captureRenderer.setSize(width, height, false);
+}
+
+function releaseCaptureRenderer() {
+    if (!cameraCaptureState.captureRenderer) {
+        return;
+    }
+
+    cameraCaptureState.captureRenderer.dispose();
+    cameraCaptureState.captureRenderer = null;
+    cameraCaptureState.lastRendererWidth = 0;
+    cameraCaptureState.lastRendererHeight = 0;
 }
 
 function ensureCaptureRenderer() {
@@ -112,13 +137,19 @@ function stopCaptureRenderLoop() {
         window.cancelAnimationFrame(cameraCaptureState.captureFrameId);
         cameraCaptureState.captureFrameId = null;
     }
+    cameraCaptureState.lastCaptureFrameAt = 0;
 }
 
 function startCaptureRenderLoop(droneId: string) {
     stopCaptureRenderLoop();
 
-    const renderTick = () => {
+    const renderTick = (time: number) => {
         cameraCaptureState.captureFrameId = window.requestAnimationFrame(renderTick);
+        if (cameraCaptureState.lastCaptureFrameAt && time - cameraCaptureState.lastCaptureFrameAt < CAMERA_CAPTURE_FRAME_INTERVAL_MS) {
+            return;
+        }
+        cameraCaptureState.lastCaptureFrameAt = time;
+
         try {
             renderFpvFrame(droneId);
         } catch (error) {
@@ -128,7 +159,7 @@ function startCaptureRenderLoop(droneId: string) {
         }
     };
 
-    renderTick();
+    renderTick(performance.now());
 }
 
 function getVideoMimeType() {
@@ -147,14 +178,20 @@ function getVideoMimeType() {
 async function downloadCanvasShot(droneId: string, fileName: string) {
     const canvas = renderFpvFrame(droneId);
 
-    const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((value: Blob | null) => {
-            if (value) resolve(value);
-            else reject(new Error('Не удалось создать PNG из canvas.'));
-        }, 'image/png');
-    });
+    try {
+        const blob = await new Promise<Blob>((resolve, reject) => {
+            canvas.toBlob((value: Blob | null) => {
+                if (value) resolve(value);
+                else reject(new Error('Не удалось создать PNG из canvas.'));
+            }, 'image/png');
+        });
 
-    triggerBrowserDownload(fileName, blob);
+        triggerBrowserDownload(fileName, blob);
+    } finally {
+        if (!cameraCaptureState.isRecording) {
+            releaseCaptureRenderer();
+        }
+    }
 }
 
 export const camera_requestMakeShot = function(L: any) {
@@ -260,6 +297,7 @@ export const camera_requestRecordStart = function(L: any) {
             cameraCaptureState.videoChunks = [];
             cameraCaptureState.isRecording = false;
             cameraCaptureState.recordingDroneId = null;
+            releaseCaptureRenderer();
         }
     };
 

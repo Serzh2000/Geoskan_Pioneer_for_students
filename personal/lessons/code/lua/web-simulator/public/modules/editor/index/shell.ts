@@ -18,6 +18,7 @@ import {
     setTextEditorValueOnInstance
 } from '../text-editor.js';
 import type { AppTheme } from '../../app/theme-toggle.js';
+import { applyBlocklyWorkspaceTheme, blocklyTheme, blocklyThemeDark } from '../runtime.js';
 import {
     createEditorAutofitContext,
     getSavedEditorDraft as getSavedEditorDraftFromStorage,
@@ -139,4 +140,6 @@ export function setEditorTheme(theme: AppTheme): void {
     if (hasFallbackEditor()) return;
 
     setTextEditorTheme(theme);
+    applyBlocklyWorkspaceTheme(theme);
+    editorIndexState.blocklyWorkspace?.setTheme(theme === 'dark' ? blocklyThemeDark : blocklyTheme);
 }

@@ -17,7 +17,7 @@
 }
 
 .guide-portal-intro__hero {
-    background: linear-gradient(180deg, #ffffff 0%, #fffaf5 100%);
+    background: linear-gradient(180deg, var(--guide-bg) 0%, var(--guide-accent-soft) 100%);
     border-left: 4px solid var(--guide-accent);
 }
 
@@ -62,7 +62,7 @@
 }
 
 .guide-roadmap-item:hover {
-    background: #fffaf5;
+    background: var(--guide-accent-soft);
     border-color: rgba(255, 107, 0, 0.22);
 }
 
@@ -82,7 +82,7 @@
 }
 
 .guide-roadmap-item__index {
-    background: rgba(255, 107, 0, 0.12);
+    background: var(--guide-accent-soft);
     color: var(--guide-accent);
 }
 
@@ -97,7 +97,7 @@
 }
 
 .guide-lesson-overview__fill {
-    background: linear-gradient(90deg, #ff6b00 0%, #0f9d58 100%);
+    background: linear-gradient(90deg, var(--guide-accent) 0%, var(--guide-success) 100%);
 }
 
 .guide-lesson-page__header-pill,
@@ -144,7 +144,7 @@
 .guide-theory-card,
 .guide-practice-card,
 .guide-api-card {
-    border-radius: 12px;
+    border-radius: var(--guide-radius-inner);
 }
 
 .guide-panel-card,
@@ -210,7 +210,7 @@
 }
 
 .guide-lesson-page__title {
-    font-size: 34px;
+    font-size: 28px;
 }
 
 .guide-panel-card__title {
@@ -277,15 +277,11 @@
 
 .guide-workbench-layout {
     grid-template-columns: minmax(0, 1.5fr) minmax(340px, 0.9fr);
-    gap: 14px;
+    gap: var(--guide-gap);
 }
 
 .guide-workbench-layout__main {
-    gap: 14px;
-}
-
-.guide-blockly-stage {
-    height: 360px;
+    gap: var(--guide-gap);
 }
 
 .guide-scene-preview-host {
@@ -303,7 +299,7 @@
 
 @media (max-width: 860px) {
     .guide-modal-layout {
-        gap: 10px;
+        gap: var(--guide-gap);
     }
 
     .guide-hero,

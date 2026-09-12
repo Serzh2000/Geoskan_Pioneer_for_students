@@ -4,6 +4,7 @@ import type {
     GuideLesson,
     GuideLessonProgressState,
     GuideLessonState,
+    GuideLessonStepId,
     GuidePortalPageId,
     GuideTabId,
     GuideThemeId,
@@ -24,12 +25,9 @@ const activeTabByLanguage: Record<ScriptLanguage, GuideTabId> = loadedSessionSta
 const activePortalPageByLanguage: Record<ScriptLanguage, GuidePortalPageId> = loadedSessionState.activePortalPageByLanguage;
 let activeGuideTheme: GuideThemeId = 'dark';
 
-const lessonSequences = loadedSessionState.lessonSequences;
-const lessonWorkspaceXml = loadedSessionState.lessonWorkspaceXml;
 const lessonBanners = new Map<string, RuntimeBanner>();
 const lessonChecks = new Map<string, boolean>();
-const lessonSolutionVisibility = new Map<string, boolean>();
-const lessonGeneratedCodeVisibility = new Map<string, boolean>();
+const activeLessonStepByKey = new Map<string, GuideLessonStepId>();
 const completedLessonsByLanguage: Record<ScriptLanguage, Set<string>> = loadGuideProgress();
 
 function persistCurrentGuideSessionState(): void {
@@ -37,9 +35,7 @@ function persistCurrentGuideSessionState(): void {
         activeLessonByLanguage,
         activeChapterByLanguage,
         activeTabByLanguage,
-        activePortalPageByLanguage,
-        lessonSequences,
-        lessonWorkspaceXml
+        activePortalPageByLanguage
     });
 }
 
@@ -63,7 +59,16 @@ export function ensureActiveChapterId(language: ScriptLanguage, chapterId: strin
 
 export function setActiveLessonId(language: ScriptLanguage, lessonId: string): void {
     activeLessonByLanguage[language] = lessonId;
+    activeLessonStepByKey.set(getStateKey(language, lessonId), 'theory');
     persistCurrentGuideSessionState();
+}
+
+export function getActiveGuideStep(language: ScriptLanguage, lessonId: string): GuideLessonStepId {
+    return activeLessonStepByKey.get(getStateKey(language, lessonId)) || 'theory';
+}
+
+export function setActiveGuideStep(language: ScriptLanguage, lessonId: string, step: GuideLessonStepId): void {
+    activeLessonStepByKey.set(getStateKey(language, lessonId), step);
 }
 
 export function setActiveChapterId(language: ScriptLanguage, chapterId: string): void {
@@ -175,36 +180,6 @@ export function getFirstUnlockedLesson(state: GuideLessonState, language: Script
     return state.lessons.find((lesson) => isLessonUnlocked(state, language, lesson.id)) || state.lessons[0];
 }
 
-export function getLessonSequence(language: ScriptLanguage, lessonId: string): string[] {
-    const key = getStateKey(language, lessonId);
-    if (!lessonSequences.has(key)) {
-        lessonSequences.set(key, []);
-    }
-    return [...(lessonSequences.get(key) || [])];
-}
-
-export function setLessonSequence(language: ScriptLanguage, lessonId: string, sequence: string[]): void {
-    lessonSequences.set(getStateKey(language, lessonId), [...sequence]);
-    persistCurrentGuideSessionState();
-}
-
-export function setLessonWorkspaceState(language: ScriptLanguage, lessonId: string, xml: string | null): void {
-    const key = getStateKey(language, lessonId);
-    if (xml) lessonWorkspaceXml.set(key, xml);
-    else lessonWorkspaceXml.delete(key);
-    persistCurrentGuideSessionState();
-}
-
-export function getLessonWorkspaceState(language: ScriptLanguage, lessonId: string): string | null {
-    return lessonWorkspaceXml.get(getStateKey(language, lessonId)) || null;
-}
-
-export function clearLessonSequence(language: ScriptLanguage, lessonId: string): void {
-    lessonSequences.set(getStateKey(language, lessonId), []);
-    lessonWorkspaceXml.delete(getStateKey(language, lessonId));
-    persistCurrentGuideSessionState();
-}
-
 export function setLessonBanner(language: ScriptLanguage, lessonId: string, banner: RuntimeBanner | null): void {
     const key = getStateKey(language, lessonId);
     if (banner) lessonBanners.set(key, banner);
@@ -221,20 +196,4 @@ export function setLessonChecked(language: ScriptLanguage, lessonId: string, che
 
 export function isLessonChecked(language: ScriptLanguage, lessonId: string): boolean {
     return lessonChecks.get(getStateKey(language, lessonId)) || false;
-}
-
-export function setLessonSolutionVisible(language: ScriptLanguage, lessonId: string, visible: boolean): void {
-    lessonSolutionVisibility.set(getStateKey(language, lessonId), visible);
-}
-
-export function isLessonSolutionVisible(language: ScriptLanguage, lessonId: string): boolean {
-    return lessonSolutionVisibility.get(getStateKey(language, lessonId)) || false;
-}
-
-export function setLessonGeneratedCodeVisible(language: ScriptLanguage, lessonId: string, visible: boolean): void {
-    lessonGeneratedCodeVisibility.set(getStateKey(language, lessonId), visible);
-}
-
-export function isLessonGeneratedCodeVisible(language: ScriptLanguage, lessonId: string): boolean {
-    return lessonGeneratedCodeVisibility.get(getStateKey(language, lessonId)) || false;
 }

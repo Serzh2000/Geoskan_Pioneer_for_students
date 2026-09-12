@@ -33,7 +33,7 @@ export function getLuaMissionLessons(): GuideLesson[] {
                 apiFocus('Ev.TAKEOFF_COMPLETE', 'Событие окончания взлета. После него маршрут становится логически допустимым.', 'if event == Ev.TAKEOFF_COMPLETE then ... end'),
                 apiFocus('Ev.POINT_REACHED и Ev.MCE_LANDING', 'Событие достижения точки подтверждает окончание маршрута, а команда посадки завершает миссию.', 'if event == Ev.POINT_REACHED then ap.push(Ev.MCE_LANDING) end')
             ],
-            targetBlockIds: ['lua_ap_push', 'lua_event_callback', 'lua_ap_push', 'lua_event_callback', 'lua_goto_local_point', 'lua_event_callback', 'lua_ap_push', 'lua_callback_open', 'lua_callback_end'],
+            targetBlockIds: ['lua_ap_push', 'lua_callback_open', 'lua_event_callback', 'lua_ap_push', 'lua_event_callback', 'lua_goto_local_point', 'lua_event_callback', 'lua_ap_push', 'lua_callback_end'],
             blocks: [
                 createStatementBlock('lua5-preflight', 'PREFLIGHT', 'ap.push(Ev.MCE_PREFLIGHT)', 'Старт миссии.', 'setup', 'ap.push(Ev.MCE_PREFLIGHT)'),
                 createEventBlock('lua5-engines', 'ждать ENGINES_STARTED', 'if event == Ev.ENGINES_STARTED', 'Открывает ветку для взлета.', 'Ev.ENGINES_STARTED'),
@@ -77,55 +77,31 @@ export function getLuaMissionLessons(): GuideLesson[] {
                 }
             ],
             missingBlockDiagnostics: {
-                'lua5-preflight': {
+                lua_ap_push: {
                     kind: 'error',
-                    title: 'Нет команды `PREFLIGHT`',
-                    reason: 'Миссия не может стартовать без первоначальной подготовки.',
-                    fix: 'Добавьте блок `PREFLIGHT` первым.'
+                    title: 'Не хватает команд автопилота',
+                    reason: 'Для полной миссии нужны команды подготовки, взлета и посадки.',
+                    fix: 'Добавьте недостающий блок `ap.push(...)` в нужную ветку сценария.'
                 },
-                'lua5-engines': {
+                lua_event_callback: {
                     kind: 'error',
-                    title: 'Нет ожидания `ENGINES_STARTED`',
-                    reason: 'Без этого события взлет отправляется без подтверждения готовности двигателей.',
-                    fix: 'Поставьте блок `ждать ENGINES_STARTED` сразу после `PREFLIGHT`.'
+                    title: 'Не хватает событийной ветки',
+                    reason: 'Команды миссии должны быть привязаны к событиям FSM.',
+                    fix: 'Добавьте недостающий блок ожидания события.'
                 },
-                'lua5-takeoff': {
-                    kind: 'error',
-                    title: 'Не отправлен `TAKEOFF`',
-                    reason: 'Без взлета миссия не может перейти к полету в точку.',
-                    fix: 'Добавьте блок `TAKEOFF` после `ENGINES_STARTED`.'
-                },
-                'lua5-complete': {
-                    kind: 'error',
-                    title: 'Нет ожидания `TAKEOFF_COMPLETE`',
-                    reason: 'Команда перехода к точке должна запускаться после завершения взлета, а не сразу.',
-                    fix: 'Добавьте блок `ждать TAKEOFF_COMPLETE` перед полетом к точке.'
-                },
-                'lua5-goto': {
+                lua_goto_local_point: {
                     kind: 'error',
                     title: 'Не задан полет к точке',
                     reason: 'Без `ap.goToLocalPoint(...)` маршрут урока остается незавершенным.',
                     fix: 'Добавьте блок `лететь к точке` после `TAKEOFF_COMPLETE`.'
                 },
-                'lua5-point': {
-                    kind: 'error',
-                    title: 'Нет ожидания `POINT_REACHED`',
-                    reason: 'Посадка должна запускаться после подтверждения достижения координаты.',
-                    fix: 'Добавьте блок `ждать POINT_REACHED` перед `LANDING`.'
-                },
-                'lua5-land': {
-                    kind: 'error',
-                    title: 'Не добавлена посадка',
-                    reason: 'Сценарий выполняет взлет и маршрут, но не завершает миссию безопасной посадкой.',
-                    fix: 'Добавьте блок `LANDING` после `POINT_REACHED`.'
-                },
-                'lua_callback_open': {
+                lua_callback_open: {
                     kind: 'error',
                     title: 'Не открыт callback',
                     reason: 'В интерактивном учебнике `function callback(event)` должен быть отдельным открывающим блоком.',
                     fix: 'Добавьте блок `открыть callback` перед событийной логикой.'
                 },
-                'lua_callback_end': {
+                lua_callback_end: {
                     kind: 'error',
                     title: 'Не закрыт callback',
                     reason: 'Конструкция `function callback(event)` должна завершаться отдельным независимым блоком `end`.',

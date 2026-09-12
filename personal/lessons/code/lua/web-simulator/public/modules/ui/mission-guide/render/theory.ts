@@ -1,7 +1,58 @@
 import type { ScriptLanguage } from '../../api-docs/sections.js';
 import { getActiveChapter, getFirstUnlockedLesson, getLessonProgressState, getLessonsForChapter } from '../state.js';
-import type { GuideLessonState } from '../types.js';
-import { escapeHtml } from './shared.js';
+import type { GuideLessonState, GuideTheorySpoiler } from '../types.js';
+import { escapeHtml, renderInline } from './shared.js';
+
+function renderTheoryList(items: string[], variant: 'bullets' | 'ordered'): string {
+    if (!items.length) {
+        return '';
+    }
+    const tag = variant === 'ordered' ? 'ol' : 'ul';
+    const modifier = variant === 'ordered' ? ' guide-theory-card__list--ordered' : '';
+    return `
+        <${tag} class="guide-theory-card__list${modifier}">
+            ${items.map((item) => `<li>${renderInline(item)}</li>`).join('')}
+        </${tag}>
+    `;
+}
+
+function renderTheorySpoiler(spoiler: GuideTheorySpoiler): string {
+    const body = [
+        spoiler.paragraphs?.length ? spoiler.paragraphs.map((paragraph) => `<p>${renderInline(paragraph)}</p>`).join('') : '',
+        renderTheoryList(spoiler.ordered || [], 'ordered'),
+        renderTheoryList(spoiler.bullets || [], 'bullets')
+    ].filter(Boolean).join('');
+
+    return `
+        <details class="guide-theory-card__spoiler">
+            <summary>${renderInline(spoiler.label)}</summary>
+            <div class="guide-theory-card__spoiler-body">${body}</div>
+        </details>
+    `;
+}
+
+function renderTheorySection(section: { title: string; paragraphs: string[]; bullets?: string[]; ordered?: string[]; spoilers?: GuideTheorySpoiler[]; takeaway?: string }, index: number): string {
+    return `
+        <article class="guide-theory-card">
+            <div class="guide-theory-card__head">
+                <div class="guide-theory-card__index">${index + 1}</div>
+                <div class="guide-panel-card__title">${renderInline(section.title)}</div>
+            </div>
+            <div class="guide-theory-card__content">
+                ${section.paragraphs.map((paragraph) => `<p>${renderInline(paragraph)}</p>`).join('')}
+                ${renderTheoryList(section.ordered || [], 'ordered')}
+                ${renderTheoryList(section.bullets || [], 'bullets')}
+                ${section.spoilers?.length ? section.spoilers.map(renderTheorySpoiler).join('') : ''}
+                ${section.takeaway ? `
+                    <div class="guide-theory-card__takeaway">
+                        <div class="guide-theory-card__takeaway-label">Ключевой вывод</div>
+                        <div class="guide-theory-card__takeaway-text">${renderInline(section.takeaway)}</div>
+                    </div>
+                ` : ''}
+            </div>
+        </article>
+    `;
+}
 
 export function renderTheoryView(state: GuideLessonState, language: ScriptLanguage): string {
     const activeChapter = getActiveChapter(state, language);
@@ -21,7 +72,7 @@ export function renderTheoryView(state: GuideLessonState, language: ScriptLangua
             <div class="guide-theory-page__meta">
                 <div class="guide-lesson-page__meta-item">
                     <div class="guide-lesson-page__meta-label">О чем глава</div>
-                    <div class="guide-lesson-page__goal">${escapeHtml(activeChapter.theoryIntro)}</div>
+                    <div class="guide-lesson-page__goal">${renderInline(activeChapter.theoryIntro)}</div>
                 </div>
                 <div class="guide-lesson-page__meta-item">
                     <div class="guide-lesson-page__meta-label">Практика главы</div>
@@ -30,27 +81,14 @@ export function renderTheoryView(state: GuideLessonState, language: ScriptLangua
             </div>
 
             <div class="guide-theory-sections">
-                ${activeChapter.theorySections.map((section) => `
-                    <article class="guide-theory-card">
-                        <div class="guide-panel-card__title">${escapeHtml(section.title)}</div>
-                        <div class="guide-theory-card__content">
-                            ${section.paragraphs.slice(0, 1).map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
-                            ${section.bullets?.length ? `
-                                <ul class="guide-theory-card__list">
-                                    ${section.bullets.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
-                                </ul>
-                            ` : ''}
-                            ${section.takeaway ? `<div class="guide-panel-note"><strong>Вывод:</strong> ${escapeHtml(section.takeaway)}</div>` : ''}
-                        </div>
-                    </article>
-                `).join('')}
+                ${activeChapter.theorySections.map(renderTheorySection).join('')}
             </div>
 
             <section class="guide-panel-card">
                 <div class="guide-panel-card__top">
                     <div>
                         <div class="guide-panel-card__title">${escapeHtml(activeChapter.practiceHeading)}</div>
-                        <div class="guide-panel-card__text">${escapeHtml(activeChapter.practiceIntro)}</div>
+                        <div class="guide-panel-card__text">${renderInline(activeChapter.practiceIntro)}</div>
                     </div>
                 </div>
                 <div class="guide-practice-grid">
@@ -66,8 +104,8 @@ export function renderTheoryView(state: GuideLessonState, language: ScriptLangua
         return `
                         <article class="guide-practice-card ${progressState === 'locked' ? 'is-locked' : ''}">
                             <div class="guide-practice-card__difficulty">${escapeHtml(lesson.badge)}</div>
-                            <div class="guide-practice-card__title">${escapeHtml(lesson.title)}</div>
-                            <div class="guide-panel-card__text">${escapeHtml(lesson.summary)}</div>
+                            <div class="guide-practice-card__title">${renderInline(lesson.title)}</div>
+                            <div class="guide-panel-card__text">${renderInline(lesson.summary)}</div>
                             <div class="guide-panel-note">${statusLabel}</div>
                         </article>
                     `;

@@ -1,0 +1,961 @@
+=== ALL Nt.* block definitions: 52 ===
+ai_model_init, aruco_find, cam_get_cv_frame, crop_image, detect_shape, engines_disarm, flip_image, get_bgr_mask, get_binary_threshold, get_canny_edges, get_contours, get_dist_sensor_data, get_gaussian_blur, get_global_position_gps, get_global_velocity_gps, get_image_size, get_local_position_lps, get_local_velocity_lps, get_object_coords, get_object_size, get_position_velocity_by_index, get_ranger_data, get_ranger_data_by_index, get_time, go_local_point, go_local_point_body_fixed, go_to_point, grab_close, grab_open, imshow, imwrite, landing, led_all, led_index, not_point_reached, paint_obj, pose_compare, ppocr_text_find, ppocr_text_selection_from_object, preflight, resize_image, rotate_image, servo_set_angle, set_manual_speed, set_manual_speed_body_fixed, sleep, start_block, take_off, update_yaw, waiting_for_point, yolo_object, yolo_pose_object
+
+=== ALL Ct.forBlock.* generators: 51 ===
+ai_model_init, aruco_find, cam_get_cv_frame, crop_image, detect_shape, engines_disarm, flip_image, get_bgr_mask, get_binary_threshold, get_canny_edges, get_contours, get_dist_sensor_data, get_gaussian_blur, get_global_position_gps, get_global_velocity_gps, get_image_size, get_local_position_lps, get_local_velocity_lps, get_object_coords, get_object_size, get_position_velocity_by_index, get_ranger_data, get_ranger_data_by_index, get_time, go_local_point, go_local_point_body_fixed, grab_close, grab_open, imshow, imwrite, landing, led_all, led_index, not_point_reached, paint_obj, pose_compare, ppocr_text_find, ppocr_text_selection_from_object, preflight, resize_image, rotate_image, servo_set_angle, set_manual_speed, set_manual_speed_body_fixed, sleep, start_block, take_off, update_yaw, waiting_for_point, yolo_object, yolo_pose_object
+
+=== UI DEFS ===
+
+---- UI ai_model_init ----
+{init:function(){const i=document.getElementById("platform"),r=i?i.getAttribute("data-platform"):"",n=[["Yolo","Yolo"],["YoloPose","YoloPose"]];r=="mini2"&&n.push(["PaddleOCR","PaddleOCR"]),this.appendDummyInput().setAlign(yt.Align.RIGHT).appendField("Инициализация ИИ модели").appendField(new Wo(n,l=>(this.updateShape_(l),l)),"chosen_model"),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setInputsInline(!0),this.setColour(Kp),this.setTooltip(""),this.setHelpUrl(""),this.updateShape_(this.getFieldValue("chosen_model"))},updateShape_:function(i){for(;this.inputList.length>1;)this.removeInput(this.inputList[1].name)}}
+
+---- UI aruco_find ----
+{init:function(){this.appendDummyInput().appendField("Найти маркеры ArUco"),this.appendValueInput("IMG").setCheck("Frame").appendField("на изображении"),this.appendDummyInput().appendField("семейство").appendField(new Wo([["Original ArUco","DICT_ARUCO_ORIGINAL"],["4x4_50","DICT_4X4_50"],["5x5_100","DICT_5X5_100"],["6x6_250","DICT_6X6_250"],["7x7_1000","DICT_7X7_1000"]]),"FAMILY"),this.setInputsInline(!0),this.setOutput(!0,"ArUco_object"),this.setColour(Sa),this.setTooltip("Находит все маркеры ArUco заданного семейства"),this.setHelpUrl("")}}
+
+---- UI cam_get_cv_frame ----
+{init:function(){const i=document.getElementById("platform"),r=i?i.getAttribute("data-platform"):"",n=[["основной","CameraType.MAIN"]];r=="mini2"&&n.push(["вспомогательной","CameraType.OPT"]),this.appendDummyInput().setAlign(yt.Align.RIGHT).appendField("Получить кадр с").appendField(new Wo(n),"choice").appendField("камеры"),this.setOutput(!0,"Frame"),this.setColour(Na),this.setTooltip("Выберите: основная камера или камера оптопотока"),this.setHelpUrl("")}}
+
+---- UI crop_image ----
+{init:function(){this.appendDummyInput().appendField("Обрезка"),this.appendValueInput("IMG").setCheck("Frame").appendField("изображения"),this.appendValueInput("POINT1").setCheck("Point").appendField("от точки"),this.appendValueInput("POINT2").setCheck("Point").appendField("до точки"),this.setInputsInline(!0),this.setColour(Na),this.setOutput(!0,"Frame"),this.setTooltip("Обрезает изображение от одной точки до другой"),this.setHelpUrl("")}}
+
+---- UI detect_shape ----
+{init:function(){this.appendDummyInput().appendField("Определить форму"),this.appendValueInput("CONTOURS").setCheck("Contours").appendField("контура"),this.appendValueInput("INDEX").setCheck("Number").appendField("индекс"),this.setInputsInline(!0),this.setColour(Sa),this.setOutput(!0,"String"),this.setTooltip("Определяет форму объекта по его контуру (круг, квадрат, прямоугольник, треугольник, многоугольник)"),this.setHelpUrl("")}}
+
+---- UI engines_disarm ----
+{init:function(){this.appendDummyInput().appendField("Заглушить двигатели"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour($r),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI flip_image ----
+{init:function(){const i=[["вертикальной оси","VERTICAL"],["горизонтальной оси","HORIZONTAL"],["вертикальной и горизонтальной осей","BOTH"]];this.appendDummyInput().appendField("Отразить"),this.appendValueInput("IMG").setCheck("Frame").appendField("изображение"),this.appendDummyInput().appendField("вдоль").appendField(new Wo(i),"chosen_direction"),this.setInputsInline(!0),this.setColour(Na),this.setOutput(!0,"Frame"),this.setTooltip("Отражает изображение в заданном направлении"),this.setHelpUrl("")}}
+
+---- UI get_bgr_mask ----
+{init:function(){this.appendDummyInput().appendField("Получить цветовую маску"),this.appendValueInput("IMG").setCheck("Frame").appendField("изображения"),this.appendValueInput("COLOR_LOWER").setCheck("Colour").appendField("нижняя граница"),this.appendValueInput("COLOR_UPPER").setCheck("Colour").appendField("верхняя граница"),this.setInputsInline(!0),this.setColour(Sa),this.setOutput(!0,"Mask"),this.setTooltip("Применяет цветовую маску к изображению"),this.setHelpUrl("")}}
+
+---- UI get_binary_threshold ----
+{init:function(){this.appendDummyInput().appendField("Получить бинарную маску по порогу"),this.appendValueInput("IMG").setCheck("Frame").appendField("из изображения"),this.appendDummyInput().appendField("порог").appendField(new eA(127,0,255,1),"THRESHOLD"),this.setInputsInline(!0),this.setColour(Sa),this.setOutput(!0,"Mask"),this.setTooltip("Применяет бинарное пороговое преобразование к изображению. Порог должен быть от 0 до 255."),this.setHelpUrl("")}}
+
+---- UI get_canny_edges ----
+{init:function(){this.appendDummyInput().appendField("Получить маску Канни"),this.appendValueInput("IMG").setCheck("Frame").appendField("изображения"),this.appendDummyInput().appendField("нижняя граница").appendField(new eA(100,0,255,1),"THRESHOLD1"),this.appendDummyInput().appendField("верхняя граница").appendField(new eA(200,0,255,1),"THRESHOLD2"),this.setInputsInline(!0),this.setColour(Sa),this.setOutput(!0,"Mask"),this.setTooltip("Применяет фильтр Канни к изображению"),this.setHelpUrl("")}}
+
+---- UI get_contours ----
+{init:function(){this.appendDummyInput().appendField("Получить контуры"),this.appendValueInput("MASK").setCheck("Mask").appendField("из маски"),this.setInputsInline(!0),this.setColour(Sa),this.setOutput(!0,"Contours"),this.setTooltip("Применяет контуры к изображению"),this.setHelpUrl("")}}
+
+---- UI get_dist_sensor_data ----
+{init:function(){this.appendDummyInput().appendField("Получить данные от датчика расстояния"),this.setColour(tr),this.setOutput(!0,"Number"),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI get_gaussian_blur ----
+{init:function(){this.appendDummyInput().appendField("Получить гауссово размытие"),this.appendValueInput("IMG").setCheck("Frame").appendField("изображения"),this.appendValueInput("KERNEL_SIZE").setCheck("Number").appendField("размер ядра"),this.setInputsInline(!0),this.setColour(Sa),this.setOutput(!0,"Frame"),this.setTooltip("Применяет гауссово размытие к изображению"),this.setHelpUrl("")}}
+
+---- UI get_global_position_gps ----
+{init:function(){this.appendDummyInput().appendField("Получить текущие глобальные координаты дрона"),this.setColour(tr),this.setOutput(!0,"Point3D"),this.setTooltip("Возвращает текущие глобальные координаты дрона в метрах"),this.setHelpUrl("")}}
+
+---- UI get_global_velocity_gps ----
+{init:function(){this.appendDummyInput().appendField("Получить текущие скорости дрона в глобальной системе координат"),this.setColour(tr),this.setOutput(!0,"Velocity3D"),this.setTooltip("Возвращает текущие скорости дрона в глобальной системе координат в метрах в секунду"),this.setHelpUrl("")}}
+
+---- UI get_image_size ----
+{init:function(){this.appendDummyInput().appendField("Получить размер"),this.appendValueInput("IMG").setCheck("Frame").appendField("изображения"),this.appendDummyInput().appendField(new Wo([["ширину","width"],["высоту","height"]]),"SIZE_TYPE"),this.setInputsInline(!0),this.setColour(Na),this.setOutput(!0,"Number"),this.setTooltip("Возвращает ширину или высоту изображения"),this.setHelpUrl("")}}
+
+---- UI get_local_position_lps ----
+{init:function(){this.appendDummyInput().appendField("Получить текущие локальные координаты дрона"),this.setColour(tr),this.setOutput(!0,"Point3D"),this.setTooltip("Возвращает текущие локальные координаты дрона в метрах"),this.setHelpUrl("")}}
+
+---- UI get_local_velocity_lps ----
+{init:function(){this.appendDummyInput().appendField("Получить текущие скорости дрона в локальной системе координат"),this.setColour(tr),this.setOutput(!0,"Velocity3D"),this.setTooltip("Возвращает текущие скорости дрона в локальной системе координат в метрах в секунду"),this.setHelpUrl("")}}
+
+---- UI get_object_coords ----
+{init:function(){const i=document.getElementById("platform"),r=i?i.getAttribute("data-platform"):"",n=["ArUco_object","AI_object","Contours"];r=="mini2"&&n.push("ppocr_object"),this.appendDummyInput().appendField("Координаты"),this.appendValueInput("OBJ").setCheck(n).appendField("объекта"),this.appendDummyInput().appendField(new Wo([["центр","center"],["левый верхний угол","top_left"],["правый нижний угол","bottom_right"]]),"COORD_TYPE"),this.appendValueInput("ID_OR_INDEX").setCheck("Number").appendField("ID/индекс"),this.setInputsInline(!0),this.setOutput(!0,"Point"),this.setColour(Sa),this.setTooltip("Возвращает координаты объекта в формате (x, y) или None при отсутствии"),this.setHelpUrl("")}}
+
+---- UI get_object_size ----
+{init:function(){const i=document.getElementById("platform"),r=i?i.getAttribute("data-platform"):"",n=["ArUco_object","AI_object","Contours"];r=="mini2"&&n.push("ppocr_object"),this.appendDummyInput().appendField("Размер"),this.appendValueInput("OBJ").setCheck(n).appendField("объекта"),this.appendDummyInput().appendField(new Wo([["длина","width"],["ширина","height"],["диагональ","diagonal"],["площадь","area"]]),"SIZE_TYPE"),this.appendValueInput("ID_OR_INDEX").setCheck("Number").appendField("ID/индекс"),this.setInputsInline(!0),this.setOutput(!0,"Number"),this.setColour(Sa),this.setTooltip("Возвращает размер объекта (длину, ширину, диагональ или площадь) или None при отсутствии"),this.setHelpUrl("")}}
+
+---- UI get_position_velocity_by_index ----
+{init:function(){this.appendDummyInput().appendField("Получить"),this.appendDummyInput("system_input").setAlign(yt.Align.RIGHT).appendField("в системе").appendField(new Wo([["LPS","lps"],["GPS","gps"]],i=>(this.updateShape_(i,this.getFieldValue("SOURCE")),i)),"SYSTEM"),this.appendDummyInput("source_input").setAlign(yt.Align.RIGHT).appendField("компоненту").appendField(new Wo([["позиции","position"],["скорости","velocity"]],i=>(this.updateShape_(this.getFieldValue("SYSTEM"),i),i)),"SOURCE"),this.setColour(tr),this.setInputsInline(!0),this.setOutput(!0,"Number"),this.setTooltip("Возвращает выбранную компоненту (ось/координату/скорость) из данных позиции или скорости в системе LPS/GPS"),this.setHelpUrl(""),this.updateShape_(this.getFieldValue("SYSTEM"),this.getFieldValue("SOURCE"))},updateShape_:function(i,r){this.getInput("index_input")&&this.removeInput("index_input"),this.getInput("POSITION_VELOCITY_DATA")&&this.removeInput("POSITION_VELOCITY_DATA");const n=i==="gps",l=r==="velocity",d=l?"Velocity3D":"Point3D";let f;n&&!l?f=[["широту","0"],["долготу","1"],["высоту","2"]]:n&&l?f=[["северную","0"],["восточную","1"],["вертикальную","2"]]:f=[["X","0"],["Y","1"],["Z","2"]],this.appendDummyInput("index_input").setAlign(yt.Align.RIGHT).appendField(new Wo(f),"INDEX"),this.appendValueInput("POSITION_VELOCITY_DATA").setCheck(d).setAlign(yt.Align.RIGHT).appendField("из")}}
+
+---- UI get_ranger_data ----
+{init:function(){this.appendDummyInput().appendField("Получить данные от модуля Ranger"),this.setColour(tr),this.setOutput(!0,"RangerData"),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI get_ranger_data_by_index ----
+{init:function(){this.appendDummyInput().appendField("Получить значение дальномера"),this.appendDummyInput().setAlign(yt.Align.RIGHT).appendField(new Wo([["Правый","0"],["Левый","1"],["Передний","2"],["Задний","3"],["Верхний","4"],["Нижний/Верхний","5"]]),"INDEX"),this.appendValueInput("RANGER_DATA").setCheck("RangerData").setAlign(yt.Align.RIGHT).appendField("из данных модуля Ranger"),this.setInputsInline(!0),this.setColour(tr),this.setTooltip(""),this.setHelpUrl(""),this.setOutput(!0,"Number")}}
+
+---- UI get_time ----
+{init:function(){this.appendDummyInput().appendField("Получить время"),this.setOutput(!0,"Number"),this.setInputsInline(!0),this.setColour(Bm),this.setTooltip("Возвращает время в секундах"),this.setHelpUrl("")}}
+
+---- UI go_local_point ----
+{init:function(){this.appendDummyInput().appendField("Лететь в локальные координаты"),this.appendValueInput("X").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("X"),this.appendValueInput("Y").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("Y"),this.appendValueInput("Z").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("Z"),this.appendValueInput("YAW").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("Угол поворота"),this.appendValueInput("TIME").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("Желаемое время"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour($r),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI go_local_point_body_fixed ----
+{init:function(){this.appendDummyInput().appendField("Сместиться на локальные координаты"),this.appendValueInput("X").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("X"),this.appendValueInput("Y").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("Y"),this.appendValueInput("Z").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("Z"),this.appendValueInput("YAW").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("Угол поворота"),this.appendValueInput("TIME").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("Желаемое время"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour($r),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI grab_close ----
+{init:function(){this.appendDummyInput().appendField("Закрыть захват со скоростью"),this.appendValueInput("SPEED").setCheck("Number").setAlign(yt.Align.CENTRE),this.appendDummyInput().appendField("процентов"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour(tr),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI grab_open ----
+{init:function(){this.appendDummyInput().appendField("Открыть захват со скоростью"),this.appendValueInput("SPEED").setCheck("Number").setAlign(yt.Align.CENTRE),this.appendDummyInput().appendField("процентов"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour(tr),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI imshow ----
+{init:function(){this.appendDummyInput().appendField("Демонстрация изображения из кадра"),this.appendValueInput("frame").setCheck(["Frame","Mask"]).setAlign(yt.Align.RIGHT),this.appendValueInput("name").setCheck("String").setAlign(yt.Align.RIGHT).appendField("в окно"),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour(Na),this.setInputsInline(!0),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI imwrite ----
+{init:function(){this.appendDummyInput().appendField("Сохранить в файл"),this.appendValueInput("frame").setCheck("Frame").setAlign(yt.Align.CENTRE).appendField("кадр"),this.appendValueInput("path").setCheck("String").setAlign(yt.Align.CENTRE).appendField("с именем"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour(Na),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI landing ----
+{init:function(){this.appendDummyInput().appendField("Посадка"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour($r),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI led_all ----
+{init:function(){this.appendDummyInput().appendField("Установить цвет всех светодиодов на"),this.appendValueInput("COLOR").setCheck("Colour").setAlign(yt.Align.CENTRE),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour(tr),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI led_index ----
+{init:function(){this.appendDummyInput().appendField("Установить"),this.appendValueInput("COLOR").setCheck("Colour").setAlign(yt.Align.CENTRE).appendField("цвет"),this.appendValueInput("NUM").setCheck("Number").setAlign(yt.Align.CENTRE).appendField("на светодиод с номером"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour(tr),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI not_point_reached ----
+{init:function(){this.appendDummyInput().appendField("Достигнута точка"),this.setOutput(!0,"Boolean"),this.setColour($r),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI paint_obj ----
+{init:function(){const i=document.getElementById("platform");i&&i.getAttribute("data-platform");const r=[["ArUco","aruco"],["Yolo","yolo_obj"],["Поза","yolopose_obj"],["Контуры","contours"],["Текст","text"],["Точку","point"],["Линию","line"]];this.appendDummyInput().appendField("Нарисовать").appendField(new Wo(r,n=>(this.updateShapeMain_(n),n)),"chosen_obj"),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setInputsInline(!0),this.setColour(Na),this.setTooltip("Рисует обнаруженные объекты (ArUco маркеры, YOLO объекты, позы, контуры, текст и т.д.) на изображении"),this.setHelpUrl(""),this.updateShapeMain_(this.getFieldValue("chosen_obj"))},updateShapeMain_:function(i){for(;this.inputList.length>1;){var r=this.inputList[1];r&&r.name?this.removeInput(r.name):this.inputList.splice(1,1)}if(i==="text"){const f=document.getElementById("platform"),O=(f?f.getAttribute("data-platform"):"")=="mini2"?["String","ppocr_object"]:"String";this.appendValueInput("text").setCheck(O).setAlign(yt.Align.RIGHT).appendField("текст"),this.appendValueInput("colour").setCheck("Colour").setAlign(yt.Align.RIGHT).appendField("цветом"),this.appendValueInput("frame").setCheck("Frame").setAlign(yt.Align.RIGHT).appendField("на кадре");return}if(i==="point"){this.appendValueInput("point").setCheck("Point").setAlign(yt.Align.RIGHT).appendField("точку"),this.appendValueInput("colour").setCheck("Colour").setAlign(yt.Align.RIGHT).appendField("цветом"),this.appendValueInput("frame").setCheck("Frame").setAlign(yt.Align.RIGHT).appendField("на кадре");return}if(i==="line"){this.appendValueInput("point1").setCheck("Point").setAlign(yt.Align.RIGHT).appendField("от точки"),this.appendValueInput("point2").setCheck("Point").setAlign(yt.Align.RIGHT).appendField("до точки"),this.appendValueInput("colour").setCheck("Colour").setAlign(yt.Align.RIGHT).appendField("цветом"),this.appendValueInput("frame").setCheck("Frame").setAlign(yt.Align.RIGHT).appendField("на кадре"),this.appendDummyInput("thickness_input").appendField("толщина").appendField(new eA(2,1,10,1),"thickness");return}var n,l;if(i==="aruco"?(n="ArUco_object",l="объект ArUco"):i==="yolo_obj"?(n="AI_object",l="объект YOLO"):i==="yolopose_obj"?(n="AI_object",l="позу"):i==="contours"&&(n="Contours",l="контуры"),this.appendValueInput("obj").setCheck(n).setAlign(yt.Align.RIGHT).appendField(l),this.appendValueInput("frame").setCheck("Frame").setAlign(yt.Align.RIGHT).appendField("на кадре"),i==="aruco")this.appendDummyInput("picks").appendField("отрисовать").appendField(new Wo([["все","all"],["выбранные","pick"]],f=>(this.updateShapeSecond_(f),f)),"chosen_objaaaa").appendField("метки"),this.updateShapeSecond_(this.getFieldValue("chosen_objaaaa"));else if(i==="yolo_obj"||i==="contours"){var d=i==="yolo_obj"?"цвет рамки":"цвет контуров";this.appendValueInput("colour").setCheck("Colour").setAlign(yt.Align.RIGHT).appendField(d)}},updateShapeSecond_:function(i){let r=this.inputList.findIndex(n=>n.name==="picks");for(;this.inputList.length>r+1;)this.removeInput(this.inputList[this.inputList.length-1].name);i==="all"||i==="pick"&&this.appendValueInput("markers").setCheck(["Number","String"]).appendField("ID меток")}}
+
+---- UI pose_compare ----
+{init:function(){this.appendDummyInput().appendField("Поза в объекте"),this.appendValueInput("obj").setCheck("AI_object").setAlign(yt.Align.RIGHT),this.appendDummyInput().appendField("соответствует позе").appendField(new Wo([["Левая рука вверх","left_up"],["Правая рука вверх","right_up"],["Левая рука в сторону","left_side"],["Правая рука в сторону","right_side"],["Две руки вверх","two_hand_up"],["Обе стороны","two_hand_side"],["Кисти рядом в центре","wrist_centre"]]),"choice"),this.setOutput(!0,"Boolean"),this.setInputsInline(!0),this.setInputsInline(!0),this.setColour(Kp),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI ppocr_text_find ----
+{init:function(){this.appendDummyInput().appendField("Распознать текст"),this.appendValueInput("img").setCheck("Frame").setAlign(yt.Align.RIGHT).appendField("на изображении"),this.setOutput(!0,"ppocr_object"),this.setInputsInline(!0),this.setColour(Kp),this.setTooltip("Находит и распознает весь текст на изображении, возвращает объект с результатами распознавания"),this.setHelpUrl("")}}
+
+---- UI ppocr_text_selection_from_object ----
+{init:function(){this.appendDummyInput().appendField("Получить текст"),this.appendValueInput("ppocr").setCheck("ppocr_object").setAlign(yt.Align.RIGHT).appendField("из результата распознавания"),this.setOutput(!0,"String"),this.setInputsInline(!0),this.setColour(Kp),this.setTooltip("Извлекает распознанный текст из объекта результата распознавания в виде строки"),this.setHelpUrl("")}}
+
+---- UI preflight ----
+{init:function(){this.appendDummyInput().appendField("Предполетная подготовка"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour($r),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI resize_image ----
+{init:function(){this.appendDummyInput().appendField("Изменить размер"),this.appendValueInput("IMG").setCheck("Frame").appendField("изображения"),this.appendValueInput("WIDTH").setCheck("Number").appendField("ширина"),this.appendValueInput("HEIGHT").setCheck("Number").appendField("высота"),this.setInputsInline(!0),this.setColour(Na),this.setOutput(!0,"Frame"),this.setTooltip("Изменяет размер изображения"),this.setHelpUrl("")}}
+
+---- UI rotate_image ----
+{init:function(){const i=[["90 по часовой стрелке","90_CLOCKWISE"],["180 по часовой стрелке","180_CLOCKWISE"],["270 по часовой стрелке","270_CLOCKWISE"],["90 против часовой стрелки","90_COUNTERCLOCKWISE"],["180 против часовой стрелки","180_COUNTERCLOCKWISE"],["270 против часовой стрелки","270_COUNTERCLOCKWISE"]];this.appendDummyInput().appendField("Повернуть"),this.appendValueInput("IMG").setCheck("Frame").appendField("изображение"),this.appendDummyInput().appendField("на угол").appendField(new Wo(i),"chosen_angle"),this.setInputsInline(!0),this.setColour(Na),this.setOutput(!0,"Frame"),this.setTooltip("Поворачивает изображение на заданный угол"),this.setHelpUrl("")}}
+
+---- UI servo_set_angle ----
+{init:function(){this.appendDummyInput().appendField("Задать поворот сервопривода").appendField(new HS.FieldAngle(0,null,{min:-80,max:30,displayMin:-180,displayMax:180,majorTick:10,minorTick:5,offset:270,clockwise:1}),"angle"),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setInputsInline(!1),this.setTooltip(""),this.setHelpUrl(""),this.setColour(tr)}}
+
+---- UI set_manual_speed ----
+{init:function(){this.appendDummyInput().appendField("Установить скорость относительно точки старта"),this.appendValueInput("VX").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("по X"),this.appendValueInput("VY").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("по Y"),this.appendValueInput("VZ").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("по Z"),this.appendValueInput("YAW RATE").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("Угловая скорость"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour($r),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI set_manual_speed_body_fixed ----
+{init:function(){this.appendDummyInput().appendField("Установить скорость относительно позиции дрона"),this.appendValueInput("VX").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("по X"),this.appendValueInput("VY").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("по Y"),this.appendValueInput("VZ").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("по Z"),this.appendValueInput("YAW RATE").setCheck("Number").setAlign(yt.Align.RIGHT).appendField("Угловая скорость"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour($r),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI sleep ----
+{init:function(){this.appendValueInput("NAME").setCheck("Number").appendField("Заснуть на"),this.appendDummyInput().appendField("секунд"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour(Bm),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI start_block ----
+{init:function(){this.appendDummyInput().setAlign(yt.Align.RIGHT).appendField("Начало программы"),this.setInputsInline(!0),this.setNextStatement(!0,null),this.setColour(0),this.setTooltip(""),this.setHelpUrl(""),this.setDeletable(!1),this.setMovable(!1)}}
+
+---- UI take_off ----
+{init:function(){this.appendDummyInput().setAlign(yt.Align.RIGHT).appendField("Взлет"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour($r),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI update_yaw ----
+{init:function(){this.appendValueInput("YAW").setCheck("Number").appendField("Установить угол"),this.appendDummyInput().appendField("в градусах"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour($r),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI waiting_for_point ----
+{init:function(){this.appendDummyInput().appendField("Ожидать достижения точки"),this.setInputsInline(!0),this.setPreviousStatement(!0,null),this.setNextStatement(!0,null),this.setColour($r),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI yolo_object ----
+{init:function(){this.appendDummyInput().appendField("Найти на кадре"),this.appendValueInput("img").setCheck("Frame").setAlign(yt.Align.RIGHT),this.appendDummyInput().appendField("объект класса").appendField(new Wo([["Все","all"],["Человек","person"],["Велосипед","bicycle"],["Машина","car"],["Мотоцикл","motorbike"],["Самолёт","aeroplane"],["Автобус","bus"],["Поезд","train"],["Грузовик","truck"],["Лодка","boat"],["Светофор","traffic light"],["Пожарный гидрант","fire hydrant"],["Знак стоп","stop sign"],["Паркомат","parking meter"],["Скамейка","bench"],["Птица","bird"],["Кот","cat"],["Собака","dog"],["Лошадь","horse"],["Овца","sheep"],["Корова","cow"],["Слон","elephant"],["Медведь","bear"],["Зебра","zebra"],["Жираф","giraffe"],["Рюкзак","backpack"],["Зонт","umbrella"],["Сумка","handbag"],["Галстук","tie"],["Чемодан","suitcase"],["Фрисби","frisbee"],["Лыжи","skis"],["Сноуборд","snowboard"],["Спорт мяч","sports ball"],["Воздушный змей","kite"],["Бейсбольная бита","baseball bat"],["Бейсбольная перчатка","baseball glove"],["Скейтборд","skateboard"],["Сёрфборд","surfboard"],["Теннисная ракетка","tennis racket"],["Бутылка","bottle"],["Бокал","wine glass"],["Кружка","cup"],["Вилка","fork"],["Нож","knife"],["Ложка","spoon"],["Миска","bowl"],["Банан","banana"],["Яблоко","apple"],["Сэндвич","sandwich"],["Апельсин","orange"],["Брокколи","broccoli"],["Морковь","carrot"],["Хот-дог","hot dog"],["Пицца","pizza"],["Пончик","donut"],["Торт","cake"],["Стул","chair"],["Диван","sofa"],["Растение в горшке","pottedplant"],["Кровать","bed"],["Обеденный стол","diningtable"],["Туалет","toilet"],["Монитор","tvmonitor"],["Ноутбук","laptop"],["Мышка","mouse"],["Пульт","remote"],["Клавиатура","keyboard"],["Телефон","cell phone"],["Микроволновка","microwave"],["Духовка","oven"],["Тостер","toaster"],["Раковина","sink"],["Холодильник","refrigerator"],["Книга","book"],["Часы","clock"],["Ваза","vase"],["Ножницы","scissors"],["Медвежонок","teddy bear"],["Фен","hair drier"],["Зубная щётка","toothbrush"]]),"choice").appendField("для детекции"),this.setOutput(!0,"AI_object"),this.setInputsInline(!0),this.setInputsInline(!0),this.setColour(Kp),this.setTooltip(""),this.setHelpUrl("")}}
+
+---- UI yolo_pose_object ----
+{init:function(){this.appendDummyInput().appendField("Найти позу на кадре"),this.appendValueInput("img").setCheck("Frame").setAlign(yt.Align.RIGHT),this.setOutput(!0,"AI_object"),this.setInputsInline(!0),this.setInputsInline(!0),this.setColour(Kp),this.setTooltip(""),this.setHelpUrl("")}}
+
+=== PYTHON GENERATORS ===
+
+---- GEN ai_model_init ----
+Ct.forBlock.ai_model_init=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_os="import os",r.definitions_.import_sys="import sys",r.definitions_.import_defaultdict="from collections import defaultdict",r.definitions_.import_numpy="import numpy as np";const n=i.getFieldValue("chosen_model");r.definitions_.init_queries_dict="queries_dict: defaultdict = defaultdict(set)",r.definitions_.init_images="images = {}",r.definitions_.model_name_picker=`
+def model_name_picker(name: str):
+    if name == "Yolo":
+        return "yolov8n"
+    elif name == "YoloPose":
+        return "yolov8n-pose"
+    elif name == "PaddleOCR":
+        return "PP-OCRv5_mobile_det", "eslav_PP-OCRv5_mobile_rec"
+`;var l="";return n==="Yolo"?(r.definitions_.import_pioneer_rknn_yolo=`from pioneer_rknn import ${n}`,r.definitions_.init_class_names_yolo=`classNames_yolo = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
+    "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
+    "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
+    "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat",
+    "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup",
+    "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli",
+    "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed",
+    "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone",
+    "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors",
+    "teddy bear", "hair drier", "toothbrush"]`,r.definitions_.resize_img_yolo=`
+def resize_img_yolo(img):
+    img_copy = cv2.resize(img, IMG_SIZE)
+    img_copy = np.expand_dims(img_copy, 0)
+    return img_copy
+`,r.definitions_.add_func=`
+def yolo_find_on_image(img, results, classNames, class_filter=None, score_thr=None):
+    boxes, classes, scores = results
+    if boxes is None or classes is None or scores is None or len(boxes) == 0:
+        return {
+            "boxes": np.zeros((0, 4), dtype=np.float32),
+            "classes": np.zeros((0,), dtype=np.int32),
+            "scores": np.zeros((0,), dtype=np.float32),
+            "orig_shape": img.shape[:2],
+            "classNames": classNames
+        }
+
+    boxes = np.array(boxes)
+    classes = np.array(classes)
+    scores = np.array(scores)
+
+    indices = np.arange(len(boxes))
+    if class_filter is not None:
+        allowed = [classNames.index(cls_name) for cls_name in class_filter if cls_name in classNames]
+        indices = [i for i in indices if classes[i] in allowed]
+    if score_thr is not None:
+        indices = [i for i in indices if scores[i] >= score_thr]
+
+    return {
+        "boxes": boxes[indices],
+        "classes": classes[indices],
+        "scores": scores[indices],
+        "orig_shape": img.shape[:2],
+        "classNames": classNames
+    }
+
+def draw_yolo_on_image(img, yolo_obj, color=(0,255,0), thickness=2):
+    boxes = yolo_obj["boxes"]
+    classes = yolo_obj["classes"]
+    # scores = yolo_obj["scores"]
+    classNames = yolo_obj["classNames"]
+    orig_h, orig_w = yolo_obj["orig_shape"]
+    scale_x = orig_w / IMG_SIZE[0]
+    scale_y = orig_h / IMG_SIZE[1]
+
+    for box, cl in zip(boxes, classes): # for box, cl, score in zip(boxes, classes, scores):
+        left, top, right, bottom 
+
+---- GEN aruco_find ----
+Ct.forBlock.aruco_find=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_aruco="import cv2.aruco";var n=r.valueToCode(i,"IMG",r.ORDER_ATOMIC)||"image",l=i.getFieldValue("FAMILY");let d=i.workspace.getAllBlocks(!1),f={};for(let w of d)if(w.type==="variables_set"){let M=w.getField("VAR").getVariable().name,$=w.getInputTargetBlock("VALUE");if($&&$.type==="cam_get_cv_frame"){let x=$.getFieldValue("choice");f[M]=x}}i.workspace.inserted_aruco_imgs_var||(i.workspace.inserted_aruco_imgs_var={});let v=f[n],O;v==="CameraType.OPT"&&!i.workspace.inserted_aruco_imgs_var[n]?(i.workspace.inserted_aruco_imgs_var[n]=!0,O=`${n} := cv2.resize(${n}, (640, 640))`):O=n,r.definitions_.aruco_find_on_image=`
+def aruco_find_on_image(img_name, img, family):
+    dict_ = cv2.aruco.getPredefinedDictionary(family)
+    detector = cv2.aruco.ArucoDetector(dict_, cv2.aruco.DetectorParameters())
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    corners, ids, _ = detector.detectMarkers(gray)
+    return {
+        "img_name": img_name,
+        "family": family,
+        "corners": corners,
+        "ids": ids
+    }
+`;var _=`aruco_find_on_image('${n}', ${O}, cv2.aruco.${l})`;return[_,r.ORDER_FUNCTION_CALL]}
+
+---- GEN cam_get_cv_frame ----
+Ct.forBlock.cam_get_cv_frame=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_numpy="import numpy as np",r.definitions_.import_camera_piosdk2="from pioneer_sdk2 import Camera, ImageViewer, CameraType";const n=document.getElementById("platform");(n?n.getAttribute("data-platform"):"")=="mini2"?r.definitions_.init_cams=`
+cam_main, cam_opt = Camera(camera_type=CameraType.MAIN), Camera(camera_type=CameraType.OPT)`:r.definitions_.init_cams=`
+cam_main = Camera(camera_type=CameraType.MAIN)`,r.definitions_.init_iv="iv = ImageViewer()",r.definitions_.init_cams_dict="cams_dict = {}";var d=i.getFieldValue("choice"),f=d==="CameraType.MAIN"?"cam_main":"cam_opt";const v=this.getParent()?.getField("VAR")?.getVariable()?.name;if(v!==void 0){r.camsMap_||(r.camsMap_=new Map),r.camsMap_.set(v,f),r.setups_=Array.from(r.camsMap_.entries()).map(([w,M])=>`cams_dict["${w}"] = "${M}"`);const _=r.setups_.join(`
+`);r.definitions_.cams_dict_pre_while=_;var O=`${f}.get_cv_frame()
+`}else var O=`${f}.get_cv_frame()`;return[O,r.ORDER_ATOMIC]}
+
+---- GEN crop_image ----
+Ct.forBlock.crop_image=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_numpy="import numpy as np",r.definitions_.crop_image_func=`
+def crop_image(img, point1, point2):
+    x1, y1 = point1
+    x2, y2 = point2
+    return img[y1:y2, x1:x2].copy()
+`;var n=r.valueToCode(i,"IMG",r.ORDER_ATOMIC)||"image",l=r.valueToCode(i,"POINT1",r.ORDER_ATOMIC)||"point1",d=r.valueToCode(i,"POINT2",r.ORDER_ATOMIC)||"point2",f=`crop_image(${n}, ${l}, ${d})`;return[f,r.ORDER_FUNCTION_CALL]}
+
+---- GEN detect_shape ----
+Ct.forBlock.detect_shape=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_numpy="import numpy as np",r.definitions_.import_math="import math",r.definitions_.detect_shape_func=`
+def detect_shape(contours_obj, index):
+    # Извлекаем контуры из результата cv2.findContours
+    if isinstance(contours_obj, tuple) and len(contours_obj) >= 1:
+        contours = contours_obj[0]
+    elif isinstance(contours_obj, (list, tuple)):
+        contours = contours_obj
+    else:
+        return "неизвестно"
+    
+    if contours is None or len(contours) == 0:
+        return "неизвестно"
+    
+    # Проверяем индекс
+    index = int(index)
+    if index < 0 or index >= len(contours):
+        return "неизвестно"
+    
+    contour = contours[index]
+    
+    # Аппроксимируем контур
+    epsilon = 0.02 * cv2.arcLength(contour, True)
+    approx = cv2.approxPolyDP(contour, epsilon, True)
+    
+    # Количество вершин
+    vertices = len(approx)
+    
+    # Площадь контура
+    area = cv2.contourArea(contour)
+    
+    # Периметр контура
+    perimeter = cv2.arcLength(contour, True)
+    
+    # Отношение площади к квадрату периметра (для круга это ~1/(4*pi) ≈ 0.08)
+    if perimeter > 0:
+        circularity = 4 * math.pi * area / (perimeter * perimeter)
+    else:
+        circularity = 0
+    
+    # Определяем форму
+    if vertices == 3:
+        return "треугольник"
+    elif vertices == 4:
+        # Квадрат или прямоугольник
+        x, y, w, h = cv2.boundingRect(approx)
+        aspect_ratio = float(w) / h if h > 0 else 0
+        
+        # Если соотношение сторон близко к 1, это квадрат
+        if 0.95 <= aspect_ratio <= 1.05:
+            return "квадрат"
+        else:
+            return "прямоугольник"
+    elif vertices == 5:
+        return "пятиугольник"
+    elif vertices == 6:
+        return "шестиугольник"
+    elif vertices > 6:
+        # Много вершин - может быть круг или многоугольник
+        if circularity > 0.7:
+            return "круг"
+        else:
+            return "многоугольник"
+    else:
+        return "неизвестно"
+`;var n=r.valueToCode(i,"CONTOURS",r.ORDER_ATOMIC)||"contours",l=r.valueToCode(i,"INDEX",r.ORDER_ATOMIC)||"0",d=`detect_shape(${n}, ${l})`;return[d,r.ORDER_FUNCTION_CALL]}
+
+---- GEN engines_disarm ----
+Ct.forBlock.engines_disarm=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n=`pioneer.disarm()
+`;return n}
+
+---- GEN flip_image ----
+Ct.forBlock.flip_image=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_numpy="import numpy as np",r.definitions_.flip_image_func=`
+def flip_image(img, direction):
+    if direction == 'VERTICAL':
+        return cv2.flip(img, 0)
+    elif direction == 'HORIZONTAL':
+        return cv2.flip(img, 1)
+    elif direction == 'BOTH':
+        return cv2.flip(img, -1)
+    else:
+        return img
+`;var n=r.valueToCode(i,"IMG",r.ORDER_ATOMIC)||"image",l=i.getFieldValue("chosen_direction")||"HORIZONTAL",d=`flip_image(${n}, '${l}')`;return[d,r.ORDER_FUNCTION_CALL]}
+
+---- GEN get_bgr_mask ----
+Ct.forBlock.get_bgr_mask=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_numpy="import numpy as np",r.definitions_.get_bgr_mask_func=`
+def get_bgr_mask(img, color_lower, color_upper):
+    return cv2.inRange(img, color_lower, color_upper)
+`;var n=r.valueToCode(i,"IMG",r.ORDER_ATOMIC)||"image",l=r.valueToCode(i,"COLOR_LOWER",r.ORDER_ATOMIC)||"color_lower",d=r.valueToCode(i,"COLOR_UPPER",r.ORDER_ATOMIC)||"color_upper",f=`get_bgr_mask(${n}, ${l}, ${d})`;return[f,r.ORDER_FUNCTION_CALL]}
+
+---- GEN get_binary_threshold ----
+Ct.forBlock.get_binary_threshold=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_numpy="import numpy as np",r.definitions_.get_binary_threshold_func=`
+def get_binary_threshold(img, threshold):
+    # Преобразуем в grayscale, если изображение цветное
+    if len(img.shape) == 3:
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = img
+    # Применяем бинарное пороговое преобразование
+    _, binary = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)
+    return binary
+`;var n=r.valueToCode(i,"IMG",r.ORDER_ATOMIC)||"image",l=i.getFieldValue("THRESHOLD")||"127",d=`get_binary_threshold(${n}, ${l})`;return[d,r.ORDER_FUNCTION_CALL]}
+
+---- GEN get_canny_edges ----
+Ct.forBlock.get_canny_edges=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_numpy="import numpy as np",r.definitions_.get_canny_edges_func=`
+def get_canny_edges(img, threshold1, threshold2):
+    return cv2.Canny(img, threshold1, threshold2)
+`;var n=r.valueToCode(i,"IMG",r.ORDER_ATOMIC)||"image",l=i.getFieldValue("THRESHOLD1")||"100",d=i.getFieldValue("THRESHOLD2")||"200",f=`get_canny_edges(${n}, ${l}, ${d})`;return[f,r.ORDER_FUNCTION_CALL]}
+
+---- GEN get_contours ----
+Ct.forBlock.get_contours=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_numpy="import numpy as np",r.definitions_.get_contours_func=`
+def get_contours(mask):
+    return cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+`;var n=r.valueToCode(i,"MASK",r.ORDER_ATOMIC)||"mask",l=`get_contours(${n})`;return[l,r.ORDER_FUNCTION_CALL]}
+
+---- GEN get_dist_sensor_data ----
+Ct.forBlock.get_dist_sensor_data=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n="pioneer.get_dist_sensor_data()";return[n,r.ORDER_ATOMIC]}
+
+---- GEN get_gaussian_blur ----
+Ct.forBlock.get_gaussian_blur=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_numpy="import numpy as np",r.definitions_.get_gaussian_blur_func=`
+def get_gaussian_blur(img, kernel_size):
+    return cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
+`;var n=r.valueToCode(i,"IMG",r.ORDER_ATOMIC)||"image",l=r.valueToCode(i,"KERNEL_SIZE",r.ORDER_ATOMIC)||"3",d=`get_gaussian_blur(${n}, ${l})`;return[d,r.ORDER_FUNCTION_CALL]}
+
+---- GEN get_global_position_gps ----
+Ct.forBlock.get_global_position_gps=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n="pioneer.get_global_position_gps()";return[n,r.ORDER_ATOMIC]}
+
+---- GEN get_global_velocity_gps ----
+Ct.forBlock.get_global_velocity_gps=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n="pioneer.get_global_velocity_gps()";return[n,r.ORDER_ATOMIC]}
+
+---- GEN get_image_size ----
+Ct.forBlock.get_image_size=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_numpy="import numpy as np",r.definitions_.get_image_size_func=`
+def get_image_size(img, size_type):
+    height, width = img.shape[:2]
+    if size_type == 'width':
+        return width
+    elif size_type == 'height':
+        return height
+`;var n=r.valueToCode(i,"IMG",r.ORDER_ATOMIC)||"image",l=i.getFieldValue("SIZE_TYPE")||"width",d=`get_image_size(${n}, '${l}')`;return[d,r.ORDER_FUNCTION_CALL]}
+
+---- GEN get_local_position_lps ----
+Ct.forBlock.get_local_position_lps=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n="pioneer.get_local_position_lps()";return[n,r.ORDER_ATOMIC]}
+
+---- GEN get_local_velocity_lps ----
+Ct.forBlock.get_local_velocity_lps=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n="pioneer.get_local_velocity_lps()";return[n,r.ORDER_ATOMIC]}
+
+---- GEN get_object_coords ----
+Ct.forBlock.get_object_coords=function(i,r){r.definitions_.import_numpy="import numpy as np",r.definitions_.get_aruco_coords_func=`
+def get_aruco_coords(aruco_obj, marker_id, coord_type="center"):
+    corners, ids = aruco_obj["corners"], aruco_obj["ids"]
+    if ids is None or len(ids) == 0:
+        return None
+    for corner, mid in zip(corners, ids.flatten()):
+        if mid == marker_id:
+            pts = corner.reshape((4,2)).astype(float)
+            if coord_type == "center":
+                cx, cy = pts[:,0].mean(), pts[:,1].mean()
+                return (int(cx), int(cy))
+            elif coord_type == "top_left":
+                x, y = pts[0, 0], pts[0, 1]
+                return (int(x), int(y))
+            elif coord_type == "bottom_right":
+                x, y = pts[:,0].max(), pts[:,1].max()
+                return (int(x), int(y))
+    return None
+`,r.definitions_.get_yolo_coords_func=`
+def get_yolo_coords(yolo_obj, index, coord_type="center"):
+    if yolo_obj is None or "boxes" not in yolo_obj:
+        return None
+    boxes = yolo_obj["boxes"]
+    if boxes is None or len(boxes) == 0:
+        return None
+    if index < 0 or index >= len(boxes):
+        return None
+    
+    box = boxes[index]
+    left, top, right, bottom = box[0], box[1], box[2], box[3]
+    
+    orig_h, orig_w = yolo_obj["orig_shape"]
+    IMG_SIZE = (640, 640)
+    scale_x = orig_w / IMG_SIZE[0]
+    scale_y = orig_h / IMG_SIZE[1]
+    
+    left = int(left * scale_x)
+    right = int(right * scale_x)
+    top = int(top * scale_y)
+    bottom = int(bottom * scale_y)
+    
+    if coord_type == "center":
+        cx, cy = (left + right) // 2, (top + bottom) // 2
+        return (cx, cy)
+    elif coord_type == "top_left":
+        return (left, top)
+    elif coord_type == "bottom_right":
+        return (right, bottom)
+    return None
+`,r.definitions_.get_ppocr_coords_func=`
+def get_ppocr_coords(ppocr_obj, index, coord_type="center"):
+    if ppocr_obj is None or len(ppocr_obj) == 0:
+        return None
+    result = ppocr_obj[0]
+    if not isinstance(result, (list, tuple)) or len(result) < 2:
+        return None
+    
+    boxes = result[0]
+    if boxes is None or len(boxes) == 0:
+        return None
+    if index < 0 or index >= len(boxes):
+        return None
+    
+    box = boxes[index]
+    if isinstance(box, (list, tuple)) and len(box) >= 4:
+        try:
+            pts = np.array(box, dtype=float)
+            if pts.ndim == 2 and pts.shape[1] == 2 and pts.shape[0] >= 4:
+                x_coords = pts[:, 0]
+                y_coords = pts[:, 1]
+                
+                if coord_type == "center":
+                    cx, cy = x_coords.mean(), y_coords.mean()
+                    return (int(cx), int(cy))
+                elif coord_type == "top_left":
+                    x, y = x_coords.min(), y_coords.min()
+                    return (int(x), int(y))
+                elif coord_type == "bottom_right":
+                    x, y = x_coords.max(), y_coords.max()
+                    return (int(x), int(y))
+        except Exception:
+            return None
+    return None
+`,r.definitions_.get_contours_coords_func=`
+def get_contours_coords(contours_obj, index, coord_type="center"):
+    # contours_obj это результат cv2.findContours - кортеж (contours, hierarchy)
+    if isinstance(contours_obj, tuple) and len(contours_obj) >= 1:
+        contours = contours_obj[0]
+    elif isinstance(contours_obj, (list, tuple)):
+        contours = contours_obj
+    else:
+        return None
+    
+    
+
+---- GEN get_object_size ----
+Ct.forBlock.get_object_size=function(i,r){r.definitions_.import_numpy="import numpy as np",r.definitions_.import_math="import math",r.definitions_.import_cv2="import cv2",r.definitions_.get_aruco_size_func=`
+def get_aruco_size(aruco_obj, marker_id, size_type="width"):
+    corners, ids = aruco_obj["corners"], aruco_obj["ids"]
+    if ids is None or len(ids) == 0:
+        return None
+    for corner, mid in zip(corners, ids.flatten()):
+        if mid == marker_id:
+            pts = corner.reshape((4,2)).astype(float)
+            x_coords = pts[:, 0]
+            y_coords = pts[:, 1]
+            width = x_coords.max() - x_coords.min()
+            height = y_coords.max() - y_coords.min()
+            
+            if size_type == "width":
+                return float(width)
+            elif size_type == "height":
+                return float(height)
+            elif size_type == "diagonal":
+                return math.sqrt(width**2 + height**2)
+            elif size_type == "area":
+                return float(width * height)
+    return None
+`,r.definitions_.get_yolo_size_func=`
+def get_yolo_size(yolo_obj, index, size_type="width"):
+    if yolo_obj is None or "boxes" not in yolo_obj:
+        return None
+    boxes = yolo_obj["boxes"]
+    if boxes is None or len(boxes) == 0:
+        return None
+    if index < 0 or index >= len(boxes):
+        return None
+    
+    box = boxes[index]
+    left, top, right, bottom = box[0], box[1], box[2], box[3]
+    
+    orig_h, orig_w = yolo_obj["orig_shape"]
+    IMG_SIZE = (640, 640)
+    scale_x = orig_w / IMG_SIZE[0]
+    scale_y = orig_h / IMG_SIZE[1]
+    
+    left = left * scale_x
+    right = right * scale_x
+    top = top * scale_y
+    bottom = bottom * scale_y
+    
+    width = right - left
+    height = bottom - top
+    
+    if size_type == "width":
+        return float(width)
+    elif size_type == "height":
+        return float(height)
+    elif size_type == "diagonal":
+        return math.sqrt(width**2 + height**2)
+    elif size_type == "area":
+        return float(width * height)
+    return None
+`,r.definitions_.get_ppocr_size_func=`
+def get_ppocr_size(ppocr_obj, index, size_type="width"):
+    if ppocr_obj is None or len(ppocr_obj) == 0:
+        return None
+    result = ppocr_obj[0]
+    if not isinstance(result, (list, tuple)) or len(result) < 2:
+        return None
+    
+    boxes = result[0]
+    if boxes is None or len(boxes) == 0:
+        return None
+    if index < 0 or index >= len(boxes):
+        return None
+    
+    box = boxes[index]
+    if isinstance(box, (list, tuple)) and len(box) >= 4:
+        try:
+            pts = np.array(box, dtype=float)
+            if pts.ndim == 2 and pts.shape[1] == 2 and pts.shape[0] >= 4:
+                x_coords = pts[:, 0]
+                y_coords = pts[:, 1]
+                width = x_coords.max() - x_coords.min()
+                height = y_coords.max() - y_coords.min()
+                
+                if size_type == "width":
+                    return float(width)
+                elif size_type == "height":
+                    return float(height)
+                elif size_type == "diagonal":
+                    return math.sqrt(width**2 + height**2)
+                elif size_type == "area":
+                    return float(width * height)
+        except Exception:
+            return None
+    return None
+`,r.definitions_.get_contours_size_func=`
+def get_contours_size(contours_obj, index, size_type="width"):
+    if isinstance(contours_obj, tuple) and len(contours_obj) >= 
+
+---- GEN get_position_velocity_by_index ----
+Ct.forBlock.get_position_velocity_by_index=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n=r.valueToCode(i,"POSITION_VELOCITY_DATA",r.ORDER_ATOMIC),l=i.getFieldValue("INDEX"),d=`${n}[${l}]`;return[d,r.ORDER_ATOMIC]}
+
+---- GEN get_ranger_data ----
+Ct.forBlock.get_ranger_data=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n="pioneer.get_ranger_data()";return[n,r.ORDER_ATOMIC]}
+
+---- GEN get_ranger_data_by_index ----
+Ct.forBlock.get_ranger_data_by_index=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n=r.valueToCode(i,"RANGER_DATA",r.ORDER_ATOMIC),l=i.getFieldValue("INDEX"),d=`${n}[${l}]`;return[d,r.ORDER_ATOMIC]}
+
+---- GEN get_time ----
+Ct.forBlock.get_time=function(i,r){r.definitions_.import_time="import time";var n="time.time()";return[n,r.ORDER_ATOMIC]}
+
+---- GEN go_local_point ----
+Ct.forBlock.go_local_point=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n=r.valueToCode(i,"X",r.ORDER_ATOMIC),l=r.valueToCode(i,"Y",r.ORDER_ATOMIC),d=r.valueToCode(i,"Z",r.ORDER_ATOMIC),f=r.valueToCode(i,"YAW",r.ORDER_ATOMIC),v=r.valueToCode(i,"TIME",r.ORDER_ATOMIC),O=`pioneer.go_to_local_point(${n},${l},${d},${f},${v})
+`;return O}
+
+---- GEN go_local_point_body_fixed ----
+Ct.forBlock.go_local_point_body_fixed=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n=r.valueToCode(i,"X",r.ORDER_ATOMIC),l=r.valueToCode(i,"Y",r.ORDER_ATOMIC),d=r.valueToCode(i,"Z",r.ORDER_ATOMIC),f=r.valueToCode(i,"YAW",r.ORDER_ATOMIC),v=r.valueToCode(i,"TIME",r.ORDER_ATOMIC),O=`pioneer.go_to_local_point_body_fixed(${n},${l},${d},${f},${v})
+`;return O}
+
+---- GEN grab_close ----
+Ct.forBlock.grab_close=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n=r.valueToCode(i,"SPEED",r.ORDER_ATOMIC),l=`pioneer.grab_close(velocity=${n})
+`;return l}
+
+---- GEN grab_open ----
+Ct.forBlock.grab_open=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n=r.valueToCode(i,"SPEED",r.ORDER_ATOMIC),l=`pioneer.grab_open(velocity=${n})
+`;return l}
+
+---- GEN imshow ----
+Ct.forBlock.imshow=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_numpy="import numpy as np";var n=r.valueToCode(i,"name",r.ORDER_ATOMIC),l=r.valueToCode(i,"frame",r.ORDER_ATOMIC),d=i.getInputTargetBlock("frame"),f=!1;if(d){var v=d.type==="variables_get"||d.type==="variables_get_dynamic";if(v){var O=d.getField("VAR");if(O){var _=O.getVariable()?O.getVariable().name:null;if(_)for(var w=i.workspace.getAllBlocks(!1),M=0;M<w.length;M++){var $=w[M];if(($.type==="variables_set"||$.type==="variables_set_dynamic")&&$.getField("VAR")){var x=$.getField("VAR"),F=x.getVariable()?x.getVariable().name:null;if(F===_){var H=$.getInputTargetBlock("VALUE");if(H){var z=H.outputConnection;if(z&&z.check_){var Q=Array.isArray(z.check_)?z.check_:[z.check_];if(Q.indexOf("Mask")!==-1){f=!0;break}}if(!f){var ce=H.type;if(ce==="get_canny_edges"||ce==="get_bgr_mask"||ce==="get_binary_threshold"){f=!0;break}}}}}}}}else{var j=d.outputConnection;if(j&&j.check_){var Q=Array.isArray(j.check_)?j.check_:[j.check_];Q.indexOf("Mask")!==-1&&(f=!0)}if(!f){var le=d.type;(le==="get_canny_edges"||le==="get_bgr_mask"||le==="get_binary_threshold")&&(f=!0)}}}if(f)var P=`iv.imshow(name=${n}, frame=cv2.cvtColor(${l}, cv2.COLOR_GRAY2BGR))
+`;else var P=`iv.imshow(name=${n}, frame=${l})
+`;return P}
+
+---- GEN imwrite ----
+Ct.forBlock.imwrite=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_numpy="import numpy as np";var n=r.valueToCode(i,"frame",r.ORDER_ATOMIC),l=r.valueToCode(i,"path",r.ORDER_ATOMIC),d=`cv2.imwrite("/mnt/media/photos/" + ${l} + ".jpg", ${n}.copy())
+`;return d}
+
+---- GEN landing ----
+Ct.forBlock.landing=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n=`pioneer.land()
+`;return n}
+
+---- GEN led_all ----
+Ct.forBlock.led_all=function(i,r){r.definitions_.hex_to_bgr=`
+def hex_to_bgr(hex_color: str) -> tuple[int, int, int]:
+    if hex_color.startswith("#"):
+        hex_color = hex_color[1:]
+    if len(hex_color) != 6:
+        raise ValueError("Hex color must be in format #RRGGBB")
+    
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+    
+    return (b, g, r)
+`;var n=r.valueToCode(i,"COLOR",Ct.ORDER_ATOMIC),l=`pioneer.led_control(255, *[c / 255 for c in ${n}][::-1])
+`;return l}
+
+---- GEN led_index ----
+Ct.forBlock.led_index=function(i,r){r.definitions_.hex_to_bgr=`
+def hex_to_bgr(hex_color: str) -> tuple[int, int, int]:
+    if hex_color.startswith("#"):
+        hex_color = hex_color[1:]
+    if len(hex_color) != 6:
+        raise ValueError("Hex color must be in format #RRGGBB")
+    
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+    
+    return (b, g, r)
+`;var n=r.valueToCode(i,"NUM",Ct.ORDER_ATOMIC),l=r.valueToCode(i,"COLOR",Ct.ORDER_ATOMIC),d=`pioneer.led_control(${n}, *[c / 255 for c in ${l}][::-1])
+`;return d}
+
+---- GEN not_point_reached ----
+Ct.forBlock.not_point_reached=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n="pioneer.point_reached()";return[n,Ct.ORDER_LOGICAL_NOT]}
+
+---- GEN paint_obj ----
+Ct.forBlock.paint_obj=function(i,r){const n=i.getFieldValue("chosen_obj");if(n==="aruco"){r.definitions_.draw_aruco_on_image=`
+def draw_aruco_on_image(img, aruco_obj, id_filter=None, color=(0,255,0)):
+    corners, ids = aruco_obj["corners"], aruco_obj["ids"]
+    if ids is None or len(ids) == 0:
+        return
+
+    # Универсальная обработка фильтра: int или list/tuple/set
+    if id_filter is not None:
+        if isinstance(id_filter, int):
+            id_set = {id_filter}
+        else:
+            id_set = set(id_filter)
+        mask = [i for i, id_ in enumerate(ids.flatten()) if id_ in id_set]
+        if not mask:
+            return
+        corners = [corners[i] for i in mask]
+        ids = ids[mask]
+    cv2.aruco.drawDetectedMarkers(img, corners, ids, borderColor=color)
+`;var l=r.valueToCode(i,"obj",r.ORDER_ATOMIC),d=r.valueToCode(i,"frame",r.ORDER_ATOMIC),f=i.getInput("markers")?r.valueToCode(i,"markers",r.ORDER_ATOMIC):"None",v=`draw_aruco_on_image(${d}, ${l}, ${f}, color=(0,255,0))
+`}else if(n==="yolo_obj")var l=r.valueToCode(i,"obj",r.ORDER_ATOMIC),d=r.valueToCode(i,"frame",r.ORDER_ATOMIC),O=r.valueToCode(i,"colour",r.ORDER_ATOMIC),v=`draw_yolo_on_image(${d}, ${l}, ${O})
+`;else if(n==="yolopose_obj"){r.definitions_.import_deque_defaultdict="from collections import deque, defaultdict",r.definitions_.draw_pose_on_image=`
+POSE_PALETTE = np.array(
+    [
+        [255, 128, 0], [255, 153, 51], [255, 178, 102], [230, 230, 0], [255, 153, 255],
+        [153, 204, 255], [255, 102, 255], [255, 51, 255], [102, 178, 255], [51, 153, 255],
+        [255, 153, 153], [255, 102, 102], [255, 51, 51], [153, 255, 153], [102, 255, 102],
+        [51, 255, 51], [0, 255, 0], [0, 0, 255], [255, 0, 0], [255, 255, 255]
+    ], dtype=np.uint8
+)
+KPT_COLOR = POSE_PALETTE[[16, 16, 16, 16, 16, 0, 0, 0, 0, 0, 0, 9, 9, 9, 9, 9, 9]]
+SKELETON_PAIRS = [
+    [16, 14], [14, 12], [17, 15], [15, 13], [12, 13], [6, 12], [7, 13], [6, 7], [6, 8],
+    [7, 9], [8, 10], [9, 11], [2, 3], [1, 2], [1, 3], [2, 4], [3, 5], [4, 6], [5, 7]
+]
+LIMB_COLOR = POSE_PALETTE[[9, 9, 9, 9, 7, 7, 7, 0, 0, 0, 0, 0, 16, 16, 16, 16, 16, 16, 16]]
+SKELETON = [(a - 1, b - 1) for a, b in SKELETON_PAIRS]
+
+# Keypoint indices (COCO-17)
+LS, RS, LW, RW, LH, RH = 5, 6, 9, 10, 11, 12
+
+def draw_pose(frame, kpts_arr, thickness=3, bbox=None, label=None, label_color=(50, 220, 50)):
+    xy = kpts_arr[:, :2].astype(int)
+    conf = kpts_arr[:, 2]
+    valid = (conf > MIN_KPT_CONF) & ~np.all(xy == 0, axis=1)
+
+    for idx, (x, y) in enumerate(xy):
+        if valid[idx]:
+            col = tuple(int(c) for c in KPT_COLOR[idx])
+            cv2.circle(frame, (x, y), thickness + 2, col, -1, lineType=cv2.LINE_AA)
+
+    for i, (p1, p2) in enumerate(SKELETON):
+        if valid[p1] and valid[p2]:
+            pt1, pt2 = tuple(xy[p1]), tuple(xy[p2])
+            col = tuple(int(c) for c in LIMB_COLOR[i])
+            cv2.line(frame, pt1, pt2, col, thickness, lineType=cv2.LINE_AA)
+
+    if bbox is not None:
+        x1, y1, x2, y2 = map(int, bbox)
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (13, 76, 236), thickness + 1)
+        if label:
+            cv2.putText(
+                frame,
+                label,
+                (x1, max(0, y1 - 10)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                label_color,
+                max(1, thickness - 1),
+                lineType=cv2.LINE_AA,
+            )
+
+
+def get_kpts_array(kpts_obj):
+    # Supports:
+    # - Ultralytics-like object with .data tensor
+    # - Box.
+
+---- GEN pose_compare ----
+Ct.forBlock.pose_compare=function(i,r){var n=r.valueToCode(i,"obj",r.ORDER_ATOMIC),l=i.getFieldValue("choice");r.definitions_.import_deque_defaultdict="from collections import deque, defaultdict",r.definitions_.pose_compare_func=`
+def should_execute(cmd, last_cmds_deque, target_pose, threshold=THRESHOLD):
+    if cmd != target_pose:
+        last_cmds_deque.clear()
+        return False
+    last_cmds_deque.append(cmd)
+    if len(last_cmds_deque) < threshold:
+        return False
+    if all(c == target_pose for c in last_cmds_deque):
+        last_cmds_deque.clear()
+        return True
+    return False
+
+
+def _select_primary_pose(poses):
+    if not poses:
+        return None
+    def _area(p):
+        x1, y1, x2, y2 = p['bbox']
+        return max(0.0, x2 - x1) * max(0.0, y2 - y1)
+    return max(poses, key=_area)
+
+
+def pose_compare(result, target_pose, last_cmds, threshold=THRESHOLD, selector='largest'):
+    poses = result.get('poses', [])
+    pose_entry = _select_primary_pose(poses) if selector == 'largest' else (poses[0] if poses else None)
+    if pose_entry is None:
+        return False
+
+    pose_name = classify_gesture(pose_entry['kpts'])
+
+    # last_cmds can be either a single deque or a mapping {pose_name: deque}
+    dq = last_cmds.get(target_pose) if isinstance(last_cmds, dict) else last_cmds
+    if dq is None:
+        # Fallback: create a small deque on the fly if target key missing
+        dq = deque(maxlen=threshold)
+        if isinstance(last_cmds, dict):
+            last_cmds[target_pose] = dq
+
+    if should_execute(pose_name, dq, target_pose, threshold):
+        #print(f"***************** EXECUTE → {pose_name}")
+        return True
+    return False
+`,r.definitions_.last_cmds=`
+last_cmds = {pose_name: deque(maxlen=8) for pose_name in [
+    'left_up', 'right_up', 'left_side', 'right_side', 'two_hand_up', 'two_hand_side', 'wrist_centre'
+]}
+`;var d=`pose_compare(${n}, "${l}", last_cmds)`;return[d,r.ORDER_ATOMIC]}
+
+---- GEN ppocr_text_find ----
+Ct.forBlock.ppocr_text_find=function(i,r){var n=r.valueToCode(i,"img",r.ORDER_ATOMIC);r.definitions_.infer_cache_per_frame=`
+_infer_cache_per_frame = {}
+
+def infer_cache_per_frame(cache_key, frame, infer_fn):
+    frame_id = id(frame)
+    cached = _infer_cache_per_frame.get(cache_key)
+    if cached is None or cached["frame_id"] != frame_id:
+        cached = {
+            "frame_id": frame_id,
+            "result": infer_fn(frame),
+        }
+        _infer_cache_per_frame[cache_key] = cached
+    return cached["result"]
+`;var l=`results_ppocr_${n}`,d=`[${l} := infer_cache_per_frame("${l}", ${n}, lambda fr: model_ppocr.run(fr))]`;return[d,r.ORDER_ATOMIC]}
+
+---- GEN ppocr_text_selection_from_object ----
+Ct.forBlock.ppocr_text_selection_from_object=function(i,r){var n=r.valueToCode(i,"ppocr",r.ORDER_ATOMIC),l=`"\\n".join([text for group in ${n}[0][1] for (text, _) in group])`;return[l,r.ORDER_ATOMIC]}
+
+---- GEN preflight ----
+Ct.forBlock.preflight=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n=`pioneer.arm()
+`;return n}
+
+---- GEN resize_image ----
+Ct.forBlock.resize_image=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_numpy="import numpy as np",r.definitions_.resize_image_func=`
+def resize_image(img, width, height):
+    return cv2.resize(img, (width, height))
+`;var n=r.valueToCode(i,"IMG",r.ORDER_ATOMIC)||"image",l=r.valueToCode(i,"WIDTH",r.ORDER_ATOMIC)||"width",d=r.valueToCode(i,"HEIGHT",r.ORDER_ATOMIC)||"height",f=`resize_image(${n}, ${l}, ${d})`;return[f,r.ORDER_FUNCTION_CALL]}
+
+---- GEN rotate_image ----
+Ct.forBlock.rotate_image=function(i,r){r.definitions_.import_cv2="import cv2",r.definitions_.import_numpy="import numpy as np",r.definitions_.rotate_image_func=`
+def rotate_image(img, angle):
+    if angle == '90_CLOCKWISE':
+        return cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+    elif angle == '90_COUNTERCLOCKWISE':
+        return cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    elif angle == '180_CLOCKWISE':
+        return cv2.rotate(img, cv2.ROTATE_180)
+    elif angle == '180_COUNTERCLOCKWISE':
+        return cv2.rotate(img, cv2.ROTATE_180)
+    elif angle == '270_CLOCKWISE':
+        return cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    elif angle == '270_COUNTERCLOCKWISE':
+        return cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+    else:
+        return img
+`;var n=r.valueToCode(i,"IMG",r.ORDER_ATOMIC)||"image",l=i.getFieldValue("chosen_angle")||"90_CLOCKWISE",d=`rotate_image(${n}, '${l}')`;return[d,r.ORDER_FUNCTION_CALL]}
+
+---- GEN servo_set_angle ----
+Ct.forBlock.servo_set_angle=function(i,r){r.definitions_.import_ServoCamera="from pioneer_sdk2 import ServoCamera",r.definitions_.init_ServoCamera="servo = ServoCamera()";var n=i.getFieldValue("angle"),l=`servo.set_angle(angle=${n})
+`;return l}
+
+---- GEN set_manual_speed ----
+Ct.forBlock.set_manual_speed=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n=r.valueToCode(i,"VX",r.ORDER_ATOMIC),l=r.valueToCode(i,"VY",r.ORDER_ATOMIC),d=r.valueToCode(i,"VZ",r.ORDER_ATOMIC),f=r.valueToCode(i,"YAW RATE",r.ORDER_ATOMIC),v=`pioneer.set_manual_speed(${n},${l},${d},${f})
+`;return v}
+
+---- GEN set_manual_speed_body_fixed ----
+Ct.forBlock.set_manual_speed_body_fixed=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n=r.valueToCode(i,"VX",r.ORDER_ATOMIC),l=r.valueToCode(i,"VY",r.ORDER_ATOMIC),d=r.valueToCode(i,"VZ",r.ORDER_ATOMIC),f=r.valueToCode(i,"YAW RATE",r.ORDER_ATOMIC),v=`pioneer.set_manual_speed_body_fixed(${n},${l},${d},${f})
+`;return v}
+
+---- GEN sleep ----
+Ct.forBlock.sleep=function(i,r){r.definitions_.import_sleep="from time import sleep";var n=r.valueToCode(i,"NAME",r.ORDER_ATOMIC),l=`sleep(${n})
+`;return l}
+
+---- GEN start_block ----
+Ct.forBlock.start_block=function(i,r){return""}
+
+---- GEN take_off ----
+Ct.forBlock.take_off=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n=`pioneer.takeoff()
+`;return n}
+
+---- GEN update_yaw ----
+Ct.forBlock.update_yaw=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n=r.valueToCode(i,"YAW",r.ORDER_ATOMIC),l=`pioneer.set_yaw(${n})
+`;return l}
+
+---- GEN waiting_for_point ----
+Ct.forBlock.waiting_for_point=function(i,r){r.definitions_.import_Pioneer="from pioneer_sdk2 import Pioneer",r.definitions_.init_Pioneer="pioneer = Pioneer()";var n=`while not pioneer.point_reached():
+    pass
+`;return n}
+
+---- GEN yolo_object ----
+Ct.forBlock.yolo_object=function(i,r){var n=r.valueToCode(i,"img",r.ORDER_ATOMIC),l=i.getFieldValue("choice");r.queriesMap_||(r.queriesMap_=new Map),r.queriesMap_.set(n,l),r.setups_=Array.from(r.queriesMap_.entries()).map(([_,w])=>`queries_dict["${_}"].add("${w}")
+`);const d=r.setups_.join(`
+`);r.definitions_.queries_dict_and_images=d,r.definitions_.infer_cache_per_frame=`
+_infer_cache_per_frame = {}
+
+def infer_cache_per_frame(cache_key, frame, infer_fn):
+    frame_id = id(frame)
+    cached = _infer_cache_per_frame.get(cache_key)
+    if cached is None or cached["frame_id"] != frame_id:
+        cached = {
+            "frame_id": frame_id,
+            "result": infer_fn(frame),
+        }
+        _infer_cache_per_frame[cache_key] = cached
+    return cached["result"]
+`;var f=l==="all"?"None":`["${l}"]`,v=`results_${n}`,O=`yolo_find_on_image(${n}, (${v} := infer_cache_per_frame("${v}", ${n}, lambda fr: model_yolo.run([resize_img_yolo(fr)]))), classNames_yolo, class_filter=${f})
+`;return[O,r.ORDER_ATOMIC]}
+
+---- GEN yolo_pose_object ----
+Ct.forBlock.yolo_pose_object=function(i,r){var n=r.valueToCode(i,"img",r.ORDER_ATOMIC);r.definitions_.find_poses=`
+def find_poses(img, det_boxes):
+    """Run model inference on *img* and return a structured result object.
+
+    Returns a dict with:
+        - poses: list of pose dicts, each with keys
+            - bbox: [x1, y1, x2, y2] in *img* pixel coordinates
+            - kpts: numpy.ndarray of shape (17, 3) with x, y, conf
+        - total_dets: total number of raw detections returned by the model
+    """
+    ih, iw = img.shape[:2]
+
+    # Factors to convert network coordinates → input frame coordinates
+    sx = iw / float(IMG_SIZE[0])
+    sy = ih / float(IMG_SIZE[1])
+
+    poses = []
+    for box in det_boxes:
+        x1, y1, x2, y2 = float(box.xmin), float(box.ymin), float(box.xmax), float(box.ymax)
+
+        # Convert key-points to an array and skip invalid ones
+        karr = get_kpts_array(np.asarray(box.keypoint))
+        if karr is None:
+            continue
+
+        # Scale key-points and bbox to the original frame size
+        karr = karr.copy()
+        karr[:, 0] *= sx
+        karr[:, 1] *= sy
+        bbox_scaled = [x1 * sx, y1 * sy, x2 * sx, y2 * sy]
+
+        poses.append({
+            'bbox': bbox_scaled,
+            'kpts': karr,
+        })
+
+    return {
+        'poses': poses,
+        'total_dets': len(det_boxes),
+    }
+
+`;let l=i.workspace.getAllBlocks(!1),d={};for(let w of l)if(w.type==="variables_set"){let M=w.getField("VAR").getVariable().name,$=w.getInputTargetBlock("VALUE");if($&&$.type==="cam_get_cv_frame"){let x=$.getFieldValue("choice");d[M]=x}}let f=d[n],v;f==="CameraType.OPT"&&!i.workspace.inserted_aruco_imgs_var[n]?(i.workspace.inserted_aruco_imgs_var[n]=!0,v=`${n} := cv2.resize(${n}, IMG_SIZE)`):v=n,r.definitions_.infer_cache_per_frame=`
+_infer_cache_per_frame = {}
+
+def infer_cache_per_frame(cache_key, frame, infer_fn):
+    frame_id = id(frame)
+    cached = _infer_cache_per_frame.get(cache_key)
+    if cached is None or cached["frame_id"] != frame_id:
+        cached = {
+            "frame_id": frame_id,
+            "result": infer_fn(frame),
+        }
+        _infer_cache_per_frame[cache_key] = cached
+    return cached["result"]
+`;var O=`results_${n}`,_=`find_poses(${v}, (${O} := infer_cache_per_frame("${O}", ${v}, lambda fr: model_yolopose.run([resize_img_yolopose(fr)]))))
+`;return[_,r.ORDER_ATOMIC]}
+
+=== RAW TOOLBOX (4439 chars) ===
+[{kind:"category",name:"Текст",contents:[{kind:"block",type:"text"},{kind:"block",type:"text_join"},{kind:"block",type:"text_append"},{kind:"block",type:"text_length"},{kind:"block",type:"text_isEmpty"},{kind:"block",type:"text_indexOf"},{kind:"block",type:"text_charAt"},{kind:"block",type:"text_getSubstring"},{kind:"block",type:"text_changeCase"},{kind:"block",type:"text_trim"},{kind:"block",type:"text_print"},{kind:"block",type:"text_count"},{kind:"block",type:"text_replace"},{kind:"block",type:"text_reverse"}]},{kind:"category",name:"Логика",contents:[{kind:"block",type:"controls_if"},{kind:"block",type:"controls_ifelse"},{kind:"block",type:"logic_negate"},{kind:"block",type:"logic_null"},{kind:"block",type:"logic_compare"},{kind:"block",type:"logic_operation"},{kind:"block",type:"logic_boolean"}]},{kind:"category",name:"Циклы",contents:[{kind:"block",type:"controls_repeat_ext"},{kind:"block",type:"controls_repeat"},{kind:"block",type:"controls_whileUntil"},{kind:"block",type:"controls_for"},{kind:"block",type:"controls_forEach"},{kind:"block",type:"controls_flow_statements"}]},{kind:"category",name:"Математика",contents:[{kind:"block",type:"math_number"},{kind:"block",type:"math_arithmetic"},{kind:"block",type:"math_single"},{kind:"block",type:"math_constant"},{kind:"block",type:"math_number_property"},{kind:"block",type:"math_round"},{kind:"block",type:"math_trig"},{kind:"block",type:"math_on_list"},{kind:"block",type:"math_modulo"},{kind:"block",type:"math_constrain"},{kind:"block",type:"math_random_int"},{kind:"block",type:"math_random_float"}]},{kind:"category",name:"Функции",custom:"PROCEDURE"},{kind:"category",name:"Переменные",custom:"VARIABLE"},{kind:"category",name:"Массивы",contents:[{kind:"block",type:"lists_create_empty"},{kind:"block",type:"lists_create_with"},{kind:"block",type:"lists_repeat"},{kind:"block",type:"lists_length"},{kind:"block",type:"lists_isEmpty"},{kind:"block",type:"lists_indexOf"},{kind:"block",type:"lists_getIndex"},{kind:"block",type:"lists_setIndex"},{kind:"block",type:"lists_sort"},{kind:"block",type:"lists_split"},{kind:"block",type:"lists_reverse"}]},{kind:"category",name:"Полёт",contents:[{kind:"block",type:"preflight"},{kind:"block",type:"take_off"},{kind:"block",type:"landing"},{kind:"block",type:"engines_disarm"},{kind:"block",type:"go_local_point"},{kind:"block",type:"go_local_point_body_fixed"},{kind:"block",type:"waiting_for_point"},{kind:"block",type:"not_point_reached"},{kind:"block",type:"set_manual_speed"},{kind:"block",type:"set_manual_speed_body_fixed"},{kind:"block",type:"update_yaw"}]},{kind:"category",name:"Модули",contents:[...i==="mini2"?[{kind:"block",type:"servo_set_angle"},{kind:"block",type:"grab_open"},{kind:"block",type:"grab_close"},{kind:"block",type:"get_ranger_data"},{kind:"block",type:"get_ranger_data_by_index"}]:[],{kind:"block",type:"led_index"},{kind:"block",type:"led_all"},{kind:"block",type:"get_dist_sensor_data"},{kind:"block",type:"get_local_position_lps"},{kind:"block",type:"get_local_velocity_lps"},{kind:"block",type:"get_global_position_gps"},{kind:"block",type:"get_global_velocity_gps"},{kind:"block",type:"get_position_velocity_by_index"}]},{kind:"category",name:"Камера",contents:[{kind:"block",type:"cam_get_cv_frame"},{kind:"block",type:"imshow"},...i==="mini2"?[{kind:"block",type:"imwrite"}]:[],{kind:"block",type:"paint_obj"},{kind:"block",type:"get_image_size"},{kind:"block",type:"resize_image"},{kind:"block",type:"rotate_image"},{kind:"block",type:"flip_image"},{kind:"block",type:"crop_image"}]},{kind:"category",name:"ИИ",contents:[{kind:"block",type:"ai_model_init"},{kind:"block",type:"yolo_object"},{kind:"block",type:"yolo_pose_object"},{kind:"block",type:"pose_compare"},...i==="mini2"?[{kind:"block",type:"ppocr_text_find"},{kind:"block",type:"ppocr_text_selection_from_object"}]:[]]},{kind:"category",name:"Компьютерное зрение",contents:[{kind:"block",type:"aruco_find"},{kind:"block",type:"get_object_coords"},{kind:"block",type:"get_object_size"},{kind:"block",type:"detect_shape"},{kind:"block",type:"get_gaussian_blur"},{kind:"block",type:"get_canny_edges"},{kind:"block",type:"get_bgr_mask"},{kind:"block",type:"get_binary_threshold"},{kind:"block",type:"get_contours"}]},{kind:"category",name:"Прочее",contents:[{kind:"block",type:"sleep"},{kind:"block",type:"get_time"},{kind:"block",type:"field-colour"},{kind:"block",type:"field-angle"},{kind:"block",type:"field-point"}]}]

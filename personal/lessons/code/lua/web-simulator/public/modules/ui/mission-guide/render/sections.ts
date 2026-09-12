@@ -4,14 +4,17 @@ import {
     getCompletedLessonsCount,
     getFirstUnlockedLesson,
     getLessonProgressState,
+    getLessonsForChapter,
     isLessonCompleted
 } from '../state.js';
 import type { GuideLessonState } from '../types.js';
 import {
     escapeHtml,
     renderApiFocusItem,
+    renderInline,
     renderTargetRoute
 } from './support.js';
+import { ICON_BOOK } from './icons.js';
 
 export function renderLessonOverview(
     lessonNumber: number,
@@ -68,37 +71,26 @@ export function renderLessonTheory(lesson: GuideLessonState['lessons'][number]):
                 <div class="guide-panel-card__text">Короткая база перед практикой.</div>
             </div>
 
-            <div class="guide-lesson-section__grid">
+            <div class="guide-lesson-page__meta">
                 <article class="guide-lesson-page__meta-item">
                     <div class="guide-lesson-page__meta-label">Что изучаем</div>
-                    <div class="guide-lesson-page__goal">${escapeHtml(lesson.lessonIntro)}</div>
+                    <div class="guide-lesson-page__goal">${renderInline(lesson.lessonIntro)}</div>
                 </article>
                 <article class="guide-lesson-page__meta-item">
                     <div class="guide-lesson-page__meta-label">Ожидаемый результат</div>
-                    <div class="guide-lesson-page__goal">${escapeHtml(lesson.expectedOutcome)}</div>
+                    <div class="guide-lesson-page__goal">${renderInline(lesson.expectedOutcome)}</div>
+                </article>
+                <article class="guide-lesson-page__meta-item guide-lesson-page__meta-item--wide">
+                    <div class="guide-lesson-page__meta-label">Что собрать</div>
+                    ${renderTargetRoute(lesson)}
+                </article>
+                <article class="guide-lesson-page__meta-item guide-lesson-page__meta-item--wide">
+                    <div class="guide-lesson-page__meta-label">Что понадобится</div>
+                    <div class="guide-api-grid">
+                        ${lesson.apiFocus.map(renderApiFocusItem).join('')}
+                    </div>
                 </article>
             </div>
-
-            <article class="guide-panel-card">
-                <div class="guide-panel-card__top">
-                    <div>
-                        <div class="guide-panel-card__title">Что собрать</div>
-                        <div class="guide-panel-card__text">Минимальный набор блоков для текущего шага.</div>
-                    </div>
-                </div>
-                ${renderTargetRoute(lesson)}
-            </article>
-
-            <article class="guide-panel-card">
-                <div class="guide-panel-card__top">
-                    <div>
-                        <div class="guide-panel-card__title">Что понадобится</div>
-                    </div>
-                </div>
-                <div class="guide-api-grid">
-                    ${lesson.apiFocus.map(renderApiFocusItem).join('')}
-                </div>
-            </article>
         </section>
     `;
 }
@@ -109,15 +101,22 @@ export function renderPortalIntro(state: GuideLessonState, language: ScriptLangu
     const completedCount = getCompletedLessonsCount(state, language);
     const courseProgress = Math.round((completedCount / Math.max(state.lessons.length, 1)) * 100);
     const currentLessonId = isLessonCompleted(language, activeLesson.id) ? firstLesson.id : activeLesson.id;
+    const currentLesson = state.lessons.find((item) => item.id === currentLessonId) || firstLesson;
     const remainingCount = Math.max(state.lessons.length - completedCount, 0);
+    const isFreshStart = completedCount === 0;
+    const heroEyebrow = isFreshStart ? 'Быстрый старт' : 'С возвращением';
+    const heroTitle = isFreshStart ? 'Готовы поднять дрон в воздух?' : 'Продолжим с того же места';
+    const heroText = isFreshStart
+        ? 'Десять коротких шагов: от первого светодиода до полной миссии автопилота. Каждый шаг проверяется автоматически.'
+        : `Следующий шаг — «${escapeHtml(currentLesson.title)}». Прогресс сохранён, можно продолжать.`;
 
     return `
         <section class="guide-portal-intro">
             <div class="guide-portal-intro__top">
                 <div class="guide-portal-intro__hero">
-                    <div class="guide-portal-intro__eyebrow">Быстрый старт</div>
-                    <div class="guide-portal-intro__title">Практикум Pioneer</div>
-                    <div class="guide-portal-intro__text">Открывайте первый доступный урок или переходите к нужному шагу в дорожной карте ниже.</div>
+                    <div class="guide-portal-intro__eyebrow">${ICON_BOOK}${heroEyebrow}</div>
+                    <div class="guide-portal-intro__title">${heroTitle}</div>
+                    <div class="guide-portal-intro__text">${heroText}</div>
                 </div>
                 <div class="guide-portal-stats">
                     <article class="guide-portal-stat">
@@ -150,36 +149,53 @@ export function renderPortalIntro(state: GuideLessonState, language: ScriptLangu
                     </div>
                     <div class="guide-portal-roadmap__meta">${completedCount}/${state.lessons.length}</div>
                 </div>
-                <div class="guide-portal-roadmap__list">
-                    ${state.lessons.map((item, index) => {
-        const progressState = getLessonProgressState(state, language, item.id);
-        const stateClass = progressState === 'completed'
-            ? 'is-completed'
-            : progressState === 'locked'
-                ? 'is-locked'
-                : item.id === currentLessonId
-                    ? 'is-current'
-                    : '';
-        const stateLabel = progressState === 'completed'
-            ? 'Выполнен'
-            : progressState === 'locked'
-                ? 'Закрыт'
-                : progressState === 'in_progress'
-                    ? 'Текущий'
-                    : 'Доступен';
+                <div class="guide-roadmap-groups">
+                    ${state.chapters.map((chapter) => {
+        const chapterLessons = getLessonsForChapter(state, chapter.id);
+        const chapterCompleted = chapterLessons.filter((item) => getLessonProgressState(state, language, item.id) === 'completed').length;
+        const chapterDone = chapterCompleted === chapterLessons.length && chapterLessons.length > 0;
         return `
-                            <button
-                                type="button"
-                                class="guide-roadmap-item ${stateClass}"
-                                data-guide-open-lesson="${escapeHtml(item.id)}"
-                                ${progressState === 'locked' ? 'disabled' : ''}
-                            >
-                                <span class="guide-roadmap-item__index">${index + 1}</span>
-                                <span class="guide-roadmap-item__body">
-                                    <span class="guide-roadmap-item__title">${escapeHtml(item.title)}</span>
-                                    <span class="guide-roadmap-item__status">${stateLabel}</span>
-                                </span>
-                            </button>
+                        <div class="guide-roadmap-group ${chapterDone ? 'is-done' : ''}">
+                            <div class="guide-roadmap-group__header">
+                                <span class="guide-roadmap-group__badge">${escapeHtml(chapter.badge)}</span>
+                                <span class="guide-roadmap-group__title">${escapeHtml(chapter.title)}</span>
+                                <span class="guide-roadmap-group__meta">${chapterCompleted}/${chapterLessons.length}</span>
+                            </div>
+                            <div class="guide-portal-roadmap__list">
+                                ${chapterLessons.map((item) => {
+            const index = state.lessons.findIndex((lesson) => lesson.id === item.id);
+            const progressState = getLessonProgressState(state, language, item.id);
+            const stateClass = progressState === 'completed'
+                ? 'is-completed'
+                : progressState === 'locked'
+                    ? 'is-locked'
+                    : item.id === currentLessonId
+                        ? 'is-current'
+                        : '';
+            const stateLabel = progressState === 'completed'
+                ? 'Выполнен'
+                : progressState === 'locked'
+                    ? 'Закрыт'
+                    : progressState === 'in_progress'
+                        ? 'Текущий'
+                        : 'Доступен';
+            return `
+                                    <button
+                                        type="button"
+                                        class="guide-roadmap-item ${stateClass}"
+                                        data-guide-open-lesson="${escapeHtml(item.id)}"
+                                        ${progressState === 'locked' ? 'disabled' : ''}
+                                    >
+                                        <span class="guide-roadmap-item__index">${index + 1}</span>
+                                        <span class="guide-roadmap-item__body">
+                                            <span class="guide-roadmap-item__title">${escapeHtml(item.title)}</span>
+                                            <span class="guide-roadmap-item__status">${stateLabel}</span>
+                                        </span>
+                                    </button>
+                                `;
+        }).join('')}
+                            </div>
+                        </div>
                         `;
     }).join('')}
                 </div>

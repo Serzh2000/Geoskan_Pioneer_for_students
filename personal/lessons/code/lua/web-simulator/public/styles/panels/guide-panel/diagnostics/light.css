@@ -10,7 +10,7 @@
 .guide-empty-state,
 .guide-run-banner {
     padding: 10px 12px;
-    border-radius: 12px;
+    border-radius: var(--guide-radius-inner);
     border: 1px solid var(--guide-border);
     border-left-width: 4px;
     background: var(--guide-bg);
@@ -41,7 +41,7 @@
 .guide-result-hero {
     gap: 5px;
     padding: 12px 14px;
-    border-radius: 14px;
+    border-radius: var(--guide-radius-inner);
     border: 1px solid var(--guide-border);
     background: var(--guide-bg-muted);
     box-shadow: none;
@@ -88,7 +88,7 @@
     flex-direction: column;
     gap: 6px;
     padding: 10px 12px;
-    border-radius: 12px;
+    border-radius: var(--guide-radius-inner);
     border: 1px solid var(--guide-border);
     background: var(--guide-bg);
 }
@@ -144,7 +144,7 @@
 }
 
 .guide-lesson__code {
-    background: #fffaf5;
+    background: var(--guide-accent-soft);
     border: 1px solid rgba(255, 107, 0, 0.18);
     color: var(--guide-text);
 }

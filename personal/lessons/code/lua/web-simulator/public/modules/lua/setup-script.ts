@@ -1,19 +1,11 @@
+import { buildLuaEventTableLiteral } from './api-constants.js';
+
 /**
  * Lua bootstrap-скрипт, который подготавливает API симулятора внутри Fengari.
  * Держим его отдельно от TypeScript runtime-оркестрации, чтобы `index.ts` не разрастался.
  */
 export const LUA_SETUP_SCRIPT = `
-        Ev = { 
-            MCE_PREFLIGHT=1, MCE_TAKEOFF=2, MCE_LANDING=3, ENGINES_ARM=4, ENGINES_DISARM=5, 
-            TAKEOFF_COMPLETE=6, COPTER_LANDED=7, LOW_VOLTAGE=8, STATE_CHANGED=9, POINT_REACHED=10,
-            ENGINES_STARTED=11, POINT_DECELERATION=12, LOW_VOLTAGE1=13, LOW_VOLTAGE2=14,
-            SYNC_START=15, SHOCK=16, CONTROL_FAIL=17, ENGINE_FAIL=18
-        }
-        
-        -- Duplicate API event constants: available via Ev and as globals
-        for k, v in pairs(Ev) do
-            _G[k] = v
-        end
+        Ev = { ${buildLuaEventTableLiteral()} }
 
         local __ap_push_impl = js_ap_push
         local __ap_goToPoint_impl = js_ap_goToPoint
@@ -21,6 +13,7 @@ export const LUA_SETUP_SCRIPT = `
         local __ap_updateYaw_impl = js_ap_updateYaw
         local __timer_callLater_impl = js_timer_callLater
         local __timer_new_impl = js_timer_new
+        local __validate_missing_global_impl = js_validate_missing_global
 
         local function __diag_location(level)
             local info = debug.getinfo(level or 3, "nSl")
@@ -72,6 +65,42 @@ export const LUA_SETUP_SCRIPT = `
         end
 
         __traceback_handler = __diag_traceback
+
+        setmetatable(Ev, {
+            __index = function(_, key)
+                local _, validationError = __validate_missing_global_impl(key)
+                if validationError then
+                    error(validationError, 2)
+                end
+                return nil
+            end
+        })
+
+        local __previous_global_meta = getmetatable(_G)
+        local __previous_global_index = __previous_global_meta and __previous_global_meta.__index
+
+        local function __resolve_missing_global(key)
+            local replacement, validationError = __validate_missing_global_impl(key)
+            if validationError then
+                error(validationError, 2)
+            end
+            if replacement ~= nil then
+                return replacement
+            end
+            if type(__previous_global_index) == "function" then
+                return __previous_global_index(_G, key)
+            end
+            if type(__previous_global_index) == "table" then
+                return __previous_global_index[key]
+            end
+            return nil
+        end
+
+        local __global_meta = __previous_global_meta or {}
+        __global_meta.__index = function(_, key)
+            return __resolve_missing_global(key)
+        end
+        setmetatable(_G, __global_meta)
 
         local function __diag_log(level, scope, message, location)
             js_diag_log(level, scope, message, location or "")

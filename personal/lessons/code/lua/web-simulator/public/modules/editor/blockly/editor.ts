@@ -18,7 +18,7 @@ import {
     syncBlocklyEditorToggle as syncBlocklyEditorToggleDom,
     syncEditorModeVisibility as syncEditorModeVisibilityDom
 } from '../dom.js';
-import { blocklyTheme, editorRuntime } from '../runtime.js';
+import { getBlocklyTheme, editorRuntime } from '../runtime.js';
 import { getTextEditorValue, setTextEditorValue } from '../text-editor.js';
 
 function getEditorStateKey(language: ScriptLanguage = currentScriptLanguage): string {
@@ -109,7 +109,7 @@ function ensureBlocklyWorkspace(language: ScriptLanguage = currentScriptLanguage
             toolbox: buildMainEditorToolbox(language),
             scrollbars: true,
             trashcan: true,
-            theme: blocklyTheme,
+            theme: getBlocklyTheme(),
             toolboxPosition: 'start'
         });
 

@@ -32,7 +32,7 @@ export function getLuaCoreFlightLessons(): GuideLesson[] {
                 apiFocus('ap.push(Ev.MCE_PREFLIGHT)', 'Отправляет автопилоту команду предполетной подготовки. Это стартовый шаг для FSM-сценария.', 'ap.push(Ev.MCE_PREFLIGHT)'),
                 apiFocus('Ev.ENGINES_STARTED', 'Событие, которое сигнализирует о запуске двигателей. Только после него уместно переходить к следующим действиям миссии.', 'if event == Ev.ENGINES_STARTED then ... end')
             ],
-            targetBlockIds: ['lua_ap_push', 'lua_event_callback', 'lua_print', 'lua_callback_open', 'lua_callback_end'],
+            targetBlockIds: ['lua_ap_push', 'lua_callback_open', 'lua_event_callback', 'lua_print', 'lua_callback_end'],
             blocks: [
                 createStatementBlock('lua3-preflight', 'отправить PREFLIGHT', 'ap.push(Ev.MCE_PREFLIGHT)', 'Обязательный старт для миссий Lua через FSM Pioneer.', 'setup', 'ap.push(Ev.MCE_PREFLIGHT)'),
                 createEventBlock('lua3-engines', 'ждать ENGINES_STARTED', 'if event == Ev.ENGINES_STARTED', 'С этого события начинается безопасный переход к следующим шагам миссии.', 'Ev.ENGINES_STARTED'),
@@ -72,7 +72,7 @@ export function getLuaCoreFlightLessons(): GuideLesson[] {
                 }
             ],
             missingBlockDiagnostics: {
-                'lua3-preflight': {
+                lua_ap_push: {
                     kind: 'error',
                     title: 'Не отправлена предполетная команда',
                     reason: 'Без `ap.push(Ev.MCE_PREFLIGHT)` двигатели не переходят в состояние запуска.',
@@ -149,7 +149,7 @@ export function getLuaCoreFlightLessons(): GuideLesson[] {
                 apiFocus('Ev.MCE_TAKEOFF', 'Команда взлета. Ее нельзя отправлять раньше, чем двигатели перейдут в состояние готовности.', 'ap.push(Ev.MCE_TAKEOFF)'),
                 apiFocus('Ev.ENGINES_STARTED', 'Контрольное событие, которое отделяет подготовку от безопасного взлета.', 'if event == Ev.ENGINES_STARTED then ... end')
             ],
-            targetBlockIds: ['lua_ap_push', 'lua_event_callback', 'lua_ap_push', 'lua_callback_open', 'lua_callback_end'],
+            targetBlockIds: ['lua_ap_push', 'lua_callback_open', 'lua_event_callback', 'lua_ap_push', 'lua_callback_end'],
             blocks: [
                 createStatementBlock('lua4-preflight', 'отправить PREFLIGHT', 'ap.push(Ev.MCE_PREFLIGHT)', 'Обязательная предполетная команда.', 'setup', 'ap.push(Ev.MCE_PREFLIGHT)'),
                 createEventBlock('lua4-engines', 'ждать ENGINES_STARTED', 'if event == Ev.ENGINES_STARTED', 'Открывает безопасный момент для команды взлета.', 'Ev.ENGINES_STARTED'),
@@ -189,13 +189,13 @@ export function getLuaCoreFlightLessons(): GuideLesson[] {
                     reason: 'Без `Ev.MCE_PREFLIGHT` дрон не проходит обязательный этап подготовки.',
                     fix: 'Добавьте блок `отправить PREFLIGHT` первым.'
                 },
-                'lua4-engines': {
+                lua_event_callback: {
                     kind: 'error',
                     title: 'Не ожидается `ENGINES_STARTED`',
                     reason: 'Сценарий пытается взлететь без подтверждения запуска двигателей.',
                     fix: 'Поставьте блок ожидания `ENGINES_STARTED` перед `TAKEOFF`.'
                 },
-                'lua4-takeoff': {
+                lua_ap_push: {
                     kind: 'error',
                     title: 'Команда взлета отсутствует',
                     reason: 'Подготовка есть, но ключевой целевой шаг урока не выполняется.',

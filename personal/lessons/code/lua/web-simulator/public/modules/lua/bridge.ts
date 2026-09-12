@@ -13,6 +13,7 @@ import { sensors_pos, sensors_vel, sensors_accel, sensors_gyro, sensors_orientat
 import { timer_callLater, timer_new, sys_time, sys_deltaTime, js_sleep } from './timers.js';
 import { camera_requestMakeShot, camera_checkRequestShot, camera_requestRecordStart, camera_requestRecordStop, camera_checkRequestRecord, gpio_new, uart_new, spi_new } from './hardware.js';
 import { ledbar_fromHSV, js_init_leds, js_ledbar_set } from './leds.js';
+import { getLuaMissingGlobalConstantError } from './api-constants.js';
 import { LUA_SETUP_SCRIPT } from './setup-script.js';
 
 export function extractLuaSyntaxLine(errorMsg: string): number | null {
@@ -27,6 +28,22 @@ const lua_print = function(L: any) {
     showDronePrintBubble(drone.id, text);
     log(`[Lua print] ${text}`, 'info');
     return 0;
+};
+
+const js_validate_missing_global = function(L: any) {
+    const lua = window.fengari.lua;
+    const rawName = lua.lua_tostring(L, 1);
+    const name = rawName ? window.fengari.to_jsstring(rawName) : '';
+    const errorText = getLuaMissingGlobalConstantError(name);
+
+    if (errorText) {
+        lua.lua_pushnil(L);
+        lua.lua_pushstring(L, window.fengari.to_luastring(errorText));
+        return 2;
+    }
+
+    lua.lua_pushnil(L);
+    return 1;
 };
 
 function registerLuaBridgeFunctions(luaState: any) {
@@ -66,6 +83,7 @@ function registerLuaBridgeFunctions(luaState: any) {
     lua.lua_register(luaState, 'js_diag_record_api_call', js_diag_record_api_call);
     lua.lua_register(luaState, 'js_diag_get_fsm_state', js_diag_get_fsm_state);
     lua.lua_register(luaState, 'js_diag_describe_mce', js_diag_describe_mce);
+    lua.lua_register(luaState, 'js_validate_missing_global', js_validate_missing_global);
 }
 
 export function setupLuaBridgeForDrone(id: string) {

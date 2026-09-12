@@ -114,7 +114,7 @@ export function createEditorHost(
     deps: EditorIndexControllerDeps
 ) {
     const host: EditorControllerHost = {
-        currentScriptLanguage: deps.getCurrentScriptLanguage(),
+        getCurrentScriptLanguage: deps.getCurrentScriptLanguage,
         monacoRoot: state.monacoRoot,
         blocklyCanvas: state.blocklyCanvas,
         blocklyWorkspace: state.blocklyWorkspace,

@@ -67,7 +67,7 @@ export function getPythonCoreFlightLessons(): GuideLesson[] {
                     reason: 'Дрон не переводится в состояние готовности, поэтому смысл задания теряется.',
                     fix: 'Добавьте блок `arm()` в начало цепочки.'
                 },
-                'py3-print': {
+                py_print: {
                     kind: 'warning',
                     title: 'Нет сообщения о результате',
                     reason: 'Подготовка выполняется, но пользователь не видит явного подтверждения.',
@@ -150,13 +150,13 @@ export function getPythonCoreFlightLessons(): GuideLesson[] {
                     reason: 'Без подготовки взлетный сценарий логически неполон.',
                     fix: 'Добавьте `arm()` в начало.'
                 },
-                'py4-wait': {
+                py_time_sleep: {
                     kind: 'warning',
                     title: 'Между шагами нет паузы',
                     reason: 'Команды уходят подряд, и учебный сценарий становится менее понятным.',
                     fix: 'Вставьте блок `пауза 1 c` между `arm()` и `takeoff()`.'
                 },
-                'py4-takeoff': {
+                py_takeoff: {
                     kind: 'error',
                     title: 'Не добавлен `takeoff()`',
                     reason: 'Подготовка есть, но сам взлет не выполняется.',

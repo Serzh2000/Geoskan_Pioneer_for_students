@@ -1,4 +1,4 @@
-﻿import { apiDocs, evConstants, pythonApiDocs } from '../docs/api-docs.js';
+import { apiDocs, evConstants, pythonApiDocs } from '../docs/api-docs.js';
 
 let completionProvidersRegistered = false;
 

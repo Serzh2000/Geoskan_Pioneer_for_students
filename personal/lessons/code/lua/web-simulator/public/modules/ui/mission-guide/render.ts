@@ -1,12 +1,13 @@
 import type { ScriptLanguage } from '../api-docs/sections.js';
 import { evaluateLesson } from './evaluation/index.js';
 import { isMissionGuideScenePreviewActive } from './support/scene-preview.js';
+import { extractMissionGuideSequence, serializeWorkspaceXml } from './support/workspace-xml.js';
+import { getMainBlocklyWorkspace } from '../../editor/index.js';
 import {
     getActivePortalPage,
+    getActiveGuideStep,
     getActiveLesson,
     getLessonBanner,
-    getLessonSequence,
-    getLessonWorkspaceState,
     isLessonCompleted,
     isLessonChecked,
     getNextLesson
@@ -17,15 +18,22 @@ import {
     renderCheckSummary,
     renderResultHero,
     renderRunBanner,
-    renderDiagnosticCard
+    renderDiagnosticCard,
+    renderInline,
+    renderLessonSteps
 } from './render/support.js';
 import { renderLessonTheory, renderPortalIntro } from './render/sections.js';
 
 export function renderGuide(state: GuideLessonState, language: ScriptLanguage): string {
     const activePage = getActivePortalPage(language);
     const lesson = getActiveLesson(state, language);
-    const sequenceIds = getLessonSequence(language, lesson.id);
-    const evaluation = evaluateLesson(lesson, sequenceIds, getLessonWorkspaceState(language, lesson.id));
+    const mainWorkspace = getMainBlocklyWorkspace();
+    const sequenceIds = mainWorkspace ? extractMissionGuideSequence(mainWorkspace) : [];
+    const evaluation = evaluateLesson(
+        lesson,
+        sequenceIds,
+        mainWorkspace ? serializeWorkspaceXml(mainWorkspace) : null
+    );
     const hasChecked = isLessonChecked(language, lesson.id);
     const previewActive = isMissionGuideScenePreviewActive();
     const banner = getLessonBanner(language, lesson.id);
@@ -47,6 +55,98 @@ export function renderGuide(state: GuideLessonState, language: ScriptLanguage): 
         : hasWorkspaceContent
             ? 'Запустится после проверки'
             : 'Нужна цепочка';
+    const activeStep = getActiveGuideStep(language, lesson.id);
+
+    const theoryStep = `
+        ${renderLessonTheory(lesson)}
+        <div class="guide-actions guide-actions--primary">
+            <button type="button" class="guide-primary-action" data-guide-step="build">Дальше: собрать цепочку</button>
+        </div>
+    `;
+
+    const buildStep = `
+        <section class="guide-panel-card guide-panel-card--workspace">
+            <div class="guide-panel-card__top">
+                <div>
+                    <div class="guide-panel-card__title">Практика урока</div>
+                    <div class="guide-panel-card__text">Соберите цепочку в редакторе Blockly. Проверка сразу запускает сцену.</div>
+                </div>
+                <div class="guide-panel-card__badge">Сборка</div>
+            </div>
+            <div class="guide-workspace-health">
+                <div class="guide-workspace-health__item">
+                    <div class="guide-workspace-health__label">Сборка</div>
+                    <div class="guide-workspace-health__value">${escapeHtml(buildStatusLabel)}</div>
+                </div>
+                <div class="guide-workspace-health__item">
+                    <div class="guide-workspace-health__label">Проверка</div>
+                    <div class="guide-workspace-health__value">${escapeHtml(validationStatusLabel)}</div>
+                </div>
+                <div class="guide-workspace-health__item">
+                    <div class="guide-workspace-health__label">Запуск</div>
+                    <div class="guide-workspace-health__value">${escapeHtml(launchStatusLabel)}</div>
+                </div>
+            </div>
+            <div class="guide-editor-bridge">
+                <div class="guide-editor-bridge__text">
+                    <div class="guide-editor-bridge__title">Редактор Blockly</div>
+                    <div class="guide-editor-bridge__hint">Сборка происходит в основном редакторе. Откройте его, соберите цепочку из блоков и вернитесь к проверке.</div>
+                </div>
+                <div class="guide-editor-bridge__actions">
+                    <button type="button" class="guide-primary-action" data-guide-open-editor>Открыть редактор Blockly</button>
+                    <button type="button" class="guide-lesson__action" data-guide-fill="${escapeHtml(lesson.id)}">Подставить эталон</button>
+                </div>
+            </div>
+            <div class="guide-actions guide-actions--primary">
+                <button type="button" class="guide-primary-action" data-guide-check="${escapeHtml(lesson.id)}">Проверить и запустить</button>
+                <button type="button" class="guide-lesson__action" data-guide-launch="${hasChecked ? 'checked' : 'unchecked'}" ${hasWorkspaceContent ? '' : 'disabled'}>Перезапустить сцену</button>
+                <button type="button" class="guide-lesson__action" data-guide-reset="${escapeHtml(lesson.id)}">Сбросить проверку</button>
+            </div>
+            ${renderRunBanner(language, lesson.id)}
+        </section>
+    `;
+
+    const checkStep = `
+        <div class="guide-workbench-layout">
+            <div class="guide-workbench-layout__main">
+                <section class="guide-panel-card guide-panel-card--result">
+                    <div class="guide-panel-card__top">
+                        <div>
+                            <div class="guide-panel-card__title">Проверка и разбор</div>
+                            <div class="guide-panel-card__text">Короткий вердикт и список того, что исправить.</div>
+                        </div>
+                        <div class="guide-panel-card__badge">Фидбек</div>
+                    </div>
+                    ${renderResultHero(hasChecked, evaluation.solved, evaluation.diagnostics.length, launchedWithWarnings)}
+                    <div id="guide-check-summary">
+                        ${renderCheckSummary(hasChecked, evaluation.solved, evaluation.diagnostics.length, launchedWithWarnings)}
+                    </div>
+                    <div class="guide-diagnostics" id="diagnostics-container">
+                        ${hasChecked
+            ? evaluation.diagnostics.map(renderDiagnosticCard).join('')
+            : '<div class="guide-empty-state">Пока ничего не показываем, чтобы не подсказывать решение заранее.</div>'}
+                    </div>
+                </section>
+            </div>
+
+            <div class="guide-workbench-layout__scene">
+                <section class="guide-panel-card guide-panel-card--scene">
+                    <div class="guide-panel-card__top">
+                        <div>
+                            <div class="guide-panel-card__title">Живая сцена</div>
+                            <div class="guide-panel-card__text">Показывает поведение текущего скрипта и ошибки рантайма.</div>
+                        </div>
+                        <div class="guide-panel-card__badge">3D</div>
+                    </div>
+                    <div id="mission-guide-scene-preview-host" class="guide-scene-preview-host ${previewActive ? 'is-active' : ''}">
+                        ${previewActive ? '' : '<div class="guide-scene-preview__placeholder">Нажмите "Проверить и запустить" на шаге сборки, чтобы увидеть сцену.</div>'}
+                    </div>
+                </section>
+            </div>
+        </div>
+    `;
+
+    const stepContent = activeStep === 'theory' ? theoryStep : activeStep === 'build' ? buildStep : checkStep;
 
     return `
         <div class="guide-modal-layout" data-guide-language="${language}" data-guide-portal-page="${activePage}">
@@ -58,7 +158,7 @@ export function renderGuide(state: GuideLessonState, language: ScriptLanguage): 
                     <div class="guide-lesson-page__header-copy">
                         <div class="guide-lesson-page__badge">${escapeHtml(lesson.badge)}</div>
                         <div class="guide-lesson-page__title">${escapeHtml(lesson.title)}</div>
-                        <div class="guide-lesson-page__summary">${escapeHtml(lesson.summary)}</div>
+                        <div class="guide-lesson-page__summary">${renderInline(lesson.summary)}</div>
                     </div>
                     <div class="guide-lesson-page__header-actions">
                         <div class="guide-lesson-page__header-pill">Урок ${lessonIndex + 1} из ${state.lessons.length}</div>
@@ -66,78 +166,9 @@ export function renderGuide(state: GuideLessonState, language: ScriptLanguage): 
                     </div>
                 </div>
 
-                ${renderLessonTheory(lesson)}
+                ${renderLessonSteps(activeStep, hasChecked, evaluation.solved)}
 
-                <div class="guide-workbench-layout">
-                    <div class="guide-workbench-layout__main">
-                        <section class="guide-panel-card guide-panel-card--workspace">
-                            <div class="guide-panel-card__top">
-                                <div>
-                                    <div class="guide-panel-card__title">Практика урока</div>
-                                    <div class="guide-panel-card__text">Соберите цепочку в Blockly. Проверка сразу запускает сцену.</div>
-                                </div>
-                                <div class="guide-panel-card__badge">Сборка</div>
-                            </div>
-                            <div class="guide-workspace-health">
-                                <div class="guide-workspace-health__item">
-                                    <div class="guide-workspace-health__label">Сборка</div>
-                                    <div class="guide-workspace-health__value">${escapeHtml(buildStatusLabel)}</div>
-                                </div>
-                                <div class="guide-workspace-health__item">
-                                    <div class="guide-workspace-health__label">Проверка</div>
-                                    <div class="guide-workspace-health__value">${escapeHtml(validationStatusLabel)}</div>
-                                </div>
-                                <div class="guide-workspace-health__item">
-                                    <div class="guide-workspace-health__label">Запуск</div>
-                                    <div class="guide-workspace-health__value">${escapeHtml(launchStatusLabel)}</div>
-                                </div>
-                            </div>
-                            <div class="guide-blockly-shell">
-                                <div id="blocklyDiv" class="guide-blockly-stage"></div>
-                            </div>
-                            <div class="guide-actions guide-actions--primary">
-                                <button type="button" class="guide-primary-action" data-guide-check="${escapeHtml(lesson.id)}">Проверить и запустить</button>
-                                <button type="button" class="guide-lesson__action" data-guide-launch="${hasChecked ? 'checked' : 'unchecked'}" ${hasWorkspaceContent ? '' : 'disabled'}>Перезапустить сцену</button>
-                                <button type="button" class="guide-lesson__action" data-guide-reset="${escapeHtml(lesson.id)}">Очистить страницу</button>
-                            </div>
-                            ${renderRunBanner(language, lesson.id)}
-                        </section>
-
-                        <section class="guide-panel-card guide-panel-card--result">
-                            <div class="guide-panel-card__top">
-                                <div>
-                                    <div class="guide-panel-card__title">Проверка и разбор</div>
-                                    <div class="guide-panel-card__text">Короткий вердикт и список того, что исправить.</div>
-                                </div>
-                                <div class="guide-panel-card__badge">Фидбек</div>
-                            </div>
-                            ${renderResultHero(hasChecked, evaluation.solved, evaluation.diagnostics.length, launchedWithWarnings)}
-                            <div id="guide-check-summary">
-                                ${renderCheckSummary(hasChecked, evaluation.solved, evaluation.diagnostics.length, launchedWithWarnings)}
-                            </div>
-                            <div class="guide-diagnostics" id="diagnostics-container">
-                                ${hasChecked
-                ? evaluation.diagnostics.map(renderDiagnosticCard).join('')
-                : '<div class="guide-empty-state">Пока ничего не показываем, чтобы не подсказывать решение заранее.</div>'}
-                            </div>
-                        </section>
-                    </div>
-
-                    <div class="guide-workbench-layout__scene">
-                        <section class="guide-panel-card guide-panel-card--scene">
-                            <div class="guide-panel-card__top">
-                                <div>
-                                    <div class="guide-panel-card__title">Живая сцена</div>
-                                    <div class="guide-panel-card__text">Показывает поведение текущего скрипта и ошибки рантайма.</div>
-                                </div>
-                                <div class="guide-panel-card__badge">3D</div>
-                            </div>
-                            <div id="mission-guide-scene-preview-host" class="guide-scene-preview-host ${previewActive ? 'is-active' : ''}">
-                                ${previewActive ? '' : '<div class="guide-scene-preview__placeholder">Нажмите "Проверить и запустить", чтобы сразу увидеть сцену.</div>'}
-                            </div>
-                        </section>
-                    </div>
-                </div>
+                ${stepContent}
 
                 ${isCompleted
                 ? `<section class="guide-lesson-footer">

@@ -6,11 +6,11 @@
 .api-guide {
     background: #FFFFFF;
     border: 1px solid #E2E8F0;
-    border-radius: 14px;
-    padding: 16px;
+    border-radius: var(--panel-radius-inner);
+    padding: var(--panel-pad-x);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--panel-gap);
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.03);
 }
 

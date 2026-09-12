@@ -7,16 +7,7 @@
     display: none;
 }
 
-.panel-header--editor {
-    gap: 12px;
-}
-
-.panel-header__lead {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    min-width: 0;
-}
+/* Базовые .panel-header и .panel-header__lead определены в layout/panel-shell.css. */
 
 .panel-content--editor {
     width: 100%;
