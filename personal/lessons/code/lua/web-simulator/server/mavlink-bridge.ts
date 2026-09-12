@@ -138,11 +138,11 @@ const registeredConnections = new Map<string, BridgeConnectionRegistration>();
 const mavlinkBridges = new Map<string, MavlinkUdpBridge>();
 const cameraBridges = new Map<string, CameraTcpBridge>();
 
-function normalizeConnectionMethod(value: unknown): PioneerConnectionMethod {
+export function normalizeConnectionMethod(value: unknown): PioneerConnectionMethod {
     return value === 'serial' || value === 'udpin' || value === 'camera' ? value : 'udpout';
 }
 
-function sanitizeRegistration(input: Partial<BridgeConnectionRegistration>): BridgeConnectionRegistration {
+export function sanitizeRegistration(input: Partial<BridgeConnectionRegistration>): BridgeConnectionRegistration {
     const mavlinkPort = Number.isFinite(input.mavlinkPort) ? Number(input.mavlinkPort) : 8001;
     return {
         droneName: typeof input.droneName === 'string' && input.droneName.trim() ? input.droneName.trim() : 'pioneer',
@@ -155,23 +155,23 @@ function sanitizeRegistration(input: Partial<BridgeConnectionRegistration>): Bri
     };
 }
 
-function buildMavlinkRegistrationKey(connection: BridgeConnectionRegistration): string {
+export function buildMavlinkRegistrationKey(connection: BridgeConnectionRegistration): string {
     return `mavlink:${connection.mavlinkPort}`;
 }
 
-function buildCameraRegistrationKey(connection: BridgeConnectionRegistration): string {
+export function buildCameraRegistrationKey(connection: BridgeConnectionRegistration): string {
     return `camera:${connection.cameraPort}`;
 }
 
-function buildMavlinkSessionId(connection: BridgeConnectionRegistration): string {
+export function buildMavlinkSessionId(connection: BridgeConnectionRegistration): string {
     return `mavlink-${connection.connectionMethod}-${connection.droneIp}-${connection.mavlinkPort}`;
 }
 
-function buildCameraSessionId(connection: BridgeConnectionRegistration): string {
+export function buildCameraSessionId(connection: BridgeConnectionRegistration): string {
     return `camera-${connection.droneIp}-${connection.cameraPort}`;
 }
 
-function computeX25Crc(buffer: Buffer, extra: number): number {
+export function computeX25Crc(buffer: Buffer, extra: number): number {
     let crc = 0xFFFF;
     for (const byte of buffer) {
         let tmp = byte ^ (crc & 0xFF);
@@ -185,7 +185,7 @@ function computeX25Crc(buffer: Buffer, extra: number): number {
     return crc;
 }
 
-function encodeMavlinkV2Message(sequence: number, systemId: number, componentId: number, messageId: number, payload: Buffer): Buffer {
+export function encodeMavlinkV2Message(sequence: number, systemId: number, componentId: number, messageId: number, payload: Buffer): Buffer {
     const header = Buffer.alloc(MAVLINK_V2_HEADER_LENGTH);
     header[0] = MAVLINK_V2_MAGIC;
     header[1] = payload.length;
@@ -205,7 +205,7 @@ function encodeMavlinkV2Message(sequence: number, systemId: number, componentId:
     return Buffer.concat([header, payload, checksum]);
 }
 
-function parseSingleMavlinkFrame(datagram: Buffer): ParsedMavlinkFrame | null {
+export function parseSingleMavlinkFrame(datagram: Buffer): ParsedMavlinkFrame | null {
     if (datagram.length < MAVLINK_V1_HEADER_LENGTH + MAVLINK_CHECKSUM_LENGTH) {
         return null;
     }
@@ -249,7 +249,7 @@ function parseSingleMavlinkFrame(datagram: Buffer): ParsedMavlinkFrame | null {
     };
 }
 
-function parseCommandLong(payload: Buffer) {
+export function parseCommandLong(payload: Buffer) {
     if (payload.length < 33) {
         return null;
     }
@@ -269,7 +269,7 @@ function parseCommandLong(payload: Buffer) {
     };
 }
 
-function parseSetPositionTargetLocalNed(payload: Buffer): PositionTargetCommand | null {
+export function parseSetPositionTargetLocalNed(payload: Buffer): PositionTargetCommand | null {
     if (payload.length < 53) {
         return null;
     }
@@ -294,7 +294,7 @@ function parseSetPositionTargetLocalNed(payload: Buffer): PositionTargetCommand 
     };
 }
 
-function parseRcChannelsOverride(payload: Buffer): RcOverrideCommand | null {
+export function parseRcChannelsOverride(payload: Buffer): RcOverrideCommand | null {
     if (payload.length < 18) {
         return null;
     }
@@ -315,7 +315,7 @@ function parseRcChannelsOverride(payload: Buffer): RcOverrideCommand | null {
     };
 }
 
-function decodeDataUrlToBuffer(dataUrl: string | null): Buffer | null {
+export function decodeDataUrlToBuffer(dataUrl: string | null): Buffer | null {
     if (!dataUrl) {
         return null;
     }
@@ -332,7 +332,7 @@ function decodeDataUrlToBuffer(dataUrl: string | null): Buffer | null {
     }
 }
 
-function mapAutopilotStateToCustomMode(state: string | null | undefined): number {
+export function mapAutopilotStateToCustomMode(state: string | null | undefined): number {
     switch (state) {
         case 'ARMED':
             return 11;
@@ -349,7 +349,7 @@ function mapAutopilotStateToCustomMode(state: string | null | undefined): number
     }
 }
 
-function mapAutopilotStateToSystemStatus(state: string | null | undefined): number {
+export function mapAutopilotStateToSystemStatus(state: string | null | undefined): number {
     switch (state) {
         case 'TAKEOFF':
         case 'MISSION':
@@ -361,7 +361,7 @@ function mapAutopilotStateToSystemStatus(state: string | null | undefined): numb
     }
 }
 
-function isArmedAutopilotState(state: string | null | undefined): boolean {
+export function isArmedAutopilotState(state: string | null | undefined): boolean {
     return state === 'ARMED' || state === 'TAKEOFF' || state === 'MISSION' || state === 'LANDING';
 }
 
