@@ -28,6 +28,9 @@ export function initDroneManager(onSceneUpdate?: () => void) {
         }));
     };
 
+    // droneListPanel and connectionPanel wire each other up: connectionPanel's refreshUi closes over
+    // droneListPanel before it exists, so this forward reference can't be collapsed into one const.
+    // eslint-disable-next-line prefer-const
     let droneListPanel: ReturnType<typeof createDroneListPanel>;
     const connectionPanel = createConnectionPanel({
         dom,
