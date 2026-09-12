@@ -5,6 +5,7 @@ import fs from 'fs';
 import { glob } from 'glob';
 import type { Server } from 'http';
 import path from 'path';
+import { rateLimit } from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import { registerExternalPythonBridgeRoutes } from './server/external-python-bridge.js';
 import { registerMavlinkBridgeRoutes, stopAllMavlinkBridges } from './server/mavlink-bridge.js';
@@ -66,6 +67,33 @@ function resolveAutopilotParametersPath(): string {
     return path.join(projectRoot, 'pio-classic-newopt-stable-1.6.7178-1.properties');
 }
 
+// Ограничивает CORS конкретными origin'ами в проде через CORS_ORIGIN (список через
+// запятую), например: CORS_ORIGIN=https://sim.example.ru
+// Без этой переменной остаётся открытый CORS — так удобнее для локальной разработки
+// (Vite dev-server на отдельном порту), но НЕ подходит для публичного деплоя.
+function resolveCorsOptions(): cors.CorsOptions | undefined {
+    const configured = process.env.CORS_ORIGIN?.split(',').map((origin) => origin.trim()).filter(Boolean);
+    if (!configured || configured.length === 0) {
+        return undefined;
+    }
+
+    return { origin: configured };
+}
+
+// Основной rate-limit на чувствительные API: запуск Python-кода, MAVLink-мост, запись
+// параметров автопилота. Не защищает от целенаправленной атаки, но резко снижает ущерб
+// от автоматического перебора/скана и от одного случайного скрипта, заваливающего сервер
+// запросами. Порог настраивается через RATE_LIMIT_MAX (запросов за RATE_LIMIT_WINDOW_MS).
+function createSensitiveRouteLimiter() {
+    return rateLimit({
+        windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS ?? 60_000),
+        limit: Number(process.env.RATE_LIMIT_MAX ?? 30),
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: { ok: false, error: 'Слишком много запросов. Подождите немного и попробуйте снова.' }
+    });
+}
+
 function createApp(options: StartServerOptions): express.Express {
     const app = express();
     const vitePort = options.vitePort ?? 3001;
@@ -75,8 +103,10 @@ function createApp(options: StartServerOptions): express.Express {
     const autopilotParametersPath = resolveAutopilotParametersPath();
     const shouldServeStaticUi = isDistBuild || packagedRuntime;
 
-    app.use(cors());
+    app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS ?? 0));
+    app.use(cors(resolveCorsOptions()));
     app.use(express.json({ limit: '10mb' }));
+    app.use('/api', createSensitiveRouteLimiter());
 
     app.get('/api/files', (_req: express.Request, res: express.Response) => {
         console.log('Listing files in:', luaExamplesPath);

@@ -5,6 +5,12 @@ import os from 'os';
 import path from 'path';
 import type { PioneerConnectionConfig } from './pioneer-connection.js';
 
+class RuntimeLimitError extends Error {
+    constructor(message: string, public readonly status: number) {
+        super(message);
+    }
+}
+
 type RuntimeOutputStream = 'stdout' | 'stderr' | 'system';
 
 interface RuntimeOutputEntry {
@@ -30,6 +36,24 @@ interface LocalPythonRunSession {
 
 const localPythonRuns = new Map<string, LocalPythonRunSession>();
 const MAX_RUNTIME_OUTPUT_ENTRIES = 500;
+
+// Публичный, неаутентифицированный сервер запускает произвольный присланный код —
+// эти пороги ограничивают ущерб от одного скрипта/пользователя, а не заменяют
+// полноценную песочницу (см. docs/blockly-audit.md-соседний план на контейнеризацию).
+const MAX_CONCURRENT_RUNS = Number(process.env.PYTHON_RUNTIME_MAX_CONCURRENT ?? 20);
+const MAX_SCRIPT_LENGTH = Number(process.env.PYTHON_RUNTIME_MAX_SCRIPT_LENGTH ?? 200_000);
+// CPU-время (не wall-clock!): скрипт, который в основном спит/ждёт событий,
+// накапливает его медленно, а вот "тугой" бесконечный цикл упрётся в лимит быстро.
+const CPU_TIME_LIMIT_SECONDS = Number(process.env.PYTHON_RUNTIME_CPU_LIMIT_SECONDS ?? 600);
+const MEMORY_LIMIT_KB = Number(process.env.PYTHON_RUNTIME_MEMORY_LIMIT_KB ?? 512_000);
+
+function countRunningLocalPythonRuns(): number {
+    let count = 0;
+    for (const session of localPythonRuns.values()) {
+        if (session.running) count += 1;
+    }
+    return count;
+}
 
 function sanitizePioneerConnectionConfig(config: PioneerConnectionConfig | null | undefined) {
     const mavlinkPort = Number.isFinite(config?.mavlinkPort) ? Number(config?.mavlinkPort) : 8001;
@@ -189,10 +213,30 @@ function stopLocalPythonRun(droneId: string): boolean {
     return true;
 }
 
+// На Linux/macOS оборачиваем запуск через `sh -c` с ulimit на CPU-время и виртуальную
+// память процесса — без этого один скрипт может занять ядро процессора навсегда или
+// выжрать всю память сервера, положив симулятор для всех остальных студентов сразу.
+// На Windows (локальная разработка) ulimit недоступен, запускаем как есть.
+function buildSpawnCommand(pythonExecutable: string, args: string[]): { command: string; args: string[] } {
+    if (process.platform === 'win32') {
+        return { command: pythonExecutable, args };
+    }
+
+    const quotedArgs = [pythonExecutable, ...args].map((part) => `'${part.replace(/'/g, "'\\''")}'`).join(' ');
+    const ulimits = `ulimit -t ${CPU_TIME_LIMIT_SECONDS}; ulimit -v ${MEMORY_LIMIT_KB};`;
+    return { command: 'sh', args: ['-c', `${ulimits} exec ${quotedArgs}`] };
+}
+
 function startLocalPythonRun(droneId: string, code: string, projectRoot: string, config?: PioneerConnectionConfig): LocalPythonRunSession {
     const existingSession = localPythonRuns.get(droneId);
     if (existingSession?.running) {
         throw new Error(`Для ${droneId} уже запущен локальный Python runtime.`);
+    }
+    if (countRunningLocalPythonRuns() >= MAX_CONCURRENT_RUNS) {
+        throw new RuntimeLimitError('Сервер уже выполняет максимально допустимое число Python-скриптов одновременно. Попробуйте позже.', 429);
+    }
+    if (code.length > MAX_SCRIPT_LENGTH) {
+        throw new RuntimeLimitError(`Скрипт слишком большой (${code.length} символов, максимум ${MAX_SCRIPT_LENGTH}).`, 413);
     }
 
     const normalizedConfig = sanitizePioneerConnectionConfig(config);
@@ -216,7 +260,8 @@ function startLocalPythonRun(droneId: string, code: string, projectRoot: string,
     }, null, 2), 'utf8');
     fs.writeFileSync(wrapperPath, createRuntimeWrapperSource(), 'utf8');
 
-    const child = spawn(normalizedConfig.pythonExecutable, ['-u', wrapperPath, scriptPath, configPath], {
+    const { command, args } = buildSpawnCommand(normalizedConfig.pythonExecutable, ['-u', wrapperPath, scriptPath, configPath]);
+    const child = spawn(command, args, {
         cwd: projectRoot,
         stdio: ['ignore', 'pipe', 'pipe']
     });
@@ -287,8 +332,9 @@ export function registerPythonRuntimeRoutes(app: express.Express, projectRoot: s
                 startedAt: session.startedAt
             });
         } catch (error) {
+            const status = error instanceof RuntimeLimitError ? error.status : 409;
             const message = error instanceof Error ? error.message : 'Не удалось запустить локальный Python runtime.';
-            return res.status(409).json({ ok: false, error: message });
+            return res.status(status).json({ ok: false, error: message });
         }
     });
 
