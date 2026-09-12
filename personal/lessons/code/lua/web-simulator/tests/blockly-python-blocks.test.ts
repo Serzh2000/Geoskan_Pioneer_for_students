@@ -255,11 +255,11 @@ describe('Кодогенерация блоков полета (Pioneer SDK)', (
         expect(code).toContain('pioneer.arm()');
     });
 
-    test('take_off генерирует pioneer.arm() и pioneer.takeoff()', () => {
+    test('take_off генерирует pioneer.takeoff()', () => {
+        // arm() — отдельный блок preflight; take_off сам по себе не взводит двигатели.
         const workspace = makeWorkspace();
         workspace.newBlock('take_off');
         const code = pythonGenerator.workspaceToCode(workspace);
-        expect(code).toContain('pioneer.arm()');
         expect(code).toContain('pioneer.takeoff()');
     });
 
@@ -270,7 +270,8 @@ describe('Кодогенерация блоков полета (Pioneer SDK)', (
         for (const inputName of ['X', 'Y', 'Z', 'YAW']) {
             expect(goTo.getInput(inputName)?.connection?.getCheck()).toEqual(['Number']);
         }
-        expect(goTo.getInput('TIME')?.connection?.getCheck()).toEqual(['Number']);
+        // go_local_point не принимает TIME — угол/скорость перемещения не параметризуются временем.
+        expect(goTo.getInput('TIME')).toBeNull();
         expect(goTo.inputsInline).toBe(true);
 
         const code = pythonGenerator.workspaceToCode(workspace);
@@ -339,12 +340,12 @@ describe('Кодогенерация блоков полета (Pioneer SDK)', (
 });
 
 describe('Кодогенерация сенсорных блоков', () => {
-    test('get_local_position_lps генерирует pioneer.get_local_position_lps() и имеет выход Array', () => {
+    test('get_local_position_lps генерирует pioneer.get_local_position_lps() и имеет выход Point3D', () => {
         const workspace = makeWorkspace();
         const block = workspace.newBlock('get_local_position_lps');
-        expect(block.outputConnection?.getCheck()).toEqual(['Array']);
+        expect(block.outputConnection?.getCheck()).toEqual(['Point3D']);
         const code = pythonGenerator.workspaceToCode(workspace);
-        expect(code).toContain('pioneer.get_local_position_lps()');
+        expect(code).toContain('pioneer.get_local_position_lps(get_last_received=True)');
     });
 
     test('get_local_position_component имеет дропдаун и выходной тип Number', () => {
@@ -359,7 +360,8 @@ describe('Кодогенерация сенсорных блоков', () => {
 
     test('get_local_position_component генерирует код с индексом массива', () => {
         const workspace = makeWorkspace();
-        workspace.newBlock('get_local_position_component');
+        const component = workspace.newBlock('get_local_position_component');
+        component.setFieldValue('2', 'INDEX');
         const code = pythonGenerator.workspaceToCode(workspace);
         expect(code).toContain('pioneer.get_local_position_lps()');
         expect(code).toContain('[2]');
@@ -370,7 +372,7 @@ describe('Кодогенерация сенсорных блоков', () => {
         const dist = workspace.newBlock('get_dist_sensor_data');
         expect(dist.outputConnection?.getCheck()).toEqual(['Number']);
         const code = pythonGenerator.workspaceToCode(workspace);
-        expect(code).toContain('pioneer.get_dist_sensor_data()');
+        expect(code).toContain('pioneer.get_dist_sensor_data(get_last_received=True)');
     });
 
     test('get_battery_status генерирует pioneer.get_battery_status() и имеет выход Number', () => {
@@ -378,7 +380,7 @@ describe('Кодогенерация сенсорных блоков', () => {
         const battery = workspace.newBlock('get_battery_status');
         expect(battery.outputConnection?.getCheck()).toEqual(['Number']);
         const code = pythonGenerator.workspaceToCode(workspace);
-        expect(code).toContain('pioneer.get_battery_status()');
+        expect(code).toContain('pioneer.get_battery_status(get_last_received=True)');
     });
 
     test('get_autopilot_state генерирует pioneer.get_autopilot_state() и имеет выход String', () => {
@@ -392,19 +394,23 @@ describe('Кодогенерация сенсорных блоков', () => {
 
 describe('Кодогенерация блоков светодиодов', () => {
     test('led_all генерирует pioneer.led_control() для всех LED', () => {
+        // COLOR — это value-вход (сокет типа Colour), а не поле блока: подключаем colour_picker.
         const workspace = makeWorkspace();
         const led = workspace.newBlock('led_all');
-        led.setFieldValue('(255, 0, 0)', 'COLOR');
+        const colour = workspace.newBlock('colour_picker');
+        led.getInput('COLOR')!.connection!.connect(colour.outputConnection!);
         const code = pythonGenerator.workspaceToCode(workspace);
         expect(code).toContain('pioneer.led_control');
         expect(code).toContain('led_id=255');
     });
 
     test('led_index генерирует pioneer.led_control() для конкретного LED', () => {
+        // COLOR и NUM — оба value-входы (Colour и Number), не поля.
         const workspace = makeWorkspace();
         const led = workspace.newBlock('led_index');
-        led.setFieldValue('(255, 0, 0)', 'COLOR');
-        led.setFieldValue('5', 'NUM');
+        const colour = workspace.newBlock('colour_picker');
+        led.getInput('COLOR')!.connection!.connect(colour.outputConnection!);
+        led.getInput('NUM')!.connection!.connect(numberBlock(workspace, 5).outputConnection!);
         const code = pythonGenerator.workspaceToCode(workspace);
         expect(code).toContain('pioneer.led_control');
         expect(code).toContain('led_id=5');
@@ -434,10 +440,10 @@ describe('Кодогенерация блоков камеры', () => {
         const workspace = makeWorkspace();
         workspace.newBlock('camera_connect');
         const code = pythonGenerator.workspaceToCode(workspace);
+        // definitions_ уже очищен к моменту возврата workspaceToCode (Blockly сбрасывает
+        // его в finish()); импорт нужно искать в самом сгенерированном коде.
         expect(code).toContain('camera.connect()');
-        const defs = (pythonGenerator as any).definitions_;
-        expect(defs).toBeDefined();
-        expect(defs['import_camera']).toContain('from pioneer_sdk import Camera');
+        expect(code).toContain('from pioneer_sdk import Camera');
     });
 
     test('camera_disconnect генерирует camera.disconnect()', () => {
@@ -478,9 +484,7 @@ describe('Кодогенерация блоков видеопотока', () =>
         workspace.newBlock('video_stream_start');
         const code = pythonGenerator.workspaceToCode(workspace);
         expect(code).toContain('stream.start()');
-        const defs = (pythonGenerator as any).definitions_;
-        expect(defs).toBeDefined();
-        expect(defs['import_stream']).toContain('from pioneer_sdk import VideoStream');
+        expect(code).toContain('from pioneer_sdk import VideoStream');
     });
 
     test('video_stream_stop генерирует stream.stop()', () => {
@@ -691,14 +695,10 @@ describe('Совместимость типов value-блоков', () => {
 });
 
 describe('Тулбокс Python содержит все ожидаемые блоки', () => {
-    test('тулбокс содержит все учебные блоки', () => {
-        const xml = buildMainEditorToolbox('python');
-        const types = toolboxBlockTypes(xml);
-        for (const type of coursePythonBlockTypes) {
-            expect(types).toContain(type);
-        }
-    });
-
+    // Старые учебные блоки py_* (coursePythonBlockTypes) остаются зарегистрированными
+    // (см. describe выше) ради обратной совместимости с сохранёнными workspace, но в
+    // тулбоксе основного редактора больше не показываются — их место заняла категория
+    // Pioneer SDK, проверяемая ниже.
     test('тулбокс содержит все блоки Pioneer SDK', () => {
         const xml = buildMainEditorToolbox('python');
         const types = toolboxBlockTypes(xml);
