@@ -168,6 +168,12 @@ describe('compilePioneerWorkspace: пролог для пустого pioneer_st
         expect(code).toContain('local function __advance()');
         expect(code).toContain('function callback(event)');
         expect(code).not.toContain('coroutine');
+
+        // [добавлено 2026-09-14] Пустая программа без циклов и без
+        // pioneer_time не должна тащить __loop_guard/__t0 — тот же принцип
+        // условных хелперов, что уже есть на Python-стороне (см. ниже).
+        expect(code).not.toContain('__loop_guard');
+        expect(code).not.toContain('__t0');
     });
 
     test('Python: Pioneer(simulator=True), close_connection в конце, без хелперов для пустой программы', () => {
@@ -185,6 +191,33 @@ describe('compilePioneerWorkspace: пролог для пустого pioneer_st
         expect(code).not.toContain('_pioneer_wait');
         expect(code).not.toContain('_pioneer_t0');
         expect(code).not.toContain('import math');
+    });
+});
+
+describe('Lua: __t0/__loop_guard — только когда реально используются', () => {
+    test('pioneer_time на холсте — __t0 объявлен', () => {
+        const ws = makeWorkspace();
+        const timeBlock = ws.newBlock('pioneer_time');
+        const print = ws.newBlock('text_print');
+        print.getInput('TEXT')!.connection!.connect(timeBlock.outputConnection!);
+        chainUnderStart(ws, print);
+
+        const code = compilePioneerWorkspace(ws, 'lua');
+        expect(code).toContain('local __t0 = time()');
+        expect(code).not.toContain('__loop_guard');
+    });
+
+    test('цикл на холсте (без pioneer_time) — __loop_guard объявлен, __t0 нет', () => {
+        const ws = makeWorkspace();
+        const loop = ws.newBlock('controls_repeat_ext');
+        loop.getInput('TIMES')!.connection!.connect(numberBlock(ws, 3).outputConnection!);
+        loop.getInput('DO')!.connection!.connect(ws.newBlock('pioneer_disarm').previousConnection!);
+        chainUnderStart(ws, loop);
+
+        const code = compilePioneerWorkspace(ws, 'lua');
+        expect(code).toContain('local function __loop_guard()');
+        expect(code).toContain('__loop_guard()');
+        expect(code).not.toContain('__t0');
     });
 });
 

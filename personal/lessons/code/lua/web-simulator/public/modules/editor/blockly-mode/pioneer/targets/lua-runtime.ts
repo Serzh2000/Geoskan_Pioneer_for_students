@@ -31,6 +31,19 @@ export type LuaProgramParts = {
 // после action[...] — и эти вызовы стали бы обращением к одноимённой
 // глобальной переменной (nil), потому что на момент создания замыкания
 // локальная __advance ещё не существовала бы.
+// Пустая программа (пустой pioneer_start) не должна тащить за собой то, чем
+// не пользуется — тот же принцип, что для LED/position-хелперов и
+// Python-хелперов ожидания (см. §4.4 плана): __t0 нужен только блоку
+// pioneer_time, __loop_guard — только когда в коде реально есть цикл
+// (INFINITE_LOOP_TRAP печатает вызов __loop_guard() только внутри тела
+// controls_repeat_ext/controls_whileUntil/controls_for, см. compile.ts).
+// Проверяем по тексту, а не по типам блоков на холсте: цикл или pioneer_time
+// может быть спрятан внутри пользовательской функции (headerDefinitions) или
+// ветки pioneer_on_event (eventBranches), а не только в основной цепочке.
+function usesMarker(marker: string, ...sources: string[]): boolean {
+    return sources.some((source) => source.includes(marker));
+}
+
 export function buildLuaProgram({
     headerDefinitions,
     segmentsCode,
@@ -38,20 +51,25 @@ export function buildLuaProgram({
     eventBranches
 }: LuaProgramParts): string {
     const header = headerDefinitions ? `${headerDefinitions}\n\n` : '';
+    const needsClock = usesMarker('__t0', headerDefinitions, segmentsCode, eventBranches, transitionBranches);
+    const needsLoopGuard = usesMarker('__loop_guard(', headerDefinitions, segmentsCode, eventBranches, transitionBranches);
+
+    const clockLine = needsClock ? 'local __t0 = time()\n' : '';
+    const loopGuard = needsLoopGuard
+        ? '\n-- Защита от зависания в цикле без блоков-ожидания: считает итерации, не\n'
+            + '-- отдаёт управление — обычный синхронный Lua-цикл здесь никуда не yield\'ит.\n'
+            + 'local __loop_guard_count = 0\n'
+            + 'local function __loop_guard()\n'
+            + '    __loop_guard_count = __loop_guard_count + 1\n'
+            + '    if __loop_guard_count > 1000000 then\n'
+            + '        error("Похоже, программа зависла в бесконечном цикле")\n'
+            + '    end\n'
+            + 'end\n'
+        : '';
+
     return `-- @pioneer-blockly v1
 local __state = "__s0"
-local __t0 = time()
-
--- Защита от зависания в цикле без блоков-ожидания: считает итерации, не
--- отдаёт управление — обычный синхронный Lua-цикл здесь никуда не yield'ит.
-local __loop_guard_count = 0
-local function __loop_guard()
-    __loop_guard_count = __loop_guard_count + 1
-    if __loop_guard_count > 1000000 then
-        error("Похоже, программа зависла в бесконечном цикле")
-    end
-end
-
+${clockLine}${loopGuard}
 local action = {}
 
 local function __advance()
