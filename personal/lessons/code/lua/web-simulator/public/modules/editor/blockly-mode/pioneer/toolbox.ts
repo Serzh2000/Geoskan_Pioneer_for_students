@@ -1,5 +1,6 @@
-import { getPioneerBlockTypesByCategory } from './registry.js';
-import type { PioneerBlockCategory } from './targets/types.js';
+import { getPioneerBlockTypesByCategory, isBlockSupported } from './registry.js';
+import { UNSUPPORTED_TARGET_REASON } from './disable-reasons.js';
+import type { PioneerBlockCategory, PioneerTarget } from './targets/types.js';
 
 // Категории строятся из того, что реально зарегистрировано в pioneer/registry.ts
 // (definePioneerBlock), поэтому добавление нового блока в blocks/*.ts не требует
@@ -38,11 +39,25 @@ function colourShadow(): string {
     return '<block type="pioneer_colour_preset"></block>';
 }
 
-function renderBlock(type: string): string {
+// Атрибут XML — 'disabled-reasons', а не 'disabled="true"' (§6 плана, фаза 6,
+// шаг 2: "выбрать то, что работает в Blockly 12, и описать выбор в PR").
+// 'disabled="true"' записал бы встроенную причину MANUALLY_DISABLED, которую
+// applyPioneerTargetToWorkspace() (target-support.ts) не отслеживает и не
+// умеет снимать — блок, вытянутый из flyout, остался бы отключён навсегда
+// даже после переключения на поддерживаемый таргет. 'disabled-reasons'
+// сразу проставляет ИМЕННО UNSUPPORTED_TARGET_REASON, поэтому дальнейший
+// пересчёт таргета работает с тем же блоком без дополнительной синхронизации.
+function disabledAttribute(type: string, target: PioneerTarget | undefined): string {
+    if (!target || isBlockSupported(type, target)) return '';
+    return ` disabled-reasons="${UNSUPPORTED_TARGET_REASON}"`;
+}
+
+function renderBlock(type: string, target?: PioneerTarget): string {
     const numberInputs = NUMBER_SHADOWS[type];
     const colourInputs = COLOUR_SHADOWS[type];
+    const disabledAttr = disabledAttribute(type, target);
     if (!numberInputs && !colourInputs) {
-        return `<block type="${type}"></block>`;
+        return `<block type="${type}"${disabledAttr}></block>`;
     }
 
     const valueTags: string[] = [];
@@ -56,14 +71,15 @@ function renderBlock(type: string): string {
             valueTags.push(`<value name="${name}">${colourShadow()}</value>`);
         });
     }
-    return `<block type="${type}">${valueTags.join('')}</block>`;
+    return `<block type="${type}"${disabledAttr}>${valueTags.join('')}</block>`;
 }
 
-function renderCategory(category: PioneerBlockCategory): string {
+function renderCategory(category: PioneerBlockCategory, target?: PioneerTarget): string {
     const types = getPioneerBlockTypesByCategory(category);
     if (types.length === 0) return '';
     const { name, colour } = CATEGORY_LABELS[category];
-    return `<category name="${name}" colour="${colour}">${types.map(renderBlock).join('')}</category>`;
+    const blocks = types.map((type) => renderBlock(type, target)).join('');
+    return `<category name="${name}" colour="${colour}">${blocks}</category>`;
 }
 
 const STANDARD_CATEGORIES = `
@@ -97,9 +113,10 @@ const STANDARD_CATEGORIES = `
     <category name="Функции" custom="PROCEDURE" colour="#6366f1"></category>
 `;
 
-// Пока не подключён в UI (см. §7 плана, фаза 2, шаг 4) — только для тестов
-// и последующего включения в фазе 7.
-export function buildPioneerToolbox(): string {
-    const categories = CATEGORY_ORDER.map(renderCategory).filter(Boolean).join('');
+// target не задан — тулбокс без отключённых блоков (используется в тестах
+// фаз 1-3, где таргет ещё не имеет значения). buildMainEditorToolbox()
+// (index.ts, фаза 7) всегда передаёт текущий язык компиляции.
+export function buildPioneerToolbox(target?: PioneerTarget): string {
+    const categories = CATEGORY_ORDER.map((category) => renderCategory(category, target)).filter(Boolean).join('');
     return `<xml xmlns="https://developers.google.com/blockly/xml">${categories}${STANDARD_CATEGORIES}</xml>`;
 }
