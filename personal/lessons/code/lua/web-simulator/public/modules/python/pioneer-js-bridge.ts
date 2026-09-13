@@ -220,11 +220,9 @@ export function installJsRuntimeAPI() {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
         const ledId = toFiniteNumber(led_id, -1);
-        // pioneer_sdk.led_control() принимает r,g,b в 0..1 (как реальный SDK и Lua Ledbar:set),
-        // а внутреннее состояние дрона и рендер светодиодов — в 0..255 (см. lua/leds.ts).
-        const rn = toFiniteNumber(r, 0) * 255;
-        const gn = toFiniteNumber(g, 0) * 255;
-        const bn = toFiniteNumber(b, 0) * 255;
+        const rn = toFiniteNumber(r, 0);
+        const gn = toFiniteNumber(g, 0);
+        const bn = toFiniteNumber(b, 0);
         if (ledId === 255) {
             for (let i = 0; i < d.leds.length; i += 1) {
                 d.leds[i] = { r: rn, g: gn, b: bn, w: 0 };

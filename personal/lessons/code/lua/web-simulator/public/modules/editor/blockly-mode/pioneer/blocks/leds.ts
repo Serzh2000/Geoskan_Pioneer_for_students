@@ -42,8 +42,7 @@ function ensurePythonLedHelper(gen: Blockly.CodeGenerator): void {
     if (definitions.pioneer_led_helper) return;
     definitions.pioneer_led_helper = [
         'def _pioneer_led(led_id, c):',
-        // led_control() ждёт r,g,b в 0..1 (как реальный pioneer_sdk), а цвет в блоке хранится в 0..255.
-        '    pioneer.led_control(led_id=led_id, r=c[0] / 255, g=c[1] / 255, b=c[2] / 255)'
+        '    pioneer.led_control(led_id=led_id, r=c[0], g=c[1], b=c[2])'
     ].join('\n');
 }
 

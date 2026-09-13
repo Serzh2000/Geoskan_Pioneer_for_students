@@ -220,8 +220,7 @@ export function registerPioneerSdk2Definitions(): void {
     };
     pythonGenerator.forBlock.led_all = (block) => {
         const colour = value(block, 'COLOR', '(0, 0, 0)');
-        // led_control() ждёт r,g,b в 0..1, а цвет в блоке хранится в 0..255 — делим на 255.
-        return `pioneer.led_control(led_id=255, r=(${colour})[0] / 255, g=(${colour})[1] / 255, b=(${colour})[2] / 255)\n`;
+        return `pioneer.led_control(led_id=255, r=(${colour})[0], g=(${colour})[1], b=(${colour})[2])\n`;
     };
 
     Blockly.Blocks.led_index = {
@@ -237,7 +236,7 @@ export function registerPioneerSdk2Definitions(): void {
     };
     pythonGenerator.forBlock.led_index = (block) => {
         const colour = value(block, 'COLOR', '(0, 0, 0)');
-        return `pioneer.led_control(led_id=${value(block, 'NUM', '0')}, r=(${colour})[0] / 255, g=(${colour})[1] / 255, b=(${colour})[2] / 255)\n`;
+        return `pioneer.led_control(led_id=${value(block, 'NUM', '0')}, r=(${colour})[0], g=(${colour})[1], b=(${colour})[2])\n`;
     };
 
     Blockly.Blocks.servo_set_angle = {

@@ -124,9 +124,9 @@ export const pythonApiDocs: Record<string, ApiDoc> = {
     'Pioneer.led_control': {
         desc: 'Управление RGB-светодиодами.',
         syntax: 'pioneer.led_control(led_id=255, r=0, g=0, b=0) -> bool',
-        params: 'led_id (255 = все; 0..3 = LED 1..4), r,g,b (0..1)',
+        params: 'led_id (255 = все; 0..3 = LED 1..4), r,g,b (0..255)',
         returns: 'bool',
-        example: 'pioneer.led_control(led_id=255, r=1, g=0, b=0)',
+        example: 'pioneer.led_control(led_id=255, r=255, g=0, b=0)',
         kind: 'Method',
         insertText: 'led_control(led_id=${1:255}, r=${2:r}, g=${3:g}, b=${4:b})'
     },
