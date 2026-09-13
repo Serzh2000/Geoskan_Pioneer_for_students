@@ -509,7 +509,10 @@ describe('Кодогенерация блоков видеопотока', () =>
 });
 
 describe('Кодогенерация блоков времени', () => {
-    test('sleep генерирует time.sleep() и не bare sleep()', () => {
+    // compileMainEditorWorkspace() с фазы 7 компилирует только цепочку под
+    // pioneer_start (targets/compile.ts) — одиночный 'sleep' без него теперь
+    // орфан и не даёт кода. См. комментарий у describe.skip ниже. Разбор — фаза 9.
+    test.skip('sleep генерирует time.sleep() и не bare sleep()', () => {
         const workspace = makeWorkspace();
         const sleep = workspace.newBlock('sleep');
         sleep.getInput('NAME')!.connection!.connect(numberBlock(workspace, 1).outputConnection!);
@@ -529,7 +532,15 @@ describe('Кодогенерация блоков времени', () => {
     });
 });
 
-describe('Компиляция workspace в валидный Python код', () => {
+// Фаза 7 плана: compileMainEditorWorkspace() переключена на единый набор
+// pioneer_*, компилирует только цепочку под pioneer_start (targets/compile.ts).
+// Старые py_*/pioneer-sdk2-* блоки без pioneer_start теперь орфаны и не дают
+// кода вовсе — эти тесты проверяли старую обвязку (импорт Pioneer/Camera/
+// VideoStream и т.п.), которой в единой системе v1 больше нет. Прямая
+// генерация через pythonGenerator.workspaceToCode(...) на этих блоках
+// остаётся валидной регрессией в остальных describe() этого файла.
+// Разбор/удаление — фаза 9.
+describe.skip('Компиляция workspace в валидный Python код', () => {
     test('простой блок arm компилируется с импортом pioneer_sdk и инициализацией', () => {
         const workspace = makeWorkspace();
         workspace.newBlock('py_arm');
@@ -700,11 +711,13 @@ describe('Совместимость типов value-блоков', () => {
 });
 
 describe('Тулбокс Python содержит все ожидаемые блоки', () => {
-    // Старые учебные блоки py_* (coursePythonBlockTypes) остаются зарегистрированными
-    // (см. describe выше) ради обратной совместимости с сохранёнными workspace, но в
-    // тулбоксе основного редактора больше не показываются — их место заняла категория
-    // Pioneer SDK, проверяемая ниже.
-    test('тулбокс содержит все блоки Pioneer SDK', () => {
+    // Старые учебные блоки py_* (coursePythonBlockTypes) и pioneer-sdk2-*
+    // остаются зарегистрированными (см. describe выше) ради обратной
+    // совместимости с сохранёнными workspace, но с фазы 7 плана главный
+    // тулбокс редактора строится из единого набора pioneer_*
+    // (buildMainEditorToolbox() -> buildPioneerToolbox(), см. blockly-mode/index.ts)
+    // — категория "Pioneer SDK" в нём больше не показывается. Разбор — фаза 9.
+    test.skip('тулбокс содержит все блоки Pioneer SDK', () => {
         const xml = buildMainEditorToolbox('python');
         const types = toolboxBlockTypes(xml);
         for (const type of pioneerSdkBlockTypes) {
@@ -715,7 +728,9 @@ describe('Тулбокс Python содержит все ожидаемые бл�
     test('тулбокс содержит стандартные категории стандартного редактора', () => {
         const xml = buildMainEditorToolbox('python');
         const types = toolboxBlockTypes(xml);
-        const standardBlocks = ['controls_if', 'logic_compare', 'math_number', 'text', 'lists_create_with'];
+        // 'lists_create_with' здесь больше нет: новый единый тулбокс (фаза 7)
+        // не включает категорию "Списки" — списки вне каталога v1 (§5 плана).
+        const standardBlocks = ['controls_if', 'logic_compare', 'math_number', 'text'];
         for (const type of standardBlocks) {
             expect(types).toContain(type);
         }

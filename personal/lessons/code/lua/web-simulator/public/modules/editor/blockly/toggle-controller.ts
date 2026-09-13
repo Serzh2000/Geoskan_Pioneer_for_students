@@ -12,7 +12,7 @@ export type BlocklyToggleController = {
     compileMainEditorWorkspace: (language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg) => string;
     getTextEditorValue: () => string;
     setTextEditorValue: (value: string) => void;
-    saveBlocklyWorkspaceState: (language?: ScriptLanguage) => void;
+    saveBlocklyWorkspaceState: () => void;
     ensureBlocklyWorkspace: (language: ScriptLanguage) => Promise<void>;
     loadBlocklyWorkspace: (language: ScriptLanguage) => void;
     syncEditorModeVisibility: () => void;
@@ -34,7 +34,7 @@ export function setBlocklyEditorEnabled(controller: BlocklyToggleController, ena
     if (controller.getBlocklyEnabled() === enabled) return;
 
     if (!enabled) {
-        controller.saveBlocklyWorkspaceState(controller.currentScriptLanguage);
+        controller.saveBlocklyWorkspaceState();
         const key = controller.getEditorStateKey(controller.currentScriptLanguage);
         const previousText = controller.textDraftByKey.get(key) || '';
         const generatedCode = controller.blocklyWorkspace

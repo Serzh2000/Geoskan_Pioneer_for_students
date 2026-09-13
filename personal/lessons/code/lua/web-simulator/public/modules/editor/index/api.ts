@@ -26,6 +26,7 @@ import { getBlocklyTheme } from '../runtime.js';
 import {
     ensureBlocklyWorkspace as ensureBlocklyWorkspaceController,
     loadBlocklyWorkspace as loadBlocklyWorkspaceController,
+    retargetBlocklyWorkspace as retargetBlocklyWorkspaceController,
     saveBlocklyWorkspaceState as saveBlocklyWorkspaceStateController
 } from '../blockly/workspace-controller.js';
 import {
@@ -43,6 +44,7 @@ import {
     createEditor,
     createEditorShell,
     fallbackEditor,
+    getBlocklyStateKey,
     getEditorStateKey,
     getTextEditorValue,
     initializeEditorShellEnvironment,
@@ -63,6 +65,7 @@ function getEditorControllers() {
         isStarterLuaScript,
         getTextEditorValue,
         getEditorStateKey,
+        getBlocklyStateKey,
         updateBlocklyPreview: (language: ScriptLanguage) => {
             updateBlocklyPreviewSupport(editorIndexState.blocklyPreview, editorIndexState.blocklyWorkspace, language);
         },
@@ -133,8 +136,8 @@ function getEditorControllers() {
     });
 }
 
-function saveBlocklyWorkspaceState(language: ScriptLanguage = currentScriptLanguage): void {
-    saveBlocklyWorkspaceStateController(getEditorControllers().workspaceController, language);
+function saveBlocklyWorkspaceState(): void {
+    saveBlocklyWorkspaceStateController(getEditorControllers().workspaceController);
 }
 
 function loadBlocklyWorkspace(language: ScriptLanguage = currentScriptLanguage): void {
@@ -142,7 +145,14 @@ function loadBlocklyWorkspace(language: ScriptLanguage = currentScriptLanguage):
 }
 
 function ensureBlocklyWorkspace(language: ScriptLanguage = currentScriptLanguage): Promise<void> {
-    return ensureBlocklyWorkspaceController(getEditorControllers().workspaceController, language, currentScriptLanguage);
+    return ensureBlocklyWorkspaceController(getEditorControllers().workspaceController, language);
+}
+
+// Смена языка при включённом Blockly не трогает workspace (фаза 7 плана) —
+// только пересчитывает disabled-блоки под новый таргет и перегенерирует
+// превью/черновик текста. См. setEditorLanguage() ниже.
+function retargetBlocklyWorkspace(language: ScriptLanguage): void {
+    retargetBlocklyWorkspaceController(getEditorControllers().workspaceController, language);
 }
 
 export function initEditor(): void {
@@ -186,8 +196,15 @@ export async function setEditorLanguage(language: ScriptLanguage): Promise<void>
     setEditorTextLanguage(language);
 
     if (editorIndexState.blocklyEnabled) {
-        await ensureBlocklyWorkspace(language);
-        loadBlocklyWorkspace(language);
+        // Фаза 7 плана: язык — это только таргет компиляции. Workspace не
+        // перезагружаем (ensureBlocklyWorkspace/loadBlocklyWorkspace здесь
+        // специально не вызываются — они бы очистили и пересобрали блоки).
+        // Обновляем только тулбокс (флайаут неподдерживаемых блоков),
+        // disabled-состояние уже стоящих блоков, превью и черновик текста.
+        if (editorIndexState.blocklyWorkspace) {
+            editorIndexState.blocklyWorkspace.updateToolbox(buildMainEditorToolbox(language));
+        }
+        retargetBlocklyWorkspace(language);
     }
 }
 

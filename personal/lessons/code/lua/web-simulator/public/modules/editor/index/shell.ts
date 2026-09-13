@@ -4,6 +4,7 @@ import {
     fallbackEditor as mountFallbackEditor,
     getFallbackEditorValue,
     getEditorStateKey as getEditorStateKeyDom,
+    getBlocklyWorkspaceStateKey as getBlocklyWorkspaceStateKeyDom,
     hasFallbackEditor,
     setFallbackEditorValue,
     syncEditorModeVisibility as syncEditorModeVisibilityDom
@@ -48,6 +49,10 @@ export function initializeEditorShellEnvironment(): void {
 
 export function getEditorStateKey(language: ScriptLanguage = currentScriptLanguage): string {
     return getEditorStateKeyDom(currentDroneId, language);
+}
+
+export function getBlocklyStateKey(): string {
+    return getBlocklyWorkspaceStateKeyDom(currentDroneId);
 }
 
 export function syncEditorModeVisibility(): void {

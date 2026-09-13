@@ -17,6 +17,7 @@ export type EditorControllerHost = {
         isStarterLuaScript: BlocklyWorkspaceController['isStarterLuaScript'];
         getTextEditorValue: BlocklyWorkspaceController['getTextEditorValue'];
         getEditorStateKey: BlocklyWorkspaceController['getEditorStateKey'];
+        getBlocklyStateKey: BlocklyWorkspaceController['getBlocklyStateKey'];
         textDraftByKey: Map<string, string>;
         blocklyWorkspaceXmlByKey: Map<string, string>;
         persistEditorSession: () => void;
@@ -25,7 +26,7 @@ export type EditorControllerHost = {
         ensureBlocklyResizeTracking: () => void;
         scheduleBlocklyAutofit: () => void;
         setTextEditorValue: (value: string) => void;
-        saveBlocklyWorkspaceState: (language?: ScriptLanguage) => void;
+        saveBlocklyWorkspaceState: () => void;
         ensureBlocklyWorkspace: (language: ScriptLanguage) => Promise<void>;
         loadBlocklyWorkspace: (language: ScriptLanguage) => void;
         syncEditorModeVisibility: () => void;
@@ -54,6 +55,7 @@ export function createBlocklyWorkspaceController(host: EditorControllerHost): Bl
         isStarterLuaScript: host.isStarterLuaScript,
         getTextEditorValue: host.getTextEditorValue,
         getEditorStateKey: host.getEditorStateKey,
+        getBlocklyStateKey: host.getBlocklyStateKey,
         textDraftByKey: host.textDraftByKey,
         blocklyWorkspaceXmlByKey: host.blocklyWorkspaceXmlByKey,
         persistEditorSession: host.persistEditorSession,

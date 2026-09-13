@@ -37,12 +37,13 @@ export type EditorIndexControllerDeps = {
     isStarterLuaScript: BlocklyWorkspaceController['isStarterLuaScript'];
     getTextEditorValue: () => string;
     getEditorStateKey: (language: ScriptLanguage) => string;
+    getBlocklyStateKey: () => string;
     updateBlocklyPreview: (language: ScriptLanguage) => void;
     resizeBlocklyWorkspaceViewport: () => void;
     ensureBlocklyResizeTracking: () => void;
     scheduleBlocklyAutofit: () => void;
     setTextEditorValue: (value: string) => void;
-    saveBlocklyWorkspaceState: (language?: ScriptLanguage) => void;
+    saveBlocklyWorkspaceState: () => void;
     ensureBlocklyWorkspace: (language: ScriptLanguage) => Promise<void>;
     loadBlocklyWorkspace: (language: ScriptLanguage) => void;
     syncEditorModeVisibility: () => void;
@@ -127,6 +128,7 @@ export function createEditorHost(
         isStarterLuaScript: deps.isStarterLuaScript,
         getTextEditorValue: deps.getTextEditorValue,
         getEditorStateKey: deps.getEditorStateKey,
+        getBlocklyStateKey: deps.getBlocklyStateKey,
         textDraftByKey: collections.textDraftByKey,
         blocklyWorkspaceXmlByKey: collections.blocklyWorkspaceXmlByKey,
         persistEditorSession: () => persistEditorIndexSession(state, collections),

@@ -1,8 +1,4 @@
-import {
-    DEFAULT_LUA_SCRIPT,
-    DEFAULT_PYTHON_SCRIPT,
-    type ScriptLanguage
-} from '../../core/state.js';
+import type { ScriptLanguage } from '../../core/state.js';
 import { getBlocklyGenerator, type BlocklyNS } from './loader.js';
 
 const LUA_RAW_CODE_BLOCK = 'lua_raw_code';
@@ -74,34 +70,32 @@ export function createRawCodeWorkspaceXml(language: ScriptLanguage, code: string
     `;
 }
 
+// Фаза 7 плана, шаг 4: стартовый workspace одинаковый для обоих языков —
+// pioneer_start -> preflight -> takeoff -> land. Раньше здесь была Lua-only
+// цепочка через старые callback-блоки (lua_preflight/lua_callback_open/...),
+// а для Python отдавался "сырой код" (createRawCodeWorkspaceXml) — с единым
+// набором pioneer_* обе ветки не нужны, параметр language оставлен только
+// ради сигнатуры вызывающего кода (getStarterBlocklyWorkspaceXml в
+// workspace-controller.ts, использовавший его для Lua-only проверки, удалён).
 export function createStarterWorkspaceXml(language: ScriptLanguage): string {
-    if (language === 'lua') {
-        return `
-            <xml xmlns="https://developers.google.com/blockly/xml">
-                <block type="lua_preflight" x="32" y="32">
-                    <next>
-                        <block type="lua_callback_open">
-                            <next>
-                                <block type="lua_event_callback">
-                                    <field name="EVENT">Ev.ENGINES_STARTED</field>
-                                    <statement name="DO">
-                                        <block type="lua_ap_push">
-                                            <field name="EVENT">Ev.MCE_TAKEOFF</field>
-                                        </block>
-                                    </statement>
-                                    <next>
-                                        <block type="lua_callback_end"></block>
-                                    </next>
-                                </block>
-                            </next>
-                        </block>
-                    </next>
-                </block>
-            </xml>
-        `;
-    }
-
-    return createRawCodeWorkspaceXml(language, language === 'python' ? DEFAULT_PYTHON_SCRIPT : DEFAULT_LUA_SCRIPT);
+    void language; // см. комментарий выше — параметр сохранён ради сигнатуры вызывающего кода
+    return `
+        <xml xmlns="https://developers.google.com/blockly/xml">
+            <block type="pioneer_start" x="32" y="32">
+                <next>
+                    <block type="pioneer_preflight">
+                        <next>
+                            <block type="pioneer_takeoff">
+                                <next>
+                                    <block type="pioneer_land"></block>
+                                </next>
+                            </block>
+                        </next>
+                    </block>
+                </next>
+            </block>
+        </xml>
+    `;
 }
 
 export const RAW_CODE_BLOCK_TYPES = {

@@ -1,5 +1,6 @@
 import { Blockly, type BlocklyNS } from '../blockly-mode/loader.js';
 import { ensureEditorBlocklyDefinitions } from '../blockly-mode/index.js';
+import { applyPioneerTargetToWorkspace } from '../blockly-mode/pioneer/target-support.js';
 import type { ScriptLanguage } from '../../core/state.js';
 
 export type BlocklyWorkspaceController = {
@@ -18,6 +19,10 @@ export type BlocklyWorkspaceController = {
     isStarterLuaScript: (value: string) => boolean;
     getTextEditorValue: () => string;
     getEditorStateKey: (language: ScriptLanguage) => string;
+    // Ключ хранения XML воркспейса — фаза 7 плана: один Blockly-воркспейс на
+    // дрона (`${droneId}:blockly`), не зависит от языка компиляции, в отличие
+    // от getEditorStateKey (текстовые черновики остаются per-язык).
+    getBlocklyStateKey: () => string;
     textDraftByKey: Map<string, string>;
     blocklyWorkspaceXmlByKey: Map<string, string>;
     persistEditorSession: () => void;
@@ -27,29 +32,19 @@ export type BlocklyWorkspaceController = {
     scheduleBlocklyAutofit: () => void;
 };
 
-export function getStarterBlocklyWorkspaceXml(
-    controller: BlocklyWorkspaceController,
-    language: ScriptLanguage
-): string | null {
-    if (language !== 'lua') return null;
+// getStarterBlocklyWorkspaceXml() (Lua-only проверка isStarterLuaScript())
+// удалена в фазе 7: стартовый workspace теперь одинаковый для обоих языков
+// (pioneer_start -> preflight -> takeoff -> land), поэтому loadBlocklyWorkspace()
+// ниже берёт его напрямую из createStarterWorkspaceXml() без языковой развилки.
+// Поля getTextEditorValue/isStarterLuaScript остаются в контроллере: то же имя
+// isStarterLuaScript отдельно используется текстовым редактором (autofit.ts)
+// для авто-разворота панели — это другая, не связанная с Blockly, функция.
 
-    const key = controller.getEditorStateKey(language);
-    const draftText = controller.textDraftByKey.get(key) || controller.getTextEditorValue();
-    if (draftText.trim().length > 0 && !controller.isStarterLuaScript(draftText)) {
-        return null;
-    }
-
-    return controller.createStarterWorkspaceXml(language);
-}
-
-export function saveBlocklyWorkspaceState(
-    controller: BlocklyWorkspaceController,
-    language: ScriptLanguage
-): void {
+export function saveBlocklyWorkspaceState(controller: BlocklyWorkspaceController): void {
     if (!controller.blocklyWorkspace) return;
 
     const xml = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyWorkspace));
-    controller.blocklyWorkspaceXmlByKey.set(controller.getEditorStateKey(language), xml);
+    controller.blocklyWorkspaceXmlByKey.set(controller.getBlocklyStateKey(), xml);
     controller.persistEditorSession();
 }
 
@@ -59,10 +54,9 @@ export function loadBlocklyWorkspace(
 ): void {
     if (!controller.blocklyWorkspace) return;
 
-    const key = controller.getEditorStateKey(language);
+    const key = controller.getBlocklyStateKey();
     const savedXml = controller.blocklyWorkspaceXmlByKey.get(key);
-    const starterXml = savedXml ? null : getStarterBlocklyWorkspaceXml(controller, language);
-    const workspaceXml = savedXml || starterXml;
+    const workspaceXml = savedXml || controller.createStarterWorkspaceXml(language);
 
     controller.blocklyWorkspace.clear();
 
@@ -75,8 +69,12 @@ export function loadBlocklyWorkspace(
         }
     }
 
+    // Пересчитываем disabled-блоки под таргет ПОСЛЕ загрузки XML (фаза 6):
+    // сохранённый workspace мог быть создан в другом языке компиляции.
+    applyPioneerTargetToWorkspace(controller.blocklyWorkspace, language);
+
     if (workspaceXml) {
-        saveBlocklyWorkspaceState(controller, language);
+        saveBlocklyWorkspaceState(controller);
     } else {
         controller.blocklyWorkspaceXmlByKey.delete(key);
     }
@@ -86,10 +84,28 @@ export function loadBlocklyWorkspace(
     controller.scheduleBlocklyAutofit();
 }
 
+// Смена языка при включённом Blockly (фаза 7, §9 открытый вопрос 5): workspace
+// НЕ перезагружается — меняется только таргет компиляции. Пересчитываем
+// disabled-блоки под новый таргет, перегенерируем превью и перезаписываем
+// черновик текста НОВОГО языка сгенерированным кодом (решение принято как
+// "да, перезаписывать", как и предлагает сам план).
+export function retargetBlocklyWorkspace(
+    controller: BlocklyWorkspaceController,
+    language: ScriptLanguage
+): void {
+    if (!controller.blocklyWorkspace) return;
+
+    applyPioneerTargetToWorkspace(controller.blocklyWorkspace, language);
+
+    const compiled = controller.compileMainEditorWorkspace(language, controller.blocklyWorkspace);
+    controller.textDraftByKey.set(controller.getEditorStateKey(language), compiled);
+    controller.updateBlocklyPreview(language);
+    controller.persistEditorSession();
+}
+
 export function ensureBlocklyWorkspace(
     controller: BlocklyWorkspaceController,
-    language: ScriptLanguage,
-    currentScriptLanguage: ScriptLanguage
+    language: ScriptLanguage
 ): Promise<void> {
     if (!controller.blocklyCanvas) return Promise.resolve();
 
@@ -119,7 +135,7 @@ export function ensureBlocklyWorkspace(
                 // ensureBlocklyWorkspace() — иначе после смены языка правки
                 // сохраняются под старым ключом и компилируются старым генератором.
                 const activeLanguage = controller.getCurrentLanguage();
-                saveBlocklyWorkspaceState(controller, activeLanguage);
+                saveBlocklyWorkspaceState(controller);
                 controller.textDraftByKey.set(
                     controller.getEditorStateKey(activeLanguage),
                     controller.compileMainEditorWorkspace(activeLanguage, blocklyWorkspace)

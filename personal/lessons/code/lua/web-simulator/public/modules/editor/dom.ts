@@ -25,6 +25,14 @@ export function getEditorStateKey(currentDroneId: string, language: ScriptLangua
     return `${currentDroneId}:${language}`;
 }
 
+// Ключ Blockly-воркспейса (фаза 7 плана): один на дрона, не зависит от языка —
+// язык остаётся только выбором таргета компиляции, переключение языка не
+// должно требовать другого workspace. Текстовые черновики (getEditorStateKey
+// выше) по-прежнему хранятся отдельно на каждый язык.
+export function getBlocklyWorkspaceStateKey(currentDroneId: string): string {
+    return `${currentDroneId}:blockly`;
+}
+
 export function createEditorShell(): EditorShellRefs {
     const editorElement = document.getElementById('editor');
     if (!editorElement) {

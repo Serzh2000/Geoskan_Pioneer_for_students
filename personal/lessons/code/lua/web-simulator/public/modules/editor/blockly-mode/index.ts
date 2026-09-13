@@ -3,15 +3,13 @@ import { evConstants } from '../../docs/api-docs-events.js';
 import { Blockly, getBlocklyGenerator, initBlocklyDefinitions, ensureBlocklyLoaded, type BlocklyNS } from './loader.js';
 import { buildCatalog } from './catalog.js';
 import type { ApiCatalogEntry } from './types.js';
-import {
-    compileMainEditorWorkspace as compileWorkspaceCode
-} from './workspace.js';
 import { buildPioneerToolbox } from './pioneer/toolbox.js';
 import { compilePioneerWorkspace as compilePioneerWorkspaceCode } from './pioneer/targets/compile.js';
 import { registerPioneerBlocks } from './pioneer/blocks/index.js';
 
-// Реэкспорт для тестов и будущей фазы 7 (§7 плана, фаза 2, шаг 4): новая
-// система pioneer_* пока не подключена к тулбоксу/компиляции UI напрямую.
+// Реэкспорт для тестов и для buildMainEditorToolbox/compileMainEditorWorkspace
+// ниже: с фазы 7 это и есть система главного тулбокса/компилятора редактора,
+// а не отдельная параллельная песочница.
 export { buildPioneerToolbox };
 export const compilePioneerWorkspace = compilePioneerWorkspaceCode;
 
@@ -410,161 +408,11 @@ function extendCatalogWithCourseBlocks(language: ScriptLanguage, catalog: ApiCat
     return [...catalog, ...additions];
 }
 
-function renderStandardCategories(language: ScriptLanguage): string {
-    // Сенсорные value-блоки определены только для Python (blockly-core/python-definitions.ts)
-    const pythonSensorCategory = language === 'python' ? `
-        <category name="Сенсоры и данные" colour="#14b8a6">
-            <block type="py_get_sensor_distance"></block>
-            <block type="py_get_local_point"></block>
-            <block type="py_get_battery"></block>
-            <block type="py_get_autopilot_state"></block>
-        </category>
-    ` : '';
-
-    // Категория сенсоров для Lua — показывает блоки из lua-definitions.ts
-    const luaSensorCategory = language === 'lua' ? `
-        <category name="Датчики и телеметрия" colour="#14b8a6">
-            <block type="lua_get_dist_sensor_data"></block>
-            <block type="lua_get_local_position"></block>
-            <block type="lua_get_local_velocity"></block>
-            <block type="lua_get_pv_by_index"></block>
-            <block type="lua_get_time"></block>
-            <block type="lua_sleep"></block>
-            <block type="lua_get_battery"></block>
-        </category>
-    ` : '';
-
-    // Категория полета для Lua
-    const luaFlightCategory = language === 'lua' ? `
-        <category name="Полёт" colour="#a855f7">
-            <block type="lua_preflight"></block>
-            <block type="lua_takeoff"></block>
-            <block type="lua_landing"></block>
-            <block type="lua_engines_disarm"></block>
-            <block type="lua_go_to_local_point"></block>
-            <block type="lua_update_yaw"></block>
-            <block type="lua_waiting_for_point"></block>
-            <block type="lua_not_point_reached"></block>
-            <block type="lua_point_reached"></block>
-        </category>
-    ` : '';
-
-    // Категория светодиодов для Lua
-    const luaLedCategory = language === 'lua' ? `
-        <category name="Светодиоды" colour="#22c55e">
-            <block type="lua_ledbar_new"></block>
-            <block type="lua_led_set"></block>
-            <block type="lua_led_all"></block>
-            <block type="lua_led_index"></block>
-        </category>
-    ` : '';
-
-    // Категория сервоприводов удалена: в Lua API нет servo/grab-функций,
-    // а их блоки больше не определены (раньше это ломало flyout ошибкой
-    // «Invalid block definition for type: lua_servo_set_angle»).
-
-    // Категория логики для Lua — блоки из lua-definitions.ts + event constant
-    const luaLogicCategory = language === 'lua' ? `
-        <category name="Логика и автопилот" colour="#8b5cf6">
-            <block type="lua_callback_open"></block>
-            <block type="lua_event_callback"></block>
-            <block type="lua_ap_push"></block>
-            <block type="lua_callback_end"></block>
-        </category>
-    ` : '';
-
-    return `
-        <sep></sep>
-        ${luaFlightCategory}
-        ${luaLedCategory}
-        ${luaSensorCategory}
-        <sep></sep>
-        ${luaLogicCategory}
-        <category name="Логика" colour="#8b5cf6">
-            <block type="controls_if"></block>
-            <block type="logic_compare"></block>
-            <block type="logic_operation"></block>
-            <block type="logic_negate"></block>
-            <block type="logic_boolean"></block>
-            <block type="logic_ternary"></block>
-        </category>
-        <category name="Циклы" colour="#ec4899">
-            <block type="controls_repeat_ext"></block>
-            <block type="controls_whileUntil"></block>
-            <block type="controls_for"></block>
-            <block type="controls_forEach"></block>
-            <block type="controls_flow_statements"></block>
-        </category>
-        <category name="Числа" colour="#f59e0b">
-            <block type="math_number"></block>
-            <block type="math_arithmetic"></block>
-            <block type="math_single"></block>
-            <block type="math_modulo"></block>
-            <block type="math_round"></block>
-            <block type="math_constrain"></block>
-            <block type="math_random_int"></block>
-            <block type="math_random_float"></block>
-        </category>
-        <category name="Списки" colour="#f97316">
-            <block type="lists_create_with"></block>
-            <block type="lists_repeat"></block>
-            <block type="lists_length"></block>
-            <block type="lists_isEmpty"></block>
-            <block type="lists_getIndex"></block>
-            <block type="lists_setIndex"></block>
-        </category>
-        <category name="Текст" colour="#22c55e">
-            <block type="text"></block>
-            <block type="text_join"></block>
-            <block type="text_length"></block>
-            <block type="text_indexOf"></block>
-            <block type="text_print"></block>
-        </category>
-        ${pythonSensorCategory}
-        <category name="Переменные" custom="VARIABLE" colour="#14b8a6"></category>
-        <category name="Функции" custom="PROCEDURE" colour="#6366f1"></category>
-    `;
-}
-
-function renderPioneerSdkCategories(): string {
-    const category = (name: string, colour: string, types: string[]) => `
-        <category name="${name}" colour="${colour}">
-            ${types.map((type) => `<block type="${type}"></block>`).join('')}
-        </category>`;
-
-    return [
-        category('Полет', '#a855f7', [
-            'preflight', 'take_off', 'go_local_point', 'go_local_point_body_fixed', 'set_manual_speed',
-            'not_point_reached', 'landing', 'engines_disarm', 'close_connection'
-        ]),
-        category('Сенсоры и координаты', '#14b8a6', [
-            'get_local_position_lps', 'get_local_position_component', 'get_dist_sensor_data',
-            'get_battery_status', 'get_autopilot_state'
-        ]),
-        category('Светодиоды', '#22c55e', ['led_all', 'led_index']),
-        category('Пульт и Lua-скрипт', '#f59e0b', ['send_rc_channels', 'lua_script_control']),
-        category('Камера', '#06b6d4', ['camera_connect', 'camera_disconnect', 'camera_connected', 'camera_get_frame', 'cam_get_cv_frame']),
-        category('Видеопоток', '#06b6d4', ['video_stream_start', 'video_stream_stop', 'video_stream_connected']),
-        category('Время', '#f59e0b', ['sleep', 'get_time']),
-        `<sep></sep>`,
-        `<category name="Логика" colour="#8b5cf6">
-            <block type="controls_if"></block><block type="logic_compare"></block><block type="logic_operation"></block>
-            <block type="logic_negate"></block><block type="logic_boolean"></block>
-        </category>`,
-        `<category name="Циклы" colour="#ec4899">
-            <block type="controls_repeat_ext"></block><block type="controls_whileUntil"></block>
-            <block type="controls_for"></block><block type="controls_flow_statements"></block>
-        </category>`,
-        `<category name="Числа" colour="#f59e0b">
-            <block type="math_number"></block><block type="math_arithmetic"></block><block type="math_single"></block>
-        </category>`,
-        `<category name="Цвет" colour="#22c55e"><block type="colour_picker"></block></category>`,
-        `<category name="Текст" colour="#22c55e"><block type="text"></block><block type="text_print"></block></category>`,
-        `<category name="Списки" colour="#f97316"><block type="lists_create_with"></block><block type="lists_getIndex"></block></category>`,
-        `<category name="Переменные" custom="VARIABLE" colour="#14b8a6"></category>`,
-        `<category name="Функции" custom="PROCEDURE" colour="#6366f1"></category>`
-    ].join('');
-}
+// renderStandardCategories()/renderPioneerSdkCategories() удалены в фазе 7:
+// строили XML старого тулбокса (lua_*/py_*/pioneer-sdk2-*), который
+// buildMainEditorToolbox() больше не использует — см. комментарий на
+// определении buildMainEditorToolbox() ниже. Сами блоки (Blockly.Blocks[...],
+// генераторы) не тронуты, это была только сборка XML тулбокса.
 
 // Единственная точка входа, которую должны ждать все вызывающие стороны
 // (ensureBlocklyWorkspace в workspace-controller.ts) перед тем, как трогать
@@ -610,33 +458,26 @@ export function ensureEditorBlocklyDefinitions(): Promise<void> {
             defineLuaEventConstantBlock();
 
             // Единый набор pioneer_* регистрируется рядом со старыми блоками
-            // (§7 плана, фаза 2, шаг 3): он пока нигде не подключён к UI
-            // (buildMainEditorToolbox/compileMainEditorWorkspace выше его не
-            // используют), доступен только через buildPioneerToolbox()/
-            // compilePioneerWorkspace() для тестов — см. фазу 7.
+            // (§7 плана, фаза 2, шаг 3): старые lua_*/py_*/pioneer-sdk2-*
+            // остаются зарегистрированными (нужны сохранённым сессиям и
+            // урокам до миграции в фазе 8-9), но с фазы 7 главный тулбокс и
+            // компилятор редактора (ниже) используют только pioneer_*.
             registerPioneerBlocks();
         });
     }
     return definitionsLoadPromise;
 }
 
+// Фаза 7: главный тулбокс и компилятор редактора переключены на единый
+// набор pioneer_*. Старые renderStandardCategories()/renderPioneerSdkCategories()
+// и compileWorkspaceCode() (workspace.ts) больше не используются здесь — старые
+// блоки остаются зарегистрированными (см. комментарий выше) для сохранённых
+// сессий/уроков, но недоступны через главный тулбокс, пока не пройдёт
+// миграция (фаза 8) и очистка (фаза 9).
 export function buildMainEditorToolbox(language: ScriptLanguage): string {
-    if (language === 'python') {
-        return `
-            <xml xmlns="https://developers.google.com/blockly/xml">
-                ${renderPioneerSdkCategories()}
-            </xml>
-        `;
-    }
-
-    // Для Lua используем категории, аналогичные Python, но с Lua-блоками из lua-definitions.ts
-    return `
-        <xml xmlns="https://developers.google.com/blockly/xml">
-            ${renderStandardCategories('lua')}
-        </xml>
-    `;
+    return buildPioneerToolbox(language);
 }
 
 export function compileMainEditorWorkspace(language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg): string {
-    return compileWorkspaceCode(language, workspace);
+    return compilePioneerWorkspaceCode(workspace, language);
 }

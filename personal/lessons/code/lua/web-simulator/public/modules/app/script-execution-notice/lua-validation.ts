@@ -92,6 +92,14 @@ function hasLuaAutopilotMissionApiUsage(code: string) {
     );
 }
 
+// Разделители шагов миссии: `sleep(` — старый учебный Lua, `__wait_event(`/
+// `__wait_seconds(` — рантайм генератора pioneer_* (targets/lua-runtime.ts,
+// см. docs/blockly-unification-plan.md §7, фаза 7, шаг 5). Без этого
+// сгенерированный полётный скрипт (моторы -> взлёт -> точка -> посадка, где
+// каждая команда сопровождается __wait_event, а не sleep) ложно считался бы
+// одним шагом с несколькими командами миссии.
+const MISSION_STEP_SEPARATOR_PATTERN = /\bsleep\s*\(|__wait_event\s*\(|__wait_seconds\s*\(/;
+
 function collectLuaMissionCommandGroups(fragment: string): string[][] {
     const groups: string[][] = [];
     let currentGroup: string[] = [];
@@ -100,7 +108,7 @@ function collectLuaMissionCommandGroups(fragment: string): string[][] {
         const normalizedLine = line.trim().toLowerCase();
         if (!normalizedLine) continue;
 
-        if (/\bsleep\s*\(/.test(normalizedLine)) {
+        if (MISSION_STEP_SEPARATOR_PATTERN.test(normalizedLine)) {
             if (currentGroup.length) {
                 groups.push(currentGroup);
                 currentGroup = [];

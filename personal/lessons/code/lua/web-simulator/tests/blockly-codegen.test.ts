@@ -71,7 +71,13 @@ describe('Инвентаризация тулбокса редактора', () 
         }
     });
 
-    test('учебные блоки попадают в тулбокс своего языка и отсутствуют в чужом', () => {
+    // Фаза 7 плана (docs/blockly-unification-plan.md): buildMainEditorToolbox()
+    // переключён на единый набор pioneer_* — главный тулбокс редактора больше
+    // не строит отдельные lua_*/py_*/pioneer-sdk2-* категории, проверявшиеся
+    // здесь. Сами старые блоки остаются зарегистрированными (см. describe ниже
+    // и pioneer-blockly-target-support.test.ts для нового эквивалента этой
+    // проверки). Полное разбор/удаление — фаза 9.
+    test.skip('учебные блоки попадают в тулбокс своего языка и отсутствуют в чужом', () => {
         const luaXml = buildMainEditorToolbox('lua');
         const pythonXml = buildMainEditorToolbox('python');
 
@@ -420,7 +426,11 @@ describe('Кодогенерация Lua', () => {
         expect(code).toContain('leds:set(1, 0, 1, 0)');
     });
 
-    test('стартовый workspace Lua загружается из XML и компилируется', () => {
+    // Фаза 7 плана: стартовый workspace — единый pioneer_start -> preflight ->
+    // takeoff -> land (createStarterWorkspaceXml() больше не строит Lua-only
+    // цепочку через lua_callback_open/lua_event_callback), поэтому и ожидания
+    // от компиляции — вызовы pioneer_*-генераторов, а не старый callback-блок.
+    test('стартовый workspace загружается из XML и компилируется (Lua)', () => {
         const workspace = makeWorkspace();
         const dom = Blockly.utils.xml.textToDom(createStarterWorkspaceXml('lua')) as Element;
         Blockly.Xml.domToWorkspace(dom, workspace);
@@ -428,10 +438,24 @@ describe('Кодогенерация Lua', () => {
 
         const code = compileMainEditorWorkspace('lua', workspace as unknown as Blockly.WorkspaceSvg);
         expect(code).toContain('ap.push(Ev.MCE_PREFLIGHT)');
-        expect(code).toContain('function callback(event)');
-        expect(code).toContain('if event == Ev.ENGINES_STARTED then');
+        expect(code).toContain('__wait_event(Ev.ENGINES_STARTED)');
         expect(code).toContain('ap.push(Ev.MCE_TAKEOFF)');
-        expect(code.trimEnd().endsWith('end')).toBe(true);
+        expect(code).toContain('__wait_event(Ev.TAKEOFF_COMPLETE)');
+        expect(code).toContain('function callback(event)');
+        expect(code.trimEnd().endsWith('__resume()')).toBe(true);
+    });
+
+    test('стартовый workspace загружается из XML и компилируется (Python)', () => {
+        const workspace = makeWorkspace();
+        const dom = Blockly.utils.xml.textToDom(createStarterWorkspaceXml('python')) as Element;
+        Blockly.Xml.domToWorkspace(dom, workspace);
+        expect(workspace.getTopBlocks(false).length).toBe(1);
+
+        const code = compileMainEditorWorkspace('python', workspace as unknown as Blockly.WorkspaceSvg);
+        expect(code).toContain('pioneer.arm()');
+        expect(code).toContain('pioneer.takeoff()');
+        expect(code).toContain('pioneer.land()');
+        expect(code.trimEnd().endsWith('pioneer.close_connection()')).toBe(true);
     });
 });
 
@@ -540,7 +564,10 @@ describe('Кодогенерация Python', () => {
         expect(notReached.outputConnection?.getCheck()).toEqual(['Boolean']);
     });
 
-    test('тулбокс содержит отдельные блоки реального pioneer-sdk и нормальный блок высоты', () => {
+    // Фаза 7: buildMainEditorToolbox()/compileMainEditorWorkspace() больше не
+    // строят тулбокс/код из pioneer-sdk2-*/py_*-блоков — см. комментарий у
+    // describe('Инвентаризация тулбокса редактора') выше. Разбор — фаза 9.
+    test.skip('тулбокс содержит отдельные блоки реального pioneer-sdk и нормальный блок высоты', () => {
         const types = toolboxBlockTypes(buildMainEditorToolbox('python'));
         for (const type of adaptedPythonBlockTypes) expect(types).toContain(type);
         for (const unsupported of ['get_ranger_data', 'servo_set_angle', 'ai_model_init', 'get_global_position_gps']) {
@@ -554,7 +581,7 @@ describe('Кодогенерация Python', () => {
         expect(component.outputConnection?.getCheck()).toEqual(['Number']);
     });
 
-    test('компиляция Python добавляет обвязку pioneer_sdk', () => {
+    test.skip('компиляция Python добавляет обвязку pioneer_sdk', () => {
         const workspace = makeWorkspace();
         workspace.newBlock('py_arm');
 
@@ -565,7 +592,7 @@ describe('Кодогенерация Python', () => {
         expect(code.trimEnd().endsWith('pioneer.close_connection()')).toBe(true);
     });
 
-    test('блок ожидания генерирует определенное имя time.sleep', () => {
+    test.skip('блок ожидания генерирует определенное имя time.sleep', () => {
         const workspace = makeWorkspace();
         const sleep = workspace.newBlock('sleep');
         sleep.getInput('NAME')!.connection!.connect(numberBlock(workspace, 1).outputConnection!);
@@ -586,7 +613,7 @@ describe('Кодогенерация Python', () => {
         }
     });
 
-    test('интеграционная цепочка полета компилируется без неопределенных имен', () => {
+    test.skip('интеграционная цепочка полета компилируется без неопределенных имен', () => {
         const workspace = makeWorkspace();
         const arm = workspace.newBlock('preflight');
         const takeoff = workspace.newBlock('take_off');
@@ -604,7 +631,11 @@ describe('Кодогенерация Python', () => {
         expect(code).not.toMatch(/(^|\n)\s*sleep\s*\(/);
     });
 
-    test('камера и видеопоток добавляют импорты и инициализацию автоматически', () => {
+    // Камера/видеопоток — вне скоупа v1 единого набора pioneer_* (см. §5 плана,
+    // "Вне скоупа v1"), поэтому compileMainEditorWorkspace больше не добавляет
+    // такую обвязку. Старый pioneer-sdk2 генератор камеры не тронут — просто
+    // недостижим через главный тулбокс/компилятор с фазы 7.
+    test.skip('камера и видеопоток добавляют импорты и инициализацию автоматически', () => {
         const cameraWorkspace = makeWorkspace();
         cameraWorkspace.newBlock('camera_connect');
         const cameraCode = compileMainEditorWorkspace('python', cameraWorkspace as unknown as Blockly.WorkspaceSvg);
@@ -748,7 +779,13 @@ describe('Совместимость типов при соединении', ()
     });
 });
 
-describe('Компиляция workspace Lua (compileMainEditorWorkspace)', () => {
+// Фаза 7: compileMainEditorWorkspace() компилирует только цепочку под
+// pioneer_start (см. targets/compile.ts) — одиночный старый блок lua_ap_push
+// без pioneer_start теперь орфан и не даёт кода вовсе, поэтому оба теста
+// ниже больше не показательны для главного компилятора. Прямая проверка
+// luaGenerator.workspaceToCode(...) на старых блоках остаётся валидной в
+// остальных describe() этого файла. Разбор — фаза 9.
+describe.skip('Компиляция workspace Lua (compileMainEditorWorkspace)', () => {
     test('префикс/суффикс не добавляются для Lua (чистый код)', () => {
         const ws = makeWorkspace();
         ws.newBlock('lua_ap_push');
@@ -795,11 +832,11 @@ describe('Интеграционные тесты Lua', () => {
         expect(code).toContain('Timer.callLater(0.5, function()');
         expect(code).toContain('ap.push(Ev.MCE_TAKEOFF)');
 
-        // Компилируем через compileMainEditorWorkspace — должен вернуть тот же код
-        const compiled = compileMainEditorWorkspace('lua', ws as unknown as Blockly.WorkspaceSvg);
-        expect(compiled).toContain('ap.push(Ev.MCE_PREFLIGHT)');
-        expect(compiled).toContain('Timer.callLater(0.5, function()');
-        expect(compiled).toContain('ap.push(Ev.MCE_TAKEOFF)');
+        // compileMainEditorWorkspace() отдельно не проверяем: с фазы 7 она
+        // компилирует только цепочку под pioneer_start (см. targets/compile.ts),
+        // а эти блоки — сироты старой системы без pioneer_start. Прямая
+        // генерация через luaGenerator (проверено выше) остаётся валидной
+        // регрессией для самих lua_*-блоков.
     });
 
     test('ap.push(MCE_PREFLIGHT) → ap.push(MCE_TAKEOFF) → ap.goToLocalPoint(1,0,1) → ap.push(MCE_LANDING)', () => {
