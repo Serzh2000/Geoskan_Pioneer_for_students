@@ -1,12 +1,19 @@
 import * as THREE from 'three';
 import { setCommonMeta, applyShadows } from './utils.js';
+import { OBJECT_TYPE } from '../../shared/object-types.js';
+import {
+    GATE_RING_CENTER_HEIGHT,
+    GATE_RING_RADIUS,
+    GATE_RING_TUBE_RADIUS,
+    GATE_STAND_RADIUS
+} from '../../shared/gate-geometry.js';
 
 export function createGateMesh() {
-    const group = setCommonMeta(new THREE.Group(), 'Ворота', { collidableRadius: 0.95 });
-    const ringRadius = 0.64;
-    const ringTubeRadius = 0.07;
-    const ringCenterHeight = 1.18;
-    const standRadius = 0.04;
+    const group = setCommonMeta(new THREE.Group(), OBJECT_TYPE.GATE, { collidableRadius: 0.95 });
+    const ringRadius = GATE_RING_RADIUS;
+    const ringTubeRadius = GATE_RING_TUBE_RADIUS;
+    const ringCenterHeight = GATE_RING_CENTER_HEIGHT;
+    const standRadius = GATE_STAND_RADIUS;
     const standHeight = 0.98;
     const standOffsetY = 0.64;
 

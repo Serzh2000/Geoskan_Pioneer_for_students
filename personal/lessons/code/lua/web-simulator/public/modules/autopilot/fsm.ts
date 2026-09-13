@@ -1,4 +1,5 @@
 import type {
+    CommandSource,
     DroneState,
     Vector3
 } from '../core/state.js';
@@ -30,10 +31,18 @@ export {
     isDroneAirborneState,
     isDroneMovingState,
     queueMceCommand,
+    recordTickCommand,
     setDroneFsmState,
     shouldSpinRotors,
     withCommandSource
 } from './fsm-runtime.js';
+
+// Timer callbacks and Python scripts issue goToLocalPoint asynchronously and can't
+// resequence around a still-running takeoff, so they get the target queued instead
+// of rejected; direct Lua calls are expected to wait for callback(event) instead.
+function canDeferGoToLocalPointDuringTakeoff(commandSource: CommandSource): boolean {
+    return commandSource === 'timer' || commandSource === 'python';
+}
 
 export function applyGoToLocalPointRequest(
     drone: DroneState,
@@ -42,7 +51,7 @@ export function applyGoToLocalPointRequest(
 ) {
     recordTickCommand(drone, 'goToLocalPoint');
     const commandSource = getCommandSource(drone);
-    const canQueueDuringTakeoff = commandSource === 'timer' || commandSource === 'python';
+    const canQueueDuringTakeoff = canDeferGoToLocalPointDuringTakeoff(commandSource);
 
     if (drone.fsmState === 'TAKEOFF_PROCESS' && canQueueDuringTakeoff) {
         drone.target_pos = {

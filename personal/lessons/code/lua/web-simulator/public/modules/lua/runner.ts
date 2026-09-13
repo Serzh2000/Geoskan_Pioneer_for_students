@@ -2,7 +2,7 @@ import * as fengari from 'fengari-web';
 import { log } from '../shared/logging/logger.js';
 import { luaToStr } from './utils.js';
 import { drones } from '../core/state.js';
-import { emitScriptFailure } from '../core/mission-notices.js';
+import { failScriptRun } from '../core/script-failure.js';
 import { createLuaRuntimeFailureError, rememberLuaErrorStack, setLuaExecutionPhase } from './diagnostics.js';
 
 export function runCoroutine(L: any, T: any, nresults: any, id: string, phase: string = 'main chunk') {
@@ -27,9 +27,7 @@ export function runCoroutine(L: any, T: any, nresults: any, id: string, phase: s
         rememberLuaErrorStack(drone, errorMsg);
         log(`Runtime Error (${id}): ${errorMsg}`, 'error');
         if (drone) {
-            drone.running = false;
-            drone.status = '\u041e\u0428\u0418\u0411\u041a\u0410';
+            failScriptRun(drone, 'lua', createLuaRuntimeFailureError(drone, phase, errorMsg));
         }
-        emitScriptFailure('lua', createLuaRuntimeFailureError(drone, phase, errorMsg));
     }
 }

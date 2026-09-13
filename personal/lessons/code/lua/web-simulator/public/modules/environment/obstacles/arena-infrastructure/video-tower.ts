@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { setCommonMeta, applyShadows } from '../utils.js';
+import { OBJECT_TYPE } from '../../../shared/object-types.js';
 
 export function createVideoTowerMesh() {
-    const group = setCommonMeta(new THREE.Group(), 'Видеомачта', {
+    const group = setCommonMeta(new THREE.Group(), OBJECT_TYPE.VIDEO_TOWER, {
         collidableRadius: 0.55,
         connectable: true,
         connectionRadius: 8,

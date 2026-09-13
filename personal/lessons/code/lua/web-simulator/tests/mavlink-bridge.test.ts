@@ -4,6 +4,10 @@
  * binary-protocol building blocks that everything else in the bridge
  * relies on being correct.
  */
+import dgram from 'dgram';
+import express from 'express';
+import net from 'net';
+import request from 'supertest';
 import {
     buildCameraRegistrationKey,
     buildCameraSessionId,
@@ -20,7 +24,9 @@ import {
     parseRcChannelsOverride,
     parseSetPositionTargetLocalNed,
     parseSingleMavlinkFrame,
-    sanitizeRegistration
+    registerMavlinkBridgeRoutes,
+    sanitizeRegistration,
+    stopAllMavlinkBridges
 } from '../server/mavlink-bridge.js';
 
 const MAVLINK_MSG_ID_HEARTBEAT = 0;
@@ -262,5 +268,114 @@ describe('registration key/session id builders', () => {
         expect(buildMavlinkSessionId(connection)).not.toBe(buildCameraSessionId(connection));
         expect(buildMavlinkSessionId(connection)).toContain('10.0.0.5');
         expect(buildCameraSessionId(connection)).toContain('10.0.0.5');
+    });
+});
+
+/**
+ * Regression coverage for a connection leak: POST /api/mavlink-bridge/connections
+ * is public/unauthenticated, and bridges used to be tracked only by port. If a
+ * client re-registered the same drone under a new MAVLink/camera port (e.g. the
+ * user changes the port in the UI), the bridge for the OLD port was never
+ * closed — its UDP socket / TCP server and setInterval timers kept running
+ * forever. These tests exercise the real HTTP route (not just the in-memory
+ * maps) and prove the old sockets are actually released by re-binding fresh
+ * sockets on the old ports afterwards.
+ */
+describe('ensureBridgeConnections drone re-registration (connection leak regression)', () => {
+    function makeApp() {
+        const app = express();
+        app.use(express.json());
+        registerMavlinkBridgeRoutes(app);
+        return app;
+    }
+
+    const app = makeApp();
+
+    afterAll(() => {
+        stopAllMavlinkBridges();
+    });
+
+    function delay(ms: number): Promise<void> {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function canBindUdp(port: number): Promise<boolean> {
+        return new Promise((resolve) => {
+            const socket = dgram.createSocket('udp4');
+            socket.once('error', () => {
+                socket.close();
+                resolve(false);
+            });
+            socket.bind(port, '0.0.0.0', () => {
+                socket.close(() => resolve(true));
+            });
+        });
+    }
+
+    function canListenTcp(port: number): Promise<boolean> {
+        return new Promise((resolve) => {
+            const server = net.createServer();
+            server.once('error', () => {
+                server.close();
+                resolve(false);
+            });
+            server.listen(port, '0.0.0.0', () => {
+                server.close(() => resolve(true));
+            });
+        });
+    }
+
+    test('re-registering the same drone on new ports closes the old bridges instead of leaking their sockets', async () => {
+        const droneName = 'leak-regression-drone';
+        const oldMavlinkPort = 19101;
+        const oldCameraPort = 19102;
+        const newMavlinkPort = 19201;
+        const newCameraPort = 19202;
+
+        const first = await request(app)
+            .post('/api/mavlink-bridge/connections')
+            .send({
+                connections: [{
+                    droneName,
+                    droneIp: '127.0.0.1',
+                    mavlinkPort: oldMavlinkPort,
+                    cameraPort: oldCameraPort,
+                    connectionMethod: 'udpout'
+                }]
+            });
+        expect(first.status).toBe(200);
+        expect(first.body.mavlinkPorts).toContain(oldMavlinkPort);
+
+        // Give the newly constructed bridges' async socket.bind()/server.listen()
+        // a moment to complete before probing them.
+        await delay(50);
+
+        // Sanity check: the old ports are genuinely in use right now, so the
+        // "can bind again after re-registering" assertion below is meaningful.
+        expect(await canBindUdp(oldMavlinkPort)).toBe(false);
+        expect(await canListenTcp(oldCameraPort)).toBe(false);
+
+        const second = await request(app)
+            .post('/api/mavlink-bridge/connections')
+            .send({
+                connections: [{
+                    droneName,
+                    droneIp: '127.0.0.1',
+                    mavlinkPort: newMavlinkPort,
+                    cameraPort: newCameraPort,
+                    connectionMethod: 'udpout'
+                }]
+            });
+        expect(second.status).toBe(200);
+        expect(second.body.mavlinkPorts).toContain(newMavlinkPort);
+        expect(second.body.mavlinkPorts).not.toContain(oldMavlinkPort);
+
+        await delay(50);
+
+        // The old bridge must have been closed (socket/timers released) rather
+        // than left running: binding fresh sockets on the old ports must now
+        // succeed.
+        expect(await canBindUdp(oldMavlinkPort)).toBe(true);
+        expect(await canListenTcp(oldCameraPort)).toBe(true);
     });
 });

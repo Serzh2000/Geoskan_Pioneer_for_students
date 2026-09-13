@@ -6,6 +6,7 @@ import {
     enterPreflight,
     enterTakeoffProcess,
     isDroneMovingState,
+    recordTickCommand,
     setDroneFsmState,
     withCommandSource
 } from '../autopilot/fsm.js';
@@ -29,6 +30,14 @@ import {
     isDroneCameraConnected
 } from './pioneer-js-bridge-camera.js';
 import { installCvRuntimeAPI } from './pioneer-js-bridge-cv.js';
+
+// Python scripts run synchronously between asyncio yields, same as a Lua chunk between
+// coroutine resumes, so a malformed numeric argument must not become NaN and silently
+// corrupt drone state/physics; fall back to a safe default instead.
+function toFiniteNumber(value: unknown, fallback: number): number {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+}
 
 export function installJsRuntimeAPI() {
     const w = window as any;
@@ -68,6 +77,7 @@ export function installJsRuntimeAPI() {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
         return withCommandSource(d, 'python', () => {
+            recordTickCommand(d, 'preflight');
             const ok = enterPreflight(d);
             if (ok) {
                 triggerLuaCallback(id, 11);
@@ -97,23 +107,29 @@ export function installJsRuntimeAPI() {
     w.pioneer_takeoff = (id: string) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
-        return withCommandSource(d, 'python', () => enterTakeoffProcess(d));
+        return withCommandSource(d, 'python', () => {
+            recordTickCommand(d, 'takeoff');
+            return enterTakeoffProcess(d);
+        });
     };
 
     w.pioneer_land = (id: string) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
-        return withCommandSource(d, 'python', () => enterLandingProcess(d));
+        return withCommandSource(d, 'python', () => {
+            recordTickCommand(d, 'landing');
+            return enterLandingProcess(d);
+        });
     };
 
     w.pioneer_go_to_local_point = (id: string, x: any, y: any, z: any, yaw: any) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
         const origin = localOriginByDrone[id] || { x: 0, y: 0, z: 0 };
-        const tx = x == null ? d.pos.x : origin.x + Number(x);
-        const ty = y == null ? d.pos.y : origin.y + Number(y);
-        const tz = z == null ? d.pos.z : origin.z + Number(z);
-        const yawm = yaw == null ? d.target_yaw : Number(yaw);
+        const tx = x == null ? d.pos.x : origin.x + toFiniteNumber(x, 0);
+        const ty = y == null ? d.pos.y : origin.y + toFiniteNumber(y, 0);
+        const tz = z == null ? d.pos.z : origin.z + toFiniteNumber(z, 0);
+        const yawm = yaw == null ? d.target_yaw : toFiniteNumber(yaw, d.target_yaw);
 
         return withCommandSource(d, 'python', () => applyGoToLocalPointRequest(d, { x: tx, y: ty, z: tz }, { yaw: yawm }));
     };
@@ -139,10 +155,10 @@ export function installJsRuntimeAPI() {
         const dt = last ? Math.min(0.1, (now - last) / 1000) : 0.05;
         lastManualSpeedUpdateMs[id] = now;
 
-        const vxn = Number(vx);
-        const vyn = Number(vy);
-        const vzn = Number(vz);
-        const yrn = Number(yaw_rate);
+        const vxn = toFiniteNumber(vx, 0);
+        const vyn = toFiniteNumber(vy, 0);
+        const vzn = toFiniteNumber(vz, 0);
+        const yrn = toFiniteNumber(yaw_rate, 0);
 
         if (d.fsmState === 'IDLE' || d.fsmState === 'PREFLIGHT') {
             return false;
@@ -203,10 +219,10 @@ export function installJsRuntimeAPI() {
     w.pioneer_led_control = (id: string, led_id: any, r: any, g: any, b: any) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
-        const ledId = Number(led_id);
-        const rn = Number(r);
-        const gn = Number(g);
-        const bn = Number(b);
+        const ledId = toFiniteNumber(led_id, -1);
+        const rn = toFiniteNumber(r, 0);
+        const gn = toFiniteNumber(g, 0);
+        const bn = toFiniteNumber(b, 0);
         if (ledId === 255) {
             for (let i = 0; i < d.leds.length; i += 1) {
                 d.leds[i] = { r: rn, g: gn, b: bn, w: 0 };

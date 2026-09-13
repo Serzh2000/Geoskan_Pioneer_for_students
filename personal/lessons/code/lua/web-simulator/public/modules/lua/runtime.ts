@@ -10,7 +10,7 @@ import {
 } from './diagnostics.js';
 import { runCoroutine } from './runner.js';
 import { createScriptFailureError } from '../app/script-execution-notice.js';
-import { emitScriptFailure } from '../core/mission-notices.js';
+import { failScriptRun } from '../core/script-failure.js';
 import { extractLuaSyntaxLine, setupLuaBridgeForDrone } from './bridge.js';
 import { resetLuaMissionGuard } from './mission-guard.js';
 
@@ -159,9 +159,7 @@ export function triggerLuaCallback(id: string, eventId: number) {
                 rememberLuaErrorStack(drone, errorMsg);
                 console.error(`[Lua Error] callback(${eventId}) on ${id}:`, errorMsg);
                 log(`[Lua Error] ${errorMsg}`, 'error');
-                drone.running = false;
-                drone.status = 'ОШИБКА';
-                emitScriptFailure('lua', createLuaRuntimeFailureError(drone, `callback(event=${eventId})`, errorMsg));
+                failScriptRun(drone, 'lua', createLuaRuntimeFailureError(drone, `callback(event=${eventId})`, errorMsg));
                 lua.lua_pop(L, 1);
             }
         } catch (e) {

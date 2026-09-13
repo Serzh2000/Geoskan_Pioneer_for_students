@@ -12,6 +12,7 @@ import {
     MarkerMapStartCorner,
     MarkerMapTraversal
 } from '../types.js';
+import { clamp } from '../../../shared/math.js';
 
 export const MARKER_CANVAS_SIZE = 1024;
 export const SHEET_SIZE = 1.05;
@@ -100,13 +101,13 @@ export function normalizeMarkerValue(kind: MarkerKind, dictionaryId: MarkerDicti
 function clampInt(value: unknown, fallback: number, min: number, max: number) {
     const parsed = Number.parseInt(String(value ?? ''), 10);
     if (!Number.isFinite(parsed)) return fallback;
-    return Math.min(Math.max(parsed, min), max);
+    return clamp(parsed, min, max);
 }
 
 function clampNumber(value: unknown, fallback: number, min: number, max: number) {
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) return fallback;
-    return Math.min(Math.max(parsed, min), max);
+    return clamp(parsed, min, max);
 }
 
 export function wrapMarkerId(markerId: number, dictionaryId: MarkerDictionaryId) {

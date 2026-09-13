@@ -138,6 +138,15 @@ const registeredConnections = new Map<string, BridgeConnectionRegistration>();
 const mavlinkBridges = new Map<string, MavlinkUdpBridge>();
 const cameraBridges = new Map<string, CameraTcpBridge>();
 
+// The maps above are keyed by port, but a client can re-register the same
+// logical drone under a different port (e.g. the user changes the MAVLink
+// port in the UI). These track which port-keyed bridge currently "belongs"
+// to a given drone name, so that when a new registration for a known drone
+// arrives under a different key, the old bridge can be closed instead of
+// left running forever (leaked UDP socket / TCP server / interval timers).
+const droneMavlinkKeys = new Map<string, string>();
+const droneCameraKeys = new Map<string, string>();
+
 export function normalizeConnectionMethod(value: unknown): PioneerConnectionMethod {
     return value === 'serial' || value === 'udpin' || value === 'camera' ? value : 'udpout';
 }
@@ -773,20 +782,60 @@ class CameraTcpBridge {
     }
 }
 
+function closeStaleMavlinkBridge(droneName: string, currentMavlinkKey: string): void {
+    const previousMavlinkKey = droneMavlinkKeys.get(droneName);
+    if (!previousMavlinkKey || previousMavlinkKey === currentMavlinkKey) {
+        return;
+    }
+
+    const previousBridge = mavlinkBridges.get(previousMavlinkKey);
+    if (previousBridge) {
+        previousBridge.close();
+        mavlinkBridges.delete(previousMavlinkKey);
+    }
+    registeredConnections.delete(previousMavlinkKey);
+}
+
+function closeStaleCameraBridge(droneName: string, currentCameraKey: string): void {
+    const previousCameraKey = droneCameraKeys.get(droneName);
+    if (!previousCameraKey || previousCameraKey === currentCameraKey) {
+        return;
+    }
+
+    const previousBridge = cameraBridges.get(previousCameraKey);
+    if (previousBridge) {
+        previousBridge.close();
+        cameraBridges.delete(previousCameraKey);
+    }
+}
+
 function ensureBridgeConnections(connections: BridgeConnectionRegistration[]): void {
     for (const rawConnection of connections) {
         const connection = sanitizeRegistration(rawConnection);
         const mavlinkKey = buildMavlinkRegistrationKey(connection);
+        const cameraKey = buildCameraRegistrationKey(connection);
+
+        // If this drone was already registered under a different port, close
+        // its previous bridge(s) before creating new ones so re-registering
+        // (e.g. the user changes the MAVLink port) can't leak sockets/timers.
+        closeStaleMavlinkBridge(connection.droneName, mavlinkKey);
+        closeStaleCameraBridge(connection.droneName, cameraKey);
+
         registeredConnections.set(mavlinkKey, connection);
 
-        if ((connection.connectionMethod === 'udpout' || connection.connectionMethod === 'udpin') && !mavlinkBridges.has(mavlinkKey)) {
-            mavlinkBridges.set(mavlinkKey, new MavlinkUdpBridge(connection));
+        if (connection.connectionMethod === 'udpout' || connection.connectionMethod === 'udpin') {
+            if (!mavlinkBridges.has(mavlinkKey)) {
+                mavlinkBridges.set(mavlinkKey, new MavlinkUdpBridge(connection));
+            }
+            droneMavlinkKeys.set(connection.droneName, mavlinkKey);
+        } else {
+            droneMavlinkKeys.delete(connection.droneName);
         }
 
-        const cameraKey = buildCameraRegistrationKey(connection);
         if (!cameraBridges.has(cameraKey)) {
             cameraBridges.set(cameraKey, new CameraTcpBridge(connection));
         }
+        droneCameraKeys.set(connection.droneName, cameraKey);
     }
 }
 
@@ -819,4 +868,8 @@ export function stopAllMavlinkBridges(): void {
         bridge.close();
     }
     cameraBridges.clear();
+
+    registeredConnections.clear();
+    droneMavlinkKeys.clear();
+    droneCameraKeys.clear();
 }

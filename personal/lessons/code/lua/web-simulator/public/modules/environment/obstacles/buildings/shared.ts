@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { clamp } from '../../../shared/math.js';
 
 export type BuildingFace = 'front' | 'back';
 export type WindowIncidentKind = 'smoke' | 'fire' | 'thief';
@@ -21,5 +22,5 @@ export interface BuildingWindowSlot {
 export const WINDOW_COUNT_PER_FACE = 3;
 
 export function clampBuildingFloors(value: unknown) {
-    return Math.max(5, Math.min(20, Number(value) || 9));
+    return clamp(Number(value) || 9, 5, 20);
 }

@@ -6,10 +6,15 @@ import {
     SHEET_THICKNESS,
     SURFACE_EPSILON
 } from './shared.js';
+import { clamp } from '../../../shared/math.js';
 
+// Unlike the shared `clamp`, this treats an inverted (min > max) range as
+// degenerate rather than undefined behavior and collapses it to the
+// midpoint - callers rely on always getting a point back for box-surface
+// projection even when a box axis has zero size.
 function clampValue(value: number, min: number, max: number) {
     if (min > max) return (min + max) / 2;
-    return Math.min(Math.max(value, min), max);
+    return clamp(value, min, max);
 }
 
 function makeCandidate(position: THREE.Vector3, anchor: THREE.Vector3, normal: THREE.Vector3): MarkerSurfaceCandidate {

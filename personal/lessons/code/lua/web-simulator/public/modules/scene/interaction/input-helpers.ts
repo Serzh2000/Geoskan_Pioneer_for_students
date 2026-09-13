@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { log } from '../../shared/logging/logger.js';
 import { envGroup } from '../../environment/index.js';
 import { droneMeshes, raycaster, scene } from '../core/scene-init.js';
+import { OBJECT_TYPE } from '../../shared/object-types.js';
 
 const groundPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 const CLICK_TRACE_PREFIX = '[3D-CLICK]';
@@ -23,7 +24,7 @@ export function getRootSceneObject(object: THREE.Object3D) {
 export function isGroundObject(object: THREE.Object3D | null | undefined) {
     let current: THREE.Object3D | null | undefined = object;
     while (current) {
-        if (current.name === 'Ground' || current.userData?.type === 'ground') return true;
+        if (current.name === 'Ground' || current.userData?.type === OBJECT_TYPE.GROUND) return true;
         current = current.parent;
     }
     return false;

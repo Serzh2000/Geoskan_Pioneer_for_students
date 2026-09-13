@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { setupLights } from './lights.js';
 import { createGround } from './ground.js';
+import { OBJECT_TYPE } from '../shared/object-types.js';
 import {
     createArenaControlStationMesh,
     createArenaHeliportMesh,
@@ -23,7 +24,6 @@ import {
     createGateMesh,
     createGeoskanArenaPreset,
     createHillMesh,
-    createLandingPad,
     createLightTowerMesh,
     createLocusBeaconMesh,
     createObstacles,
@@ -116,7 +116,7 @@ export function updateSceneObjectValue(
     object: THREE.Object3D,
     params: { value?: string; markerDictionary?: string; floors?: number }
 ) {
-    if (object.userData?.type === 'Многоэтажка') {
+    if (object.userData?.type === OBJECT_TYPE.BUILDING) {
         return updateApartmentBuildingMetadata(object, {
             value: params.value,
             floors: params.floors
@@ -128,5 +128,3 @@ export function updateSceneObjectValue(
 export function updateSceneObjectPoints(object: THREE.Object3D, points: ScenePathPoint[]) {
     return updateLinearFeaturePoints(object, points);
 }
-
-export { createLandingPad };

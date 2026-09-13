@@ -248,6 +248,15 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
             }
 
             stopLuaScript(id);
+            const droneBeingDeleted = drones[id];
+            if (droneBeingDeleted) {
+                droneBeingDeleted.running = false;
+                droneBeingDeleted.status = 'ОСТАНОВЛЕН';
+                droneBeingDeleted.pendingLocalPoint = false;
+                droneBeingDeleted.pendingLocalPointSource = null;
+                droneBeingDeleted.pendingLocalPointTarget = null;
+                droneBeingDeleted.pointReachedFlag = false;
+            }
             stopPythonScript(id);
             disposePythonRunState(id);
             void setExternalBridgeEnabled(id, false);

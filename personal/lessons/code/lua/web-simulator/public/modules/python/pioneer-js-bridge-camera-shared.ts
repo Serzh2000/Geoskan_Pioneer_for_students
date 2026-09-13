@@ -1,7 +1,8 @@
 import { envGroup } from '../environment/index.js';
 import { getDroneOrDefault } from './runtime-shared.js';
+import { OBJECT_TYPE } from '../shared/object-types.js';
 
-const VIDEO_TOWER_TYPE = 'Видеомачта';
+const VIDEO_TOWER_TYPE = OBJECT_TYPE.VIDEO_TOWER;
 const DEFAULT_VIDEO_TOWER_CONNECT_RADIUS = 8;
 const VIDEO_TOWER_STREAM_MAX_DISTANCE = 12;
 

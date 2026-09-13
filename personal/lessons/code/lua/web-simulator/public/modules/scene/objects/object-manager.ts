@@ -7,6 +7,7 @@ import { MarkerMapOptions, SceneObjectOptions, ScenePathPoint } from '../../envi
 import { handleDeselection, deselectObject } from '../interaction/selection.js';
 import { handleSelection, updateObjectSelectionVisuals } from '../interaction/input.js';
 import { findSceneObjectById, getSceneTopLevelObjects, isTransformableObject, listSceneObjects, normalizePoints, parsePointsText } from './object-catalog.js';
+import { OBJECT_TYPE } from '../../shared/object-types.js';
 import type { RotationAxis, TransformMode } from './object-transform.js';
 import { activateTransformMode, clearSelectedObjectInitialTransform, getRotationStepDegrees, getRotationStepOptions, rememberSelectedObjectInitialTransform, resetSelectedObjectToInitialTransform, rotateSelectedObjectByDegrees, setRotationStepDegrees } from './object-transform.js';
 import { finishLinearFeatureEditing, getLinearFeatureEditingTargetId, isLinearFeatureEditingActive, startLinearFeatureEditing } from '../interaction/linear-editing.js';
@@ -26,7 +27,7 @@ export function groupObjects() {
 
     const group = new THREE.Group();
     group.name = `Группа (${multiSelectedObjects.length})`;
-    group.userData.type = 'group';
+    group.userData.type = OBJECT_TYPE.GROUP;
     group.userData.draggable = true;
 
     // Вычисляем центр группы
@@ -52,7 +53,7 @@ export function groupObjects() {
 
 export function ungroupObject(targetGroup?: THREE.Object3D) {
     const group = targetGroup || selectedObject;
-    if (!group || group.userData.type !== 'group') {
+    if (!group || group.userData.type !== OBJECT_TYPE.GROUP) {
         log('Выбранный объект не является группой', 'warn');
         return false;
     }
@@ -245,7 +246,7 @@ export function updateSelectedSceneObject(params: { value?: string; markerDictio
             markerDictionary: params.markerDictionary,
             floors: params.floors
         }) || updated;
-    } else if (params.floors !== undefined && selectedObject.userData?.type === 'Многоэтажка') {
+    } else if (params.floors !== undefined && selectedObject.userData?.type === OBJECT_TYPE.BUILDING) {
         updated = updateSceneObjectValue(selectedObject, {
             floors: params.floors
         }) || updated;

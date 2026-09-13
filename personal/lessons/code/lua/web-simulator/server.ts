@@ -138,8 +138,13 @@ function createApp(options: StartServerOptions): express.Express {
             return res.status(404).json({ error: 'File not found' });
         }
 
-        const content = await readFile(filePath, 'utf8');
-        res.json({ content });
+        try {
+            const content = await readFile(filePath, 'utf8');
+            res.json({ content });
+        } catch (error) {
+            console.error('Failed to read file content:', error);
+            res.status(500).json({ error: 'Failed to read file' });
+        }
     });
 
     app.get('/api/autopilot-parameters', async (_req: express.Request, res: express.Response) => {
@@ -194,6 +199,25 @@ function createApp(options: StartServerOptions): express.Express {
             res.redirect(302, `http://localhost:${vitePort}/`);
         });
     }
+
+    // Last-resort safety net, registered after every route. Express 5 (unlike
+    // Express 4) already forwards a rejected promise from an async handler to
+    // `next(err)` on its own, and a synchronous throw has always been caught
+    // by Express's router — so nothing upstream needs an explicit wrapper for
+    // that to work. This middleware does not replace the more specific
+    // local try/catch error handling already present in individual routes
+    // (e.g. /api/autopilot-parameters); it only catches whatever slips past
+    // those, so one bad request can't crash the whole (unauthenticated,
+    // publicly reachable) process.
+    const handleUnhandledError: express.ErrorRequestHandler = (err, _req, res, next) => {
+        if (res.headersSent) {
+            next(err);
+            return;
+        }
+        console.error('Unhandled error while processing request:', err);
+        res.status(500).json({ ok: false, error: 'Internal server error.' });
+    };
+    app.use(handleUnhandledError);
 
     return app;
 }

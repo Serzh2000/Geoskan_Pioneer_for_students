@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createTrussArena } from './truss-arena.js';
 import { GROUND_PHYSICS_MATERIAL } from '../physics/materials.js';
+import { OBJECT_TYPE } from '../shared/object-types.js';
 import { createAxesLabels } from './ground/axes-labels.js';
 import { createFloorTexture, createLandingPadTexture, replaceMaterialTexture } from './ground/textures.js';
 import { getGroundTheme, type GroundTheme } from './ground/theme.js';
@@ -79,7 +80,7 @@ export function createGround(_scene: THREE.Scene, envGroup: THREE.Group) {
     ground.receiveShadow = true;
     ground.name = 'Ground';
     ground.userData = {
-        type: 'ground',
+        type: OBJECT_TYPE.GROUND,
         physicsMaterial: { ...GROUND_PHYSICS_MATERIAL }
     };
 

@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { DEFAULT_CARGO_MASS_KG, DEFAULT_CARGO_PHYSICS_MATERIAL } from '../../../physics/materials.js';
 import { setCommonMeta, applyShadows } from '../utils.js';
+import { OBJECT_TYPE } from '../../../shared/object-types.js';
 
 export function createCargoMesh() {
-    const group = setCommonMeta(new THREE.Group(), 'Грузик', { collidableRadius: 0.22 });
+    const group = setCommonMeta(new THREE.Group(), OBJECT_TYPE.CARGO_SMALL, { collidableRadius: 0.22 });
     group.userData.massKg = DEFAULT_CARGO_MASS_KG;
     group.userData.physicsMaterial = { ...DEFAULT_CARGO_PHYSICS_MATERIAL };
     const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.94, metalness: 0.04 });

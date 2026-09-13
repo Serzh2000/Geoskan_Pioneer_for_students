@@ -10,6 +10,7 @@ describe('drone FSM validation', () => {
     let enterTakeoffProcess: typeof import('../public/modules/autopilot/fsm.js').enterTakeoffProcess;
     let handlePreflightTimeout: typeof import('../public/modules/autopilot/fsm.js').handlePreflightTimeout;
     let queueMceCommand: typeof import('../public/modules/autopilot/fsm.js').queueMceCommand;
+    let recordTickCommand: typeof import('../public/modules/autopilot/fsm.js').recordTickCommand;
     let setDroneFsmState: typeof import('../public/modules/autopilot/fsm.js').setDroneFsmState;
     let updateActiveFlight: typeof import('../public/modules/physics/flight-update.js').updateActiveFlight;
     let withCommandSource: typeof import('../public/modules/autopilot/fsm.js').withCommandSource;
@@ -92,6 +93,7 @@ describe('drone FSM validation', () => {
             enterTakeoffProcess,
             handlePreflightTimeout,
             queueMceCommand,
+            recordTickCommand,
             setDroneFsmState,
             withCommandSource
         } = await import('../public/modules/autopilot/fsm.js'));
@@ -328,5 +330,32 @@ describe('drone FSM validation', () => {
 
         expect(drone.vel.z).toBeCloseTo(-0.1, 5);
         expect(drone.pos.z).toBeCloseTo(0.1, 5);
+    });
+
+    test('rejects two conflicting MCE commands issued in the same tick (direct/Lua source)', () => {
+        queueMceCommand(drone, MCECommands.MCE_PREFLIGHT, 'direct');
+
+        expect(() => queueMceCommand(drone, MCECommands.MCE_LANDING, 'direct')).toThrow(
+            'CRITICAL ERROR: Commands PREFLIGHT, LANDING run at the same time'
+        );
+        expect(drone.running).toBe(false);
+        expect(drone.fsmState).toBe('IDLE');
+    });
+
+    // pioneer.arm()/takeoff()/land() call recordTickCommand exactly like queueMceCommand
+    // does for Lua's ap.push(), so a Python script that fires two of these synchronously
+    // (before its injected asyncio.sleep yield) must be stopped with the same
+    // simultaneous-commands error Lua gets, instead of silently applying both.
+    test('rejects Python arm() immediately followed by takeoff() in the same tick, mirroring Lua', () => {
+        withCommandSource(drone, 'python', () => {
+            recordTickCommand(drone, 'preflight');
+            enterPreflight(drone);
+        });
+
+        expect(() => withCommandSource(drone, 'python', () => {
+            recordTickCommand(drone, 'takeoff');
+        })).toThrow('CRITICAL ERROR: Commands PREFLIGHT, TAKEOFF run at the same time');
+        expect(drone.running).toBe(false);
+        expect(drone.fsmState).toBe('IDLE');
     });
 });

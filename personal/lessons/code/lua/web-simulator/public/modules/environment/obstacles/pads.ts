@@ -34,38 +34,6 @@ export function createStyledLandingPad(text: string, bgColor = '#2563eb', textCo
     return mesh;
 }
 
-export function createLandingPad(scene: THREE.Scene, pos: THREE.Vector3) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 128;
-    canvas.height = 128;
-    const ctx = canvas.getContext('2d');
-
-    if (ctx) {
-        ctx.fillStyle = '#22c55e';
-        ctx.fillRect(0, 0, 128, 128);
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 10;
-        ctx.strokeRect(10, 10, 108, 108);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 84px monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('H', 64, 68);
-    }
-
-    const texture = new THREE.CanvasTexture(canvas);
-    const geometry = new THREE.CircleGeometry(0.9, 48);
-    const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0.92 });
-    const pad = new THREE.Mesh(geometry, material);
-
-    pad.position.copy(pos);
-    pad.position.z += 0.015;
-    pad.name = 'landing_pad';
-    pad.userData = { type: 'pad' };
-    scene.add(pad);
-    return pad;
-}
-
 export function createTransportMesh() {
     const group = setCommonMeta(new THREE.Group(), 'Транспорт', { collidableRadius: 0.5 });
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.62, metalness: 0.18 });

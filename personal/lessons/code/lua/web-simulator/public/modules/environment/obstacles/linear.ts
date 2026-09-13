@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ScenePathPoint, SceneObjectOptions } from './types.js';
 import { setCommonMeta, applyShadows, clearGeneratedChildren } from './utils.js';
+import { OBJECT_TYPE } from '../../shared/object-types.js';
 
 function toPointList(points?: ScenePathPoint[]) {
     if (points && points.length >= 2) {
@@ -147,7 +148,7 @@ export function rebuildLinearFeature(group: THREE.Group) {
 }
 
 export function createRoadMesh(options: SceneObjectOptions = {}) {
-    const group = setCommonMeta(new THREE.Group(), 'Дорога', {
+    const group = setCommonMeta(new THREE.Group(), OBJECT_TYPE.ROAD, {
         supportsPoints: true,
         points: toPointList(options.points),
         closed: !!options.closed,
@@ -159,7 +160,7 @@ export function createRoadMesh(options: SceneObjectOptions = {}) {
 }
 
 export function createRailwayMesh(options: SceneObjectOptions = {}) {
-    const group = setCommonMeta(new THREE.Group(), 'Железнодорожные пути', {
+    const group = setCommonMeta(new THREE.Group(), OBJECT_TYPE.RAILWAY, {
         supportsPoints: true,
         points: toPointList(options.points),
         closed: !!options.closed,

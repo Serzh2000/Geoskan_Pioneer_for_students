@@ -1,3 +1,5 @@
+import { OBJECT_TYPE } from '../shared/object-types.js';
+
 export const TRACE_SAMPLE_INTERVAL = 0.05;
 // Физика интегрируется фиксированным шагом независимо от частоты кадров и
 // simSpeed — иначе один большой Euler-шаг (при просадке FPS или ускорении)
@@ -13,15 +15,15 @@ export const MANUAL_TAKEOFF_ALTITUDE = 0.8;
 
 export const NON_COLLIDABLE_TYPES = new Set([
     'Ground',
-    'ground',
-    'Ворота',
-    'Дорога',
-    'Железнодорожные пути',
+    OBJECT_TYPE.GROUND,
+    OBJECT_TYPE.GATE,
+    OBJECT_TYPE.ROAD,
+    OBJECT_TYPE.RAILWAY,
     'Площадка H',
     'Площадка ⚡',
-    'Стартовая позиция',
-    'Хелипорт',
-    'Станция заряда',
-    'Груз',
-    'Грузик'
+    OBJECT_TYPE.START_POSITION,
+    OBJECT_TYPE.HELIPORT,
+    OBJECT_TYPE.CHARGE_STATION,
+    OBJECT_TYPE.CARGO,
+    OBJECT_TYPE.CARGO_SMALL
 ]);

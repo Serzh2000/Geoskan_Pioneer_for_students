@@ -7,8 +7,9 @@ import {
     DEFAULT_CARGO_PHYSICS_MATERIAL,
     GROUND_PHYSICS_MATERIAL
 } from './materials.js';
+import { OBJECT_TYPE } from '../shared/object-types.js';
 
-const CARGO_TYPES = new Set(['Грузик', 'Груз']);
+const CARGO_TYPES = new Set([OBJECT_TYPE.CARGO_SMALL, OBJECT_TYPE.CARGO]);
 const CARGO_AIR_DRAG = 0.2;
 const MAGNET_ATTACH_OFFSET_Z = 0.15;
 const MAGNET_CAPTURE_RADIUS_XY = 0.28;

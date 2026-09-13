@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { droneMeshes, selectedObject } from '../core/scene-init.js';
 import { envGroup } from '../../environment/index.js';
 import { type ScenePathPoint } from '../../environment/obstacles.js';
+import { OBJECT_TYPE } from '../../shared/object-types.js';
 
 export function formatPoints(points: ScenePathPoint[]) {
     return points.map((point) => `${point.x.toFixed(2)}, ${point.y.toFixed(2)}, ${point.z.toFixed(2)}`).join('\n');
@@ -55,7 +56,7 @@ export function findSceneObjectById(id: string) {
 
 export function isTransformableObject(target: THREE.Object3D | null | undefined) {
     if (!target || !target.parent) return false;
-    if (target.name === 'Ground' || target.userData?.type === 'ground') return false;
+    if (target.name === 'Ground' || target.userData?.type === OBJECT_TYPE.GROUND) return false;
 
     for (const id in droneMeshes) {
         if (target === droneMeshes[id]) return true;

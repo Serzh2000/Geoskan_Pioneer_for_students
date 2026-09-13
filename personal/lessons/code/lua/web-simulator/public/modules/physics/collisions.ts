@@ -4,6 +4,13 @@ import {
     DRONE_COLLISION_RADIUS,
     NON_COLLIDABLE_TYPES
 } from './constants.js';
+import { OBJECT_TYPE } from '../shared/object-types.js';
+import {
+    GATE_RING_CENTER_HEIGHT,
+    GATE_RING_RADIUS,
+    GATE_RING_TUBE_RADIUS,
+    GATE_STAND_RADIUS
+} from '../shared/gate-geometry.js';
 
 function shouldSkipCollisionForObject(obj: THREE.Object3D) {
     const type = String(obj.userData?.type || obj.name || '');
@@ -11,7 +18,7 @@ function shouldSkipCollisionForObject(obj: THREE.Object3D) {
 }
 
 function isGateObject(obj: THREE.Object3D | null | undefined) {
-    return String(obj?.userData?.type || obj?.name || '') === 'Ворота';
+    return String(obj?.userData?.type || obj?.name || '') === OBJECT_TYPE.GATE;
 }
 
 function findGateAncestor(obj: THREE.Object3D | null) {
@@ -59,12 +66,12 @@ function gateHasCollision(gate: THREE.Object3D, samples: THREE.Vector3[]) {
             new THREE.Vector3(0, 0.21, 0.46),
             new THREE.Vector3(0, 1.13, 0.46)
         );
-        if (leftLegDistance <= 0.04 + DRONE_COLLISION_RADIUS || rightLegDistance <= 0.04 + DRONE_COLLISION_RADIUS) {
+        if (leftLegDistance <= GATE_STAND_RADIUS + DRONE_COLLISION_RADIUS || rightLegDistance <= GATE_STAND_RADIUS + DRONE_COLLISION_RADIUS) {
             return true;
         }
 
-        const radial = Math.hypot(local.y, local.z - 1.18);
-        const torusTubeDistance = Math.hypot(radial - 0.64, local.x) - 0.07;
+        const radial = Math.hypot(local.y, local.z - GATE_RING_CENTER_HEIGHT);
+        const torusTubeDistance = Math.hypot(radial - GATE_RING_RADIUS, local.x) - GATE_RING_TUBE_RADIUS;
         if (torusTubeDistance <= DRONE_COLLISION_RADIUS) {
             return true;
         }

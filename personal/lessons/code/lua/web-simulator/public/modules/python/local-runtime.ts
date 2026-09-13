@@ -1,5 +1,6 @@
 import { createScriptFailureError } from '../app/script-execution-notice.js';
 import { emitScriptFailure } from '../core/mission-notices.js';
+import { failScriptRun } from '../core/script-failure.js';
 import { drones, ensureDronePythonConnectionSettings } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 
@@ -115,21 +116,24 @@ async function pollRuntimeStatus(droneId: string): Promise<void> {
                 return;
             }
 
-            if (drone) {
-                drone.status = 'ОШИБКА';
-            }
             const message = `Локальный Python runtime завершился с кодом ${status.exitCode ?? 'unknown'}.`;
-            emitScriptFailure('python', createScriptFailureError('runtime', message));
+            const failureError = createScriptFailureError('runtime', message);
+            if (drone) {
+                failScriptRun(drone, 'python', failureError);
+            } else {
+                emitScriptFailure('python', failureError);
+            }
             return;
         }
     } catch (error) {
         clearPollTimer(droneId);
         const drone = drones[droneId];
+        const failureError = normalizeRuntimeError(error);
         if (drone) {
-            drone.running = false;
-            drone.status = 'ОШИБКА';
+            failScriptRun(drone, 'python', failureError);
+        } else {
+            emitScriptFailure('python', failureError);
         }
-        emitScriptFailure('python', normalizeRuntimeError(error));
         return;
     }
 

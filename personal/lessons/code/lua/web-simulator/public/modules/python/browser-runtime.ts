@@ -2,6 +2,7 @@ import { drones } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 import { createScriptFailureError } from '../app/script-execution-notice.js';
 import { emitScriptFailure } from '../core/mission-notices.js';
+import { failScriptRun } from '../core/script-failure.js';
 import {
     cancelledRuns,
     cleanupPythonRuntimeState,
@@ -220,11 +221,12 @@ finally:
             clearActivePythonRun(droneId, token);
             return;
         }
+        const failureError = createScriptFailureError('runtime', msg);
         if (activeRuns[droneId]?.token === token && drones[droneId]) {
-            drones[droneId].running = false;
-            drones[droneId].status = 'ОШИБКА';
+            failScriptRun(drones[droneId], 'python', failureError);
+        } else {
+            emitScriptFailure('python', failureError);
         }
         clearActivePythonRun(droneId, token);
-        emitScriptFailure('python', createScriptFailureError('runtime', msg));
     });
 }

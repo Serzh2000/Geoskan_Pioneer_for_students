@@ -9,8 +9,9 @@ import {
     reportCameraBridgeDebug,
     resolveConnectedCameraFeed
 } from './pioneer-js-bridge-camera-shared.js';
+import { OBJECT_TYPE } from '../shared/object-types.js';
 
-const VIDEO_TOWER_TYPE = 'Видеомачта';
+const VIDEO_TOWER_TYPE = OBJECT_TYPE.VIDEO_TOWER;
 
 export function closeDroneCameraConnection(id: string) {
     delete cameraConnectionsByDrone[id];

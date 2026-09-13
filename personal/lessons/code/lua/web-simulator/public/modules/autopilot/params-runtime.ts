@@ -182,10 +182,6 @@ export function getAutopilotRuntimeConfig() {
     return runtimeConfig;
 }
 
-export function clearAutopilotRuntimeForDrone(droneId: string) {
-    droneContexts.delete(droneId);
-}
-
 export function rememberAutopilotHomePosition(drone: DroneState) {
     const context = getDroneContext(drone.id);
     context.homePosition = { ...drone.pos };

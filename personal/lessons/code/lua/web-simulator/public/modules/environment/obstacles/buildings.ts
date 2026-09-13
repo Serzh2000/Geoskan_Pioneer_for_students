@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { SceneObjectOptions } from './types.js';
 import { setCommonMeta, applyShadows, clearGeneratedChildren } from './utils.js';
+import { OBJECT_TYPE } from '../../shared/object-types.js';
 import { addIncidentEffect } from './buildings/effects.js';
 import { getWindowSlots, parseWindowIncidents, summarizeWindowIncidents } from './buildings/incidents.js';
 import { clampBuildingFloors } from './buildings/shared.js';
@@ -232,7 +233,7 @@ export function createApartmentBuildingMesh(options: SceneObjectOptions = {}) {
     const colors = [0xe5e7eb, 0xef4444, 0x2563eb, 0x10b981, 0xf59e0b];
     const bodyColor = colors[Math.floor(Math.random() * colors.length)];
     
-    const group = setCommonMeta(new THREE.Group(), 'Многоэтажка', {
+    const group = setCommonMeta(new THREE.Group(), OBJECT_TYPE.BUILDING, {
         floors: clampBuildingFloors(options.floors ?? 9),
         collidableRadius: 2.6,
         supportsValue: true,
@@ -244,20 +245,12 @@ export function createApartmentBuildingMesh(options: SceneObjectOptions = {}) {
     return group;
 }
 
-export function updateApartmentBuildingIncidents(object: THREE.Object3D, value: string | undefined) {
-    const group = object as THREE.Group;
-    if (group.userData?.type !== 'Многоэтажка') return false;
-    group.userData.value = value || '';
-    rebuildApartmentBuilding(group);
-    return true;
-}
-
 export function updateApartmentBuildingMetadata(
     object: THREE.Object3D,
     params: { value?: string; floors?: number }
 ) {
     const group = object as THREE.Group;
-    if (group.userData?.type !== 'Многоэтажка') return false;
+    if (group.userData?.type !== OBJECT_TYPE.BUILDING) return false;
     if (params.value !== undefined) group.userData.value = params.value || '';
     if (params.floors !== undefined) group.userData.floors = clampBuildingFloors(params.floors);
     rebuildApartmentBuilding(group);
