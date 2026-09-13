@@ -92,13 +92,19 @@ function hasLuaAutopilotMissionApiUsage(code: string) {
     );
 }
 
-// Разделители шагов миссии: `sleep(` — старый учебный Lua, `__wait_event(`/
-// `__wait_seconds(` — рантайм генератора pioneer_* (targets/lua-runtime.ts,
-// см. docs/blockly-unification-plan.md §7, фаза 7, шаг 5). Без этого
-// сгенерированный полётный скрипт (моторы -> взлёт -> точка -> посадка, где
-// каждая команда сопровождается __wait_event, а не sleep) ложно считался бы
-// одним шагом с несколькими командами миссии.
-const MISSION_STEP_SEPARATOR_PATTERN = /\bsleep\s*\(|__wait_event\s*\(|__wait_seconds\s*\(/;
+// Разделители шагов миссии: `sleep(` — старый учебный Lua, `action[` —
+// начало нового состояния FSM генератора pioneer_* (targets/lua-fsm.ts,
+// targets/compile.ts; см. docs/blockly-unification-plan.md §4.3, §7 фаза 7
+// шаг 5, пересмотрено 2026-09-13 — FSM вместо корутины, см. §2.1). Каждый
+// блок-ожидание завершает текущее состояние и открывает следующее, поэтому
+// граница state-таблицы — это и есть граница шага миссии: без этого
+// разделителя команды из РАЗНЫХ сегментов (например, PREFLIGHT в action["__s0"]
+// и TAKEOFF в action["__s1"]) слиплись бы в один шаг с двумя командами.
+// Маркеры __wait_event(.../__wait_seconds(, которыми размечали шаги до
+// перехода на FSM, в готовый Lua больше не попадают вовсе (это только
+// внутренний сигнал компилятора, см. targets/lua-fsm.ts) — здесь их
+// заменяет граница action[...].
+const MISSION_STEP_SEPARATOR_PATTERN = /\bsleep\s*\(|\baction\s*\[/;
 
 function collectLuaMissionCommandGroups(fragment: string): string[][] {
     const groups: string[][] = [];
