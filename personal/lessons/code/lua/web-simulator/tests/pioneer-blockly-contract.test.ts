@@ -47,7 +47,11 @@ function buildLuaAllowSet(): Set<string> {
     return keys;
 }
 
-const LUA_STD_NAMES = new Set(['print', 'error', 'select', 'tostring']);
+// 'callback' — не вызов API, а ложное срабатывание регэкспа на объявлении
+// `function callback(event)` из фиксированного пролога (targets/lua-runtime.ts):
+// вызовов с таким именем в теле программы не бывает, это часть каждого
+// сгенерированного Lua-скрипта.
+const LUA_STD_NAMES = new Set(['print', 'error', 'select', 'tostring', 'callback']);
 const LUA_STD_PREFIXES = ['math.', 'coroutine.'];
 
 function isAllowedLuaCall(name: string, allowSet: Set<string>): boolean {
@@ -149,16 +153,19 @@ function buildWorkspaceForBlock(type: string): Blockly.Workspace {
     return workspace;
 }
 
-beforeAll(async () => {
-    // Тот же приём "прогрева" динамических импортов для Jest, что и в
-    // tests/blockly-codegen.test.ts — иначе внутренний import() внутри
-    // ensureEditorBlocklyDefinitions() не резолвит голые спецификаторы пакетов.
-    await import('../public/modules/editor/blockly-mode/blockly-core.js');
-    await import('../public/modules/editor/blockly-mode/workspace-xml.js');
-    await import('../public/modules/editor/blockly-mode/lua-definitions.js');
-    await import('../public/modules/editor/blockly-mode/pioneer/registry.js');
-    await ensureEditorBlocklyDefinitions();
-});
+// Top-level await, а не beforeAll(): describe()-тела ниже перечисляют блоки
+// через getPioneerBlockTypes() синхронно, на этапе СБОРА тестов, который Jest
+// выполняет раньше, чем успевает отработать любой beforeAll(). Реестр должен
+// быть заполнен уже к моменту, когда движок дойдёт до первого describe().
+//
+// Тот же приём "прогрева" динамических импортов для Jest, что и в
+// tests/blockly-codegen.test.ts — иначе внутренний import() внутри
+// ensureEditorBlocklyDefinitions() не резолвит голые спецификаторы пакетов.
+await import('../public/modules/editor/blockly-mode/blockly-core.js');
+await import('../public/modules/editor/blockly-mode/workspace-xml.js');
+await import('../public/modules/editor/blockly-mode/lua-definitions.js');
+await import('../public/modules/editor/blockly-mode/pioneer/registry.js');
+await ensureEditorBlocklyDefinitions();
 
 describe('Белый список API (pioneer_*)', () => {
     const luaAllowSet = buildLuaAllowSet();

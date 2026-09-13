@@ -8,6 +8,7 @@ import {
 } from './workspace.js';
 import { buildPioneerToolbox } from './pioneer/toolbox.js';
 import { compilePioneerWorkspace as compilePioneerWorkspaceCode } from './pioneer/targets/compile.js';
+import { registerPioneerBlocks } from './pioneer/blocks/index.js';
 
 // Реэкспорт для тестов и будущей фазы 7 (§7 плана, фаза 2, шаг 4): новая
 // система pioneer_* пока не подключена к тулбоксу/компиляции UI напрямую.
@@ -607,6 +608,13 @@ export function ensureEditorBlocklyDefinitions(): Promise<void> {
             });
 
             defineLuaEventConstantBlock();
+
+            // Единый набор pioneer_* регистрируется рядом со старыми блоками
+            // (§7 плана, фаза 2, шаг 3): он пока нигде не подключён к UI
+            // (buildMainEditorToolbox/compileMainEditorWorkspace выше его не
+            // используют), доступен только через buildPioneerToolbox()/
+            // compilePioneerWorkspace() для тестов — см. фазу 7.
+            registerPioneerBlocks();
         });
     }
     return definitionsLoadPromise;
