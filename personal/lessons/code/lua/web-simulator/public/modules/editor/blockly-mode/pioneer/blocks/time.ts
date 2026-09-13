@@ -1,5 +1,6 @@
 import * as Blockly from 'blockly';
 import { definePioneerBlock } from '../registry.js';
+import { installWaitInEventGuard } from '../wait-in-event-guard.js';
 
 export function registerTimeBlocks(): void {
     definePioneerBlock({
@@ -13,6 +14,7 @@ export function registerTimeBlocks(): void {
             this.setNextStatement(true, null);
             this.setColour('#f59e0b');
             this.setTooltip('Приостанавливает выполнение программы на заданное число секунд.');
+            installWaitInEventGuard(this);
         },
         targets: {
             // __wait_seconds — часть корутинного рантайма (targets/lua-runtime.ts):

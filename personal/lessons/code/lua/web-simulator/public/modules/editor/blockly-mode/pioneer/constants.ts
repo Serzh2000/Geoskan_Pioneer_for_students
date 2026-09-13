@@ -2,8 +2,9 @@
 // (см. §4.2 плана): именно с него compilePioneerWorkspace собирает тело __main.
 export const PIONEER_START_TYPE = 'pioneer_start';
 
-// Появится в фазе 5 (события Lua); зафиксировано здесь заранее, чтобы
-// compilePioneerWorkspace (фаза 2) уже умел отличать такие блоки от «сирот».
+// Хат-блок обработчика события автопилота (фаза 5, только Lua) — тип
+// зафиксирован здесь ещё в фазе 2, чтобы compilePioneerWorkspace умел
+// отличать такие блоки от «сирот» до того, как сам блок появился.
 export const PIONEER_ON_EVENT_TYPE = 'pioneer_on_event';
 
 // Число светодиодов по умолчанию для Ledbar.new() в сгенерированном Lua.

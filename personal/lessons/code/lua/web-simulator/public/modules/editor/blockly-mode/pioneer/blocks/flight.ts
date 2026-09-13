@@ -1,5 +1,6 @@
 import * as Blockly from 'blockly';
 import { definePioneerBlock } from '../registry.js';
+import { installWaitInEventGuard } from '../wait-in-event-guard.js';
 
 const NUMBER_CHECK = 'Number';
 
@@ -39,6 +40,7 @@ export function registerFlightBlocks(): void {
             this.setNextStatement(true, null);
             this.setColour('#a855f7');
             this.setTooltip('Подготовка к полёту: запускает моторы и ждёт готовности.');
+            installWaitInEventGuard(this);
         },
         targets: {
             lua: () => 'ap.push(Ev.MCE_PREFLIGHT)\n__wait_event(Ev.ENGINES_STARTED)\n',
@@ -56,6 +58,7 @@ export function registerFlightBlocks(): void {
             this.setNextStatement(true, null);
             this.setColour('#a855f7');
             this.setTooltip('Взлёт и ожидание набора высоты.');
+            installWaitInEventGuard(this);
         },
         targets: {
             lua: () => 'ap.push(Ev.MCE_TAKEOFF)\n__wait_event(Ev.TAKEOFF_COMPLETE)\n',
@@ -77,6 +80,7 @@ export function registerFlightBlocks(): void {
             this.setNextStatement(true, null);
             this.setColour('#a855f7');
             this.setTooltip('Полёт в точку локальной системы координат и ожидание её достижения.');
+            installWaitInEventGuard(this);
         },
         targets: {
             lua: (block, gen) => {
@@ -133,6 +137,7 @@ export function registerFlightBlocks(): void {
             this.setNextStatement(true, null);
             this.setColour('#a855f7');
             this.setTooltip('Посадка и ожидание касания земли.');
+            installWaitInEventGuard(this);
         },
         targets: {
             lua: () => 'ap.push(Ev.MCE_LANDING)\n__wait_event(Ev.COPTER_LANDED)\n',

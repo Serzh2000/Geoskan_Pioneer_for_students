@@ -3,6 +3,7 @@ import { registerTimeBlocks } from './time.js';
 import { registerLedBlocks } from './leds.js';
 import { registerSensorBlocks } from './sensors.js';
 import { registerFlightBlocks } from './flight.js';
+import { registerEventBlocks } from './events.js';
 
 let registered = false;
 
@@ -17,4 +18,5 @@ export function registerPioneerBlocks(): void {
     registerLedBlocks();
     registerSensorBlocks();
     registerFlightBlocks();
+    registerEventBlocks();
 }
