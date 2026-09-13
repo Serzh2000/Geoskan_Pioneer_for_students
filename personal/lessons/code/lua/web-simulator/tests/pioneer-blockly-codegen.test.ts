@@ -111,7 +111,7 @@ describe('pioneer_led_all / pioneer_led_index', () => {
 
         const code = compilePioneerWorkspace(ws, 'python');
         expect(code).toContain('def _pioneer_led(led_id, c):');
-        expect(code).toContain('pioneer.led_control(led_id=led_id, r=c[0], g=c[1], b=c[2])');
+        expect(code).toContain('pioneer.led_control(led_id=led_id, r=c[0] / 255, g=c[1] / 255, b=c[2] / 255)');
         expect(code).toContain('_pioneer_led(3, (255, 255, 255))');
     });
 });
