@@ -46,6 +46,7 @@ export function createBlocklyWorkspaceController(host: EditorControllerHost): Bl
         blocklyCanvas: host.blocklyCanvas,
         blocklyWorkspace: host.blocklyWorkspace,
         setBlocklyWorkspace: host.setBlocklyWorkspace,
+        getCurrentLanguage: host.getCurrentScriptLanguage,
         getTheme: host.getTheme,
         buildMainEditorToolbox: host.buildMainEditorToolbox,
         compileMainEditorWorkspace: host.compileMainEditorWorkspace,

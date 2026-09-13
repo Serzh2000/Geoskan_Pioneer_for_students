@@ -6,6 +6,11 @@ export type BlocklyWorkspaceController = {
     blocklyCanvas: HTMLElement | null;
     blocklyWorkspace: BlocklyNS.WorkspaceSvg | null;
     setBlocklyWorkspace: (workspace: BlocklyNS.WorkspaceSvg | null) => void;
+    // Геттер, а не снимок: addChangeListener в ensureBlocklyWorkspace() ниже
+    // живёт дольше одного вызова и должен видеть язык на момент правки блока,
+    // а не язык, с которым Blockly-воркспейс был впервые создан (см. §2 плана —
+    // баг замыкания языка).
+    getCurrentLanguage: () => ScriptLanguage;
     getTheme: () => BlocklyNS.Theme | undefined;
     buildMainEditorToolbox: (language: ScriptLanguage) => Element | string;
     compileMainEditorWorkspace: (language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg) => string;
@@ -110,12 +115,16 @@ export function ensureBlocklyWorkspace(
             });
 
             blocklyWorkspace.addChangeListener(() => {
-                saveBlocklyWorkspaceState(controller, language);
+                // Актуальный язык на момент правки, а не язык первого вызова
+                // ensureBlocklyWorkspace() — иначе после смены языка правки
+                // сохраняются под старым ключом и компилируются старым генератором.
+                const activeLanguage = controller.getCurrentLanguage();
+                saveBlocklyWorkspaceState(controller, activeLanguage);
                 controller.textDraftByKey.set(
-                    controller.getEditorStateKey(language),
-                    controller.compileMainEditorWorkspace(language, blocklyWorkspace)
+                    controller.getEditorStateKey(activeLanguage),
+                    controller.compileMainEditorWorkspace(activeLanguage, blocklyWorkspace)
                 );
-                controller.updateBlocklyPreview(language);
+                controller.updateBlocklyPreview(activeLanguage);
             });
 
             controller.setBlocklyWorkspace(blocklyWorkspace);
