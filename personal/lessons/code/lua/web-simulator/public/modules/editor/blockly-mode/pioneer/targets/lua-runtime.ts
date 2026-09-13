@@ -1,54 +1,68 @@
-// Lua-рантайм для pioneer_*-блоков (§4.3 плана): тело pioneer_start исполняется
-// в coroutine, ожидание события/времени делает yield, а Timer.callLater и
-// callback(event) возобновляют её через __resume(). sleep() рантайма
-// симулятора здесь НЕ используется — он сам сделан через lua_yield и ломает
-// возобновление вложенной корутины (см. §2 плана, timers.ts:99-117).
+// Lua-рантайм для pioneer_*-блоков (§4.3 плана, ПЕРЕСМОТРЕНО 2026-09-13, см.
+// §2.1): тело pioneer_start компилируется в конечный автомат по состояниям
+// (FSM), как в официальных примерах Geoskan и в генераторе TRIK Studio —
+// action["__sN"] = function() ... end, callback(event) переключает __state
+// и вызывает __advance(). Корутины НЕ используются вообще: ни один реальный
+// скрипт (свой или из TRIK Studio) их не использует, официальная документация
+// прямо не рекомендует sleep(), а sleep()/coroutine.yield() рантайма
+// симулятора (timers.ts:99-117) в принципе ломает вложенную пользовательскую
+// корутину — см. §2 плана. Сегменты и переходы собирает targets/lua-fsm.ts.
 export type LuaProgramParts = {
-    // Пользовательские функции (procedures_def*) и хелперы блоков (LED и т.п.),
-    // добавленные через definitions_ — печатаются один раз, до __main().
+    // definitions_ (LED/position-хелперы блоков, пользовательские функции
+    // procedures_def*) — печатаются один раз, до объявления состояний.
     headerDefinitions: string;
-    // Код цепочки pioneer_start, уже с отступом под тело __main().
-    body: string;
-    // Ветки pioneer_on_event (фаза 5), уже с отступом под тело callback().
+    // action["__sN"] = function() ... end, по одной записи на состояние —
+    // собирает targets/lua-fsm.ts (buildLuaFsmSections).
+    segmentsCode: string;
+    // Ветки-переходы по событию вида `if __state == "__sN" and event == Ev.X
+    // then __state = "__sN+1"; __advance() end` — по одной на блок ожидания
+    // события (preflight/takeoff/go_to/land).
+    transitionBranches: string;
+    // Ветки pioneer_on_event (фаза 5): побочные обработчики событий, не
+    // двигают __state и не должны получить свой forward-reference (см. ниже).
     eventBranches: string;
 };
 
-export function buildLuaProgram({ headerDefinitions, body, eventBranches }: LuaProgramParts): string {
+// __advance() объявлена в тексте прогрраммы ДО таблицы action[...], а не
+// после неё, как в черновике плана (§4.3): сегменты состояний сами вызывают
+// __advance() из своего Timer.callLater-перехода (pioneer_wait, см.
+// targets/lua-fsm.ts), а Lua резолвит имя локальной переменной как upvalue
+// только начиная с точки её объявления в исходном тексте. Объяви __advance
+// после action[...] — и эти вызовы стали бы обращением к одноимённой
+// глобальной переменной (nil), потому что на момент создания замыкания
+// локальная __advance ещё не существовала бы.
+export function buildLuaProgram({
+    headerDefinitions,
+    segmentsCode,
+    transitionBranches,
+    eventBranches
+}: LuaProgramParts): string {
     const header = headerDefinitions ? `${headerDefinitions}\n\n` : '';
     return `-- @pioneer-blockly v1
-local __co = nil
-local __waiting_event = nil
+local __state = "__s0"
 local __t0 = time()
 
-local function __resume()
-    if __co == nil or coroutine.status(__co) ~= "suspended" then return end
-    local ok, err = coroutine.resume(__co)
-    if not ok then error(err) end
-end
-
-local function __wait_event(ev)
-    __waiting_event = ev
-    coroutine.yield()
-end
-
-local function __wait_seconds(t)
-    Timer.callLater(t, __resume)
-    coroutine.yield()
-end
-
-local function __tick() __wait_seconds(0.05) end
-
-${header}local function __main()
-${body}end
-
-function callback(event)
-${eventBranches}    if __waiting_event ~= nil and event == __waiting_event then
-        __waiting_event = nil
-        __resume()
+-- Защита от зависания в цикле без блоков-ожидания: считает итерации, не
+-- отдаёт управление — обычный синхронный Lua-цикл здесь никуда не yield'ит.
+local __loop_guard_count = 0
+local function __loop_guard()
+    __loop_guard_count = __loop_guard_count + 1
+    if __loop_guard_count > 1000000 then
+        error("Похоже, программа зависла в бесконечном цикле")
     end
 end
 
-__co = coroutine.create(__main)
-__resume()
+local action = {}
+
+local function __advance()
+    local current = action[__state]
+    if current ~= nil then current() end
+end
+
+${header}${segmentsCode}
+function callback(event)
+${eventBranches}${transitionBranches}end
+
+__advance()
 `;
 }

@@ -1,6 +1,7 @@
 import * as Blockly from 'blockly';
 import { isBlockSupported } from './registry.js';
 import { UNSUPPORTED_TARGET_REASON, refreshBlockWarning, setUnsupportedTargetMessage, withoutUndo } from './disable-reasons.js';
+import { refreshWaitContainerGuardsForWorkspace } from './wait-in-loop-guard.js';
 import type { PioneerTarget } from './targets/types.js';
 
 const TARGET_LABELS: Record<PioneerTarget, string> = { lua: 'Lua', python: 'Python' };
@@ -26,4 +27,8 @@ export function applyPioneerTargetToWorkspace(workspace: Blockly.Workspace, targ
             refreshBlockWarning(block);
         });
     });
+    // Ограничение "ожидание внутри цикла/если" (wait-in-loop-guard.ts) —
+    // только для Lua: смена языка не двигает и не создаёт блоки, поэтому
+    // собственный onChange-слушатель этой причины сам не сработает.
+    refreshWaitContainerGuardsForWorkspace(workspace, target);
 }

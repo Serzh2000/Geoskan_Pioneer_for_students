@@ -4,15 +4,22 @@ import { pythonGenerator } from 'blockly/python';
 import { PIONEER_ON_EVENT_TYPE, PIONEER_START_TYPE } from '../constants.js';
 import type { PioneerTarget } from './types.js';
 import { buildLuaProgram } from './lua-runtime.js';
+import { buildLuaFsmSections } from './lua-fsm.js';
 import { buildPythonProgram } from './python-runtime.js';
 
-// Имена рантайма (см. targets/lua-runtime.ts) резервируем, чтобы генератор
-// переменных Blockly (my_variable, my_variable2, ...) не мог случайно
-// сгенерировать пользовательскую переменную с тем же именем.
+// Имена рантайма (см. targets/lua-runtime.ts, targets/lua-fsm.ts) резервируем,
+// чтобы генератор переменных Blockly (my_variable, my_variable2, ...) не мог
+// случайно сгенерировать пользовательскую переменную с тем же именем.
+// Корутинных имён (__co, __resume, coroutine, ...) здесь больше нет — FSM
+// их не использует вовсе (§2.1, §4.3 плана). __wait_event/__wait_seconds
+// оставлены в списке на всякий случай: в готовый Lua они не попадают (это
+// только маркеры для lua-fsm.ts на этапе сборки), но лучше не рисковать
+// совпадением с именем маркера, если пользовательский код где-то его
+// процитирует как текст.
 const LUA_RESERVED_WORDS = [
-    '__co', '__waiting_event', '__t0', '__resume', '__wait_event',
-    '__wait_seconds', '__tick', '__main', 'ap', 'Ev', 'Timer', 'Sensors',
-    'Ledbar', 'leds', 'callback', 'coroutine', 'time'
+    '__state', '__t0', '__loop_guard', '__loop_guard_count', 'action',
+    '__advance', 'current', '__wait_event', '__wait_seconds', 'ap', 'Ev',
+    'Timer', 'Sensors', 'Ledbar', 'leds', 'callback', 'time'
 ].join(',');
 
 // procedures_defnoreturn/procedures_defreturn — единственные блоки-сироты,
@@ -43,16 +50,22 @@ function collectDefinitionsText(generator: Blockly.CodeGenerator): string {
         .join('\n\n');
 }
 
-export type PioneerCompiledSource = {
-    headerDefinitions: string;
-    body: string;
-    eventBranches: string;
+type TopLevelParts = {
+    generator: Blockly.CodeGenerator;
+    // Первый блок, подключённый ПОД pioneer_start (не сам pioneer_start —
+    // его генератор всегда возвращает '' в обоих таргетах, см. blocks/program.ts).
+    firstBodyBlock: Blockly.Block | null;
+    eventBlocks: Blockly.Block[];
+    procedureBlocks: Blockly.Block[];
 };
 
-// Фаза 1/2: собирает только цепочку под pioneer_start + определения функций,
-// без обвязки-рантайма (корутина для Lua, Pioneer()-пролог для Python) —
-// её добавляют targets/lua-runtime.ts и targets/python-runtime.ts в фазе 2/4.
-export function compilePioneerSource(workspace: Blockly.Workspace, target: PioneerTarget): PioneerCompiledSource {
+// Общая часть для Lua и Python (§4.2 плана, шаг 2): находит цепочку под
+// pioneer_start, блоки pioneer_on_event и блоки-сироты procedures_def*,
+// заодно расставляет предупреждения об отключённых от старта блоках.
+// Собственно генерацию кода (плоскую для Python, разбивку на состояния для
+// Lua) делают вызывающие функции ниже — она слишком по-разному устроена для
+// двух таргетов, чтобы иметь общую реализацию.
+function collectTopLevelParts(workspace: Blockly.Workspace, target: PioneerTarget): TopLevelParts {
     const generator = getGenerator(target);
     generator.init(workspace);
     if (target === 'lua') {
@@ -83,27 +96,74 @@ export function compilePioneerSource(workspace: Blockly.Workspace, target: Pione
     });
 
     const mainBlock = startBlocks[0] ?? null;
-    const body = mainBlock ? statementCode(generator, mainBlock) : '';
+    return {
+        generator,
+        firstBodyBlock: mainBlock ? mainBlock.getNextBlock() : null,
+        eventBlocks,
+        procedureBlocks
+    };
+}
+
+function buildHeaderDefinitions(generator: Blockly.CodeGenerator, procedureBlocks: Blockly.Block[]): string {
     const procedureCode = procedureBlocks
         .map((block) => statementCode(generator, block))
         .filter(Boolean)
         .join('\n');
+    const definitionsText = collectDefinitionsText(generator);
+    return [definitionsText, procedureCode].filter(Boolean).join('\n\n');
+}
+
+export type PioneerLuaCompiledSource = {
+    headerDefinitions: string;
+    segmentsCode: string;
+    transitionBranches: string;
+    eventBranches: string;
+};
+
+// Lua: тело pioneer_start разбивается на состояния FSM (§4.3 плана,
+// пересмотрено 2026-09-13) — см. targets/lua-fsm.ts. Ветки pioneer_on_event
+// по-прежнему получаем штатным statementCode() — это не часть FSM-цепочки,
+// а независимые побочные обработчики (см. events.ts).
+export function compilePioneerLuaSource(workspace: Blockly.Workspace): PioneerLuaCompiledSource {
+    const { generator, firstBodyBlock, eventBlocks, procedureBlocks } = collectTopLevelParts(workspace, 'lua');
+
+    const { segmentsCode, transitionBranches } = buildLuaFsmSections(generator, firstBodyBlock);
     const eventBranches = eventBlocks
         .map((block) => statementCode(generator, block))
         .filter(Boolean)
         .join('\n');
 
-    const definitionsText = collectDefinitionsText(generator);
-    const headerDefinitions = [definitionsText, procedureCode].filter(Boolean).join('\n\n');
-
-    return { headerDefinitions, body, eventBranches };
+    return {
+        headerDefinitions: buildHeaderDefinitions(generator, procedureBlocks),
+        segmentsCode,
+        transitionBranches,
+        eventBranches
+    };
 }
 
-// Ловушка на случай бесконечного цикла (§4.2 плана): для Lua отдаёт управление
-// в event loop симулятора через yield корутины, для Python — просто отдаёт
-// квант времени. Ставится только на время компиляции и снимается сразу после,
-// чтобы не задеть сторонние вызовы generator.workspaceToCode() (стандартные
-// тесты controls_repeat_ext/controls_for и т.п. в blockly-codegen.test.ts).
+export type PioneerPythonCompiledSource = {
+    headerDefinitions: string;
+    body: string;
+};
+
+// Python: обычная плоская последовательность — ожидание здесь блокирующий
+// опрос (targets/python-runtime.ts), а не переключение состояний, поэтому
+// штатного generator.blockToCode(), обходящего всю цепочку самостоятельно,
+// вполне достаточно (в отличие от Lua-таргета).
+export function compilePioneerPythonSource(workspace: Blockly.Workspace): PioneerPythonCompiledSource {
+    const { generator, firstBodyBlock, procedureBlocks } = collectTopLevelParts(workspace, 'python');
+    const body = firstBodyBlock ? statementCode(generator, firstBodyBlock) : '';
+
+    return { headerDefinitions: buildHeaderDefinitions(generator, procedureBlocks), body };
+}
+
+// Ловушка на случай бесконечного цикла без блоков-ожидания (§4.2 плана): для
+// Lua — счётчик итераций __loop_guard() (targets/lua-runtime.ts; FSM не
+// использует yield/корутину, поэтому "отдать управление" тут не вариант —
+// см. §2.1 плана), для Python — обычный квант времени. Ставится только на
+// время компиляции и снимается сразу после, чтобы не задеть сторонние вызовы
+// generator.workspaceToCode() (стандартные тесты controls_repeat_ext/
+// controls_for и т.п. в blockly-codegen.test.ts).
 function withInfiniteLoopTrap<T>(generator: Blockly.CodeGenerator, trap: string, run: () => T): T {
     const previous = generator.INFINITE_LOOP_TRAP;
     generator.INFINITE_LOOP_TRAP = trap;
@@ -116,21 +176,26 @@ function withInfiniteLoopTrap<T>(generator: Blockly.CodeGenerator, trap: string,
 
 export function compilePioneerWorkspace(workspace: Blockly.Workspace, target: PioneerTarget): string {
     const generator = getGenerator(target);
-    const trap = target === 'lua' ? '__tick()\n' : 'time.sleep(0.01)\n';
-
-    const { headerDefinitions, body, eventBranches } = withInfiniteLoopTrap(
-        generator,
-        trap,
-        () => compilePioneerSource(workspace, target)
-    );
+    const trap = target === 'lua' ? '__loop_guard()\n' : 'time.sleep(0.01)\n';
 
     if (target === 'lua') {
+        const { headerDefinitions, segmentsCode, transitionBranches, eventBranches } = withInfiniteLoopTrap(
+            generator,
+            trap,
+            () => compilePioneerLuaSource(workspace)
+        );
         return buildLuaProgram({
             headerDefinitions,
-            body: generator.prefixLines(body, generator.INDENT),
+            segmentsCode,
+            transitionBranches,
             eventBranches: generator.prefixLines(eventBranches, generator.INDENT)
         });
     }
 
+    const { headerDefinitions, body } = withInfiniteLoopTrap(
+        generator,
+        trap,
+        () => compilePioneerPythonSource(workspace)
+    );
     return buildPythonProgram({ headerDefinitions, body });
 }
