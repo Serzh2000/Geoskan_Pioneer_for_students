@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "type-check": "tsc --noEmit",
-    "lint": "eslint . --ext .ts --max-warnings=653",
+    "lint": "eslint . --ext .ts --max-warnings=627",
     "docs:functions": "node tools/generate_functions_reference_index.mjs"
   },
   "keywords": [],
@@ -19,8 +19,6 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@babylonjs/core": "^9.4.1",
-    "axios": "^1.13.6",
     "blockly": "^12.5.1",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
@@ -29,9 +27,7 @@
     "fengari-web": "^0.1.4",
     "glob": "^13.0.6",
     "monaco-editor": "^0.55.1",
-    "swagger-ui-express": "^5.0.1",
-    "three": "^0.183.2",
-    "yamljs": "^0.3.0"
+    "three": "^0.183.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -40,9 +36,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^25.5.0",
     "@types/supertest": "^7.2.1",
-    "@types/swagger-ui-express": "^4.1.8",
     "@types/three": "^0.183.1",
-    "@types/yamljs": "^0.2.34",
     "@typescript-eslint/eslint-plugin": "^8.57.1",
     "@typescript-eslint/parser": "^8.57.1",
     "concurrently": "^9.2.1",

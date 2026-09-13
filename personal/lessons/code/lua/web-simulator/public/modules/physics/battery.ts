@@ -1,7 +1,9 @@
 import { isDroneAirborneState, shouldSpinRotors } from '../autopilot/fsm.js';
 import type { DroneState } from '../core/state.js';
+import { emitGenericNotice } from '../core/mission-notices.js';
 import { triggerLuaCallback } from '../lua/index.js';
 import { log } from '../shared/logging/logger.js';
+import { clamp } from '../shared/math.js';
 
 const BATTERY_CAPACITY_MAH = 1800;
 const BATTERY_FULL_VOLTAGE = 8.4;
@@ -13,10 +15,6 @@ const BATTERY_IDLE_DRAW_A = 0.02;
 const BATTERY_ARMED_GROUND_DRAW_A = 1.1;
 const BATTERY_PREFLIGHT_DRAW_A = 0.8;
 const BATTERY_HOVER_DRAW_A = 7.2;
-
-function clamp(value: number, min: number, max: number) {
-    return Math.max(min, Math.min(max, value));
-}
 
 function lerp(start: number, end: number, t: number) {
     return start + (end - start) * clamp(t, 0, 1);
@@ -77,12 +75,7 @@ function getLoadedVoltage(chargeRatio: number, currentDrawAmps: number) {
 }
 
 function showBatteryNotice(title: string, message: string, level: 'warn' | 'error') {
-    if (!(window as any).showSimulationNotice) return;
-    (window as any).showSimulationNotice({
-        title,
-        message,
-        level
-    });
+    emitGenericNotice(title, message, level);
 }
 
 function notifyLowVoltage(simState: DroneState, id: string, level: 1 | 2) {

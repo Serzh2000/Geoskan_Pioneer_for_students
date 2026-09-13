@@ -3,8 +3,13 @@ import * as Blockly from 'blockly';
 import { pythonGenerator } from 'blockly/python';
 import { ensureEditorBlocklyDefinitions } from '../public/modules/editor/blockly-mode/index.js';
 
-beforeAll(() => {
-    ensureEditorBlocklyDefinitions();
+beforeAll(async () => {
+    // См. комментарий в tests/blockly-codegen.test.ts: обходим ограничение
+    // Jest (--experimental-vm-modules) на вложенные import() прогревом кэша.
+    await import('../public/modules/editor/blockly-mode/blockly-core.js');
+    await import('../public/modules/editor/blockly-mode/workspace-xml.js');
+    await import('../public/modules/editor/blockly-mode/lua-definitions.js');
+    await ensureEditorBlocklyDefinitions();
 });
 
 test('debug2: трассировка генераторов', () => {

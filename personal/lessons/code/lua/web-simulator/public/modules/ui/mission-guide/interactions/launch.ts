@@ -19,17 +19,17 @@ export function canLaunchLesson(sequenceIds: string[], diagnostics: Array<{ kind
     return launchAllowed;
 }
 
-export function launchLesson(
+export async function launchLesson(
     language: ScriptLanguage,
     lesson: GuideLesson,
     rerender: RenderMissionGuidePanel,
     banner: { kind: 'info' | 'warning'; message: string }
-): void {
+): Promise<void> {
     const languageSelect = document.getElementById('script-language-select') as HTMLSelectElement | null;
 
     setCurrentScriptLanguage(language);
     if (languageSelect) languageSelect.value = language;
-    setEditorLanguage(language);
+    await setEditorLanguage(language);
 
     const code = getEditorValue();
     logGuideEvent('launch_requested', {

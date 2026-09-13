@@ -5,7 +5,6 @@ const explodedDrones = new Set<string>();
 export function explodeDrone(id: string, mesh: THREE.Object3D) {
     if (explodedDrones.has(id)) return;
     explodedDrones.add(id);
-    console.log(`[Visuals] Exploding drone ${id}`);
 
     const partsToExplode: THREE.Object3D[] = [];
     try {

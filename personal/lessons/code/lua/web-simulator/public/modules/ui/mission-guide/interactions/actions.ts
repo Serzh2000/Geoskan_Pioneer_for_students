@@ -1,9 +1,15 @@
 import { summarizeGuideDiagnostics, logGuideEvent } from '../support/logging.js';
 import { buildGuideEventContext, resetGuideRuntimeView, type GuideInteractionContext } from './context.js';
 import { canLaunchLesson, launchLesson } from './launch.js';
-import { buildTargetWorkspaceXml, extractMissionGuideSequence, serializeWorkspaceXml } from '../support/workspace-xml.js';
 import { evaluateLesson } from '../evaluation/index.js';
-import { getMainBlocklyWorkspace, loadMainBlocklyXml, setBlocklyEditorEnabled } from '../../../editor/index.js';
+import {
+    buildTargetWorkspaceXml,
+    extractMissionGuideSequence,
+    serializeWorkspaceXml,
+    getMainBlocklyWorkspace,
+    loadMainBlocklyXml,
+    setBlocklyEditorEnabled
+} from '../../../editor/index.js';
 import {
     setLessonBanner,
     setLessonChecked,
@@ -78,17 +84,18 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
     container.querySelectorAll<HTMLElement>('[data-guide-fill]').forEach((element) => {
         element.addEventListener('click', () => {
             logGuideEvent('solution_fill_requested', buildGuideEventContext(context));
-            loadMainBlocklyXml(buildTargetWorkspaceXml(lesson.id, lesson.targetBlockIds));
-            setLessonChecked(language, lesson.id, true);
-            setLessonBanner(language, lesson.id, {
-                kind: 'info',
-                message: 'Эталонная последовательность загружена в редактор Blockly.'
+            loadMainBlocklyXml(buildTargetWorkspaceXml(lesson.id, lesson.targetBlockIds)).then(() => {
+                setLessonChecked(language, lesson.id, true);
+                setLessonBanner(language, lesson.id, {
+                    kind: 'info',
+                    message: 'Эталонная последовательность загружена в редактор Blockly.'
+                });
+                logGuideEvent('solution_fill_applied', {
+                    ...buildGuideEventContext(context),
+                    targetSequence: lesson.targetBlockIds
+                }, 'success');
+                rerender(language);
             });
-            logGuideEvent('solution_fill_applied', {
-                ...buildGuideEventContext(context),
-                targetSequence: lesson.targetBlockIds
-            }, 'success');
-            rerender(language);
         });
     });
 

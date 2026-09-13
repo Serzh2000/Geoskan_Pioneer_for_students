@@ -1,4 +1,5 @@
-import { simState, simSettings } from '../../core/state.js';
+import { drones, currentDroneId, simSettings } from '../../core/state.js';
+import { getCameraMode } from '../../scene/core/camera-mode-state.js';
 
 const STATS_UPDATE_INTERVAL_MS = 50;
 
@@ -35,19 +36,19 @@ let lastStatsUpdateAt = 0;
 
 function getStatusColor(isDarkTheme: boolean): string {
     if (
-        simState.fsmState === 'TAKEOFF_PROCESS'
-        || simState.fsmState === 'FLYING_HOVER'
-        || simState.fsmState === 'FLYING_MOVING'
-        || simState.fsmState === 'LANDING_PROCESS'
+        drones[currentDroneId].fsmState === 'TAKEOFF_PROCESS'
+        || drones[currentDroneId].fsmState === 'FLYING_HOVER'
+        || drones[currentDroneId].fsmState === 'FLYING_MOVING'
+        || drones[currentDroneId].fsmState === 'LANDING_PROCESS'
     ) {
         return isDarkTheme ? '#4ade80' : '#15803d';
     }
 
-    if (simState.fsmState === 'PREFLIGHT') {
+    if (drones[currentDroneId].fsmState === 'PREFLIGHT') {
         return isDarkTheme ? '#fbbf24' : '#b45309';
     }
 
-    if (simState.status === 'ОШИБКА' || simState.status === 'CRASHED') {
+    if (drones[currentDroneId].status === 'ОШИБКА' || drones[currentDroneId].status === 'CRASHED') {
         return isDarkTheme ? '#f87171' : '#c2410c';
     }
 
@@ -55,10 +56,10 @@ function getStatusColor(isDarkTheme: boolean): string {
 }
 
 function updateTelemetry(speed: number, isDarkTheme: boolean): void {
-    const altText = simState.pos.z.toFixed(2);
+    const altText = drones[currentDroneId].pos.z.toFixed(2);
     const speedText = speed.toFixed(1);
-    const batteryText = Math.floor(simState.battery).toString();
-    const timeText = simState.current_time.toFixed(1);
+    const batteryText = Math.floor(drones[currentDroneId].battery).toString();
+    const timeText = drones[currentDroneId].current_time.toFixed(1);
     const statusColor = getStatusColor(isDarkTheme);
 
     if (stateAlt && lastAltText !== altText) {
@@ -76,9 +77,9 @@ function updateTelemetry(speed: number, isDarkTheme: boolean): void {
         lastBatteryText = batteryText;
     }
 
-    if (stateStatus && lastStatusText !== simState.status) {
-        stateStatus.textContent = simState.status;
-        lastStatusText = simState.status;
+    if (stateStatus && lastStatusText !== drones[currentDroneId].status) {
+        stateStatus.textContent = drones[currentDroneId].status;
+        lastStatusText = drones[currentDroneId].status;
     }
 
     if (stateStatus && lastStatusColor !== statusColor) {
@@ -100,14 +101,14 @@ function updateFlightMode(): void {
         lastHudModeVisible = shouldShowHudMode;
     }
 
-    if (shouldShowHudMode && stateMode && lastFlightModeText !== simState.flightMode) {
-        stateMode.textContent = simState.flightMode;
-        lastFlightModeText = simState.flightMode;
+    if (shouldShowHudMode && stateMode && lastFlightModeText !== drones[currentDroneId].flightMode) {
+        stateMode.textContent = drones[currentDroneId].flightMode;
+        lastFlightModeText = drones[currentDroneId].flightMode;
     }
 }
 
 function updateCameraParamsVisibility(): void {
-    const shouldShowCamParams = window.cameraMode === 'fpv';
+    const shouldShowCamParams = getCameraMode() === 'fpv';
     if (camParams && lastCamParamsVisible !== shouldShowCamParams) {
         camParams.style.display = shouldShowCamParams ? 'flex' : 'none';
         lastCamParamsVisible = shouldShowCamParams;
@@ -115,8 +116,8 @@ function updateCameraParamsVisibility(): void {
 }
 
 function updateButtons(): void {
-    const runDisabled = simState.running;
-    const stopDisabled = !simState.running;
+    const runDisabled = drones[currentDroneId].running;
+    const stopDisabled = !drones[currentDroneId].running;
 
     if (runBtn && lastRunButtonDisabled !== runDisabled) {
         runBtn.disabled = runDisabled;
@@ -134,10 +135,10 @@ function updateButtons(): void {
 }
 
 function updateLeds(): void {
-    if (!simState.leds) return;
+    if (!drones[currentDroneId].leds) return;
 
-    for (let i = 0; i < simState.leds.length; i += 1) {
-        const led = simState.leds[i];
+    for (let i = 0; i < drones[currentDroneId].leds.length; i += 1) {
+        const led = drones[currentDroneId].leds[i];
         if (!led || i >= ledElements.length) continue;
 
         const r = Math.round(led.r || 0);
@@ -158,7 +159,7 @@ function updateLeds(): void {
         lastLedStyles[i] = signature;
     }
 
-    for (let i = simState.leds.length; i < ledElements.length; i += 1) {
+    for (let i = drones[currentDroneId].leds.length; i < ledElements.length; i += 1) {
         if (!lastLedStyles[i]) continue;
         const ledEl = ledElements[i];
         if (!ledEl) continue;
@@ -181,7 +182,7 @@ export function updateStats() {
     }
     lastStatsUpdateAt = now;
 
-    const speed = Math.sqrt(simState.vel.x**2 + simState.vel.y**2 + simState.vel.z**2);
+    const speed = Math.sqrt(drones[currentDroneId].vel.x**2 + drones[currentDroneId].vel.y**2 + drones[currentDroneId].vel.z**2);
     const isDarkTheme = document.documentElement.dataset.theme === 'dark';
 
     updateTelemetry(speed, isDarkTheme);

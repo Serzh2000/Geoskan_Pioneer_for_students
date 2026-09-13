@@ -3,11 +3,12 @@
  * Экспортирует функции для инициализации и обновления сцены.
  */
 import * as THREE from 'three';
-import { drones, simState, currentDroneId, simSettings } from '../core/state.js';
+import { drones, currentDroneId, simSettings } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 import { envGroup } from '../environment/index.js';
 import { createDroneModel, updateLEDs, animateRotors } from '../drone-model/index.js';
 import { updateCamera } from '../scene/core/camera.js';
+import { getCameraMode } from '../scene/core/camera-mode-state.js';
 import { 
     initScene, scene, camera, renderer, controls, transformControl, 
     transformHelper, selectionHelper, 
@@ -183,7 +184,7 @@ export function init3D(container: HTMLElement) {
 
         log('3D-сцена загружена.', 'success');
         log('[3D-CLICK] Обработчики pointerdown/pointerup подключены через document capture', 'info');
-        updateCamera(camera, droneMeshes[currentDroneId] || null, controls, (window as any).cameraMode || 'drone');
+        updateCamera(camera, droneMeshes[currentDroneId] || null, controls, getCameraMode());
         
     } catch (e: any) {
         console.error('[3D] Critical error during init3D:', e);
@@ -196,6 +197,10 @@ export function syncDrones() {
         if (!droneMeshes[id]) {
             const mesh = createDroneModel();
             mesh.up.set(0, 0, 1);
+            // Cache the orientation arrow reference once at build time so the
+            // per-frame update loop doesn't need to walk the mesh's subtree
+            // via getObjectByName() every frame (see updateDrone3D below).
+            mesh.userData.orientationArrow = mesh.getObjectByName('orientation_arrow') || null;
             scene.add(mesh);
             droneMeshes[id] = mesh;
             initTrailForDrone(id);
@@ -216,22 +221,22 @@ export function getObstacles() {
 
 export function updateDrone3D(dt: number) {
     if (!is3DActive || !renderer || !camera) return;
-    const cameraMode = (window as any).cameraMode || 'drone';
+    const cameraMode = getCameraMode();
 
-    if (simState.running && transformControl && transformControl.object) {
+    if (drones[currentDroneId].running && transformControl && transformControl.object) {
         log(`[3DDBG] updateDrone3D detach while running target=${(transformControl.object as any).name || 'unknown'}`, 'info');
         transformControl.detach();
         if (transformHelper) transformHelper.visible = false;
         if (selectionHelper) selectionHelper.visible = false;
     }
     
-    if (transformControl && transformControl.object && !simState.running) {
+    if (transformControl && transformControl.object && !drones[currentDroneId].running) {
         transformControl.visible = simSettings.showGizmo;
         if (transformHelper) transformHelper.visible = simSettings.showGizmo;
     }
     
     // Обновляем позицию selectionHelper если объект движется и выделен
-    if (simState.running && selectedObject && selectionHelper && selectionHelper.visible) {
+    if (drones[currentDroneId].running && selectedObject && selectionHelper && selectionHelper.visible) {
         selectionHelper.update();
     }
     
@@ -285,7 +290,7 @@ export function updateDrone3D(dt: number) {
 
         updateTrailForDrone(id);
 
-        const arrow = mesh.getObjectByName('orientation_arrow');
+        const arrow = mesh.userData.orientationArrow as THREE.Object3D | null | undefined;
         if (arrow) {
             const scale = Math.max(1, camera.position.distanceTo(mesh.position) * 0.15);
             arrow.scale.set(scale, scale, scale);

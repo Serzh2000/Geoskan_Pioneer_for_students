@@ -1,4 +1,4 @@
-import { Blockly } from '../../ui/mission-guide/blockly.js';
+import type { BlocklyNS } from '../blockly-mode/loader.js';
 import type { ScriptLanguage } from '../../core/state.js';
 import type { BlocklyWorkspaceController } from '../blockly/workspace-controller.js';
 import type { BlocklyToggleController } from '../blockly/toggle-controller.js';
@@ -7,10 +7,10 @@ export type EditorControllerHost = {
         getCurrentScriptLanguage: () => ScriptLanguage;
         monacoRoot: HTMLElement | null;
         blocklyCanvas: HTMLElement | null;
-        blocklyWorkspace: Blockly.WorkspaceSvg | null;
+        blocklyWorkspace: BlocklyNS.WorkspaceSvg | null;
         blocklyCodeOverlayToggle: HTMLInputElement | null;
-        setBlocklyWorkspace: (workspace: Blockly.WorkspaceSvg | null) => void;
-        theme: Blockly.Theme;
+        setBlocklyWorkspace: (workspace: BlocklyNS.WorkspaceSvg | null) => void;
+        getTheme: () => BlocklyNS.Theme | undefined;
         buildMainEditorToolbox: BlocklyWorkspaceController['buildMainEditorToolbox'];
         compileMainEditorWorkspace: BlocklyWorkspaceController['compileMainEditorWorkspace'];
         createStarterWorkspaceXml: BlocklyWorkspaceController['createStarterWorkspaceXml'];
@@ -26,7 +26,7 @@ export type EditorControllerHost = {
         scheduleBlocklyAutofit: () => void;
         setTextEditorValue: (value: string) => void;
         saveBlocklyWorkspaceState: (language?: ScriptLanguage) => void;
-        ensureBlocklyWorkspace: (language: ScriptLanguage) => void;
+        ensureBlocklyWorkspace: (language: ScriptLanguage) => Promise<void>;
         loadBlocklyWorkspace: (language: ScriptLanguage) => void;
         syncEditorModeVisibility: () => void;
         syncBlocklyEditorToggle: () => void;
@@ -46,7 +46,7 @@ export function createBlocklyWorkspaceController(host: EditorControllerHost): Bl
         blocklyCanvas: host.blocklyCanvas,
         blocklyWorkspace: host.blocklyWorkspace,
         setBlocklyWorkspace: host.setBlocklyWorkspace,
-        theme: host.theme,
+        getTheme: host.getTheme,
         buildMainEditorToolbox: host.buildMainEditorToolbox,
         compileMainEditorWorkspace: host.compileMainEditorWorkspace,
         createStarterWorkspaceXml: host.createStarterWorkspaceXml,

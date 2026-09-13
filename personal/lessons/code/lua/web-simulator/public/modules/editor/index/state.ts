@@ -1,4 +1,4 @@
-import { Blockly } from '../../ui/mission-guide/blockly.js';
+import { Blockly } from '../blockly-mode/loader.js';
 import type { ScriptLanguage } from '../../core/state.js';
 import { createBlocklyResizeRuntime } from '../blockly/support.js';
 import type { EditorShellRefs } from '../dom.js';

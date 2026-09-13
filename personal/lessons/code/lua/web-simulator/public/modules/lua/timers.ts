@@ -1,3 +1,4 @@
+import * as fengari from 'fengari-web';
 import { getDroneFromLua } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 import { pushLuaRuntimeLog } from './diagnostics.js';
@@ -11,11 +12,11 @@ function normalizeLuaDelay(value: number) {
 }
 
 export const timer_callLater = function(L: any) {
-    if (window.fengari.lua.lua_gettop(L) < 2) return 0;
-    const requestedDelay = window.fengari.lua.lua_tonumber(L, 1);
+    if (fengari.lua.lua_gettop(L) < 2) return 0;
+    const requestedDelay = fengari.lua.lua_tonumber(L, 1);
     const delay = normalizeLuaDelay(requestedDelay);
-    window.fengari.lua.lua_pushvalue(L, 2);
-    const func_ref = window.fengari.lauxlib.luaL_ref(L, window.fengari.lua.LUA_REGISTRYINDEX);
+    fengari.lua.lua_pushvalue(L, 2);
+    const func_ref = fengari.lauxlib.luaL_ref(L, fengari.lua.LUA_REGISTRYINDEX);
     const simState = getDroneFromLua(L);
     
     simState.timers.push({
@@ -32,11 +33,11 @@ export const timer_callLater = function(L: any) {
 };
 
 export const timer_new = function(L: any) {
-    if (window.fengari.lua.lua_gettop(L) < 2) return 0;
-    const requestedPeriod = window.fengari.lua.lua_tonumber(L, 1);
+    if (fengari.lua.lua_gettop(L) < 2) return 0;
+    const requestedPeriod = fengari.lua.lua_tonumber(L, 1);
     const period = normalizeLuaDelay(requestedPeriod);
-    window.fengari.lua.lua_pushvalue(L, 2);
-    const func_ref = window.fengari.lauxlib.luaL_ref(L, window.fengari.lua.LUA_REGISTRYINDEX);
+    fengari.lua.lua_pushvalue(L, 2);
+    const func_ref = fengari.lauxlib.luaL_ref(L, fengari.lua.LUA_REGISTRYINDEX);
     const simState = getDroneFromLua(L);
     
     const timer_obj = {
@@ -54,13 +55,13 @@ export const timer_new = function(L: any) {
     pushLuaRuntimeLog(simState, 'info', 'Timer.new/js', `Периодический таймер создан: period=${period}s; sourceState=${simState.fsmState}`, null);
     log(`[Lua Timer] new(${period}s) created`, 'info');
     
-    window.fengari.lua.lua_newtable(L);
-    window.fengari.lua.lua_pushlightuserdata(L, timer_obj);
-    window.fengari.lua.lua_setfield(L, -2, "__ptr");
+    fengari.lua.lua_newtable(L);
+    fengari.lua.lua_pushlightuserdata(L, timer_obj);
+    fengari.lua.lua_setfield(L, -2, "__ptr");
     
-    window.fengari.lua.lua_pushcfunction(L, (L: any) => {
-        window.fengari.lua.lua_getfield(L, 1, "__ptr");
-        const ptr = window.fengari.lua.lua_touserdata(L, -1);
+    fengari.lua.lua_pushcfunction(L, (L: any) => {
+        fengari.lua.lua_getfield(L, 1, "__ptr");
+        const ptr = fengari.lua.lua_touserdata(L, -1);
         ptr.running = true;
         ptr.next_trigger = getDroneFromLua(L).current_time + ptr.period;
         ptr.trigger_time = ptr.next_trigger;
@@ -69,34 +70,34 @@ export const timer_new = function(L: any) {
         log(`[Lua Timer] start()`, 'info');
         return 0;
     });
-    window.fengari.lua.lua_setfield(L, -2, "start");
+    fengari.lua.lua_setfield(L, -2, "start");
     
-    window.fengari.lua.lua_pushcfunction(L, (L: any) => {
-        window.fengari.lua.lua_getfield(L, 1, "__ptr");
-        const ptr = window.fengari.lua.lua_touserdata(L, -1);
+    fengari.lua.lua_pushcfunction(L, (L: any) => {
+        fengari.lua.lua_getfield(L, 1, "__ptr");
+        const ptr = fengari.lua.lua_touserdata(L, -1);
         ptr.running = false;
         pushLuaRuntimeLog(getDroneFromLua(L), 'debug', 'Timer.stop/js', 'Таймер остановлен пользователем', null);
         log(`[Lua Timer] stop()`, 'info');
         return 0;
     });
-    window.fengari.lua.lua_setfield(L, -2, "stop");
+    fengari.lua.lua_setfield(L, -2, "stop");
     
     return 1;
 };
 
 export const sys_time = function(L: any) {
     const simState = getDroneFromLua(L);
-    window.fengari.lua.lua_pushnumber(L, simState.current_time);
+    fengari.lua.lua_pushnumber(L, simState.current_time);
     return 1;
 };
 
 export const sys_deltaTime = function(L: any) {
-    window.fengari.lua.lua_pushnumber(L, 0.05); 
+    fengari.lua.lua_pushnumber(L, 0.05); 
     return 1;
 };
 
 export const js_sleep = function(L: any) {
-    const requestedDelay = window.fengari.lua.lua_tonumber(L, 1);
+    const requestedDelay = fengari.lua.lua_tonumber(L, 1);
     const delay = normalizeLuaDelay(requestedDelay);
     const simState = getDroneFromLua(L);
 
@@ -110,5 +111,5 @@ export const js_sleep = function(L: any) {
     });
     pushLuaRuntimeLog(simState, 'debug', 'sleep/js', `Сон зарегистрирован: delay=${delay}s; sourceState=${simState.fsmState}`, null);
     log(`[Lua Timer] sleep(${delay}s) registered`, 'info');
-    return window.fengari.lua.lua_yield(L, 0);
+    return fengari.lua.lua_yield(L, 0);
 };

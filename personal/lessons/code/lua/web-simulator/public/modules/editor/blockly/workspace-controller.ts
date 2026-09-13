@@ -1,13 +1,14 @@
-import { Blockly } from '../../ui/mission-guide/blockly.js';
+import { Blockly, type BlocklyNS } from '../blockly-mode/loader.js';
+import { ensureEditorBlocklyDefinitions } from '../blockly-mode/index.js';
 import type { ScriptLanguage } from '../../core/state.js';
 
 export type BlocklyWorkspaceController = {
     blocklyCanvas: HTMLElement | null;
-    blocklyWorkspace: Blockly.WorkspaceSvg | null;
-    setBlocklyWorkspace: (workspace: Blockly.WorkspaceSvg | null) => void;
-    theme: Blockly.Theme;
+    blocklyWorkspace: BlocklyNS.WorkspaceSvg | null;
+    setBlocklyWorkspace: (workspace: BlocklyNS.WorkspaceSvg | null) => void;
+    getTheme: () => BlocklyNS.Theme | undefined;
     buildMainEditorToolbox: (language: ScriptLanguage) => Element | string;
-    compileMainEditorWorkspace: (language: ScriptLanguage, workspace: Blockly.WorkspaceSvg) => string;
+    compileMainEditorWorkspace: (language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg) => string;
     createStarterWorkspaceXml: (language: ScriptLanguage) => string;
     isStarterLuaScript: (value: string) => boolean;
     getTextEditorValue: () => string;
@@ -84,32 +85,43 @@ export function ensureBlocklyWorkspace(
     controller: BlocklyWorkspaceController,
     language: ScriptLanguage,
     currentScriptLanguage: ScriptLanguage
-): void {
-    if (!controller.blocklyCanvas) return;
+): Promise<void> {
+    if (!controller.blocklyCanvas) return Promise.resolve();
 
-    if (!controller.blocklyWorkspace) {
-        const blocklyWorkspace = Blockly.inject(controller.blocklyCanvas, {
-            toolbox: controller.buildMainEditorToolbox(language),
-            scrollbars: true,
-            trashcan: true,
-            theme: controller.theme,
-            toolboxPosition: 'start'
-        });
-
-        blocklyWorkspace.addChangeListener(() => {
-            saveBlocklyWorkspaceState(controller, language);
-            controller.textDraftByKey.set(
-                controller.getEditorStateKey(language),
-                controller.compileMainEditorWorkspace(language, blocklyWorkspace)
-            );
-            controller.updateBlocklyPreview(language);
-        });
-
-        controller.setBlocklyWorkspace(blocklyWorkspace);
-    } else {
+    if (controller.blocklyWorkspace) {
         controller.blocklyWorkspace.updateToolbox(controller.buildMainEditorToolbox(language));
+        controller.ensureBlocklyResizeTracking();
+        controller.resizeBlocklyWorkspaceViewport();
+        return Promise.resolve();
     }
 
-    controller.ensureBlocklyResizeTracking();
-    controller.resizeBlocklyWorkspaceViewport();
+    // Первое обращение к Blockly в сессии: дожидаемся динамической подгрузки
+    // пакета и определений блоков, прежде чем трогать Blockly.* синхронно.
+    return ensureEditorBlocklyDefinitions().then(() => {
+        if (controller.blocklyWorkspace) {
+            controller.blocklyWorkspace.updateToolbox(controller.buildMainEditorToolbox(language));
+        } else if (controller.blocklyCanvas) {
+            const blocklyWorkspace = Blockly.inject(controller.blocklyCanvas, {
+                toolbox: controller.buildMainEditorToolbox(language),
+                scrollbars: true,
+                trashcan: true,
+                theme: controller.getTheme(),
+                toolboxPosition: 'start'
+            });
+
+            blocklyWorkspace.addChangeListener(() => {
+                saveBlocklyWorkspaceState(controller, language);
+                controller.textDraftByKey.set(
+                    controller.getEditorStateKey(language),
+                    controller.compileMainEditorWorkspace(language, blocklyWorkspace)
+                );
+                controller.updateBlocklyPreview(language);
+            });
+
+            controller.setBlocklyWorkspace(blocklyWorkspace);
+        }
+
+        controller.ensureBlocklyResizeTracking();
+        controller.resizeBlocklyWorkspaceViewport();
+    });
 }

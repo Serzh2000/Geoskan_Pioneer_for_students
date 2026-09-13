@@ -4,6 +4,7 @@
  */
 import { log } from '../shared/logging/logger.js';
 import type { ScriptLanguage } from '../core/state.js';
+import { onMissionNotices } from '../core/mission-notices.js';
 import {
     renderEarlyRouteHtml,
     renderIssuesHtml,
@@ -255,6 +256,22 @@ export function showMissingCallbackMissionNotice(apiName?: string) {
             ignoredCall
         ]),
         level: 'warn'
+    });
+}
+
+// Подключает ядро (physics/lua/autopilot) к показу тостов через шину
+// core/mission-notices.ts — вызывается один раз при старте приложения (main.ts).
+export function wireMissionNotices(): void {
+    onMissionNotices({
+        scriptFailure: showScriptFailureNotice,
+        missionGamepadOverride: showMissionGamepadOverrideNotice,
+        missingCallbackMission: showMissingCallbackMissionNotice,
+        earlyRoute: showEarlyRouteNotice,
+        simultaneousCommands: showSimultaneousCommandsNotice,
+        genericNotice: (title, message, level) => {
+            if (!(window as any).showSimulationNotice) return;
+            (window as any).showSimulationNotice({ title, message, level });
+        }
     });
 }
 

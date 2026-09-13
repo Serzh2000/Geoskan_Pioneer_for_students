@@ -1,4 +1,5 @@
 import type { DroneState, Vector3 } from '../core/state.js';
+import { clamp } from '../shared/math.js';
 
 export type AutopilotRuntimeConfig = {
     manual: {
@@ -55,10 +56,6 @@ type DroneAutopilotContext = {
     autoFlightStartS: number | null;
     emergencyLandingTriggered: boolean;
 };
-
-function clamp(value: number, min: number, max: number) {
-    return Math.max(min, Math.min(max, value));
-}
 
 function readNumber(values: Record<string, number>, key: string, fallback: number) {
     const value = values[key];

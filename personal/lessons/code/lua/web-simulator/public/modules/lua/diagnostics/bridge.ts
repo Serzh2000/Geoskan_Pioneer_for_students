@@ -2,6 +2,7 @@
  * Fengari bridge callbacks для Lua diagnostics.
  * Держит только чтение аргументов из Lua и проксирование в state helpers.
  */
+import * as fengari from 'fengari-web';
 import { getDroneFromLua } from '../../core/state.js';
 import type { LuaDiagnosticLevel } from '../../core/state.js';
 import {
@@ -12,12 +13,12 @@ import {
 } from './state.js';
 
 function readLuaStringArg(L: any, index: number) {
-    const value = window.fengari.lua.lua_tostring(L, index);
-    return value ? window.fengari.to_jsstring(value) : '';
+    const value = fengari.lua.lua_tostring(L, index);
+    return value ? fengari.to_jsstring(value) : '';
 }
 
 function readLuaNumberArg(L: any, index: number) {
-    return Number(window.fengari.lua.lua_tonumber(L, index));
+    return Number(fengari.lua.lua_tonumber(L, index));
 }
 
 export const js_diag_log = function(L: any) {
@@ -41,12 +42,12 @@ export const js_diag_record_api_call = function(L: any) {
 
 export const js_diag_get_fsm_state = function(L: any) {
     const drone = getDroneFromLua(L);
-    window.fengari.lua.lua_pushstring(L, window.fengari.to_luastring(drone.fsmState));
+    fengari.lua.lua_pushstring(L, fengari.to_luastring(drone.fsmState));
     return 1;
 };
 
 export const js_diag_describe_mce = function(L: any) {
     const commandId = readLuaNumberArg(L, 1);
-    window.fengari.lua.lua_pushstring(L, window.fengari.to_luastring(describeCommandId(commandId)));
+    fengari.lua.lua_pushstring(L, fengari.to_luastring(describeCommandId(commandId)));
     return 1;
 };

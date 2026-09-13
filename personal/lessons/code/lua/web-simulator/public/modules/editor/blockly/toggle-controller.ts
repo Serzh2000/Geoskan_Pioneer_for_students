@@ -1,19 +1,19 @@
 import type { ScriptLanguage } from '../../core/state.js';
-import { Blockly } from '../../ui/mission-guide/blockly.js';
+import type { BlocklyNS } from '../blockly-mode/loader.js';
 
 export type BlocklyToggleController = {
     currentScriptLanguage: ScriptLanguage;
     monacoRoot: HTMLElement | null;
-    blocklyWorkspace: Blockly.WorkspaceSvg | null;
+    blocklyWorkspace: BlocklyNS.WorkspaceSvg | null;
     blocklyCodeOverlayToggle: HTMLInputElement | null;
     textDraftByKey: Map<string, string>;
     blocklyWorkspaceXmlByKey: Map<string, string>;
     getEditorStateKey: (language: ScriptLanguage) => string;
-    compileMainEditorWorkspace: (language: ScriptLanguage, workspace: Blockly.WorkspaceSvg) => string;
+    compileMainEditorWorkspace: (language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg) => string;
     getTextEditorValue: () => string;
     setTextEditorValue: (value: string) => void;
     saveBlocklyWorkspaceState: (language?: ScriptLanguage) => void;
-    ensureBlocklyWorkspace: (language: ScriptLanguage) => void;
+    ensureBlocklyWorkspace: (language: ScriptLanguage) => Promise<void>;
     loadBlocklyWorkspace: (language: ScriptLanguage) => void;
     syncEditorModeVisibility: () => void;
     syncBlocklyEditorToggle: () => void;
@@ -67,11 +67,12 @@ export function setBlocklyEditorEnabled(controller: BlocklyToggleController, ena
     controller.syncEditorModeVisibility();
     controller.syncBlocklyEditorToggle();
     controller.syncBlocklyCodeOverlayToggle();
-    controller.ensureBlocklyWorkspace(controller.currentScriptLanguage);
-    controller.loadBlocklyWorkspace(controller.currentScriptLanguage);
-    controller.expandEditorPanelForBlockly();
-    controller.layoutEditor();
-    controller.persistEditorSession();
+    controller.ensureBlocklyWorkspace(controller.currentScriptLanguage).then(() => {
+        controller.loadBlocklyWorkspace(controller.currentScriptLanguage);
+        controller.expandEditorPanelForBlockly();
+        controller.layoutEditor();
+        controller.persistEditorSession();
+    });
 }
 
 export function initBlocklyEditorToggle(controller: BlocklyToggleController): void {

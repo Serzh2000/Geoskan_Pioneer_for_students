@@ -1,3 +1,4 @@
+import * as fengari from 'fengari-web';
 import { drones, getDroneFromLua } from '../core/state.js';
 import { showDronePrintBubble } from '../drone/index.js';
 import { log } from '../shared/logging/logger.js';
@@ -23,22 +24,22 @@ export function extractLuaSyntaxLine(errorMsg: string): number | null {
 
 const lua_print = function(L: any) {
     const drone = getDroneFromLua(L);
-    const rawText = window.fengari.lua.lua_tostring(L, 1);
-    const text = rawText ? window.fengari.to_jsstring(rawText) : '';
+    const rawText = fengari.lua.lua_tostring(L, 1);
+    const text = rawText ? fengari.to_jsstring(rawText) : '';
     showDronePrintBubble(drone.id, text);
     log(`[Lua print] ${text}`, 'info');
     return 0;
 };
 
 const js_validate_missing_global = function(L: any) {
-    const lua = window.fengari.lua;
+    const lua = fengari.lua;
     const rawName = lua.lua_tostring(L, 1);
-    const name = rawName ? window.fengari.to_jsstring(rawName) : '';
+    const name = rawName ? fengari.to_jsstring(rawName) : '';
     const errorText = getLuaMissingGlobalConstantError(name);
 
     if (errorText) {
         lua.lua_pushnil(L);
-        lua.lua_pushstring(L, window.fengari.to_luastring(errorText));
+        lua.lua_pushstring(L, fengari.to_luastring(errorText));
         return 2;
     }
 
@@ -47,7 +48,7 @@ const js_validate_missing_global = function(L: any) {
 };
 
 function registerLuaBridgeFunctions(luaState: any) {
-    const lua = window.fengari.lua;
+    const lua = fengari.lua;
 
     lua.lua_register(luaState, 'js_ap_push', ap_push);
     lua.lua_register(luaState, 'js_ap_goToPoint', ap_goToPoint);
@@ -87,19 +88,19 @@ function registerLuaBridgeFunctions(luaState: any) {
 }
 
 export function setupLuaBridgeForDrone(id: string) {
-    const lua = window.fengari.lua;
-    const lauxlib = window.fengari.lauxlib;
-    const lualib = window.fengari.lualib;
+    const lua = fengari.lua;
+    const lauxlib = fengari.lauxlib;
+    const lualib = fengari.lualib;
 
     const luaState = lauxlib.luaL_newstate();
     lualib.luaL_openlibs(luaState);
 
     registerLuaBridgeFunctions(luaState);
 
-    lua.lua_pushstring(luaState, window.fengari.to_luastring(id));
-    lua.lua_setglobal(luaState, window.fengari.to_luastring('__DRONE_ID__'));
+    lua.lua_pushstring(luaState, fengari.to_luastring(id));
+    lua.lua_setglobal(luaState, fengari.to_luastring('__DRONE_ID__'));
 
-    const res = lauxlib.luaL_dostring(luaState, window.fengari.to_luastring(LUA_SETUP_SCRIPT));
+    const res = lauxlib.luaL_dostring(luaState, fengari.to_luastring(LUA_SETUP_SCRIPT));
     if (res !== 0) {
         const errVal = lua.lua_tostring(luaState, -1);
         console.error(`[Lua Bridge] Failed to setup environment for ${id}:`, luaToStr(errVal, luaState));

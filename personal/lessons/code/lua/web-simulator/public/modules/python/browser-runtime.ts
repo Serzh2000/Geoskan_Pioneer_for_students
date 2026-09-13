@@ -1,6 +1,7 @@
 import { drones } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
-import { createScriptFailureError, showScriptFailureNotice } from '../app/script-execution-notice.js';
+import { createScriptFailureError } from '../app/script-execution-notice.js';
+import { emitScriptFailure } from '../core/mission-notices.js';
 import {
     cancelledRuns,
     cleanupPythonRuntimeState,
@@ -224,6 +225,6 @@ finally:
             drones[droneId].status = 'ОШИБКА';
         }
         clearActivePythonRun(droneId, token);
-        showScriptFailureNotice('python', createScriptFailureError('runtime', msg));
+        emitScriptFailure('python', createScriptFailureError('runtime', msg));
     });
 }

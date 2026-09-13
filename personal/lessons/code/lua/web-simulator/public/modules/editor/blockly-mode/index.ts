@@ -1,16 +1,16 @@
 import type { ScriptLanguage } from '../../core/state.js';
 import { evConstants } from '../../docs/api-docs-events.js';
-import { Blockly, getBlocklyGenerator, initBlocklyDefinitions } from '../../ui/mission-guide/blockly.js';
+import { Blockly, getBlocklyGenerator, initBlocklyDefinitions, ensureBlocklyLoaded, type BlocklyNS } from './loader.js';
 import { buildCatalog } from './catalog.js';
 import type { ApiCatalogEntry } from './types.js';
 import {
     compileMainEditorWorkspace as compileWorkspaceCode
 } from './workspace.js';
-import { registerLuaEditorBlocklyDefinitions, ALL_LUA_BLOCK_TYPES } from './lua-definitions.js';
 
 const LUA_EVENT_CONSTANT_BLOCK = 'lua_event_constant';
 
 let definitionsInitialized = false;
+let definitionsLoadPromise: Promise<void> | null = null;
 let luaCatalog: ApiCatalogEntry[] = [];
 let pythonCatalog: ApiCatalogEntry[] = [];
 
@@ -558,44 +558,54 @@ function renderPioneerSdkCategories(): string {
     ].join('');
 }
 
-export function ensureEditorBlocklyDefinitions(): void {
-    if (definitionsInitialized) return;
-    definitionsInitialized = true;
+// Единственная точка входа, которую должны ждать все вызывающие стороны
+// (ensureBlocklyWorkspace в workspace-controller.ts) перед тем, как трогать
+// Blockly.* синхронно. buildMainEditorToolbox/compileMainEditorWorkspace ниже
+// сами по себе синхронны и полагаются на то, что вызывающая сторона это уже сделала.
+export function ensureEditorBlocklyDefinitions(): Promise<void> {
+    if (definitionsInitialized) return Promise.resolve();
+    if (!definitionsLoadPromise) {
+        definitionsLoadPromise = Promise.all([
+            ensureBlocklyLoaded(),
+            import('./lua-definitions.js')
+        ]).then(([, luaDefinitions]) => {
+            definitionsInitialized = true;
 
-    initBlocklyDefinitions();
+            initBlocklyDefinitions();
 
-    // Регистрируем полный набор Lua-блоков из lua-definitions.ts
-    // перед построением каталога, чтобы динамические API-блоки не перезаписали их.
-    registerLuaEditorBlocklyDefinitions();
+            // Регистрируем полный набор Lua-блоков из lua-definitions.ts
+            // перед построением каталога, чтобы динамические API-блоки не перезаписали их.
+            luaDefinitions.registerLuaEditorBlocklyDefinitions();
 
-    luaCatalog = buildCatalog('lua');
-    pythonCatalog = buildCatalog('python');
+            luaCatalog = buildCatalog('lua');
+            pythonCatalog = buildCatalog('python');
 
-    // Расширяем каталог учебными блоками, чтобы они группировались в отдельную категорию
-    const luaCatalogWithCourse = extendCatalogWithCourseBlocks('lua', luaCatalog);
-    const pythonCatalogWithCourse = extendCatalogWithCourseBlocks('python', pythonCatalog);
+            // Расширяем каталог учебными блоками, чтобы они группировались в отдельную категорию
+            const luaCatalogWithCourse = extendCatalogWithCourseBlocks('lua', luaCatalog);
+            const pythonCatalogWithCourse = extendCatalogWithCourseBlocks('python', pythonCatalog);
 
-    // Защита: блоки из LUA_FULL_BLOCK_TYPES уже зарегистрированы в lua-definitions.ts
-    // и не должны быть перезаписаны динамическими версиями из каталога API.
-    // Динамические блоки создаём только для типов, которых нет в полном наборе Lua-блоков.
-    const luaProtectedTypes = new Set(LUA_FULL_BLOCK_TYPES);
-    luaCatalogWithCourse.forEach((entry) => {
-        if (!luaProtectedTypes.has(entry.type)) {
-            defineStatementBlock(entry, 'lua');
-        }
-    });
-    pythonCatalogWithCourse.forEach((entry) => {
-        if (!getCourseBlockTypes('python').includes(entry.type)) {
-            defineStatementBlock(entry, 'python');
-        }
-    });
+            // Защита: блоки из LUA_FULL_BLOCK_TYPES уже зарегистрированы в lua-definitions.ts
+            // и не должны быть перезаписаны динамическими версиями из каталога API.
+            // Динамические блоки создаём только для типов, которых нет в полном наборе Lua-блоков.
+            const luaProtectedTypes = new Set(LUA_FULL_BLOCK_TYPES);
+            luaCatalogWithCourse.forEach((entry) => {
+                if (!luaProtectedTypes.has(entry.type)) {
+                    defineStatementBlock(entry, 'lua');
+                }
+            });
+            pythonCatalogWithCourse.forEach((entry) => {
+                if (!getCourseBlockTypes('python').includes(entry.type)) {
+                    defineStatementBlock(entry, 'python');
+                }
+            });
 
-    defineLuaEventConstantBlock();
+            defineLuaEventConstantBlock();
+        });
+    }
+    return definitionsLoadPromise;
 }
 
 export function buildMainEditorToolbox(language: ScriptLanguage): string {
-    ensureEditorBlocklyDefinitions();
-
     if (language === 'python') {
         return `
             <xml xmlns="https://developers.google.com/blockly/xml">
@@ -612,12 +622,6 @@ export function buildMainEditorToolbox(language: ScriptLanguage): string {
     `;
 }
 
-export function compileMainEditorWorkspace(language: ScriptLanguage, workspace: Blockly.WorkspaceSvg): string {
-    ensureEditorBlocklyDefinitions();
+export function compileMainEditorWorkspace(language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg): string {
     return compileWorkspaceCode(language, workspace);
 }
-
-// text_print перемещён в blockly-core/definitions.ts.
-// Здесь оставляем только заглушку, которая не переопределяет уже существующее определение,
-// чтобы избежать дублирования генераторов.
-// Блок text_print и его генераторы регистрируются в blockly-core/definitions.ts.

@@ -4,7 +4,6 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 import 'monaco-editor/esm/vs/editor/editor.all.js';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import type { ScriptLanguage } from '../core/state.js';
-import { ensureEditorBlocklyDefinitions } from './blockly-mode/index.js';
 import { setupCompletionProvider } from './monaco/completion.js';
 import { setupHoverProvider } from './monaco/hover.js';
 import { setupSyntaxHighlighting } from './monaco/syntax.js';
@@ -81,7 +80,6 @@ export function createTextEditorInstance(options: TextEditorCreateOptions): any 
     setupSyntaxHighlighting(monaco);
     setupHoverProvider(monaco);
     setupCompletionProvider(monaco);
-    ensureEditorBlocklyDefinitions();
 
     const editorInstance = monaco.editor.create(options.root, {
         value: options.initialValue,

@@ -1,3 +1,4 @@
+import * as fengari from 'fengari-web';
 
 const logs = document.getElementById('logs');
 
@@ -44,16 +45,16 @@ function decodeLuaByteLikeValue(luaVal: any): string | null {
 export function luaToStr(luaVal: any, L: any): string {
     if (luaVal === null || luaVal === undefined) {
         if (L) {
-            const top = window.fengari.lua.lua_gettop(L);
+            const top = fengari.lua.lua_gettop(L);
             if (top > 0) {
-                const s = window.fengari.lua.lua_tostring(L, -1);
-                if (s) return window.fengari.to_jsstring(s);
+                const s = fengari.lua.lua_tostring(L, -1);
+                if (s) return fengari.to_jsstring(s);
             }
         }
         return "Unknown Lua Error (no message)";
     }
     try {
-        const str = window.fengari.to_jsstring(luaVal);
+        const str = fengari.to_jsstring(luaVal);
         return str || "Empty Lua Error message";
     } catch (e) {
         const decoded = decodeLuaByteLikeValue(luaVal);

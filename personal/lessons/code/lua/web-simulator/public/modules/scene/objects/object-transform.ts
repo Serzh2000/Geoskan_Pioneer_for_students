@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { controls, selectedObject, transformControl, transformHelper } from '../core/scene-init.js';
-import { simState, simSettings } from '../../core/state.js';
+import { drones, currentDroneId, simSettings } from '../../core/state.js';
 import { updateTransformModeDecorations } from '../interaction/transform.js';
 import { isTransformableObject } from './object-catalog.js';
+import { getCameraMode } from '../core/camera-mode-state.js';
 
 export type TransformMode = 'translate' | 'rotate' | 'scale';
 export type RotationAxis = 'x' | 'y' | 'z';
@@ -52,30 +53,30 @@ export function clearSelectedObjectInitialTransform(target?: THREE.Object3D | nu
 }
 
 export function rotateSelectedObjectByDegrees(axis: RotationAxis, deltaDegrees: number) {
-    if (!selectedObject || !transformControl || !isTransformableObject(selectedObject) || simState.running) return false;
+    if (!selectedObject || !transformControl || !isTransformableObject(selectedObject) || drones[currentDroneId].running) return false;
     const radians = THREE.MathUtils.degToRad(deltaDegrees);
     selectedObject.rotation[axis] += radians;
     selectedObject.updateMatrixWorld(true);
-    transformControl.dispatchEvent({ type: 'change', target: transformControl });
+    transformControl.dispatchEvent({ type: 'change' });
     updateTransformModeDecorations(transformControl.getMode(), selectedObject);
     return true;
 }
 
 export function resetSelectedObjectToInitialTransform() {
-    if (!selectedObject || !transformControl || !isTransformableObject(selectedObject) || simState.running) return false;
+    if (!selectedObject || !transformControl || !isTransformableObject(selectedObject) || drones[currentDroneId].running) return false;
     if (!initialTransformTarget || !initialTransformSnapshot || selectedObject !== initialTransformTarget) return false;
 
     selectedObject.position.copy(initialTransformSnapshot.position);
     selectedObject.quaternion.copy(initialTransformSnapshot.quaternion);
     selectedObject.scale.copy(initialTransformSnapshot.scale);
     selectedObject.updateMatrixWorld(true);
-    transformControl.dispatchEvent({ type: 'change', target: transformControl });
+    transformControl.dispatchEvent({ type: 'change' });
     updateTransformModeDecorations(transformControl.getMode(), selectedObject);
     return true;
 }
 
 export function activateTransformMode(mode: TransformMode, target: THREE.Object3D) {
-    if (!transformControl || !target || !target.parent || simState.running) return false;
+    if (!transformControl || !target || !target.parent || drones[currentDroneId].running) return false;
     if (!isTransformableObject(target)) return false;
 
     transformControl.attach(target);
@@ -99,6 +100,6 @@ export function activateTransformMode(mode: TransformMode, target: THREE.Object3
         (window as any).setTransformToolbarRotationStep(rotationStepDegrees);
     }
     updateTransformModeDecorations(mode, target);
-    if (controls) controls.enabled = (window as any).cameraMode === 'free' && !(window as any).isTransforming;
+    if (controls) controls.enabled = getCameraMode() === 'free' && !(window as any).isTransforming;
     return true;
 }

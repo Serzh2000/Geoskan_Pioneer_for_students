@@ -3,7 +3,7 @@ import { JSDOM } from 'jsdom';
 import { evaluateLesson } from '../public/modules/ui/mission-guide/evaluation/index.js';
 import { getLuaLessonState } from '../public/modules/ui/mission-guide/lua-lessons.js';
 import { getPythonLessonState } from '../public/modules/ui/mission-guide/python-lessons.js';
-import { buildTargetWorkspaceXml } from '../public/modules/ui/mission-guide/support/workspace-xml.js';
+import { buildTargetWorkspaceXml } from '../public/modules/editor/blockly-mode/workspace-xml.js';
 import type { GuideLesson } from '../public/modules/ui/mission-guide/types.js';
 
 const { window } = new JSDOM();

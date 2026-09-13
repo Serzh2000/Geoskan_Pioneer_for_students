@@ -9,7 +9,7 @@ import {
     renderer,
     toggleMultiSelectObject
 } from '../core/scene-init.js';
-import { simState } from '../../core/state.js';
+import { drones, currentDroneId } from '../../core/state.js';
 import { handleDeselection } from './selection.js';
 import { isTransformableObject } from '../objects/object-catalog.js';
 import { handleLinearEditingPointerUp, isLinearFeatureEditingActive } from './linear-editing.js';
@@ -24,6 +24,7 @@ import {
     traceClick
 } from './input-helpers.js';
 import { handleSelection, updateObjectSelectionVisuals } from './selection-ui.js';
+import { getCameraMode } from '../core/camera-mode-state.js';
 
 export { handleSelection, updateObjectSelectionVisuals };
 
@@ -36,8 +37,8 @@ export function onPointerDown(event: PointerEvent) {
 }
 
 export function onPointerUp(event: PointerEvent) {
-    traceClick(`pointerup button=${event.button} x=${event.clientX} y=${event.clientY} cameraMode=${String((window as any).cameraMode)}`);
-    if (simState.running && (window as any).cameraMode === 'fpv') {
+    traceClick(`pointerup button=${event.button} x=${event.clientX} y=${event.clientY} cameraMode=${String(getCameraMode())}`);
+    if (drones[currentDroneId].running && getCameraMode() === 'fpv') {
         traceClick('pointerup ignored: fpv mode while simulation is running', 'warn');
         return;
     }

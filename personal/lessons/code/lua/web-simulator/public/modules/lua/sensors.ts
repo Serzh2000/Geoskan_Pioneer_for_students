@@ -1,56 +1,57 @@
+import * as fengari from 'fengari-web';
 import { getDroneFromLua, simSettings } from '../core/state.js';
 import { getAutopilotRuntimeConfig } from '../autopilot/params-runtime.js';
 
 export const sensors_pos = function(L: any) {
     const simState = getDroneFromLua(L);
-    window.fengari.lua.lua_pushnumber(L, simState.pos.x);
-    window.fengari.lua.lua_pushnumber(L, simState.pos.y);
-    window.fengari.lua.lua_pushnumber(L, simState.pos.z);
+    fengari.lua.lua_pushnumber(L, simState.pos.x);
+    fengari.lua.lua_pushnumber(L, simState.pos.y);
+    fengari.lua.lua_pushnumber(L, simState.pos.z);
     return 3;
 };
 
 export const sensors_vel = function(L: any) {
     const simState = getDroneFromLua(L);
-    window.fengari.lua.lua_pushnumber(L, simState.vel.x);
-    window.fengari.lua.lua_pushnumber(L, simState.vel.y);
-    window.fengari.lua.lua_pushnumber(L, simState.vel.z);
+    fengari.lua.lua_pushnumber(L, simState.vel.x);
+    fengari.lua.lua_pushnumber(L, simState.vel.y);
+    fengari.lua.lua_pushnumber(L, simState.vel.z);
     return 3;
 };
 
 export const sensors_accel = function(L: any) {
     const simState = getDroneFromLua(L);
-    window.fengari.lua.lua_pushnumber(L, simState.accel.x);
-    window.fengari.lua.lua_pushnumber(L, simState.accel.y);
-    window.fengari.lua.lua_pushnumber(L, simState.accel.z);
+    fengari.lua.lua_pushnumber(L, simState.accel.x);
+    fengari.lua.lua_pushnumber(L, simState.accel.y);
+    fengari.lua.lua_pushnumber(L, simState.accel.z);
     return 3;
 };
 
 export const sensors_gyro = function(L: any) {
     const simState = getDroneFromLua(L);
-    window.fengari.lua.lua_pushnumber(L, simState.gyro.x);
-    window.fengari.lua.lua_pushnumber(L, simState.gyro.y);
-    window.fengari.lua.lua_pushnumber(L, simState.gyro.z);
+    fengari.lua.lua_pushnumber(L, simState.gyro.x);
+    fengari.lua.lua_pushnumber(L, simState.gyro.y);
+    fengari.lua.lua_pushnumber(L, simState.gyro.z);
     return 3;
 };
 
 export const sensors_orientation = function(L: any) {
     const simState = getDroneFromLua(L);
-    window.fengari.lua.lua_pushnumber(L, simState.orientation.roll);
-    window.fengari.lua.lua_pushnumber(L, simState.orientation.pitch);
-    window.fengari.lua.lua_pushnumber(L, simState.orientation.yaw);
+    fengari.lua.lua_pushnumber(L, simState.orientation.roll);
+    fengari.lua.lua_pushnumber(L, simState.orientation.pitch);
+    fengari.lua.lua_pushnumber(L, simState.orientation.yaw);
     return 3;
 };
 
 export const sensors_range = function(L: any) {
     const simState = getDroneFromLua(L);
     const minHeight = getAutopilotRuntimeConfig().sensors.altMinHeight;
-    window.fengari.lua.lua_pushnumber(L, simState.pos.z >= minHeight ? simState.pos.z : 0);
+    fengari.lua.lua_pushnumber(L, simState.pos.z >= minHeight ? simState.pos.z : 0);
     return 1;
 };
 
 export const sensors_battery = function(L: any) {
     const simState = getDroneFromLua(L);
-    window.fengari.lua.lua_pushnumber(L, simState.batteryVoltage);
+    fengari.lua.lua_pushnumber(L, simState.batteryVoltage);
     return 1;
 };
 
@@ -58,7 +59,7 @@ export const sensors_tof = function(L: any) {
     const simState = getDroneFromLua(L);
     const minHeight = getAutopilotRuntimeConfig().sensors.altMinHeight;
     const rangeMeters = simState.pos.z >= minHeight ? simState.pos.z : 0;
-    window.fengari.lua.lua_pushnumber(L, rangeMeters * 1000);
+    fengari.lua.lua_pushnumber(L, rangeMeters * 1000);
     return 1;
 };
 
@@ -70,7 +71,7 @@ export const sensors_rc = function(L: any) {
     const simState = getDroneFromLua(L);
     if (!simSettings.gamepadConnected) {
         for (let i = 0; i < 8; i += 1) {
-            window.fengari.lua.lua_pushnumber(L, 0);
+            fengari.lua.lua_pushnumber(L, 0);
         }
         return 8;
     }
@@ -91,13 +92,13 @@ export const sensors_rc = function(L: any) {
     const ch7 = normalizeRcPwmToUnit(getChannel(6, 1000), 1500);
     const ch8 = normalizeRcPwmToUnit(getChannel(7, getChannel(6, 1000)), 1500);
 
-    window.fengari.lua.lua_pushnumber(L, ch1);
-    window.fengari.lua.lua_pushnumber(L, ch2);
-    window.fengari.lua.lua_pushnumber(L, ch3);
-    window.fengari.lua.lua_pushnumber(L, ch4);
-    window.fengari.lua.lua_pushnumber(L, ch5);
-    window.fengari.lua.lua_pushnumber(L, ch6);
-    window.fengari.lua.lua_pushnumber(L, ch7);
-    window.fengari.lua.lua_pushnumber(L, ch8);
+    fengari.lua.lua_pushnumber(L, ch1);
+    fengari.lua.lua_pushnumber(L, ch2);
+    fengari.lua.lua_pushnumber(L, ch3);
+    fengari.lua.lua_pushnumber(L, ch4);
+    fengari.lua.lua_pushnumber(L, ch5);
+    fengari.lua.lua_pushnumber(L, ch6);
+    fengari.lua.lua_pushnumber(L, ch7);
+    fengari.lua.lua_pushnumber(L, ch8);
     return 8;
 };

@@ -531,7 +531,7 @@ luaGenerator.forBlock['lua_time_sleep'] = luaGenerator.forBlock['lua_sleep'];
 export function registerLuaEditorBlocklyDefinitions(): void {
     // Большинство блоков уже зарегистрировано выше через Blockly.Blocks[...],
     // на момент импорта этого модуля. Но lua_print/lua_variables_set/lua_variables_get
-    // регистрируются лениво, внутри initBlocklyDefinitions() (mission-guide/blockly-core),
+    // регистрируются лениво, внутри initBlocklyDefinitions() (blockly-core.ts),
     // которая вызывается только здесь, из index.ts — до этого момента их ещё нет.
     // Поэтому алиасы к ним нельзя создавать на верхнем уровне модуля, только здесь.
     Blockly.Blocks['lua_print_alias'] = Blockly.Blocks['lua_print'];

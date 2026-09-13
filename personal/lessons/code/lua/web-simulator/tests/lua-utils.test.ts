@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 describe('lua utils error decoding', () => {
     let luaToStr: typeof import('../public/modules/lua/utils.js').luaToStr;
 
@@ -8,20 +10,18 @@ describe('lua utils error decoding', () => {
             scrollHeight: 0
         };
 
-        (globalThis as any).window = {
-            fengari: {
-                lua: {
-                    lua_gettop: () => 0,
-                    lua_tostring: () => null
-                },
-                to_jsstring: (value: unknown) => {
-                    if (typeof value === 'string') {
-                        return value;
-                    }
-                    throw new Error('not a direct lua string');
+        jest.unstable_mockModule('fengari-web', () => ({
+            lua: {
+                lua_gettop: () => 0,
+                lua_tostring: () => null
+            },
+            to_jsstring: (value: unknown) => {
+                if (typeof value === 'string') {
+                    return value;
                 }
+                throw new Error('not a direct lua string');
             }
-        };
+        }));
         (globalThis as any).document = {
             getElementById: (id: string) => (id === 'logs' ? logsEl : null),
             createElement: () => ({

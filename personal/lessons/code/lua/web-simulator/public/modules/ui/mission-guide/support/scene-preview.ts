@@ -1,12 +1,13 @@
 import { controls, onWindowResize, renderer } from '../../../scene/core/scene-init.js';
 import { log } from '../../../shared/logging/logger.js';
+import { getCameraMode, type CameraMode } from '../../../scene/core/camera-mode-state.js';
 
 let previewActive = false;
 let originalParent: ParentNode | null = null;
 let originalNextSibling: ChildNode | null = null;
 let cachedSceneContainer: HTMLDivElement | null = null;
 let previewGestureCleanup: (() => void) | null = null;
-let originalCameraMode: string | null = null;
+let originalCameraMode: CameraMode | null = null;
 let lastPreviewGestureLogAt = 0;
 
 function debugPreviewZoom(message: string, force = false): void {
@@ -14,7 +15,6 @@ function debugPreviewZoom(message: string, force = false): void {
     if (!force && now - lastPreviewGestureLogAt < 250) return;
     lastPreviewGestureLogAt = now;
     log(`[GUIDE-PREVIEW] ${message}`, 'info');
-    console.info('[GUIDE-PREVIEW]', message);
 }
 
 function getSceneContainer(): HTMLDivElement | null {
@@ -158,11 +158,11 @@ export function mountMissionGuideScenePreview(): void {
 
     sceneContainer.classList.add('scene-container--guide-preview');
     if (originalCameraMode === null) {
-        originalCameraMode = typeof (window as any).cameraMode === 'string' ? (window as any).cameraMode : 'free';
+        originalCameraMode = getCameraMode();
     }
     (window as any).setCameraMode?.('free');
     debugPreviewZoom(
-        `preview mounted previousMode=${String(originalCameraMode)} currentMode=${String((window as any).cameraMode)} controlsEnabled=${String(controls?.enabled)} canvas=${String(Boolean(sceneContainer.querySelector('#canvas-container')))} sceneParent=guide-preview`,
+        `preview mounted previousMode=${String(originalCameraMode)} currentMode=${String(getCameraMode())} controlsEnabled=${String(controls?.enabled)} canvas=${String(Boolean(sceneContainer.querySelector('#canvas-container')))} sceneParent=guide-preview`,
         true
     );
 
@@ -180,7 +180,7 @@ export function restoreMissionGuideScenePreview(): void {
         (window as any).setCameraMode?.(originalCameraMode);
     }
     debugPreviewZoom(
-        `preview restored mode=${String((window as any).cameraMode)} controlsEnabled=${String(controls?.enabled)}`,
+        `preview restored mode=${String(getCameraMode())} controlsEnabled=${String(controls?.enabled)}`,
         true
     );
     originalCameraMode = null;

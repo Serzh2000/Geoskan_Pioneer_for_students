@@ -3,7 +3,7 @@ import {
     DEFAULT_PYTHON_SCRIPT,
     type ScriptLanguage
 } from '../../core/state.js';
-import { Blockly, getBlocklyGenerator } from '../../ui/mission-guide/blockly.js';
+import { getBlocklyGenerator, type BlocklyNS } from './loader.js';
 
 const LUA_RAW_CODE_BLOCK = 'lua_raw_code';
 const PY_RAW_CODE_BLOCK = 'py_raw_code';
@@ -12,16 +12,16 @@ function getRawCodeBlockType(language: ScriptLanguage): string {
     return language === 'lua' ? LUA_RAW_CODE_BLOCK : PY_RAW_CODE_BLOCK;
 }
 
-function getWorkspaceTopBlocks(workspace: Blockly.WorkspaceSvg): Blockly.Block[] {
+function getWorkspaceTopBlocks(workspace: BlocklyNS.WorkspaceSvg): BlocklyNS.Block[] {
     return workspace.getTopBlocks(true).filter((block) => !block.isInsertionMarker());
 }
 
-function hasOnlySingleRawCodeBlock(language: ScriptLanguage, workspace: Blockly.WorkspaceSvg): boolean {
+function hasOnlySingleRawCodeBlock(language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg): boolean {
     const blocks = getWorkspaceTopBlocks(workspace);
     return blocks.length === 1 && blocks[0]?.type === getRawCodeBlockType(language) && !blocks[0].getNextBlock();
 }
 
-function compileGeneratorWorkspace(language: ScriptLanguage, workspace: Blockly.WorkspaceSvg): string {
+function compileGeneratorWorkspace(language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg): string {
     const generator = getBlocklyGenerator(language);
     const code = String(generator?.workspaceToCode(workspace) || '').trim();
 
@@ -55,7 +55,7 @@ function escapeXml(value: string): string {
         .replace(/'/g, '&apos;');
 }
 
-export function compileMainEditorWorkspace(language: ScriptLanguage, workspace: Blockly.WorkspaceSvg): string {
+export function compileMainEditorWorkspace(language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg): string {
     return hasOnlySingleRawCodeBlock(language, workspace)
         ? compileGeneratorWorkspace(language, workspace)
         : compileGeneratorWorkspace(language, workspace);

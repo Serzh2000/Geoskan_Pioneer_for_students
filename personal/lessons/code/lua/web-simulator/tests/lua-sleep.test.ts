@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 describe('lua sleep runtime', () => {
     let createDroneState: typeof import('../public/modules/core/state.js').createDroneState;
     let resetState: typeof import('../public/modules/core/state.js').resetState;
@@ -16,32 +18,31 @@ describe('lua sleep runtime', () => {
             scrollHeight: 0
         };
 
-        (globalThis as any).window = {
-            fengari: {
-                lua: {
-                    LUA_OK: 0,
-                    LUA_YIELD: 1,
-                    LUA_REGISTRYINDEX: 1,
-                    lua_gettop: () => 1,
-                    lua_getglobal: () => {},
-                    lua_tostring: () => 'lua_sleep_test_drone',
-                    lua_pop: () => {},
-                    lua_tonumber: () => 0.5,
-                    lua_yield: () => 1,
-                    lua_resume: () => {
-                        observedSources.push(drone.currentCommandSource);
-                        return 0;
-                    },
-                    lua_isnumber: () => false,
-                    lua_newthread: () => ({})
+        jest.unstable_mockModule('fengari-web', () => ({
+            lua: {
+                LUA_OK: 0,
+                LUA_YIELD: 1,
+                LUA_REGISTRYINDEX: 1,
+                lua_gettop: () => 1,
+                lua_getglobal: () => {},
+                lua_tostring: () => 'lua_sleep_test_drone',
+                lua_pop: () => {},
+                lua_tonumber: () => 0.5,
+                lua_yield: () => 1,
+                lua_resume: () => {
+                    observedSources.push(drone.currentCommandSource);
+                    return 0;
                 },
-                lauxlib: {
-                    luaL_unref: () => {}
-                },
-                to_luastring: (value: string) => value,
-                to_jsstring: (value: string) => value
-            }
-        };
+                lua_isnumber: () => false,
+                lua_newthread: () => ({})
+            },
+            lauxlib: {
+                luaL_unref: () => {}
+            },
+            to_luastring: (value: string) => value,
+            to_jsstring: (value: string) => value
+        }));
+        (globalThis as any).window = {};
         (globalThis as any).document = {
             getElementById: (id: string) => (id === 'logs' ? logsEl : null),
             createElement: () => ({

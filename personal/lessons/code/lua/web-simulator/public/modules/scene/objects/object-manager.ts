@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { log } from '../../shared/logging/logger.js';
 import { transformControl, transformHelper, controls, droneMeshes, selectedObject, multiSelectedObjects, setSelectedObject } from '../core/scene-init.js';
-import { drones, currentDroneId, simState, simSettings } from '../../core/state.js';
+import { drones, currentDroneId, simSettings } from '../../core/state.js';
 import { envGroup, addObjectToScene, updateSceneObjectPoints, updateSceneObjectValue } from '../../environment/index.js';
 import { MarkerMapOptions, SceneObjectOptions, ScenePathPoint } from '../../environment/obstacles.js';
 import { handleDeselection, deselectObject } from '../interaction/selection.js';
@@ -140,7 +140,7 @@ export function resetDroneToOrigin() {
     if (!currentDrone) return false;
     const droneState = drones[currentDroneId];
     
-    if (simState.running) {
+    if (drones[currentDroneId].running) {
         log('Нельзя вернуть дрон в начало во время выполнения скрипта', 'warn');
         return false;
     }

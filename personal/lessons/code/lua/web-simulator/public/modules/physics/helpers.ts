@@ -1,5 +1,10 @@
+import type * as THREE from 'three';
 import type { DroneState } from '../core/state.js';
 import { isDroneAirborneState } from '../autopilot/fsm.js';
+
+// Физика не должна статически зависеть от drone/index.ts (сцена/Three.js) —
+// список препятствий приходит извне как параметр, а не через прямой импорт.
+export type ObstacleProvider = () => THREE.Object3D[];
 
 export const PHYSICS_TUNING = {
     STABILIZE_MAX_TILT: 0.8,

@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 /**
  * Общая harness-инициализация для тестов уведомлений о выполнении скриптов.
  * Скрывает настройку window/document и ленивые импорты тестируемых модулей.
@@ -29,6 +31,13 @@ export async function createScriptExecutionNoticeHarness(): Promise<ScriptExecut
         appendChild: () => {}
     };
 
+    jest.unstable_mockModule('fengari-web', () => ({
+        lua: {},
+        lauxlib: {},
+        lualib: {},
+        to_luastring: (value: string) => value,
+        to_jsstring: (value: unknown) => value
+    }));
     (globalThis as any).window = {
         setTimeout: (cb: () => void) => {
             cb();

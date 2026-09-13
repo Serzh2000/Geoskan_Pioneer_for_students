@@ -1,7 +1,7 @@
 import type * as THREE from 'three';
 import { getAutopilotRuntimeConfig } from '../autopilot/params-runtime.js';
 import type { DroneState } from '../core/state.js';
-import { showMissionGamepadOverrideNotice } from '../app/script-execution-notice.js';
+import { emitMissionGamepadOverride } from '../core/mission-notices.js';
 import { enterPreflight, enterTakeoffProcess, setDroneFsmState } from '../autopilot/fsm.js';
 import { matchesAuxRange, simSettings } from '../core/state.js';
 import { triggerLuaCallback } from '../lua/index.js';
@@ -19,10 +19,9 @@ import {
     applyDeadzone,
     approach,
     clampStick,
-    normalizeThrottle
+    normalizeThrottle,
+    type ObstacleProvider
 } from './helpers.js';
-
-type ObstacleProvider = () => THREE.Object3D[];
 
 function isAutonomousMissionControlling(simState: DroneState) {
     return simState.running && (
@@ -245,7 +244,7 @@ export function updateActiveFlight(
     if (autonomousMissionControlling) {
         if (simSettings.gamepadConnected && simState.flightMode !== 'AUTO' && !simState.missionRcOverrideNoticeShown) {
             simState.missionRcOverrideNoticeShown = true;
-            showMissionGamepadOverrideNotice();
+            emitMissionGamepadOverride();
         }
         simState.flightMode = 'AUTO';
     }

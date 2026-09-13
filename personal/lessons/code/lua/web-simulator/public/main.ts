@@ -1,11 +1,9 @@
 /* eslint-disable @typescript-eslint/triple-slash-reference */
 /// <reference path="./global.d.ts" />
 /// <reference path="./shims.d.ts" />
-import * as THREE from 'three';
-import * as fengari from 'fengari-web';
-import { simState, resetState, resetRuntimeStatePreservePose, drones, currentDroneId, currentScriptLanguage } from './modules/core/state.js';
+import { resetState, resetRuntimeStatePreservePose, drones, currentDroneId, currentScriptLanguage } from './modules/core/state.js';
 import { init3D, updateDrone3D, is3DActive, addObject, appendPointToSelectedLinearObject, clearSceneSelection, deleteSelectedObject, finishSelectedLinearObjectEditing, getSelectedSceneObjectId, isSelectedLinearObjectEditingActive, listSceneObjects, resetDroneToOrigin, resetSelectedSceneObjectTransform, rotateSelectedSceneObjectByDegrees, selectSceneObjectById, setSceneObjectTransformMode, startSelectedLinearObjectEditing, updateSelectedSceneObject, deleteSceneObjectById } from './modules/drone/index.js';
-import { runLuaScript, stopLuaScript, triggerLuaCallback } from './modules/lua/index.js';
+import { runLuaScript, stopLuaScript } from './modules/lua/index.js';
 import { setLocalFrameOrigin } from './modules/lua/autopilot.js';
 import { runPythonScript, stopPythonScript } from './modules/python/index.js';
 /**
@@ -16,22 +14,19 @@ import { initEditor, getEditorValue, initBlocklyEditorToggle, layoutEditor, setE
 import { initUI } from './modules/ui/index.js';
 import { log } from './modules/shared/logging/logger.js';
 import type { MarkerMapOptions } from './modules/environment/obstacles.js';
-import { resetScriptExecutionNoticeState, showScenarioValidationNotice, showScriptFailureNotice, validateScenarioBeforeLaunch } from './modules/app/script-execution-notice.js';
+import { resetScriptExecutionNoticeState, showScenarioValidationNotice, showScriptFailureNotice, validateScenarioBeforeLaunch, wireMissionNotices } from './modules/app/script-execution-notice.js';
 import { configureSimulationControls } from './modules/app/simulation-controls.js';
 import { initScriptLanguageSelector } from './modules/app/language-selector.js';
 import { initThemeToggle } from './modules/app/theme-toggle.js';
 import { registerGlobalErrorHandler } from './modules/app/global-error.js';
 import { startAnimationLoop } from './modules/app/animation-loop.js';
 
-// Global assignments for legacy/Lua support
-(window as any).THREE = THREE;
-(window as any).fengari = fengari;
-
 // Global Loop
 
 function init() {
     log('Инициализация симулятора...', 'info');
     registerGlobalErrorHandler();
+    wireMissionNotices();
     initThemeToggle();
 
     configureSimulationControls({
@@ -94,7 +89,6 @@ function init() {
 }
 
 async function startSimulation() {
-    log(`[DEBUG] startSimulation called. currentDroneId: ${currentDroneId}`, 'info');
     resetScriptExecutionNoticeState();
     (window as any).clearEditorProblemHighlight?.();
     
@@ -104,11 +98,10 @@ async function startSimulation() {
     // First save current editor code to the currently selected drone
     if (drones[currentDroneId]) {
         const editorCode = getEditorValue();
-        log(`[DEBUG] getEditorValue() returned length: ${editorCode.length}`, 'info');
         if (currentScriptLanguage === 'lua') drones[currentDroneId].script = editorCode;
         else drones[currentDroneId].pythonScript = editorCode;
     } else {
-        log(`[DEBUG] drones[currentDroneId] is undefined!`, 'error');
+        log('Не удалось получить текущий дрон: код из редактора не сохранён', 'error');
     }
 
     // Python is launched only for the selected drone. Lua still runs for all drones.
@@ -154,7 +147,6 @@ async function startSimulation() {
         
         // Always try to run, even if it was running before (stop it first)
         const code = drone.script;
-        log(`[DEBUG] Drone ${id} script length: ${code ? code.length : 0}`, 'info');
         if (!code || !code.trim()) continue;
         anyAttempted = true;
         const validation = validateScenarioBeforeLaunch('lua', code);
@@ -175,17 +167,11 @@ async function startSimulation() {
         try {
             runLuaScript(id, code);
             log(`Скрипт запущен для ${drone.name}`, 'success');
-            
-            try {
-                // MCE_PREFLIGHT (1) — это команда ap.push, а не входящее событие от AP.
-                // Для запуска сценария достаточно, что скрипт уже выполнил ap.push(Ev.MCE_PREFLIGHT).
-                // Входящие события (ENGINES_STARTED=11, TAKEOFF_COMPLETE=6, POINT_REACHED=10)
-                // triggerятся только симуляцией при смене состояний дрона.
-            } catch (errCb) {
-                console.error("Error in triggerLuaCallback:", errCb);
-                throw errCb;
-            }
-            
+
+            // MCE_PREFLIGHT (1) — это команда ap.push, а не входящее событие от AP.
+            // Для запуска сценария достаточно, что скрипт уже выполнил ap.push(Ev.MCE_PREFLIGHT).
+            // Входящие события (ENGINES_STARTED=11, TAKEOFF_COMPLETE=6, POINT_REACHED=10)
+            // triggerятся только симуляцией при смене состояний дрона.
         } catch (e: any) {
             drone.running = false;
             drone.status = 'ОШИБКА';

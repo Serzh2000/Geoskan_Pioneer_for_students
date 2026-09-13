@@ -1,4 +1,4 @@
-import { Blockly } from '../ui/mission-guide/blockly.js';
+import type { BlocklyNS } from './blockly-mode/loader.js';
 import { currentScriptLanguage, DEFAULT_LUA_SCRIPT, type ScriptLanguage } from '../core/state.js';
 
 const MIN_SIDEBAR_WIDTH = 320;
@@ -12,7 +12,7 @@ export type EditorAutofitContext = {
     blocklyRoot: HTMLElement | null;
     blocklyCanvasHost: HTMLElement | null;
     blocklyCanvas: HTMLElement | null;
-    blocklyWorkspace: Blockly.WorkspaceSvg | null;
+    blocklyWorkspace: BlocklyNS.WorkspaceSvg | null;
     editorInstance: any;
 };
 
@@ -104,7 +104,7 @@ function getRequiredLuaSidebarWidth(text: string, context: EditorAutofitContext)
 function getBlocklyBlocksWidth(context: EditorAutofitContext): number {
     if (!context.blocklyWorkspace) return 0;
 
-    const boundingBox = (context.blocklyWorkspace as Blockly.WorkspaceSvg & {
+    const boundingBox = (context.blocklyWorkspace as BlocklyNS.WorkspaceSvg & {
         getBlocksBoundingBox?: () => { left: number; right: number };
     }).getBlocksBoundingBox?.();
     if (boundingBox) {

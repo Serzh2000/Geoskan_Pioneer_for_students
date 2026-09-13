@@ -14,3 +14,8 @@ export {
     setEditorLanguage,
     setEditorValue
 } from './index/api.js';
+export {
+    buildTargetWorkspaceXml,
+    extractMissionGuideSequence,
+    serializeWorkspaceXml
+} from './blockly.js';

@@ -1,9 +1,9 @@
+import * as THREE from 'three';
 import type { PerspectiveCamera, WebGLRenderer } from 'three';
+import * as fengari from 'fengari-web';
 import { getDroneFromLua } from '../../core/state.js';
 import { log } from '../../shared/logging/logger.js';
 import { droneMeshes, renderer as mainRenderer, scene } from '../../scene/core/scene-init.js';
-
-declare const THREE: any;
 
 const CAMERA_CAPTURE_FRAME_INTERVAL_MS = 33;
 
@@ -229,7 +229,7 @@ export const camera_requestMakeShot = function(L: any) {
 };
 
 export const camera_checkRequestShot = function(L: any) {
-    window.fengari.lua.lua_pushinteger(L, cameraCaptureState.shotPending ? 0 : 1);
+    fengari.lua.lua_pushinteger(L, cameraCaptureState.shotPending ? 0 : 1);
     return 1;
 };
 
@@ -321,6 +321,6 @@ export const camera_requestRecordStop = function(L: any) {
 };
 
 export const camera_checkRequestRecord = function(L: any) {
-    window.fengari.lua.lua_pushinteger(L, cameraCaptureState.isRecording ? 1 : 0);
+    fengari.lua.lua_pushinteger(L, cameraCaptureState.isRecording ? 1 : 0);
     return 1;
 };

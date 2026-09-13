@@ -1,8 +1,9 @@
 import { log } from '../../shared/logging/logger.js';
+import { setCameraMode as setCameraModeState, type CameraMode } from '../../scene/core/camera-mode-state.js';
 
 export function initCameraModeUI() {
-    (window as any).setCameraMode = function(mode: string) {
-        (window as any).cameraMode = mode;
+    (window as any).setCameraMode = function(mode: CameraMode) {
+        setCameraModeState(mode);
         const buttons = document.querySelectorAll('.camera-controls button') as NodeListOf<HTMLButtonElement>;
         buttons.forEach((btn) => {
             const onclick = btn.getAttribute('onclick') || '';

@@ -7,7 +7,7 @@ import {
     setSelectedObject,
     transformControl
 } from '../core/scene-init.js';
-import { simState } from '../../core/state.js';
+import { drones, currentDroneId } from '../../core/state.js';
 import { deselectObject, exitTransformMode } from './selection.js';
 import { updateTransformModeDecorations } from './transform.js';
 import { showGroundPoint } from '../core/ground-feedback.js';
@@ -18,6 +18,7 @@ import {
 } from '../objects/object-transform.js';
 import { isTransformableObject } from '../objects/object-catalog.js';
 import { getObjectDisplayName, isDroneObject, traceClick } from './input-helpers.js';
+import { getCameraMode } from '../core/camera-mode-state.js';
 
 type ObjectContextMenuAction = {
     label: string;
@@ -40,11 +41,11 @@ type ObjectContextMenuConfig = {
 };
 
 function showTransformUi(obj: THREE.Object3D, preferredMode?: 'translate' | 'rotate' | 'scale') {
-    if (!transformControl || !isTransformableObject(obj) || simState.running) return;
+    if (!transformControl || !isTransformableObject(obj) || drones[currentDroneId].running) return;
     const activeMode = preferredMode || 'translate';
     traceClick(`activate gizmo mode=${activeMode} for ${getObjectDisplayName(obj)}`);
     activateTransformMode(activeMode, obj);
-    if (controls) controls.enabled = (window as any).cameraMode === 'free' && !(window as any).isTransforming;
+    if (controls) controls.enabled = getCameraMode() === 'free' && !(window as any).isTransforming;
     // The inspector already exposes transform mode switching and rotation presets,
     // so the floating gizmo toolbar only duplicates controls and obscures the scene.
     if ((window as any).hideGizmoToolbar) {
@@ -55,7 +56,7 @@ function showTransformUi(obj: THREE.Object3D, preferredMode?: 'translate' | 'rot
 function hideTransformUiPreserveSelection() {
     exitTransformMode();
     updateTransformModeDecorations(null);
-    if (controls) controls.enabled = (window as any).cameraMode === 'free' && !(window as any).isTransforming;
+    if (controls) controls.enabled = getCameraMode() === 'free' && !(window as any).isTransforming;
 }
 
 export function updateObjectSelectionVisuals(obj: THREE.Object3D, selected: boolean) {
@@ -100,7 +101,7 @@ export function handleSelection(obj: THREE.Object3D | null, x: number, y: number
     const transformable = obj ? (isDroneObject(obj) || isTransformableObject(obj)) : false;
     if (showMenu) {
         hideTransformUiPreserveSelection();
-    } else if (obj && transformable && !simState.running) {
+    } else if (obj && transformable && !drones[currentDroneId].running) {
         showTransformUi(obj);
     } else if ((window as any).hideGizmoToolbar) {
         (window as any).hideGizmoToolbar();

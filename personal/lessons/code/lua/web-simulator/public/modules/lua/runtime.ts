@@ -1,3 +1,4 @@
+import * as fengari from 'fengari-web';
 import { drones } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 import { beginEventCallbackPhase, withCommandSource } from '../autopilot/fsm.js';
@@ -8,7 +9,8 @@ import {
     setLuaExecutionPhase
 } from './diagnostics.js';
 import { runCoroutine } from './runner.js';
-import { createScriptFailureError, showScriptFailureNotice } from '../app/script-execution-notice.js';
+import { createScriptFailureError } from '../app/script-execution-notice.js';
+import { emitScriptFailure } from '../core/mission-notices.js';
 import { extractLuaSyntaxLine, setupLuaBridgeForDrone } from './bridge.js';
 import { resetLuaMissionGuard } from './mission-guard.js';
 
@@ -23,7 +25,7 @@ function disposeLuaRuntime(id: string) {
 
     if (!luaState) return;
     try {
-        window.fengari.lua.lua_close(luaState);
+        fengari.lua.lua_close(luaState);
     } catch (e) {
         console.error('Error closing lua state:', e);
     }
@@ -46,13 +48,13 @@ export function runLuaScript(id: string, scriptContent: string) {
         throw e;
     }
 
-    const loadStatus = window.fengari.lauxlib.luaL_loadstring(L, window.fengari.to_luastring(scriptContent));
+    const loadStatus = fengari.lauxlib.luaL_loadstring(L, fengari.to_luastring(scriptContent));
     if (loadStatus !== 0) {
-        const errVal = window.fengari.lua.lua_tostring(L, -1);
+        const errVal = fengari.lua.lua_tostring(L, -1);
         const errorMsg = luaToStr(errVal, L);
-        window.fengari.lua.lua_pop(L, 1);
+        fengari.lua.lua_pop(L, 1);
         try {
-            window.fengari.lua.lua_close(L);
+            fengari.lua.lua_close(L);
         } catch (e) {
             console.error('Error closing lua state after syntax failure:', e);
         }
@@ -62,9 +64,9 @@ export function runLuaScript(id: string, scriptContent: string) {
         });
     }
 
-    const T = window.fengari.lua.lua_newthread(L);
-    window.fengari.lua.lua_pushvalue(L, -2);
-    window.fengari.lua.lua_xmove(L, T, 1);
+    const T = fengari.lua.lua_newthread(L);
+    fengari.lua.lua_pushvalue(L, -2);
+    fengari.lua.lua_xmove(L, T, 1);
 
     try {
         runCoroutine(L, T, 0, id, 'main chunk');
@@ -81,8 +83,8 @@ export function stopLuaScript(id: string) {
 }
 
 export function updateTimers() {
-    const lua = window.fengari.lua;
-    const lauxlib = window.fengari.lauxlib;
+    const lua = fengari.lua;
+    const lauxlib = fengari.lauxlib;
 
     for (const id in drones) {
         const drone = drones[id];
@@ -143,11 +145,11 @@ export function triggerLuaCallback(id: string, eventId: number) {
     beginEventCallbackPhase(drone);
     setLuaExecutionPhase(drone, `callback(event=${eventId})`);
 
-    const lua = window.fengari.lua;
+    const lua = fengari.lua;
     const baseTop = lua.lua_gettop(L);
-    lua.lua_getglobal(L, window.fengari.to_luastring('__traceback_handler'));
+    lua.lua_getglobal(L, fengari.to_luastring('__traceback_handler'));
     const errorHandlerIndex = lua.lua_gettop(L);
-    lua.lua_getglobal(L, window.fengari.to_luastring('callback'));
+    lua.lua_getglobal(L, fengari.to_luastring('callback'));
     if (lua.lua_isfunction(L, -1)) {
         lua.lua_pushinteger(L, eventId);
         try {
@@ -159,7 +161,7 @@ export function triggerLuaCallback(id: string, eventId: number) {
                 log(`[Lua Error] ${errorMsg}`, 'error');
                 drone.running = false;
                 drone.status = 'ОШИБКА';
-                showScriptFailureNotice('lua', createLuaRuntimeFailureError(drone, `callback(event=${eventId})`, errorMsg));
+                emitScriptFailure('lua', createLuaRuntimeFailureError(drone, `callback(event=${eventId})`, errorMsg));
                 lua.lua_pop(L, 1);
             }
         } catch (e) {

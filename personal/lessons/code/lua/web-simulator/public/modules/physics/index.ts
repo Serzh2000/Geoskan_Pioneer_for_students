@@ -32,7 +32,7 @@ export function updatePhysics(dt: number) {
         const simState = drones[id];
         const prevPos = { ...simState.pos };
         handlePreflightTimeout(simState);
-        if (processCommandQueue(simState, id) === 'abortFrame') return;
+        processCommandQueue(simState, id);
 
         const isFlying = isDroneFlying(simState);
         if (simState.running) {

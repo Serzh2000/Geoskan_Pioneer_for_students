@@ -1,5 +1,5 @@
 import type { ScriptLanguage } from '../../core/state.js';
-import { Blockly } from '../../ui/mission-guide/blockly.js';
+import { Blockly, type BlocklyNS } from '../blockly-mode/loader.js';
 import { compileMainEditorWorkspace } from '../blockly-mode/index.js';
 import { resizeBlocklyCanvas, updateGeneratedCodePreview } from '../blockly-mode/ui.js';
 
@@ -18,7 +18,7 @@ export function createBlocklyResizeRuntime(): BlocklyResizeRuntime {
 export function resizeBlocklyWorkspaceViewport(
     host: HTMLElement | null,
     canvas: HTMLElement | null,
-    workspace: Blockly.WorkspaceSvg | null
+    workspace: BlocklyNS.WorkspaceSvg | null
 ) {
     resizeBlocklyCanvas(host, canvas);
     if (workspace) Blockly.svgResize(workspace);
@@ -46,14 +46,14 @@ export function ensureBlocklyResizeTracking(
 
 export function updateBlocklyPreview(
     preview: HTMLElement | null,
-    workspace: Blockly.WorkspaceSvg | null,
+    workspace: BlocklyNS.WorkspaceSvg | null,
     language: ScriptLanguage
 ) {
     if (!preview || !workspace) return;
     updateGeneratedCodePreview(preview, compileMainEditorWorkspace(language, workspace));
 }
 
-export function isBlocklyWorkspaceEmpty(workspace: Blockly.WorkspaceSvg | null): boolean {
+export function isBlocklyWorkspaceEmpty(workspace: BlocklyNS.WorkspaceSvg | null): boolean {
     if (!workspace) return true;
     return workspace.getTopBlocks(false).filter((block) => !block.isInsertionMarker()).length === 0;
 }

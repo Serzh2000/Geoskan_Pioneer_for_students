@@ -1,8 +1,7 @@
 import type { ScriptLanguage } from '../api-docs/sections.js';
 import { evaluateLesson } from './evaluation/index.js';
 import { isMissionGuideScenePreviewActive } from './support/scene-preview.js';
-import { extractMissionGuideSequence, serializeWorkspaceXml } from './support/workspace-xml.js';
-import { getMainBlocklyWorkspace } from '../../editor/index.js';
+import { extractMissionGuideSequence, serializeWorkspaceXml, getMainBlocklyWorkspace } from '../../editor/index.js';
 import {
     getActivePortalPage,
     getActiveGuideStep,

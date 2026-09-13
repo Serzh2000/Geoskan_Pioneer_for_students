@@ -18,3 +18,7 @@ __pycache__/
 
 # Editor/OS/scratch scraps
 /temp_test_output*.txt
+
+# Saved/exported third-party web pages and vendor library files (local
+# reference material only; not read by the app, build, or tests)
+/docs/imported/

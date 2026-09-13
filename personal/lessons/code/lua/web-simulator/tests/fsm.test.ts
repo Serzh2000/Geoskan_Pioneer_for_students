@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 describe('drone FSM validation', () => {
     let MCECommands: typeof import('../public/modules/autopilot/mce-events.js').MCECommands;
     let applyGoToLocalPointRequest: typeof import('../public/modules/autopilot/fsm.js').applyGoToLocalPointRequest;
@@ -50,6 +52,13 @@ describe('drone FSM validation', () => {
             }
         };
 
+        jest.unstable_mockModule('fengari-web', () => ({
+            lua: {},
+            lauxlib: {},
+            lualib: {},
+            to_luastring: (value: string) => value,
+            to_jsstring: (value: unknown) => value
+        }));
         (globalThis as any).window = {};
         (globalThis as any).document = {
             getElementById: (id: string) => (id === 'logs' ? logsEl : null),

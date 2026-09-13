@@ -1,5 +1,5 @@
 import { currentDroneId, currentScriptLanguage, type ScriptLanguage } from '../../core/state.js';
-import { Blockly } from '../../ui/mission-guide/blockly.js';
+import { Blockly, type BlocklyNS } from '../blockly-mode/loader.js';
 import {
     buildMainEditorToolbox,
     compileMainEditorWorkspace,
@@ -56,7 +56,7 @@ import { editorIndexState, getEditorIndexCollections, getEditorIndexShellState }
 
 function getEditorControllers() {
     return createEditorIndexControllers(editorIndexState, getEditorIndexCollections(), {
-        theme: getBlocklyTheme(),
+        getTheme: getBlocklyTheme,
         buildMainEditorToolbox,
         compileMainEditorWorkspace,
         createStarterWorkspaceXml,
@@ -121,7 +121,7 @@ function getEditorControllers() {
         layoutEditor,
         isBlocklyWorkspaceEmpty: () => isBlocklyWorkspaceEmptySupport(editorIndexState.blocklyWorkspace),
         getCurrentScriptLanguage: () => currentScriptLanguage,
-        setBlocklyWorkspace: (workspace: Blockly.WorkspaceSvg | null) => {
+        setBlocklyWorkspace: (workspace: BlocklyNS.WorkspaceSvg | null) => {
             editorIndexState.blocklyWorkspace = workspace;
         },
         setBlocklyEnabled: (enabled: boolean) => {
@@ -141,8 +141,8 @@ function loadBlocklyWorkspace(language: ScriptLanguage = currentScriptLanguage):
     loadBlocklyWorkspaceController(getEditorControllers().workspaceController, language);
 }
 
-function ensureBlocklyWorkspace(language: ScriptLanguage = currentScriptLanguage): void {
-    ensureBlocklyWorkspaceController(getEditorControllers().workspaceController, language, currentScriptLanguage);
+function ensureBlocklyWorkspace(language: ScriptLanguage = currentScriptLanguage): Promise<void> {
+    return ensureBlocklyWorkspaceController(getEditorControllers().workspaceController, language, currentScriptLanguage);
 }
 
 export function initEditor(): void {
@@ -169,12 +169,12 @@ export function getEditorValue(): string {
     return getTextEditorValue();
 }
 
-export function setEditorValue(value: string): void {
+export async function setEditorValue(value: string): Promise<void> {
     editorIndexState.textDraftByKey.set(getEditorStateKey(), value);
     persistEditorIndexSession(getEditorIndexShellState(), getEditorIndexCollections());
 
     if (editorIndexState.blocklyEnabled) {
-        ensureBlocklyWorkspace(currentScriptLanguage);
+        await ensureBlocklyWorkspace(currentScriptLanguage);
         loadBlocklyWorkspace(currentScriptLanguage);
         return;
     }
@@ -182,11 +182,11 @@ export function setEditorValue(value: string): void {
     setTextEditorValue(value);
 }
 
-export function setEditorLanguage(language: ScriptLanguage): void {
+export async function setEditorLanguage(language: ScriptLanguage): Promise<void> {
     setEditorTextLanguage(language);
 
     if (editorIndexState.blocklyEnabled) {
-        ensureBlocklyWorkspace(language);
+        await ensureBlocklyWorkspace(language);
         loadBlocklyWorkspace(language);
     }
 }
@@ -203,7 +203,7 @@ export function initBlocklyEditorToggle(): void {
     initBlocklyEditorToggleController(getEditorControllers().toggleController);
 }
 
-export function getMainBlocklyWorkspace(): Blockly.WorkspaceSvg | null {
+export function getMainBlocklyWorkspace(): BlocklyNS.WorkspaceSvg | null {
     if (editorIndexState.blocklyEnabled && editorIndexState.blocklyWorkspace) {
         return editorIndexState.blocklyWorkspace;
     }
@@ -211,12 +211,12 @@ export function getMainBlocklyWorkspace(): Blockly.WorkspaceSvg | null {
     return null;
 }
 
-export function loadMainBlocklyXml(xml: string): void {
+export async function loadMainBlocklyXml(xml: string): Promise<void> {
     if (!editorIndexState.blocklyEnabled) {
         setBlocklyEditorEnabled(true);
     }
 
-    ensureBlocklyWorkspace(currentScriptLanguage);
+    await ensureBlocklyWorkspace(currentScriptLanguage);
     const workspace = editorIndexState.blocklyWorkspace;
     if (!workspace) {
         return;

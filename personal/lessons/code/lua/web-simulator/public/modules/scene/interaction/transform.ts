@@ -4,6 +4,7 @@ import { droneMeshes, selectedObject, transformControl, controls, selectionHelpe
 import { envGroup } from '../../environment/index.js';
 import { snapMarkerToSurface } from '../../environment/obstacles.js';
 import { AXIS_COLORS } from '../core/transform-controls-style-helpers.js';
+import { getCameraMode } from '../core/camera-mode-state.js';
 
 let rotationGuide: THREE.Group | null = null;
 let rotationGuideHost: THREE.Object3D | null = null;
@@ -168,6 +169,6 @@ export function setupTransformControlListeners() {
     transformControl.addEventListener('dragging-changed', (event: any) => {
         const isDragging = event.value;
         (window as any).isTransforming = isDragging;
-        if (controls) controls.enabled = !isDragging && (window as any).cameraMode === 'free';
+        if (controls) controls.enabled = !isDragging && getCameraMode() === 'free';
     });
 }

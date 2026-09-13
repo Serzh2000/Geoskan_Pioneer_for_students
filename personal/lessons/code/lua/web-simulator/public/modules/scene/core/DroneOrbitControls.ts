@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { log } from '../../shared/logging/logger.js';
+import { getCameraMode } from './camera-mode-state.js';
 
 export class DroneOrbitControls {
     camera: THREE.PerspectiveCamera;
@@ -33,7 +34,6 @@ export class DroneOrbitControls {
         if (!force && now - this.lastZoomDebugAt < 250) return;
         this.lastZoomDebugAt = now;
         log(`[GUIDE-ZOOM] ${message}`, 'info');
-        console.info('[GUIDE-ZOOM]', message);
     }
 
     private clampTargetToSceneBounds() {
@@ -189,7 +189,7 @@ export class DroneOrbitControls {
         if (!this.enabled || transformInteractionActive) {
             this.skippedZoomDebugCount += 1;
             this.debugZoom(
-                `wheel ignored enabled=${String(this.enabled)} transform=${String(transformInteractionActive)} mode=${String((window as any).cameraMode)} ctrl=${String(e.ctrlKey)} deltaY=${e.deltaY.toFixed(2)} skipped=${this.skippedZoomDebugCount}`
+                `wheel ignored enabled=${String(this.enabled)} transform=${String(transformInteractionActive)} mode=${String(getCameraMode())} ctrl=${String(e.ctrlKey)} deltaY=${e.deltaY.toFixed(2)} skipped=${this.skippedZoomDebugCount}`
             );
             return;
         }
@@ -212,7 +212,7 @@ export class DroneOrbitControls {
         
         this.radius = Math.max(this.minRadius, this.radius);
         this.debugZoom(
-            `wheel applied mode=${String((window as any).cameraMode)} ctrl=${String(e.ctrlKey)} deltaY=${e.deltaY.toFixed(2)} radius=${previousRadius.toFixed(3)}->${this.radius.toFixed(3)}`,
+            `wheel applied mode=${String(getCameraMode())} ctrl=${String(e.ctrlKey)} deltaY=${e.deltaY.toFixed(2)} radius=${previousRadius.toFixed(3)}->${this.radius.toFixed(3)}`,
             true
         );
         this.update();

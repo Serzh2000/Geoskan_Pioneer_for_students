@@ -1,4 +1,4 @@
-import { showSimultaneousCommandsNotice } from '../app/script-execution-notice.js';
+import { emitSimultaneousCommands } from '../core/mission-notices.js';
 import type {
     DroneFsmState,
     DroneState,
@@ -86,7 +86,7 @@ export function failSimultaneousCommands(drone: DroneState, commands: TickFlight
         `Команды миссии запущены одновременно без паузы: ${labels.join(', ')}.`,
         ['Разнесите эти команды по этапам через `Timer.callLater(...)`, `sleep(...)` или `callback(event)`.']
     );
-    showSimultaneousCommandsNotice(labels);
+    emitSimultaneousCommands(labels);
     drone.running = false;
     drone.status = '\u041e\u0428\u0418\u0411\u041a\u0410';
     recordLuaFsmTransition(drone, drone.fsmState, 'IDLE', 'simultaneous mission commands', drone.currentCommandSource || 'system');

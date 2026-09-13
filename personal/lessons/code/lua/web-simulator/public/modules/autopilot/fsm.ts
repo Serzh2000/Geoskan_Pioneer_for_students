@@ -3,7 +3,7 @@ import type {
     Vector3
 } from '../core/state.js';
 import { simSettings } from '../core/state.js';
-import { showEarlyRouteNotice } from '../app/script-execution-notice.js';
+import { emitEarlyRoute } from '../core/mission-notices.js';
 import { log } from '../shared/logging/logger.js';
 import {
     getAutopilotRuntimeConfig,
@@ -63,7 +63,7 @@ export function applyGoToLocalPointRequest(
 
     if (drone.fsmState === 'PREFLIGHT' || drone.fsmState === 'TAKEOFF_PROCESS' || drone.fsmState === 'LANDING_PROCESS') {
         if (commandSource === 'timer') {
-            showEarlyRouteNotice();
+            emitEarlyRoute();
             log('WARNING: Delayed command was rejected because FSM state has already changed.', 'warn');
             return false;
         }

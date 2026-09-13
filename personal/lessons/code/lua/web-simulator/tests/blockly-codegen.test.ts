@@ -47,8 +47,17 @@ const adaptedPythonBlockTypes = [
     'video_stream_start', 'video_stream_stop', 'video_stream_connected', 'sleep', 'get_time'
 ];
 
-beforeAll(() => {
-    ensureEditorBlocklyDefinitions();
+beforeAll(async () => {
+    // Jest (--experimental-vm-modules) не умеет резолвить голые спецификаторы
+    // (типа 'blockly') внутри import(), вызванного из модуля, который сам был
+    // подгружен динамически. Прогреваем те же модули статическим await import()
+    // прямо здесь — ES-кэш модулей делает внутренний import() в
+    // ensureEditorBlocklyDefinitions() уже бесплатным. В браузере (Vite) эта
+    // проблема не воспроизводится — там резолвер работает штатно.
+    await import('../public/modules/editor/blockly-mode/blockly-core.js');
+    await import('../public/modules/editor/blockly-mode/workspace-xml.js');
+    await import('../public/modules/editor/blockly-mode/lua-definitions.js');
+    await ensureEditorBlocklyDefinitions();
 });
 
 describe('Инвентаризация тулбокса редактора', () => {

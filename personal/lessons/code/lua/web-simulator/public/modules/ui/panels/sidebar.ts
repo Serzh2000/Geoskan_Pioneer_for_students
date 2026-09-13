@@ -142,7 +142,6 @@ export function initSidebar(callbacks: UICallbacks) {
 
         if (isAlreadyActive && panels.style.width !== '0px') {
             if (panelName) {
-                console.info(`[Sidebar] Closing panel: ${panelName}`);
                 log(`Closing panel: ${panelName}`, 'info');
             }
             closePanelWithAnimation();
@@ -162,7 +161,6 @@ export function initSidebar(callbacks: UICallbacks) {
         persistActivePanel(panelId);
 
         if (panelName) {
-            console.info(`[Sidebar] Opening panel: ${panelName}`);
             log(`Opening panel: ${panelName}`, 'info');
         }
 

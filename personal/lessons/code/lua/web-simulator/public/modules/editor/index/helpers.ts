@@ -1,4 +1,4 @@
-import { Blockly } from '../../ui/mission-guide/blockly.js';
+import type { BlocklyNS } from '../blockly-mode/loader.js';
 import type { ScriptLanguage } from '../../core/state.js';
 import type { EditorAutofitContext } from '../autofit.js';
 import type { BlocklyWorkspaceController } from '../blockly/workspace-controller.js';
@@ -17,7 +17,7 @@ export type EditorIndexShellState = {
     blocklyRoot: HTMLElement | null;
     blocklyCanvasHost: HTMLElement | null;
     blocklyCanvas: HTMLElement | null;
-    blocklyWorkspace: Blockly.WorkspaceSvg | null;
+    blocklyWorkspace: BlocklyNS.WorkspaceSvg | null;
     blocklyCodeOverlayToggle: HTMLInputElement | null;
     blocklyEnabled: boolean;
     blocklyGeneratedCodeVisible: boolean;
@@ -30,7 +30,7 @@ export type EditorIndexCollections = {
 };
 
 export type EditorIndexControllerDeps = {
-    theme: Blockly.Theme;
+    getTheme: () => BlocklyNS.Theme | undefined;
     buildMainEditorToolbox: BlocklyWorkspaceController['buildMainEditorToolbox'];
     compileMainEditorWorkspace: BlocklyWorkspaceController['compileMainEditorWorkspace'];
     createStarterWorkspaceXml: BlocklyWorkspaceController['createStarterWorkspaceXml'];
@@ -43,7 +43,7 @@ export type EditorIndexControllerDeps = {
     scheduleBlocklyAutofit: () => void;
     setTextEditorValue: (value: string) => void;
     saveBlocklyWorkspaceState: (language?: ScriptLanguage) => void;
-    ensureBlocklyWorkspace: (language: ScriptLanguage) => void;
+    ensureBlocklyWorkspace: (language: ScriptLanguage) => Promise<void>;
     loadBlocklyWorkspace: (language: ScriptLanguage) => void;
     syncEditorModeVisibility: () => void;
     syncBlocklyEditorToggle: () => void;
@@ -54,7 +54,7 @@ export type EditorIndexControllerDeps = {
     layoutEditor: () => void;
     isBlocklyWorkspaceEmpty: () => boolean;
     getCurrentScriptLanguage: () => ScriptLanguage;
-    setBlocklyWorkspace: (workspace: Blockly.WorkspaceSvg | null) => void;
+    setBlocklyWorkspace: (workspace: BlocklyNS.WorkspaceSvg | null) => void;
     setBlocklyEnabled: (enabled: boolean) => void;
     setBlocklyGeneratedCodeVisible: (visible: boolean) => void;
 };
@@ -120,7 +120,7 @@ export function createEditorHost(
         blocklyWorkspace: state.blocklyWorkspace,
         blocklyCodeOverlayToggle: state.blocklyCodeOverlayToggle,
         setBlocklyWorkspace: deps.setBlocklyWorkspace,
-        theme: deps.theme,
+        getTheme: deps.getTheme,
         buildMainEditorToolbox: deps.buildMainEditorToolbox,
         compileMainEditorWorkspace: deps.compileMainEditorWorkspace,
         createStarterWorkspaceXml: deps.createStarterWorkspaceXml,

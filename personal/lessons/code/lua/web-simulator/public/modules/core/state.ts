@@ -1,3 +1,4 @@
+import * as fengari from 'fengari-web';
 export type {
     AuxChannelRange,
     CommandSource,
@@ -56,6 +57,11 @@ export const drones: Record<string, DroneState> = {};
 export let currentDroneId: string = 'drone_1';
 export const MAX_PATH_POINTS = 2000;
 export const pathPoints: Record<string, Vector3[]> = { 'drone_1': [] };
+// Монотонный счётчик добавленных точек трассы на дрон: rendering-слой (drone/trails.ts)
+// использует его, чтобы понять, сколько НОВЫХ точек появилось с прошлого кадра,
+// не перечитывая весь pathPoints[id] (который к тому же — сдвигающийся FIFO,
+// так что индексы «старых» точек меняются при переполнении).
+export const pathPointsVersion: Record<string, number> = { 'drone_1': 0 };
 
 export let currentScriptLanguage: ScriptLanguage = 'lua';
 
@@ -144,24 +150,12 @@ export function createDroneState(id: string, name: string, x: number = 0, y: num
     const drone = createDroneRecord(id, name, x, y, z);
     drones[id] = drone;
     pathPoints[id] = [];
+    pathPointsVersion[id] = 0;
     return drone;
 }
 
 // Initialize the first default drone
 createDroneState('drone_1', 'Pioneer 1');
-
-// Backward compatibility alias: simState points to the currently selected drone
-export const simState = new Proxy({} as DroneState, {
-    get: (target, prop) => {
-        if (!drones[currentDroneId]) return undefined;
-        return (drones[currentDroneId] as any)[prop];
-    },
-    set: (target, prop, value) => {
-        if (!drones[currentDroneId]) return false;
-        (drones[currentDroneId] as any)[prop] = value;
-        return true;
-    }
-});
 
 export function setCurrentDrone(id: string) {
     if (!drones[id]) return;
@@ -208,10 +202,10 @@ export function resetRuntimeStatePreservePose(id: string = currentDroneId) {
 }
 
 export function getDroneFromLua(L: any): DroneState {
-    window.fengari.lua.lua_getglobal(L, window.fengari.to_luastring("__DRONE_ID__"));
-    const idStr = window.fengari.lua.lua_tostring(L, -1);
-    const id = idStr ? window.fengari.to_jsstring(idStr) : currentDroneId;
-    window.fengari.lua.lua_pop(L, 1);
+    fengari.lua.lua_getglobal(L, fengari.to_luastring("__DRONE_ID__"));
+    const idStr = fengari.lua.lua_tostring(L, -1);
+    const id = idStr ? fengari.to_jsstring(idStr) : currentDroneId;
+    fengari.lua.lua_pop(L, 1);
     return drones[id] || drones[currentDroneId];
 }
 
@@ -220,9 +214,11 @@ export function resetState(id: string = currentDroneId) {
     if (!drone) return;
     resetDroneRuntimeState(drone);
     pathPoints[id] = [];
+    pathPointsVersion[id] = 0;
 }
 
 export function removeDroneState(id: string) {
     delete pathPoints[id];
+    delete pathPointsVersion[id];
     delete drones[id];
 }

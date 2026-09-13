@@ -1,9 +1,10 @@
+import * as fengari from 'fengari-web';
 import { getDroneFromLua } from '../core/state.js';
 
 export const ledbar_fromHSV = function(L: any) {
-    const h = window.fengari.lua.lua_tonumber(L, 1);
-    const s = window.fengari.lua.lua_tonumber(L, 2);
-    const v = window.fengari.lua.lua_tonumber(L, 3);
+    const h = fengari.lua.lua_tonumber(L, 1);
+    const s = fengari.lua.lua_tonumber(L, 2);
+    const v = fengari.lua.lua_tonumber(L, 3);
     
     let r, g, b;
     const i = Math.floor(h * 6);
@@ -21,25 +22,25 @@ export const ledbar_fromHSV = function(L: any) {
         case 5: r = v; g = p; b = q; break;
     }
     
-    window.fengari.lua.lua_pushnumber(L, r);
-    window.fengari.lua.lua_pushnumber(L, g);
-    window.fengari.lua.lua_pushnumber(L, b);
+    fengari.lua.lua_pushnumber(L, r);
+    fengari.lua.lua_pushnumber(L, g);
+    fengari.lua.lua_pushnumber(L, b);
     return 3;
 };
 
 export const js_init_leds = function(L: any) {
-    const count = window.fengari.lua.lua_tointeger(L, 1);
+    const count = fengari.lua.lua_tointeger(L, 1);
     const simState = getDroneFromLua(L);
     simState.leds = Array.from({ length: count }, () => ({r: 0, g: 0, b: 0, w: 0}));
     return 0;
 };
 
 export const js_ledbar_set = function(L: any) {
-    if (window.fengari.lua.lua_gettop(L) < 4) return 0;
-    const index = window.fengari.lua.lua_tointeger(L, 1);
-    const r = window.fengari.lua.lua_tonumber(L, 2);
-    const g = window.fengari.lua.lua_tonumber(L, 3);
-    const b = window.fengari.lua.lua_tonumber(L, 4);
+    if (fengari.lua.lua_gettop(L) < 4) return 0;
+    const index = fengari.lua.lua_tointeger(L, 1);
+    const r = fengari.lua.lua_tonumber(L, 2);
+    const g = fengari.lua.lua_tonumber(L, 3);
+    const b = fengari.lua.lua_tonumber(L, 4);
     
     const simState = getDroneFromLua(L);
     if (simState.leds && index >= 0 && index < simState.leds.length) {

@@ -72,8 +72,13 @@ const sensorValueBlockTypes = [
     'py_get_autopilot_state'
 ];
 
-beforeAll(() => {
-    ensureEditorBlocklyDefinitions();
+beforeAll(async () => {
+    // См. комментарий в tests/blockly-codegen.test.ts: обходим ограничение
+    // Jest (--experimental-vm-modules) на вложенные import() прогревом кэша.
+    await import('../public/modules/editor/blockly-mode/blockly-core.js');
+    await import('../public/modules/editor/blockly-mode/workspace-xml.js');
+    await import('../public/modules/editor/blockly-mode/lua-definitions.js');
+    await ensureEditorBlocklyDefinitions();
 });
 
 describe('Регистрация Python-блоков в Blockly.Blocks', () => {

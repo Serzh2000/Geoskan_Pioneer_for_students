@@ -9,7 +9,6 @@ const CLICK_TRACE_PREFIX = '[3D-CLICK]';
 export function traceClick(message: string, level: 'info' | 'warn' = 'info') {
     const fullMessage = `${CLICK_TRACE_PREFIX} ${message}`;
     if (level === 'warn') console.warn(fullMessage);
-    else console.debug(fullMessage);
     log(fullMessage, level);
 }
 

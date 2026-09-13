@@ -1,4 +1,5 @@
 import type { GamepadInputRef } from '../../core/state.js';
+import { clamp } from '../../shared/math.js';
 import type {
     ActionAuxChannelKey,
     AuxiliaryChannelKey,
@@ -9,8 +10,6 @@ import type {
     ControlBinding,
     DeviceProfile,
     PrimaryChannelKey,
-    RcWizardModalState,
-    RcWizardState,
     WizardStepId,
     WizardStepState
 } from './types.js';
@@ -35,7 +34,6 @@ export const MIN_POSITION_SAMPLES = 6;
 export const MAX_PRESET_POSITIONS = 5;
 export const RC_CHANNEL_COUNT = 12;
 export const RC_VISIBLE_CHANNELS_DEFAULT = 8;
-export const RC_STORAGE_KEY = 'geoskan_rc_setup_state';
 export const VIRTUAL_DEVICE_ID = 'virtual-radiomaster';
 export const DEFAULT_PWM_MIN = 1000;
 export const DEFAULT_PWM_CENTER = 1500;
@@ -51,38 +49,9 @@ export const BINDING_ACTIONS: BindingAction[] = [
     'Pit Mode'
 ];
 
-export const DEFAULT_WIZARD_SESSION: RcWizardState = {
-    currentStepId: 'device',
-    skippedSteps: [],
-    autoDetectChannel: null,
-    calibrationActive: false
-};
-
-export const DEFAULT_WIZARD_MODAL_STATE: RcWizardModalState = {
-    isOpen: false,
-    mode: null,
-    stepId: 'mode',
-    currentAuxRole: 'flightMode',
-    primaryAssignments: {
-        throttle: null,
-        yaw: null,
-        pitch: null,
-        roll: null
-    },
-    auxAssignments: {
-        flightMode: null,
-        arm: null,
-        magnet: null
-    },
-    captureSourceId: null,
-    captureTicks: 0,
-    statusText: 'Выберите раскладку стиков, чтобы начать мастер.',
-    errorText: null
-};
-
 export const axisRef = (index: number): GamepadInputRef => `a${index}` as GamepadInputRef;
 export const buttonRef = (index: number): GamepadInputRef => `b${index}` as GamepadInputRef;
-export const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+export { clamp };
 export const clampRc = (value: number): number => Math.round(clamp(value, 1000, 2000));
 
 export function getChannelInversionIndex(channel: ChannelKey): number {

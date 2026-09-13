@@ -1,8 +1,9 @@
+import * as fengari from 'fengari-web';
 import { getDroneFromLua } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 import { pushCommand } from '../autopilot/mce-events.js';
 import { applyGoToLocalPointRequest, getCommandSource, queueMceCommand } from '../autopilot/fsm.js';
-import { showMissingCallbackMissionNotice } from '../app/script-execution-notice.js';
+import { emitMissingCallbackMission } from '../core/mission-notices.js';
 import { describeCommandId, pushLuaRuntimeLog } from './diagnostics.js';
 import { allowLuaMissionCommand } from './mission-guard.js';
 
@@ -17,7 +18,7 @@ function ensureLuaMissionCommandAllowed(simState: ReturnType<typeof getDroneFrom
 
     if (!simState.luaMissingCallbackNoticeShown) {
         simState.luaMissingCallbackNoticeShown = true;
-        showMissingCallbackMissionNotice(apiName);
+        emitMissingCallbackMission(apiName);
     }
 
     return false;
@@ -29,8 +30,8 @@ export function setLocalFrameOrigin(x: number, y: number, z: number) {
 }
 
 export const ap_push = function(L: any) {
-    if (window.fengari.lua.lua_gettop(L) < 1) return 0;
-    const event = window.fengari.lua.lua_tointeger(L, 1);
+    if (fengari.lua.lua_gettop(L) < 1) return 0;
+    const event = fengari.lua.lua_tointeger(L, 1);
     const simState = getDroneFromLua(L);
     if (!ensureLuaMissionCommandAllowed(simState, `ap.push(${describeCommandId(event)})`)) return 0;
     pushLuaRuntimeLog(
@@ -47,10 +48,10 @@ export const ap_push = function(L: any) {
 };
 
 export const ap_goToPoint = function(L: any) {
-    if (window.fengari.lua.lua_gettop(L) < 3) return 0;
-    const lat = window.fengari.lua.lua_tonumber(L, 1);
-    const lon = window.fengari.lua.lua_tonumber(L, 2);
-    const alt = window.fengari.lua.lua_tonumber(L, 3);
+    if (fengari.lua.lua_gettop(L) < 3) return 0;
+    const lat = fengari.lua.lua_tonumber(L, 1);
+    const lon = fengari.lua.lua_tonumber(L, 2);
+    const alt = fengari.lua.lua_tonumber(L, 3);
     const simState = getDroneFromLua(L);
     if (!ensureLuaMissionCommandAllowed(simState, 'ap.goToPoint(...)')) return 0;
     const accepted = applyGoToLocalPointRequest(simState, {
@@ -65,11 +66,11 @@ export const ap_goToPoint = function(L: any) {
 };
 
 export const ap_goToLocalPoint = function(L: any) {
-    if (window.fengari.lua.lua_gettop(L) < 3) return 0;
-    const x = window.fengari.lua.lua_tonumber(L, 1);
-    const y = window.fengari.lua.lua_tonumber(L, 2);
-    const z = window.fengari.lua.lua_tonumber(L, 3);
-    const time = (window.fengari.lua.lua_gettop(L) >= 4) ? window.fengari.lua.lua_tonumber(L, 4) : 0;
+    if (fengari.lua.lua_gettop(L) < 3) return 0;
+    const x = fengari.lua.lua_tonumber(L, 1);
+    const y = fengari.lua.lua_tonumber(L, 2);
+    const z = fengari.lua.lua_tonumber(L, 3);
+    const time = (fengari.lua.lua_gettop(L) >= 4) ? fengari.lua.lua_tonumber(L, 4) : 0;
     
     const simState = getDroneFromLua(L);
     if (!ensureLuaMissionCommandAllowed(simState, 'ap.goToLocalPoint(...)')) return 0;
@@ -86,8 +87,8 @@ export const ap_goToLocalPoint = function(L: any) {
 };
 
 export const ap_updateYaw = function(L: any) {
-    if (window.fengari.lua.lua_gettop(L) < 1) return 0;
-    const yaw = window.fengari.lua.lua_tonumber(L, 1);
+    if (fengari.lua.lua_gettop(L) < 1) return 0;
+    const yaw = fengari.lua.lua_tonumber(L, 1);
     const simState = getDroneFromLua(L);
     simState.target_yaw = yaw;
     if (getCommandSource(simState) !== 'timer') {

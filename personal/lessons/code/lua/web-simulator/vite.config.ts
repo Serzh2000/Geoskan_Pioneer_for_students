@@ -45,7 +45,19 @@ export default defineConfig({
   build: {
     outDir: '../dist/public',
     emptyOutDir: true,
-    target: 'es2020'
+    target: 'es2020',
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('/three/')) return 'vendor-three';
+          if (id.includes('/monaco-editor/')) return 'vendor-monaco';
+          if (id.includes('/blockly/')) return 'vendor-blockly';
+          if (id.includes('/fengari-web/') || id.includes('/fengari/')) return 'vendor-fengari';
+          return 'vendor';
+        }
+      }
+    }
   },
   server: {
     port: 3001,

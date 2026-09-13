@@ -12,7 +12,7 @@ import {
     beginDisarmedFall
 } from './events.js';
 
-export type CommandQueueResult = 'continue' | 'abortFrame';
+export type CommandQueueResult = 'continue';
 
 export function processCommandQueue(simState: DroneState, id: string): CommandQueueResult {
     if (simState.command_queue.length === 0) return 'continue';
