@@ -37,12 +37,18 @@ function chainUnderStart(workspace: Blockly.Workspace, ...blocks: Blockly.Block[
 }
 
 describe('pioneer_wait / pioneer_time', () => {
-    test('pioneer_wait: __wait_seconds (Lua) / time.sleep (Python)', () => {
+    test('pioneer_wait: Timer.callLater-переход FSM (Lua) / time.sleep (Python)', () => {
         const wsLua = makeWorkspace();
         const waitLua = wsLua.newBlock('pioneer_wait');
         waitLua.getInput('SECONDS')!.connection!.connect(numberBlock(wsLua, 2.5).outputConnection!);
         chainUnderStart(wsLua, waitLua);
-        expect(compilePioneerWorkspace(wsLua, 'lua')).toContain('__wait_seconds(2.5)');
+        const luaCode = compilePioneerWorkspace(wsLua, 'lua');
+        // __wait_seconds — не настоящая функция, а маркер для lua-fsm.ts: в
+        // готовом Lua вместо неё — Timer.callLater(...) с переходом __s0 -> __s1
+        // (§4.3 плана, пересмотрено 2026-09-13, см. §2.1).
+        expect(luaCode).not.toContain('__wait_seconds');
+        expect(luaCode).toContain('Timer.callLater(2.5, function()');
+        expect(luaCode).toContain('__state = "__s1"');
 
         const wsPy = makeWorkspace();
         const waitPy = wsPy.newBlock('pioneer_wait');
@@ -151,15 +157,17 @@ describe('pioneer_position / pioneer_distance / pioneer_battery', () => {
 });
 
 describe('compilePioneerWorkspace: пролог для пустого pioneer_start', () => {
-    test('Lua: корутина, __wait_event/__wait_seconds, маркер версии', () => {
+    test('Lua: FSM-таблица состояний, __advance, маркер версии, без корутин', () => {
         const ws = makeWorkspace();
         ws.newBlock('pioneer_start');
         const code = compilePioneerWorkspace(ws, 'lua');
 
         expect(code.startsWith('-- @pioneer-blockly v1')).toBe(true);
-        expect(code).toContain('coroutine.create(__main)');
+        expect(code).toContain('local action = {}');
+        expect(code).toContain('action["__s0"] = function()');
+        expect(code).toContain('local function __advance()');
         expect(code).toContain('function callback(event)');
-        expect(code).toContain('local function __wait_seconds(t)');
+        expect(code).not.toContain('coroutine');
     });
 
     test('Python: Pioneer(simulator=True), _pioneer_t0, wait-хелперы, close_connection в конце', () => {

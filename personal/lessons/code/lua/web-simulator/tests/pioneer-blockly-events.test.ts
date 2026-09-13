@@ -1,9 +1,11 @@
 /**
  * pioneer_on_event (фаза 5 плана): дропдаун from-autopilot, генерация веток
- * в callback(event) до возобновления корутины, и отключение блоков модели
+ * в callback(event) ДО веток-переходов FSM (§4.3 плана, пересмотрено
+ * 2026-09-13 — FSM вместо корутины, см. §2.1), и отключение блоков модели
  * ожидания (preflight/takeoff/go_to/land/wait), если их вложили внутрь
- * pioneer_on_event — там нет корутины, coroutine.yield() внутри callback()
- * упадёт с ошибкой (§4.3 плана).
+ * pioneer_on_event — там нет отдельного состояния автомата, маркер
+ * __wait_event/__wait_seconds попал бы в тело callback() как есть и вызвал
+ * бы несуществующую функцию.
  */
 import * as Blockly from 'blockly';
 import { ensureEditorBlocklyDefinitions } from '../public/modules/editor/blockly-mode/index.js';
@@ -43,8 +45,13 @@ async function flushBlocklyEvents(): Promise<void> {
 }
 
 describe('pioneer_on_event: генерация ветки в callback(event)', () => {
-    test('ветка if event == Ev.X then ... end появляется до проверки __waiting_event', async () => {
+    test('ветка if event == Ev.X then ... end появляется до веток-переходов FSM', async () => {
         const workspace = makeWorkspace();
+        // pioneer_preflight создаёт переход __s0 -> __s1 по Ev.ENGINES_STARTED —
+        // нужен, чтобы в callback(event) вообще была ветка-переход FSM, ordering
+        // которой сравниваем с веткой pioneer_on_event.
+        chainUnderStart(workspace, workspace.newBlock('pioneer_preflight'));
+
         const onEvent = workspace.newBlock('pioneer_on_event');
         onEvent.setFieldValue('SHOCK', 'EVENT');
 
@@ -61,9 +68,9 @@ describe('pioneer_on_event: генерация ветки в callback(event)', (
         expect(code).toContain('__led_all({255, 0, 0})');
 
         const branchIndex = code.indexOf('if event == Ev.SHOCK then');
-        const waitingCheckIndex = code.indexOf('if __waiting_event ~= nil');
+        const transitionIndex = code.indexOf('if __state == "__s0" and event == Ev.ENGINES_STARTED');
         expect(branchIndex).toBeGreaterThan(-1);
-        expect(waitingCheckIndex).toBeGreaterThan(branchIndex);
+        expect(transitionIndex).toBeGreaterThan(branchIndex);
     });
 
     test('дропдаун предлагает только события "от автопилота" с русскими подписями', () => {
@@ -113,8 +120,13 @@ describe('pioneer_on_event: блоки ожидания внутри отклю�
 
         const code = compilePioneerWorkspace(workspace, 'lua');
         expect(code).not.toContain('__wait_seconds(3.5)');
-        // Определение хелпера в прологе остаётся — отключён только вызов.
-        expect(code).toContain('local function __wait_seconds(t)');
+        // Остальной пролог не пострадал — сломан (точнее, пуст) только код
+        // самого отключённого блока. __wait_seconds — не настоящая функция
+        // рантайма (маркер для lua-fsm.ts, см. targets/lua-fsm.ts), поэтому
+        // никакого её "определения" в прологе в принципе нет — ни до, ни
+        // после отключения блока.
+        expect(code).toContain('local function __advance()');
+        expect(code).not.toContain('__wait_seconds');
     });
 
     test('pioneer_go_to внутри DO тоже отключается', async () => {

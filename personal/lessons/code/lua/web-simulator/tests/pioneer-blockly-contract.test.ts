@@ -51,8 +51,20 @@ function buildLuaAllowSet(): Set<string> {
 // `function callback(event)` из фиксированного пролога (targets/lua-runtime.ts):
 // вызовов с таким именем в теле программы не бывает, это часть каждого
 // сгенерированного Lua-скрипта.
-const LUA_STD_NAMES = new Set(['print', 'error', 'select', 'tostring', 'callback']);
-const LUA_STD_PREFIXES = ['math.', 'coroutine.'];
+// coroutine.* — [пересмотрено 2026-09-13, см. §2.1 плана] сознательно НЕ в
+// списке: Lua-таргет с FSM корутины не использует вовсе, а если бы
+// сгенерированный код где-то вызвал coroutine.*, это означало бы, что FSM
+// реализована неправильно (см. targets/lua-fsm.ts, targets/lua-runtime.ts).
+// 'function' — ложное срабатывание CALL_PATTERN на анонимных функциях FSM
+// (`action["__sN"] = function()`, `Timer.callLater(t, function()`, см.
+// targets/lua-fsm.ts): регэксп не различает "вызов" и "ключевое слово
+// function перед (", когда сразу за ним, без имени, идёт открывающая
+// скобка — это ключевое слово Lua, а не API, которое нужно проверять.
+// 'current' — локальная переменная __advance() в targets/lua-runtime.ts
+// (`local current = action[__state]; if current ~= nil then current() end`):
+// вызов значения, хранящегося в локальной переменной, а не обращение к API.
+const LUA_STD_NAMES = new Set(['print', 'error', 'select', 'tostring', 'callback', 'function', 'current']);
+const LUA_STD_PREFIXES = ['math.'];
 
 function isAllowedLuaCall(name: string, allowSet: Set<string>): boolean {
     if (name.startsWith('__')) return true;
@@ -279,15 +291,28 @@ describe('Интеграционный тест: полный полёт (фаз
     test('Lua: моторы -> взлёт -> точка (1, 0, 1) -> ждать 2с -> посадка', () => {
         const code = compilePioneerWorkspace(buildFullFlightWorkspace(), 'lua');
 
+        // Маркеры __wait_event/__wait_seconds — не настоящие функции, а сигнал
+        // для lua-fsm.ts на этапе сборки (§4.3 плана, пересмотрено 2026-09-13,
+        // см. §2.1): в готовом коде вместо них — состояния FSM и переходы.
+        expect(code).not.toContain('__wait_event');
+        expect(code).not.toContain('__wait_seconds');
+        expect(code).not.toContain('coroutine');
+
+        expect(code).toContain('action["__s0"] = function()');
         expect(code).toContain('ap.push(Ev.MCE_PREFLIGHT)');
-        expect(code).toContain('__wait_event(Ev.ENGINES_STARTED)');
+        expect(code).toContain('action["__s1"] = function()');
         expect(code).toContain('ap.push(Ev.MCE_TAKEOFF)');
-        expect(code).toContain('__wait_event(Ev.TAKEOFF_COMPLETE)');
+        expect(code).toContain('action["__s2"] = function()');
         expect(code).toContain('ap.goToLocalPoint(1, 0, 1)');
-        expect(code).toContain('__wait_event(Ev.POINT_REACHED)');
-        expect(code).toContain('__wait_seconds(2)');
+        expect(code).toContain('action["__s3"] = function()');
+        expect(code).toContain('Timer.callLater(2, function()');
+        expect(code).toContain('action["__s4"] = function()');
         expect(code).toContain('ap.push(Ev.MCE_LANDING)');
-        expect(code).toContain('__wait_event(Ev.COPTER_LANDED)');
+
+        expect(code).toContain('if __state == "__s0" and event == Ev.ENGINES_STARTED then __state = "__s1"; __advance() end');
+        expect(code).toContain('if __state == "__s1" and event == Ev.TAKEOFF_COMPLETE then __state = "__s2"; __advance() end');
+        expect(code).toContain('if __state == "__s2" and event == Ev.POINT_REACHED then __state = "__s3"; __advance() end');
+        expect(code).toContain('if __state == "__s4" and event == Ev.COPTER_LANDED then __state = "__s5"; __advance() end');
 
         const unknown = extractCalls(code).filter((name) => !isAllowedLuaCall(name, luaAllowSet));
         expect(unknown).toEqual([]);
