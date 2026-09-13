@@ -117,7 +117,7 @@ describe('pioneer_led_all / pioneer_led_index', () => {
 
         const code = compilePioneerWorkspace(ws, 'python');
         expect(code).toContain('def _pioneer_led(led_id, c):');
-        expect(code).toContain('pioneer.led_control(led_id=led_id, r=c[0] / 255, g=c[1] / 255, b=c[2] / 255)');
+        expect(code).toContain('pioneer.led_control(led_id=led_id, r=c[0], g=c[1], b=c[2])');
         expect(code).toContain('_pioneer_led(3, (255, 255, 255))');
     });
 });
@@ -170,14 +170,92 @@ describe('compilePioneerWorkspace: пролог для пустого pioneer_st
         expect(code).not.toContain('coroutine');
     });
 
-    test('Python: Pioneer(simulator=True), _pioneer_t0, wait-хелперы, close_connection в конце', () => {
+    test('Python: Pioneer(simulator=True), close_connection в конце, без хелперов для пустой программы', () => {
         const ws = makeWorkspace();
         ws.newBlock('pioneer_start');
         const code = compilePioneerWorkspace(ws, 'python');
 
         expect(code.startsWith('# @pioneer-blockly v1')).toBe(true);
         expect(code).toContain('pioneer = Pioneer(simulator=True)');
-        expect(code).toContain('def _pioneer_wait_armed():');
         expect(code.trimEnd().endsWith('pioneer.close_connection()')).toBe(true);
+
+        // [пересмотрено 2026-09-14, см. §4.4 плана] Пустая программа без
+        // блоков полёта/времени/поворота не должна тащить за собой ни один
+        // из условных хелперов — раньше все они были в фиксированном прологе.
+        expect(code).not.toContain('_pioneer_wait');
+        expect(code).not.toContain('_pioneer_t0');
+        expect(code).not.toContain('import math');
+    });
+});
+
+describe('pioneer_preflight / pioneer_takeoff / pioneer_land: общий _pioneer_wait только при использовании', () => {
+    test('Python: одна общая def _pioneer_wait(...), инлайн-условия вместо именованных обёрток', () => {
+        const ws = makeWorkspace();
+        const preflight = ws.newBlock('pioneer_preflight');
+        const takeoff = ws.newBlock('pioneer_takeoff');
+        const land = ws.newBlock('pioneer_land');
+        chainUnderStart(ws, preflight, takeoff, land);
+
+        const code = compilePioneerWorkspace(ws, 'python');
+        expect(code.match(/def _pioneer_wait\(condition, timeout, message\):/g)).toHaveLength(1);
+        expect(code).not.toContain('_pioneer_wait_armed');
+        expect(code).not.toContain('_pioneer_wait_takeoff');
+        expect(code).not.toContain('_pioneer_wait_landed');
+        expect(code).toContain(
+            "pioneer.arm()\n_pioneer_wait(lambda: pioneer.get_autopilot_state() == 'ARMED', 15, 'Моторы не запустились за 15 секунд')"
+        );
+        expect(code).toContain(
+            "pioneer.takeoff()\n_pioneer_wait(lambda: pioneer.get_autopilot_state() == 'MISSION', 30, 'Дрон не взлетел за 30 секунд')"
+        );
+        expect(code).toContain(
+            "pioneer.land()\n_pioneer_wait(lambda: pioneer.get_autopilot_state() == 'DISARMED', 30, 'Дрон не приземлился за 30 секунд')"
+        );
+        // Ни один из этих трёх блоков не использует math.
+        expect(code).not.toContain('import math');
+    });
+
+    test('Python: pioneer_go_to переиспользует общий _pioneer_wait для point_reached', () => {
+        const ws = makeWorkspace();
+        const goTo = ws.newBlock('pioneer_go_to');
+        goTo.getInput('X')!.connection!.connect(numberBlock(ws, 1).outputConnection!);
+        goTo.getInput('Y')!.connection!.connect(numberBlock(ws, 0).outputConnection!);
+        goTo.getInput('Z')!.connection!.connect(numberBlock(ws, 1).outputConnection!);
+        chainUnderStart(ws, goTo);
+
+        const code = compilePioneerWorkspace(ws, 'python');
+        expect(code.match(/def _pioneer_wait\(condition, timeout, message\):/g)).toHaveLength(1);
+        expect(code).toContain(
+            "pioneer.go_to_local_point(x=1, y=0, z=1)\n_pioneer_wait(pioneer.point_reached, 60, 'Дрон не долетел до точки за 60 секунд')"
+        );
+    });
+
+    test('Python: pioneer_set_yaw добавляет import math один раз и переиспользует _pioneer_wait', () => {
+        const ws = makeWorkspace();
+        const setYaw = ws.newBlock('pioneer_set_yaw');
+        setYaw.getInput('ANGLE')!.connection!.connect(numberBlock(ws, 90).outputConnection!);
+        chainUnderStart(ws, setYaw);
+
+        const code = compilePioneerWorkspace(ws, 'python');
+        expect(code.match(/^import math$/m)).toHaveLength(1);
+        expect(code.match(/def _pioneer_wait\(condition, timeout, message\):/g)).toHaveLength(1);
+        expect(code).toContain('def _pioneer_set_yaw(yaw):');
+        expect(code).toContain("_pioneer_wait(pioneer.point_reached, 60, 'Дрон не долетел до точки за 60 секунд')");
+        expect(code).toContain('_pioneer_set_yaw(math.radians(90))');
+    });
+
+    test('Python: _pioneer_t0 добавляется, только когда используется pioneer_time', () => {
+        const wsWithout = makeWorkspace();
+        wsWithout.newBlock('pioneer_start');
+        expect(compilePioneerWorkspace(wsWithout, 'python')).not.toContain('_pioneer_t0');
+
+        const wsWith = makeWorkspace();
+        const timeBlock = wsWith.newBlock('pioneer_time');
+        const wait = wsWith.newBlock('pioneer_wait');
+        wait.getInput('SECONDS')!.connection!.connect(timeBlock.outputConnection!);
+        chainUnderStart(wsWith, wait);
+
+        const code = compilePioneerWorkspace(wsWith, 'python');
+        expect(code).toContain('_pioneer_t0 = time.time()');
+        expect(code).toContain('time.sleep((time.time() - _pioneer_t0))');
     });
 });

@@ -1,41 +1,30 @@
 // Python-рантайм для pioneer_*-блоков (§4.4 плана): все команды pioneer_sdk
 // неблокирующие, поэтому последовательность строится опросом состояния —
 // без корутин, в отличие от Lua-таргета (targets/lua-runtime.ts).
+//
+// [пересмотрено 2026-09-14] Раньше здесь был фиксированный пролог с четырьмя
+// именованными обёртками (_pioneer_wait_armed/_takeoff/_landed/_point) и
+// хардкодом `import math` / `_pioneer_t0 = time.time()`, печатавшимися в
+// КАЖДОЙ программе независимо от того, какие блоки реально на холсте
+// (ученику показывали 4 функции ожидания даже для одной команды "взлететь").
+// Теперь единственный по-настоящему общий кусок — сам опрос-примитив
+// `_pioneer_wait(condition, timeout, message)`; конкретные условия ожидания
+// (ARMED/MISSION/DISARMED/point_reached) блоки полёта (blocks/flight.ts)
+// подставляют инлайном прямо в месте вызова, а `_pioneer_wait`, `import math`
+// и `_pioneer_t0` попадают в headerDefinitions через generator.definitions_
+// только когда их реально использует хотя бы один блок на холсте — тем же
+// приёмом, что уже был у LED/position-хелперов (blocks/leds.ts, blocks/sensors.ts).
 export type PythonProgramParts = {
-    // LED/position-хелперы (definitions_), добавляются только при использовании блока.
+    // Хелперы pioneer_*-блоков (definitions_), добавляются только при использовании.
     headerDefinitions: string;
     // Код цепочки pioneer_start (без отступа — тело идёт на верхнем уровне модуля).
     body: string;
 };
 
-// Условия для _pioneer_wait_armed/_takeoff/_landed взяты из маппинга
-// get_autopilot_state() в pioneer-js-bridge.ts (~стр. 205): PREFLIGHT -> ARMED,
-// (FLYING_HOVER|FLYING_MOVING) -> MISSION, IDLE -> DISARMED. Так что "взлёт
-// завершён" — это переход в MISSION, а не в отдельное состояние TAKEOFF.
-const WAIT_HELPERS = `def _pioneer_wait(condition, timeout, message):
-    started = time.time()
-    while not condition():
-        if time.time() - started > timeout:
-            raise RuntimeError(message)
-        time.sleep(0.05)
-
-def _pioneer_wait_point():
-    _pioneer_wait(pioneer.point_reached, 60, 'Дрон не долетел до точки за 60 секунд')
-
-def _pioneer_wait_armed():
-    _pioneer_wait(lambda: pioneer.get_autopilot_state() == 'ARMED', 15, 'Моторы не запустились за 15 секунд')
-
-def _pioneer_wait_takeoff():
-    _pioneer_wait(lambda: pioneer.get_autopilot_state() == 'MISSION', 30, 'Дрон не взлетел за 30 секунд')
-
-def _pioneer_wait_landed():
-    _pioneer_wait(lambda: pioneer.get_autopilot_state() == 'DISARMED', 30, 'Дрон не приземлился за 30 секунд')`;
-
 export function buildPythonProgram({ headerDefinitions, body }: PythonProgramParts): string {
     const sections = [
-        '# @pioneer-blockly v1\nfrom pioneer_sdk import Pioneer\nimport time\nimport math',
-        'pioneer = Pioneer(simulator=True)\n_pioneer_t0 = time.time()',
-        WAIT_HELPERS
+        '# @pioneer-blockly v1\nfrom pioneer_sdk import Pioneer\nimport time',
+        'pioneer = Pioneer(simulator=True)'
     ];
     if (headerDefinitions) sections.push(headerDefinitions);
     if (body) sections.push(body.replace(/\n+$/, ''));

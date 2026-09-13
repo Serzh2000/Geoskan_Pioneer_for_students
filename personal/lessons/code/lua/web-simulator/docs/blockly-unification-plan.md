@@ -258,14 +258,16 @@ __advance()
 
 ### 4.4 Python-пролог (эталон)
 
+**[пересмотрено 2026-09-14]** Первоначальный набросок ниже держал четыре именованные обёртки ожидания (`_pioneer_wait_armed`/`_takeoff`/`_landed`/`_point`), `import math` и `_pioneer_t0 = time.time()` в фиксированном прологе — они печатались в КАЖДОЙ программе, даже когда на холсте нет ни одного блока, которому это нужно (например, программа «моторы → взлёт → посадка» без единого `pioneer_go_to`/`pioneer_set_yaw`/`pioneer_time` всё равно тащила за собой `_pioneer_wait_point`, `import math` и точку отсчёта времени). Это и была основная жалоба владельца: генерируемый код выглядел пугающе многословным по сравнению с официальными примерами Geoskan.
+
+Фактическая реализация: общий опрос-примитив остался один — `_pioneer_wait(condition, timeout, message)`, — но он попадает в `headerDefinitions` (через `generator.definitions_`, как LED/position-хелперы, `blocks/leds.ts`/`blocks/sensors.ts`) только если хотя бы один блок полёта (`pioneer_preflight`/`pioneer_takeoff`/`pioneer_go_to`/`pioneer_set_yaw`/`pioneer_land`) реально на холсте. Конкретное условие/таймаут/сообщение (`ARMED`/15с, `MISSION`/30с, `DISARMED`/30с, `point_reached`/60с) каждый такой блок подставляет **инлайн** прямо в месте вызова (`blocks/flight.ts`), а не через отдельную именованную функцию. `import math` и `_pioneer_t0 = time.time()` — тем же приёмом: первое ставит `pioneer_set_yaw`/`pioneer_set_manual_speed` (ключ `import_math`, тот же, каким сама `pythonGenerator` помечает свои условные импорты — см. `math_number`/`math_atan2`/`math_random_int` в `generators/python`), второе — `pioneer_time` (`blocks/time.ts`).
+
 ```python
 # @pioneer-blockly v1
 from pioneer_sdk import Pioneer
 import time
-import math
 
 pioneer = Pioneer(simulator=True)
-_pioneer_t0 = time.time()
 
 def _pioneer_wait(condition, timeout, message):
     started = time.time()
@@ -274,15 +276,10 @@ def _pioneer_wait(condition, timeout, message):
             raise RuntimeError(message)
         time.sleep(0.05)
 
-def _pioneer_wait_point():
-    _pioneer_wait(pioneer.point_reached, 60, 'Дрон не долетел до точки за 60 секунд')
-
-# _pioneer_wait_armed / _pioneer_wait_takeoff / _pioneer_wait_landed:
-# условие по pioneer.get_autopilot_state(). Значения состояний возьми из маппинга
-# в pioneer-js-bridge.ts (~стр. 205) и сверь с python-api-docs.ts.
-# _pioneer_led(led_id, c), _pioneer_position(index) — через definitions_, только при использовании.
-
-# ... тело pioneer_start ...
+# ... тело pioneer_start: инлайн-вызовы _pioneer_wait(...) с условием по
+# pioneer.get_autopilot_state() (маппинг — pioneer-js-bridge.ts, ~стр. 205)
+# или pioneer.point_reached; import math / _pioneer_t0 / _pioneer_led /
+# _pioneer_position — через definitions_, только при использовании ...
 
 pioneer.close_connection()
 ```
@@ -296,11 +293,11 @@ pioneer.close_connection()
 | type | Вид для ученика | Lua | Python | Таргеты |
 |---|---|---|---|---|
 | `pioneer_start` | hat «Начало программы», неудаляемый | тело `__main` | тело скрипта | оба |
-| `pioneer_preflight` | «Запустить моторы» | `ap.push(Ev.MCE_PREFLIGHT)`<br>`__wait_event(Ev.ENGINES_STARTED)` | `pioneer.arm()`<br>`_pioneer_wait_armed()` | оба |
-| `pioneer_takeoff` | «Взлететь» | `ap.push(Ev.MCE_TAKEOFF)`<br>`__wait_event(Ev.TAKEOFF_COMPLETE)` | `pioneer.takeoff()`<br>`_pioneer_wait_takeoff()` | оба |
-| `pioneer_go_to` | «Лететь в точку X [] Y [] Z [] м» | `ap.goToLocalPoint(x, y, z)`<br>`__wait_event(Ev.POINT_REACHED)` | `pioneer.go_to_local_point(x=x, y=y, z=z)`<br>`_pioneer_wait_point()` | оба |
-| `pioneer_set_yaw` | «Повернуться на курс [] °» | `ap.updateYaw(math.rad(a))` | `_pioneer_set_yaw(math.radians(a))`: `go_to_local_point` в текущие координаты с `yaw`, затем ожидание точки | оба (**проверить в симуляторе**, что поведение совпадает) |
-| `pioneer_land` | «Приземлиться» | `ap.push(Ev.MCE_LANDING)`<br>`__wait_event(Ev.COPTER_LANDED)` | `pioneer.land()`<br>`_pioneer_wait_landed()` | оба |
+| `pioneer_preflight` | «Запустить моторы» | `ap.push(Ev.MCE_PREFLIGHT)`<br>`__wait_event(Ev.ENGINES_STARTED)` | `pioneer.arm()`<br>`_pioneer_wait(lambda: ...get_autopilot_state() == 'ARMED', 15, ...)` | оба |
+| `pioneer_takeoff` | «Взлететь» | `ap.push(Ev.MCE_TAKEOFF)`<br>`__wait_event(Ev.TAKEOFF_COMPLETE)` | `pioneer.takeoff()`<br>`_pioneer_wait(lambda: ...get_autopilot_state() == 'MISSION', 30, ...)` | оба |
+| `pioneer_go_to` | «Лететь в точку X [] Y [] Z [] м» | `ap.goToLocalPoint(x, y, z)`<br>`__wait_event(Ev.POINT_REACHED)` | `pioneer.go_to_local_point(x=x, y=y, z=z)`<br>`_pioneer_wait(pioneer.point_reached, 60, ...)` | оба |
+| `pioneer_set_yaw` | «Повернуться на курс [] °» | `ap.updateYaw(math.rad(a))` | `_pioneer_set_yaw(math.radians(a))`: `go_to_local_point` в текущие координаты с `yaw`, затем ожидание точки через `_pioneer_wait` | оба (**проверить в симуляторе**, что поведение совпадает) |
+| `pioneer_land` | «Приземлиться» | `ap.push(Ev.MCE_LANDING)`<br>`__wait_event(Ev.COPTER_LANDED)` | `pioneer.land()`<br>`_pioneer_wait(lambda: ...get_autopilot_state() == 'DISARMED', 30, ...)` | оба |
 | `pioneer_disarm` | «Выключить моторы» | `ap.push(Ev.ENGINES_DISARM)` | `pioneer.disarm()` | оба |
 | `pioneer_set_manual_speed` | «Скорость Vx [] Vy [] Vz [] м/с, поворот [] °/с» | — | `pioneer.set_manual_speed(vx, vy, vz, math.radians(r))` | только Python |
 | `pioneer_wait` | «Ждать [] сек» | `__wait_seconds(t)` | `time.sleep(t)` | оба |
