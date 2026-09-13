@@ -6,6 +6,13 @@ import type { ApiCatalogEntry } from './types.js';
 import {
     compileMainEditorWorkspace as compileWorkspaceCode
 } from './workspace.js';
+import { buildPioneerToolbox } from './pioneer/toolbox.js';
+import { compilePioneerWorkspace as compilePioneerWorkspaceCode } from './pioneer/targets/compile.js';
+
+// Реэкспорт для тестов и будущей фазы 7 (§7 плана, фаза 2, шаг 4): новая
+// система pioneer_* пока не подключена к тулбоксу/компиляции UI напрямую.
+export { buildPioneerToolbox };
+export const compilePioneerWorkspace = compilePioneerWorkspaceCode;
 
 const LUA_EVENT_CONSTANT_BLOCK = 'lua_event_constant';
 
