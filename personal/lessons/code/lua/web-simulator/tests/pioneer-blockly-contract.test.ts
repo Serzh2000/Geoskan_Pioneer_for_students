@@ -241,6 +241,79 @@ describe('Синтаксис Lua (настоящий Fengari luaL_loadstring)', 
     }
 });
 
+// Фаза 4, шаг 5 плана: «моторы → взлёт → точка (1, 0, 1) → ждать 2 → посадка»
+// в стиле существующих «Интеграционные тесты Lua» (blockly-codegen.test.ts).
+function buildFullFlightWorkspace(): Blockly.Workspace {
+    const workspace = new Blockly.Workspace();
+    const start = workspace.newBlock(PIONEER_START_TYPE);
+    const preflight = workspace.newBlock('pioneer_preflight');
+    const takeoff = workspace.newBlock('pioneer_takeoff');
+    const goTo = workspace.newBlock('pioneer_go_to');
+    const wait = workspace.newBlock('pioneer_wait');
+    const land = workspace.newBlock('pioneer_land');
+
+    goTo.getInput('X')!.connection!.connect(numberInput(workspace, 1).outputConnection!);
+    goTo.getInput('Y')!.connection!.connect(numberInput(workspace, 0).outputConnection!);
+    goTo.getInput('Z')!.connection!.connect(numberInput(workspace, 1).outputConnection!);
+    wait.getInput('SECONDS')!.connection!.connect(numberInput(workspace, 2).outputConnection!);
+
+    start.nextConnection!.connect(preflight.previousConnection!);
+    preflight.nextConnection!.connect(takeoff.previousConnection!);
+    takeoff.nextConnection!.connect(goTo.previousConnection!);
+    goTo.nextConnection!.connect(wait.previousConnection!);
+    wait.nextConnection!.connect(land.previousConnection!);
+
+    return workspace;
+}
+
+function numberInput(workspace: Blockly.Workspace, value: number): Blockly.Block {
+    const block = workspace.newBlock('math_number');
+    block.setFieldValue(String(value), 'NUM');
+    return block;
+}
+
+describe('Интеграционный тест: полный полёт (фаза 4)', () => {
+    const luaAllowSet = buildLuaAllowSet();
+    const pioneerMethods = extractPioneerMethods(fs.readFileSync(PIONEER_SDK_SOURCE_PATH, 'utf8'));
+
+    test('Lua: моторы -> взлёт -> точка (1, 0, 1) -> ждать 2с -> посадка', () => {
+        const code = compilePioneerWorkspace(buildFullFlightWorkspace(), 'lua');
+
+        expect(code).toContain('ap.push(Ev.MCE_PREFLIGHT)');
+        expect(code).toContain('__wait_event(Ev.ENGINES_STARTED)');
+        expect(code).toContain('ap.push(Ev.MCE_TAKEOFF)');
+        expect(code).toContain('__wait_event(Ev.TAKEOFF_COMPLETE)');
+        expect(code).toContain('ap.goToLocalPoint(1, 0, 1)');
+        expect(code).toContain('__wait_event(Ev.POINT_REACHED)');
+        expect(code).toContain('__wait_seconds(2)');
+        expect(code).toContain('ap.push(Ev.MCE_LANDING)');
+        expect(code).toContain('__wait_event(Ev.COPTER_LANDED)');
+
+        const unknown = extractCalls(code).filter((name) => !isAllowedLuaCall(name, luaAllowSet));
+        expect(unknown).toEqual([]);
+
+        expect(checkLuaSyntax(code).ok).toBe(true);
+    });
+
+    test('Python: тот же маршрут через pioneer_sdk с ожиданием по опросу состояния', () => {
+        const code = compilePioneerWorkspace(buildFullFlightWorkspace(), 'python');
+
+        expect(code).toContain('pioneer.arm()');
+        expect(code).toContain('_pioneer_wait_armed()');
+        expect(code).toContain('pioneer.takeoff()');
+        expect(code).toContain('_pioneer_wait_takeoff()');
+        expect(code).toContain('pioneer.go_to_local_point(x=1, y=0, z=1)');
+        expect(code).toContain('_pioneer_wait_point()');
+        expect(code).toContain('time.sleep(2)');
+        expect(code).toContain('pioneer.land()');
+        expect(code).toContain('_pioneer_wait_landed()');
+        expect(code.trimEnd().endsWith('pioneer.close_connection()')).toBe(true);
+
+        const unknown = extractCalls(code).filter((name) => !isAllowedPythonCall(name, pioneerMethods));
+        expect(unknown).toEqual([]);
+    });
+});
+
 describe('legacy (ожидаемо падает по тому же белому списку)', () => {
     const luaAllowSet = buildLuaAllowSet();
     const pioneerMethods = extractPioneerMethods(fs.readFileSync(PIONEER_SDK_SOURCE_PATH, 'utf8'));
