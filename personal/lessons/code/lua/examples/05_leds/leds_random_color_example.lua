@@ -5,7 +5,7 @@
 -- Упрощение вызова функции распаковки таблиц из модуля table
 local unpack = table.unpack
 -- Количество светодиодов на базовой плате
-local ledNumber = 25
+local ledNumber = 29
 -- Создание порта управления светодиодами
 local leds = Ledbar.new(ledNumber)
 
@@ -28,7 +28,7 @@ end
 -- Функция обработки событий, автоматически вызывается автопилотом
 function callback(event)
     -- Вызов функции emergency() при низком напряжении на аккумуляторе
-    if (event == LOW_VOLTAGE2) then
+    if (event == Ev.LOW_VOLTAGE2) then
         emergency()
     end
 end

@@ -1,5 +1,5 @@
 local unpack = table.unpack
-local ledNumber = 25
+local ledNumber = 29
 local leds = Ledbar.new(ledNumber)
 
 local function changeColor(col)
@@ -16,7 +16,7 @@ end)
 t11_timer:start()
 
 function callback(event)
-    if event == COPTER_LANDED then
+    if event == Ev.COPTER_LANDED then
         t11_timer:stop()
         changeColor({0, 0, 0})
     end

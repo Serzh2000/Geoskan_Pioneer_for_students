@@ -5,18 +5,18 @@ local perim = {                                -- точки периметра 
 }
 local i = 1                                    -- индекс текущей точки
 function callback(event)                        -- обработчик событий
-  if event == TAKEOFF_COMPLETE then          -- после взлёта
+  if event == Ev.TAKEOFF_COMPLETE then          -- после взлёта
     Timer.callLater(2, function()               -- стабилизация
       ap.goToLocalPoint(table.unpack(perim[i])) -- первая точка периметра
     end)
   end
-  if event == POINT_REACHED then             -- точка достигнута
+  if event == Ev.POINT_REACHED then             -- точка достигнута
     i = i + 1                                   -- следующая
     if i <= #perim then                         -- если не конец
       ap.goToLocalPoint(table.unpack(perim[i])) -- командуем следующую
     else                                        -- завершили обход
       ap.goToLocalPoint(0, 0, z)                -- возврат в центр
-      ap.push(MCE_LANDING)                   -- посадка
+      ap.push(Ev.MCE_LANDING)                   -- посадка
     end
   end
 end

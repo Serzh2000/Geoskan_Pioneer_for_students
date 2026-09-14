@@ -1,5 +1,5 @@
 local unpack = table.unpack
-local ledNumber = 25
+local ledNumber = 29
 local leds = Ledbar.new(ledNumber)
 
 -- Задание 10: Случайный диско (каждый диод свой цвет)

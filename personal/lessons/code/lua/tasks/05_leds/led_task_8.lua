@@ -1,5 +1,5 @@
 local unpack = table.unpack
-local ledNumber = 25
+local ledNumber = 29
 local leds = Ledbar.new(ledNumber)
 
 -- Задание 8: Чет/Нечет (0,2.. - Красный; 1,3.. - Синий)

@@ -16,13 +16,13 @@ function nextPoint()                             -- переход к следу
       ap.goToLocalPoint(table.unpack(points[curr]))
       curr = curr + 1
     else                                         -- два цикла выполнены
-      ap.push(MCE_LANDING)                    -- посадка
+      ap.push(Ev.MCE_LANDING)                    -- посадка
     end
   end
 end
-ap.push(MCE_PREFLIGHT)                        -- предстарт
-Timer.callLater(2, function() ap.push(MCE_TAKEOFF) end) -- взлёт
+ap.push(Ev.MCE_PREFLIGHT)                        -- предстарт
+Timer.callLater(2, function() ap.push(Ev.MCE_TAKEOFF) end) -- взлёт
 function callback(event)                          -- обработчик событий
-  if event == TAKEOFF_COMPLETE then Timer.callLater(2, nextPoint) end     -- старт после стабилизации
-  if event == POINT_REACHED then nextPoint() end        -- переход по достижению
+  if event == Ev.TAKEOFF_COMPLETE then Timer.callLater(2, nextPoint) end     -- старт после стабилизации
+  if event == Ev.POINT_REACHED then nextPoint() end        -- переход по достижению
 end

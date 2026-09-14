@@ -7,12 +7,12 @@ pointT = Timer.new(0.1, function()     -- периодический тайме�
   local y = r * math.sin(angle * math.pi / 180) -- Y по формуле y=r*sin(theta)
   ap.goToLocalPoint(x, y, z)           -- команда полёта к локальной точке (x,y,z)
 end)
-ap.push(MCE_PREFLIGHT)              -- предстартовая подготовка (без движения)
+ap.push(Ev.MCE_PREFLIGHT)              -- предстартовая подготовка (без движения)
 Timer.callLater(2, function()          -- отложенный вызов через 2 секунды
-  ap.push(MCE_TAKEOFF)              -- команда взлёта до штатной высоты
+  ap.push(Ev.MCE_TAKEOFF)              -- команда взлёта до штатной высоты
 end)
 function callback(event)               -- обработчик системных событий
-  if event == TAKEOFF_COMPLETE then -- событие: взлёт завершён
+  if event == Ev.TAKEOFF_COMPLETE then -- событие: взлёт завершён
     Timer.callLater(2, function()      -- стабилизация после взлёта
       pointT:start()                   -- запуск таймера окружности
     end)

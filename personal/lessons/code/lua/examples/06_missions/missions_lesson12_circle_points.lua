@@ -1,4 +1,4 @@
-local ledNumber = 25                        -- количество видимых диодов на плате
+local ledNumber = 29                        -- количество видимых диодов на плате
 local leds = Ledbar.new(ledNumber)         -- объект управления светодиодами
 local unpack = table.unpack                -- сокращение для распаковки таблиц
 local curr_state = "PREPARE_FLIGHT"        -- начальное состояние автомата
@@ -29,10 +29,10 @@ local j = 1                                -- индекс текущей точ
 action = {                                 -- таблица функций по состояниям
   ["PREPARE_FLIGHT"] = function()          -- подготовка полёта
     changeColor(colors[2])                 -- белый — подготовка
-    Timer.callLater(2, function () ap.push(MCE_PREFLIGHT) end) -- предстарт
+    Timer.callLater(2, function () ap.push(Ev.MCE_PREFLIGHT) end) -- предстарт
     Timer.callLater(4, function () changeColor(colors[3]) end)    -- зелёный — готовность
     Timer.callLater(6, function ()        -- через 6 секунд
-      ap.push(MCE_TAKEOFF)             -- взлёт
+      ap.push(Ev.MCE_TAKEOFF)             -- взлёт
       curr_state = "FLIGHT"               -- переход к полёту
     end)
   end,
@@ -50,18 +50,18 @@ action = {                                 -- таблица функций по
   end,
   ["PIONEER_LANDING"] = function ()        -- состояние посадки
     changeColor(colors[6])                 -- синий — посадка
-    Timer.callLater(2, function () ap.push(MCE_LANDING) end) -- команда посадки
+    Timer.callLater(2, function () ap.push(Ev.MCE_LANDING) end) -- команда посадки
   end
 }
 
 function callback(event)                   -- обработчик системных событий
-  if (event == TAKEOFF_COMPLETE) then action[curr_state]() end -- старт логики
-  if (event == SHOCK) then              -- авария (столкновение)
+  if (event == Ev.TAKEOFF_COMPLETE) then action[curr_state]() end -- старт логики
+  if (event == Ev.SHOCK) then              -- авария (столкновение)
     changeColor(colors[1])                 -- красный цвет
-    ap.push(ENGINES_DISARM)                -- выключение двигателей (требуется ENGINES_DISARM)
+    ap.push(Ev.ENGINES_DISARM)                -- выключение двигателей (требуется ENGINES_DISARM)
   end
-  if (event == POINT_REACHED) then action[curr_state]() end -- переход по достижению точки
-  if (event == COPTER_LANDED) then changeColor(colors[7]) end -- выключить индикацию
+  if (event == Ev.POINT_REACHED) then action[curr_state]() end -- переход по достижению точки
+  if (event == Ev.COPTER_LANDED) then changeColor(colors[7]) end -- выключить индикацию
 end
 
 changeColor(colors[1])                     -- начальная индикация (красный)

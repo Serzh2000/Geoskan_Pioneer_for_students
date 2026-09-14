@@ -15,13 +15,13 @@ pointT = Timer.new(0.1, function()            -- периодический та
   elseif angle <= -360 and phase=="SECOND" then-- завершение второй окружности
     pointT:stop()                             -- остановка таймера
     ap.goToLocalPoint(0, 0, z)                -- возврат в центр
-    ap.push(MCE_LANDING)                   -- посадка
+    ap.push(Ev.MCE_LANDING)                   -- посадка
   end
 end)
-ap.push(MCE_PREFLIGHT)                     -- предстарт
-Timer.callLater(2, function() ap.push(MCE_TAKEOFF) end) -- взлёт через 2с
+ap.push(Ev.MCE_PREFLIGHT)                     -- предстарт
+Timer.callLater(2, function() ap.push(Ev.MCE_TAKEOFF) end) -- взлёт через 2с
 function callback(event)                      -- обработчик событий
-  if event == TAKEOFF_COMPLETE then        -- после взлёта
+  if event == Ev.TAKEOFF_COMPLETE then        -- после взлёта
     Timer.callLater(2, function()             -- стабилизация после взлёта
       pointT:start()                          -- запуск траектории восьмёрки
     end)

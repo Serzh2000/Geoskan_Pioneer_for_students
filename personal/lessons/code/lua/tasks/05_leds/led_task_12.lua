@@ -1,5 +1,5 @@
 local unpack = table.unpack
-local ledNumber = 25
+local ledNumber = 29
 local leds = Ledbar.new(ledNumber)
 
 local function changeColor(col)
@@ -19,7 +19,7 @@ t12_timer = Timer.new(0.05, function()
 end)
 
 function callback(event)
-    if event == LOW_VOLTAGE2 then
+    if event == Ev.LOW_VOLTAGE2 then
         t12_timer:start()
     end
 end

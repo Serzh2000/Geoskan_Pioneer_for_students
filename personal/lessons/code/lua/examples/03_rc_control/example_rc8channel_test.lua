@@ -46,7 +46,7 @@ local function nextPoint()
     else
         Timer.callLater(1, function()
             -- Команда на посадку
-            ap.push(MCE_LANDING)
+            ap.push(Ev.MCE_LANDING)
         end)
     end
 end
@@ -54,11 +54,11 @@ end
 -- Функция обработки событий, автоматически вызывается автопилотом
 function callback(event)
     -- Когда коптер поднялся на высоту взлета Flight_com_takeoffAlt, переходим к полету по точкам
-    if(event == TAKEOFF_COMPLETE) then
+    if(event == Ev.TAKEOFF_COMPLETE) then
         Timer.callLater(5, nextPoint)
     end
     -- Когда коптер достиг текущей точки, переходим к следующей
-    if(event == POINT_REACHED) then
+    if(event == Ev.POINT_REACHED) then
         Timer.callLater(5, nextPoint)
     end
     
@@ -73,8 +73,8 @@ startTimer = Timer.new(1, function()
     rc_chans = table.pack(rc())
     if rc_chans[8] > 0 then -- проверка положения тумблера SwA
         curr_point = 1
-        ap.push(MCE_PREFLIGHT)
-        Timer.callLater(6, function() ap.push(MCE_TAKEOFF) end)
+        ap.push(Ev.MCE_PREFLIGHT)
+        Timer.callLater(6, function() ap.push(Ev.MCE_TAKEOFF) end)
     end
 end)
 -- Таймер, через 2 секунды вызывающий функцию взлета

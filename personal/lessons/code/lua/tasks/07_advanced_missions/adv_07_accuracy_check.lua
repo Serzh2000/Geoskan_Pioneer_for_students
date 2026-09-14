@@ -7,12 +7,12 @@ for i=1,N do                                 -- генерация точек о
   points[i] = {r*math.cos(th), r*math.sin(th), z} -- координаты (x,y,z)
 end
 function callback(event)                      -- обработчик событий
-  if event == TAKEOFF_COMPLETE then        -- старт после взлёта
+  if event == Ev.TAKEOFF_COMPLETE then        -- старт после взлёта
     Timer.callLater(2, function()              -- стабилизация
       ap.goToLocalPoint(table.unpack(points[curr])) -- первая точка
     end)
   end
-  if event == POINT_REACHED then           -- точка достигнута
+  if event == Ev.POINT_REACHED then           -- точка достигнута
     local now = os.clock()                    -- текущее время
     if tprev then print("Δt=", now - tprev) end -- печать интервала
     tprev = now                               -- обновить tprev

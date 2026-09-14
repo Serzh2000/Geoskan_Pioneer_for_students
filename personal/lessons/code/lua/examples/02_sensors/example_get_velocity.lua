@@ -4,7 +4,7 @@
 local abs = math.abs
 
 -- Количество светодиодов на базовой плате
-local ledNumber = 25
+local ledNumber = 29
 -- Создание порта управления светодиодами
 local leds = Ledbar.new(ledNumber)
 

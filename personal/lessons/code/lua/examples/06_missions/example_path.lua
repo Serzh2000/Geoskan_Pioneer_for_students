@@ -52,8 +52,8 @@ end
 function Path:start()
 	if self.point[1].takeoff then
 		self.state = 1
-		ap.push(MCE_PREFLIGHT) 
-		Timer.callLater(1, function() ap.push(MCE_TAKEOFF) end)
+		ap.push(Ev.MCE_PREFLIGHT) 
+		Timer.callLater(1, function() ap.push(Ev.MCE_TAKEOFF) end)
 	end
 end
 
@@ -63,13 +63,13 @@ function Path:eventHandler( e )
 	local change_state = false
 	local obj_state = self.point[self.state]
 
-	if e == TAKEOFF_COMPLETE and obj_state.takeoff then
+	if e == Ev.TAKEOFF_COMPLETE and obj_state.takeoff then
 		change_state = true
-	elseif e == POINT_REACHED and obj_state.waypoint then
+	elseif e == Ev.POINT_REACHED and obj_state.waypoint then
 		change_state = true
-	elseif e == POINT_REACHED and obj_state.landing then
+	elseif e == Ev.POINT_REACHED and obj_state.landing then
 		change_state = true
-	elseif e == COPTER_LANDED and ( obj_state.landing or obj_state.takeoff ) then
+	elseif e == Ev.COPTER_LANDED and ( obj_state.landing or obj_state.takeoff ) then
 		change_state = true
 	end
 
@@ -89,10 +89,10 @@ function Path:eventHandler( e )
 		if obj_state.waypoint then
 			ap.goToLocalPoint( obj_state.x, obj_state.y, obj_state.z )
 		elseif obj_state.takeoff then
-			Timer.callLater(2, function() ap.push(MCE_PREFLIGHT) end)
-			Timer.callLater(3, function() ap.push(MCE_TAKEOFF) end)
+			Timer.callLater(2, function() ap.push(Ev.MCE_PREFLIGHT) end)
+			Timer.callLater(3, function() ap.push(Ev.MCE_TAKEOFF) end)
 		elseif obj_state.landing then
-			ap.push(MCE_LANDING)
+			ap.push(Ev.MCE_LANDING)
 		end
 
 	end
@@ -121,7 +121,7 @@ local colors = {	red = 		{1, 0, 0},
 					white = 	{1, 1, 1},
 					black = 	{0, 0, 0}    }
 
-local led_count = 25	-- Количество используемых светодиодов
+local led_count = 29	-- Количество используемых светодиодов
 local leds = Ledbar.new(led_count)  -- Создает новый Ledbar для управления светодиодами
 
 -- Фукция установки желаемого цвета на светодиодах на плате

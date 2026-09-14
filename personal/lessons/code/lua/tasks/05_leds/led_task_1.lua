@@ -1,5 +1,5 @@
 local unpack = table.unpack
-local ledNumber = 25
+local ledNumber = 29
 local leds = Ledbar.new(ledNumber)
 
 local function changeColor(col)
@@ -8,5 +8,5 @@ local function changeColor(col)
     end
 end
 
--- Задание 1: Зеленый свет (включаем все 25 светодиодов)
+-- Задание 1: Зеленый свет (включаем все 29 светодиодов)
 changeColor({0, 1, 0})

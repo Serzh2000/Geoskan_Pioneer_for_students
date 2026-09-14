@@ -8,10 +8,10 @@ pointT = Timer.new(0.1, function()           -- периодический та�
   local y = r * math.sin(th)                 -- Y траектории
   ap.goToLocalPoint(x, y, z)                 -- команда на точку (x,y,z)
 end)
-ap.push(MCE_PREFLIGHT)                    -- предстарт
-Timer.callLater(2, function() ap.push(MCE_TAKEOFF) end) -- взлёт
+ap.push(Ev.MCE_PREFLIGHT)                    -- предстарт
+Timer.callLater(2, function() ap.push(Ev.MCE_TAKEOFF) end) -- взлёт
 function callback(event)
-  if event == TAKEOFF_COMPLETE then
+  if event == Ev.TAKEOFF_COMPLETE then
     Timer.callLater(2, function() pointT:start() end) -- стабилизация
   end
 end

@@ -5,10 +5,10 @@ pointT = Timer.new(0.1, function()           -- периодический та�
   local th = angle * math.pi / 180           -- радианы
   ap.goToLocalPoint(r*math.cos(th), r*math.sin(th), z) -- команда полёта
 end)
-ap.push(MCE_PREFLIGHT)                    -- предстарт
-Timer.callLater(2, function() ap.push(MCE_TAKEOFF) end) -- взлёт
+ap.push(Ev.MCE_PREFLIGHT)                    -- предстарт
+Timer.callLater(2, function() ap.push(Ev.MCE_TAKEOFF) end) -- взлёт
 function callback(event)                      -- обработчик событий
-  if event == TAKEOFF_COMPLETE then        -- старт после взлёта
+  if event == Ev.TAKEOFF_COMPLETE then        -- старт после взлёта
     Timer.callLater(2, function()             -- стабилизация
       pointT:start()                          -- включить удержание по кругу
     end)

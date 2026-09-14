@@ -10,21 +10,21 @@ local function nextPoint()                 -- переход к следующе
       curr_point = curr_point + 1          -- увеличить индекс
     end)
   else
-    Timer.callLater(1, function() ap.push(MCE_LANDING) end) -- посадка
+    Timer.callLater(1, function() ap.push(Ev.MCE_LANDING) end) -- посадка
   end
 end
 
 function callback(event)                   -- обработчик событий
-  if(event == TAKEOFF_COMPLETE) then Timer.callLater(5, nextPoint) end -- старт
-  if(event == POINT_REACHED) then Timer.callLater(5, nextPoint) end    -- шаг
+  if(event == Ev.TAKEOFF_COMPLETE) then Timer.callLater(5, nextPoint) end -- старт
+  if(event == Ev.POINT_REACHED) then Timer.callLater(5, nextPoint) end    -- шаг
 end
 
 startTimer = Timer.new(1, function()       -- опрос RC каждую секунду
   rc_chans = table.pack(rc())              -- считанные каналы
   if rc_chans[8] > 0 then                  -- тумблер включён
     curr_point = 1                         -- сброс маршрута
-    ap.push(MCE_PREFLIGHT)              -- предстарт
-    Timer.callLater(6, function() ap.push(MCE_TAKEOFF) end) -- взлёт
+    ap.push(Ev.MCE_PREFLIGHT)              -- предстарт
+    Timer.callLater(6, function() ap.push(Ev.MCE_TAKEOFF) end) -- взлёт
   end
 end)
 startTimer:start()                         -- запуск опроса RC

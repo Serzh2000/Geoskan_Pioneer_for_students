@@ -1,7 +1,7 @@
 -- Плавная смена цвета индикации этапов миссии
-local leds = Ledbar.new(25)                   -- объект управления линейкой
+local leds = Ledbar.new(29)                   -- объект управления линейкой
 local function setAll(r,g,b)                  -- утилита: установить цвет всем индексам
-  for i=0,24 do leds:set(i,r,g,b) end
+  for i=0,28 do leds:set(i,r,g,b) end
 end
 function stageColor(stage)                    -- функция цвета по стадии
   if stage=="PREPARE" then                    -- подготовка

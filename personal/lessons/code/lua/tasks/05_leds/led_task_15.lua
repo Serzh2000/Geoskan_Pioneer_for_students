@@ -1,5 +1,5 @@
 local unpack = table.unpack
-local ledNumber = 25
+local ledNumber = 29
 local leds = Ledbar.new(ledNumber)
 
 -- Задание 15: Двоичный счетчик (0 -> 2^4-1, используем 4 бита)

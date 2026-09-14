@@ -1,5 +1,5 @@
 -- создание порта управления светодиодом
-local ledbar = Ledbar.new(25)
+local ledbar = Ledbar.new(29)
 
 -- переменная текущего состояния
 local curr_state = "START"
@@ -20,7 +20,7 @@ action = {
 		ledbar:set(3, 1, 1, 0.0)
 
 		-- выключение двигателей и конец программы
-		ap.push(ENGINES_DISARM)
+		ap.push(Ev.ENGINES_DISARM)
 		curr_state = "NONE"
 
 	end,
@@ -28,15 +28,15 @@ action = {
 
 -- функция обработки событий, автоматически вызывается автопилотом
 function callback(event)
-	if (event == Ev.ALTITUDE_REACHED) then
+	if (event == Ev.TAKEOFF_COMPLETE) then
 		action[curr_state]()
 	end
 
-	if (event == POINT_REACHED) then
+	if (event == Ev.POINT_REACHED) then
 		action[curr_state]()
 	end
 
-	if (event == COPTER_LANDED) then
+	if (event == Ev.COPTER_LANDED) then
 		sleep(2)
 		action[curr_state]()
 	end
