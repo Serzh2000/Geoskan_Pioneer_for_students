@@ -15,16 +15,18 @@
 
 \textbf{Ключевые моменты:}
 1. Создаем список IP-адресов.
-2. Для каждого IP создаем объект \texttt{Pioneer}.
+2. Для каждого IP создаем объект \texttt{Pioneer}. Адрес обязательно передается по имени --- \texttt{Pioneer(ip=ip)}: первый позиционный параметр конструктора называется \texttt{name}, поэтому запись \texttt{Pioneer(ip)} задаст дрону имя, а подключение пойдет на адрес по умолчанию.
 3. Используем \texttt{threading.Thread} для запуска функций управления одновременно.
 
 \begin{codebox}[Псевдокод роя]
 \begin{verbatim}
-drones = [Pioneer(ip1), Pioneer(ip2)]
+drones = [Pioneer(ip=ip1), Pioneer(ip=ip2)]
 
 def mission(drone):
     drone.arm()
+    time.sleep(1)   # пауза между arm и takeoff обязательна
     drone.takeoff()
+    time.sleep(5)
     drone.land()
 
 # Запуск потоков
