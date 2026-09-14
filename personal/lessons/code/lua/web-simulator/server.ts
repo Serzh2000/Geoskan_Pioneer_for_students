@@ -81,17 +81,20 @@ function resolveCorsOptions(): cors.CorsOptions | undefined {
     return { origin: configured };
 }
 
-// Внешний Python-мост (external-python-bridge.ts) опрашивает /state и /events каждые
-// 100-250мс из вкладки браузера (external-bridge.ts:150-155) — это до ~20 запросов/сек
-// с ОДНОЙ активной привязкой дрона, и лишь один такой мост уже вымотал бы основной лимит
-// 30 запросов/60с за полторы секунды. Поэтому эти два маршрута исключены из основного
-// лимитера (см. skip ниже) и получают отдельный, кратно более щедрый лимит — тоже
-// ограниченный, но подобранный под реальную частоту легитимного поллинга, а не под
-// редкие "чувствительные" вызовы вроде запуска кода.
-export const BRIDGE_POLL_PATHS = new Set([
-    '/api/external-python-bridge/state',
-    '/api/external-python-bridge/events'
-]);
+// Внешний Python-мост высокочастотен по самой своей природе, причём с ОБЕИХ сторон:
+//   * вкладка браузера опрашивает /events и /state каждые 100-250мс
+//     (public/modules/python/external-bridge.ts) — это до ~20 запросов/сек на одну
+//     привязку дрона;
+//   * внешний скрипт/IDLE шлёт команды через POST /event потоком (go_to_local_point в
+//     цикле, set_manual_speed, led_control).
+// Оба потока идут с одного и того же локального IP, то есть делят один счётчик лимитера.
+// Общий лимит 30/60с такой трафик выедает примерно за полторы секунды, после чего сервер
+// начинает отвечать 429 уже на всё, включая приём команд. При этом и Python-hook
+// (python_bridge/pioneer_browser_bridge_runtime.py глушит любые HTTP-ошибки), и браузерный
+// поллинг (тихий catch) ошибки не показывают — снаружи это выглядит как «дрон не реагирует,
+// и нигде нет ни одной ошибки». Поэтому весь префикс моста выведен из-под общего лимитера и
+// получает собственный, кратно более щедрый (но всё ещё конечный) лимит.
+export const EXTERNAL_BRIDGE_ROUTE_PREFIX = '/api/external-python-bridge';
 
 // Основной rate-limit на чувствительные API: запуск Python-кода, MAVLink-мост, запись
 // параметров автопилота. Не защищает от целенаправленной атаки, но резко снижает ущерб
@@ -103,25 +106,26 @@ export function createSensitiveRouteLimiter() {
         limit: Number(process.env.RATE_LIMIT_MAX ?? 30),
         standardHeaders: true,
         legacyHeaders: false,
-        // req.path не включает префикс монтирования ('/api') — сравниваем полный
-        // путь через baseUrl + path, иначе BRIDGE_POLL_PATHS (хранит полные пути
-        // с /api) никогда не совпадёт и skip не сработает ни разу.
-        skip: (req) => BRIDGE_POLL_PATHS.has(req.baseUrl + req.path),
+        // req.path не включает префикс монтирования ('/api'), поэтому сравниваем полный
+        // путь через baseUrl + path — иначе EXTERNAL_BRIDGE_ROUTE_PREFIX (полный путь с
+        // /api) не совпал бы никогда и skip не сработал бы ни разу.
+        skip: (req) => `${req.baseUrl}${req.path}`.startsWith(EXTERNAL_BRIDGE_ROUTE_PREFIX),
         message: { ok: false, error: 'Слишком много запросов. Подождите немного и попробуйте снова.' }
     });
 }
 
-// Отдельный, более щедрый лимит именно для поллинга внешнего моста — см. комментарий
-// у BRIDGE_POLL_PATHS. 3000/60с (=50/сек) даёт запас поверх наблюдаемых ~20/сек на одну
-// привязку дрона, но всё ещё ограничивает настоящий флуд. Настраивается отдельными
-// переменными окружения, чтобы не трогать общий RATE_LIMIT_MAX.
-export function createBridgePollLimiter() {
+// Отдельный лимит для внешнего Python-моста — см. комментарий у
+// EXTERNAL_BRIDGE_ROUTE_PREFIX. 6000/60с (=100/сек) с запасом покрывает наблюдаемые
+// ~20 запросов/сек на привязку дрона плюс поток команд от внешнего скрипта, но всё ещё
+// ограничивает настоящий флуд. Настраивается отдельными переменными окружения, чтобы
+// не трогать общий RATE_LIMIT_MAX.
+export function createExternalBridgeLimiter() {
     return rateLimit({
-        windowMs: Number(process.env.BRIDGE_POLL_RATE_LIMIT_WINDOW_MS ?? 60_000),
-        limit: Number(process.env.BRIDGE_POLL_RATE_LIMIT_MAX ?? 3000),
+        windowMs: Number(process.env.BRIDGE_RATE_LIMIT_WINDOW_MS ?? 60_000),
+        limit: Number(process.env.BRIDGE_RATE_LIMIT_MAX ?? 6000),
         standardHeaders: true,
         legacyHeaders: false,
-        message: { ok: false, error: 'Слишком много запросов. Подождите немного и попробуйте снова.' }
+        message: { ok: false, error: 'Слишком много запросов к внешнему мосту. Подождите немного и попробуйте снова.' }
     });
 }
 
@@ -138,7 +142,7 @@ function createApp(options: StartServerOptions): express.Express {
     app.use(cors(resolveCorsOptions()));
     app.use(express.json({ limit: '10mb' }));
     app.use('/api', createSensitiveRouteLimiter());
-    app.use(Array.from(BRIDGE_POLL_PATHS), createBridgePollLimiter());
+    app.use(EXTERNAL_BRIDGE_ROUTE_PREFIX, createExternalBridgeLimiter());
 
     app.get('/api/files', async (_req: express.Request, res: express.Response) => {
         console.log('Listing files in:', luaExamplesPath);

@@ -1,5 +1,5 @@
 import { drones } from '../core/state.js';
-import { isPointReached } from '../autopilot/fsm.js';
+import { beginEventCallbackPhase, isPointReached } from '../autopilot/fsm.js';
 import { installJsRuntimeAPI } from './pioneer-js-bridge.js';
 import { captureDroneCameraFrameDataUrl, isDroneCameraConnected } from './pioneer-js-bridge-camera.js';
 import { localOriginByDrone } from './runtime-shared.js';
@@ -78,6 +78,23 @@ export function applyExternalEvent(
     const drone = drones[droneId];
     if (drone) {
         drone.name = event.droneName || drone.name;
+    }
+
+    // Каждая команда внешнего моста приходит отдельным сетевым событием, разнесённым по
+    // реальному времени, — это ровно такая же "новая фаза", как callback(event) в Lua.
+    //
+    // Защита от одновременных команд (recordTickCommand) сравнивает команды по тику
+    // СИМУЛИРОВАННОГО времени: drone.current_time растёт только внутри updatePhysics, а тот
+    // вызывается из requestAnimationFrame. Как только вкладка симулятора уходит в фон (а
+    // при работе с внешним Python это норма: ученик смотрит в IDLE и в окно камеры, браузер
+    // позади), браузер полностью останавливает rAF — симулированное время замирает, и тогда
+    // arm() и takeoff(), разнесённые в реальности на секунды, попадают в ОДИН и тот же тик.
+    // Guard считает их одновременными, роняет миссию в IDLE и бросает CRITICAL ERROR,
+    // который поллинг моста гасит молча: снаружи это выглядит как "дрон не реагирует и
+    // нигде нет ошибок". Внешние команды по своей природе не могут быть "одновременными",
+    // поэтому каждое событие начинает свою фазу.
+    if (drone) {
+        beginEventCallbackPhase(drone);
     }
 
     switch (event.method) {

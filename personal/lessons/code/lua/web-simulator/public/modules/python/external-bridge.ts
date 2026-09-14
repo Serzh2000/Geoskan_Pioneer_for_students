@@ -1,4 +1,5 @@
 import { drones, ensureDronePythonConnectionSettings } from '../core/state.js';
+import { log } from '../shared/logging/logger.js';
 import {
     type ExternalBridgeState,
     type ExternalDroneBinding,
@@ -139,7 +140,19 @@ async function pollExternalBridge(): Promise<void> {
 
         const events = Array.isArray(payload.events) ? payload.events as ExternalPythonBridgeEvent[] : [];
         for (const event of events) {
-            applyExternalEvent(state, event, isBridgeAllowedForDrone);
+            // Ошибку одной команды нельзя ни глушить, ни давать ей уронить весь цикл:
+            // без локального catch исключение из applyExternalEvent (например FSM-ошибка)
+            // улетало во внешний "тихий" catch, курсор nextAfterId не сдвигался, и то же
+            // самое событие применялось снова и снова, каждый раз падая молча. Теперь
+            // сбойная команда логируется, курсор двигается, остальные события выполняются.
+            try {
+                applyExternalEvent(state, event, isBridgeAllowedForDrone);
+            } catch (error) {
+                log(
+                    `Внешний Python bridge: команда ${event.method} отклонена симулятором — ${error instanceof Error ? error.message : String(error)}`,
+                    'error'
+                );
+            }
             state.nextAfterId = Math.max(state.nextAfterId, event.id);
         }
         await syncExternalBridgeStates(state.bindings.values(), isBridgeAllowedForDrone);
