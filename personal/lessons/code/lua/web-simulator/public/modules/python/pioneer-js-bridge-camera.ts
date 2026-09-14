@@ -1,10 +1,12 @@
 import { getDroneOrDefault } from './runtime-shared.js';
-import { captureDroneCameraFrameDataUrl as captureDroneCameraFrameImageDataUrl } from './pioneer-js-bridge-camera-render.js';
+import {
+    captureDroneCameraFrameDataUrl as captureDroneCameraFrameImageDataUrl,
+    captureDroneCameraFramePixels,
+    type CameraFramePixels
+} from './pioneer-js-bridge-camera-render.js';
 import {
     cameraConnectionsByDrone,
-    encodeFramePayload,
     findClosestVideoTower,
-    getTowerStreamAnchor,
     getVideoTowerObjects,
     reportCameraBridgeDebug,
     resolveConnectedCameraFeed
@@ -59,78 +61,63 @@ export function isDroneCameraConnected(id: string) {
     return Boolean(resolveConnectedCameraFeed(id));
 }
 
-export function getDroneCameraFrame(id: string) {
-    const resolved = resolveConnectedCameraFeed(id);
-    if (!resolved) {
-        reportCameraBridgeDebug('H3', 'Camera frame request returned null because no active camera connection exists', {
-            droneId: id,
-            activeConnection: Boolean(cameraConnectionsByDrone[id]),
-            availableTowerCount: getVideoTowerObjects().length
-        });
-        return null;
-    }
-    const payload = {
-        source: resolved.tower ? 'video-tower' : 'fpv-direct',
-        towerId: resolved.tower?.uuid ?? null,
-        towerName: resolved.tower?.name || null,
+function reportMissingFeed(id: string, hypothesisId: string, message: string) {
+    reportCameraBridgeDebug(hypothesisId, message, {
         droneId: id,
-        distance: resolved.distance === null ? null : Number(resolved.distance.toFixed(3)),
-        connectedMs: Math.max(0, Math.round(performance.now() - resolved.connection.connectedAt)),
-        timestamp: Date.now(),
-        dronePosition: {
-            x: Number(resolved.drone.pos.x.toFixed(3)),
-            y: Number(resolved.drone.pos.y.toFixed(3)),
-            z: Number(resolved.drone.pos.z.toFixed(3))
-        }
-    };
-    reportCameraBridgeDebug('H4', 'Camera frame request returned encoded payload', {
-        droneId: id,
-        towerId: resolved.tower?.uuid ?? null,
-        payloadKeys: Object.keys(payload)
+        activeConnection: Boolean(cameraConnectionsByDrone[id]),
+        availableTowerCount: getVideoTowerObjects().length
     });
-    return encodeFramePayload(payload);
 }
 
-export function getDroneCameraCvFrame(id: string) {
-    const resolved = resolveConnectedCameraFeed(id);
-    if (!resolved) {
-        reportCameraBridgeDebug('H3', 'Camera CV frame request returned null because no active camera connection exists', {
-            droneId: id,
-            activeConnection: Boolean(cameraConnectionsByDrone[id]),
-            availableTowerCount: getVideoTowerObjects().length
-        });
+// dataURL несёт картинку в base64; настоящему SDK по UDP приходят те же самые байты JPEG,
+// поэтому раскодировать их обратно в бинарь — единственный способ отдать в Python
+// честный кадр с маркерами FFD8/FFD9, а не описание кадра.
+function decodeDataUrlToBytes(dataUrl: string): Uint8Array | null {
+    const separator = dataUrl.indexOf(',');
+    if (separator < 0) return null;
+
+    const binary = atob(dataUrl.slice(separator + 1));
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+}
+
+export function getDroneCameraFrame(id: string): Uint8Array | null {
+    const dataUrl = captureDroneCameraFrameImageDataUrl(id);
+    if (!dataUrl) {
+        reportMissingFeed(id, 'H3', 'Camera frame request returned null because no frame could be captured');
         return null;
     }
-    const anchor = resolved.tower ? getTowerStreamAnchor(resolved.tower) : null;
-    const payload = {
-        source: resolved.tower ? 'video-tower' : 'fpv-direct',
-        towerId: resolved.tower?.uuid ?? null,
-        towerName: resolved.tower?.name || null,
-        connected: true,
-        distance: resolved.distance === null ? null : Number(resolved.distance.toFixed(3)),
-        timestamp: Date.now(),
-        drone_position: [
-            Number(resolved.drone.pos.x.toFixed(3)),
-            Number(resolved.drone.pos.y.toFixed(3)),
-            Number(resolved.drone.pos.z.toFixed(3))
-        ],
-        tower_position: anchor ? [
-            Number(anchor.x.toFixed(3)),
-            Number(anchor.y.toFixed(3)),
-            Number(anchor.z.toFixed(3))
-        ] : null,
-        delta: anchor ? [
-            Number((resolved.drone.pos.x - anchor.x).toFixed(3)),
-            Number((resolved.drone.pos.y - anchor.y).toFixed(3)),
-            Number((resolved.drone.pos.z - anchor.z).toFixed(3))
-        ] : null
-    };
-    reportCameraBridgeDebug('H5', 'Camera CV frame request returned structured payload', {
+
+    const bytes = decodeDataUrlToBytes(dataUrl);
+    if (!bytes || bytes.length === 0) {
+        reportMissingFeed(id, 'H4', 'Camera frame request returned null because the captured data URL was malformed');
+        return null;
+    }
+
+    reportCameraBridgeDebug('H4', 'Camera frame request returned raw JPEG bytes', {
         droneId: id,
-        towerId: resolved.tower?.uuid ?? null,
-        payloadKeys: Object.keys(payload)
+        byteLength: bytes.length
     });
-    return payload;
+    return bytes;
+}
+
+export function getDroneCameraCvFrame(id: string): CameraFramePixels | null {
+    const pixels = captureDroneCameraFramePixels(id);
+    if (!pixels) {
+        reportMissingFeed(id, 'H3', 'Camera CV frame request returned null because no frame could be captured');
+        return null;
+    }
+
+    reportCameraBridgeDebug('H5', 'Camera CV frame request returned decoded BGR pixels', {
+        droneId: id,
+        width: pixels.width,
+        height: pixels.height,
+        byteLength: pixels.data.length
+    });
+    return pixels;
 }
 
 export function captureDroneCameraFrameDataUrl(id: string) {

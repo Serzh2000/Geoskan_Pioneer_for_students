@@ -10,7 +10,11 @@ import {
     localOriginByDrone,
     resetPythonDroneBindings
 } from './runtime-shared.js';
-import { ensurePyodide } from './pyodide-loader.js';
+import { ensureNumpyLoaded, ensurePyodide } from './pyodide-loader.js';
+
+// get_cv_frame собирает настоящий numpy-массив, но подгрузить пакет можно только из async-кода,
+// а сам вызов в скрипте синхронный. Поэтому решение принимается по исходнику до запуска.
+const NUMPY_DEPENDENT_SOURCE = /\bnumpy\b|\bget_cv_frame\b/;
 
 type ActivePythonRun = {
     token: symbol;
@@ -79,6 +83,10 @@ export async function runBrowserPythonScript(droneId: string, code: string): Pro
 
     const normalizedUserCode = (code || '').replace(/\r\n/g, '\n');
     await validatePythonSyntax(pyodide, normalizedUserCode);
+
+    if (NUMPY_DEPENDENT_SOURCE.test(normalizedUserCode)) {
+        await ensureNumpyLoaded();
+    }
 
     const wrapped = `
 import ast, asyncio, builtins, js

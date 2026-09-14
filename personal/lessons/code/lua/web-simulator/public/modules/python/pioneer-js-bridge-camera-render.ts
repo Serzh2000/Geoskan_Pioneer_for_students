@@ -9,8 +9,23 @@ const MAX_CAPTURE_WIDTH = 640;
 const MAX_CAPTURE_HEIGHT = 360;
 const FRAME_CACHE_INTERVAL_MS = 100;
 
+export type CameraFramePixels = {
+    width: number;
+    height: number;
+    // Порядок каналов BGR и три байта на пиксель — ровно то, что настоящий cv2.imdecode
+    // отдаёт из JPEG'а реальной камеры, поэтому индексация кадра в Python совпадает с железом.
+    data: Uint8Array;
+};
+
+type FrameCacheEntry = {
+    capturedAt: number;
+    dataUrl: string | null;
+    pixels: CameraFramePixels | null;
+};
+
 let captureRenderer: WebGLRenderer | null = null;
-const frameCacheByDrone = new Map<string, { dataUrl: string; capturedAt: number }>();
+let pixelReadCanvas: HTMLCanvasElement | null = null;
+const frameCacheByDrone = new Map<string, FrameCacheEntry>();
 
 function getRendererCanvas(): HTMLCanvasElement | null {
     const canvas = mainRenderer?.domElement;
@@ -82,15 +97,46 @@ function renderDroneFpvFrame(droneId: string): HTMLCanvasElement | null {
     return canvas;
 }
 
-export function captureDroneCameraFrameDataUrl(id: string) {
-    const resolved = resolveConnectedCameraFeed(id);
-    if (!resolved) return null;
+// WebGL-канвас не отдаёт getImageData, поэтому кадр переносится в 2D-контекст: заодно
+// строки приходят сверху вниз, а не снизу вверх, как это делает сырой gl.readPixels.
+function readCanvasBgrPixels(canvas: HTMLCanvasElement): CameraFramePixels | null {
+    const width = Math.max(1, canvas.width);
+    const height = Math.max(1, canvas.height);
 
-    const now = Date.now();
-    const cachedFrame = frameCacheByDrone.get(id);
-    if (cachedFrame && now - cachedFrame.capturedAt < FRAME_CACHE_INTERVAL_MS) {
-        return cachedFrame.dataUrl;
+    if (!pixelReadCanvas) {
+        pixelReadCanvas = document.createElement('canvas');
     }
+    if (pixelReadCanvas.width !== width || pixelReadCanvas.height !== height) {
+        pixelReadCanvas.width = width;
+        pixelReadCanvas.height = height;
+    }
+
+    const context = pixelReadCanvas.getContext('2d', { willReadFrequently: true });
+    if (!context) return null;
+
+    context.clearRect(0, 0, width, height);
+    context.drawImage(canvas, 0, 0);
+    const rgba = context.getImageData(0, 0, width, height).data;
+
+    const bgr = new Uint8Array(width * height * 3);
+    for (let src = 0, dst = 0; dst < bgr.length; src += 4, dst += 3) {
+        bgr[dst] = rgba[src + 2];
+        bgr[dst + 1] = rgba[src + 1];
+        bgr[dst + 2] = rgba[src];
+    }
+    return { width, height, data: bgr };
+}
+
+function readFreshCacheEntry(id: string): FrameCacheEntry | null {
+    const cached = frameCacheByDrone.get(id);
+    if (!cached) return null;
+    return Date.now() - cached.capturedAt < FRAME_CACHE_INTERVAL_MS ? cached : null;
+}
+
+// Кадр берётся только у камеры, которая реально к чему-то подключена: это тот же
+// признак «нет сигнала», из-за которого настоящий SDK возвращает None.
+function captureFreshFpvCanvas(id: string): HTMLCanvasElement | null {
+    if (!resolveConnectedCameraFeed(id)) return null;
 
     const canvas = renderDroneFpvFrame(id);
     if (!canvas) {
@@ -102,8 +148,31 @@ export function captureDroneCameraFrameDataUrl(id: string) {
         });
         return null;
     }
+    return canvas;
+}
+
+export function captureDroneCameraFrameDataUrl(id: string): string | null {
+    const cached = readFreshCacheEntry(id);
+    if (cached?.dataUrl) return cached.dataUrl;
+
+    const canvas = captureFreshFpvCanvas(id);
+    if (!canvas) return null;
 
     const dataUrl = canvas.toDataURL('image/jpeg', 0.65);
-    frameCacheByDrone.set(id, { dataUrl, capturedAt: now });
+    frameCacheByDrone.set(id, { capturedAt: Date.now(), dataUrl, pixels: null });
     return dataUrl;
+}
+
+export function captureDroneCameraFramePixels(id: string): CameraFramePixels | null {
+    const cached = readFreshCacheEntry(id);
+    if (cached?.pixels) return cached.pixels;
+
+    const canvas = captureFreshFpvCanvas(id);
+    if (!canvas) return null;
+
+    const pixels = readCanvasBgrPixels(canvas);
+    if (!pixels) return null;
+
+    frameCacheByDrone.set(id, { capturedAt: Date.now(), dataUrl: null, pixels });
+    return pixels;
 }

@@ -122,8 +122,3 @@ export function resolveConnectedCameraFeed(droneId: string): ResolvedCameraFeed 
 
     return { tower, drone, distance, connection };
 }
-
-export function encodeFramePayload(payload: Record<string, unknown>) {
-    const encoded = new TextEncoder().encode(JSON.stringify(payload));
-    return Array.from(encoded);
-}

@@ -1,91 +1,21 @@
 import { installJsRuntimeAPI } from './pioneer-js-bridge.js';
+import { PIONEER_CV_PRELUDE } from './pioneer-sdk-cv-prelude.js';
 
 const PIONEER_SDK_PRELUDE = `
 import asyncio, inspect, sys, types
 import js
 
 m = types.ModuleType('pioneer_sdk')
-
-class SimCvFrame:
-    def __init__(self, payload=None):
-        self.payload = payload or {}
-        self.shape = (480, 640, 3)
-
-    def copy(self):
-        return SimCvFrame(dict(self.payload))
-
-    def __getitem__(self, key):
-        return 0
-
-    def __setitem__(self, key, value):
-        return None
-
-class _CvNode:
-    def mat(self):
-        return None
-
-class _CvFileStorage:
-    def __init__(self, path, mode):
-        self.path = path
-        self.mode = mode
-
-    def getNode(self, name):
-        return _CvNode()
-
-    def release(self):
-        return None
-
-class _ArucoDetector:
-    def __init__(self, dictionary=None, params=None):
-        self.dictionary = dictionary
-        self.params = params
-
-    def detectMarkers(self, frame):
-        return [], None, []
-
-class _ArucoNamespace:
-    DICT_4X4_50 = 0
-    DICT_6X6_50 = 1
-
-    @staticmethod
-    def getPredefinedDictionary(kind):
-        return {"kind": kind}
-
-    @staticmethod
-    def DetectorParameters():
-        return {}
-
-    @staticmethod
-    def ArucoDetector(dictionary, params):
-        return _ArucoDetector(dictionary, params)
-
-    @staticmethod
-    def drawDetectedMarkers(frame, corners, ids=None):
-        return frame
-
-cv2 = types.ModuleType('cv2')
-cv2.IMREAD_COLOR = 1
-cv2.FILE_STORAGE_READ = 0
-cv2.error = Exception
-cv2.aruco = _ArucoNamespace()
-cv2.FileStorage = _CvFileStorage
-
-def _cv2_imshow(name, frame):
-    payload = getattr(frame, "payload", frame)
-    return js.pioneer_cv_imshow(name, payload)
-
-def _cv2_destroy_all_windows():
-    return js.pioneer_cv_destroy_all_windows()
-
-cv2.imwrite = lambda *args, **kwargs: True
-cv2.imdecode = lambda buffer, flags=1: SimCvFrame({"buffer_size": len(buffer) if buffer is not None else 0, "flags": flags})
-cv2.imshow = _cv2_imshow
-cv2.destroyAllWindows = _cv2_destroy_all_windows
-cv2.waitKey = lambda delay=0: int(js.pioneer_cv_wait_key(delay))
-cv2.solvePnP = lambda *args, **kwargs: (False, None, None)
-sys.modules['cv2'] = cv2
+${PIONEER_CV_PRELUDE}
+import threading as _real_threading
 
 threading_mod = types.ModuleType('threading')
+
+# Подменять модуль целиком нельзя: numpy и прочие пакеты берут из threading Lock/RLock/local,
+# и без них импорт падает. Кооперативными с asyncio делаются только Thread и Event.
+for _threading_attr in dir(_real_threading):
+    if not _threading_attr.startswith('__'):
+        setattr(threading_mod, _threading_attr, getattr(_real_threading, _threading_attr))
 
 class _Event:
     def __init__(self):
@@ -241,14 +171,14 @@ class Camera:
         return bool(js.pioneer_camera_disconnect(self._id))
 
     def get_frame(self):
+        # Настоящий SDK вытаскивает из UDP-датаграммы кусок между FFD8 и FFD9, то есть целый
+        # JPEG. Здесь кадр уже целиком в памяти, так что отдаём те же самые байты картинки.
         if not self.connected():
             self.connect()
         frame = js.pioneer_camera_get_frame(self._id)
         if frame is None:
             return bytes()
-        if hasattr(frame, 'to_py'):
-            frame = frame.to_py()
-        return bytes(frame)
+        return _js_bytes(frame)
 
     def get_cv_frame(self):
         if not self.connected():
@@ -260,9 +190,15 @@ class Camera:
                 "message": "camera-not-connected",
                 "drone_id": self._id
             })
-        if hasattr(frame, 'to_py'):
-            frame = frame.to_py()
-        return SimCvFrame(frame)
+        width = int(frame.width)
+        height = int(frame.height)
+        raw = _js_bytes(frame.data)
+        numpy = _numpy_or_none()
+        if numpy is not None and width > 0 and height > 0 and len(raw) == width * height * 3:
+            # frombuffer поверх bytes отдаёт read-only view, а cv2.imdecode возвращает
+            # изменяемый массив — копия нужна, чтобы рисование по кадру не падало.
+            return numpy.frombuffer(raw, dtype=numpy.uint8).reshape((height, width, 3)).copy()
+        return SimCvFrame({"connected": True, "drone_id": self._id}, raw, width, height)
 
 class VideoStream:
     def __init__(self, *args, **kwargs):
