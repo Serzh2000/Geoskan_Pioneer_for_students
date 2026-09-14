@@ -86,7 +86,12 @@ export function registerPythonBlocklyDefinitions(): void {
             this.setHelpUrl('');
         }
     };
-    pythonGenerator.forBlock['take_off'] = () => 'pioneer.arm()\npioneer.takeoff()\n';
+    // Без паузы arm() и takeoff() попадают в один и тот же тик симулятора и
+    // рантайм кидает "CRITICAL ERROR: Commands ... run at the same time"
+    // (см. autopilot/fsm-internals.ts, isCompatibleSameTickPair) — это падало
+    // на самом первом запуске у нового пользователя, ставившего только этот
+    // блок.
+    pythonGenerator.forBlock['take_off'] = () => 'pioneer.arm()\ntime.sleep(1)\npioneer.takeoff()\n';
 
     // landing
     Blockly.Blocks['landing'] = {
