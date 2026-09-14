@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import type { PerspectiveCamera, WebGLRenderer } from 'three';
-import { droneMeshes, renderer as mainRenderer, scene } from '../scene/core/scene-init.js';
+import { droneMeshes, scene } from '../scene/core/scene-init.js';
 import { reportCameraBridgeDebug, resolveConnectedCameraFeed } from './pioneer-js-bridge-camera-shared.js';
 
-const DEFAULT_CAPTURE_WIDTH = 640;
-const DEFAULT_CAPTURE_HEIGHT = 360;
-const MAX_CAPTURE_WIDTH = 640;
-const MAX_CAPTURE_HEIGHT = 360;
+// У железной камеры разрешение своё и постоянное, оно не зависит от того, какого размера
+// окно у оператора. Раньше кадр подстраивался под основной canvas, и frame.shape менялся
+// от раскладки панелей — код ученика с обращением к cv[240][320] ломался на узком окне.
+const CAPTURE_WIDTH = 640;
+const CAPTURE_HEIGHT = 360;
 const FRAME_CACHE_INTERVAL_MS = 100;
 
 export type CameraFramePixels = {
@@ -27,26 +28,8 @@ let captureRenderer: WebGLRenderer | null = null;
 let pixelReadCanvas: HTMLCanvasElement | null = null;
 const frameCacheByDrone = new Map<string, FrameCacheEntry>();
 
-function getRendererCanvas(): HTMLCanvasElement | null {
-    const canvas = mainRenderer?.domElement;
-    if (canvas instanceof HTMLCanvasElement) return canvas;
-    return document.querySelector('#canvas-container canvas');
-}
-
 function syncCaptureRendererSize(renderer: WebGLRenderer) {
-    const sourceCanvas = getRendererCanvas();
-    let width = Math.max(1, sourceCanvas?.width || sourceCanvas?.clientWidth || DEFAULT_CAPTURE_WIDTH);
-    let height = Math.max(1, sourceCanvas?.height || sourceCanvas?.clientHeight || DEFAULT_CAPTURE_HEIGHT);
-    const aspect = width / height;
-    if (!Number.isFinite(aspect) || aspect <= 0) {
-        width = DEFAULT_CAPTURE_WIDTH;
-        height = DEFAULT_CAPTURE_HEIGHT;
-    } else if (width > MAX_CAPTURE_WIDTH || height > MAX_CAPTURE_HEIGHT) {
-        const scale = Math.min(MAX_CAPTURE_WIDTH / width, MAX_CAPTURE_HEIGHT / height);
-        width = Math.max(1, Math.round(width * scale));
-        height = Math.max(1, Math.round(height * scale));
-    }
-    renderer.setSize(width, height, false);
+    renderer.setSize(CAPTURE_WIDTH, CAPTURE_HEIGHT, false);
 }
 
 function ensureCaptureRenderer() {
