@@ -7,6 +7,7 @@ drone = Pioneer()
 try:
     print("Взлет...")
     drone.arm()
+    time.sleep(1) # Даем автопилоту перейти в режим готовности
     drone.takeoff()
     
     h = 1.0          # Высота

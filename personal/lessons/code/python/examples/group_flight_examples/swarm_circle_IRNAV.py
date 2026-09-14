@@ -81,6 +81,7 @@ def go_to_start_point(drone_ip):
     event.wait()  # Ожидаение команды на старт
     log(f"[{drone_ip}] ARM")
     mini[drone_ip].arm()
+    time.sleep(1)  # Даем автопилоту перейти в режим готовности
     log(f"[{drone_ip}] TAKE_OFF")
     mini[drone_ip].takeoff()
     log(f"[{drone_ip}] GO_TO_START_POINT")

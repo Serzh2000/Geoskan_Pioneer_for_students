@@ -17,6 +17,7 @@ def exercise_03():
         
         # 1. Взлет
         drone.arm()
+        time.sleep(1) # Даем автопилоту перейти в режим готовности
         drone.takeoff()
         time.sleep(5)
         

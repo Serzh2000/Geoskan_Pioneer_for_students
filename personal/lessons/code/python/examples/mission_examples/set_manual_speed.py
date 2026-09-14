@@ -7,6 +7,7 @@ if __name__ == "__main__":
 
     try:
         pioneer_mini.arm()            # Включаем моторы дрона
+        time.sleep(1)                 # Даем автопилоту перейти в режим готовности
         pioneer_mini.takeoff()        # Взлет
         time.sleep(1)                 # Ждем 1 секунду после взлета
 

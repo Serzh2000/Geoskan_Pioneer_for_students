@@ -65,6 +65,7 @@ class DroneFlightThread:
     def flight_logic(self):
         print("Арминг и взлет...")
         self.drone.arm()
+        time.sleep(1) # Даем автопилоту перейти в режим готовности
         self.drone.takeoff()
         time.sleep(2)
         

@@ -19,6 +19,7 @@ def load_map(filename):
 def fly_mission(drone, markers_map):
     print("Начинаем полет по карте...")
     drone.arm()
+    time.sleep(1) # Даем автопилоту перейти в режим готовности
     drone.takeoff()
     
     # Пример: летим к маркеру с ID 0, затем к ID 24 (если они есть)

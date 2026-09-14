@@ -374,6 +374,7 @@ while True:
         # если используется НЕ встроенная в компьютер камера
         if not useIntegratedCam:
             pioneer.arm()
+            time.sleep(1)  # Даем автопилоту перейти в режим готовности
             pioneer.takeoff()
             pioneer.go_to_local_point(0, 0, 1.5, 0)
 

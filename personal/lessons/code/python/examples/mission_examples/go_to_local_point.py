@@ -7,6 +7,7 @@ pioneer = Pioneer()
 try:
     # Взлет на 1 метр
     pioneer.arm()
+    time.sleep(1) # Даем автопилоту перейти в режим готовности
     pioneer.takeoff()
     pioneer.go_to_local_point(x=0, y=0, z=1, yaw=0)
     while not pioneer.point_reached():

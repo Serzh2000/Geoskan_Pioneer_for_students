@@ -5,6 +5,7 @@ def main():
     drone = Pioneer()
     try:
         drone.arm()
+        time.sleep(1) # Даем автопилоту перейти в режим готовности
         drone.takeoff()
         time.sleep(3)
         

@@ -1,6 +1,7 @@
 from pioneer_sdk import Pioneer,Camera
 import cv2
 import math
+import time
 
 # Инициализация дрона
 mini = Pioneer()
@@ -20,6 +21,7 @@ def show_camera():
 # Функция взлета на высоту 1 метр
 def go_to_start_point():
     mini.arm()
+    time.sleep(1)  # Даем автопилоту перейти в режим готовности
     mini.takeoff()
     mini.go_to_local_point(x=0, y=0, z=1, yaw=0)  # Подъем на 1 метр
     while not mini.point_reached():
