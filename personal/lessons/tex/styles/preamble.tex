@@ -156,13 +156,118 @@
 \usepackage{accsupp} % Accessibility support
 \usepackage{attachfile2} % File attachments
 
-% Helper for copyable spaces in code
+% --- Copy-paste friendly code listings -------------------------------------
+%
+% Problem: the PDF text layer produced by minted/fancyvrb does not reproduce
+% the original source file when the reader copies a listing out of the PDF:
+%   * leading indentation is lost (spaces are TeX glue, not glyphs),
+%   * the hyphen glyph is mapped to U+2010 instead of ASCII U+002D,
+%   * a long line that visually wraps is copied as two lines and the
+%     fvextra continuation symbol ",->" leaks into the copied text.
+% All of that breaks the code as soon as it is pasted into the project's
+% Monaco based web editor (and into any Lua/Python tool chain).
+%
+% Fix: read the real source file, and attach its exact text, line by line,
+% to the typeset lines as a PDF /Span with /ActualText (accsupp).  Text
+% extractors must honour /ActualText, so the copied text becomes the literal
+% file content.  Nothing about the visual output changes.
+%
+% The ActualText deliberately carries NO line terminator: PDF viewers and
+% extractors insert their own newline between two typeset lines, so adding
+% U+000A here would produce doubled blank lines on paste.  Source lines that
+% contain no visible glyph (empty or whitespace-only) get no span at all,
+% because a marked-content span without glyphs confuses extractors.
+%
+% The previous \FV@Space patch (a single space wrapped in ActualText) was a
+% no-op: with breaklines=true fvextra redefines \FV@Space when the listing
+% environment starts, so the patch never reached the output.  It is replaced
+% by the per-line mechanism below, which covers spaces as part of the line.
+
+% accsupp's dvipdfm driver (the one XeTeX selects) emits BDC/EMC through the
+% "pdf:content" special, which dvipdfmx wraps in "q <translate to the current
+% point> cm ... Q".  Text extractors that compute the span's position at EMC
+% time therefore see the span shifted to the right by the width of the line,
+% which makes poppler place the whole listing in a bogus column and silently
+% drop every listing after the first one on a page.  "pdf:code" injects the
+% same operators with no transformation, which is what BDC/EMC need.
 \makeatletter
-\def\FV@Space{%
-  \BeginAccSupp{method=hex,unicode,ActualText=0020}%
-  \ \EndAccSupp{}%
-}
+\def\ACCSUPP@bdc{\special{pdf:code \ACCSUPP@span BDC}}
+\def\ACCSUPP@emc{\special{pdf:code EMC}}
 \makeatother
+
+\ExplSyntaxOn
+\seq_new:N  \g__codeacc_hex_seq
+\int_new:N  \l__codeacc_index_int
+\int_new:N  \l__codeacc_pending_int
+\ior_new:N  \g__codeacc_ior
+\bool_new:N \g__codeacc_active_bool
+\tl_new:N   \l__codeacc_line_tl
+\str_new:N  \l__codeacc_hex_str
+
+% Store one raw source line as UTF-16BE hex (or an empty entry for a line
+% that will not produce any glyph on the page).
+\cs_new_protected:Npn \__codeacc_store_line:n #1
+  {
+    \tl_set:Nx \l__codeacc_line_tl { \tl_trim_spaces:n {#1} }
+    \tl_if_empty:NTF \l__codeacc_line_tl
+      {
+        \int_incr:N \l__codeacc_pending_int
+        \seq_gput_right:Nn \g__codeacc_hex_seq { }
+      }
+      {
+        \str_set_convert:Nnnn \l__codeacc_hex_str {#1} { } { utf16be/hex }
+        \seq_gput_right:Nx \g__codeacc_hex_seq { \str_use:N \l__codeacc_hex_str }
+        \int_zero:N \l__codeacc_pending_int
+      }
+  }
+
+% Read the whole source file once, before \inputminted typesets it.
+\cs_new_protected:Npn \__codeacc_load:n #1
+  {
+    \seq_gclear:N \g__codeacc_hex_seq
+    \bool_gset_false:N \g__codeacc_active_bool
+    \file_if_exist:nT {#1}
+      {
+        \int_zero:N \l__codeacc_pending_int
+        \ior_open:Nn \g__codeacc_ior {#1}
+        \ior_str_map_inline:Nn \g__codeacc_ior { \__codeacc_store_line:n {##1} }
+        \ior_close:N \g__codeacc_ior
+        \bool_gset_true:N \g__codeacc_active_bool
+      }
+  }
+
+% fvextra calls \FancyVerbFormatLine more than once per line (once inside a
+% measuring \sbox), so the source line is looked up through fancyvrb's own
+% FancyVerbLine counter instead of a counter of our own.
+\cs_new_protected:Npn \__codeacc_wrap_line:n #1
+  {
+    \bool_if:NTF \g__codeacc_active_bool
+      {
+        \int_set:Nn \l__codeacc_index_int { \value{FancyVerbLine} }
+        \str_set:Nx \l__codeacc_hex_str
+          { \seq_item:Nn \g__codeacc_hex_seq { \l__codeacc_index_int } }
+        \str_if_empty:NTF \l__codeacc_hex_str
+          { #1 }
+          {
+            \exp_args:Nx \BeginAccSupp
+              { method=hex,unicode,ActualText= \str_use:N \l__codeacc_hex_str }
+            #1
+            \EndAccSupp { }
+          }
+      }
+      { #1 }
+  }
+
+% \CodeAccInputMinted{<language>}{<path relative to tex/>}
+\NewDocumentCommand \CodeAccInputMinted { m m }
+  {
+    \__codeacc_load:n {#2}
+    \group_begin:
+      \cs_set_eq:NN \FancyVerbFormatLine \__codeacc_wrap_line:n
+      \inputminted [ fontsize = \small ] {#1} {#2}
+    \group_end:
+  }
+\ExplSyntaxOff
 
 % 1. Code File Environment (Modern Flat Design)
 \NewDocumentEnvironment{codefile}{O{python}m}{
@@ -183,7 +288,7 @@
         boxed title style={colback=white, colframe=white, boxrule=0pt},
         shadow={2mm}{-2mm}{0mm}{black!10}
     ]
-    \inputminted[fontsize=\small]{#1}{../code/#2}
+    \CodeAccInputMinted{#1}{../code/#2}
     \end{tcolorbox}
 }{}
 
@@ -206,7 +311,7 @@
         boxed title style={colback=white, colframe=white, boxrule=0pt},
         shadow={2mm}{-2mm}{0mm}{black!10}
     ]
-    \inputminted[fontsize=\small]{#1}{../code/#3}
+    \CodeAccInputMinted{#1}{../code/#3}
     \end{tcolorbox}
 }{}
 
