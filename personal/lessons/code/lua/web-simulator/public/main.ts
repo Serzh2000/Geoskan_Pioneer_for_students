@@ -10,7 +10,7 @@ import { runPythonScript, stopPythonScript } from './modules/python/index.js';
  * Main browser entry point for the simulator.
  * Wires together the 3D scene, editor, UI controls, and script runtimes.
  */
-import { initEditor, getEditorValue, initBlocklyEditorToggle, layoutEditor, setEditorValue } from './modules/editor/index.js';
+import { initEditor, getEditorValue, layoutEditor, setEditorValue } from './modules/editor/index.js';
 import { initUI } from './modules/ui/index.js';
 import { log } from './modules/shared/logging/logger.js';
 import type { MarkerMapOptions } from './modules/environment/obstacles.js';
@@ -74,7 +74,6 @@ function init() {
 
     // Initialize Editor
     initEditor();
-    initBlocklyEditorToggle();
     initScriptLanguageSelector();
 
     // Initialize 3D Scene

@@ -2,8 +2,7 @@ import {
     applyEditorLayoutState,
     computeExpandedSidebarWidth,
     computeBlocklyViewportDimensions,
-    resizeBlocklyCanvas,
-    updateGeneratedCodePreview
+    resizeBlocklyCanvas
 } from '../public/modules/editor/blockly-ui.js';
 
 function createMockClassList() {
@@ -35,76 +34,20 @@ function createMockElement() {
     } as unknown as HTMLElement;
 }
 
-function createMockInput() {
-    const element = createMockElement() as HTMLInputElement & {
-        checked: boolean;
-        disabled: boolean;
-        type: string;
-    };
-    element.checked = false;
-    element.disabled = false;
-    element.type = 'checkbox';
-    return element;
-}
-
 describe('Editor Blockly UI', () => {
     test('переключает видимость текстового редактора и Blockly-режима', () => {
         const monacoRoot = createMockElement();
         const blocklyRoot = createMockElement();
-        const codeOverlay = createMockElement();
-        const codeToggle = createMockInput();
 
-        applyEditorLayoutState({
-            monacoRoot,
-            blocklyRoot,
-            codeOverlay,
-            codeToggle
-        }, {
-            blocklyEnabled: true,
-            generatedCodeVisible: false
-        });
+        applyEditorLayoutState({ monacoRoot, blocklyRoot }, { blocklyEnabled: true });
 
         expect(monacoRoot.classList.contains('editor-mode-root--hidden')).toBe(true);
         expect(blocklyRoot.classList.contains('editor-mode-root--hidden')).toBe(false);
-        expect(codeOverlay.classList.contains('blockly-code-overlay--visible')).toBe(false);
-        expect(codeToggle.disabled).toBe(false);
-        expect(codeToggle.checked).toBe(false);
-        expect(codeOverlay.getAttribute('aria-hidden')).toBe('true');
-    });
 
-    test('показывает overlay с кодом только в Blockly-режиме', () => {
-        const monacoRoot = createMockElement();
-        const blocklyRoot = createMockElement();
-        const codeOverlay = createMockElement();
-        const codeToggle = createMockInput();
+        applyEditorLayoutState({ monacoRoot, blocklyRoot }, { blocklyEnabled: false });
 
-        applyEditorLayoutState({
-            monacoRoot,
-            blocklyRoot,
-            codeOverlay,
-            codeToggle
-        }, {
-            blocklyEnabled: true,
-            generatedCodeVisible: true
-        });
-
-        expect(codeOverlay.classList.contains('blockly-code-overlay--visible')).toBe(true);
-        expect(codeOverlay.getAttribute('aria-hidden')).toBe('false');
-        expect(codeToggle.checked).toBe(true);
-
-        applyEditorLayoutState({
-            monacoRoot,
-            blocklyRoot,
-            codeOverlay,
-            codeToggle
-        }, {
-            blocklyEnabled: false,
-            generatedCodeVisible: true
-        });
-
-        expect(codeOverlay.classList.contains('blockly-code-overlay--visible')).toBe(false);
-        expect(codeToggle.disabled).toBe(true);
-        expect(codeToggle.checked).toBe(false);
+        expect(monacoRoot.classList.contains('editor-mode-root--hidden')).toBe(false);
+        expect(blocklyRoot.classList.contains('editor-mode-root--hidden')).toBe(true);
     });
 
     test('корректно вычисляет размеры Blockly-области для разных разрешений', () => {
@@ -140,15 +83,5 @@ describe('Editor Blockly UI', () => {
         expect(dimensions).toEqual({ width: 1439, height: 812 });
         expect(canvas.style.width).toBe('1439px');
         expect(canvas.style.height).toBe('812px');
-    });
-
-    test('обновляет отображаемый код при изменении workspace', () => {
-        const preview = createMockElement();
-
-        updateGeneratedCodePreview(preview, 'print("one")');
-        expect(preview.textContent).toBe('print("one")');
-
-        updateGeneratedCodePreview(preview, 'print("two")\nprint("three")');
-        expect(preview.textContent).toBe('print("two")\nprint("three")');
     });
 });

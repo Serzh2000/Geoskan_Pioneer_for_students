@@ -4,7 +4,6 @@ export {
     getEditorValue,
     getMainBlocklyWorkspace,
     getSavedEditorDraft,
-    initBlocklyEditorToggle,
     initEditor,
     isBlocklyEditorEnabled,
     layoutEditor,
@@ -12,7 +11,8 @@ export {
     setEditorTheme,
     setBlocklyEditorEnabled,
     setEditorLanguage,
-    setEditorValue
+    setEditorValue,
+    syncScriptLanguageSelect
 } from './index/api.js';
 export {
     buildTargetWorkspaceXml,

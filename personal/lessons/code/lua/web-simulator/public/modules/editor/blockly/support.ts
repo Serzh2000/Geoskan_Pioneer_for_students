@@ -1,7 +1,5 @@
-import type { ScriptLanguage } from '../../core/state.js';
 import { Blockly, type BlocklyNS } from '../blockly-mode/loader.js';
-import { compileMainEditorWorkspace } from '../blockly-mode/index.js';
-import { resizeBlocklyCanvas, updateGeneratedCodePreview } from '../blockly-mode/ui.js';
+import { resizeBlocklyCanvas } from '../blockly-mode/ui.js';
 
 export type BlocklyResizeRuntime = {
     observer: ResizeObserver | null;
@@ -42,15 +40,6 @@ export function ensureBlocklyResizeTracking(
         window.addEventListener('resize', resize);
         runtime.windowResizeBound = true;
     }
-}
-
-export function updateBlocklyPreview(
-    preview: HTMLElement | null,
-    workspace: BlocklyNS.WorkspaceSvg | null,
-    language: ScriptLanguage
-) {
-    if (!preview || !workspace) return;
-    updateGeneratedCodePreview(preview, compileMainEditorWorkspace(language, workspace));
 }
 
 export function isBlocklyWorkspaceEmpty(workspace: BlocklyNS.WorkspaceSvg | null): boolean {

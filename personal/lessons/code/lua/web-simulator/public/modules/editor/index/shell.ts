@@ -60,10 +60,8 @@ export function getBlocklyStateKey(): string {
 export function syncEditorModeVisibility(): void {
     syncEditorModeVisibilityDom({
         monacoRoot: editorIndexState.monacoRoot,
-        blocklyRoot: editorIndexState.blocklyRoot,
-        blocklyCodeOverlay: editorIndexState.blocklyCodeOverlay,
-        blocklyCodeOverlayToggle: editorIndexState.blocklyCodeOverlayToggle
-    }, editorIndexState.blocklyEnabled, editorIndexState.blocklyGeneratedCodeVisible);
+        blocklyRoot: editorIndexState.blocklyRoot
+    }, editorIndexState.blocklyEnabled);
 }
 
 export function createEditorShell(): void {

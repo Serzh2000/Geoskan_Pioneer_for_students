@@ -26,7 +26,6 @@ export type BlocklyWorkspaceController = {
     textDraftByKey: Map<string, string>;
     blocklyWorkspaceXmlByKey: Map<string, string>;
     persistEditorSession: () => void;
-    updateBlocklyPreview: (language: ScriptLanguage) => void;
     resizeBlocklyWorkspaceViewport: () => void;
     ensureBlocklyResizeTracking: () => void;
     scheduleBlocklyAutofit: () => void;
@@ -79,16 +78,15 @@ export function loadBlocklyWorkspace(
         controller.blocklyWorkspaceXmlByKey.delete(key);
     }
 
-    controller.updateBlocklyPreview(language);
     controller.resizeBlocklyWorkspaceViewport();
     controller.scheduleBlocklyAutofit();
 }
 
 // Смена языка при включённом Blockly (фаза 7, §9 открытый вопрос 5): workspace
 // НЕ перезагружается — меняется только таргет компиляции. Пересчитываем
-// disabled-блоки под новый таргет, перегенерируем превью и перезаписываем
-// черновик текста НОВОГО языка сгенерированным кодом (решение принято как
-// "да, перезаписывать", как и предлагает сам план).
+// disabled-блоки под новый таргет и перезаписываем черновик текста НОВОГО
+// языка сгенерированным кодом (решение принято как "да, перезаписывать", как и
+// предлагает сам план).
 export function retargetBlocklyWorkspace(
     controller: BlocklyWorkspaceController,
     language: ScriptLanguage
@@ -99,7 +97,6 @@ export function retargetBlocklyWorkspace(
 
     const compiled = controller.compileMainEditorWorkspace(language, controller.blocklyWorkspace);
     controller.textDraftByKey.set(controller.getEditorStateKey(language), compiled);
-    controller.updateBlocklyPreview(language);
     controller.persistEditorSession();
 }
 
@@ -140,7 +137,6 @@ export function ensureBlocklyWorkspace(
                     controller.getEditorStateKey(activeLanguage),
                     controller.compileMainEditorWorkspace(activeLanguage, blocklyWorkspace)
                 );
-                controller.updateBlocklyPreview(activeLanguage);
             });
 
             controller.setBlocklyWorkspace(blocklyWorkspace);

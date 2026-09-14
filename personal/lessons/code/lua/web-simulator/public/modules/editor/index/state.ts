@@ -1,10 +1,9 @@
-import { Blockly } from '../blockly-mode/loader.js';
 import type { ScriptLanguage } from '../../core/state.js';
 import { createBlocklyResizeRuntime } from '../blockly/support.js';
 import type { EditorShellRefs } from '../dom.js';
 import type { EditorIndexCollections, EditorIndexShellState } from './helpers.js';
 
-export type EditorIndexRuntimeState = EditorIndexShellState & Pick<EditorShellRefs, 'blocklyPreview' | 'blocklyCodeOverlay'> & {
+export type EditorIndexRuntimeState = EditorIndexShellState & {
     blocklyResizeRuntime: ReturnType<typeof createBlocklyResizeRuntime>;
     textDraftByKey: Map<string, string>;
     blocklyWorkspaceXmlByKey: Map<string, string>;
@@ -18,12 +17,8 @@ export const editorIndexState: EditorIndexRuntimeState = {
     blocklyRoot: null,
     blocklyCanvasHost: null,
     blocklyCanvas: null,
-    blocklyPreview: null,
-    blocklyCodeOverlay: null,
-    blocklyCodeOverlayToggle: null,
     blocklyWorkspace: null,
     blocklyEnabled: false,
-    blocklyGeneratedCodeVisible: false,
     blocklyResizeRuntime: createBlocklyResizeRuntime(),
     previousSidebarWidthBeforeBlockly: null,
     textDraftByKey: new Map<string, string>(),
@@ -40,9 +35,7 @@ export function getEditorIndexShellState(): EditorIndexShellState {
         blocklyCanvasHost: editorIndexState.blocklyCanvasHost,
         blocklyCanvas: editorIndexState.blocklyCanvas,
         blocklyWorkspace: editorIndexState.blocklyWorkspace,
-        blocklyCodeOverlayToggle: editorIndexState.blocklyCodeOverlayToggle,
         blocklyEnabled: editorIndexState.blocklyEnabled,
-        blocklyGeneratedCodeVisible: editorIndexState.blocklyGeneratedCodeVisible,
         previousSidebarWidthBeforeBlockly: editorIndexState.previousSidebarWidthBeforeBlockly
     };
 }
@@ -59,9 +52,6 @@ export function assignEditorIndexShell(refs: EditorShellRefs): void {
     editorIndexState.blocklyRoot = refs.blocklyRoot;
     editorIndexState.blocklyCanvasHost = refs.blocklyCanvasHost;
     editorIndexState.blocklyCanvas = refs.blocklyCanvas;
-    editorIndexState.blocklyPreview = refs.blocklyPreview;
-    editorIndexState.blocklyCodeOverlay = refs.blocklyCodeOverlay;
-    editorIndexState.blocklyCodeOverlayToggle = refs.blocklyCodeOverlayToggle;
 }
 
 export function setPendingEditorLanguage(language: ScriptLanguage | null): void {

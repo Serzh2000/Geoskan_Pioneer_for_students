@@ -18,9 +18,7 @@ export type EditorIndexShellState = {
     blocklyCanvasHost: HTMLElement | null;
     blocklyCanvas: HTMLElement | null;
     blocklyWorkspace: BlocklyNS.WorkspaceSvg | null;
-    blocklyCodeOverlayToggle: HTMLInputElement | null;
     blocklyEnabled: boolean;
-    blocklyGeneratedCodeVisible: boolean;
     previousSidebarWidthBeforeBlockly: string | null;
 };
 
@@ -38,7 +36,6 @@ export type EditorIndexControllerDeps = {
     getTextEditorValue: () => string;
     getEditorStateKey: (language: ScriptLanguage) => string;
     getBlocklyStateKey: () => string;
-    updateBlocklyPreview: (language: ScriptLanguage) => void;
     resizeBlocklyWorkspaceViewport: () => void;
     ensureBlocklyResizeTracking: () => void;
     scheduleBlocklyAutofit: () => void;
@@ -47,8 +44,7 @@ export type EditorIndexControllerDeps = {
     ensureBlocklyWorkspace: (language: ScriptLanguage) => Promise<void>;
     loadBlocklyWorkspace: (language: ScriptLanguage) => void;
     syncEditorModeVisibility: () => void;
-    syncBlocklyEditorToggle: () => void;
-    syncBlocklyCodeOverlayToggle: () => void;
+    syncScriptLanguageSelect: () => void;
     restoreEditorPanelWidthAfterBlockly: () => void;
     maybeAutoExpandTextEditorPanel: (text: string, language?: ScriptLanguage) => void;
     expandEditorPanelForBlockly: () => void;
@@ -57,7 +53,6 @@ export type EditorIndexControllerDeps = {
     getCurrentScriptLanguage: () => ScriptLanguage;
     setBlocklyWorkspace: (workspace: BlocklyNS.WorkspaceSvg | null) => void;
     setBlocklyEnabled: (enabled: boolean) => void;
-    setBlocklyGeneratedCodeVisible: (visible: boolean) => void;
 };
 
 export function createEditorAutofitContext(state: EditorIndexShellState): EditorAutofitContext {
@@ -72,32 +67,27 @@ export function createEditorAutofitContext(state: EditorIndexShellState): Editor
 }
 
 export function persistEditorIndexSession(
-    state: Pick<EditorIndexShellState, 'blocklyEnabled' | 'blocklyGeneratedCodeVisible'>,
+    state: Pick<EditorIndexShellState, 'blocklyEnabled'>,
     collections: EditorIndexCollections
 ): void {
     persistEditorSessionToStorage({
         textDraftByKey: collections.textDraftByKey,
         blocklyWorkspaceXmlByKey: collections.blocklyWorkspaceXmlByKey,
-        blocklyEnabled: state.blocklyEnabled,
-        blocklyGeneratedCodeVisible: state.blocklyGeneratedCodeVisible
+        blocklyEnabled: state.blocklyEnabled
     });
 }
 
 export function loadEditorIndexSession(
-    state: Pick<EditorIndexShellState, 'blocklyEnabled' | 'blocklyGeneratedCodeVisible'>,
+    state: Pick<EditorIndexShellState, 'blocklyEnabled'>,
     collections: EditorIndexCollections
-): Pick<EditorIndexShellState, 'blocklyEnabled' | 'blocklyGeneratedCodeVisible'> {
+): Pick<EditorIndexShellState, 'blocklyEnabled'> {
     const persisted = loadPersistedEditorSessionFromStorage({
         textDraftByKey: collections.textDraftByKey,
         blocklyWorkspaceXmlByKey: collections.blocklyWorkspaceXmlByKey
     });
 
     return {
-        blocklyEnabled: typeof persisted?.blocklyEnabled === 'boolean' ? persisted.blocklyEnabled : state.blocklyEnabled,
-        blocklyGeneratedCodeVisible:
-            typeof persisted?.blocklyGeneratedCodeVisible === 'boolean'
-                ? persisted.blocklyGeneratedCodeVisible
-                : state.blocklyGeneratedCodeVisible
+        blocklyEnabled: typeof persisted?.blocklyEnabled === 'boolean' ? persisted.blocklyEnabled : state.blocklyEnabled
     };
 }
 
@@ -119,7 +109,6 @@ export function createEditorHost(
         monacoRoot: state.monacoRoot,
         blocklyCanvas: state.blocklyCanvas,
         blocklyWorkspace: state.blocklyWorkspace,
-        blocklyCodeOverlayToggle: state.blocklyCodeOverlayToggle,
         setBlocklyWorkspace: deps.setBlocklyWorkspace,
         getTheme: deps.getTheme,
         buildMainEditorToolbox: deps.buildMainEditorToolbox,
@@ -132,7 +121,6 @@ export function createEditorHost(
         textDraftByKey: collections.textDraftByKey,
         blocklyWorkspaceXmlByKey: collections.blocklyWorkspaceXmlByKey,
         persistEditorSession: () => persistEditorIndexSession(state, collections),
-        updateBlocklyPreview: deps.updateBlocklyPreview,
         resizeBlocklyWorkspaceViewport: deps.resizeBlocklyWorkspaceViewport,
         ensureBlocklyResizeTracking: deps.ensureBlocklyResizeTracking,
         scheduleBlocklyAutofit: deps.scheduleBlocklyAutofit,
@@ -141,16 +129,14 @@ export function createEditorHost(
         ensureBlocklyWorkspace: deps.ensureBlocklyWorkspace,
         loadBlocklyWorkspace: deps.loadBlocklyWorkspace,
         syncEditorModeVisibility: deps.syncEditorModeVisibility,
-        syncBlocklyEditorToggle: deps.syncBlocklyEditorToggle,
-        syncBlocklyCodeOverlayToggle: deps.syncBlocklyCodeOverlayToggle,
+        syncScriptLanguageSelect: deps.syncScriptLanguageSelect,
         restoreEditorPanelWidthAfterBlockly: deps.restoreEditorPanelWidthAfterBlockly,
         maybeAutoExpandTextEditorPanel: deps.maybeAutoExpandTextEditorPanel,
         expandEditorPanelForBlockly: deps.expandEditorPanelForBlockly,
         layoutEditor: deps.layoutEditor,
         isBlocklyWorkspaceEmpty: deps.isBlocklyWorkspaceEmpty,
         getBlocklyEnabled: () => state.blocklyEnabled,
-        setBlocklyEnabled: deps.setBlocklyEnabled,
-        setBlocklyGeneratedCodeVisible: deps.setBlocklyGeneratedCodeVisible
+        setBlocklyEnabled: deps.setBlocklyEnabled
     };
 
     return {

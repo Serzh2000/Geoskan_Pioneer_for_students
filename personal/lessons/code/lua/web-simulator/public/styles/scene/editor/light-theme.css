@@ -28,25 +28,6 @@
     box-sizing: border-box;
 }
 
-.editor-header-toggle {
-    color: var(--text-muted);
-}
-
-.editor-header-toggle__slider {
-    background: rgba(107, 114, 128, 0.18);
-    border-color: rgba(9, 9, 11, 0.12);
-}
-
-.editor-header-toggle__slider::after {
-    background: #ffffff;
-    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.14);
-}
-
-.editor-header-toggle__switch input:checked + .editor-header-toggle__slider {
-    background: rgba(255, 107, 0, 0.75);
-    border-color: rgba(255, 107, 0, 0.22);
-}
-
 :root[data-theme='light'] .blockly-editor-canvas-host {
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(244, 245, 247, 0.82)),
@@ -117,20 +98,4 @@
     background: #ffffff;
     color: var(--text-color);
     box-shadow: var(--shadow-soft);
-}
-
-:root[data-theme='light'] .blockly-code-overlay {
-    border: 1px solid rgba(9, 9, 11, 0.08);
-    background: rgba(255, 255, 255, 0.96);
-    box-shadow: var(--shadow-card);
-}
-
-:root[data-theme='light'] .blockly-code-overlay__title {
-    color: var(--accent-color);
-}
-
-:root[data-theme='light'] .blockly-code-overlay__code {
-    background: #f4f5f7;
-    border: 1px solid rgba(9, 9, 11, 0.08);
-    color: var(--text-color);
 }

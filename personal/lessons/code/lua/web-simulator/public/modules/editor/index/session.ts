@@ -7,7 +7,6 @@ export type PersistedEditorSession = {
     textDraftByKey?: Record<string, string>;
     blocklyWorkspaceXmlByKey?: Record<string, string>;
     blocklyEnabled?: boolean;
-    blocklyGeneratedCodeVisible?: boolean;
 };
 
 export type EditorSessionMaps = {
@@ -17,7 +16,6 @@ export type EditorSessionMaps = {
 
 export type EditorSessionState = EditorSessionMaps & {
     blocklyEnabled: boolean;
-    blocklyGeneratedCodeVisible: boolean;
 };
 
 let editorSessionLoaded = false;
@@ -29,8 +27,7 @@ export function persistEditorSession(state: EditorSessionState): void {
         const payload: PersistedEditorSession = {
             textDraftByKey: Object.fromEntries(state.textDraftByKey),
             blocklyWorkspaceXmlByKey: Object.fromEntries(state.blocklyWorkspaceXmlByKey),
-            blocklyEnabled: state.blocklyEnabled,
-            blocklyGeneratedCodeVisible: state.blocklyGeneratedCodeVisible
+            blocklyEnabled: state.blocklyEnabled
         };
         window.localStorage.setItem(EDITOR_SESSION_STORAGE_KEY, JSON.stringify(payload));
     } catch {

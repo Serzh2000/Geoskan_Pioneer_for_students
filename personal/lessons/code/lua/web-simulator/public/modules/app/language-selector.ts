@@ -2,7 +2,15 @@ import { currentDroneId, currentScriptLanguage, drones, setCurrentScriptLanguage
 import { renderMissionGuidePanel } from '../ui/mission-guide/panel.js';
 import { renderApiDocs } from '../ui/api-docs/index.js';
 import { log } from '../shared/logging/logger.js';
-import { getEditorValue, getSavedEditorDraft, setEditorLanguage, setEditorValue } from '../editor/index.js';
+import {
+    getEditorValue,
+    getSavedEditorDraft,
+    isBlocklyEditorEnabled,
+    setBlocklyEditorEnabled,
+    setEditorLanguage,
+    setEditorValue,
+    syncScriptLanguageSelect
+} from '../editor/index.js';
 
 const SCRIPT_LANGUAGE_STORAGE_KEY = 'geoskan_script_language_v1';
 
@@ -27,7 +35,12 @@ export function initScriptLanguageSelector(): void {
         setCurrentScriptLanguage(savedLanguage);
     }
 
-    langSelect.value = currentScriptLanguage;
+    // Blockly — третье значение этого же списка, а не отдельный переключатель.
+    // Включённость режима восстанавливает initEditor() из сессии редактора
+    // (blocklyEnabled) ещё до этого вызова, поэтому отдельного ключа хранения
+    // для UI-состояния списка не заводим — источник правды один.
+    syncScriptLanguageSelect();
+
     const drone = drones[currentDroneId];
     if (drone) {
         setEditorLanguage(currentScriptLanguage);
@@ -41,18 +54,38 @@ export function initScriptLanguageSelector(): void {
     }
 
     langSelect.addEventListener('change', () => {
-        const lang = langSelect.value as ScriptLanguage;
         const selectedDrone = drones[currentDroneId];
         if (!selectedDrone) return;
 
-        const currentCode = getEditorValue();
-        if (currentScriptLanguage === 'lua') {
-            selectedDrone.script = currentCode;
-        } else {
-            selectedDrone.pythonScript = currentCode;
+        if (langSelect.value === 'blockly') {
+            if (!isBlocklyEditorEnabled()) {
+                // Таргет компиляции — текущий currentScriptLanguage: он не
+                // сбрасывается при входе в Blockly и выходе из него.
+                setBlocklyEditorEnabled(true);
+                log(`Режим Blockly, таргет: ${currentScriptLanguage.toUpperCase()}`, 'info');
+            }
+            return;
         }
 
-        setCurrentScriptLanguage(lang);
+        const lang = langSelect.value as ScriptLanguage;
+
+        if (isBlocklyEditorEnabled()) {
+            // Выход из Blockly компилирует workspace в текстовый черновик
+            // currentScriptLanguage, поэтому выбранный язык выставляем ДО
+            // выключения режима: блоки попадают сразу в тот язык, который
+            // пользователь только что выбрал в списке.
+            setCurrentScriptLanguage(lang);
+            setBlocklyEditorEnabled(false);
+        } else {
+            const currentCode = getEditorValue();
+            if (currentScriptLanguage === 'lua') {
+                selectedDrone.script = currentCode;
+            } else {
+                selectedDrone.pythonScript = currentCode;
+            }
+            setCurrentScriptLanguage(lang);
+        }
+
         window.localStorage.setItem(SCRIPT_LANGUAGE_STORAGE_KEY, lang);
         setEditorLanguage(lang);
         const code = getSavedEditorDraft(lang) || (lang === 'lua' ? selectedDrone.script : selectedDrone.pythonScript);

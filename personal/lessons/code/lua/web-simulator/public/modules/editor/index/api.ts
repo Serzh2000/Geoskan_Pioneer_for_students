@@ -5,15 +5,11 @@ import {
     compileMainEditorWorkspace,
     createStarterWorkspaceXml
 } from '../blockly.js';
-import {
-    syncBlocklyCodeOverlayToggle as syncBlocklyCodeOverlayToggleDom,
-    syncBlocklyEditorToggle as syncBlocklyEditorToggleDom
-} from '../dom.js';
+import { syncScriptLanguageSelect as syncScriptLanguageSelectDom } from '../dom.js';
 import {
     ensureBlocklyResizeTracking as ensureBlocklyResizeTrackingSupport,
     isBlocklyWorkspaceEmpty as isBlocklyWorkspaceEmptySupport,
-    resizeBlocklyWorkspaceViewport as resizeBlocklyWorkspaceViewportSupport,
-    updateBlocklyPreview as updateBlocklyPreviewSupport
+    resizeBlocklyWorkspaceViewport as resizeBlocklyWorkspaceViewportSupport
 } from '../blockly/support.js';
 import {
     expandEditorPanelForBlockly as expandEditorPanelForBlocklyAutofit,
@@ -29,10 +25,7 @@ import {
     retargetBlocklyWorkspace as retargetBlocklyWorkspaceController,
     saveBlocklyWorkspaceState as saveBlocklyWorkspaceStateController
 } from '../blockly/workspace-controller.js';
-import {
-    initBlocklyEditorToggle as initBlocklyEditorToggleController,
-    setBlocklyEditorEnabled as setBlocklyEditorEnabledController
-} from '../blockly/toggle-controller.js';
+import { setBlocklyEditorEnabled as setBlocklyEditorEnabledController } from '../blockly/toggle-controller.js';
 import {
     createEditorAutofitContext,
     getSavedEditorDraft as getSavedEditorDraftFromStorage,
@@ -67,9 +60,6 @@ function getEditorControllers() {
         getTextEditorValue,
         getEditorStateKey,
         getBlocklyStateKey,
-        updateBlocklyPreview: (language: ScriptLanguage) => {
-            updateBlocklyPreviewSupport(editorIndexState.blocklyPreview, editorIndexState.blocklyWorkspace, language);
-        },
         resizeBlocklyWorkspaceViewport: () => {
             resizeBlocklyWorkspaceViewportSupport(
                 editorIndexState.blocklyCanvasHost,
@@ -94,15 +84,8 @@ function getEditorControllers() {
         ensureBlocklyWorkspace,
         loadBlocklyWorkspace,
         syncEditorModeVisibility,
-        syncBlocklyEditorToggle: () => {
-            syncBlocklyEditorToggleDom(editorIndexState.blocklyEnabled);
-        },
-        syncBlocklyCodeOverlayToggle: () => {
-            syncBlocklyCodeOverlayToggleDom(
-                editorIndexState.blocklyCodeOverlayToggle,
-                editorIndexState.blocklyEnabled,
-                editorIndexState.blocklyGeneratedCodeVisible
-            );
+        syncScriptLanguageSelect: () => {
+            syncScriptLanguageSelectDom(editorIndexState.blocklyEnabled, currentScriptLanguage);
         },
         restoreEditorPanelWidthAfterBlockly: () => {
             editorIndexState.previousSidebarWidthBeforeBlockly = restoreEditorPanelWidthAfterBlocklyAutofit(
@@ -130,9 +113,6 @@ function getEditorControllers() {
         },
         setBlocklyEnabled: (enabled: boolean) => {
             editorIndexState.blocklyEnabled = enabled;
-        },
-        setBlocklyGeneratedCodeVisible: (visible: boolean) => {
-            editorIndexState.blocklyGeneratedCodeVisible = visible;
         }
     });
 }
@@ -159,7 +139,6 @@ function retargetBlocklyWorkspace(language: ScriptLanguage): void {
 export function initEditor(): void {
     const persisted = loadEditorIndexSession(getEditorIndexShellState(), getEditorIndexCollections());
     editorIndexState.blocklyEnabled = persisted.blocklyEnabled;
-    editorIndexState.blocklyGeneratedCodeVisible = persisted.blocklyGeneratedCodeVisible;
 
     try {
         initializeEditorShellEnvironment();
@@ -221,8 +200,11 @@ export function isBlocklyEditorEnabled(): boolean {
     return editorIndexState.blocklyEnabled;
 }
 
-export function initBlocklyEditorToggle(): void {
-    initBlocklyEditorToggleController(getEditorControllers().toggleController);
+// Приводит единственный селектор режима (#script-language-select) в соответствие
+// с текущим состоянием редактора — нужен на старте и после программного
+// включения Blockly (loadMainBlocklyXml).
+export function syncScriptLanguageSelect(): void {
+    syncScriptLanguageSelectDom(editorIndexState.blocklyEnabled, currentScriptLanguage);
 }
 
 export function getMainBlocklyWorkspace(): BlocklyNS.WorkspaceSvg | null {

@@ -53,7 +53,6 @@ function makeController(overrides: {
     blocklyWorkspaceXmlByKey: Map<string, string>;
     compileMainEditorWorkspace?: BlocklyWorkspaceController['compileMainEditorWorkspace'];
     createStarterWorkspaceXml?: BlocklyWorkspaceController['createStarterWorkspaceXml'];
-    updateBlocklyPreview?: BlocklyWorkspaceController['updateBlocklyPreview'];
 }): BlocklyWorkspaceController {
     const state: { blocklyWorkspace: BlocklyNS.WorkspaceSvg | null } = { blocklyWorkspace: null };
 
@@ -79,7 +78,6 @@ function makeController(overrides: {
         textDraftByKey: overrides.textDraftByKey,
         blocklyWorkspaceXmlByKey: overrides.blocklyWorkspaceXmlByKey,
         persistEditorSession: () => {},
-        updateBlocklyPreview: overrides.updateBlocklyPreview ?? (() => {}),
         resizeBlocklyWorkspaceViewport: () => {},
         ensureBlocklyResizeTracking: () => {},
         scheduleBlocklyAutofit: () => {}
@@ -148,13 +146,11 @@ describe('retargetBlocklyWorkspace: смена языка не перезагр�
 
         const textDraftByKey = new Map<string, string>();
         const blocklyWorkspaceXmlByKey = new Map<string, string>();
-        const previewCalls: ScriptLanguage[] = [];
         const controller = makeController({
             getCurrentLanguage: () => 'python',
             textDraftByKey,
             blocklyWorkspaceXmlByKey,
-            compileMainEditorWorkspace: (language, ws) => compilePioneerWorkspace(ws, language),
-            updateBlocklyPreview: (language) => previewCalls.push(language)
+            compileMainEditorWorkspace: (language, ws) => compilePioneerWorkspace(ws, language)
         });
         controller.setBlocklyWorkspace(workspace as unknown as BlocklyNS.WorkspaceSvg);
 
@@ -166,7 +162,6 @@ describe('retargetBlocklyWorkspace: смена языка не перезагр�
         expect(workspace.getAllBlocks(false)).toContain(start);
         expect(speed.isEnabled()).toBe(false);
         expect(textDraftByKey.get('drone:lua')).not.toContain('set_manual_speed');
-        expect(previewCalls).toEqual(['lua']);
 
         // Переключаем обратно на Python — блок должен снова включиться и
         // сгенерировать код, а сам workspace (те же инстансы блоков) не менялся.

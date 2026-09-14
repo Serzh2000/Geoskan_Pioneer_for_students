@@ -11,9 +11,6 @@ export type EditorShellRefs = {
     blocklyRoot: HTMLElement | null;
     blocklyCanvasHost: HTMLElement | null;
     blocklyCanvas: HTMLElement | null;
-    blocklyPreview: HTMLElement | null;
-    blocklyCodeOverlay: HTMLElement | null;
-    blocklyCodeOverlayToggle: HTMLInputElement | null;
 };
 
 export type FallbackEditorOptions = {
@@ -40,10 +37,7 @@ export function createEditorShell(): EditorShellRefs {
             monacoRoot: null,
             blocklyRoot: null,
             blocklyCanvasHost: null,
-            blocklyCanvas: null,
-            blocklyPreview: null,
-            blocklyCodeOverlay: null,
-            blocklyCodeOverlayToggle: null
+            blocklyCanvas: null
         };
     }
 
@@ -53,12 +47,6 @@ export function createEditorShell(): EditorShellRefs {
             <div class="blockly-editor-shell">
                 <div id="blockly-editor-canvas-host" class="blockly-editor-canvas-host">
                     <div id="blockly-editor-canvas" class="blockly-editor-canvas"></div>
-                    <div id="blockly-code-overlay" class="blockly-code-overlay" aria-hidden="true">
-                        <div class="blockly-code-overlay__header">
-                            <div class="blockly-code-overlay__title">Сгенерированный код</div>
-                        </div>
-                        <pre id="blockly-editor-code-preview" class="blockly-code-overlay__code"></pre>
-                    </div>
                 </div>
             </div>
         </div>
@@ -68,38 +56,28 @@ export function createEditorShell(): EditorShellRefs {
         monacoRoot: document.getElementById('monaco-editor-root'),
         blocklyRoot: document.getElementById('blockly-editor-root'),
         blocklyCanvasHost: document.getElementById('blockly-editor-canvas-host'),
-        blocklyCanvas: document.getElementById('blockly-editor-canvas'),
-        blocklyPreview: document.getElementById('blockly-editor-code-preview'),
-        blocklyCodeOverlay: document.getElementById('blockly-code-overlay'),
-        blocklyCodeOverlayToggle: document.getElementById('blockly-code-overlay-toggle') as HTMLInputElement | null
+        blocklyCanvas: document.getElementById('blockly-editor-canvas')
     };
 }
 
 export function syncEditorModeVisibility(
-    refs: Pick<EditorShellRefs, 'monacoRoot' | 'blocklyRoot' | 'blocklyCodeOverlay' | 'blocklyCodeOverlayToggle'>,
-    blocklyEnabled: boolean,
-    blocklyGeneratedCodeVisible: boolean
+    refs: Pick<EditorShellRefs, 'monacoRoot' | 'blocklyRoot'>,
+    blocklyEnabled: boolean
 ) {
     applyEditorLayoutState({
         monacoRoot: refs.monacoRoot,
-        blocklyRoot: refs.blocklyRoot,
-        codeOverlay: refs.blocklyCodeOverlay,
-        codeToggle: refs.blocklyCodeOverlayToggle
-    }, {
-        blocklyEnabled,
-        generatedCodeVisible: blocklyGeneratedCodeVisible
-    });
+        blocklyRoot: refs.blocklyRoot
+    }, { blocklyEnabled });
 }
 
-export function syncBlocklyEditorToggle(blocklyEnabled: boolean) {
-    const toggle = document.getElementById('blockly-editor-toggle') as HTMLInputElement | null;
-    if (toggle) toggle.checked = blocklyEnabled;
-}
-
-export function syncBlocklyCodeOverlayToggle(toggle: HTMLInputElement | null, blocklyEnabled: boolean, blocklyGeneratedCodeVisible: boolean) {
-    if (!toggle) return;
-    toggle.checked = blocklyEnabled && blocklyGeneratedCodeVisible;
-    toggle.disabled = !blocklyEnabled;
+// Единственный селектор режима/языка — выпадающий список в шапке
+// (#script-language-select со значениями lua/python/blockly). Blockly больше не
+// отдельный чекбокс, поэтому программное включение режима (например,
+// loadMainBlocklyXml из гайда миссии) должно само приводить список в
+// соответствие с состоянием редактора.
+export function syncScriptLanguageSelect(blocklyEnabled: boolean, language: ScriptLanguage) {
+    const select = document.getElementById('script-language-select') as HTMLSelectElement | null;
+    if (select) select.value = blocklyEnabled ? 'blockly' : language;
 }
 
 function getFallbackEditorElement(): HTMLTextAreaElement | null {

@@ -8,7 +8,6 @@ export type EditorControllerHost = {
         monacoRoot: HTMLElement | null;
         blocklyCanvas: HTMLElement | null;
         blocklyWorkspace: BlocklyNS.WorkspaceSvg | null;
-        blocklyCodeOverlayToggle: HTMLInputElement | null;
         setBlocklyWorkspace: (workspace: BlocklyNS.WorkspaceSvg | null) => void;
         getTheme: () => BlocklyNS.Theme | undefined;
         buildMainEditorToolbox: BlocklyWorkspaceController['buildMainEditorToolbox'];
@@ -21,7 +20,6 @@ export type EditorControllerHost = {
         textDraftByKey: Map<string, string>;
         blocklyWorkspaceXmlByKey: Map<string, string>;
         persistEditorSession: () => void;
-        updateBlocklyPreview: (language: ScriptLanguage) => void;
         resizeBlocklyWorkspaceViewport: () => void;
         ensureBlocklyResizeTracking: () => void;
         scheduleBlocklyAutofit: () => void;
@@ -30,8 +28,7 @@ export type EditorControllerHost = {
         ensureBlocklyWorkspace: (language: ScriptLanguage) => Promise<void>;
         loadBlocklyWorkspace: (language: ScriptLanguage) => void;
         syncEditorModeVisibility: () => void;
-        syncBlocklyEditorToggle: () => void;
-        syncBlocklyCodeOverlayToggle: () => void;
+        syncScriptLanguageSelect: () => void;
         restoreEditorPanelWidthAfterBlockly: () => void;
         maybeAutoExpandTextEditorPanel: (text: string, language?: ScriptLanguage) => void;
         expandEditorPanelForBlockly: () => void;
@@ -39,7 +36,6 @@ export type EditorControllerHost = {
         isBlocklyWorkspaceEmpty: () => boolean;
         getBlocklyEnabled: () => boolean;
         setBlocklyEnabled: (enabled: boolean) => void;
-        setBlocklyGeneratedCodeVisible: (visible: boolean) => void;
 };
 
 export function createBlocklyWorkspaceController(host: EditorControllerHost): BlocklyWorkspaceController {
@@ -59,7 +55,6 @@ export function createBlocklyWorkspaceController(host: EditorControllerHost): Bl
         textDraftByKey: host.textDraftByKey,
         blocklyWorkspaceXmlByKey: host.blocklyWorkspaceXmlByKey,
         persistEditorSession: host.persistEditorSession,
-        updateBlocklyPreview: host.updateBlocklyPreview,
         resizeBlocklyWorkspaceViewport: host.resizeBlocklyWorkspaceViewport,
         ensureBlocklyResizeTracking: host.ensureBlocklyResizeTracking,
         scheduleBlocklyAutofit: host.scheduleBlocklyAutofit
@@ -73,7 +68,6 @@ export function createBlocklyToggleController(host: EditorControllerHost): Block
         },
         monacoRoot: host.monacoRoot,
         blocklyWorkspace: host.blocklyWorkspace,
-        blocklyCodeOverlayToggle: host.blocklyCodeOverlayToggle,
         textDraftByKey: host.textDraftByKey,
         blocklyWorkspaceXmlByKey: host.blocklyWorkspaceXmlByKey,
         getEditorStateKey: host.getEditorStateKey,
@@ -84,17 +78,14 @@ export function createBlocklyToggleController(host: EditorControllerHost): Block
         ensureBlocklyWorkspace: host.ensureBlocklyWorkspace,
         loadBlocklyWorkspace: host.loadBlocklyWorkspace,
         syncEditorModeVisibility: host.syncEditorModeVisibility,
-        syncBlocklyEditorToggle: host.syncBlocklyEditorToggle,
-        syncBlocklyCodeOverlayToggle: host.syncBlocklyCodeOverlayToggle,
+        syncScriptLanguageSelect: host.syncScriptLanguageSelect,
         restoreEditorPanelWidthAfterBlockly: host.restoreEditorPanelWidthAfterBlockly,
         maybeAutoExpandTextEditorPanel: host.maybeAutoExpandTextEditorPanel,
         expandEditorPanelForBlockly: host.expandEditorPanelForBlockly,
         layoutEditor: host.layoutEditor,
         persistEditorSession: host.persistEditorSession,
-        resizeBlocklyWorkspaceViewport: host.resizeBlocklyWorkspaceViewport,
         isBlocklyWorkspaceEmpty: host.isBlocklyWorkspaceEmpty,
         getBlocklyEnabled: host.getBlocklyEnabled,
-        setBlocklyEnabled: host.setBlocklyEnabled,
-        setBlocklyGeneratedCodeVisible: host.setBlocklyGeneratedCodeVisible
+        setBlocklyEnabled: host.setBlocklyEnabled
     };
 }

@@ -1,13 +1,10 @@
 export type EditorLayoutState = {
     blocklyEnabled: boolean;
-    generatedCodeVisible: boolean;
 };
 
 export type EditorUiElements = {
     monacoRoot?: HTMLElement | null;
     blocklyRoot?: HTMLElement | null;
-    codeOverlay?: HTMLElement | null;
-    codeToggle?: HTMLInputElement | null;
 };
 
 export type BlocklyViewportDimensions = {
@@ -44,24 +41,6 @@ export function resizeBlocklyCanvas(
 }
 
 export function applyEditorLayoutState(elements: EditorUiElements, state: EditorLayoutState): void {
-    const overlayVisible = state.blocklyEnabled && state.generatedCodeVisible;
-
     elements.monacoRoot?.classList.toggle('editor-mode-root--hidden', state.blocklyEnabled);
     elements.blocklyRoot?.classList.toggle('editor-mode-root--hidden', !state.blocklyEnabled);
-
-    if (elements.codeOverlay) {
-        elements.codeOverlay.classList.toggle('blockly-code-overlay--visible', overlayVisible);
-        elements.codeOverlay.setAttribute('aria-hidden', overlayVisible ? 'false' : 'true');
-    }
-
-    if (elements.codeToggle) {
-        elements.codeToggle.disabled = !state.blocklyEnabled;
-        elements.codeToggle.checked = overlayVisible;
-        elements.codeToggle.setAttribute('aria-disabled', state.blocklyEnabled ? 'false' : 'true');
-    }
-}
-
-export function updateGeneratedCodePreview(preview: HTMLElement | null | undefined, code: string): void {
-    if (!preview) return;
-    preview.textContent = code;
 }
