@@ -25,8 +25,29 @@ function definitionsOf(gen: Blockly.CodeGenerator): Record<string, string> {
 // в pioneer-js-bridge.ts (~стр. 205): PREFLIGHT -> ARMED, (FLYING_HOVER|
 // FLYING_MOVING) -> MISSION, IDLE -> DISARMED. Так что "взлёт завершён" — это
 // переход в MISSION, а не в отдельное состояние TAKEOFF.
+//
+// Обязательный первый time.sleep(...) ДО проверки условия — не косметика.
+// pioneer.arm() синхронно переводит дрон в состояние PREFLIGHT, а
+// get_autopilot_state() маппит PREFLIGHT прямо в 'ARMED' (pioneer-js-bridge.ts,
+// ~стр. 209) — то есть условие "armed" истинно уже на первой проверке, ДО
+// того, как пройдёт хоть один реальный тик. Без гарантированного sleep()
+// перед проверкой pioneer.takeoff() выполнился бы в тот же тик, что и
+// pioneer.arm(), и рантайм симулятора кидает по этому поводу настоящее
+// исключение: "CRITICAL ERROR: Commands ... run at the same time" (см.
+// fsm-internals.ts:failSimultaneousCommands, recordTickCommand). Тот же риск
+// был и у прежнего общего _pioneer_wait(...) — просто никто не запускал
+// Python-сценарий с preflight+takeoff подряд вживую в браузере, пока
+// владелец не поймал это на реальном запуске.
+//
+// Интервал 0.1, а не 0.05: проверено вживую в браузере — 0.05 реального
+// времени слишком коротко, чтобы физический тик симулятора (current_time,
+// physics/index.ts) успел продвинуться хотя бы на шаг между time.sleep() и
+// следующей проверкой/командой, и ошибка "run at the same time" всё равно
+// периодически возникает. 0.1 надёжно работает и совпадает с интервалом в
+// официальных примерах Geoscan (`while not pioneer.point_reached():
+// time.sleep(0.1)`).
 function pollWhile(conditionCall: string): string {
-    return `while not ${conditionCall}:\n    time.sleep(0.05)\n`;
+    return `time.sleep(0.1)\nwhile not ${conditionCall}:\n    time.sleep(0.1)\n`;
 }
 
 // math.radians нужен только pioneer_set_yaw/pioneer_set_manual_speed — печатаем
@@ -51,8 +72,11 @@ function ensurePythonSetYawHelper(gen: Blockly.CodeGenerator): void {
         '    if pos is None:',
         '        pos = [0, 0, 0]',
         '    pioneer.go_to_local_point(x=pos[0], y=pos[1], z=pos[2], yaw=yaw)',
+        // go_to_local_point — тоже команда, охраняемая проверкой "не в один
+        // тик" (см. pollWhile выше) — тот же обязательный sleep до проверки.
+        '    time.sleep(0.1)',
         '    while not pioneer.point_reached():',
-        '        time.sleep(0.05)'
+        '        time.sleep(0.1)'
     ].join('\n');
 }
 

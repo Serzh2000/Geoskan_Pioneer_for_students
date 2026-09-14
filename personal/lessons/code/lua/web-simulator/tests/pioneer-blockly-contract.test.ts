@@ -329,14 +329,14 @@ describe('Интеграционный тест: полный полёт (фаз
         // 2026-09-14 повторно, см. §4.4 плана) — прямой инлайновый while,
         // как в официальных примерах Geoscan.
         expect(code).toContain('pioneer.arm()');
-        expect(code).toContain("while not pioneer.get_autopilot_state() == 'ARMED':\n    time.sleep(0.05)");
+        expect(code).toContain("while not pioneer.get_autopilot_state() == 'ARMED':\n    time.sleep(0.1)");
         expect(code).toContain('pioneer.takeoff()');
-        expect(code).toContain("while not pioneer.get_autopilot_state() == 'MISSION':\n    time.sleep(0.05)");
+        expect(code).toContain("while not pioneer.get_autopilot_state() == 'MISSION':\n    time.sleep(0.1)");
         expect(code).toContain('pioneer.go_to_local_point(x=1, y=0, z=1)');
-        expect(code).toContain('while not pioneer.point_reached():\n    time.sleep(0.05)');
+        expect(code).toContain('while not pioneer.point_reached():\n    time.sleep(0.1)');
         expect(code).toContain('time.sleep(2)');
         expect(code).toContain('pioneer.land()');
-        expect(code).toContain("while not pioneer.get_autopilot_state() == 'DISARMED':\n    time.sleep(0.05)");
+        expect(code).toContain("while not pioneer.get_autopilot_state() == 'DISARMED':\n    time.sleep(0.1)");
         expect(code.trimEnd().endsWith('pioneer.close_connection()')).toBe(true);
 
         expect(code).not.toContain('_pioneer_wait');

@@ -317,17 +317,28 @@ import time
 pioneer = Pioneer(simulator=True)
 
 pioneer.arm()
+time.sleep(0.1)
 while not pioneer.get_autopilot_state() == 'ARMED':
-    time.sleep(0.05)
+    time.sleep(0.1)
 pioneer.takeoff()
+time.sleep(0.1)
 while not pioneer.get_autopilot_state() == 'MISSION':
-    time.sleep(0.05)
+    time.sleep(0.1)
 pioneer.land()
+time.sleep(0.1)
 while not pioneer.get_autopilot_state() == 'DISARMED':
-    time.sleep(0.05)
+    time.sleep(0.1)
 
 pioneer.close_connection()
 ```
+
+**[пересмотрено 2026-09-14, третий раз — реальный баг, не косметика]** Владелец собрал блоками «моторы → взлёт → лететь в точку → посадка» и поймал живьём в браузере настоящее падение: `CRITICAL ERROR: Commands PREFLIGHT, TAKEOFF run at the same time`. Причина: `pioneer.arm()` синхронно переводит дрон в состояние `PREFLIGHT`, а `get_autopilot_state()` маппит `PREFLIGHT` прямо в `'ARMED'` (`pioneer-js-bridge.ts` ~стр. 209) — то есть условие `while not ...== 'ARMED'` было ложным (цикл не заходил в тело) уже на первой проверке, `time.sleep()` внутри цикла ни разу не вызывался, и `pioneer.takeoff()` выполнялся в тот же физический тик симулятора, что и `pioneer.arm()`. Рантайм (`fsm-internals.ts:failSimultaneousCommands`) кидает на это настоящее исключение. Это был баг ещё в первой итерации (общий `_pioneer_wait`) — просто никто не запускал именно эту последовательность блоков живьём в браузере до этого момента.
+
+Исправлено два раза за один заход:
+1. Добавлен **обязательный** `time.sleep(...)` ПЕРЕД проверкой условия (не только внутри цикла) — гарантирует, что хотя бы один реальный тик пройдёт между любыми двумя командами полёта, даже если условие готовности истинно с самого начала.
+2. Интервал увеличен с 0.05 до **0.1** — проверено вживую в браузере (с cache reload несколько раз): 0.05 секунды реального времени не всегда достаточно, чтобы физический тик симулятора (`current_time`, `physics/index.ts`) успел продвинуться хотя бы на шаг за время, пока Python ждёт на `await asyncio.sleep(...)` (`time.sleep` транслируется в `asyncio.sleep` AST-трансформацией в `browser-runtime.ts`) — ошибка воспроизводилась стабильно. 0.1 — надёжно работает и совпадает с интервалом в официальных примерах Geoscan.
+
+Тот же обязательный `time.sleep(0.1)` добавлен и в хелпер `_pioneer_set_yaw` (`blocks/flight.ts`) — он тоже вызывает `go_to_local_point`, одну из команд, охраняемых этой же проверкой.
 
 **Почему не убрали опрос совсем** (как в самом коротком официальном примере `arm(); takeoff(); land()` без единой паузы): проверили — в НАШЕМ симуляторе (не в реальном SDK) `enterLandingProcess`/`enterTakeoffProcess` (`public/modules/autopilot/fsm.ts`) кидают настоящее исключение (`throw new Error(...)`, `fsm-runtime.ts:100`), если команда пришла не в том состоянии FSM. На реальном железе SDK так строго не проверяет (просто отправляет MAVLink-команду, прошивка сама решает) — это ещё одна педагогическая заглушка нашего симулятора, отдельная от mission-guard. Полностью убрать опрос означало бы, что `pioneer.land()` сразу после `pioneer.takeoff()` **реально упадёт с исключением** в нашем рантайме. Смягчение этой проверки — правка `fsm.ts`, то есть рантайма (§1 п.10), обсуждалось отдельно и владелец решил рантайм пока не трогать.
 
@@ -340,11 +351,11 @@ pioneer.close_connection()
 | type | Вид для ученика | Lua | Python | Таргеты |
 |---|---|---|---|---|
 | `pioneer_start` | hat «Начало программы», неудаляемый | тело `__main` | тело скрипта | оба |
-| `pioneer_preflight` | «Запустить моторы» | `ap.push(Ev.MCE_PREFLIGHT)`<br>`__wait_event(Ev.ENGINES_STARTED)` | `pioneer.arm()`<br>`while not ...get_autopilot_state() == 'ARMED': time.sleep(0.05)` | оба |
-| `pioneer_takeoff` | «Взлететь» | `ap.push(Ev.MCE_TAKEOFF)`<br>`__wait_event(Ev.TAKEOFF_COMPLETE)` | `pioneer.takeoff()`<br>`while not ...get_autopilot_state() == 'MISSION': time.sleep(0.05)` | оба |
-| `pioneer_go_to` | «Лететь в точку X [] Y [] Z [] м» | `ap.goToLocalPoint(x, y, z)`<br>`__wait_event(Ev.POINT_REACHED)` | `pioneer.go_to_local_point(x=x, y=y, z=z)`<br>`while not pioneer.point_reached(): time.sleep(0.05)` | оба |
+| `pioneer_preflight` | «Запустить моторы» | `ap.push(Ev.MCE_PREFLIGHT)`<br>`__wait_event(Ev.ENGINES_STARTED)` | `pioneer.arm()`<br>`while not ...get_autopilot_state() == 'ARMED': time.sleep(0.1)` | оба |
+| `pioneer_takeoff` | «Взлететь» | `ap.push(Ev.MCE_TAKEOFF)`<br>`__wait_event(Ev.TAKEOFF_COMPLETE)` | `pioneer.takeoff()`<br>`while not ...get_autopilot_state() == 'MISSION': time.sleep(0.1)` | оба |
+| `pioneer_go_to` | «Лететь в точку X [] Y [] Z [] м» | `ap.goToLocalPoint(x, y, z)`<br>`__wait_event(Ev.POINT_REACHED)` | `pioneer.go_to_local_point(x=x, y=y, z=z)`<br>`while not pioneer.point_reached(): time.sleep(0.1)` | оба |
 | `pioneer_set_yaw` | «Повернуться на курс [] °» | `ap.updateYaw(math.rad(a))` | `_pioneer_set_yaw(math.radians(a))`: `go_to_local_point` в текущие координаты с `yaw`, затем тот же `while`-опрос точки | оба (**проверить в симуляторе**, что поведение совпадает) |
-| `pioneer_land` | «Приземлиться» | `ap.push(Ev.MCE_LANDING)`<br>`__wait_event(Ev.COPTER_LANDED)` | `pioneer.land()`<br>`while not ...get_autopilot_state() == 'DISARMED': time.sleep(0.05)` | оба |
+| `pioneer_land` | «Приземлиться» | `ap.push(Ev.MCE_LANDING)`<br>`__wait_event(Ev.COPTER_LANDED)` | `pioneer.land()`<br>`while not ...get_autopilot_state() == 'DISARMED': time.sleep(0.1)` | оба |
 | `pioneer_disarm` | «Выключить моторы» | `ap.push(Ev.ENGINES_DISARM)` | `pioneer.disarm()` | оба |
 | `pioneer_set_manual_speed` | «Скорость Vx [] Vy [] Vz [] м/с, поворот [] °/с» | — | `pioneer.set_manual_speed(vx, vy, vz, math.radians(r))` | только Python |
 | `pioneer_wait` | «Ждать [] сек» | `__wait_seconds(t)` | `time.sleep(t)` | оба |
