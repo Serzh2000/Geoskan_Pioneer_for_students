@@ -27,7 +27,7 @@ Lua — лёгкий и встраиваемый язык программиро
   \item[\hypertarget{term:loop}{Цикл}] повторение действий: \verb|for|, \verb|while|, \verb|repeat until|.
   \item[\hypertarget{term:ipairs}{ipairs/pairs}] итераторы по таблицам: \verb|ipairs| для массивов; \verb|pairs| для словарей (порядок не гарантирован).
   \item[\hypertarget{term:truthiness}{Истинность}] в Lua ложными считаются только \verb|false| и \verb|nil|.
-  \item[\hypertarget{term:unpack}{unpack}] распаковывает таблицу в список аргументов: \verb|unpack({1,0,0}) -> 1,0,0|.
+  \item[\hypertarget{term:unpack}{table.unpack}] распаковывает таблицу в список аргументов: \verb|table.unpack({1,0,0}) -> 1,0,0|. Это функция из библиотеки \verb|table|, а не глобальная функция: вызывать её нужно как \verb|table.unpack|. Для краткости в начале скрипта часто пишут \verb|local unpack = table.unpack|.
 \end{description}
 
 \subsection{История и назначение}

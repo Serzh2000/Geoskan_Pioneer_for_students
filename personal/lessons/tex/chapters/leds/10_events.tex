@@ -1,13 +1,13 @@
 \subsection{Событийная модель}
 \begin{itemize}
   \item \verb|function callback(event)| — обработчик системных событий.
-  \item Примеры: \verb|Ev.COPTER_LANDED| (посадка), \verb|Ev.LOW_VOLTAGE2| (низкое напряжение), \verb|Ev.POINT_REACHED|, \verb|Ev.ALTITUDE_REACHED|.
+  \item Примеры: \verb|Ev.COPTER_LANDED| (посадка), \verb|Ev.LOW_VOLTAGE2| (низкое напряжение), \verb|Ev.POINT_REACHED|, \verb|Ev.TAKEOFF_COMPLETE|.
   \item Внутри \verb|callback| быстро реагируйте на событие; не используйте \verb|sleep()|.
 \end{itemize}
 \textbf{Примеры:}
 \begin{codefile}{lua/examples/05_leds/leds_events_landed.lua}
 \end{codefile}
-\textbf{Пояснение.} В этом листинге функция \verb|callback(event)| отслеживает событие \verb|Ev.COPTER_LANDED| и при посадке выключает все светодиоды, проходя по индексам линейки. Основной принцип — простая реакция на одно конкретное событие автопілота.
+\textbf{Пояснение.} В этом листинге функция \verb|callback(event)| отслеживает событие \verb|Ev.COPTER_LANDED| и при посадке выключает все светодиоды, проходя по индексам линейки. Основной принцип — простая реакция на одно конкретное событие автопилота.
 \begin{codefile}{lua/examples/05_leds/leds_events_low_voltage.lua}
 \end{codefile}
 \textbf{Пояснение.} Во втором примере создаётся периодический таймер \verb|mainTimer|, а \verb|callback(event)| реагирует на \verb|Ev.LOW_VOLTAGE2|: останавливает таймер и через \verb|Timer.callLater| включает красный цвет на всех светодиодах. Основной принцип — объединить событийную модель и таймеры для безопасной индикации аварийного состояния.

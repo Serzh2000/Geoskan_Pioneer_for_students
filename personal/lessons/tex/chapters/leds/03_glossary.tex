@@ -12,7 +12,7 @@
   \item[\hypertarget{term:state}{Состояние}] текущее положение логики (например, «красный», «жёлтый», «зелёный»).
   \item[\hypertarget{term:automaton}{Конечный автомат}] модель, где программа находится в одном из состояний и переходит в другое при событиях.
   \item[\hypertarget{term:rgb}{RGB-компоненты}] три числа \verb|R|, \verb|G|, \verb|B| (яркость каналов). Диапазон значений: \verb|[0.0, 1.0]|.
-  \item[\hypertarget{term:index}{Индекс светодиода}] номер светодиода в линейке (от \verb|0| до \verb|24|).
-  \item[\hypertarget{term:api}{API}] набор функций модуля (\verb|Ledbar.set|, \verb|Timer.new| и др.).
+  \item[\hypertarget{term:index}{Индекс светодиода}] номер светодиода в линейке (от \verb|0| до \verb|28|).
+  \item[\hypertarget{term:api}{API}] набор функций модуля. Часть из них вызывается от самого модуля (\verb|Ledbar.new|, \verb|Timer.new|), а часть — от созданного объекта через двоеточие (\verb|leds:set(...)|); такие функции называют методами объекта.
   \item[\hypertarget{term:ledbar}{Ledbar}] модуль управления RGB-светодиодами квадрокоптера.
 \end{description}

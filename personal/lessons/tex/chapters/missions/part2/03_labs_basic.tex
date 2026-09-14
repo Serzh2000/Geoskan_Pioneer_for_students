@@ -8,7 +8,7 @@
     \item запускать обновление точки через \texttt{Timer.new(0.1, fn)} после \texttt{Ev.TAKEOFF\_COMPLETE};
     \item вычислять \(x = r \cos(\theta)\), \(y = r \sin(\theta)\) с переводом градусов в радианы;
     \item при необходимости сопровождать курс вызовом \texttt{ap.updateYaw(angle * math.pi / 180)};
-    \item использовать индикацию \texttt{Ledbar.new(25)} для этапов;
+    \item использовать индикацию \texttt{Ledbar.new(29)} для этапов;
     \item по \texttt{Ev.SHOCK} — останов таймеров и \texttt{ap.push(Ev.ENGINES\_DISARM)}, по \texttt{Ev.LOW\_VOLTAGE2} — посадку.
 \end{itemize}
 
@@ -62,7 +62,7 @@
 \end{taskbox}
 
 \begin{taskbox}[Аварийная реакция на \texttt{Ev.SHOCK}]
-Требуется немедленно остановить все таймеры миссии, включить красный цвет на всех \texttt{0..24} индексах линейки и выполнить \texttt{ap.push(Ev.ENGINES\_DISARM)}.
+Требуется немедленно остановить все таймеры миссии, включить красный цвет на всех \texttt{0..28} индексах линейки и выполнить \texttt{ap.push(Ev.ENGINES\_DISARM)}.
 
 \textbf{Ожидаемый результат:} мгновенное выключение двигателей и красная индикация аварии.
 \end{taskbox}
