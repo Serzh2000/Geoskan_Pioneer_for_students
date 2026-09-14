@@ -9,7 +9,7 @@ export type PioneerBlockGenerator = (
     gen: Blockly.CodeGenerator
 ) => string | [string, number];
 
-export type PioneerBlockCategory = 'program' | 'flight' | 'time' | 'leds' | 'sensors' | 'events';
+export type PioneerBlockCategory = 'program' | 'flight' | 'time' | 'leds' | 'sensors' | 'camera' | 'events';
 
 export type PioneerBlockSpec = {
     type: `pioneer_${string}`;

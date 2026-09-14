@@ -1,4 +1,5 @@
 import { getDroneOrDefault } from './runtime-shared.js';
+import { log } from '../shared/logging/logger.js';
 import {
     captureDroneCameraFrameDataUrl as captureDroneCameraFrameImageDataUrl,
     captureDroneCameraFramePixels,
@@ -72,7 +73,10 @@ function reportMissingFeed(id: string, hypothesisId: string, message: string) {
 // dataURL несёт картинку в base64; настоящему SDK по UDP приходят те же самые байты JPEG,
 // поэтому раскодировать их обратно в бинарь — единственный способ отдать в Python
 // честный кадр с маркерами FFD8/FFD9, а не описание кадра.
-function decodeDataUrlToBytes(dataUrl: string): Uint8Array | null {
+// Возвращаемый тип сужен до Uint8Array<ArrayBuffer> (а не ArrayBufferLike):
+// такие байты кладутся в Blob при сохранении снимка (downloadDroneCameraPhoto),
+// а BlobPart не принимает буфер, который мог бы оказаться SharedArrayBuffer.
+function decodeDataUrlToBytes(dataUrl: string): Uint8Array<ArrayBuffer> | null {
     const separator = dataUrl.indexOf(',');
     if (separator < 0) return null;
 
@@ -122,5 +126,57 @@ export function getDroneCameraCvFrame(id: string): CameraFramePixels | null {
 
 export function captureDroneCameraFrameDataUrl(id: string) {
     return captureDroneCameraFrameImageDataUrl(id);
+}
+
+function buildTimestampSlug() {
+    return new Date().toISOString().replace(/[:.]/g, '-');
+}
+
+// Копия triggerBrowserDownload() из modules/lua/hardware/camera.ts, а не общий
+// хелпер: Lua-модуль тянет за собой fengari и три предмета сцены, и импорт его
+// ради шести строк втащил бы весь Lua-рантайм в Python-мост. Сам приём
+// (createObjectURL + <a download> + revokeObjectURL) — единственный способ
+// отдать файл из браузера, поэтому совпадение здесь неизбежно, а не случайно.
+function triggerBrowserDownload(fileName: string, blob: Blob) {
+    const href = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = href;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(href), 1000);
+}
+
+// «Сохранить снимок» со стороны Python. До этого способа сохранить кадр из
+// Pyodide не было вовсе: файловая система Pyodide живёт в памяти вкладки и
+// ученику недоступна, а cv2.imwrite из официального примера здесь заглушка
+// (pioneer-sdk-cv-prelude.ts, `cv2.imwrite = lambda *a, **k: True`). Значит,
+// единственный честный аналог «файл сохранён» — та же загрузка браузером,
+// которую делает Lua-таргет.
+//
+// Кадр берётся тем же captureDroneCameraFrameDataUrl(), что и get_frame(), и
+// попадает в тот же 100-мс кеш (pioneer-js-bridge-camera-render.ts): вызов
+// сразу после get_frame() скачивает БУКВАЛЬНО тот кадр, который получила
+// программа ученика, а не следующий.
+export function downloadDroneCameraPhoto(id: string): boolean {
+    const dataUrl = captureDroneCameraFrameImageDataUrl(id);
+    if (!dataUrl) {
+        reportMissingFeed(id, 'H3', 'Camera photo download skipped because no frame could be captured');
+        log('Camera: Не удалось сохранить снимок: нет кадра с камеры.', 'error');
+        return false;
+    }
+
+    const bytes = decodeDataUrlToBytes(dataUrl);
+    if (!bytes || bytes.length === 0) {
+        reportMissingFeed(id, 'H4', 'Camera photo download skipped because the captured data URL was malformed');
+        log('Camera: Не удалось сохранить снимок: кадр повреждён.', 'error');
+        return false;
+    }
+
+    const fileName = `pioneer-shot-${id}-${buildTimestampSlug()}.jpg`;
+    triggerBrowserDownload(fileName, new Blob([bytes], { type: 'image/jpeg' }));
+    log(`Camera: Снимок сохранен как ${fileName}`, 'success');
+    return true;
 }
 

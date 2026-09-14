@@ -18,8 +18,12 @@ import { buildPythonProgram } from './python-runtime.js';
 // процитирует как текст.
 const LUA_RESERVED_WORDS = [
     '__state', '__t0', '__loop_guard', '__loop_guard_count', 'action',
-    '__advance', 'current', '__wait_event', '__wait_seconds', 'ap', 'Ev',
-    'Timer', 'Sensors', 'Ledbar', 'leds', 'callback', 'time'
+    '__advance', 'current', '__wait_event', '__wait_seconds', '__wait_poll',
+    'ap', 'Ev', 'Timer', 'Sensors', 'Ledbar', 'leds', 'callback', 'time',
+    // 'camera' — глобальная таблица рантайма (lua/setup-script.ts), к которой
+    // обращается pioneer_camera_take_photo: пользовательская переменная с тем
+    // же именем затенила бы её и сломала снимок.
+    'camera'
 ].join(',');
 
 // procedures_defnoreturn/procedures_defreturn — единственные блоки-сироты,

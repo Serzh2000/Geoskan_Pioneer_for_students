@@ -12,10 +12,14 @@ const CATEGORY_LABELS: Record<PioneerBlockCategory, { name: string; colour: stri
     time: { name: 'Время', colour: '#f59e0b' },
     leds: { name: 'Светодиоды', colour: '#22c55e' },
     sensors: { name: 'Датчики', colour: '#14b8a6' },
+    camera: { name: 'Камера', colour: '#0ea5e9' },
     events: { name: 'События', colour: '#8b5cf6' }
 };
 
-const CATEGORY_ORDER: PioneerBlockCategory[] = ['program', 'flight', 'time', 'leds', 'sensors', 'events'];
+// Камера идёт после датчиков: это тоже «что дрон видит/меряет», а не команда
+// полёта, но в отличие от датчиков она блок-действие, а не значение. События
+// остаются последними — они про устройство программы, а не про дрон.
+const CATEGORY_ORDER: PioneerBlockCategory[] = ['program', 'flight', 'time', 'leds', 'sensors', 'camera', 'events'];
 
 const NUMBER_SHADOWS: Record<string, Record<string, number>> = {
     pioneer_wait: { SECONDS: 1 },

@@ -31,6 +31,28 @@ export const luaApiDocsRuntime: Record<string, ApiDoc> = {
     },
     'boardNumber': { desc: 'Номер платы (коптера).', syntax: 'boardNumber()', returns: 'number', kind: 'Function', insertText: 'boardNumber()' },
 
+    // Снимок с бортовой камеры. В симуляторе checkRequestShot() возвращает 0,
+    // пока кадр готовится, и 1, когда готов (modules/lua/hardware/camera.ts),
+    // а не -1/0/1 из документации на железо — описываем то, что реализовано.
+    'camera.requestMakeShot': {
+        desc: 'Запрос снимка с камеры. Возвращает управление сразу, кадр сохраняется асинхронно.',
+        syntax: 'camera.requestMakeShot()',
+        params: 'none',
+        returns: 'nil',
+        example: 'camera.requestMakeShot()',
+        kind: 'Method',
+        insertText: 'requestMakeShot()'
+    },
+    'camera.checkRequestShot': {
+        desc: 'Готовность снимка: 1 — сохранён, 0 — ещё готовится.',
+        syntax: 'camera.checkRequestShot()',
+        params: 'none',
+        returns: 'number (0 или 1)',
+        example: 'if camera.checkRequestShot() == 1 then print("готово") end',
+        kind: 'Method',
+        insertText: 'checkRequestShot()'
+    },
+
     'Gpio.new': { desc: 'Создание GPIO.', kind: 'Method', insertText: 'new(${1:port}, ${2:pin}, ${3:mode})' },
     'Gpio.read': { desc: 'Чтение значения пина.', kind: 'Method', insertText: 'read()' },
     'Gpio.set': { desc: 'Установка пина в 1.', kind: 'Method', insertText: 'set()' },

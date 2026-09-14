@@ -25,6 +25,7 @@ import {
     closeDroneCameraConnection,
     connectDroneCamera,
     disconnectDroneCamera,
+    downloadDroneCameraPhoto,
     getDroneCameraCvFrame,
     getDroneCameraFrame,
     isDroneCameraConnected
@@ -307,6 +308,15 @@ export function installJsRuntimeAPI() {
     w.pioneer_camera_get_cv_frame = (id: string) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         return getDroneCameraCvFrame(id);
+    };
+
+    // Скачивание снимка (блок «Сделать снимок», Python-таргет). Отдельная
+    // функция моста, а не метод класса Camera в prelude: у настоящего
+    // pioneer_sdk такого метода нет, и выдумывать его — значит учить ученика
+    // несуществующему API.
+    w.pioneer_camera_save_photo = (id: string) => {
+        if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
+        return downloadDroneCameraPhoto(id);
     };
 }
 

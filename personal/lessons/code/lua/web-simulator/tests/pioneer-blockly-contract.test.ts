@@ -32,6 +32,7 @@ import type { PioneerTarget } from '../public/modules/editor/blockly-mode/pionee
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PIONEER_SDK_SOURCE_PATH = path.join(HERE, '../public/modules/python/pioneer-sdk-module.ts');
+const PIONEER_BRIDGE_SOURCE_PATH = path.join(HERE, '../public/modules/python/pioneer-js-bridge.ts');
 
 const CALL_PATTERN = /\b([A-Za-z_][\w]*(?:[.:][A-Za-z_]\w*)*)\s*\(/g;
 
@@ -73,9 +74,9 @@ function isAllowedLuaCall(name: string, allowSet: Set<string>): boolean {
     return LUA_STD_PREFIXES.some((prefix) => name.startsWith(prefix));
 }
 
-function extractPioneerMethods(source: string): Set<string> {
-    const classStart = source.indexOf('class Pioneer:');
-    if (classStart === -1) throw new Error('class Pioneer: не найден в pioneer-sdk-module.ts');
+function extractClassMethods(source: string, className: string): Set<string> {
+    const classStart = source.indexOf(`class ${className}:`);
+    if (classStart === -1) throw new Error(`class ${className}: не найден в pioneer-sdk-module.ts`);
     const rest = source.slice(classStart);
     const nextClassIdx = rest.indexOf('\nclass ', 1);
     const classBody = nextClassIdx === -1 ? rest : rest.slice(0, nextClassIdx);
@@ -89,11 +90,34 @@ function extractPioneerMethods(source: string): Set<string> {
     return methods;
 }
 
-const PYTHON_STD_NAMES = new Set(['time.sleep', 'time.time', 'print', 'RuntimeError', 'Pioneer', 'condition']);
+function extractPioneerMethods(source: string): Set<string> {
+    return extractClassMethods(source, 'Pioneer');
+}
+
+// Всё, что мост реально кладёт в window (`w.pioneer_* = ...`,
+// pioneer-js-bridge.ts). Для Python это такой же контракт, как luaApiDocs для
+// Lua: сгенерированный код обращается к js.pioneer_* напрямую, и опечатка в
+// имени иначе всплыла бы только вживую в браузере.
+function extractBridgeGlobals(source: string): Set<string> {
+    return new Set(Array.from(source.matchAll(/^\s*w\.(pioneer_\w+)\s*=/gm)).map((match) => match[1]));
+}
+
+const PIONEER_SDK_SOURCE = fs.readFileSync(PIONEER_SDK_SOURCE_PATH, 'utf8');
+// Объект камеры в сгенерированном коде называется `camera` (blocks/camera.ts,
+// `camera = Camera()`) — ровно как в официальном примере Geoscan
+// docs/imported/Python_files/frames_from_camera.py.
+const CAMERA_METHODS = extractClassMethods(PIONEER_SDK_SOURCE, 'Camera');
+const BRIDGE_GLOBALS = extractBridgeGlobals(fs.readFileSync(PIONEER_BRIDGE_SOURCE_PATH, 'utf8'));
+
+const PYTHON_STD_NAMES = new Set([
+    'time.sleep', 'time.time', 'print', 'RuntimeError', 'Pioneer', 'Camera', 'condition'
+]);
 
 function isAllowedPythonCall(name: string, pioneerMethods: Set<string>): boolean {
     if (name.startsWith('_pioneer_')) return true;
     if (name.startsWith('pioneer.')) return pioneerMethods.has(name.slice('pioneer.'.length));
+    if (name.startsWith('camera.')) return CAMERA_METHODS.has(name.slice('camera.'.length));
+    if (name.startsWith('js.')) return BRIDGE_GLOBALS.has(name.slice('js.'.length));
     if (name.startsWith('math.')) return true;
     return PYTHON_STD_NAMES.has(name);
 }
