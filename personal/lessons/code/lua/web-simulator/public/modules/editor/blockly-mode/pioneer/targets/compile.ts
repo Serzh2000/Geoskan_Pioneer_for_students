@@ -79,6 +79,18 @@ function collectTopLevelParts(workspace: Blockly.Workspace, target: PioneerTarge
         (block) => block.type !== PIONEER_START_TYPE && block.type !== PIONEER_ON_EVENT_TYPE
     );
 
+    // Снимаем предупреждение со ВСЕХ блоков перед перерасчётом, а не только с
+    // тех, что сейчас в otherBlocks: иначе оно "прилипает". Пример бага —
+    // блок math_number подключили к пустому входу X у pioneer_go_to, пока не
+    // подключён он был top-level и получил это предупреждение; после
+    // подключения он больше не top-level и в otherBlocks не попадает, но
+    // никто и не вызывал setWarningText(null) для него — предупреждение
+    // оставалось висеть на уже подключённом блоке. compile.ts — единственное
+    // место в pioneer_*, где вообще используется setWarningText (проверено
+    // грепом), так что чистить его у всех блоков безопасно — других
+    // предупреждений оно не затronет.
+    workspace.getAllBlocks(false).forEach((block) => block.setWarningText(null));
+
     startBlocks.forEach((block, index) => {
         block.setWarningText(
             index === 0 ? null : 'Несколько блоков «Начало программы»: используется только первый.'

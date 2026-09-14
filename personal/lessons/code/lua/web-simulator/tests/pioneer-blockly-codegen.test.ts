@@ -5,6 +5,7 @@
  * в Python и т.п. Белый список API и покрытие таргетов — в
  * tests/pioneer-blockly-contract.test.ts, здесь только точная кодогенерация.
  */
+import { jest } from '@jest/globals';
 import * as Blockly from 'blockly';
 import { luaGenerator } from 'blockly/lua';
 import { pythonGenerator } from 'blockly/python';
@@ -303,5 +304,37 @@ describe('pioneer_preflight / pioneer_takeoff / pioneer_land: опрос сос�
         const code = compilePioneerWorkspace(wsWith, 'python');
         expect(code).toContain('_pioneer_t0 = time.time()');
         expect(code).toContain('time.sleep((time.time() - _pioneer_t0))');
+    });
+});
+
+describe('compile.ts: предупреждение «не подключён к Начало программы» не липнет', () => {
+    // Blockly.Block.setWarningText — no-op на безголовом (не-SVG) блоке, оно
+    // реально работает только у BlockSvg в браузере (см. node_modules/blockly/
+    // core/block.d.ts:923 — параметры подчёркнуты, значит намеренно не
+    // используются в базовой реализации). Поэтому в headless-тесте нельзя
+    // прочитать getWarningText() (такого метода нет вообще ни у Block, ни у
+    // BlockSvg — только setWarningText) — проверяем сам факт и порядок
+    // вызовов через шпион, это и есть наблюдаемое поведение compile.ts.
+    test('число, изначально свободное на холсте, а затем подключённое к X у pioneer_go_to — предупреждение снимается на втором проходе', () => {
+        const ws = makeWorkspace();
+        const goTo = ws.newBlock('pioneer_go_to');
+        const x = numberBlock(ws, 1);
+        const spy = jest.spyOn(x, 'setWarningText');
+
+        // Первый проход: x ещё ничем не подключён — top-level "сирота".
+        compilePioneerWorkspace(ws, 'lua');
+        expect(spy).toHaveBeenLastCalledWith('Блок не подключён к «Начало программы».');
+
+        // Подключаем x к X-входу pioneer_go_to и саму цепочку — к pioneer_start.
+        goTo.getInput('X')!.connection!.connect(x.outputConnection!);
+        chainUnderStart(ws, goTo);
+        spy.mockClear();
+
+        // Раньше на этом проходе setWarningText(null) для x вообще не
+        // вызывался, потому что после подключения он больше не top-level и не
+        // попадает в цикл, который явно снимает предупреждение.
+        compilePioneerWorkspace(ws, 'lua');
+        expect(spy).toHaveBeenCalledWith(null);
+        expect(spy).not.toHaveBeenCalledWith('Блок не подключён к «Начало программы».');
     });
 });
