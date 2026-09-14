@@ -298,21 +298,23 @@ describe('Интеграционный тест: полный полёт (фаз
         expect(code).not.toContain('__wait_seconds');
         expect(code).not.toContain('coroutine');
 
-        expect(code).toContain('action["__s0"] = function()');
-        expect(code).toContain('ap.push(Ev.MCE_PREFLIGHT)');
-        expect(code).toContain('action["__s1"] = function()');
-        expect(code).toContain('ap.push(Ev.MCE_TAKEOFF)');
-        expect(code).toContain('action["__s2"] = function()');
-        expect(code).toContain('ap.goToLocalPoint(1, 0, 1)');
-        expect(code).toContain('action["__s3"] = function()');
-        expect(code).toContain('Timer.callLater(2, function()');
-        expect(code).toContain('action["__s4"] = function()');
-        expect(code).toContain('ap.push(Ev.MCE_LANDING)');
+        // [пересмотрено 2026-09-14] Ни одно имя события в этом маршруте не
+        // повторяется (ENGINES_STARTED, TAKEOFF_COMPLETE, POINT_REACHED,
+        // COPTER_LANDED — по одному разу), поэтому компилируется ПЛОСКИЙ
+        // вариант: соседние ветки в callback(event), без таблицы состояний
+        // (§4.3 плана). Байт-в-байт этот вывод зафиксирован в
+        // tests/pioneer-blockly-lua-fsm.test.ts; здесь — структура и
+        // белый список API.
+        expect(code).not.toContain('action[');
+        expect(code).not.toContain('__state');
+        expect(code).not.toContain('__advance');
 
-        expect(code).toContain('if __state == "__s0" and event == Ev.ENGINES_STARTED then __state = "__s1"; __advance() end');
-        expect(code).toContain('if __state == "__s1" and event == Ev.TAKEOFF_COMPLETE then __state = "__s2"; __advance() end');
-        expect(code).toContain('if __state == "__s2" and event == Ev.POINT_REACHED then __state = "__s3"; __advance() end');
-        expect(code).toContain('if __state == "__s4" and event == Ev.COPTER_LANDED then __state = "__s5"; __advance() end');
+        expect(code).toContain('ap.push(Ev.MCE_PREFLIGHT)');
+        expect(code).toContain('if event == Ev.ENGINES_STARTED then\n        ap.push(Ev.MCE_TAKEOFF)\n    end');
+        expect(code).toContain('if event == Ev.TAKEOFF_COMPLETE then\n        ap.goToLocalPoint(1, 0, 1)\n    end');
+        expect(code).toContain('if event == Ev.POINT_REACHED then\n        Timer.callLater(2, function()\n');
+        expect(code).toContain('ap.push(Ev.MCE_LANDING)');
+        expect(code).toContain('if event == Ev.COPTER_LANDED then\n    end');
 
         const unknown = extractCalls(code).filter((name) => !isAllowedLuaCall(name, luaAllowSet));
         expect(unknown).toEqual([]);

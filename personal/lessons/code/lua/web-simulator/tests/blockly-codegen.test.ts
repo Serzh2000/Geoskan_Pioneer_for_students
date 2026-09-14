@@ -433,6 +433,10 @@ describe('Кодогенерация Lua', () => {
     // Lua-таргет компилирует в FSM, а не в корутину (§4.3 плана, пересмотрено
     // 2026-09-13, см. §2.1) — __wait_event/__wait_seconds не настоящие
     // функции и в готовый код не попадают, см. targets/lua-fsm.ts.
+    // [пересмотрено 2026-09-14] У стартовой программы ни одно имя события не
+    // повторяется, поэтому она компилируется в ПЛОСКИЙ вариант без таблицы
+    // состояний (§4.3 плана) — байт-в-байт этот вывод зафиксирован в
+    // tests/pioneer-blockly-lua-fsm.test.ts.
     test('стартовый workspace загружается из XML и компилируется (Lua)', () => {
         const workspace = makeWorkspace();
         const dom = Blockly.utils.xml.textToDom(createStarterWorkspaceXml('lua')) as Element;
@@ -441,12 +445,12 @@ describe('Кодогенерация Lua', () => {
 
         const code = compileMainEditorWorkspace('lua', workspace as unknown as Blockly.WorkspaceSvg);
         expect(code).toContain('ap.push(Ev.MCE_PREFLIGHT)');
-        expect(code).toContain('if __state == "__s0" and event == Ev.ENGINES_STARTED then __state = "__s1"; __advance() end');
-        expect(code).toContain('ap.push(Ev.MCE_TAKEOFF)');
-        expect(code).toContain('if __state == "__s1" and event == Ev.TAKEOFF_COMPLETE then __state = "__s2"; __advance() end');
+        expect(code).toContain('if event == Ev.ENGINES_STARTED then\n        ap.push(Ev.MCE_TAKEOFF)\n    end');
+        expect(code).toContain('if event == Ev.TAKEOFF_COMPLETE then\n        ap.push(Ev.MCE_LANDING)\n    end');
         expect(code).toContain('function callback(event)');
         expect(code).not.toContain('coroutine');
-        expect(code.trimEnd().endsWith('__advance()')).toBe(true);
+        expect(code).not.toContain('__state');
+        expect(code).not.toContain('__advance');
     });
 
     test('стартовый workspace загружается из XML и компилируется (Python)', () => {

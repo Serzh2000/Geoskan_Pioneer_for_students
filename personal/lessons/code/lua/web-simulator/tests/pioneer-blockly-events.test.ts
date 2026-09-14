@@ -45,11 +45,12 @@ async function flushBlocklyEvents(): Promise<void> {
 }
 
 describe('pioneer_on_event: генерация ветки в callback(event)', () => {
-    test('ветка if event == Ev.X then ... end появляется до веток-переходов FSM', async () => {
+    test('ветка if event == Ev.X then ... end появляется до веток-переходов', async () => {
         const workspace = makeWorkspace();
-        // pioneer_preflight создаёт переход __s0 -> __s1 по Ev.ENGINES_STARTED —
-        // нужен, чтобы в callback(event) вообще была ветка-переход FSM, ordering
-        // которой сравниваем с веткой pioneer_on_event.
+        // pioneer_preflight создаёт переход по Ev.ENGINES_STARTED — нужен, чтобы
+        // в callback(event) вообще была ветка-переход, ordering которой
+        // сравниваем с веткой pioneer_on_event. Имя события не повторяется, так
+        // что режим плоский и ветка-переход печатается без __state-охраны.
         chainUnderStart(workspace, workspace.newBlock('pioneer_preflight'));
 
         const onEvent = workspace.newBlock('pioneer_on_event');
@@ -68,7 +69,7 @@ describe('pioneer_on_event: генерация ветки в callback(event)', (
         expect(code).toContain('__led_all({255, 0, 0})');
 
         const branchIndex = code.indexOf('if event == Ev.SHOCK then');
-        const transitionIndex = code.indexOf('if __state == "__s0" and event == Ev.ENGINES_STARTED');
+        const transitionIndex = code.indexOf('if event == Ev.ENGINES_STARTED then');
         expect(branchIndex).toBeGreaterThan(-1);
         expect(transitionIndex).toBeGreaterThan(branchIndex);
     });
@@ -125,7 +126,7 @@ describe('pioneer_on_event: блоки ожидания внутри отклю�
         // рантайма (маркер для lua-fsm.ts, см. targets/lua-fsm.ts), поэтому
         // никакого её "определения" в прологе в принципе нет — ни до, ни
         // после отключения блока.
-        expect(code).toContain('local function __advance()');
+        expect(code).toContain('function callback(event)');
         expect(code).not.toContain('__wait_seconds');
     });
 

@@ -37,18 +37,20 @@ function chainUnderStart(workspace: Blockly.Workspace, ...blocks: Blockly.Block[
 }
 
 describe('pioneer_wait / pioneer_time', () => {
-    test('pioneer_wait: Timer.callLater-переход FSM (Lua) / time.sleep (Python)', () => {
+    test('pioneer_wait: Timer.callLater-переход (Lua) / time.sleep (Python)', () => {
         const wsLua = makeWorkspace();
         const waitLua = wsLua.newBlock('pioneer_wait');
         waitLua.getInput('SECONDS')!.connection!.connect(numberBlock(wsLua, 2.5).outputConnection!);
         chainUnderStart(wsLua, waitLua);
         const luaCode = compilePioneerWorkspace(wsLua, 'lua');
         // __wait_seconds — не настоящая функция, а маркер для lua-fsm.ts: в
-        // готовом Lua вместо неё — Timer.callLater(...) с переходом __s0 -> __s1
-        // (§4.3 плана, пересмотрено 2026-09-13, см. §2.1).
+        // готовом Lua вместо неё — Timer.callLater(...) (§4.3 плана,
+        // пересмотрено 2026-09-13, см. §2.1). Ни одного повторяющегося имени
+        // события здесь нет, поэтому режим плоский и __state не нужен вовсе:
+        // отложенный колбэк ничего не проверяет, а сразу продолжает программу.
         expect(luaCode).not.toContain('__wait_seconds');
         expect(luaCode).toContain('Timer.callLater(2.5, function()');
-        expect(luaCode).toContain('__state = "__s1"');
+        expect(luaCode).not.toContain('__state');
 
         const wsPy = makeWorkspace();
         const waitPy = wsPy.newBlock('pioneer_wait');
@@ -157,16 +159,22 @@ describe('pioneer_position / pioneer_distance / pioneer_battery', () => {
 });
 
 describe('compilePioneerWorkspace: пролог для пустого pioneer_start', () => {
-    test('Lua: FSM-таблица состояний, __advance, маркер версии, без корутин', () => {
+    // [пересмотрено 2026-09-14] Пустая программа — это ноль переходов, то есть
+    // тривиально плоский случай (§4.3 плана): ни таблицы состояний, ни
+    // __state, ни __advance(). Пустой function callback(event) при этом
+    // остаётся: по его наличию mission-guard.ts решает, пропускать ли больше
+    // одной команды миссии (см. targets/lua-runtime.ts, buildFlatLuaProgram).
+    test('Lua: плоский вывод без таблицы состояний, маркер версии, без корутин', () => {
         const ws = makeWorkspace();
         ws.newBlock('pioneer_start');
         const code = compilePioneerWorkspace(ws, 'lua');
 
         expect(code.startsWith('-- @pioneer-blockly v1')).toBe(true);
-        expect(code).toContain('local action = {}');
-        expect(code).toContain('action["__s0"] = function()');
-        expect(code).toContain('local function __advance()');
         expect(code).toContain('function callback(event)');
+        expect(code).not.toContain('local action = {}');
+        expect(code).not.toContain('action[');
+        expect(code).not.toContain('__state');
+        expect(code).not.toContain('__advance');
         expect(code).not.toContain('coroutine');
 
         // [добавлено 2026-09-14] Пустая программа без циклов и без

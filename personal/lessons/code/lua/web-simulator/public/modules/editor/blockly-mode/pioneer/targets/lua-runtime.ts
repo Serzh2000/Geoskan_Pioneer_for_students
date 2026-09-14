@@ -7,6 +7,16 @@
 // прямо не рекомендует sleep(), а sleep()/coroutine.yield() рантайма
 // симулятора (timers.ts:99-117) в принципе ломает вложенную пользовательскую
 // корутину — см. §2 плана. Сегменты и переходы собирает targets/lua-fsm.ts.
+//
+// [пересмотрено 2026-09-14] Здесь ДВА сборщика программы, а не один:
+// buildFlatLuaProgram() для линейной цепочки без повторяющихся событий
+// (buildLuaSections() возвращает mode: 'flat') и buildLuaProgram() — полный
+// FSM для всего остального. Плоский вариант — это то, что владелец увидел в
+// рукописных примерах: таблица состояний, __state и __advance() там не нужны
+// вообще, потому что пришедшее событие само однозначно указывает следующий
+// шаг. Полный FSM остаётся обязательным, как только имя события повторяется
+// (две pioneer_go_to подряд ждут один и тот же Ev.POINT_REACHED) — см.
+// targets/lua-fsm.ts, isFlatEligible().
 export type LuaProgramParts = {
     // definitions_ (LED/position-хелперы блоков, пользовательские функции
     // procedures_def*) — печатаются один раз, до объявления состояний.
@@ -40,22 +50,17 @@ export type LuaProgramParts = {
 // Проверяем по тексту, а не по типам блоков на холсте: цикл или pioneer_time
 // может быть спрятан внутри пользовательской функции (headerDefinitions) или
 // ветки pioneer_on_event (eventBranches), а не только в основной цепочке.
-function usesMarker(marker: string, ...sources: string[]): boolean {
+function usesMarker(marker: string, sources: string[]): boolean {
     return sources.some((source) => source.includes(marker));
 }
 
-export function buildLuaProgram({
-    headerDefinitions,
-    segmentsCode,
-    transitionBranches,
-    eventBranches
-}: LuaProgramParts): string {
-    const header = headerDefinitions ? `${headerDefinitions}\n\n` : '';
-    const needsClock = usesMarker('__t0', headerDefinitions, segmentsCode, eventBranches, transitionBranches);
-    const needsLoopGuard = usesMarker('__loop_guard(', headerDefinitions, segmentsCode, eventBranches, transitionBranches);
-
-    const clockLine = needsClock ? 'local __t0 = time()\n' : '';
-    const loopGuard = needsLoopGuard
+// Общая для обоих сборщиков часть пролога: то, что печатается только при
+// фактическом использовании. Порядок строк (сначала __t0, потом __loop_guard)
+// совпадает с исходным шаблоном FSM — вывод FSM-режима от этого выделения в
+// отдельную функцию не меняется ни на байт.
+function buildConditionalPreamble(sources: string[]): string {
+    const clockLine = usesMarker('__t0', sources) ? 'local __t0 = time()\n' : '';
+    const loopGuard = usesMarker('__loop_guard(', sources)
         ? '\n-- Защита от зависания в цикле без блоков-ожидания: считает итерации, не\n'
             + '-- отдаёт управление — обычный синхронный Lua-цикл здесь никуда не yield\'ит.\n'
             + 'local __loop_guard_count = 0\n'
@@ -66,10 +71,23 @@ export function buildLuaProgram({
             + '    end\n'
             + 'end\n'
         : '';
+    return `${clockLine}${loopGuard}`;
+}
+
+export function buildLuaProgram({
+    headerDefinitions,
+    segmentsCode,
+    transitionBranches,
+    eventBranches
+}: LuaProgramParts): string {
+    const header = headerDefinitions ? `${headerDefinitions}\n\n` : '';
+    const preamble = buildConditionalPreamble([
+        headerDefinitions, segmentsCode, eventBranches, transitionBranches
+    ]);
 
     return `-- @pioneer-blockly v1
 local __state = "__s0"
-${clockLine}${loopGuard}
+${preamble}
 local action = {}
 
 local function __advance()
@@ -82,5 +100,48 @@ function callback(event)
 ${eventBranches}${transitionBranches}end
 
 __advance()
+`;
+}
+
+export type LuaFlatProgramParts = {
+    // То же, что и у FSM-варианта: definitions_ блоков и пользовательские
+    // функции.
+    headerDefinitions: string;
+    // Код первого шага — он выполняется сразу при запуске скрипта, поэтому
+    // печатается на верхнем уровне, без обёртки в action[...]/__advance().
+    topLevelCode: string;
+    // Плоские соседние ветки `if event == Ev.X then ... end`, по одной на
+    // блок-ожидание события (targets/lua-fsm.ts).
+    callbackBranches: string;
+    // Ветки pioneer_on_event — как и в FSM-режиме, независимые побочные
+    // обработчики, печатаются первыми.
+    eventBranches: string;
+};
+
+// Плоская программа (§4.3 плана, дополнено 2026-09-14): ни __state, ни
+// таблицы action, ни __advance() — как в рукописных примерах Geoskan.
+// Условный пролог (__t0/__loop_guard) работает здесь тем же способом, что и в
+// FSM-варианте: по текстовому поиску маркера. function callback(event)
+// печатаем ВСЕГДА, даже с пустым телом: mission-guard.ts пропускает больше
+// одной команды миссии только скриптам, в которых он видит `function
+// callback(`, — программа вроде «повернуться на курс + выключить моторы»
+// (переходов нет вовсе, а команд две) без этого объявления упёрлась бы в
+// лимит рантайма.
+export function buildFlatLuaProgram({
+    headerDefinitions,
+    topLevelCode,
+    callbackBranches,
+    eventBranches
+}: LuaFlatProgramParts): string {
+    const header = headerDefinitions ? `${headerDefinitions}\n\n` : '';
+    const preamble = buildConditionalPreamble([
+        headerDefinitions, topLevelCode, eventBranches, callbackBranches
+    ]);
+    const preambleBlock = preamble ? `${preamble}\n` : '';
+
+    return `-- @pioneer-blockly v1
+${preambleBlock}${header}${topLevelCode}
+function callback(event)
+${eventBranches}${callbackBranches}end
 `;
 }

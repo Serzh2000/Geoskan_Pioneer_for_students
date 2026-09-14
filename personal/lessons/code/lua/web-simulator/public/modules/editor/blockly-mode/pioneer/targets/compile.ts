@@ -3,8 +3,8 @@ import { luaGenerator } from 'blockly/lua';
 import { pythonGenerator } from 'blockly/python';
 import { PIONEER_ON_EVENT_TYPE, PIONEER_START_TYPE } from '../constants.js';
 import type { PioneerTarget } from './types.js';
-import { buildLuaProgram } from './lua-runtime.js';
-import { buildLuaFsmSections } from './lua-fsm.js';
+import { buildFlatLuaProgram, buildLuaProgram } from './lua-runtime.js';
+import { buildLuaSections, indentLuaBlock, type LuaSections } from './lua-fsm.js';
 import { buildPythonProgram } from './python-runtime.js';
 
 // Имена рантайма (см. targets/lua-runtime.ts, targets/lua-fsm.ts) резервируем,
@@ -115,19 +115,22 @@ function buildHeaderDefinitions(generator: Blockly.CodeGenerator, procedureBlock
 
 export type PioneerLuaCompiledSource = {
     headerDefinitions: string;
-    segmentsCode: string;
-    transitionBranches: string;
+    // Ветки pioneer_on_event — без внешнего отступа: его добавляет уже
+    // конкретный сборщик программы, у плоского и FSM-варианта он разный.
     eventBranches: string;
+    // Либо плоские ветки callback, либо таблица состояний — что именно,
+    // решает targets/lua-fsm.ts по повторам имён событий.
+    sections: LuaSections;
 };
 
-// Lua: тело pioneer_start разбивается на состояния FSM (§4.3 плана,
-// пересмотрено 2026-09-13) — см. targets/lua-fsm.ts. Ветки pioneer_on_event
-// по-прежнему получаем штатным statementCode() — это не часть FSM-цепочки,
-// а независимые побочные обработчики (см. events.ts).
+// Lua: тело pioneer_start разбивается на шаги по блокам-ожиданиям (§4.3
+// плана) — см. targets/lua-fsm.ts. Ветки pioneer_on_event по-прежнему получаем
+// штатным statementCode() — это не часть цепочки шагов, а независимые побочные
+// обработчики (см. events.ts), одинаковые в обоих режимах.
 export function compilePioneerLuaSource(workspace: Blockly.Workspace): PioneerLuaCompiledSource {
     const { generator, firstBodyBlock, eventBlocks, procedureBlocks } = collectTopLevelParts(workspace, 'lua');
 
-    const { segmentsCode, transitionBranches } = buildLuaFsmSections(generator, firstBodyBlock);
+    const sections = buildLuaSections(generator, firstBodyBlock);
     const eventBranches = eventBlocks
         .map((block) => statementCode(generator, block))
         .filter(Boolean)
@@ -135,9 +138,8 @@ export function compilePioneerLuaSource(workspace: Blockly.Workspace): PioneerLu
 
     return {
         headerDefinitions: buildHeaderDefinitions(generator, procedureBlocks),
-        segmentsCode,
-        transitionBranches,
-        eventBranches
+        eventBranches,
+        sections
     };
 }
 
@@ -179,15 +181,27 @@ export function compilePioneerWorkspace(workspace: Blockly.Workspace, target: Pi
     const trap = target === 'lua' ? '__loop_guard()\n' : 'time.sleep(0.01)\n';
 
     if (target === 'lua') {
-        const { headerDefinitions, segmentsCode, transitionBranches, eventBranches } = withInfiniteLoopTrap(
+        const { headerDefinitions, eventBranches, sections } = withInfiniteLoopTrap(
             generator,
             trap,
             () => compilePioneerLuaSource(workspace)
         );
+        if (sections.mode === 'flat') {
+            return buildFlatLuaProgram({
+                headerDefinitions,
+                topLevelCode: sections.topLevelCode,
+                callbackBranches: sections.callbackBranches,
+                // В плоском режиме всё тело callback живёт на одном отступе
+                // в четыре пробела (как в рукописных примерах Geoskan), поэтому
+                // и ветки pioneer_on_event сдвигаем тем же хелпером, а не
+                // generator.INDENT — сам их текст при этом не меняется.
+                eventBranches: indentLuaBlock(eventBranches)
+            });
+        }
         return buildLuaProgram({
             headerDefinitions,
-            segmentsCode,
-            transitionBranches,
+            segmentsCode: sections.segmentsCode,
+            transitionBranches: sections.transitionBranches,
             eventBranches: generator.prefixLines(eventBranches, generator.INDENT)
         });
     }
