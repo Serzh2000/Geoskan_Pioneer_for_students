@@ -323,26 +323,21 @@ describe('Интеграционный тест: полный полёт (фаз
     test('Python: тот же маршрут через pioneer_sdk с ожиданием по опросу состояния', () => {
         const code = compilePioneerWorkspace(buildFullFlightWorkspace(), 'python');
 
-        // Именованных обёрток (_pioneer_wait_armed и т.п.) больше нет
-        // (пересмотрено 2026-09-14, см. §4.4 плана) — один общий
-        // _pioneer_wait(condition, timeout, message), вызываемый инлайн.
+        // Никакого общего хелпера с таймаутом/сообщением (пересмотрено
+        // 2026-09-14 повторно, см. §4.4 плана) — прямой инлайновый while,
+        // как в официальных примерах Geoscan.
         expect(code).toContain('pioneer.arm()');
-        expect(code).toContain("_pioneer_wait(lambda: pioneer.get_autopilot_state() == 'ARMED', 15, 'Моторы не запустились за 15 секунд')");
+        expect(code).toContain("while not pioneer.get_autopilot_state() == 'ARMED':\n    time.sleep(0.05)");
         expect(code).toContain('pioneer.takeoff()');
-        expect(code).toContain("_pioneer_wait(lambda: pioneer.get_autopilot_state() == 'MISSION', 30, 'Дрон не взлетел за 30 секунд')");
+        expect(code).toContain("while not pioneer.get_autopilot_state() == 'MISSION':\n    time.sleep(0.05)");
         expect(code).toContain('pioneer.go_to_local_point(x=1, y=0, z=1)');
-        expect(code).toContain("_pioneer_wait(pioneer.point_reached, 60, 'Дрон не долетел до точки за 60 секунд')");
+        expect(code).toContain('while not pioneer.point_reached():\n    time.sleep(0.05)');
         expect(code).toContain('time.sleep(2)');
         expect(code).toContain('pioneer.land()');
-        expect(code).toContain("_pioneer_wait(lambda: pioneer.get_autopilot_state() == 'DISARMED', 30, 'Дрон не приземлился за 30 секунд')");
+        expect(code).toContain("while not pioneer.get_autopilot_state() == 'DISARMED':\n    time.sleep(0.05)");
         expect(code.trimEnd().endsWith('pioneer.close_connection()')).toBe(true);
 
-        // Общий хелпер печатается ровно один раз, а не по разу на блок.
-        expect(code.match(/def _pioneer_wait\(condition, timeout, message\):/g)).toHaveLength(1);
-        expect(code).not.toContain('_pioneer_wait_armed');
-        expect(code).not.toContain('_pioneer_wait_takeoff');
-        expect(code).not.toContain('_pioneer_wait_landed');
-        expect(code).not.toContain('_pioneer_wait_point');
+        expect(code).not.toContain('_pioneer_wait');
         // Ни один блок в этом маршруте не использует math/pioneer_time.
         expect(code).not.toContain('import math');
         expect(code).not.toContain('_pioneer_t0');

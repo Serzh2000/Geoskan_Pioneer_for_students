@@ -13,30 +13,20 @@ function definitionsOf(gen: Blockly.CodeGenerator): Record<string, string> {
     return (gen as unknown as { definitions_: Record<string, string> }).definitions_;
 }
 
-// Единственный опрос-хелпер на все блоки полёта (§4.4 плана, пересмотрено
-// 2026-09-14): раньше на каждое условие ожидания (ARMED/MISSION/DISARMED/
-// point_reached) заводилась отдельная именованная функция-обёртка
-// (_pioneer_wait_armed и т.п.), и все четыре печатались в КАЖДОЙ программе
-// независимо от того, какие блоки полёта реально есть на холсте. Теперь
-// общий примитив один, а условие/таймаут/сообщение блок подставляет инлайн
-// в месте вызова — гейтится через definitions_ тем же приёмом, что и
-// LED/position-хелперы (см. blocks/leds.ts, blocks/sensors.ts).
+// Опрос состояния — прямым инлайновым while, без общего хелпера с таймаутом
+// и сообщением об ошибке (§4.4 плана, пересмотрено 2026-09-14 повторно):
+// владелец сравнил сгенерированный код с официальными примерами Geoscan
+// (там везде `while not pioneer.point_reached(): time.sleep(0.1)` без
+// таймаута) и явно попросил визуально облегчить ожидание, приняв риск
+// зависания скрипта, если состояние по какой-то причине не наступит —
+// то же самое приняли и авторы официальных примеров.
 //
 // Условия для ARMED/MISSION/DISARMED взяты из маппинга get_autopilot_state()
 // в pioneer-js-bridge.ts (~стр. 205): PREFLIGHT -> ARMED, (FLYING_HOVER|
 // FLYING_MOVING) -> MISSION, IDLE -> DISARMED. Так что "взлёт завершён" — это
 // переход в MISSION, а не в отдельное состояние TAKEOFF.
-function ensurePythonWaitHelper(gen: Blockly.CodeGenerator): void {
-    const definitions = definitionsOf(gen);
-    if (definitions.pioneer_wait_helper) return;
-    definitions.pioneer_wait_helper = [
-        'def _pioneer_wait(condition, timeout, message):',
-        '    started = time.time()',
-        '    while not condition():',
-        '        if time.time() - started > timeout:',
-        '            raise RuntimeError(message)',
-        '        time.sleep(0.05)'
-    ].join('\n');
+function pollWhile(conditionCall: string): string {
+    return `while not ${conditionCall}:\n    time.sleep(0.05)\n`;
 }
 
 // math.radians нужен только pioneer_set_yaw/pioneer_set_manual_speed — печатаем
@@ -61,7 +51,8 @@ function ensurePythonSetYawHelper(gen: Blockly.CodeGenerator): void {
         '    if pos is None:',
         '        pos = [0, 0, 0]',
         '    pioneer.go_to_local_point(x=pos[0], y=pos[1], z=pos[2], yaw=yaw)',
-        "    _pioneer_wait(pioneer.point_reached, 60, 'Дрон не долетел до точки за 60 секунд')"
+        '    while not pioneer.point_reached():',
+        '        time.sleep(0.05)'
     ].join('\n');
 }
 
@@ -79,12 +70,9 @@ export function registerFlightBlocks(): void {
         },
         targets: {
             lua: () => 'ap.push(Ev.MCE_PREFLIGHT)\n__wait_event(Ev.ENGINES_STARTED)\n',
-            python: (block, gen) => {
-                ensurePythonWaitHelper(gen);
-                return "pioneer.arm()\n_pioneer_wait(lambda: pioneer.get_autopilot_state() == 'ARMED', 15, 'Моторы не запустились за 15 секунд')\n";
-            }
+            python: () => `pioneer.arm()\n${pollWhile("pioneer.get_autopilot_state() == 'ARMED'")}`
         },
-        apiUsage: { lua: ['ap.push', '__wait_event'], python: ['pioneer.arm', '_pioneer_wait', 'pioneer.get_autopilot_state'] }
+        apiUsage: { lua: ['ap.push', '__wait_event'], python: ['pioneer.arm', 'pioneer.get_autopilot_state'] }
     });
 
     definePioneerBlock({
@@ -100,12 +88,9 @@ export function registerFlightBlocks(): void {
         },
         targets: {
             lua: () => 'ap.push(Ev.MCE_TAKEOFF)\n__wait_event(Ev.TAKEOFF_COMPLETE)\n',
-            python: (block, gen) => {
-                ensurePythonWaitHelper(gen);
-                return "pioneer.takeoff()\n_pioneer_wait(lambda: pioneer.get_autopilot_state() == 'MISSION', 30, 'Дрон не взлетел за 30 секунд')\n";
-            }
+            python: () => `pioneer.takeoff()\n${pollWhile("pioneer.get_autopilot_state() == 'MISSION'")}`
         },
-        apiUsage: { lua: ['ap.push', '__wait_event'], python: ['pioneer.takeoff', '_pioneer_wait', 'pioneer.get_autopilot_state'] }
+        apiUsage: { lua: ['ap.push', '__wait_event'], python: ['pioneer.takeoff', 'pioneer.get_autopilot_state'] }
     });
 
     definePioneerBlock({
@@ -131,16 +116,15 @@ export function registerFlightBlocks(): void {
                 return `ap.goToLocalPoint(${x}, ${y}, ${z})\n__wait_event(Ev.POINT_REACHED)\n`;
             },
             python: (block, gen) => {
-                ensurePythonWaitHelper(gen);
                 const x = numberArg(gen, block, 'X', '0');
                 const y = numberArg(gen, block, 'Y', '0');
                 const z = numberArg(gen, block, 'Z', '0');
-                return `pioneer.go_to_local_point(x=${x}, y=${y}, z=${z})\n_pioneer_wait(pioneer.point_reached, 60, 'Дрон не долетел до точки за 60 секунд')\n`;
+                return `pioneer.go_to_local_point(x=${x}, y=${y}, z=${z})\n${pollWhile('pioneer.point_reached()')}`;
             }
         },
         apiUsage: {
             lua: ['ap.goToLocalPoint', '__wait_event'],
-            python: ['pioneer.go_to_local_point', '_pioneer_wait', 'pioneer.point_reached']
+            python: ['pioneer.go_to_local_point', 'pioneer.point_reached']
         }
     });
 
@@ -164,14 +148,13 @@ export function registerFlightBlocks(): void {
             // "проверить в симуляторе, что поведение совпадает" с Lua).
             python: (block, gen) => {
                 ensurePythonMathImport(gen);
-                ensurePythonWaitHelper(gen);
                 ensurePythonSetYawHelper(gen);
                 return `_pioneer_set_yaw(math.radians(${numberArg(gen, block, 'ANGLE', '0')}))\n`;
             }
         },
         apiUsage: {
             lua: ['ap.updateYaw', 'math.rad'],
-            python: ['_pioneer_set_yaw', 'math.radians', '_pioneer_wait', 'pioneer.point_reached', 'pioneer.get_local_position_lps', 'pioneer.go_to_local_point']
+            python: ['_pioneer_set_yaw', 'math.radians', 'pioneer.point_reached', 'pioneer.get_local_position_lps', 'pioneer.go_to_local_point']
         }
     });
 
@@ -188,12 +171,9 @@ export function registerFlightBlocks(): void {
         },
         targets: {
             lua: () => 'ap.push(Ev.MCE_LANDING)\n__wait_event(Ev.COPTER_LANDED)\n',
-            python: (block, gen) => {
-                ensurePythonWaitHelper(gen);
-                return "pioneer.land()\n_pioneer_wait(lambda: pioneer.get_autopilot_state() == 'DISARMED', 30, 'Дрон не приземлился за 30 секунд')\n";
-            }
+            python: () => `pioneer.land()\n${pollWhile("pioneer.get_autopilot_state() == 'DISARMED'")}`
         },
-        apiUsage: { lua: ['ap.push', '__wait_event'], python: ['pioneer.land', '_pioneer_wait', 'pioneer.get_autopilot_state'] }
+        apiUsage: { lua: ['ap.push', '__wait_event'], python: ['pioneer.land', 'pioneer.get_autopilot_state'] }
     });
 
     definePioneerBlock({

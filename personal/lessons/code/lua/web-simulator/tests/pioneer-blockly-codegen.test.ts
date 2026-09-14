@@ -221,8 +221,8 @@ describe('Lua: __t0/__loop_guard — только когда реально ис
     });
 });
 
-describe('pioneer_preflight / pioneer_takeoff / pioneer_land: общий _pioneer_wait только при использовании', () => {
-    test('Python: одна общая def _pioneer_wait(...), инлайн-условия вместо именованных обёрток', () => {
+describe('pioneer_preflight / pioneer_takeoff / pioneer_land: опрос состояния инлайновым while', () => {
+    test('Python: инлайновый while без общего хелпера/таймаута (§4.4 плана, облегчено 2026-09-14)', () => {
         const ws = makeWorkspace();
         const preflight = ws.newBlock('pioneer_preflight');
         const takeoff = ws.newBlock('pioneer_takeoff');
@@ -230,24 +230,23 @@ describe('pioneer_preflight / pioneer_takeoff / pioneer_land: общий _pionee
         chainUnderStart(ws, preflight, takeoff, land);
 
         const code = compilePioneerWorkspace(ws, 'python');
-        expect(code.match(/def _pioneer_wait\(condition, timeout, message\):/g)).toHaveLength(1);
-        expect(code).not.toContain('_pioneer_wait_armed');
-        expect(code).not.toContain('_pioneer_wait_takeoff');
-        expect(code).not.toContain('_pioneer_wait_landed');
+        // Никакого общего _pioneer_wait(...) с таймаутом/сообщением — только
+        // прямой while, как в официальных примерах Geoscan.
+        expect(code).not.toContain('_pioneer_wait');
         expect(code).toContain(
-            "pioneer.arm()\n_pioneer_wait(lambda: pioneer.get_autopilot_state() == 'ARMED', 15, 'Моторы не запустились за 15 секунд')"
+            "pioneer.arm()\nwhile not pioneer.get_autopilot_state() == 'ARMED':\n    time.sleep(0.05)"
         );
         expect(code).toContain(
-            "pioneer.takeoff()\n_pioneer_wait(lambda: pioneer.get_autopilot_state() == 'MISSION', 30, 'Дрон не взлетел за 30 секунд')"
+            "pioneer.takeoff()\nwhile not pioneer.get_autopilot_state() == 'MISSION':\n    time.sleep(0.05)"
         );
         expect(code).toContain(
-            "pioneer.land()\n_pioneer_wait(lambda: pioneer.get_autopilot_state() == 'DISARMED', 30, 'Дрон не приземлился за 30 секунд')"
+            "pioneer.land()\nwhile not pioneer.get_autopilot_state() == 'DISARMED':\n    time.sleep(0.05)"
         );
         // Ни один из этих трёх блоков не использует math.
         expect(code).not.toContain('import math');
     });
 
-    test('Python: pioneer_go_to переиспользует общий _pioneer_wait для point_reached', () => {
+    test('Python: pioneer_go_to ждёт point_reached() тем же инлайновым while', () => {
         const ws = makeWorkspace();
         const goTo = ws.newBlock('pioneer_go_to');
         goTo.getInput('X')!.connection!.connect(numberBlock(ws, 1).outputConnection!);
@@ -256,13 +255,13 @@ describe('pioneer_preflight / pioneer_takeoff / pioneer_land: общий _pionee
         chainUnderStart(ws, goTo);
 
         const code = compilePioneerWorkspace(ws, 'python');
-        expect(code.match(/def _pioneer_wait\(condition, timeout, message\):/g)).toHaveLength(1);
+        expect(code).not.toContain('_pioneer_wait');
         expect(code).toContain(
-            "pioneer.go_to_local_point(x=1, y=0, z=1)\n_pioneer_wait(pioneer.point_reached, 60, 'Дрон не долетел до точки за 60 секунд')"
+            'pioneer.go_to_local_point(x=1, y=0, z=1)\nwhile not pioneer.point_reached():\n    time.sleep(0.05)'
         );
     });
 
-    test('Python: pioneer_set_yaw добавляет import math один раз и переиспользует _pioneer_wait', () => {
+    test('Python: pioneer_set_yaw добавляет import math один раз, ждёт точку тем же while', () => {
         const ws = makeWorkspace();
         const setYaw = ws.newBlock('pioneer_set_yaw');
         setYaw.getInput('ANGLE')!.connection!.connect(numberBlock(ws, 90).outputConnection!);
@@ -270,9 +269,9 @@ describe('pioneer_preflight / pioneer_takeoff / pioneer_land: общий _pionee
 
         const code = compilePioneerWorkspace(ws, 'python');
         expect(code.match(/^import math$/m)).toHaveLength(1);
-        expect(code.match(/def _pioneer_wait\(condition, timeout, message\):/g)).toHaveLength(1);
+        expect(code).not.toContain('_pioneer_wait');
         expect(code).toContain('def _pioneer_set_yaw(yaw):');
-        expect(code).toContain("_pioneer_wait(pioneer.point_reached, 60, 'Дрон не долетел до точки за 60 секунд')");
+        expect(code).toContain('while not pioneer.point_reached():\n        time.sleep(0.05)');
         expect(code).toContain('_pioneer_set_yaw(math.radians(90))');
     });
 

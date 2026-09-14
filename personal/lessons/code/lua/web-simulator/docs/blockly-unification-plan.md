@@ -271,7 +271,9 @@ __advance()
 
 **[пересмотрено 2026-09-14]** Первоначальный набросок ниже держал четыре именованные обёртки ожидания (`_pioneer_wait_armed`/`_takeoff`/`_landed`/`_point`), `import math` и `_pioneer_t0 = time.time()` в фиксированном прологе — они печатались в КАЖДОЙ программе, даже когда на холсте нет ни одного блока, которому это нужно (например, программа «моторы → взлёт → посадка» без единого `pioneer_go_to`/`pioneer_set_yaw`/`pioneer_time` всё равно тащила за собой `_pioneer_wait_point`, `import math` и точку отсчёта времени). Это и была основная жалоба владельца: генерируемый код выглядел пугающе многословным по сравнению с официальными примерами Geoskan.
 
-Фактическая реализация: общий опрос-примитив остался один — `_pioneer_wait(condition, timeout, message)`, — но он попадает в `headerDefinitions` (через `generator.definitions_`, как LED/position-хелперы, `blocks/leds.ts`/`blocks/sensors.ts`) только если хотя бы один блок полёта (`pioneer_preflight`/`pioneer_takeoff`/`pioneer_go_to`/`pioneer_set_yaw`/`pioneer_land`) реально на холсте. Конкретное условие/таймаут/сообщение (`ARMED`/15с, `MISSION`/30с, `DISARMED`/30с, `point_reached`/60с) каждый такой блок подставляет **инлайн** прямо в месте вызова (`blocks/flight.ts`), а не через отдельную именованную функцию. `import math` и `_pioneer_t0 = time.time()` — тем же приёмом: первое ставит `pioneer_set_yaw`/`pioneer_set_manual_speed` (ключ `import_math`, тот же, каким сама `pythonGenerator` помечает свои условные импорты — см. `math_number`/`math_atan2`/`math_random_int` в `generators/python`), второе — `pioneer_time` (`blocks/time.ts`).
+Фактическая реализация (первая итерация): общий опрос-примитив остался один — `_pioneer_wait(condition, timeout, message)` — попадал в `headerDefinitions` только если хотя бы один блок полёта реально на холсте, конкретное условие/таймаут/сообщение каждый блок подставлял инлайн. Это было лучше, чем безусловный пролог, но владелец сравнил результат с официальными примерами Geoscan ещё раз и явно попросил облегчить визуально дальше — там везде голый `while not condition(): time.sleep(0.1)`, без таймаута и сообщения об ошибке.
+
+**[пересмотрено 2026-09-14, второй раз]** Убрали общий хелпер `_pioneer_wait` целиком. Каждый блок полёта печатает опрос состояния прямым инлайновым `while` (`blocks/flight.ts`, функция `pollWhile`) — без функции-обёртки, без таймаута, без исключения при зависании. Это осознанный компромисс: если событие по какой-то причине не наступит, сгенерированный скрипт зависнет молча, вместо явной ошибки с сообщением. Ровно то же самое поведение и у официальных примеров, на которые ориентировались. `import math`/`_pioneer_t0` остаются условными тем же приёмом (`definitions_`), что и раньше.
 
 ```python
 # @pioneer-blockly v1
@@ -280,20 +282,20 @@ import time
 
 pioneer = Pioneer(simulator=True)
 
-def _pioneer_wait(condition, timeout, message):
-    started = time.time()
-    while not condition():
-        if time.time() - started > timeout:
-            raise RuntimeError(message)
-        time.sleep(0.05)
-
-# ... тело pioneer_start: инлайн-вызовы _pioneer_wait(...) с условием по
-# pioneer.get_autopilot_state() (маппинг — pioneer-js-bridge.ts, ~стр. 205)
-# или pioneer.point_reached; import math / _pioneer_t0 / _pioneer_led /
-# _pioneer_position — через definitions_, только при использовании ...
+pioneer.arm()
+while not pioneer.get_autopilot_state() == 'ARMED':
+    time.sleep(0.05)
+pioneer.takeoff()
+while not pioneer.get_autopilot_state() == 'MISSION':
+    time.sleep(0.05)
+pioneer.land()
+while not pioneer.get_autopilot_state() == 'DISARMED':
+    time.sleep(0.05)
 
 pioneer.close_connection()
 ```
+
+**Почему не убрали опрос совсем** (как в самом коротком официальном примере `arm(); takeoff(); land()` без единой паузы): проверили — в НАШЕМ симуляторе (не в реальном SDK) `enterLandingProcess`/`enterTakeoffProcess` (`public/modules/autopilot/fsm.ts`) кидают настоящее исключение (`throw new Error(...)`, `fsm-runtime.ts:100`), если команда пришла не в том состоянии FSM. На реальном железе SDK так строго не проверяет (просто отправляет MAVLink-команду, прошивка сама решает) — это ещё одна педагогическая заглушка нашего симулятора, отдельная от mission-guard. Полностью убрать опрос означало бы, что `pioneer.land()` сразу после `pioneer.takeoff()` **реально упадёт с исключением** в нашем рантайме. Смягчение этой проверки — правка `fsm.ts`, то есть рантайма (§1 п.10), обсуждалось отдельно и владелец решил рантайм пока не трогать.
 
 ---
 
@@ -304,11 +306,11 @@ pioneer.close_connection()
 | type | Вид для ученика | Lua | Python | Таргеты |
 |---|---|---|---|---|
 | `pioneer_start` | hat «Начало программы», неудаляемый | тело `__main` | тело скрипта | оба |
-| `pioneer_preflight` | «Запустить моторы» | `ap.push(Ev.MCE_PREFLIGHT)`<br>`__wait_event(Ev.ENGINES_STARTED)` | `pioneer.arm()`<br>`_pioneer_wait(lambda: ...get_autopilot_state() == 'ARMED', 15, ...)` | оба |
-| `pioneer_takeoff` | «Взлететь» | `ap.push(Ev.MCE_TAKEOFF)`<br>`__wait_event(Ev.TAKEOFF_COMPLETE)` | `pioneer.takeoff()`<br>`_pioneer_wait(lambda: ...get_autopilot_state() == 'MISSION', 30, ...)` | оба |
-| `pioneer_go_to` | «Лететь в точку X [] Y [] Z [] м» | `ap.goToLocalPoint(x, y, z)`<br>`__wait_event(Ev.POINT_REACHED)` | `pioneer.go_to_local_point(x=x, y=y, z=z)`<br>`_pioneer_wait(pioneer.point_reached, 60, ...)` | оба |
-| `pioneer_set_yaw` | «Повернуться на курс [] °» | `ap.updateYaw(math.rad(a))` | `_pioneer_set_yaw(math.radians(a))`: `go_to_local_point` в текущие координаты с `yaw`, затем ожидание точки через `_pioneer_wait` | оба (**проверить в симуляторе**, что поведение совпадает) |
-| `pioneer_land` | «Приземлиться» | `ap.push(Ev.MCE_LANDING)`<br>`__wait_event(Ev.COPTER_LANDED)` | `pioneer.land()`<br>`_pioneer_wait(lambda: ...get_autopilot_state() == 'DISARMED', 30, ...)` | оба |
+| `pioneer_preflight` | «Запустить моторы» | `ap.push(Ev.MCE_PREFLIGHT)`<br>`__wait_event(Ev.ENGINES_STARTED)` | `pioneer.arm()`<br>`while not ...get_autopilot_state() == 'ARMED': time.sleep(0.05)` | оба |
+| `pioneer_takeoff` | «Взлететь» | `ap.push(Ev.MCE_TAKEOFF)`<br>`__wait_event(Ev.TAKEOFF_COMPLETE)` | `pioneer.takeoff()`<br>`while not ...get_autopilot_state() == 'MISSION': time.sleep(0.05)` | оба |
+| `pioneer_go_to` | «Лететь в точку X [] Y [] Z [] м» | `ap.goToLocalPoint(x, y, z)`<br>`__wait_event(Ev.POINT_REACHED)` | `pioneer.go_to_local_point(x=x, y=y, z=z)`<br>`while not pioneer.point_reached(): time.sleep(0.05)` | оба |
+| `pioneer_set_yaw` | «Повернуться на курс [] °» | `ap.updateYaw(math.rad(a))` | `_pioneer_set_yaw(math.radians(a))`: `go_to_local_point` в текущие координаты с `yaw`, затем тот же `while`-опрос точки | оба (**проверить в симуляторе**, что поведение совпадает) |
+| `pioneer_land` | «Приземлиться» | `ap.push(Ev.MCE_LANDING)`<br>`__wait_event(Ev.COPTER_LANDED)` | `pioneer.land()`<br>`while not ...get_autopilot_state() == 'DISARMED': time.sleep(0.05)` | оба |
 | `pioneer_disarm` | «Выключить моторы» | `ap.push(Ev.ENGINES_DISARM)` | `pioneer.disarm()` | оба |
 | `pioneer_set_manual_speed` | «Скорость Vx [] Vy [] Vz [] м/с, поворот [] °/с» | — | `pioneer.set_manual_speed(vx, vy, vz, math.radians(r))` | только Python |
 | `pioneer_wait` | «Ждать [] сек» | `__wait_seconds(t)` | `time.sleep(t)` | оба |
