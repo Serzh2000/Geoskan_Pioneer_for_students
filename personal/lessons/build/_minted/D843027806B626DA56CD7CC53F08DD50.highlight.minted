@@ -1,5 +1,5 @@
 \begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{MCE\PYGZus{}PREFLIGHT}\PYG{p}{)}                 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{безопасная} \PYG{n}{предстартовая} \PYG{n}{подготовка}
+\PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}PREFLIGHT}\PYG{p}{)}                 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{безопасная} \PYG{n}{предстартовая} \PYG{n}{подготовка}
 \PYG{n}{Timer}\PYG{o}{.}\PYG{n}{callLater}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{function}\PYG{p}{(}\PYG{p}{)}             \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{отложить} \PYG{n}{действие} \PYG{n}{на} \PYG{l+m+mi}{1} \PYG{n}{секунду}
   \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{ENGINES\PYGZus{}ARM}\PYG{p}{)}                 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{команда} \PYG{n}{запуска} \PYG{n}{двигателей} \PYG{p}{(}\PYG{n}{без} \PYG{n}{взлёта}\PYG{p}{)}
 \PYG{n}{end}\PYG{p}{)}

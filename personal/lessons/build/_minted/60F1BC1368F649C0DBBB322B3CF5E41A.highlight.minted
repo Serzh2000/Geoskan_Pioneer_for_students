@@ -1,5 +1,5 @@
 \begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{local} \PYG{n}{ledNumber} \PYG{o}{=} \PYG{l+m+mi}{25}                        \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{количество} \PYG{n}{видимых} \PYG{n}{диодов} \PYG{n}{на} \PYG{n}{плате}
+\PYG{n}{local} \PYG{n}{ledNumber} \PYG{o}{=} \PYG{l+m+mi}{29}                        \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{количество} \PYG{n}{видимых} \PYG{n}{диодов} \PYG{n}{на} \PYG{n}{плате}
 \PYG{n}{local} \PYG{n}{leds} \PYG{o}{=} \PYG{n}{Ledbar}\PYG{o}{.}\PYG{n}{new}\PYG{p}{(}\PYG{n}{ledNumber}\PYG{p}{)}         \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{объект} \PYG{n}{управления} \PYG{n}{светодиодами}
 \PYG{n}{local} \PYG{n}{unpack} \PYG{o}{=} \PYG{n}{table}\PYG{o}{.}\PYG{n}{unpack}                \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{сокращение} \PYG{n}{для} \PYG{n}{распаковки} \PYG{n}{таблиц}
 \PYG{n}{local} \PYG{n}{curr\PYGZus{}state} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{PREPARE\PYGZus{}FLIGHT}\PYG{l+s+s2}{\PYGZdq{}}        \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{начальное} \PYG{n}{состояние} \PYG{n}{автомата}
@@ -30,10 +30,10 @@
 \PYG{n}{action} \PYG{o}{=} \PYG{p}{\PYGZob{}}                                 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{таблица} \PYG{n}{функций} \PYG{n}{по} \PYG{n}{состояниям}
   \PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{PREPARE\PYGZus{}FLIGHT}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{]} \PYG{o}{=} \PYG{n}{function}\PYG{p}{(}\PYG{p}{)}          \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{подготовка} \PYG{n}{полёта}
     \PYG{n}{changeColor}\PYG{p}{(}\PYG{n}{colors}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}\PYG{p}{)}                 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{белый} \PYG{err}{—} \PYG{n}{подготовка}
-    \PYG{n}{Timer}\PYG{o}{.}\PYG{n}{callLater}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{function} \PYG{p}{(}\PYG{p}{)} \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{MCE\PYGZus{}PREFLIGHT}\PYG{p}{)} \PYG{n}{end}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{предстарт}
+    \PYG{n}{Timer}\PYG{o}{.}\PYG{n}{callLater}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{function} \PYG{p}{(}\PYG{p}{)} \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}PREFLIGHT}\PYG{p}{)} \PYG{n}{end}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{предстарт}
     \PYG{n}{Timer}\PYG{o}{.}\PYG{n}{callLater}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n}{function} \PYG{p}{(}\PYG{p}{)} \PYG{n}{changeColor}\PYG{p}{(}\PYG{n}{colors}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]}\PYG{p}{)} \PYG{n}{end}\PYG{p}{)}    \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{зелёный} \PYG{err}{—} \PYG{n}{готовность}
     \PYG{n}{Timer}\PYG{o}{.}\PYG{n}{callLater}\PYG{p}{(}\PYG{l+m+mi}{6}\PYG{p}{,} \PYG{n}{function} \PYG{p}{(}\PYG{p}{)}        \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{через} \PYG{l+m+mi}{6} \PYG{n}{секунд}
-      \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{MCE\PYGZus{}TAKEOFF}\PYG{p}{)}             \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{взлёт}
+      \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}TAKEOFF}\PYG{p}{)}             \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{взлёт}
       \PYG{n}{curr\PYGZus{}state} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{FLIGHT}\PYG{l+s+s2}{\PYGZdq{}}               \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{переход} \PYG{n}{к} \PYG{n}{полёту}
     \PYG{n}{end}\PYG{p}{)}
   \PYG{n}{end}\PYG{p}{,}
@@ -51,18 +51,18 @@
   \PYG{n}{end}\PYG{p}{,}
   \PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{PIONEER\PYGZus{}LANDING}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{]} \PYG{o}{=} \PYG{n}{function} \PYG{p}{(}\PYG{p}{)}        \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{состояние} \PYG{n}{посадки}
     \PYG{n}{changeColor}\PYG{p}{(}\PYG{n}{colors}\PYG{p}{[}\PYG{l+m+mi}{6}\PYG{p}{]}\PYG{p}{)}                 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{синий} \PYG{err}{—} \PYG{n}{посадка}
-    \PYG{n}{Timer}\PYG{o}{.}\PYG{n}{callLater}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{function} \PYG{p}{(}\PYG{p}{)} \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{MCE\PYGZus{}LANDING}\PYG{p}{)} \PYG{n}{end}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{команда} \PYG{n}{посадки}
+    \PYG{n}{Timer}\PYG{o}{.}\PYG{n}{callLater}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{function} \PYG{p}{(}\PYG{p}{)} \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}LANDING}\PYG{p}{)} \PYG{n}{end}\PYG{p}{)} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{команда} \PYG{n}{посадки}
   \PYG{n}{end}
 \PYG{p}{\PYGZcb{}}
 
 \PYG{n}{function} \PYG{n}{callback}\PYG{p}{(}\PYG{n}{event}\PYG{p}{)}                   \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{обработчик} \PYG{n}{системных} \PYG{n}{событий}
-  \PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{TAKEOFF\PYGZus{}COMPLETE}\PYG{p}{)} \PYG{n}{then} \PYG{n}{action}\PYG{p}{[}\PYG{n}{curr\PYGZus{}state}\PYG{p}{]}\PYG{p}{(}\PYG{p}{)} \PYG{n}{end} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{старт} \PYG{n}{логики}
-  \PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{SHOCK}\PYG{p}{)} \PYG{n}{then}              \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{авария} \PYG{p}{(}\PYG{n}{столкновение}\PYG{p}{)}
+  \PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{TAKEOFF\PYGZus{}COMPLETE}\PYG{p}{)} \PYG{n}{then} \PYG{n}{action}\PYG{p}{[}\PYG{n}{curr\PYGZus{}state}\PYG{p}{]}\PYG{p}{(}\PYG{p}{)} \PYG{n}{end} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{старт} \PYG{n}{логики}
+  \PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{SHOCK}\PYG{p}{)} \PYG{n}{then}              \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{авария} \PYG{p}{(}\PYG{n}{столкновение}\PYG{p}{)}
     \PYG{n}{changeColor}\PYG{p}{(}\PYG{n}{colors}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{)}                 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{красный} \PYG{n}{цвет}
-    \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{ENGINES\PYGZus{}DISARM}\PYG{p}{)}                \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{выключение} \PYG{n}{двигателей} \PYG{p}{(}\PYG{n}{требуется} \PYG{n}{ENGINES\PYGZus{}DISARM}\PYG{p}{)}
+    \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{ENGINES\PYGZus{}DISARM}\PYG{p}{)}                \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{выключение} \PYG{n}{двигателей} \PYG{p}{(}\PYG{n}{требуется} \PYG{n}{ENGINES\PYGZus{}DISARM}\PYG{p}{)}
   \PYG{n}{end}
-  \PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{POINT\PYGZus{}REACHED}\PYG{p}{)} \PYG{n}{then} \PYG{n}{action}\PYG{p}{[}\PYG{n}{curr\PYGZus{}state}\PYG{p}{]}\PYG{p}{(}\PYG{p}{)} \PYG{n}{end} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{переход} \PYG{n}{по} \PYG{n}{достижению} \PYG{n}{точки}
-  \PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{COPTER\PYGZus{}LANDED}\PYG{p}{)} \PYG{n}{then} \PYG{n}{changeColor}\PYG{p}{(}\PYG{n}{colors}\PYG{p}{[}\PYG{l+m+mi}{7}\PYG{p}{]}\PYG{p}{)} \PYG{n}{end} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{выключить} \PYG{n}{индикацию}
+  \PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{POINT\PYGZus{}REACHED}\PYG{p}{)} \PYG{n}{then} \PYG{n}{action}\PYG{p}{[}\PYG{n}{curr\PYGZus{}state}\PYG{p}{]}\PYG{p}{(}\PYG{p}{)} \PYG{n}{end} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{переход} \PYG{n}{по} \PYG{n}{достижению} \PYG{n}{точки}
+  \PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{COPTER\PYGZus{}LANDED}\PYG{p}{)} \PYG{n}{then} \PYG{n}{changeColor}\PYG{p}{(}\PYG{n}{colors}\PYG{p}{[}\PYG{l+m+mi}{7}\PYG{p}{]}\PYG{p}{)} \PYG{n}{end} \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{выключить} \PYG{n}{индикацию}
 \PYG{n}{end}
 
 \PYG{n}{changeColor}\PYG{p}{(}\PYG{n}{colors}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{p}{)}                     \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{начальная} \PYG{n}{индикация} \PYG{p}{(}\PYG{n}{красный}\PYG{p}{)}

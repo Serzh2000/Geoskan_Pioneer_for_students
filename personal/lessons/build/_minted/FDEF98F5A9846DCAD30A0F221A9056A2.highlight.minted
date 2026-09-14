@@ -1,0 +1,15 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}PREFLIGHT}\PYG{p}{)}                 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{предстарт}
+\PYG{n}{Timer}\PYG{o}{.}\PYG{n}{callLater}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{function}\PYG{p}{(}\PYG{p}{)}             \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{через} \PYG{l+m+mi}{1} \PYG{n}{секунду}
+  \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}TAKEOFF}\PYG{p}{)}                 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{инициировать} \PYG{n}{взлёт}
+\PYG{n}{end}\PYG{p}{)}
+
+\PYG{n}{function} \PYG{n}{callback}\PYG{p}{(}\PYG{n}{event}\PYG{p}{)}                   \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{обработчик} \PYG{n}{системных} \PYG{n}{событий}
+  \PYG{k}{if} \PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{TAKEOFF\PYGZus{}COMPLETE} \PYG{n}{then}     \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{взлёт} \PYG{n}{завершён}
+    \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}LANDING}\PYG{p}{)}                \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{выполнить} \PYG{n}{посадку}
+  \PYG{n}{end}
+  \PYG{k}{if} \PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{COPTER\PYGZus{}LANDED} \PYG{n}{then}        \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{посадка} \PYG{n}{завершена}
+    \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{ENGINES\PYGZus{}DISARM}\PYG{p}{)}             \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{выключить} \PYG{n}{двигатели}
+  \PYG{n}{end}
+\PYG{n}{end}
+\end{MintedVerbatim}

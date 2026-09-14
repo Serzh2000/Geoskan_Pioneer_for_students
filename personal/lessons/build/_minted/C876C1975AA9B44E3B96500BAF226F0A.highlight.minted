@@ -1,6 +1,6 @@
 \begin{MintedVerbatim}[commandchars=\\\{\}]
 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{создание} \PYG{n}{порта} \PYG{n}{управления} \PYG{n}{светодиодом}
-\PYG{n}{local} \PYG{n}{ledbar} \PYG{o}{=} \PYG{n}{Ledbar}\PYG{o}{.}\PYG{n}{new}\PYG{p}{(}\PYG{l+m+mi}{25}\PYG{p}{)}
+\PYG{n}{local} \PYG{n}{ledbar} \PYG{o}{=} \PYG{n}{Ledbar}\PYG{o}{.}\PYG{n}{new}\PYG{p}{(}\PYG{l+m+mi}{29}\PYG{p}{)}
 
 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{переменная} \PYG{n}{текущего} \PYG{n}{состояния}
 \PYG{n}{local} \PYG{n}{curr\PYGZus{}state} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{START}\PYG{l+s+s2}{\PYGZdq{}}
@@ -18,7 +18,7 @@
 		\PYG{n}{ledbar}\PYG{p}{:}\PYG{n+nb}{set}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{)}
 
 		\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{выключение} \PYG{n}{двигателей} \PYG{n}{и} \PYG{n}{конец} \PYG{n}{программы}
-		\PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{ENGINES\PYGZus{}DISARM}\PYG{p}{)}
+		\PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{ENGINES\PYGZus{}DISARM}\PYG{p}{)}
 		\PYG{n}{curr\PYGZus{}state} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{NONE}\PYG{l+s+s2}{\PYGZdq{}}
 
 	\PYG{n}{end}\PYG{p}{,}
@@ -26,15 +26,15 @@
 
 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{функция} \PYG{n}{обработки} \PYG{n}{событий}\PYG{p}{,} \PYG{n}{автоматически} \PYG{n}{вызывается} \PYG{n}{автопилотом}
 \PYG{n}{function} \PYG{n}{callback}\PYG{p}{(}\PYG{n}{event}\PYG{p}{)}
-	\PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{ALTITUDE\PYGZus{}REACHED}\PYG{p}{)} \PYG{n}{then}
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{TAKEOFF\PYGZus{}COMPLETE}\PYG{p}{)} \PYG{n}{then}
 		\PYG{n}{action}\PYG{p}{[}\PYG{n}{curr\PYGZus{}state}\PYG{p}{]}\PYG{p}{(}\PYG{p}{)}
 	\PYG{n}{end}
 
-	\PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{POINT\PYGZus{}REACHED}\PYG{p}{)} \PYG{n}{then}
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{POINT\PYGZus{}REACHED}\PYG{p}{)} \PYG{n}{then}
 		\PYG{n}{action}\PYG{p}{[}\PYG{n}{curr\PYGZus{}state}\PYG{p}{]}\PYG{p}{(}\PYG{p}{)}
 	\PYG{n}{end}
 
-	\PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{COPTER\PYGZus{}LANDED}\PYG{p}{)} \PYG{n}{then}
+	\PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{COPTER\PYGZus{}LANDED}\PYG{p}{)} \PYG{n}{then}
 		\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{)}
 		\PYG{n}{action}\PYG{p}{[}\PYG{n}{curr\PYGZus{}state}\PYG{p}{]}\PYG{p}{(}\PYG{p}{)}
 	\PYG{n}{end}

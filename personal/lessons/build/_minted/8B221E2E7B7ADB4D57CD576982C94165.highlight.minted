@@ -6,7 +6,7 @@
 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{Упрощение} \PYG{n}{вызова} \PYG{n}{функции} \PYG{n}{распаковки} \PYG{n}{таблиц} \PYG{n}{из} \PYG{n}{модуля} \PYG{n}{table}
 \PYG{n}{local} \PYG{n}{unpack} \PYG{o}{=} \PYG{n}{table}\PYG{o}{.}\PYG{n}{unpack}
 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{Количество} \PYG{n}{светодиодов} \PYG{n}{на} \PYG{n}{базовой} \PYG{n}{плате}
-\PYG{n}{local} \PYG{n}{ledNumber} \PYG{o}{=} \PYG{l+m+mi}{25}
+\PYG{n}{local} \PYG{n}{ledNumber} \PYG{o}{=} \PYG{l+m+mi}{29}
 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{Создание} \PYG{n}{порта} \PYG{n}{управления} \PYG{n}{светодиодами}
 \PYG{n}{local} \PYG{n}{leds} \PYG{o}{=} \PYG{n}{Ledbar}\PYG{o}{.}\PYG{n}{new}\PYG{p}{(}\PYG{n}{ledNumber}\PYG{p}{)}
 
@@ -29,7 +29,7 @@
 \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{Функция} \PYG{n}{обработки} \PYG{n}{событий}\PYG{p}{,} \PYG{n}{автоматически} \PYG{n}{вызывается} \PYG{n}{автопилотом}
 \PYG{n}{function} \PYG{n}{callback}\PYG{p}{(}\PYG{n}{event}\PYG{p}{)}
     \PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{Вызов} \PYG{n}{функции} \PYG{n}{emergency}\PYG{p}{(}\PYG{p}{)} \PYG{n}{при} \PYG{n}{низком} \PYG{n}{напряжении} \PYG{n}{на} \PYG{n}{аккумуляторе}
-    \PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{LOW\PYGZus{}VOLTAGE2}\PYG{p}{)} \PYG{n}{then}
+    \PYG{k}{if} \PYG{p}{(}\PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{LOW\PYGZus{}VOLTAGE2}\PYG{p}{)} \PYG{n}{then}
         \PYG{n}{emergency}\PYG{p}{(}\PYG{p}{)}
     \PYG{n}{end}
 \PYG{n}{end}

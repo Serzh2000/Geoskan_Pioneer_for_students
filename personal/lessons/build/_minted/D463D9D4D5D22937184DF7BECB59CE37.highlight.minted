@@ -1,5 +1,5 @@
 \begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{local} \PYG{n}{ledNumber} \PYG{o}{=} \PYG{l+m+mi}{25}
+\PYG{n}{local} \PYG{n}{ledNumber} \PYG{o}{=} \PYG{l+m+mi}{29}
 \PYG{n}{local} \PYG{n}{leds} \PYG{o}{=} \PYG{n}{Ledbar}\PYG{o}{.}\PYG{n}{new}\PYG{p}{(}\PYG{n}{ledNumber}\PYG{p}{)}
 \PYG{n}{local} \PYG{n}{on} \PYG{o}{=} \PYG{n}{false}
 \PYG{n}{function} \PYG{n}{updateBlink}\PYG{p}{(}\PYG{p}{)}
