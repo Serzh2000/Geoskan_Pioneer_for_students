@@ -6,7 +6,7 @@
   \item Выключение двигателей: \texttt{ap.push(Ev.ENGINES\_DISARM)} — выключение моторов (обычно после \texttt{COPTER\_LANDED} или при аварии).
   \item Полёт к точке: \texttt{ap.goToLocalPoint(x, y, z)} — установка целевой точки в локальной системе координат (метры). По достижению цели генерируется \texttt{Ev.POINT\_REACHED}.
   \item Обновление курса: \texttt{ap.updateYaw(rad)} — установка курса в радианах; для градусов применяют перевод \texttt{rad = deg * math.pi / 180}.
-  \item Считывание RC: \texttt{Sensors.rc()} — получение массива каналов радиоуправления; для тумблера \texttt{SwA} обычно анализируют 8-й канал (\texttt{rc\_chans[8]}).
+  \item Считывание RC: \texttt{Sensors.rc()} — возвращает 8 отдельных значений каналов радиоуправления (а не таблицу), поэтому для индексации их сначала оборачивают: \texttt{local rc\_chans = table.pack(Sensors.rc())}. Для тумблера \texttt{SwA} обычно анализируют 8-й канал (\texttt{rc\_chans[8]}).
   \item Обработчик событий: \texttt{function callback(event)} — функция, вызываемая платформой при наступлении \texttt{Ev.*} (\texttt{TAKEOFF\_COMPLETE}, \texttt{POINT\_REACHED} и др.). Внутри \texttt{callback} строятся переходы автомата миссии.
   \item Таймеры: \texttt{Timer.callLater(delay, fn)} — безопасная «задержка» без блокировки потока; \texttt{Timer.new(period, fn)} — периодическое действие через фиксированный интервал (анимации, траектории).
   \item Принципы неблокирующей логики: избегать \texttt{sleep()}; строить сценарий через события и таймеры, чтобы обработчик \texttt{callback} оставался кратким.
