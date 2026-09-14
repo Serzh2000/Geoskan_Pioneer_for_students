@@ -6,6 +6,7 @@
     \PYG{n}{drone} \PYG{o}{=} \PYG{n}{Pioneer}\PYG{p}{(}\PYG{p}{)}
     \PYG{k}{try}\PYG{p}{:}
         \PYG{n}{drone}\PYG{o}{.}\PYG{n}{arm}\PYG{p}{(}\PYG{p}{)}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} Даем автопилоту перейти в режим готовности}
         \PYG{n}{drone}\PYG{o}{.}\PYG{n}{takeoff}\PYG{p}{(}\PYG{p}{)}
         \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{)}
         

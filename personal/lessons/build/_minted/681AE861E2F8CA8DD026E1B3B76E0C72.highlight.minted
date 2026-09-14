@@ -66,6 +66,7 @@
     \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{flight\PYGZus{}logic}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{)}\PYG{p}{:}
         \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Арминг и взлет...}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
         \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{drone}\PYG{o}{.}\PYG{n}{arm}\PYG{p}{(}\PYG{p}{)}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} Даем автопилоту перейти в режим готовности}
         \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{drone}\PYG{o}{.}\PYG{n}{takeoff}\PYG{p}{(}\PYG{p}{)}
         \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{)}
         

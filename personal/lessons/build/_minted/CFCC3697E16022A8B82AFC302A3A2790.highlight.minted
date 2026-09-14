@@ -21,6 +21,7 @@
         \PYG{c+c1}{\PYGZsh{} 1. Взлет}
         \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Взлет...}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
         \PYG{n}{drone}\PYG{o}{.}\PYG{n}{arm}\PYG{p}{(}\PYG{p}{)}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} Даем автопилоту перейти в режим готовности}
         \PYG{n}{drone}\PYG{o}{.}\PYG{n}{takeoff}\PYG{p}{(}\PYG{p}{)}
         \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)}
         
