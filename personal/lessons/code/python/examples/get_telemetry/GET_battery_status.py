@@ -16,13 +16,13 @@ while True:
 
         # Менее 3.6 В – красный (низкий заряд)
         if battery_voltage < 3.6:
-            mini.led_control(led_id=255, r=0.1, g=0, b=0)  # Красный цвет
+            mini.led_control(led_id=255, r=255, g=0, b=0)  # Красный цвет
         # От 3.6 В до 4.0 В – желтый (средний заряд)
         elif battery_voltage < 4.0:
-            mini.led_control(led_id=255, r=0.1, g=0.1, b=0)  # Желтый цвет (красный + зеленый)
+            mini.led_control(led_id=255, r=255, g=255, b=0)  # Желтый цвет (красный + зеленый)
         # От 4.0 В до 4.2 В – зеленый (хороший заряд)
         elif battery_voltage <= 4.2:
-            mini.led_control(led_id=255, r=0, g=0.1, b=0)  # Зеленый цвет
+            mini.led_control(led_id=255, r=0, g=255, b=0)  # Зеленый цвет
 
     # Задержка для уменьшения частоты запросов
     time.sleep(2)

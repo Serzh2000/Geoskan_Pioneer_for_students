@@ -31,21 +31,21 @@ if __name__ == "__main__":                     # Проверяем, что ск
                     
                     # Определяем цвет светодиодов в зависимости от высоты
                     if tof_data <= height_1:
-                        r = 0.1  # Красный
+                        r = 255  # Красный
                         g = 0
                         b = 0
                     elif height_1 < tof_data <= height_2:
                         r = 0
-                        g = 0.1  # Зеленый
+                        g = 255  # Зеленый
                         b = 0
                     elif height_2 < tof_data <= height_3:
                         r = 0
                         g = 0
-                        b = 0.1  # Синий
+                        b = 255  # Синий
                     elif tof_data >= height_3:
-                        r = 0.1
-                        g = 0.1
-                        b = 0.1  # Белый
+                        r = 255
+                        g = 255
+                        b = 255  # Белый
                     
                     # Управляем светодиодами дрона
                     pioneer_mini.led_control(led_id=255, r=r, g=g, b=b)
