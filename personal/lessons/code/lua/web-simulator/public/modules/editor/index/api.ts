@@ -43,6 +43,7 @@ import { createEditorIndexControllers } from './runtime.js';
 import {
     createEditor,
     createEditorShell,
+    disposeEditor,
     fallbackEditor,
     getBlocklyStateKey,
     getEditorStateKey,
@@ -166,6 +167,10 @@ export function initEditor(): void {
         createEditor();
     } catch (error) {
         console.error('Monaco Editor load error:', error);
+        // Ошибка могла прилететь уже после monaco.editor.create() — тогда
+        // редактор существует, и пересоздание оболочки ниже вырежет его DOM,
+        // оставив висеть сам инстанс. Гасим до пересоздания.
+        disposeEditor();
         createEditorShell();
         fallbackEditor();
     }

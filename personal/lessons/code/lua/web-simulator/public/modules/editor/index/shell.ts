@@ -11,15 +11,17 @@ import {
 } from '../dom.js';
 import {
     createTextEditorInstance,
+    disposeTextEditorInstance,
     getTextEditorValueFromInstance,
     initializeMonacoEnvironment,
     layoutTextEditorInstance,
     setTextEditorTheme,
     setTextEditorLanguageOnInstance,
-    setTextEditorValueOnInstance
+    setTextEditorValueOnInstance,
+    type TextEditorValueMode
 } from '../text-editor.js';
 import type { AppTheme } from '../../app/theme-toggle.js';
-import { applyBlocklyWorkspaceTheme, getBlocklyThemeByName } from '../runtime.js';
+import { getBlocklyThemeByName } from '../runtime.js';
 import {
     createEditorAutofitContext,
     getSavedEditorDraft as getSavedEditorDraftFromStorage,
@@ -83,6 +85,17 @@ export function fallbackEditor(): void {
     });
 }
 
+// Пересоздание оболочки затирает innerHTML контейнера вместе с DOM редактора,
+// поэтому перед этим инстанс нужно погасить: иначе он останется жить со своими
+// слушателями, воркерами и записью в глобальном реестре Monaco.
+export function disposeEditor(): void {
+    const editorInstance = editorIndexState.editorInstance;
+    if (!editorInstance) return;
+
+    editorIndexState.editorInstance = null;
+    disposeTextEditorInstance(editorInstance);
+}
+
 export function createEditor(): void {
     const initialLanguage: ScriptLanguage = editorIndexState.pendingLanguage || 'lua';
     const initialValue =
@@ -115,10 +128,10 @@ export function getTextEditorValue(): string {
     return hasFallbackEditor() ? getFallbackEditorValue() : getTextEditorValueFromInstance(editorIndexState.editorInstance);
 }
 
-export function setTextEditorValue(value: string): void {
+export function setTextEditorValue(value: string, mode: TextEditorValueMode = 'reset'): void {
     if (hasFallbackEditor()) {
         setFallbackEditorValue(value);
-    } else if (!setTextEditorValueOnInstance(editorIndexState.editorInstance, value)) {
+    } else if (!setTextEditorValueOnInstance(editorIndexState.editorInstance, value, mode)) {
         setPendingEditorValue(value);
     } else {
         setPendingEditorValue(null);
@@ -145,7 +158,6 @@ export function setEditorTheme(theme: AppTheme): void {
     if (hasFallbackEditor()) return;
 
     setTextEditorTheme(theme);
-    applyBlocklyWorkspaceTheme(theme);
     const resolvedTheme = getBlocklyThemeByName(theme);
     if (resolvedTheme) {
         editorIndexState.blocklyWorkspace?.setTheme(resolvedTheme);
