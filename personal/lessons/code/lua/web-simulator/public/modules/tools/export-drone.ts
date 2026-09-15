@@ -1,7 +1,6 @@
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { createDroneModel } from '../drone-model/index.js';
 
-const EXPORT_TIMEOUT_MS = 8000;
 const EXPORT_FILE_NAME = 'pioneer-drone.glb';
 
 const button = document.getElementById('export-drone-button') as HTMLButtonElement | null;
@@ -23,8 +22,9 @@ async function exportDroneModel() {
     setStatus('Собираю модель...');
 
     try {
+        // Модель собирается из примитивов синхронно — ждать загрузки
+        // внешних CAD-ресурсов больше не нужно.
         const drone = createDroneModel();
-        await waitForCadAssets(drone, EXPORT_TIMEOUT_MS);
 
         setStatus('Экспортирую GLB...');
         const glb = await exportAsGlb(drone);
@@ -36,19 +36,6 @@ async function exportDroneModel() {
     } finally {
         exportButton.disabled = false;
     }
-}
-
-async function waitForCadAssets(drone: ReturnType<typeof createDroneModel>, timeoutMs: number) {
-    const startedAt = Date.now();
-
-    while (Date.now() - startedAt < timeoutMs) {
-        const hasFrame = !!drone.getObjectByName('pioneer_cad_frame');
-        const hasMotors = !!drone.getObjectByName('pioneer_cad_motors');
-        if (hasFrame && hasMotors) return;
-        await delay(100);
-    }
-
-    throw new Error('CAD parts were not ready before timeout.');
 }
 
 function exportAsGlb(drone: ReturnType<typeof createDroneModel>) {
@@ -80,10 +67,6 @@ function downloadFile(blob: Blob, fileName: string) {
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
-}
-
-function delay(ms: number) {
-    return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 function setStatus(text: string) {
