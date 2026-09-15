@@ -8,7 +8,12 @@ import { reportCameraBridgeDebug, resolveConnectedCameraFeed } from './pioneer-j
 // от раскладки панелей — код ученика с обращением к cv[240][320] ломался на узком окне.
 const CAPTURE_WIDTH = 640;
 const CAPTURE_HEIGHT = 360;
-const FRAME_CACHE_INTERVAL_MS = 100;
+// 100 -> 33: этот кэш годами держал реальный потолок кадров в get_frame()/get_cv_frame()
+// (внутрибраузерный Python) и во внешнем мосте (server/mavlink-bridge.ts,
+// CAMERA_FRAME_INTERVAL_MS, снижен туда же и по той же причине) на 10 кадрах/с, хотя сам
+// рендер+JPEG-кодирование измерены в пределах ~17мс на синтетическом кадре (реальные
+// кадры дешевле) — то есть реальный потолок по стоимости рендера заметно выше 10 к/с.
+const FRAME_CACHE_INTERVAL_MS = 33;
 
 export type CameraFramePixels = {
     width: number;

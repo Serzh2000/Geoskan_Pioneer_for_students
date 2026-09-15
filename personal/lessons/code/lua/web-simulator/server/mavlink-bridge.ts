@@ -103,7 +103,15 @@ const MAV_STATE_ACTIVE = 4;
 const HEARTBEAT_BASE_MODE_SAFETY_ARMED = 0x80;
 const HEARTBEAT_INTERVAL_MS = 200;
 const MAVLINK_SESSION_TIMEOUT_MS = 2000;
-const CAMERA_FRAME_INTERVAL_MS = 100;
+// 100 -> 33: раньше этот интервал и браузерный цикл захвата кадра (~100мс с учётом
+// времени самой работы, см. public/modules/python/external-bridge.ts) были двумя
+// независимыми таймерами по 100мс без общей фазы, поэтому часть циклов ретранслятора
+// попадала на уже устаревшую (>100мс) запись кэша кадра (FRAME_CACHE_INTERVAL_MS в
+// pioneer-js-bridge-camera-render.ts) и отправляла клиенту дубликат предыдущего кадра.
+// Снижение обоих интервалов синхронно даёт запас: пока браузер укладывается в целевые
+// ~33мс на кадр (JPEG-кодирование измерено в пределах ~17мс на синтетическом кадре,
+// реальные кадры дешевле), ретранслятор почти всегда находит свежую запись.
+const CAMERA_FRAME_INTERVAL_MS = 33;
 
 const GO_TO_LOCAL_POINT_MASK = 0b0000100111111000;
 const MANUAL_SPEED_MASK = 0b0000010111000111;
