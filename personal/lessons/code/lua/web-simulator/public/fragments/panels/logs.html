@@ -1,22 +1,19 @@
-            <div id="logs-panel" class="sidebar-panel">
-                <div class="panel-header panel-header--logs">
-                    <div class="panel-header__lead panel-header__lead--logs">
-                        <span class="panel-title">Системный журнал</span>
-                        <span class="panel-header__subtitle">События симулятора, редактора и сцены</span>
-                    </div>
-                    <button class="panel-close-btn" onclick="closePanel()">✕</button>
-                </div>
-                <div class="panel-content panel-content--logs">
-                    <div class="logs-panel-content">
-                        <div class="logs-panel-tabs-wrap">
-                            <div class="logs-panel-tabs-label">Разделы журнала</div>
-                            <div id="logs-tabs" class="logs-panel-tabs" role="tablist" aria-label="Разделы системного журнала"></div>
-                        </div>
-                        <div id="logs" class="logs-console__stream" aria-live="polite">
-                            <div class="logs-console__empty">
-                                Журнал ожидает первые события симулятора.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div id="logs-panel" class="sidebar-panel">
+  <div class="panel-header panel-header--logs">
+    <div class="panel-header__lead panel-header__lead--logs"><span class="panel-title">Журнал событий</span><span class="panel-header__subtitle">Программа, сцена и состояние симулятора</span></div>
+    <button class="panel-close-btn" onclick="closePanel()" aria-label="Закрыть журнал">×</button>
+  </div>
+  <div class="panel-content panel-content--logs"><div class="logs-panel-content">
+    <div class="journal-filters">
+      <input id="logs-search" type="search" placeholder="Найти сообщение…" aria-label="Поиск по журналу">
+      <div class="journal-filter-row">
+        <label>Источник<select id="logs-source"><option value="all">Все источники</option><option value="script">Программа</option><option value="scene">Сцена</option><option value="system">Система</option><option value="guide">Обучение</option><option value="editor">Редактор</option><option value="camera">Камера</option></select></label>
+        <label>Уровень<select id="logs-severity"><option value="all">Все события</option><option value="error">Ошибки</option><option value="warn">Предупреждения</option><option value="success">Успешные</option><option value="info">Информация</option></select></label>
+      </div>
+      <label class="journal-check"><input id="logs-technical" type="checkbox"> Служебная диагностика</label>
+    </div>
+    <div id="logs-status" class="journal-status" role="status">Ожидание событий</div>
+    <div id="logs" class="logs-console__stream" role="region" aria-label="События журнала" tabindex="0"><div class="journal-empty">События появятся после запуска симулятора.</div></div>
+    <div class="journal-footer"><label class="journal-check"><input id="logs-follow" type="checkbox" checked> Следить</label><button id="logs-export" type="button" title="Скачать весь журнал, включая диагностику">Скачать</button><button id="logs-clear" type="button">Очистить</button></div>
+  </div></div>
+</div>

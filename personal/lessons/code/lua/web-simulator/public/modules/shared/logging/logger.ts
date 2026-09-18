@@ -1,3 +1,4 @@
+import { renderJournal } from './journal.js';
 type LogLevel = 'info' | 'error' | 'warn' | 'success';
 type LogTone = 'info' | 'action' | 'warn' | 'error' | 'success';
 export type LogCategoryKey = 'all' | 'system' | 'guide' | 'camera' | 'editor' | 'scene' | 'script';
@@ -7,7 +8,7 @@ type ParsedLogMessage = {
     message: string;
 };
 
-type LogRecord = {
+export type LogRecord = {
     time: string;
     tag: string;
     message: string;
@@ -176,7 +177,7 @@ function renderLogsUI() {
         renderTabs(tabs, counts);
     }
 
-    renderLogStream(logs);
+    renderJournal(logs, logEntries);
 }
 
 function scheduleLogsRender() {
