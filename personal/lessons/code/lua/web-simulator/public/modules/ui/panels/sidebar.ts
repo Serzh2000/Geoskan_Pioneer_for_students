@@ -215,13 +215,6 @@ export function initSidebar(callbacks: UICallbacks) {
 
     const restoreSidebarState = () => {
         const savedPanelId = localStorage.getItem(ACTIVE_PANEL_STORAGE_KEY);
-        if (savedPanelId === null) {
-            syncResponsiveSidebarState();
-            syncSidebarCollapsedState();
-            syncSidebarMode(document.querySelector('.sidebar-panel.active')?.id ?? null);
-            refreshViewportLayout();
-            return;
-        }
 
         resetClosingState();
         document.querySelectorAll('.sidebar-panel').forEach((panel) => {
@@ -230,7 +223,9 @@ export function initSidebar(callbacks: UICallbacks) {
         });
         setActiveTabButton(null);
 
-        if (savedPanelId === CLOSED_PANEL_SENTINEL) {
+        // savedPanelId === null — приложение открыто впервые: показываем чистую
+        // сцену, а не панель редактора из разметки.
+        if (savedPanelId === null || savedPanelId === CLOSED_PANEL_SENTINEL) {
             panels.style.width = '0px';
             syncSidebarCollapsedState();
             syncSidebarMode(null);

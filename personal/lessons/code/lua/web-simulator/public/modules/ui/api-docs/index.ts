@@ -8,6 +8,7 @@ import { ApiMethodPreview, type ApiPreviewScenario } from './preview/index.js';
 import {
     buildSections,
     getPreviewScenario,
+    type ApiCategoryId,
     type ApiEntryView,
     type ApiSection,
     type ScriptLanguage
@@ -16,11 +17,15 @@ import {
 const uiState: {
     language: ScriptLanguage;
     query: string;
+    category: ApiCategoryId | 'all';
+    expanded: Set<string>;
     openPreviewKey: string | null;
     previews: Map<string, ApiMethodPreview>;
 } = {
     language: 'lua',
     query: '',
+    category: 'all',
+    expanded: new Set(),
     openPreviewKey: null,
     previews: new Map()
 };
@@ -68,76 +73,130 @@ function destroyPreviews(): void {
     uiState.previews.clear();
 }
 
-function renderToolbar(language: ScriptLanguage, totalCount: number): string {
-    const label = language === 'lua' ? 'Lua API' : 'Python API';
+function renderToolbar(language: ScriptLanguage, sections: ApiSection[], totalCount: number): string {
+    const label = language === 'lua' ? 'Lua' : 'Python';
     const escapedQuery = escapeHtml(uiState.query);
-    const summary = totalCount === 0 ? 'Совпадений нет' : `Найдено: ${totalCount}`;
+    const chips = [
+        { id: 'all' as const, title: 'Все', count: totalCount },
+        ...sections.map((section) => ({ id: section.id, title: section.title, count: section.entries.length }))
+    ];
 
     return `
         <div class="api-toolbar">
-            <label class="api-search">
-                <span class="api-search__label">Поиск по API</span>
+            <div class="api-search">
+                <svg class="api-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="10" cy="10" r="7" />
+                    <path d="M21 21l-6 -6" />
+                </svg>
                 <input
                     id="api-docs-search"
                     class="api-search__input"
-                    type="search"
-                    placeholder="Метод, событие, аргумент, пример..."
+                    type="text"
+                    placeholder="Найти метод, событие или пример..."
                     value="${escapedQuery}"
                     autocomplete="off"
                     spellcheck="false"
+                    aria-label="Поиск по API"
                 />
-            </label>
-            <div class="api-toolbar__meta">
-                <span class="api-toolbar__badge">${label}</span>
-                <span class="api-toolbar__summary">${summary}</span>
+                <span class="api-search__badge">${label}</span>
             </div>
+            <div class="api-filters">
+                ${chips
+                    .map(
+                        (chip) => `
+                            <button
+                                type="button"
+                                class="api-chip ${uiState.category === chip.id ? 'is-active' : ''}"
+                                data-category="${chip.id}"
+                                aria-pressed="${uiState.category === chip.id}">
+                                ${escapeHtml(chip.title)}
+                                <span class="api-chip__count">${chip.count}</span>
+                            </button>
+                        `
+                    )
+                    .join('')}
+            </div>
+        </div>
+    `;
+}
+
+function renderFact(label: string, value: string): string {
+    return `
+        <div class="api-fact">
+            <dt class="api-fact__label">${label}</dt>
+            <dd class="api-fact__value">${value}</dd>
+        </div>
+    `;
+}
+
+function renderEntryBody(entry: ApiEntryView): string {
+    const isInteractive = !!entry.previewScenario;
+    const isPreviewOpen = uiState.openPreviewKey === entry.name && isInteractive;
+    const directionLabel = entry.doc.direction === 'to-autopilot'
+        ? 'В автопилот'
+        : entry.doc.direction === 'from-autopilot'
+            ? 'От автопилота'
+            : '';
+
+    const facts = [
+        entry.doc.params ? renderFact('Аргументы', highlightApiCode(entry.doc.params)) : '',
+        entry.doc.returns ? renderFact('Возвращает', highlightApiCode(entry.doc.returns)) : '',
+        directionLabel ? renderFact('Направление', escapeHtml(directionLabel)) : ''
+    ].join('');
+
+    return `
+        <div class="api-entry__body">
+            ${entry.doc.syntax
+                ? `<div class="api-code">
+                       <div class="api-code__label">Синтаксис</div>
+                       <code class="api-code__text">${highlightApiCode(entry.doc.syntax)}</code>
+                   </div>`
+                : ''}
+            ${facts ? `<dl class="api-facts">${facts}</dl>` : ''}
+            ${entry.doc.example
+                ? `<div class="api-code api-code--example">
+                       <div class="api-code__label">
+                           Пример
+                           <button type="button" class="api-copy" data-copy="${escapeHtml(entry.doc.example)}">Копировать</button>
+                       </div>
+                       <code class="api-code__text">${highlightApiCode(entry.doc.example)}</code>
+                   </div>`
+                : ''}
+            ${isInteractive
+                ? `<button type="button" class="api-preview-toggle ${isPreviewOpen ? 'is-open' : ''}"
+                       data-preview-toggle="${escapeHtml(entry.name)}" aria-expanded="${isPreviewOpen}">
+                       ${isPreviewOpen ? 'Скрыть 3D-анимацию' : 'Показать 3D-анимацию'}
+                   </button>`
+                : ''}
+            ${isPreviewOpen ? renderPreviewShell(entry) : ''}
         </div>
     `;
 }
 
 function renderEntry(entry: ApiEntryView): string {
     const isInteractive = !!entry.previewScenario;
-    const isOpen = uiState.openPreviewKey === entry.name && isInteractive;
-    const headerTag = isInteractive ? 'button' : 'div';
-    const headerAttrs = isInteractive
-        ? `type="button" class="api-header api-header--button" data-preview-toggle="${escapeHtml(entry.name)}" aria-expanded="${isOpen}"`
-        : 'class="api-header"';
-    const scopeTag = escapeHtml(entry.scopeLabel);
-    const kind = escapeHtml(entry.doc.kind || 'Method');
-    const directionLabel = entry.doc.direction === 'to-autopilot'
-        ? 'В автопилот'
-        : entry.doc.direction === 'from-autopilot'
-            ? 'От автопилота'
-            : '';
-    const aliases = (entry.doc.aliases || []).slice(0, 6);
+    const isExpanded = uiState.expanded.has(entry.name);
 
     return `
-        <div class="api-entry ${isInteractive ? 'api-entry--interactive' : ''}">
-            <${headerTag} ${headerAttrs}>
-                <span class="api-header__main">
+        <article class="api-entry ${isExpanded ? 'is-expanded' : ''}">
+            <button
+                type="button"
+                class="api-entry__head"
+                data-entry-toggle="${escapeHtml(entry.name)}"
+                aria-expanded="${isExpanded}">
+                <span class="api-entry__title">
                     <span class="api-name">${escapeHtml(entry.name)}</span>
-                    <span class="api-tags">
-                        <span class="api-tag">${scopeTag}</span>
-                        ${directionLabel ? `<span class="api-tag api-tag--accent">${escapeHtml(directionLabel)}</span>` : ''}
-                        ${isInteractive ? '<span class="api-tag api-tag--accent">3D</span>' : ''}
-                    </span>
+                    ${isInteractive ? '<span class="api-badge-3d">3D</span>' : ''}
                 </span>
-                <span class="api-header__side">
-                    <span class="api-kind">${kind}</span>
-                    ${isInteractive ? `<span class="api-toggle-indicator">${isOpen ? 'Скрыть' : 'Показать'} анимацию</span>` : ''}
-                </span>
-            </${headerTag}>
-            <div class="api-desc">${entry.doc.desc || 'Описание пока не добавлено.'}</div>
-            <div class="api-details">
-                ${entry.doc.syntax ? `<div class="api-details-row"><span class="api-details-label">Синтаксис:</span><span class="api-details-value">${highlightApiCode(entry.doc.syntax)}</span></div>` : ''}
-                ${entry.doc.params ? `<div class="api-details-row"><span class="api-details-label">Аргументы:</span><span class="api-details-value">${highlightApiCode(entry.doc.params)}</span></div>` : ''}
-                ${entry.doc.returns ? `<div class="api-details-row"><span class="api-details-label">Возвращает:</span><span class="api-details-value">${highlightApiCode(entry.doc.returns)}</span></div>` : ''}
-                ${directionLabel ? `<div class="api-details-row"><span class="api-details-label">Направление:</span><span class="api-details-value">${escapeHtml(directionLabel)}</span></div>` : ''}
-                ${aliases.length ? `<div class="api-details-row"><span class="api-details-label">Поиск:</span><span class="api-details-value">${escapeHtml(aliases.join(', '))}</span></div>` : ''}
-            </div>
-            ${entry.doc.example ? `<div class="api-example">${highlightApiCode(entry.doc.example)}</div>` : ''}
-            ${isOpen ? renderPreviewShell(entry) : ''}
-        </div>
+                <span class="api-entry__desc">${entry.doc.desc || 'Описание пока не добавлено.'}</span>
+                <svg class="api-entry__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M6 9l6 6l6 -6" />
+                </svg>
+            </button>
+            ${isExpanded ? renderEntryBody(entry) : ''}
+        </article>
     `;
 }
 
@@ -166,25 +225,28 @@ function renderSections(sections: ApiSection[]): string {
         return `
             <div class="api-empty-state">
                 <div class="api-empty-state__title">Ничего не найдено</div>
-                <div class="api-empty-state__text">Попробуйте изменить строку поиска или очистить фильтр.</div>
+                <div class="api-empty-state__text">Попробуйте изменить запрос или выбрать категорию «Все».</div>
             </div>
         `;
     }
 
-    return sections
-        .map((section) => `
-            <section class="api-category">
-                <div class="api-category-title">
-                    <span>${section.title}</span>
-                    <span class="api-category-count">${section.entries.length}</span>
-                </div>
-                <div class="api-category-description">${section.description}</div>
-                <div class="api-category-list">
-                    ${section.entries.map(renderEntry).join('')}
-                </div>
-            </section>
-        `)
-        .join('');
+    return `
+        <div class="api-results">
+            ${sections
+                .map((section) => `
+                    <section class="api-category">
+                        <div class="api-category-head">
+                            <h3 class="api-category-title">${section.title}</h3>
+                            <p class="api-category-description">${section.description}</p>
+                        </div>
+                        <div class="api-category-list">
+                            ${section.entries.map(renderEntry).join('')}
+                        </div>
+                    </section>
+                `)
+                .join('')}
+        </div>
+    `;
 }
 
 function restoreSearchSelection(container: HTMLElement, selection: SearchSelectionState | null): void {
@@ -212,11 +274,51 @@ function attachInteractions(container: HTMLElement): void {
         });
     }
 
+    container.querySelectorAll<HTMLElement>('[data-category]').forEach((chip) => {
+        chip.addEventListener('click', () => {
+            uiState.category = (chip.dataset.category || 'all') as ApiCategoryId | 'all';
+            renderApiDocs(uiState.language);
+        });
+    });
+
+    container.querySelectorAll<HTMLElement>('[data-entry-toggle]').forEach((trigger) => {
+        trigger.addEventListener('click', () => {
+            const key = trigger.dataset.entryToggle;
+            if (!key) return;
+            if (uiState.expanded.has(key)) {
+                uiState.expanded.delete(key);
+                if (uiState.openPreviewKey === key) uiState.openPreviewKey = null;
+            } else {
+                uiState.expanded.add(key);
+            }
+            renderApiDocs(uiState.language);
+        });
+    });
+
     container.querySelectorAll<HTMLElement>('[data-preview-toggle]').forEach((trigger) => {
         trigger.addEventListener('click', () => {
             const key = trigger.dataset.previewToggle || null;
             uiState.openPreviewKey = uiState.openPreviewKey === key ? null : key;
             renderApiDocs(uiState.language);
+        });
+    });
+
+    container.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((button) => {
+        button.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(button.dataset.copy || '');
+                button.textContent = 'Скопировано';
+                button.classList.add('is-done');
+                window.setTimeout(() => {
+                    button.textContent = 'Копировать';
+                    button.classList.remove('is-done');
+                }, 1600);
+            } catch {
+                button.textContent = 'Не удалось';
+                window.setTimeout(() => {
+                    button.textContent = 'Копировать';
+                }, 1600);
+            }
         });
     });
 }
@@ -242,6 +344,7 @@ export function renderApiDocs(
 
     if (uiState.language !== language) {
         uiState.openPreviewKey = null;
+        uiState.expanded.clear();
     }
     uiState.language = language;
 
@@ -249,10 +352,19 @@ export function renderApiDocs(
     const sections = buildSections(docs, language, uiState.query);
     const totalEntries = sections.reduce((count, section) => count + section.entries.length, 0);
 
+    // Выбранная категория может опустеть после нового запроса — тогда
+    // показываем всё, иначе экран остался бы пустым без объяснения.
+    if (uiState.category !== 'all' && !sections.some((section) => section.id === uiState.category)) {
+        uiState.category = 'all';
+    }
+    const visibleSections = uiState.category === 'all'
+        ? sections
+        : sections.filter((section) => section.id === uiState.category);
+
     destroyPreviews();
     container.innerHTML = `
-        ${renderToolbar(language, totalEntries)}
-        ${renderSections(sections)}
+        ${renderToolbar(language, sections, totalEntries)}
+        ${renderSections(visibleSections)}
     `;
 
     attachInteractions(container);
@@ -271,6 +383,10 @@ export function openApiDocsCatalog(options: {
         uiState.query = options.query;
     }
     uiState.openPreviewKey = options.previewKey ?? null;
+    uiState.category = 'all';
+    if (options.previewKey) {
+        uiState.expanded.add(options.previewKey);
+    }
 
     (window as any).openPanel?.('docs-panel');
     renderApiDocs(language);

@@ -9,6 +9,48 @@
 
 /* Базовые .panel-header и .panel-header__lead определены в layout/panel-shell.css. */
 
+/*
+ * Тулбар редактора: язык, примеры и загрузка файла переехали сюда из
+ * глобального хедера — это инструменты кода, а не приложения.
+ */
+.editor-toolbar {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.editor-toolbar__select,
+.editor-toolbar__btn {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+/* Глобальное правило форм задаёт select { width: 100% } — в тулбаре это ломает строку. */
+.editor-toolbar__select {
+    width: auto;
+    padding-right: 26px;
+    background-position: right 6px center;
+    min-width: 0;
+    flex: 1 1 150px;
+    max-width: 260px;
+}
+
+.editor-toolbar__select--lang {
+    flex: 0 0 96px;
+    color: var(--accent-color);
+}
+
+.editor-toolbar__btn {
+    flex: 0 0 auto;
+}
+
 .panel-content--editor {
     width: 100%;
     overflow-x: auto;

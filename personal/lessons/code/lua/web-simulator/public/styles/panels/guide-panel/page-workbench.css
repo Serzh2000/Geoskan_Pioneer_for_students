@@ -59,8 +59,9 @@
     touch-action: none;
 }
 
-.guide-scene-preview-host > .scene-container.scene-container--guide-preview .hud-side-column,
-.guide-scene-preview-host > .scene-container.scene-container--guide-preview .hud-visibility-controls {
+/* Превью переносит сюда сам .scene-container — его накладки в уроке лишние. */
+.guide-scene-preview-host > .scene-container > .scene-onboarding,
+.guide-scene-preview-host > .scene-container > .scene-hud-readout {
     display: none;
 }
 

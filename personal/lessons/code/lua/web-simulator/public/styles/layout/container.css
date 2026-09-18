@@ -17,10 +17,6 @@
     align-items: stretch;
 }
 
-.mobile-workspace-nav {
-    display: none;
-}
-
 .mobile-workspace-track {
     display: flex;
     flex: 1 1 auto;

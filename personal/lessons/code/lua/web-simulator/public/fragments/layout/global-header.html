@@ -1,5 +1,41 @@
         <header class="header">
             <div class="header-brand">
+                <button
+                    id="rail-toggle-btn"
+                    type="button"
+                    class="btn-secondary header-icon-btn header-rail-toggle"
+                    title="Показать панели инструментов"
+                    aria-label="Показать панели инструментов"
+                    aria-pressed="false">
+                    <span class="header-icon-btn__glyph" aria-hidden="true">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.75"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="header-icon-btn__svg header-rail-toggle__icon header-rail-toggle__icon--expand">
+                            <path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" />
+                            <path d="M9 4v16" />
+                            <path d="M14 10l2 2l-2 2" />
+                        </svg>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.75"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="header-icon-btn__svg header-rail-toggle__icon header-rail-toggle__icon--collapse">
+                            <path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" />
+                            <path d="M9 4v16" />
+                            <path d="M15 10l-2 2l2 2" />
+                        </svg>
+                    </span>
+                </button>
                 <div class="header-brand-mark">G</div>
                 <div class="header-brand-copy">
                     <div class="header-logo">
@@ -10,22 +46,48 @@
                 </div>
             </div>
             <div class="header-actions">
-                <div class="header-controls-group">
-                    <select id="file-selector" class="btn-secondary header-select">
-                        <option value="">Выберите пример...</option>
-                    </select>
-                    <button onclick="document.getElementById('file-input').click()" class="btn-secondary" title="Открыть файл">ОТКРЫТЬ ФАЙЛ</button>
-                    <input type="file" id="file-input" style="display:none" accept=".lua,.py">
-                    <select id="script-language-select" class="btn-secondary header-select header-lang-select">
-                        <option value="lua">Lua</option>
-                        <option value="python">Python</option>
-                        <option value="blockly">Blockly</option>
-                    </select>
-                    <button id="theme-toggle" type="button" class="btn-secondary header-theme-toggle" title="Переключить тему" aria-label="Переключить тему" aria-pressed="false">
-                        <span class="header-theme-toggle__track" aria-hidden="true">
-                            <span class="header-theme-toggle__thumb"></span>
+                <div class="header-controls-group header-controls-group--actions">
+                    <button id="run-btn" class="btn-primary">ЗАПУСТИТЬ</button>
+                    <button id="stop-btn" class="btn-secondary header-danger-btn">СТОП</button>
+                    <button id="restart-btn" class="btn-secondary">СБРОС</button>
+                    <button
+                        id="theme-toggle"
+                        type="button"
+                        class="btn-secondary header-icon-btn header-theme-toggle"
+                        title="Переключить тему"
+                        aria-label="Переключить тему"
+                        aria-pressed="false">
+                        <span class="header-icon-btn__glyph" aria-hidden="true">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="header-icon-btn__svg header-theme-toggle__icon header-theme-toggle__icon--light">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                                <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
+                            </svg>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="header-icon-btn__svg header-theme-toggle__icon header-theme-toggle__icon--dark">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                            </svg>
                         </span>
-                        <span class="header-theme-toggle__label">Светлая тема</span>
                     </button>
                     <button
                         id="header-info-btn"
@@ -61,43 +123,23 @@
                             </svg>
                         </span>
                     </button>
-                </div>
-                <div class="header-controls-group header-controls-group--actions">
-                    <button id="run-btn" class="btn-primary">ЗАПУСТИТЬ</button>
-                    <button id="stop-btn" class="btn-secondary header-danger-btn">СТОП</button>
-                    <button id="restart-btn" class="btn-secondary">СБРОС</button>
-                    <div class="mobile-workspace-nav" aria-label="Мобильная навигация">
-                        <div class="mobile-workspace-nav__tabs" role="tablist" aria-label="Страницы рабочей области">
-                            <button
-                                type="button"
-                                class="mobile-workspace-nav__tab is-active"
-                                data-mobile-workspace-target="code"
-                                role="tab"
-                                aria-selected="true">
-                                Код
-                            </button>
-                            <button
-                                type="button"
-                                class="mobile-workspace-nav__tab"
-                                data-mobile-workspace-target="scene"
-                                role="tab"
-                                aria-selected="false">
-                                Сцена
-                            </button>
-                            <button
-                                type="button"
-                                class="mobile-workspace-nav__tab"
-                                data-mobile-workspace-target="controls"
-                                role="tab"
-                                aria-selected="false">
-                                Управление
-                            </button>
-                        </div>
-                        <div class="mobile-workspace-nav__pager">
-                            <button type="button" class="mobile-workspace-nav__arrow" data-mobile-workspace-action="prev">Назад</button>
-                            <span class="mobile-workspace-nav__label" data-mobile-workspace-label>Код</span>
-                            <button type="button" class="mobile-workspace-nav__arrow" data-mobile-workspace-action="next">Вперед</button>
-                        </div>
+                    <div class="workspace-switch" role="tablist" aria-label="Рабочая область">
+                        <button
+                            type="button"
+                            class="workspace-switch__btn"
+                            data-workspace-target="code"
+                            role="tab"
+                            aria-selected="false">
+                            Код
+                        </button>
+                        <button
+                            type="button"
+                            class="workspace-switch__btn is-active"
+                            data-workspace-target="scene"
+                            role="tab"
+                            aria-selected="true">
+                            Сцена
+                        </button>
                     </div>
                 </div>
             </div>

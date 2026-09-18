@@ -7,6 +7,8 @@ const stateAlt = document.getElementById('state-alt') as HTMLElement | null;
 const stateSpd = document.getElementById('state-spd') as HTMLElement | null;
 const stateBat = document.getElementById('state-bat') as HTMLElement | null;
 const stateStatus = document.getElementById('state-status') as HTMLElement | null;
+const stateBatBar = document.getElementById('state-bat-bar') as HTMLElement | null;
+const statusRow = document.querySelector('.telemetry-status') as HTMLElement | null;
 const stateTime = document.getElementById('state-time') as HTMLElement | null;
 const stateMode = document.getElementById('state-mode') as HTMLElement | null;
 const hudStatMode = document.getElementById('hud-stat-mode') as HTMLElement | null;
@@ -24,7 +26,7 @@ let lastAltText = '';
 let lastSpeedText = '';
 let lastBatteryText = '';
 let lastStatusText = '';
-let lastStatusColor = '';
+let lastStatusTone = '';
 let lastTimeText = '';
 let lastFlightModeText = '';
 let lastHudModeVisible: boolean | null = null;
@@ -34,33 +36,42 @@ let lastStopButtonDisabled: boolean | null = null;
 const lastLedStyles = Array.from({ length: 29 }, () => '');
 let lastStatsUpdateAt = 0;
 
-function getStatusColor(isDarkTheme: boolean): string {
+// Оттенок состояния держим классом: тему разбирает CSS, а не JS.
+function getStatusTone(): string {
     if (
         drones[currentDroneId].fsmState === 'TAKEOFF_PROCESS'
         || drones[currentDroneId].fsmState === 'FLYING_HOVER'
         || drones[currentDroneId].fsmState === 'FLYING_MOVING'
         || drones[currentDroneId].fsmState === 'LANDING_PROCESS'
     ) {
-        return isDarkTheme ? '#4ade80' : '#15803d';
+        return 'flying';
     }
 
-    if (drones[currentDroneId].fsmState === 'PREFLIGHT') {
-        return isDarkTheme ? '#fbbf24' : '#b45309';
-    }
+    if (drones[currentDroneId].fsmState === 'PREFLIGHT') return 'preflight';
 
     if (drones[currentDroneId].status === 'ОШИБКА' || drones[currentDroneId].status === 'CRASHED') {
-        return isDarkTheme ? '#f87171' : '#c2410c';
+        return 'error';
     }
 
-    return isDarkTheme ? '#f8fafc' : '#151515';
+    return 'idle';
 }
 
-function updateTelemetry(speed: number, isDarkTheme: boolean): void {
+function updateBatteryBar(battery: number): void {
+    if (!stateBatBar) return;
+
+    const percent = Math.max(0, Math.min(100, battery));
+    stateBatBar.style.width = `${percent}%`;
+    stateBatBar.classList.toggle('is-low', percent <= 30 && percent > 15);
+    stateBatBar.classList.toggle('is-critical', percent <= 15);
+}
+
+function updateTelemetry(speed: number): void {
     const altText = drones[currentDroneId].pos.z.toFixed(2);
     const speedText = speed.toFixed(1);
-    const batteryText = Math.floor(drones[currentDroneId].battery).toString();
+    const battery = Math.floor(drones[currentDroneId].battery);
+    const batteryText = battery.toString();
     const timeText = drones[currentDroneId].current_time.toFixed(1);
-    const statusColor = getStatusColor(isDarkTheme);
+    const statusTone = getStatusTone();
 
     if (stateAlt && lastAltText !== altText) {
         stateAlt.textContent = altText;
@@ -72,8 +83,9 @@ function updateTelemetry(speed: number, isDarkTheme: boolean): void {
         lastSpeedText = speedText;
     }
 
-    if (stateBat && lastBatteryText !== batteryText) {
-        stateBat.textContent = batteryText;
+    if (lastBatteryText !== batteryText) {
+        if (stateBat) stateBat.textContent = batteryText;
+        updateBatteryBar(battery);
         lastBatteryText = batteryText;
     }
 
@@ -82,9 +94,9 @@ function updateTelemetry(speed: number, isDarkTheme: boolean): void {
         lastStatusText = drones[currentDroneId].status;
     }
 
-    if (stateStatus && lastStatusColor !== statusColor) {
-        stateStatus.style.color = statusColor;
-        lastStatusColor = statusColor;
+    if (statusRow && lastStatusTone !== statusTone) {
+        statusRow.dataset.tone = statusTone;
+        lastStatusTone = statusTone;
     }
 
     if (stateTime && lastTimeText !== timeText) {
@@ -151,8 +163,11 @@ function updateLeds(): void {
         const ledEl = ledElements[i];
         if (!ledEl) continue;
 
-        ledEl.style.backgroundColor = colorStr;
-        ledEl.style.boxShadow = (r + g + b > 0) ? `0 0 8px ${colorStr}` : 'none';
+        // Погашенный светодиод возвращаем стилям панели, иначе он станет
+        // чёрным пятном вместо углубления в плате.
+        const isLit = r + g + b > 0;
+        ledEl.style.backgroundColor = isLit ? colorStr : '';
+        ledEl.style.boxShadow = isLit ? `0 0 10px ${colorStr}, inset 0 0 6px rgba(255, 255, 255, 0.3)` : '';
         ledEl.title = i < 4
             ? `Базовый светодиод ${i}\nRGB: ${r}, ${g}, ${b}`
             : `Светодиод матрицы ${i}\nRGB: ${r}, ${g}, ${b}`;
@@ -164,8 +179,8 @@ function updateLeds(): void {
         const ledEl = ledElements[i];
         if (!ledEl) continue;
 
-        ledEl.style.backgroundColor = 'rgb(0,0,0)';
-        ledEl.style.boxShadow = 'none';
+        ledEl.style.backgroundColor = '';
+        ledEl.style.boxShadow = '';
         ledEl.title = '';
         lastLedStyles[i] = '';
     }
@@ -183,9 +198,8 @@ export function updateStats() {
     lastStatsUpdateAt = now;
 
     const speed = Math.sqrt(drones[currentDroneId].vel.x**2 + drones[currentDroneId].vel.y**2 + drones[currentDroneId].vel.z**2);
-    const isDarkTheme = document.documentElement.dataset.theme === 'dark';
 
-    updateTelemetry(speed, isDarkTheme);
+    updateTelemetry(speed);
     updateFlightMode();
     updateCameraParamsVisibility();
     updateButtons();

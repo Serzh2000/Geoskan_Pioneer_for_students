@@ -16,11 +16,12 @@ import { initSettingsUI } from './settings/index.js';
 import { initSimulationNotice } from './panels/simulation-notice.js';
 import { initMissionGuideModal } from './mission-guide/modal.js';
 import { initInfoModal } from './info/modal.js';
-import { initHudControls } from './controls/hud-controls.js';
 import { initSidebar } from './panels/sidebar.js';
+import { initRailVisibility } from './panels/rail-visibility.js';
+import { initSceneOnboarding } from './scene-onboarding.js';
 import { initCameraModeUI } from './controls/camera-mode.js';
 import { initFileControls } from './controls/file-controls.js';
-import { initMobileWorkspaceCarousel } from './mobile-workspace-carousel.js';
+import { initWorkspaceView } from './workspace-view.js';
 import { initMobileEditorViewport } from './mobile-editor-viewport.js';
 import type { MarkerMapOptions } from '../environment/obstacles.js';
 
@@ -53,8 +54,15 @@ export interface UICallbacks {
             value?: string;
             pointsText?: string;
             metaLines?: string[];
+            label?: string;
+            presetName?: string;
+            depth?: number;
+            parentId?: string;
+            childCount?: number;
+            pointCount?: number;
         }>;
         select: (id: string) => boolean;
+        focus: (id: string) => boolean;
         remove: (id: string) => boolean;
         add: (
             type: string,
@@ -86,12 +94,13 @@ export function initUI(callbacks: UICallbacks) {
     initLEDMatrixUI();
     initSettingsUI();
     initSimulationNotice();
-    initHudControls();
 
     initSidebar(callbacks);
+    initRailVisibility();
+    initSceneOnboarding();
     initCameraModeUI();
     initMobileEditorViewport({ onEditorResize: callbacks.onEditorResize });
-    initMobileWorkspaceCarousel();
+    initWorkspaceView();
 
     const runBtn = document.getElementById('run-btn');
     const stopBtn = document.getElementById('stop-btn');

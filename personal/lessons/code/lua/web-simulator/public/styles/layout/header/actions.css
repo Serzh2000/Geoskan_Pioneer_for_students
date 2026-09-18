@@ -5,46 +5,128 @@
     align-items: center;
 }
 
-.header-icon-btn {
+/*
+ * Базовый `.btn-secondary` объявлен в styles/gamepad/panel/buttons.css и
+ * подключается после шапки, поэтому геометрию иконок задаём составным
+ * селектором — иначе его отступы и скругление перебивают эти правила.
+ */
+.header-actions .header-icon-btn,
+.header-brand .header-rail-toggle {
     width: 38px;
     min-width: 38px;
+    height: 38px;
     padding: 0;
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
-    border-radius: 14px;
+    border-radius: 12px;
     border-color: rgba(148, 163, 184, 0.24);
     background: rgba(248, 250, 252, 0.96);
     color: #6b7280;
 }
 
 .header-icon-btn__glyph {
-    width: 18px;
-    height: 18px;
+    position: relative;
+    width: 20px;
+    height: 20px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
 }
 
 .header-icon-btn__svg {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     display: block;
 }
 
-.header-icon-btn.is-active {
-    color: var(--accent-color);
-    border-color: rgba(255, 107, 0, 0.2);
-    background: rgba(255, 107, 0, 0.08);
+/*
+ * Кнопка рельса стоит в бренд-группе, вне .header-actions, поэтому базовые
+ * правила иконок оттуда её не достают — задаём размеры здесь.
+ */
+.header-rail-toggle {
+    flex: 0 0 auto;
+    margin-right: 2px;
 }
 
-.header-icon-btn:hover {
+.header-rail-toggle__icon {
+    position: absolute;
+}
+
+.header-rail-toggle__icon--collapse,
+.header-rail-toggle[aria-pressed='true'] .header-rail-toggle__icon--expand {
+    display: none;
+}
+
+.header-rail-toggle[aria-pressed='true'] .header-rail-toggle__icon--collapse {
+    display: block;
+}
+
+.header-actions .header-icon-btn.is-active,
+.header-brand .header-rail-toggle.is-active {
+    color: var(--accent-color);
+    border-color: rgba(255, 107, 0, 0.24);
+    background: rgba(255, 107, 0, 0.1);
+}
+
+.header-actions .header-icon-btn:hover,
+.header-brand .header-rail-toggle:hover {
     color: #4b5563;
     border-color: rgba(100, 116, 139, 0.28);
     background: rgba(255, 255, 255, 0.98);
 }
 
+.header-brand .header-rail-toggle.is-active:hover {
+    color: var(--accent-color);
+    background: rgba(255, 107, 0, 0.14);
+}
+
 .header-actions select.btn-secondary.header-select {
     padding-right: 32px;
     background-position: right 8px center;
+}
+
+/*
+ * Переключатель «Код / Сцена» — сегментированный контрол в шапке. Заменяет
+ * вкладку редактора на рельсе, поэтому виден на любой ширине.
+ */
+.workspace-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    height: 38px;
+    padding: 3px;
+    margin-left: 4px;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    background: rgba(248, 250, 252, 0.96);
+    flex: 0 0 auto;
+}
+
+.header-actions .workspace-switch__btn {
+    min-width: 72px;
+    height: 100%;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.header-actions .workspace-switch__btn:hover {
+    color: #1f2937;
+}
+
+.header-actions .workspace-switch__btn.is-active {
+    background: #ffffff;
+    color: var(--accent-color);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
 }
 
 .header-danger-btn {

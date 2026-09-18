@@ -1,7 +1,22 @@
             <div id="editor-panel" class="sidebar-panel active">
                 <div class="panel-header panel-header--editor">
-                    <div class="panel-header__lead">
-                        <span class="panel-title">РЕДАКТОР LUA</span>
+                    <div class="panel-header__lead editor-toolbar">
+                        <select id="script-language-select" class="btn-secondary editor-toolbar__select editor-toolbar__select--lang" title="Язык скрипта">
+                            <option value="lua">Lua</option>
+                            <option value="python">Python</option>
+                            <option value="blockly">Blockly</option>
+                        </select>
+                        <select id="file-selector" class="btn-secondary editor-toolbar__select">
+                            <option value="">Выберите пример...</option>
+                        </select>
+                        <button
+                            type="button"
+                            class="btn-secondary editor-toolbar__btn"
+                            onclick="document.getElementById('file-input').click()"
+                            title="Открыть файл с компьютера">
+                            Открыть файл
+                        </button>
+                        <input type="file" id="file-input" style="display:none" accept=".lua,.py">
                     </div>
                     <button class="panel-close-btn" onclick="closePanel()">✕</button>
                 </div>

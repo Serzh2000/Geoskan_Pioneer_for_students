@@ -27,13 +27,9 @@ function updateThemeToggleButton(theme: AppTheme): void {
     const themeToggleButton = document.getElementById('theme-toggle') as HTMLButtonElement | null;
     if (!themeToggleButton) return;
 
-    const label = themeToggleButton.querySelector('.header-theme-toggle__label');
     themeToggleButton.setAttribute('aria-pressed', String(theme === 'dark'));
     themeToggleButton.title = theme === 'dark' ? 'Переключить на светлую тему' : 'Переключить на темную тему';
     themeToggleButton.setAttribute('aria-label', themeToggleButton.title);
-    if (label) {
-        label.textContent = theme === 'dark' ? 'Темная тема' : 'Светлая тема';
-    }
 }
 
 export function applyAppTheme(theme: AppTheme): void {

@@ -29,87 +29,89 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 
-.scene-viewport-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--panel-gap);
-    min-height: 32px;
-}
-
-.scene-viewport-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-}
-
-.scene-viewport-label {
+/* Счётчик кадров поверх сцены — вместо прежней шапки вьюпорта. */
+.scene-hud-readout {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    z-index: 2;
+    pointer-events: none;
     display: inline-flex;
     align-items: center;
-    min-height: 26px;
-    padding: 0 11px;
+    padding: 4px 10px;
     border-radius: 999px;
-    background: rgba(255, 107, 0, 0.08);
-    border: 1px solid rgba(255, 107, 0, 0.18);
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    line-height: 1;
-    color: var(--accent-color);
-}
-
-.scene-viewport-subtitle {
-    color: var(--text-muted);
-    font-size: 12px;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.scene-viewport-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 12px;
-    min-height: 28px;
-    border-radius: 999px;
-    background: rgba(248, 249, 250, 0.92);
+    background: rgba(248, 249, 250, 0.72);
     border: 1px solid rgba(148, 163, 184, 0.18);
-    color: #334155;
-    font-size: 11px;
+    color: #64748b;
+}
+
+.scene-viewport-fps {
+    color: inherit;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
+}
+
+:root[data-theme='dark'] .scene-hud-readout {
+    background: rgba(15, 23, 42, 0.62);
+    border-color: rgba(148, 163, 184, 0.16);
+    color: #94a3b8;
+}
+
+/* Приглашение на первом запуске: единственная заметная точка входа. */
+.scene-onboarding {
+    position: absolute;
+    left: 50%;
+    bottom: 76px;
+    transform: translateX(-50%);
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+    max-width: calc(100% - 32px);
+}
+
+/* display:flex выше перебивает атрибут hidden. */
+.scene-onboarding[hidden] {
+    display: none;
+}
+
+.scene-onboarding__btn {
+    padding: 13px 26px;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
+    color: #ffffff;
+    background: linear-gradient(135deg, #ff7d1f, var(--accent-color));
+    box-shadow: 0 16px 34px rgba(255, 107, 0, 0.32);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.scene-viewport-status__dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #10b981;
+.scene-onboarding__btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 20px 40px rgba(255, 107, 0, 0.38);
 }
 
-:root[data-theme='dark'] .scene-viewport-label {
-    background: rgba(255, 107, 0, 0.14);
-    border-color: rgba(255, 176, 103, 0.22);
-    color: #fff7ed;
+.scene-onboarding__hint {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
 }
 
-:root[data-theme='dark'] .scene-viewport-subtitle {
-    color: #cbd5e1;
-}
-
-:root[data-theme='dark'] .scene-viewport-status {
-    background: rgba(15, 23, 42, 0.92);
-    border-color: rgba(148, 163, 184, 0.18);
-    color: #f8fafc;
-}
-
-:root[data-theme='dark'] .scene-viewport-status__dot {
-    background: #34d399;
+/* На узком экране рельса у края нет — инструменты живут на вкладке «Код». */
+@media (max-width: 980px) {
+    .scene-onboarding__hint {
+        display: none;
+    }
 }
 
 .scene-container {

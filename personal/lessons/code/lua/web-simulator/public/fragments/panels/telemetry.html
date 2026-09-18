@@ -1,0 +1,66 @@
+            <div id="telemetry-panel" class="sidebar-panel">
+                <div class="panel-header">
+                    <div class="panel-header__lead">
+                        <span class="panel-title">Телеметрия</span>
+                    </div>
+                    <button class="panel-close-btn" onclick="closePanel()">✕</button>
+                </div>
+                <div class="panel-content telemetry-panel-content">
+                    <div class="telemetry-status">
+                        <span class="telemetry-status__dot" aria-hidden="true"></span>
+                        <span class="telemetry-status__label">Состояние</span>
+                        <span class="telemetry-status__value" id="state-status">ОЖИДАНИЕ</span>
+                    </div>
+
+                    <div class="telemetry-metrics">
+                        <div class="metric">
+                            <span class="metric__label">Высота</span>
+                            <span class="metric__value"><span id="state-alt">0.00</span><span class="metric__unit">м</span></span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric__label">Скорость</span>
+                            <span class="metric__value"><span id="state-spd">0.0</span><span class="metric__unit">м/с</span></span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric__label">Время полета</span>
+                            <span class="metric__value"><span id="state-time">0.0</span><span class="metric__unit">с</span></span>
+                        </div>
+                        <div class="metric" id="hud-stat-mode" style="display: none;">
+                            <span class="metric__label">Режим</span>
+                            <span class="metric__value"><span id="state-mode">АВТО</span></span>
+                        </div>
+                    </div>
+
+                    <div class="telemetry-battery">
+                        <div class="telemetry-battery__head">
+                            <span class="metric__label">Батарея</span>
+                            <span class="metric__value metric__value--inline"><span id="state-bat">100</span><span class="metric__unit">%</span></span>
+                        </div>
+                        <div class="telemetry-battery__track">
+                            <div class="telemetry-battery__fill" id="state-bat-bar"></div>
+                        </div>
+                    </div>
+
+                    <section class="telemetry-section">
+                        <h3 class="telemetry-section__title">Бортовые индикаторы</h3>
+                        <div class="led-board led-board--base">
+                            <div class="led-base-grid">
+                                <div id="led-base-0" class="led-pixel-base" title="Базовый светодиод 0"></div>
+                                <div id="led-base-1" class="led-pixel-base" title="Базовый светодиод 1"></div>
+                                <div id="led-base-2" class="led-pixel-base" title="Базовый светодиод 2"></div>
+                                <div id="led-base-3" class="led-pixel-base" title="Базовый светодиод 3"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="telemetry-section">
+                        <h3 class="telemetry-section__title">
+                            LED-матрица
+                            <span class="telemetry-section__badge">5 x 5</span>
+                        </h3>
+                        <div class="led-board">
+                            <div class="led-matrix-grid" id="led-matrix-grid"></div>
+                        </div>
+                    </section>
+                </div>
+            </div>
