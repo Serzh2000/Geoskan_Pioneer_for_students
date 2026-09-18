@@ -1,0 +1,47 @@
+{
+  "source_file": "Geoscan_Pioneer_Basic.blend",
+  "source_sha256": "2e755ba9ff2c37aba61a1af44928c39b7021374cf86b0a5548346ebf12de96f9",
+  "output_sha256": "4d4f867573dcd5d36117aecbe89b3356681fd6f9bad14724485623f86ac36175",
+  "coordinate_system": "Z-up; 2 scene units per physical metre; feet at z=0",
+  "web_optimization": "Static parts merged; small-component bevels omitted; propeller subdivision level 1",
+  "source_objects_by_group": {
+    "frame": 1273,
+    "rotor_0": 20,
+    "rotor_2": 20,
+    "rotor_1": 20,
+    "rotor_3": 20,
+    "base_led_1": 4,
+    "base_led_0": 4,
+    "base_led_2": 4,
+    "base_led_3": 4
+  },
+  "rotor_centers": [
+    [
+      0.1343500018119812,
+      0.1343500018119812,
+      0.20000000298023224
+    ],
+    [
+      -0.1343500018119812,
+      -0.1343500018119812,
+      0.20000000298023224
+    ],
+    [
+      -0.1343500018119812,
+      0.1343500018119812,
+      0.20000000298023224
+    ],
+    [
+      0.1343500018119812,
+      -0.1343500018119812,
+      0.20000000298023224
+    ]
+  ],
+  "led_order": [
+    "upper right",
+    "upper left",
+    "underside left",
+    "underside right"
+  ],
+  "provenance": "User-provided Blender reconstruction; original rights retained; no new license assigned"
+}

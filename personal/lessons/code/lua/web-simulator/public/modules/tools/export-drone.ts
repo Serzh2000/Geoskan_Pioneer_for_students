@@ -1,5 +1,5 @@
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
-import { createDroneModel } from '../drone-model/index.js';
+import { createDroneModel, whenDroneModelReady } from '../drone-model/index.js';
 
 const EXPORT_FILE_NAME = 'pioneer-drone.glb';
 
@@ -22,9 +22,8 @@ async function exportDroneModel() {
     setStatus('Собираю модель...');
 
     try {
-        // Модель собирается из примитивов синхронно — ждать загрузки
-        // внешних CAD-ресурсов больше не нужно.
         const drone = createDroneModel();
+        await whenDroneModelReady(drone);
 
         setStatus('Экспортирую GLB...');
         const glb = await exportAsGlb(drone);
