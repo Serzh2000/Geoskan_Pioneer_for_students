@@ -17,8 +17,8 @@ export function createGateMesh() {
     const standHeight = 0.98;
     const standOffsetY = 0.64;
 
-    const mat = new THREE.MeshStandardMaterial({ color: 0xff8800, roughness: 0.7, emissive: 0xff4400, emissiveIntensity: 0.1 });
-    const ringMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1, metalness: 0.5 });
+    const mat = new THREE.MeshStandardMaterial({ color: 0x3f5059, roughness: 0.55, metalness: 0.45 });
+    const ringMat = new THREE.MeshStandardMaterial({ color: 0xe8e4d7, roughness: 0.6, metalness: 0.08 });
 
     const legGeom = new THREE.CylinderGeometry(standRadius, standRadius, standHeight);
     const leg1 = new THREE.Mesh(legGeom, mat);
@@ -29,7 +29,7 @@ export function createGateMesh() {
     leg2.rotation.x = Math.PI / 2;
     group.add(leg1, leg2);
 
-    const torus = new THREE.Mesh(new THREE.TorusGeometry(ringRadius, ringTubeRadius, 18, 40), ringMat);
+    const torus = new THREE.Mesh(new THREE.TorusGeometry(ringRadius, ringTubeRadius, 16, 80), ringMat);
     torus.position.z = ringCenterHeight;
     torus.rotation.y = Math.PI / 2;
     group.add(torus);
@@ -55,7 +55,7 @@ export function createPylonMesh() {
     const topRadius = 0.08;
     const segments = 4;
     
-    const matRed = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.8 });
+    const matRed = new THREE.MeshStandardMaterial({ color: 0xcc8651, roughness: 0.8 });
     const matWhite = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.8 });
     
     for (let i = 0; i < segments; i++) {
@@ -109,7 +109,7 @@ export function createFlagMesh() {
     finial.position.z = poleHeight;
     group.add(finial);
 
-    const flagMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.7, side: THREE.DoubleSide });
+    const flagMat = new THREE.MeshStandardMaterial({ color: 0x4a7d89, roughness: 0.7, side: THREE.DoubleSide });
     
     const flagGeom = new THREE.PlaneGeometry(0.6, 0.4, 10, 5);
     const pos = flagGeom.attributes.position;

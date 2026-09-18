@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export function createTrussArenaMesh(size = 18, height = 5) {
     const group = new THREE.Group();
     const trussRadius = 0.05;
-    const trussMat = new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.8, roughness: 0.2 });
+    const trussMat = new THREE.MeshStandardMaterial({ color: 0x657781, metalness: 0.65, roughness: 0.38 });
 
     const createTruss = (p1: THREE.Vector3, p2: THREE.Vector3) => {
         const dist = p1.distanceTo(p2);
@@ -36,22 +36,42 @@ export function createTrussArenaMesh(size = 18, height = 5) {
         createTruss(corners[i].clone().setZ(height), corners[(i+1)%4].clone().setZ(height));
     }
 
-    // Net
-    const netMat = new THREE.MeshStandardMaterial({ 
-        color: 0x000000, 
-        transparent: true, 
-        opacity: 0.15, 
-        side: THREE.DoubleSide,
-        wireframe: true
+    // Batched safety mesh: real square cells, no diagonal box wireframe.
+    const vertices: number[] = [];
+    const h = size / 2;
+    const line = (a: number[], b: number[]) => vertices.push(...a, ...b);
+    for (let v = -h; v <= h; v += 0.5) {
+        line([v, h, 0], [v, h, height]);
+        line([-h, v, 0], [-h, v, height]);
+        line([h, v, 0], [h, v, height]);
+    }
+    for (let z = 0.5; z <= height; z += 0.5) {
+        line([-h, h, z], [h, h, z]);
+        line([-h, -h, z], [-h, h, z]);
+        line([h, -h, z], [h, h, z]);
+    }
+    const netGeometry = new THREE.BufferGeometry();
+    netGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    group.add(new THREE.LineSegments(netGeometry, new THREE.LineBasicMaterial({
+        color: 0x7e969f, transparent: true, opacity: 0.12, depthWrite: false
+    })));
+    // Perimeter luminaires provide visual depth without additional light passes.
+    const lightMaterial = new THREE.MeshStandardMaterial({
+        color: 0xd6f1ff, emissive: 0xb9e5ff, emissiveIntensity: 2,
+        roughness: 0.45
     });
-    const netGeom = new THREE.BoxGeometry(size, size, height);
-    const net = new THREE.Mesh(netGeom, netMat);
-    net.position.z = height / 2;
-    group.add(net);
+    for (const x of [-h, h]) {
+        const strip = new THREE.Mesh(new THREE.BoxGeometry(0.035, size - 0.5, 0.04), lightMaterial);
+        strip.position.set(x, 0, height - 0.12);
+        group.add(strip);
+    }
 
     return group;
 }
 
 export function createTrussArena(group: THREE.Group) {
-    group.add(createTrussArenaMesh());
+    const frame = createTrussArenaMesh();
+    frame.name = 'Ограждение полигона';
+    frame.userData.defaultArenaFrame = true;
+    group.add(frame);
 }

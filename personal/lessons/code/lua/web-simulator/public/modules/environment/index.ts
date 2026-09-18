@@ -90,6 +90,18 @@ export function setupEnvironment(scene: THREE.Scene) {
 
     createGround(scene, envGroup);
     createObstacles(envGroup);
+    // Presets supply their own layout; the empty-scene dressing must not cut through it.
+    const syncDefaultDressing = () => {
+        const hasPreset = envGroup.children.some(child => Boolean(child.userData.presetName));
+        for (const child of envGroup.children) {
+            if (child.userData.defaultArenaFrame) child.visible = !hasPreset;
+            if (child.userData.type === OBJECT_TYPE.GROUND) {
+                child.children.forEach(decoration => { decoration.visible = !hasPreset; });
+            }
+        }
+    };
+    envGroup.addEventListener('childadded', syncDefaultDressing);
+    envGroup.addEventListener('childremoved', syncDefaultDressing);
 }
 
 export function addObjectToScene(type: string, camera?: THREE.Camera | null, options: SceneObjectOptions = {}) {
@@ -98,7 +110,7 @@ export function addObjectToScene(type: string, camera?: THREE.Camera | null, opt
     
     if (obj) {
         let pos = new THREE.Vector3(0, 0, 0);
-        if (camera) {
+        if (camera && !obj.userData.presetName) {
             const dir = new THREE.Vector3();
             camera.getWorldDirection(dir);
             dir.multiplyScalar(5);

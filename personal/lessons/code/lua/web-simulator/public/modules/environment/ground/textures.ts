@@ -3,7 +3,7 @@
  * Содержит только работу с canvas/texture, без сборки сцены.
  */
 import * as THREE from 'three';
-import { getFloorPalette, getGroundTheme, type GroundTheme } from './theme.js';
+import { getGroundTheme, type GroundTheme } from './theme.js';
 
 export function createFloorTexture(textureSize = 1024, theme: GroundTheme = getGroundTheme()) {
     const canvas = document.createElement('canvas');
@@ -13,71 +13,28 @@ export function createFloorTexture(textureSize = 1024, theme: GroundTheme = getG
 
     if (!ctx) return new THREE.CanvasTexture(canvas);
 
-    const palette = getFloorPalette(theme);
-    const squaresPerSide = 8;
-    const tileSize = textureSize / squaresPerSide;
-    const seamSize = Math.max(2, Math.round(tileSize * 0.025));
-
-    const hash = (x: number, y: number) => {
-        const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
-        return value - Math.floor(value);
-    };
-
-    ctx.fillStyle = palette.baseColor;
+    const dark = theme === 'dark';
+    ctx.fillStyle = dark ? '#35434b' : '#cdd4d6';
     ctx.fillRect(0, 0, textureSize, textureSize);
-
-    for (let row = 0; row < squaresPerSide; row++) {
-        for (let col = 0; col < squaresPerSide; col++) {
-            const x = col * tileSize;
-            const y = row * tileSize;
-            const innerX = x + seamSize;
-            const innerY = y + seamSize;
-            const innerSize = tileSize - seamSize * 2;
-            const isLight = (row + col) % 2 === 0;
-            const squareColor = isLight ? palette.lightSquare : palette.darkSquare;
-
-            ctx.fillStyle = squareColor;
-            ctx.fillRect(innerX, innerY, innerSize, innerSize);
-
-            ctx.strokeStyle = palette.seamColor;
-            ctx.lineWidth = 1;
-            ctx.strokeRect(innerX + 0.5, innerY + 0.5, innerSize - 1, innerSize - 1);
-
-            for (let localY = seamSize + 10; localY < tileSize - seamSize - 10; localY += 18) {
-                for (let localX = seamSize + 10; localX < tileSize - seamSize - 10; localX += 18) {
-                    const n = hash(localX / 18, localY / 18);
-                    const tone = isLight ? palette.speckleBaseTone : palette.speckleBaseTone + 16;
-                    const alpha = isLight
-                        ? palette.speckleLightAlpha + n * 0.012
-                        : palette.speckleDarkAlpha + n * 0.012;
-                    ctx.fillStyle = `rgba(${tone}, ${tone}, ${tone}, ${alpha.toFixed(3)})`;
-                    ctx.fillRect(x + localX, y + localY, 2, 2);
-                }
-            }
-
-            for (let i = 0; i < 8; i++) {
-                const scuffSeed = hash(col * 10 + i, row * 10 + i * 3);
-                const scuffX = innerX + 8 + ((innerSize - 24) * hash(col * 21 + i, row * 17 + i));
-                const scuffY = innerY + 8 + ((innerSize - 24) * hash(col * 13 + i, row * 29 + i));
-                const scuffLength = 8 + scuffSeed * 10;
-                const scuffAlpha = isLight ? palette.scuffLightAlpha : palette.scuffDarkAlpha;
-                ctx.strokeStyle = `rgba(${palette.scuffColor}, ${scuffAlpha.toFixed(3)})`;
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(scuffX, scuffY);
-                ctx.lineTo(scuffX + scuffLength, scuffY + scuffLength * 0.18);
-                ctx.stroke();
-            }
-
-            if (row % 2 === 0 && col % 2 === 0) {
-                const markerInset = seamSize + 8;
-                const markerSize = Math.max(8, Math.round(tileSize * 0.06));
-                ctx.fillStyle = palette.accentColor;
-                ctx.fillRect(x + markerInset, y + markerInset, markerSize * 2, 2);
-                ctx.fillRect(x + markerInset, y + markerInset, 2, markerSize * 2);
-            }
-        }
+    // Eight metres per repeat: restrained one-metre calibration grid.
+    const step = textureSize / 8;
+    ctx.strokeStyle = dark ? 'rgba(184,208,217,0.17)' : 'rgba(62,87,97,0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+        const p = i * step + 0.5;
+        ctx.moveTo(p, 0); ctx.lineTo(p, textureSize);
+        ctx.moveTo(0, p); ctx.lineTo(textureSize, p);
     }
+    ctx.stroke();
+    ctx.strokeStyle = dark ? 'rgba(202,222,229,0.35)' : 'rgba(62,87,97,0.35)';
+    ctx.beginPath();
+    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+        const px = x * step, py = y * step;
+        ctx.moveTo(px - 4, py); ctx.lineTo(px + 4, py);
+        ctx.moveTo(px, py - 4); ctx.lineTo(px, py + 4);
+    }
+    ctx.stroke();
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
@@ -89,25 +46,30 @@ export function createFloorTexture(textureSize = 1024, theme: GroundTheme = getG
 
 export function createLandingPadTexture(theme: GroundTheme): THREE.CanvasTexture {
     const padCanvas = document.createElement('canvas');
-    padCanvas.width = 256;
-    padCanvas.height = 256;
+    padCanvas.width = 1024;
+    padCanvas.height = 1024;
     const ctx = padCanvas.getContext('2d');
-
     if (ctx) {
-        const background = theme === 'dark' ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.98)';
-        const border = theme === 'dark' ? '#e2e8f0' : '#111111';
-        const letter = theme === 'dark' ? '#ff8f3a' : '#ff6b00';
-
-        ctx.fillStyle = background;
-        ctx.fillRect(0, 0, 256, 256);
-        ctx.strokeStyle = border;
-        ctx.lineWidth = 15;
-        ctx.strokeRect(10, 10, 236, 236);
-        ctx.fillStyle = letter;
-        ctx.font = 'bold 160px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('H', 128, 128);
+        ctx.fillStyle = theme === 'dark' ? '#202d35' : '#455861';
+        ctx.beginPath(); ctx.arc(512, 512, 500, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#f3aa59';
+        ctx.lineWidth = 16;
+        ctx.beginPath(); ctx.arc(512, 512, 474, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = '#adc0c7';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([4, 18]);
+        ctx.beginPath(); ctx.arc(512, 512, 425, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#edf3f2';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = '600 300px Arial'; ctx.fillText('H', 512, 500);
+        ctx.font = '500 32px Arial'; ctx.fillText('P I O N E E R', 512, 735);
+        ctx.font = '24px Arial'; ctx.fillText('01 / LANDING ZONE', 512, 310);
+        for (let i = 0; i < 4; i++) {
+            ctx.save(); ctx.translate(512, 512); ctx.rotate(i * Math.PI / 2);
+            ctx.fillStyle = '#f3aa59'; ctx.fillRect(-5, -474, 10, 55);
+            ctx.restore();
+        }
     }
 
     const texture = new THREE.CanvasTexture(padCanvas);

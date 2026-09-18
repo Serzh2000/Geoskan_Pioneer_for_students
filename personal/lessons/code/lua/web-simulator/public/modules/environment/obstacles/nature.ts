@@ -1,235 +1,130 @@
 import * as THREE from 'three';
 import { setCommonMeta, applyShadows } from './utils.js';
+import { createParkBenchMesh, createParkLampMesh, createParkPlanterMesh } from './park-props.js';
 
-function createGrassClump(material: THREE.Material) {
-    const group = new THREE.Group();
-    
-    // Генерируем 5-8 травинок в одном пучке для густоты
-    const numBlades = 5 + Math.floor(Math.random() * 4);
-    
-    for (let i = 0; i < numBlades; i++) {
-        // Разнообразные размеры: высота 0.12-0.25, ширина основания 0.01-0.025
-        const height = 0.12 + Math.random() * 0.13;
-        const radius = 0.01 + Math.random() * 0.015;
-        
-        // 3 грани для классического low-poly вида травы
-        const bladeGeom = new THREE.ConeGeometry(radius, height, 3);
-        // Сдвигаем геометрию так, чтобы точка вращения (pivot) была у основания
-        bladeGeom.translate(0, height / 2, 0);
-        
-        const blade = new THREE.Mesh(bladeGeom, material);
-        
-        // Распределяем травинки по небольшому радиусу от центра
-        const angle = (i / numBlades) * Math.PI * 2 + (Math.random() - 0.5);
-        const dist = Math.random() * 0.04;
-        blade.position.set(Math.cos(angle) * dist, Math.sin(angle) * dist, 0);
-        
-        // Оставляем травинки статичными, без дополнительного вращения вокруг осей.
-        blade.rotation.order = 'ZYX';
-        blade.rotation.z = 0;
-        
-        const lean = 0.1 + Math.random() * 0.35; // Угол отклонения
-        blade.rotation.x = Math.PI / 2 + lean; // Поднимаем вертикально (+Z) и наклоняем
-        blade.rotation.y = 0;
-
-        group.add(blade);
-    }
-
-    return group;
-}
+const bark = () => new THREE.MeshStandardMaterial({ color: 0x675b4c, roughness: 0.96 });
+const foliage = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: 0.94 });
+const noise = (i: number) => { const n = Math.sin(i * 127.1 + 13.7) * 43758.5453; return n - Math.floor(n); };
 
 export function createBushMesh(scale = 1) {
     const group = new THREE.Group();
-    const mat = new THREE.MeshStandardMaterial({ color: 0x5d9732, roughness: 0.95 });
-    const geom = new THREE.SphereGeometry(0.3 * scale, 8, 8);
-    
-    const p1 = new THREE.Mesh(geom, mat);
-    p1.position.set(0, 0, 0.15 * scale);
-    p1.scale.set(1, 1, 0.8);
-    group.add(p1);
-    
-    const p2 = new THREE.Mesh(geom, mat);
-    p2.scale.set(0.7, 0.7, 0.56);
-    p2.position.set(0.18 * scale, 0.15 * scale, 0.1 * scale);
-    group.add(p2);
-    
-    const p3 = new THREE.Mesh(geom, mat);
-    p3.scale.set(0.8, 0.8, 0.64);
-    p3.position.set(-0.15 * scale, -0.18 * scale, 0.08 * scale);
-    group.add(p3);
-    
+    const geometry = new THREE.IcosahedronGeometry(0.3, 2);
+    const material = foliage(0x627854);
+    for (let i = 0; i < 5; i++) {
+        const lobe = new THREE.Mesh(geometry, material);
+        const angle = i * 2.4;
+        lobe.position.set(Math.cos(angle) * 0.16, Math.sin(angle) * 0.16, 0.2 + noise(i) * 0.08);
+        lobe.scale.set(0.8, 0.8, 0.65 + noise(i + 8) * 0.25);
+        group.add(lobe);
+    }
+    group.scale.setScalar(scale);
     applyShadows(group);
     return group;
 }
 
 export function createHillMesh() {
-    const group = setCommonMeta(new THREE.Group(), 'Холм', { collidableRadius: 2.2 });
-    const grassMat = new THREE.MeshStandardMaterial({ color: 0x73ab35, roughness: 0.98 });
-    const grassLightMat = new THREE.MeshStandardMaterial({ color: 0xa8d652, roughness: 0.95 });
-    const grassDarkMat = new THREE.MeshStandardMaterial({ color: 0x4f8127, roughness: 0.99 });
-
+    const group = setCommonMeta(new THREE.Group(), 'Холм', { collidableRadius: 2.6 });
     const radius = 2.4;
-    const height = 1.3;
-    const points = [];
-    
-    // Создаем плавный профиль холма (S-образная кривая)
+    const points: THREE.Vector2[] = [];
     for (let i = 24; i >= 0; i--) {
         const t = i / 24;
-        const x = t * radius;
-        const y = height * (Math.cos(t * Math.PI) + 1) / 2;
-        points.push(new THREE.Vector2(x, y));
+        points.push(new THREE.Vector2(t * radius, 1.3 * (Math.cos(t * Math.PI) + 1) / 2));
     }
-
-    const hillGeometry = new THREE.LatheGeometry(points, 48);
-    
-    // Добавляем легкую органичную неровность, чтобы холм не был идеальным конусом
-    const position = hillGeometry.attributes.position;
+    const geometry = new THREE.LatheGeometry(points, 48);
+    const position = geometry.attributes.position;
+    const colors: number[] = [];
+    const low = new THREE.Color(0x758064), high = new THREE.Color(0x92967a);
     for (let i = 0; i < position.count; i++) {
-        const vx = position.getX(i);
-        const vy = position.getY(i);
-        const vz = position.getZ(i);
-
-        const angle = Math.atan2(vz, vx);
-        const radiusDistortion = 1 + 0.06 * Math.cos(3 * angle) + 0.04 * Math.sin(5 * angle);
-
-        position.setX(i, vx * radiusDistortion);
-        position.setZ(i, vz * radiusDistortion);
+        const x = position.getX(i), y = position.getY(i), z = position.getZ(i);
+        const angle = Math.atan2(z, x);
+        const distortion = 1 + 0.06 * Math.cos(3 * angle) + 0.04 * Math.sin(5 * angle);
+        position.setX(i, x * distortion); position.setZ(i, z * distortion);
+        const c = low.clone().lerp(high, Math.min(1, y / 1.3 * 0.7 + 0.15 * Math.sin(x * 5) * Math.cos(z * 4)));
+        colors.push(c.r, c.g, c.b);
     }
-    
-    hillGeometry.computeVertexNormals();
-
-    const mound = new THREE.Mesh(hillGeometry, grassMat);
-    mound.rotation.x = Math.PI / 2; // Поворачиваем, чтобы Y стал осью Z (вверх)
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    geometry.computeVertexNormals();
+    const mound = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
+    mound.rotation.x = Math.PI / 2;
     group.add(mound);
-
-    // Функция для расчета высоты холма в точке (x, y) локальной системы координат группы (где Z - верх)
-    const getHillHeightAt = (x: number, y: number): number => {
-        const angle = Math.atan2(y, x);
-        const r_distorted = Math.hypot(x, y);
-        const radiusDistortion = 1 + 0.06 * Math.cos(3 * angle) + 0.04 * Math.sin(5 * angle);
-        const r_original = r_distorted / radiusDistortion;
-        const t = r_original / radius;
-        
-        if (t > 1) return 0;
-        return height * (Math.cos(t * Math.PI) + 1) / 2;
-    };
-
-    // Простая псевдослучайная функция
-    const seededRandom = (seed: number) => {
-        const x = Math.sin(seed) * 10000;
-        return x - Math.floor(x);
-    };
-
-    // 1. Процедурно высаживаем пучки травы (с более равномерным распределением)
-    for (let i = 0; i < 45; i++) {
-        const r = Math.sqrt(seededRandom(i * 10)) * radius * 0.95;
-        const theta = seededRandom(i * 10 + 1) * Math.PI * 2;
-        const x = Math.cos(theta) * r;
-        const y = Math.sin(theta) * r;
-        const z = getHillHeightAt(x, y);
-
-        const mat = seededRandom(i * 10 + 2) > 0.5 ? grassDarkMat : grassLightMat;
-        const scale = 0.4 + seededRandom(i * 10 + 3) * 0.4;
-
-        const clump = createGrassClump(mat);
-        clump.position.set(x, y, z);
-        clump.scale.setScalar(scale);
-        clump.rotation.z = 0;
-        
-        group.add(clump);
-    }
-
-    // 2. Добавляем несколько кустов на склонах (вручную для лучшей композиции)
-    const bushes = [
-        { x: -0.8, y: -1.2, scale: 1.2 },
-        { x: 1.2, y: 0.5, scale: 0.9 },
-        { x: -0.3, y: 1.4, scale: 1.0 },
-        { x: 0.4, y: -0.6, scale: 0.8 },
-        { x: -1.5, y: 0.2, scale: 0.7 }
-    ];
-    
-    bushes.forEach((b, i) => {
-        const z = getHillHeightAt(b.x, b.y);
-        const bush = createBushMesh(b.scale);
-        bush.position.set(b.x, b.y, z - 0.05 * b.scale);
-        bush.rotation.z = seededRandom(i * 20) * Math.PI * 2;
+    // Small vegetation accents; no hundreds of individual grass draw calls.
+    for (let i = 0; i < 7; i++) {
+        const angle = i * 2.4, r = 1.3 + noise(i) * 0.65;
+        const distortion = 1 + 0.06 * Math.cos(-3 * angle) + 0.04 * Math.sin(-5 * angle);
+        const t = Math.min(1, r / distortion / radius);
+        const bush = createBushMesh(0.5 + noise(i + 20) * 0.4);
+        bush.position.set(Math.cos(angle) * r, Math.sin(angle) * r, 1.3 * (Math.cos(t * Math.PI) + 1) / 2);
         group.add(bush);
-    });
-
-    // 3. Добавляем деревья у подножья или на нижнем склоне
-    const trees = [
-        { x: -1.3, y: 0.8, scale: 0.5, type: 'tree' },
-        { x: 1.5, y: -0.7, scale: 0.6, type: 'fir' },
-        { x: 0.9, y: 1.3, scale: 0.7, type: 'tree' }
-    ];
-
-    trees.forEach((t, i) => {
-        const z = getHillHeightAt(t.x, t.y);
-        const tree = t.type === 'tree' ? createTreeMesh(t.scale) : createFirTreeMesh();
-        if (t.type === 'fir') tree.scale.setScalar(t.scale * 1.5);
-        
-        tree.position.set(t.x, t.y, z);
-        tree.rotation.z = seededRandom(i * 30) * Math.PI * 2;
-        group.add(tree);
-    });
-
+    }
     applyShadows(group);
     return group;
 }
 
 export function createFirTreeMesh() {
-    const group = new THREE.Group();
-    const trunk = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.05, 0.07, 0.4, 8),
-        new THREE.MeshStandardMaterial({ color: 0x5b4636 })
-    );
-    trunk.position.z = 0.2;
-    trunk.rotation.x = Math.PI / 2;
-    group.add(trunk);
-
-    for (let i = 0; i < 3; i++) {
-        const cone = new THREE.Mesh(
-            new THREE.ConeGeometry(0.4 - i * 0.1, 0.6, 12),
-            new THREE.MeshStandardMaterial({ color: 0x3a5f2b })
-        );
-        cone.position.z = 0.5 + i * 0.4;
-        cone.rotation.x = Math.PI / 2;
-        group.add(cone);
+    const group = setCommonMeta(new THREE.Group(), 'Ель', { collidableRadius: 0.5 });
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.065, 1.6, 10), bark());
+    trunk.rotation.x = Math.PI / 2; trunk.position.z = 0.8; group.add(trunk);
+    const materials = [foliage(0x3e6255), foliage(0x4b6b58), foliage(0x567560)];
+    for (let i = 0; i < 6; i++) {
+        const radius = 0.48 * (1 - i / 7);
+        const geometry = new THREE.ConeGeometry(radius, 0.5, 14, 2);
+        const positions = geometry.attributes.position;
+        for (let v = 0; v < positions.count; v++) {
+            const angle = Math.atan2(positions.getZ(v), positions.getX(v));
+            const k = 1 + Math.sin(angle * 7 + i) * 0.12;
+            positions.setX(v, positions.getX(v) * k); positions.setZ(v, positions.getZ(v) * k);
+        }
+        geometry.computeVertexNormals();
+        const crown = new THREE.Mesh(geometry, materials[i % 3]);
+        crown.rotation.set(Math.PI / 2, i * 0.7, 0);
+        crown.position.z = 0.52 + i * 0.21; group.add(crown);
     }
-    setCommonMeta(group, 'Ель', { collidableRadius: 0.4 });
     applyShadows(group);
     return group;
 }
 
 export function createTreeMesh(scale = 1) {
-    const group = new THREE.Group();
-    const trunk = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.08 * scale, 0.1 * scale, 0.9 * scale, 10),
-        new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.95 })
-    );
-    trunk.position.z = 0.45 * scale;
-    trunk.rotation.x = Math.PI / 2;
-    group.add(trunk);
-
-    const crown = new THREE.Mesh(
-        new THREE.SphereGeometry(0.5 * scale, 12, 12),
-        new THREE.MeshStandardMaterial({ color: 0x4d7c0f, roughness: 0.9 })
-    );
-    crown.position.z = 1.15 * scale;
-    group.add(crown);
-
-    setCommonMeta(group, 'Дерево', { collidableRadius: 0.5 * scale });
+    const group = setCommonMeta(new THREE.Group(), 'Дерево', { collidableRadius: 0.7 * scale });
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.1, 1.2, 10), bark());
+    trunk.rotation.x = Math.PI / 2; trunk.position.z = 0.6; group.add(trunk);
+    const geometry = new THREE.IcosahedronGeometry(0.42, 2);
+    const materials = [foliage(0x627951), foliage(0x73855d), foliage(0x526d51)];
+    for (let i = 0; i < 7; i++) {
+        const angle = i * 2.4;
+        const crown = new THREE.Mesh(geometry, materials[i % 3]);
+        crown.position.set(Math.cos(angle) * 0.28, Math.sin(angle) * 0.28, 1.08 + noise(i) * 0.45);
+        crown.scale.set(0.8 + noise(i + 1) * 0.3, 0.9, 1.05);
+        group.add(crown);
+    }
+    group.scale.setScalar(scale);
     applyShadows(group);
     return group;
 }
 
 export function createParkPatch(width: number, depth: number) {
     const group = new THREE.Group();
-    const patch = new THREE.Mesh(
-        new THREE.BoxGeometry(width, depth, 0.05),
-        new THREE.MeshStandardMaterial({ color: 0x9ad17b, roughness: 0.98 })
-    );
-    patch.position.z = 0.025;
-    group.add(patch);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(width + 0.18, depth + 0.18, 0.06), foliage(0x999e90));
+    base.position.z = 0.03; group.add(base);
+    const grass = new THREE.Mesh(new THREE.BoxGeometry(width, depth, 0.065), foliage(0x788668));
+    grass.position.z = 0.035; group.add(grass);
+
+    const propZ = 0.067;
+    const planter = createParkPlanterMesh();
+    planter.position.set(0, 0, propZ);
+    group.add(planter);
+
+    const bench = createParkBenchMesh();
+    bench.position.set(0, -depth * 0.38, propZ);
+    group.add(bench);
+
+    const lampA = createParkLampMesh();
+    lampA.position.set(-width * 0.44, depth * 0.42, propZ);
+    group.add(lampA);
+
+    const lampB = createParkLampMesh();
+    lampB.position.set(width * 0.44, -depth * 0.42, propZ);
+    group.add(lampB);
+
+    applyShadows(group);
     return group;
 }

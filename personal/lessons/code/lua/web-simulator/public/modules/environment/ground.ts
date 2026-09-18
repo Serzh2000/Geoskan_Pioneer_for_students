@@ -26,7 +26,7 @@ function applyGroundTheme(theme: GroundTheme = getGroundTheme()): void {
 
     if (arenaAccentMaterial) {
         arenaAccentMaterial.color.setHex(theme === 'dark' ? 0x94a3b8 : 0xffffff);
-        arenaAccentMaterial.opacity = theme === 'dark' ? 0.16 : 0.3;
+        arenaAccentMaterial.opacity = theme === 'dark' ? 0.035 : 0.06;
         arenaAccentMaterial.needsUpdate = true;
     }
 
@@ -64,7 +64,7 @@ function ensureGroundThemeListener(): void {
 }
 
 export function createGround(_scene: THREE.Scene, envGroup: THREE.Group) {
-    const groundSize = 200;
+    const groundSize = 600;
     const groundGeom = new THREE.PlaneGeometry(groundSize, groundSize);
     const groundTheme = getGroundTheme();
     groundTexture = createFloorTexture(1024, groundTheme);
@@ -92,6 +92,7 @@ export function createGround(_scene: THREE.Scene, envGroup: THREE.Group) {
         metalness: 0.02
     });
     const arenaAccent = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), arenaAccentMaterial);
+    arenaAccent.receiveShadow = true;
     arenaAccent.position.z = 0.01;
     ground.add(arenaAccent);
 
@@ -103,19 +104,22 @@ export function createGround(_scene: THREE.Scene, envGroup: THREE.Group) {
         metalness: 0.08,
         side: THREE.DoubleSide
     });
-    const centerRing = new THREE.Mesh(new THREE.RingGeometry(1.35, 1.9, 64), ringMaterial);
+    const centerRing = new THREE.Mesh(new THREE.RingGeometry(1.22, 1.24, 128), ringMaterial);
     centerRing.position.z = 0.012;
     ground.add(centerRing);
 
     // Add the H landing pad marker at the origin.
-    const padGeom = new THREE.PlaneGeometry(2, 2);
+    const padGeom = new THREE.PlaneGeometry(2.2, 2.2);
     landingPadTexture = createLandingPadTexture(groundTheme);
     landingPadMaterial = new THREE.MeshStandardMaterial({
         map: landingPadTexture,
         transparent: true,
-        opacity: 0.95
+        opacity: 1,
+        roughness: 0.9,
+        depthWrite: false
     });
     const landingPad = new THREE.Mesh(padGeom, landingPadMaterial);
+    landingPad.receiveShadow = true;
     landingPad.position.set(0, 0, 0.015);
     ground.add(landingPad);
 
@@ -124,14 +128,14 @@ export function createGround(_scene: THREE.Scene, envGroup: THREE.Group) {
     borderMaterial = nextBorderMaterial;
     cornerMaterial = nextCornerMaterial;
     const borderSegments = [
-        { x: 0, y: 8.4, w: 17.6, h: 0.34 },
-        { x: 0, y: -8.4, w: 17.6, h: 0.34 },
-        { x: 8.4, y: 0, w: 0.34, h: 17.6 },
-        { x: -8.4, y: 0, w: 0.34, h: 17.6 }
+        { x: 0, y: 8.4, w: 16.85, h: 0.045 },
+        { x: 0, y: -8.4, w: 16.85, h: 0.045 },
+        { x: 8.4, y: 0, w: 0.045, h: 16.85 },
+        { x: -8.4, y: 0, w: 0.045, h: 16.85 }
     ];
     borderSegments.forEach(({ x, y, w, h }) => {
-        const strip = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.08), nextBorderMaterial);
-        strip.position.set(x, y, 0.045);
+        const strip = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.005), nextBorderMaterial);
+        strip.position.set(x, y, 0.018);
         strip.receiveShadow = true;
         ground.add(strip);
     });
@@ -142,8 +146,8 @@ export function createGround(_scene: THREE.Scene, envGroup: THREE.Group) {
         [7.95, -7.95],
         [-7.95, -7.95]
     ].forEach(([x, y]) => {
-        const corner = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.085), nextCornerMaterial);
-        corner.position.set(x, y, 0.048);
+        const corner = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.008), nextCornerMaterial);
+        corner.position.set(x, y, 0.02);
         corner.receiveShadow = true;
         ground.add(corner);
     });

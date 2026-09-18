@@ -1,0 +1,51 @@
+{
+  "source": "Original geometry authored via Blender MCP",
+  "coordinates": "metres; Z up; export_yup=false",
+  "assets": [
+    {
+      "node": "V2_Cargo",
+      "meshes": 5,
+      "triangles": 1504
+    },
+    {
+      "node": "V2_Transport",
+      "meshes": 7,
+      "triangles": 7520
+    },
+    {
+      "node": "V2_VideoTower",
+      "meshes": 6,
+      "triangles": 4636
+    },
+    {
+      "node": "V2_ControlStation",
+      "meshes": 7,
+      "triangles": 7844
+    },
+    {
+      "node": "V2_LightTower",
+      "meshes": 5,
+      "triangles": 8156
+    },
+    {
+      "node": "V2_BuildingFloor",
+      "meshes": 4,
+      "triangles": 1620
+    },
+    {
+      "node": "V2_BuildingRoof",
+      "meshes": 4,
+      "triangles": 1944
+    },
+    {
+      "node": "V2_WindowModule",
+      "meshes": 15,
+      "triangles": 2676
+    },
+    {
+      "node": "V2_EntranceModule",
+      "meshes": 6,
+      "triangles": 648
+    }
+  ]
+}

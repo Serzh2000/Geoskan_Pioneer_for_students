@@ -25,7 +25,7 @@ export function createGeoskanArenaPreset() {
         presetName: 'geoskan-arena'
     });
 
-    group.add(createArenaSpaceMesh());
+    group.add(createArenaSpaceMesh(24));
 
     [
         [-6, -7.5, '1'],
@@ -63,11 +63,11 @@ export function createGeoskanArenaPreset() {
     group.add(settlement);
 
     const forestLeft = createForestPatchMesh();
-    forestLeft.position.set(-8.2, 7.2, 0);
+    forestLeft.position.set(-8.5, 4.8, 0);
     group.add(forestLeft);
 
     const forestRight = createForestPatchMesh();
-    forestRight.position.set(8.4, 7.1, 0);
+    forestRight.position.set(8.5, 4.8, 0);
     group.add(forestRight);
 
     const controlStation = createArenaControlStationMesh();
@@ -79,16 +79,12 @@ export function createGeoskanArenaPreset() {
     group.add(cameraTower);
 
     const lightTowerLeft = createLightTowerMesh();
-    lightTowerLeft.position.set(-8.2, 8.2, 0);
+    lightTowerLeft.position.set(-10.3, 9.6, 0);
     group.add(lightTowerLeft);
 
     const lightTowerRight = createLightTowerMesh();
-    lightTowerRight.position.set(8.2, 8.2, 0);
+    lightTowerRight.position.set(10.3, 9.6, 0);
     group.add(lightTowerRight);
-
-    const pointLight = new THREE.PointLight(0xffffff, 50, 20);
-    pointLight.position.set(0, 0, 5);
-    group.add(pointLight);
 
     const locusA = createLocusBeaconMesh();
     locusA.position.set(-8.1, -0.2, 0);
@@ -99,9 +95,9 @@ export function createGeoskanArenaPreset() {
     group.add(locusB);
 
     [
-        [-2.8, 2.2],
-        [0.2, 2.6],
-        [2.8, 2.1]
+        [-2.8, -3.7],
+        [0.2, -3.7],
+        [2.8, -3.7]
     ].forEach(([x, y]) => {
         const cargo = createCargoMesh();
         cargo.position.set(x as number, y as number, 0);

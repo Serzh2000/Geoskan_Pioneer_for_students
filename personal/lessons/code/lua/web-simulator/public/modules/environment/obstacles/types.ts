@@ -27,5 +27,6 @@ export interface SceneObjectOptions {
     points?: ScenePathPoint[];
     closed?: boolean;
     floors?: number;
+    roadWidth?: number;
     markerMap?: MarkerMapOptions;
 }
