@@ -50,6 +50,9 @@ describe('drone FSM validation', () => {
             children: [] as any[],
             appendChild(node: any) {
                 fragment.children.push(node);
+            },
+            append(...nodes: any[]) {
+                fragment.children.push(...nodes);
             }
         };
 
@@ -135,13 +138,13 @@ describe('drone FSM validation', () => {
     test('ignores TAKEOFF outside PREFLIGHT', () => {
         expect(enterTakeoffProcess(drone)).toBe(false);
         expect(drone.fsmState).toBe('IDLE');
-        expect(logLines.some((line) => line.includes('WARNING: TAKEOFF command is ignored because the drone is not in PREFLIGHT.'))).toBe(true);
+        expect(logLines.some((line) => line.includes('TAKEOFF command is ignored because the drone is not in PREFLIGHT.'))).toBe(true);
     });
 
     test('rejects goToLocalPoint on ground', () => {
         expect(applyGoToLocalPointRequest(drone, { x: 1, y: 2, z: 1 })).toBe(false);
         expect(drone.fsmState).toBe('IDLE');
-        expect(logLines.some((line) => line.includes('CRITICAL WARNING: goToLocalPoint is rejected on the ground.'))).toBe(true);
+        expect(logLines.some((line) => line.includes('goToLocalPoint is rejected on the ground.'))).toBe(true);
     });
 
     test('throws detailed FSM error for goToLocalPoint during PREFLIGHT', () => {
@@ -159,7 +162,7 @@ describe('drone FSM validation', () => {
 
         expect(handlePreflightTimeout(drone)).toBe(true);
         expect(drone.fsmState).toBe('IDLE');
-        expect(logLines.some((line) => line.includes('WARNING: Preflight timeout expired. The drone is returned to IDLE.'))).toBe(true);
+        expect(logLines.some((line) => line.includes('Preflight timeout expired. The drone is returned to IDLE.'))).toBe(true);
     });
 
     test('blocks PREFLIGHT without RC when Copter_flyWithoutRc requires a radio link', () => {
@@ -192,7 +195,28 @@ describe('drone FSM validation', () => {
 
         expect(enterLandingProcess(drone)).toBe(true);
         expect(drone.fsmState).toBe('LANDING_PROCESS');
-        expect(logLines.some((line) => line.includes('WARNING: LANDING overrides the active goToLocalPoint movement.'))).toBe(true);
+        expect(logLines.some((line) => line.includes('LANDING overrides the active goToLocalPoint movement.'))).toBe(true);
+    });
+
+    test('an inactive RC arm switch does not cancel a script preflight', () => {
+        simSettings.gamepadConnected = true;
+        drone.rcChannels[5] = 1000;
+        enterPreflight(drone);
+        updateActiveFlight(drone, drone.id, 0.016, false, () => []);
+        expect(drone.fsmState).toBe('PREFLIGHT');
+    });
+
+    test('an explicit RC disarm transition still stops an airborne mission', () => {
+        simSettings.gamepadConnected = true;
+        drone.pos.z = 1;
+        drone.target_pos = { ...drone.pos };
+        setDroneFsmState(drone, 'FLYING_HOVER');
+        drone.rcChannels[5] = 2000;
+        updateActiveFlight(drone, drone.id, 0.016, true, () => []);
+        expect(drone.fsmState).toBe('FLYING_HOVER');
+        drone.rcChannels[5] = 1000;
+        updateActiveFlight(drone, drone.id, 0.016, true, () => []);
+        expect(drone.status).toBe('DISARMED_FALL');
     });
 
     test('ignores late timer command when FSM is incompatible', () => {
@@ -200,7 +224,7 @@ describe('drone FSM validation', () => {
         const accepted = withCommandSource(drone, 'timer', () => applyGoToLocalPointRequest(drone, { x: 1, y: 0, z: 1 }));
 
         expect(accepted).toBe(false);
-        expect(logLines.some((line) => line.includes('WARNING: Delayed command was rejected because FSM state has already changed.'))).toBe(true);
+        expect(logLines.some((line) => line.includes('Delayed command was rejected because FSM state has already changed.'))).toBe(true);
     });
 
     test('accepts goToLocalPoint from timer when drone already hovers', () => {

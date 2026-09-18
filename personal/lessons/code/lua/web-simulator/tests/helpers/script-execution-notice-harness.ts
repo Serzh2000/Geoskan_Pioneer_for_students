@@ -28,7 +28,8 @@ export async function createScriptExecutionNoticeHarness(): Promise<ScriptExecut
         scrollHeight: 0
     };
     const fragment = {
-        appendChild: () => {}
+        appendChild: () => {},
+        append: () => {}
     };
 
     jest.unstable_mockModule('fengari-web', () => ({
