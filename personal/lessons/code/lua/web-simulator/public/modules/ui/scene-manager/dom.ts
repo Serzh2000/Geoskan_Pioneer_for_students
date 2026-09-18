@@ -2,6 +2,12 @@ import type { SceneManagerDomRefs } from './types.js';
 
 export function getSceneManagerDomRefs(): SceneManagerDomRefs {
     return {
+        rootEl: document.querySelector('.scene-manager'),
+        tabsEl: document.querySelector('.scene-manager-tabs'),
+        treeFilterEl: document.getElementById('scene-tree-filter') as HTMLInputElement | null,
+        treeFilterClearBtn: document.getElementById('scene-tree-filter-clear') as HTMLButtonElement | null,
+        treeCollapseBtn: document.getElementById('scene-tree-collapse') as HTMLButtonElement | null,
+        selectedParamsCardEl: document.getElementById('scene-selected-params-card'),
         hierarchyTabBtn: document.getElementById('scene-tab-hierarchy') as HTMLButtonElement | null,
         inspectorTabBtn: document.getElementById('scene-tab-inspector') as HTMLButtonElement | null,
         hierarchyPanelEl: document.getElementById('scene-panel-hierarchy'),

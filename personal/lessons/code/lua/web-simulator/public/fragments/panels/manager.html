@@ -3,15 +3,16 @@
                     <div class="panel-header__lead">
                         <span class="panel-title">Менеджер сцены</span>
                     </div>
-                    <button class="panel-close-btn" onclick="closePanel()">✕</button>
+                    <button class="panel-close-btn" onclick="closePanel()" aria-label="Закрыть менеджер сцены">✕</button>
                 </div>
                 <div class="panel-content panel-content--scene-manager">
                     <div class="scene-manager">
                         <div class="scene-manager-tabs" role="tablist" aria-label="Режим панели менеджера сцены">
-                            <button id="scene-tab-hierarchy" class="scene-manager-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="scene-panel-hierarchy">Иерархия</button>
-                            <button id="scene-tab-inspector" class="scene-manager-tab" type="button" role="tab" aria-selected="false" aria-controls="scene-panel-inspector">Инспектор</button>
+                            <button id="scene-tab-hierarchy" class="scene-manager-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="scene-panel-hierarchy">Объекты</button>
+                            <button id="scene-tab-inspector" class="scene-manager-tab" type="button" role="tab" aria-selected="false" aria-controls="scene-panel-inspector">Свойства</button>
                         </div>
 
+                        <div id="scene-operation-status" class="scene-operation-status" role="status" aria-live="polite" hidden></div>
                         <!-- @include ./manager/hierarchy.html -->
 
                         <!-- @include ./manager/inspector.html -->

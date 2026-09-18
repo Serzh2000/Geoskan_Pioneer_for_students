@@ -89,6 +89,28 @@ const TYPE_PREVIEW_CONFIG: Record<string, SceneTypePreviewConfig> = {
     }
 };
 
+// Every catalog entry describes its purpose instead of falling back to a generic cube.
+const EXTRA_TYPES: Array<[string, string, string, SceneTypePreviewConfig['accent'], string]> = [
+    ['flag', 'Флаг', 'Отметка направления и контрольной точки маршрута.', 'route', 'M6 21V3m0 1h12l-3 5 3 5H6'],
+    ['arena-hills', 'Группа холмов', 'Несколько возвышенностей для полёта с учётом рельефа.', 'terrain', 'M2 19 8 8l5 7 4-5 5 9Z'],
+    ['tree', 'Ель', 'Отдельное дерево для ориентирования и облёта препятствий.', 'terrain', 'm12 3-7 10h4l-5 5h16l-5-5h4ZM12 18v4'],
+    ['forest-patch', 'Лесной массив', 'Группа деревьев для лесных участков и поисковых миссий.', 'terrain', 'm8 4-5 12h10Zm9 3-4 12h9ZM8 16v5m9-2v3'],
+    ['settlement', 'Макет поселения', 'Небольшие дома с улицей для моделирования населённого пункта.', 'structure', 'm3 10 6-6 6 6M5 9v11h8V9m1 4 4-4 4 4m-6 0v7h5v-7'],
+    ['transport', 'Транспорт', 'Автомобиль как наземный ориентир или объект наблюдения.', 'structure', 'm4 10 3-5h10l3 5v8H4Zm0 1h16M7 18v3m10-3v3'],
+    ['cargo', 'Груз', 'Груз с подвесом для отработки захвата и транспортировки.', 'service', 'M5 8h14v12H5ZM9 8V5h6v3M12 8v12'],
+    ['charge-station', 'Станция заряда', 'Наземная площадка с маркировкой зарядной станции.', 'service', 'M4 4h16v16H4Zm9 2-5 7h4l-1 5 5-7h-4Z'],
+    ['locus-beacon', 'Локус-маяк', 'Маяк локальной навигации для размещения на полигоне.', 'service', 'M12 10v11M8 21h8M8 6a6 6 0 0 0 0 8m8-8a6 6 0 0 1 0 8M5 3a10 10 0 0 0 0 14m14-14a10 10 0 0 1 0 14'],
+    ['light-tower', 'Световая мачта', 'Освещение участка; яркость меняется в контекстном меню.', 'service', 'M12 8v13M7 21h10M4 4h16v4H4ZM6 11l-2 3m14-3 2 3'],
+    ['video-tower', 'Видеомачта', 'Мачта с видеокамерой для оборудования наблюдательного поста.', 'service', 'M11 10v11M6 21h10M5 4h11v7H5Zm11 2 5-2v8l-5-2'],
+    ['control-station', 'Пульт полигона', 'Рабочее место оператора с мониторами и оборудованием.', 'service', 'M4 4h16v10H4ZM12 14v4M8 18h8M3 18v4m18-4v4M3 18h18'],
+    ['arena-space', 'Арена с сеткой', 'Ограждённая полётная зона с опорами и защитной сеткой.', 'structure', 'M3 6h18v14H3ZM3 6l5 4h8l5-4M8 10v10m8-10v10'],
+    ['pad-h', 'Площадка H', 'Посадочная мишень с буквой H для тренировки точности.', 'service', 'M3 3h18v18H3ZM8 7v10m8-10v10M8 12h8'],
+    ['pad-charge', 'Площадка заряда', 'Площадка с символом молнии для разметки сервисной зоны.', 'service', 'M3 3h18v18H3Zm10 3-5 7h4l-1 5 5-7h-4Z']
+];
+for (const [type, title, description, accent, path] of EXTRA_TYPES) {
+    TYPE_PREVIEW_CONFIG[type] = { title, description, accent, icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>` };
+}
+
 export function getSceneTypePreviewConfig(type: string, optionLabel?: string): SceneTypePreviewConfig {
     return TYPE_PREVIEW_CONFIG[type] || {
         ...DEFAULT_TYPE_PREVIEW,

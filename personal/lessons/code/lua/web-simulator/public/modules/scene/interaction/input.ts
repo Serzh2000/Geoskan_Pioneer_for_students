@@ -56,7 +56,7 @@ export function onPointerUp(event: PointerEvent) {
     const dist = pointerDownPos.distanceTo(new THREE.Vector2(event.clientX, event.clientY));
     traceClick(`pointerup delta=${dist.toFixed(2)}`);
     if (dist > 5) {
-        traceClick(`pointerup ignored: pointer moved too far (${dist.toFixed(2)})`, 'warn');
+        traceClick(`pointerup ignored: pointer moved too far (${dist.toFixed(2)})`, 'info');
         return;
     }
 

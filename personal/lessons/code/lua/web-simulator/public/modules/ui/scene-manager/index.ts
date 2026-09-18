@@ -8,7 +8,8 @@ import {
     createSceneManagerViewState,
     syncInspectorAvailability,
     syncTabVisibility,
-    syncTransformModeState
+    syncTransformModeState,
+    type SceneTreeState
 } from './view-state.js';
 import type { SceneManagerEntry } from './types.js';
 
@@ -19,7 +20,8 @@ function buildSceneManagerRenderSignature(
     selectedId: string | null,
     activeTransformMode: TransformMode,
     isLinearEditingActive: boolean,
-    isAnyLinearEditing: boolean
+    isAnyLinearEditing: boolean,
+    tree: SceneTreeState
 ): string {
     const selected = objects.find((item) => item.id === selectedId) || null;
 
@@ -28,6 +30,8 @@ function buildSceneManagerRenderSignature(
         selectedId,
         isLinearEditingActive,
         isAnyLinearEditing,
+        query: tree.query,
+        expanded: [...tree.expandedIds].sort(),
         objects: objects.map((item) => ({
             id: item.id,
             name: item.name,
@@ -81,7 +85,8 @@ export function initSceneManager(callbacks: UICallbacks) {
                 selectedId,
                 viewState.activeTransformMode,
                 isLinearEditingActive,
-                isAnyLinearEditing
+                isAnyLinearEditing,
+                viewState.tree
             )
         };
     };
@@ -94,6 +99,8 @@ export function initSceneManager(callbacks: UICallbacks) {
 
         lastRenderSignature = renderState.signature;
         const previousSelectedId = viewState.lastSelectedId;
+        const pickedInTree = viewState.tree.suppressInspectorJump;
+        viewState.tree.suppressInspectorJump = false;
         viewState.lastSelectedId = renderSceneManager(
             callbacks,
             elements,
@@ -101,9 +108,11 @@ export function initSceneManager(callbacks: UICallbacks) {
             renderState.selectedId,
             viewState.lastSelectedId,
             () => render(true),
-            viewState.activeTransformMode
+            viewState.activeTransformMode,
+            viewState.tree
         );
-        if (viewState.lastSelectedId && viewState.lastSelectedId !== previousSelectedId) {
+        const selectionChanged = viewState.lastSelectedId && viewState.lastSelectedId !== previousSelectedId;
+        if (selectionChanged && !pickedInTree) {
             viewState.activeTab = 'inspector';
         }
         syncInspectorAvailability(elements, viewState);
@@ -155,6 +164,7 @@ export function initSceneManager(callbacks: UICallbacks) {
     registerSceneManagerBindings({
         callbacks,
         elements,
+        tree: viewState.tree,
         render: () => scheduleRender(true),
         typePreview,
         setActiveTab: (tab) => {
@@ -181,6 +191,10 @@ export function initSceneManager(callbacks: UICallbacks) {
         visibilityObserver.observe(managerPanel);
     }
     document.addEventListener('visibilitychange', () => ensurePolling(true));
+    if (elements.rootEl && typeof ResizeObserver === 'function') {
+        const layoutObserver = new ResizeObserver(() => syncTabVisibility(elements, viewState.activeTab));
+        layoutObserver.observe(elements.rootEl);
+    }
     syncTabVisibility(elements, viewState.activeTab);
     syncTransformModeState(elements, viewState.activeTransformMode);
     render(true);

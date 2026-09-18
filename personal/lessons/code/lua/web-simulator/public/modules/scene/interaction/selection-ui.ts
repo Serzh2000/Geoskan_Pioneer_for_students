@@ -72,7 +72,7 @@ export function updateObjectSelectionVisuals(obj: THREE.Object3D, selected: bool
                 }
                 if (selected) {
                     mat.emissive.copy(emissiveColor);
-                    mat.emissiveIntensity = Math.max(0.6, mat.userData.originalEmissiveIntensity);
+                    mat.emissiveIntensity = Math.max(0.08, mat.userData.originalEmissiveIntensity);
                     return;
                 }
                 mat.emissive.setHex(mat.userData.originalEmissive);

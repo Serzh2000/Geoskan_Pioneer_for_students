@@ -28,3 +28,7 @@
 @import url('./styles/panels/logs.css');
 @import url('./styles/responsive/index.css');
 @import url('./styles/core/theme.css');
+
+@import url('./styles/scene/manager-panel/workspace.css');
+
+@import './styles/panels/journal-academy.css';

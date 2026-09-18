@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { DroneOrbitControls } from './DroneOrbitControls.js';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { log } from '../../shared/logging/logger.js';
@@ -34,6 +35,7 @@ export const pointerDownPos = new THREE.Vector2();
 export let isHittingGizmo = false;
 let canvasResizeObserver: ResizeObserver | null = null;
 let sceneThemeListenerAttached = false;
+let reflectionTarget: THREE.WebGLRenderTarget | null = null;
 
 const orbitTargetBounds = new THREE.Box3();
 const orbitTargetCenter = new THREE.Vector3();
@@ -47,8 +49,8 @@ function getSceneTheme(): SceneTheme {
 function getSceneThemePalette(): { background: number; fog: number } {
     if (getSceneTheme() === 'dark') {
         return {
-            background: 0x0f172a,
-            fog: 0x0f172a
+            background: 0x263440,
+            fog: 0x263440
         };
     }
 
@@ -67,7 +69,7 @@ function applySceneTheme(): void {
     if (scene.fog instanceof THREE.FogExp2) {
         scene.fog.color.setHex(fog);
     } else {
-        scene.fog = new THREE.FogExp2(fog, 0.01);
+        scene.fog = new THREE.FogExp2(fog, 0.008);
     }
 }
 
@@ -83,8 +85,7 @@ function ensureSceneThemeListener(): void {
 export function setSelectedObject(obj: THREE.Object3D | null) {
     selectedObject = obj;
     (window as any).selectedObject = obj;
-    (window as any).pendingOrbitRetargetObject = null;
-    
+
     if (obj) {
         if (!multiSelectedObjects.includes(obj)) {
             multiSelectedObjects = [obj];
@@ -136,7 +137,16 @@ export function focusOrbitControlsOnObject(obj: THREE.Object3D | null, applyView
         orbitTargetBounds.getCenter(orbitTargetCenter);
     }
 
-    controls.setTarget(orbitTargetCenter, true, applyViewChange);
+    controls.setTarget(orbitTargetCenter, true, false);
+    if (applyViewChange && !orbitTargetBounds.isEmpty() && obj.userData.type !== 'ground' && obj.name !== 'Ground') {
+        const radius = orbitTargetBounds.getSize(new THREE.Vector3()).length() / 2;
+        const verticalFov = THREE.MathUtils.degToRad(camera.fov) / 2;
+        const limitingFov = Math.min(verticalFov, Math.atan(Math.tan(verticalFov) * camera.aspect));
+        // Frame the complete object even inside a narrow scene viewport.
+        controls.radius = Math.max(1.2, radius * 1.12 / Math.sin(limitingFov));
+        controls.elevation = Math.PI / 5;
+    }
+    if (applyViewChange) controls.update();
 }
 
 function configureTransformHelperVisuals(helper: THREE.Object3D) {
@@ -170,18 +180,27 @@ export function initScene(container: HTMLElement) {
     const height = canvasContainer.clientHeight || window.innerHeight;
     const aspect = width / height;
     
-    camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
-    camera.position.set(0, -10, 6.5);
+    camera = new THREE.PerspectiveCamera(50, aspect, 0.025, 300);
+    camera.position.set(3.4, -5.2, 3.8);
     camera.up.set(0, 0, 1);
     camera.lookAt(0, 0, 1);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio || 1);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.18;
+    renderer.toneMappingExposure = 1.05;
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const room = new RoomEnvironment();
+    reflectionTarget?.dispose();
+    reflectionTarget = pmrem.fromScene(room, 0.04);
+    scene.environment = reflectionTarget.texture;
+    scene.environmentIntensity = 0.35;
+    room.dispose();
+    pmrem.dispose();
     
     canvasContainer.innerHTML = '';
     canvasContainer.appendChild(renderer.domElement);

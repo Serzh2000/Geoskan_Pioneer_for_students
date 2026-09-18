@@ -1,3 +1,4 @@
+import { isProtectedEntry } from '../label.js';
 import type { UICallbacks } from '../../../index.js';
 import {
     clampFloors,
@@ -57,6 +58,7 @@ export function resetSelectedControls(elements: SceneManagerDomRefs) {
         elements.selectedBuildingSettingsEl
     );
     setBuildingEditorDisabled(elements, true);
+    setFieldVisibility(elements.selectedParamsCardEl, false);
 
     if (elements.visualEditBtn) {
         elements.visualEditBtn.style.display = 'none';
@@ -119,10 +121,12 @@ export function updateSelectedControls(
     const showRotateControls = selected.draggable && mode === 'rotate';
 
     elements.applyMetaBtn?.toggleAttribute('disabled', false);
-    elements.deleteBtn?.toggleAttribute('disabled', false);
+    elements.deleteBtn?.toggleAttribute('disabled', isProtectedEntry(selected));
+    if (elements.deleteBtn) elements.deleteBtn.title = isProtectedEntry(selected) ? 'Базовые объекты сцены защищены от удаления' : 'Удалить выбранный объект';
     elements.groupBtn?.toggleAttribute('disabled', false);
     elements.ungroupBtn?.toggleAttribute('disabled', !isGroup);
     elements.resetDroneBtn?.toggleAttribute('disabled', !selected.isDrone);
+    if (elements.resetDroneBtn) elements.resetDroneBtn.hidden = !selected.isDrone;
     elements.clearSelectionBtn?.toggleAttribute('disabled', false);
     elements.modeTranslateBtn?.toggleAttribute('disabled', !selected.draggable);
     elements.modeRotateBtn?.toggleAttribute('disabled', !selected.draggable);
@@ -161,7 +165,15 @@ export function updateSelectedControls(
             : 'Маршрут можно редактировать только у дорог и рельс';
     }
     setFieldVisibility(elements.selectedPointsWrapEl, hasPointsField);
-    if (elements.appendPointBtn) elements.appendPointBtn.toggleAttribute('disabled', !selected.supportsPoints);
+    if (elements.appendPointBtn) {
+        elements.appendPointBtn.toggleAttribute('disabled', !selected.supportsPoints);
+        elements.appendPointBtn.hidden = !selected.supportsPoints;
+    }
+
+    // Groups, presets and plain props expose no editable parameters; without this the card rendered
+    // as an empty box with an "Применить" button that had nothing to apply.
+    const hasEditableParams = isMarkerDictionaryEditable || !!hasValueField || hasPointsField || isBuildingSelected;
+    setFieldVisibility(elements.selectedParamsCardEl, hasEditableParams);
 
     if (elements.visualEditBtn) {
         elements.visualEditBtn.style.display = selected.supportsPoints ? 'inline-flex' : 'none';

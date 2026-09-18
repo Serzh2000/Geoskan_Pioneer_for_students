@@ -4,6 +4,12 @@ export type SceneManagerEntry = ReturnType<NonNullable<UICallbacks['sceneManager
 export type TransformMode = 'translate' | 'rotate' | 'scale';
 
 export interface SceneManagerDomRefs {
+    rootEl: HTMLElement | null;
+    tabsEl: HTMLElement | null;
+    treeFilterEl: HTMLInputElement | null;
+    treeFilterClearBtn: HTMLButtonElement | null;
+    treeCollapseBtn: HTMLButtonElement | null;
+    selectedParamsCardEl: HTMLElement | null;
     hierarchyTabBtn: HTMLButtonElement | null;
     inspectorTabBtn: HTMLButtonElement | null;
     hierarchyPanelEl: HTMLElement | null;

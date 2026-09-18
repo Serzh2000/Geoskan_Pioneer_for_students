@@ -2,23 +2,45 @@
                             <div class="scene-panel-card scene-panel-card--tree">
                                 <div class="scene-panel-card__header">
                                     <div>
-                                        <div class="scene-panel-card__title">Иерархия сцены</div>
-                                        <p class="scene-panel-card__description">Структура объектов сцены, групп и дронов для быстрого выбора.</p>
+                                        <div class="scene-panel-card__title">Объекты сцены</div>
+                                        <p class="scene-panel-card__description">Выберите объект в списке или на сцене.</p>
                                     </div>
                                     <span id="scene-object-count" class="scene-panel-card__badge">0 объектов</span>
                                 </div>
+                                <div class="scene-tree-toolbar">
+                                    <div class="scene-tree-search">
+                                        <svg class="scene-tree-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="m15.5 15.5 4 4"></path></svg>
+                                        <input id="scene-tree-filter" type="search" autocomplete="off" placeholder="Найти объект…" aria-label="Поиск объектов сцены" aria-controls="scene-object-list">
+                                        <button id="scene-tree-filter-clear" type="button" class="scene-tree-search__clear" aria-label="Очистить поиск">×</button>
+                                    </div>
+                                    <button id="scene-tree-collapse" type="button" class="scene-tree-toolbar__btn" title="Свернуть все группы" aria-label="Свернуть все группы"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m8 8 4-4 4 4M8 16l4 4 4-4M5 12h14"/></svg></button>
+                                </div>
                                 <div id="scene-click-coords" class="scene-click-coords" style="display: none;"></div>
                                 <div id="scene-object-list" class="scene-manager-list" role="tree" aria-label="Дерево объектов сцены"></div>
+                                <div class="scene-tree-footer"><span>Двойной щелчок — приблизить</span><button id="scene-open-properties" type="button" disabled>Свойства →</button></div>
                             </div>
 
                             <div class="scene-panel-card scene-panel-card--composer">
                                 <div class="scene-panel-card__header">
                                     <div>
-                                        <div class="scene-panel-card__title">Добавить на сцену</div>
-                                        <p class="scene-panel-card__description">Выберите тип объекта, задайте параметры и загрузите готовый пресет при необходимости.</p>
+                                        <div class="scene-panel-card__title">Новый объект</div>
+
                                     </div>
                                 </div>
                                 <div class="scene-form-grid">
+                                    <div class="scene-type-picker">
+                                        <div class="scene-type-picker__selection">
+
+                                            <div id="scene-add-type-selection-card" class="scene-type-picker__selection-card">
+                                                <span id="scene-add-type-current-icon" class="scene-type-picker__selection-icon" aria-hidden="true"></span>
+                                                <span class="scene-type-picker__selection-content">
+                                                    <strong id="scene-add-type-current">Ворота</strong>
+                                                    <span id="scene-add-type-current-text" class="scene-type-picker__selection-text"></span>
+                                                </span>
+                                            </div>
+                                            <button id="scene-add-type-open-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral scene-btn--catalog">Открыть каталог →</button>
+                                        </div>
+                                    </div>
                                     <div hidden aria-hidden="true">
                                         <select id="scene-add-type" class="scene-type-select__native" tabindex="-1">
                                             <option value="gate">Ворота</option>
@@ -190,10 +212,10 @@
                                 </div>
 
                                 <div class="scene-subsection">
-                                    <div class="scene-subsection__title">Пресеты сцены</div>
+                                    <div class="scene-subsection__title">Готовые сцены</div>
                                     <div class="scene-form-grid">
                                         <label class="scene-field">
-                                            <span>Выбор пресета</span>
+                                            <span>Сценарий</span>
                                             <select id="scene-preset-type">
                                                 <option value="preset-race-track">Гоночная трасса</option>
                                                 <option value="preset-residential">Спальный район</option>
@@ -201,7 +223,9 @@
                                             </select>
                                         </label>
                                     </div>
-                                    <button id="scene-preset-btn" class="btn-secondary scene-btn scene-btn--neutral">Загрузить пресет</button>
+                                    <div id="scene-preset-summary" class="scene-preset-summary"></div>
+                                    <p class="scene-preset-note">Добавится отдельной группой. Объекты на сцене сохранятся.</p>
+                                    <button id="scene-preset-btn" class="btn-secondary scene-btn scene-btn--neutral">Добавить сцену</button>
                                 </div>
                             </div>
                         </section>
@@ -210,8 +234,8 @@
                             <div class="scene-type-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="scene-type-modal-title">
                                 <div class="scene-type-modal__header">
                                     <div>
-                                        <div id="scene-type-modal-title" class="scene-type-modal__title">Каталог компонентов</div>
-                                        <div class="scene-type-modal__subtitle">Выберите объект сцены из каталога и перелистывайте страницы влево или вправо.</div>
+                                        <div id="scene-type-modal-title" class="scene-type-modal__title">Каталог объектов</div>
+                                        <div class="scene-type-modal__subtitle">Найдите объект, рассмотрите его в 3D и настройте перед добавлением.</div>
                                     </div>
                                     <button id="scene-type-modal-close-btn" type="button" class="scene-type-modal__close" aria-label="Закрыть каталог">×</button>
                                 </div>
@@ -219,8 +243,8 @@
                                     <div id="scene-type-modal-preview" class="scene-type-modal__preview" aria-hidden="true">
                                         <div class="scene-type-modal__preview-meta">
                                             <div class="scene-type-modal__preview-head">
-                                                <span class="scene-type-modal__preview-eyebrow">3D Preview</span>
-                                                <span class="scene-type-modal__preview-status">Live</span>
+                                                <span class="scene-type-modal__preview-eyebrow">Предпросмотр</span>
+                                                <span class="scene-type-modal__preview-status">3D</span>
                                             </div>
                                             <div id="scene-type-modal-preview-title" class="scene-type-modal__preview-title">Ворота</div>
                                             <div id="scene-type-modal-preview-text" class="scene-type-modal__preview-text">Ориентир и пролётная рамка для трасс и учебных миссий.</div>
@@ -228,6 +252,16 @@
                                         <div id="scene-type-modal-preview-viewport" class="scene-type-modal__preview-viewport"></div>
                                     </div>
                                     <div class="scene-type-modal__catalog">
+                                        <div class="scene-catalog-filters">
+                                            <input id="scene-catalog-search" type="search" placeholder="Поиск в каталоге…" aria-label="Поиск в каталоге" autocomplete="off">
+                                            <select id="scene-catalog-category" aria-label="Категория объектов">
+                                                <option value="all">Все категории</option>
+                                                <option value="flight">Полёт и посадка</option>
+                                                <option value="markers">Маркеры</option>
+                                                <option value="landscape">Ландшафт и город</option>
+                                                <option value="equipment">Оборудование</option>
+                                            </select>
+                                        </div>
                                         <div class="scene-type-modal__toolbar">
                                             <button id="scene-type-modal-prev-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral">← Назад</button>
                                             <div id="scene-type-modal-page-indicator" class="scene-type-modal__page-indicator">1 / 1</div>
@@ -238,12 +272,12 @@
                                             <div id="scene-type-modal-selection-card" class="scene-type-modal__selection-card">
                                                 <span id="scene-type-modal-selection-icon" class="scene-type-modal__selection-icon" aria-hidden="true"></span>
                                                 <span class="scene-type-modal__selection-content">
-                                                    <span class="scene-type-modal__selection-label">Выбор каталога</span>
+                                                    <span class="scene-type-modal__selection-label">Выбранный объект</span>
                                                     <strong id="scene-type-modal-selection-title" class="scene-type-modal__selection-title">Ворота</strong>
                                                     <span id="scene-type-modal-selection-text" class="scene-type-modal__selection-text">Ориентир и пролётная рамка для трасс и учебных миссий.</span>
                                                 </span>
                                             </div>
-                                            <button id="scene-type-modal-apply-btn" type="button" class="btn-primary scene-btn scene-btn--primary">Подтвердить выбор</button>
+                                            <button id="scene-type-modal-apply-btn" type="button" class="btn-primary scene-btn scene-btn--primary">Выбрать объект</button>
                                         </div>
                                     </div>
                                 </div>

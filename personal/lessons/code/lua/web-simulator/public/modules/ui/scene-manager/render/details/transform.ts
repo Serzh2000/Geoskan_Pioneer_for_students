@@ -8,7 +8,7 @@ type TransformValues = {
 };
 
 export function getTransformValues(selected: SceneManagerEntry, mode: TransformMode): TransformValues {
-    if (mode === 'rotate') return selected.rotation;
+    if (mode === 'rotate') return { x: selected.rotation.x * 180 / Math.PI, y: selected.rotation.y * 180 / Math.PI, z: selected.rotation.z * 180 / Math.PI };
     if (mode === 'scale') return selected.scale;
     return selected.position;
 }

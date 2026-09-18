@@ -2,18 +2,18 @@
                             <div class="scene-panel-card">
                                 <div class="scene-panel-card__header">
                                     <div>
-                                        <div class="scene-panel-card__title">Информация об объекте</div>
-                                        <p class="scene-panel-card__description">Текущий выбор, базовые свойства и служебный статус объекта сцены.</p>
+                                        <div class="scene-panel-card__title">Выбранный объект</div>
+
                                     </div>
                                 </div>
                                 <div id="scene-object-details" class="scene-manager-details">Выберите объект в иерархии, чтобы открыть инспектор.</div>
                             </div>
 
-                            <div class="scene-panel-card">
+                            <div id="scene-selected-params-card" class="scene-panel-card">
                                 <div class="scene-panel-card__header">
                                     <div>
                                         <div class="scene-panel-card__title">Параметры объекта</div>
-                                        <p class="scene-panel-card__description">Редактирование значений, словарей, этажности и маршрутов для выбранного объекта.</p>
+                                        <p class="scene-panel-card__description">Измените параметры и нажмите «Применить».</p>
                                     </div>
                                 </div>
                                 <div class="scene-form-grid">
@@ -92,8 +92,8 @@
                             <div class="scene-panel-card">
                                 <div class="scene-panel-card__header">
                                     <div>
-                                        <div class="scene-panel-card__title">Трансформация</div>
-                                        <p class="scene-panel-card__description">Выберите режим редактирования и отслеживайте текущие координаты объекта.</p>
+                                        <div class="scene-panel-card__title">Расположение</div>
+                                        <p class="scene-panel-card__description">Перетаскивайте оси на сцене. Значения ниже обновляются автоматически.</p>
                                     </div>
                                 </div>
                                 <div class="scene-transform-modes" role="group" aria-label="Режим трансформации">
@@ -101,6 +101,7 @@
                                     <button id="scene-mode-rotate" class="scene-segmented-btn" type="button">Вращение</button>
                                     <button id="scene-mode-scale" class="scene-segmented-btn" type="button">Масштаб</button>
                                 </div>
+                                <div id="scene-transform-unit" class="scene-transform-unit">Координаты, м</div>
                                 <div class="scene-transform-grid">
                                     <label class="scene-transform-field">
                                         <span>X</span>
@@ -118,8 +119,8 @@
                                 <div id="scene-rotate-controls" class="scene-rotate-controls">
                                     <div class="scene-rotate-controls__header">
                                         <div>
-                                            <div class="scene-rotate-controls__title">Компас поворота</div>
-                                            <p class="scene-rotate-controls__description">Быстрый доворот объекта по осям X, Y и Z фиксированными шагами.</p>
+                                            <div class="scene-rotate-controls__title">Повернуть на угол</div>
+                                            <p class="scene-rotate-controls__description">Z — поворот по горизонтали, X и Y — наклон.</p>
                                         </div>
                                         <button id="scene-rotate-reset-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button">Сбросить</button>
                                     </div>
@@ -129,6 +130,7 @@
                                             <div class="scene-rotate-row__buttons">
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="-45">-45°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="-15">-15°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="-5">−5°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="5">+5°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="15">+15°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="x" data-angle="45">+45°</button>
@@ -139,6 +141,7 @@
                                             <div class="scene-rotate-row__buttons">
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="-45">-45°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="-15">-15°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="-5">−5°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="5">+5°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="15">+15°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="y" data-angle="45">+45°</button>
@@ -149,6 +152,7 @@
                                             <div class="scene-rotate-row__buttons">
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="-45">-45°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="-15">-15°</button>
+                                                <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="-5">−5°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="5">+5°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="15">+15°</button>
                                                 <button class="scene-rotate-preset-btn" type="button" data-axis="z" data-angle="45">+45°</button>
@@ -158,12 +162,12 @@
                                 </div>
                                 <div class="scene-transform-secondary">
                                     <button id="scene-clear-selection-btn" class="scene-clear-selection-btn" type="button">Снять выделение</button>
-                                    <button id="scene-drone-origin-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button">Дрон в (0,0)</button>
+                                    <button id="scene-drone-origin-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button">Вернуть дрон в центр</button>
                                 </div>
                             </div>
 
                             <div class="scene-inspector-actions">
-                                <button id="scene-group-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button" title="Сгруппировать выбранные объекты (Ctrl+Click)">Группа</button>
+                                <button id="scene-group-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button" title="Сгруппировать выбранные объекты (Ctrl+Click)">Сгруппировать</button>
                                 <button id="scene-ungroup-btn" class="btn-secondary scene-btn scene-btn--neutral" type="button" title="Разгруппировать выбранную группу">Разгруппировать</button>
                                 <button id="scene-delete-btn" class="btn-secondary scene-btn scene-btn--danger" type="button">Удалить</button>
                             </div>

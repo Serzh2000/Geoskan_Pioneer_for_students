@@ -33,9 +33,11 @@ export function registerIncidentBindings({ elements }: BindingOptions) {
     });
 }
 
-export function registerCreationBindings({ callbacks, elements, render }: BindingOptions) {
+export function registerCreationBindings({ callbacks, elements, tree, render }: BindingOptions) {
     if (elements.presetBtn && elements.presetTypeEl) {
         elements.presetBtn.addEventListener('click', () => {
+            // Loading a preset is a hierarchy action: keep the freshly added group in view.
+            tree.suppressInspectorJump = true;
             callbacks.sceneManager?.add(elements.presetTypeEl?.value || '');
             render();
         });

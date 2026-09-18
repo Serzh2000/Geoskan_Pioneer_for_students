@@ -21,7 +21,8 @@ import {
     renderInline,
     renderLessonSteps
 } from './render/support.js';
-import { renderLessonTheory, renderPortalIntro } from './render/sections.js';
+import { renderLessonTheory } from './render/sections.js';
+import { renderPortalIntro } from './render/portal.js';
 
 export function renderGuide(state: GuideLessonState, language: ScriptLanguage): string {
     const activePage = getActivePortalPage(language);

@@ -3,6 +3,7 @@ import type { SceneManagerDomRefs, SceneManagerEntry, TransformMode } from './ty
 import { isSceneEditorFocused } from './support.js';
 import { renderEmptyState, renderSelectedDetails, syncSelectedInputs, updateSelectedControls } from './render/details.js';
 import { renderObjectList } from './render/list.js';
+import type { SceneTreeState } from './view-state.js';
 
 export function renderSceneManager(
     callbacks: UICallbacks,
@@ -11,11 +12,12 @@ export function renderSceneManager(
     selectedId: string | null,
     lastSelectedId: string | null,
     rerender: () => void,
-    activeTransformMode: TransformMode
+    activeTransformMode: TransformMode,
+    tree: SceneTreeState
 ) {
     if (!elements.listEl || !elements.detailsEl || !callbacks.sceneManager) return lastSelectedId;
 
-    renderObjectList(callbacks, elements, objects, selectedId, rerender);
+    renderObjectList(callbacks, elements, objects, selectedId, rerender, tree);
 
     const selected = objects.find((item) => item.id === selectedId) || null;
     if (!selected) {

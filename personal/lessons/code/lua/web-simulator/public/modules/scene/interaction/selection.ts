@@ -32,7 +32,7 @@ export function deselectObject() {
             materials.forEach((mat: any) => {
                 if (mat.emissive && mat.userData.originalEmissive !== undefined) {
                     mat.emissive.setHex(mat.userData.originalEmissive);
-                    mat.emissiveIntensity = 0;
+                    mat.emissiveIntensity = mat.userData.originalEmissiveIntensity ?? 0;
                 }
             });
         }

@@ -109,6 +109,16 @@ export function selectSceneObjectById(id: string) {
     return true;
 }
 
+export function focusSceneObjectById(id: string) {
+    const obj = findSceneObjectById(id);
+    if (!obj) return false;
+    if (isLinearFeatureEditingActive() && !isLinearFeatureEditingActive(id)) {
+        finishLinearFeatureEditing(true);
+    }
+    handleSelection(obj, window.innerWidth / 2, window.innerHeight / 2, false, true);
+    return true;
+}
+
 export function setSceneObjectTransformMode(mode: TransformMode, id?: string) {
     const target = id ? findSceneObjectById(id) : selectedObject;
     if (!target) return false;

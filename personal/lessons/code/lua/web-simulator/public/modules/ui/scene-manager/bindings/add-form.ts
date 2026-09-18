@@ -1,3 +1,4 @@
+import { matchesCatalogFilter } from '../catalog.js';
 import {
     getMapInputs,
     getSceneTypePreviewConfig,
@@ -10,9 +11,11 @@ import {
 } from '../support.js';
 import type { BindingOptions } from './shared.js';
 
-const TYPE_MODAL_PAGE_SIZE = 16;
+const TYPE_MODAL_PAGE_SIZE = 12;
 
-export function registerAddFormBindings({ callbacks, elements, render, typePreview }: BindingOptions) {
+export function registerAddFormBindings({ callbacks, elements, tree, render, typePreview }: BindingOptions) {
+    const searchInput = document.getElementById('scene-catalog-search') as HTMLInputElement | null;
+    const categoryInput = document.getElementById('scene-catalog-category') as HTMLSelectElement | null;
     const syncPreview = () => {
         updateAddTypePreview(elements);
         typePreview.sync();
@@ -21,18 +24,34 @@ export function registerAddFormBindings({ callbacks, elements, render, typePrevi
 
     let pageIndex = 0;
     let pendingTypeValue: string | null = null;
-    let modalIntent: 'select' | 'add' = 'select';
 
-    const getOptions = () => Array.from(elements.addTypeEl?.options || []);
+    // Rebuilding a preview mesh (e.g. the apartment building's hundreds of parts) on every
+    // pointerenter is what caused the reported lag when sweeping the mouse across the grid.
+    let previewHoverHandle: number | null = null;
+    const cancelScheduledPreview = () => {
+        if (previewHoverHandle === null) return;
+        window.clearTimeout(previewHoverHandle);
+        previewHoverHandle = null;
+    };
+    const schedulePreview = (type: string, label?: string) => {
+        cancelScheduledPreview();
+        previewHoverHandle = window.setTimeout(() => {
+            previewHoverHandle = null;
+            typePreview.showForType(type, label);
+        }, 90);
+    };
+
+    const getAllOptions = () => Array.from(elements.addTypeEl?.options || []);
+    const getOptions = () => getAllOptions().filter(option => matchesCatalogFilter(option.value, option.textContent || '', searchInput?.value || '', categoryInput?.value || 'all'));
     const getPendingOption = () => {
-        const options = getOptions();
+        const options = getAllOptions();
         return options.find((option) => option.value === (pendingTypeValue || elements.addTypeEl?.value)) || options[0] || null;
     };
     const getPageCount = () => Math.max(1, Math.ceil(getOptions().length / TYPE_MODAL_PAGE_SIZE));
     const clampPageIndex = (value: number) => Math.min(Math.max(value, 0), getPageCount() - 1);
     const syncPageIndicator = () => {
         if (elements.addTypeModalPageIndicatorEl) {
-            elements.addTypeModalPageIndicatorEl.textContent = `${pageIndex + 1} / ${getPageCount()}`;
+            elements.addTypeModalPageIndicatorEl.textContent = getOptions().length ? `${pageIndex * TYPE_MODAL_PAGE_SIZE + 1}–${Math.min((pageIndex + 1) * TYPE_MODAL_PAGE_SIZE, getOptions().length)} из ${getOptions().length}` : '0 объектов';
         }
         elements.addTypeModalPrevBtn?.toggleAttribute('disabled', pageIndex <= 0);
         elements.addTypeModalNextBtn?.toggleAttribute('disabled', pageIndex >= getPageCount() - 1);
@@ -59,24 +78,20 @@ export function registerAddFormBindings({ callbacks, elements, render, typePrevi
             elements.addTypeModalSelectionIconEl.innerHTML = meta.icon;
         }
         if (elements.addTypeModalApplyBtn && elements.addTypeEl) {
-            const alreadyApplied = pendingOption.value === elements.addTypeEl.value;
-            elements.addTypeModalApplyBtn.disabled = modalIntent === 'select' && alreadyApplied;
-            elements.addTypeModalApplyBtn.textContent = modalIntent === 'add'
-                ? 'Добавить объект'
-                : alreadyApplied
-                    ? 'Компонент уже выбран'
-                    : 'Подтвердить выбор';
+            elements.addTypeModalApplyBtn.disabled = false;
+            elements.addTypeModalApplyBtn.textContent = `Выбрать «${pendingOption.textContent?.trim()}»`;
         }
     };
     const closeModal = (restoreFocus = false) => {
         if (!elements.addTypeModalEl) return;
+        cancelScheduledPreview();
         elements.addTypeModalEl.classList.remove('is-open');
         elements.addTypeModalEl.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('scene-type-modal-open');
         typePreview.hide();
         pendingTypeValue = null;
         if (restoreFocus) {
-            (elements.addBtn || elements.addTypeOpenBtn)?.focus();
+            elements.addTypeOpenBtn?.focus();
         }
     };
     const applyPendingSelection = () => {
@@ -90,11 +105,6 @@ export function registerAddFormBindings({ callbacks, elements, render, typePrevi
         } else {
             updateAddControlsState(elements);
         }
-        if (modalIntent === 'add') {
-            const draft = readAddSceneObjectDraft(elements);
-            callbacks.sceneManager?.add(draft.type, draft.options);
-            render();
-        }
         closeModal(true);
     };
     const renderModalPage = () => {
@@ -106,6 +116,12 @@ export function registerAddFormBindings({ callbacks, elements, render, typePrevi
         const pageItems = options.slice(start, start + TYPE_MODAL_PAGE_SIZE);
 
         elements.addTypeModalGridEl.innerHTML = '';
+        if (!pageItems.length) {
+            const empty = document.createElement('p');
+            empty.className = 'scene-catalog-empty';
+            empty.textContent = 'Ничего не найдено. Попробуйте другое название или категорию.';
+            elements.addTypeModalGridEl.appendChild(empty);
+        }
         pageItems.forEach((option) => {
             const label = option.textContent?.trim() || option.value;
             const meta = getSceneTypePreviewConfig(option.value, label);
@@ -127,7 +143,7 @@ export function registerAddFormBindings({ callbacks, elements, render, typePrevi
                 <span class="scene-type-modal__card-text">${meta.description}</span>
             `;
             const showCardPreview = () => {
-                typePreview.showForType(option.value, label);
+                schedulePreview(option.value, label);
             };
             card.addEventListener('pointerenter', showCardPreview);
             card.addEventListener('focus', showCardPreview);
@@ -135,7 +151,9 @@ export function registerAddFormBindings({ callbacks, elements, render, typePrevi
                 pendingTypeValue = option.value;
                 renderModalPage();
                 syncModalSelectionSummary();
+                cancelScheduledPreview();
                 typePreview.showForType(option.value, label);
+                focusModalCard();
             });
             elements.addTypeModalGridEl?.appendChild(card);
         });
@@ -149,9 +167,8 @@ export function registerAddFormBindings({ callbacks, elements, render, typePrevi
             pageIndex = Math.floor(selectedIndex / TYPE_MODAL_PAGE_SIZE);
         }
     };
-    const openModal = (intent: 'select' | 'add') => {
+    const openModal = () => {
         if (!elements.addTypeModalEl || !elements.addTypeEl) return;
-        modalIntent = intent;
         pendingTypeValue = elements.addTypeEl.value;
         syncPageWithSelection();
         renderModalPage();
@@ -162,7 +179,7 @@ export function registerAddFormBindings({ callbacks, elements, render, typePrevi
             pendingTypeValue,
             elements.addTypeEl.selectedOptions[0]?.textContent?.trim() || pendingTypeValue || undefined
         );
-        window.requestAnimationFrame(() => focusModalCard());
+        window.requestAnimationFrame(() => searchInput?.focus());
     };
     const changePage = (delta: number) => {
         const nextPage = clampPageIndex(pageIndex + delta);
@@ -179,8 +196,18 @@ export function registerAddFormBindings({ callbacks, elements, render, typePrevi
         syncPreview();
     }
 
-    elements.addTypeOpenBtn?.addEventListener('click', () => openModal('select'));
-    elements.addBtn?.addEventListener('click', () => openModal('add'));
+    elements.addTypeOpenBtn?.addEventListener('click', () => openModal());
+    // Adding straight from the panel is what makes the type-specific fields above (marker value,
+    // floors, map grid, route points) usable at all - routing this through the catalog again would
+    // add the object before the user could reach them.
+    elements.addBtn?.addEventListener('click', () => {
+        const draft = readAddSceneObjectDraft(elements);
+        // Stay in the hierarchy: adding several objects in a row is the common case, and jumping to
+        // the inspector would hide this very form after each one.
+        tree.suppressInspectorJump = true;
+        callbacks.sceneManager?.add(draft.type, draft.options);
+        render();
+    });
     elements.addTypeModalApplyBtn?.addEventListener('click', applyPendingSelection);
     elements.addTypeModalPrevBtn?.addEventListener('click', () => changePage(-1));
     elements.addTypeModalNextBtn?.addEventListener('click', () => changePage(1));
@@ -193,6 +220,7 @@ export function registerAddFormBindings({ callbacks, elements, render, typePrevi
     });
     elements.addTypeModalGridEl?.addEventListener('pointerleave', () => {
         if (!isModalOpen()) return;
+        cancelScheduledPreview();
         const pendingOption = getPendingOption();
         if (pendingOption) {
             typePreview.showForType(pendingOption.value, pendingOption.textContent?.trim() || pendingOption.value);
@@ -205,21 +233,24 @@ export function registerAddFormBindings({ callbacks, elements, render, typePrevi
             closeModal(true);
             return;
         }
-        if (event.key === 'ArrowLeft') {
-            event.preventDefault();
-            changePage(-1);
-            return;
+        if (event.key === 'Tab') {
+            const focusable = Array.from(elements.addTypeModalEl?.querySelectorAll<HTMLElement>('button:not(:disabled), input, select, [tabindex="0"]') || [])
+                .filter(el => el.getClientRects().length > 0);
+            const first = focusable[0], last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
         }
-        if (event.key === 'ArrowRight') {
-            event.preventDefault();
-            changePage(1);
-            return;
-        }
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            applyPendingSelection();
+        if (event.key.startsWith('Arrow') && (event.target as HTMLElement)?.classList.contains('scene-type-modal__card')) {
+            const cards = Array.from(elements.addTypeModalGridEl?.querySelectorAll<HTMLButtonElement>('.scene-type-modal__card') || []);
+            const index = cards.indexOf(event.target as HTMLButtonElement);
+            const offset = event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1;
+            event.preventDefault(); cards[(index + offset + cards.length) % cards.length]?.focus();
         }
     });
+
+    const filterCatalog = () => { pageIndex = 0; renderModalPage(); };
+    searchInput?.addEventListener('input', filterCatalog);
+    categoryInput?.addEventListener('change', filterCatalog);
 
     getMapInputs(elements).forEach((input) => {
         input.addEventListener('input', () => {
