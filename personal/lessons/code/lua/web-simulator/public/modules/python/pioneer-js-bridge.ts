@@ -13,6 +13,7 @@ import {
 import { showDronePrintBubble } from '../drone/index.js';
 import { beginDisarmedFall, AIRBORNE_ALTITUDE_EPSILON } from '../physics/events.js';
 import { triggerLuaCallback } from '../lua/index.js';
+import { shouldDispatchLuaEvent } from '../lua/mission-guard.js';
 import { runLuaScript, stopLuaScript } from '../lua/runtime.js';
 import {
     cancelledRuns,
@@ -81,7 +82,7 @@ export function installJsRuntimeAPI() {
             recordTickCommand(d, 'preflight');
             const ok = enterPreflight(d);
             if (ok) {
-                triggerLuaCallback(id, 11);
+                if (shouldDispatchLuaEvent(d, 11)) triggerLuaCallback(id, 11);
             }
             return ok;
         });

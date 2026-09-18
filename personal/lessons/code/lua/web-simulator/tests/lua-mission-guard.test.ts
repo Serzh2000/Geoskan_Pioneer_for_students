@@ -6,7 +6,7 @@ describe('lua mission guard', () => {
         ({ allowLuaMissionCommand, resetLuaMissionGuard } = await import('../public/modules/lua/mission-guard.js'));
     });
 
-    test('accepts only the first mission command when callback(event) is absent', () => {
+    test('accepts timer-sequenced mission commands when callback(event) is absent', () => {
         const drone = {
             luaHasEventCallback: false,
             luaMissionCommandsAcceptedWithoutCallback: 0,
@@ -16,8 +16,8 @@ describe('lua mission guard', () => {
         resetLuaMissionGuard(drone, 'ap.push(Ev.MCE_PREFLIGHT)');
 
         expect(allowLuaMissionCommand(drone)).toBe(true);
-        expect(allowLuaMissionCommand(drone)).toBe(false);
-        expect(drone.luaMissionCommandsAcceptedWithoutCallback).toBe(1);
+        expect(allowLuaMissionCommand(drone)).toBe(true);
+        expect(drone.luaMissionCommandsAcceptedWithoutCallback).toBe(0);
     });
 
     test('does not limit mission commands when callback(event) exists', () => {

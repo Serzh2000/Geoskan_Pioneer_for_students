@@ -51,6 +51,7 @@ function isOpaqueLuaRuntimeValue(value: string | null | undefined) {
     if (!normalized) return true;
     if (/^\d+$/.test(normalized)) return true;
     if (/^(true|false|null|undefined)$/i.test(normalized)) return true;
+    if (/^(Unknown Lua Error \(no message\)|Empty Lua Error message)$/i.test(normalized)) return true;
     return false;
 }
 
@@ -95,7 +96,7 @@ export function createLuaRuntimeFailureError(
     const stack = isOpaqueLuaRuntimeValue(stackCandidate) ? null : stackCandidate;
     const technicalDetails = [
         ...(fallback?.details || []),
-        ...collectTechnicalDetailLines(normalized, primary)
+        ...(!opaqueRuntimeValue ? collectTechnicalDetailLines(normalized, primary) : [])
     ].filter((line, index, items) => items.indexOf(line) === index);
 
     return createScriptFailureError('runtime', primary, {

@@ -5,6 +5,7 @@ import { completePointReached, completeTakeoff, isMovementReached } from '../aut
 import { triggerLuaCallback } from '../lua/index.js';
 import { getObstacles } from '../drone/index.js';
 import { log } from '../shared/logging/logger.js';
+import { shouldDispatchLuaEvent } from '../lua/mission-guard.js';
 import { obstacleHasCollision, sampleSegmentPoints } from './collisions.js';
 
 export const AIRBORNE_ALTITUDE_EPSILON = 0.1;
@@ -105,13 +106,13 @@ export function checkPhysicsEvents(simState: DroneState, prevPos: { x: number; y
         completeTakeoff(simState);
         triggerLuaCallback(id, 6);
         if (simState.pointReachedFlag) {
-            triggerLuaCallback(id, 10);
+            if (shouldDispatchLuaEvent(simState, 10)) triggerLuaCallback(id, 10);
         }
     }
 
     if (simState.fsmState === 'FLYING_MOVING' && isMovementReached(simState)) {
         if (completePointReached(simState)) {
-            triggerLuaCallback(id, 10);
+            if (shouldDispatchLuaEvent(simState, 10)) triggerLuaCallback(id, 10);
         }
     }
 }

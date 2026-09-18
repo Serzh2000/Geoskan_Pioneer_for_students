@@ -1,0 +1,111 @@
+{
+  "station": "C:/PioneerStation/examples",
+  "gitflic": "https://gitflic.ru/project/geoscan-llc/pioneer-lua-example",
+  "commit": "6e7b6d4a8229390d03d890eb98e95624538ec8f6",
+  "files": [
+    {
+      "file": "station/example_cargo.lua",
+      "sha256": "b3e9816510e84e2385759a096b5e457481c1af45f8864fc799f309202abf237e"
+    },
+    {
+      "file": "station/example_default.lua",
+      "sha256": "2bfae2883c5ded64e0eab27d3ec9fa62c1b109b76f25161f435a0ace15211841"
+    },
+    {
+      "file": "station/example_get_accel.lua",
+      "sha256": "4784310d8e7fb162a33291bdcfd54fac0f0d88c912b7bb7a6f933bc95337d5f6"
+    },
+    {
+      "file": "station/example_get_gyro.lua",
+      "sha256": "5c12e735295d148c84e1d144b9277a539a21fc9f6998f1932ddf2dbdd6d4160e"
+    },
+    {
+      "file": "station/example_get_orientation.lua",
+      "sha256": "3a8af27924f8601af879c63dad5dbdee32b9e1116b63c674e3100b701498aa71"
+    },
+    {
+      "file": "station/example_get_position.lua",
+      "sha256": "9ca8258f5789037d6cf079ec7f289deec152e111175d3f6dfc92991797a20444"
+    },
+    {
+      "file": "station/example_get_tof.lua",
+      "sha256": "e6833ad6f53a99396e1805a4dca1f966a64e7113fff9e3f4f79476613b4e5c8e"
+    },
+    {
+      "file": "station/example_get_velocity.lua",
+      "sha256": "c396a2b7500261710dc8c9ea626ffaad70bbac7f3e0b6aa66d3e99f59db84a67"
+    },
+    {
+      "file": "station/example_go_to_point.lua",
+      "sha256": "d9b4829c7db5da613a7cbf63c3757b34b2693b9f79a2984e381d558879921d9d"
+    },
+    {
+      "file": "station/example_led.lua",
+      "sha256": "5083c426bc4726f761749d6b33a0ad3bf9cd3fa7748436bfc6e1d455969bb6f9"
+    },
+    {
+      "file": "station/example_path.lua",
+      "sha256": "159bf1c980aa71dfeaedc61e357aa50138c6db689990fa083082d9c42d61f748"
+    },
+    {
+      "file": "station/learnlua.lua",
+      "sha256": "6190d275da7e0edfeffbbed019c3013ebd94e5358ded0930d830d9dc856b19ae"
+    },
+    {
+      "file": "gitflic/example_cargo.lua",
+      "sha256": "e01ce5524267a862adb42a465c7ad418d057d6f8a5f397d77da38468880f47bb"
+    },
+    {
+      "file": "gitflic/example_get_accel.lua",
+      "sha256": "c5bba39c95207f4430084c46683940432430c1727a8f7a4d76273b4a3d6c315e"
+    },
+    {
+      "file": "gitflic/example_get_gyro.lua",
+      "sha256": "4c777b1fe166bd73763ef1dd8e4769dbbac48327b42a28165ef9cd792aaaae87"
+    },
+    {
+      "file": "gitflic/example_get_orientation.lua",
+      "sha256": "d8a5e8a21c1787e1757afe06aebff16bf15589056d7014445af801e55849436f"
+    },
+    {
+      "file": "gitflic/example_get_position.lua",
+      "sha256": "6ec5f8f8103e0af19103e32fd07104101521f99ad61fc21151aa52d1906c5f72"
+    },
+    {
+      "file": "gitflic/example_get_tof.lua",
+      "sha256": "9b3f0354ff6d40d80a28e95a89cb143514321fe3a3ff8034f6a11b806dc5c7be"
+    },
+    {
+      "file": "gitflic/example_get_velocity.lua",
+      "sha256": "2e498743f3812f0f55e88109aa18609eb4c9efae7ab7da558ac302df6a05d6fc"
+    },
+    {
+      "file": "gitflic/example_go_to_point.lua",
+      "sha256": "80a364ca787c6fc6eff26c6ee3ea88e20e189e84aecedd70c99651e4453bb8c9"
+    },
+    {
+      "file": "gitflic/example_led_blink.lua",
+      "sha256": "c32c8c0f81ba3755e10c6ca860ff1da338aab30d6445d29bbf5625b4ab19d972"
+    },
+    {
+      "file": "gitflic/example_led.lua",
+      "sha256": "b7575120009aceb3450ece18845e6562c727a980b45ab3adaba5ceb0c49bb183"
+    },
+    {
+      "file": "gitflic/example_path.lua",
+      "sha256": "2be404761a083316bcdb481ca05abf0f5fdebebb39f5a41c52494cceb8c3a67f"
+    },
+    {
+      "file": "gitflic/learnlua.lua",
+      "sha256": "91b573116052967527d0ed12e97157fc425607071debff5aab1e61e85b27c415"
+    },
+    {
+      "file": "gitflic/rc_script_start.lua",
+      "sha256": "63c8caec99b36a2ee95ece8e23c7ff0ceed4e007883bdd5fe27cee0c0590aebc"
+    },
+    {
+      "file": "gitflic/take_photo_video.lua",
+      "sha256": "5305e7183249d8e1a394ba288af9f8d0e4309e901a0a41a738caf213702c3e55"
+    }
+  ]
+}

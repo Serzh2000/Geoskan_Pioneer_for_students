@@ -2,9 +2,11 @@ import * as fengari from 'fengari-web';
 import { getDroneFromLua } from '../core/state.js';
 
 export const ledbar_fromHSV = function(L: any) {
-    const h = fengari.lua.lua_tonumber(L, 1);
-    const s = fengari.lua.lua_tonumber(L, 2);
-    const v = fengari.lua.lua_tonumber(L, 3);
+    // Pioneer examples use degrees for hue and percentages for saturation/value.
+    const hue = fengari.lua.lua_tonumber(L, 1);
+    const h = ((hue % 360) + 360) % 360 / 360;
+    const s = Math.max(0, Math.min(100, fengari.lua.lua_tonumber(L, 2))) / 100;
+    const v = Math.max(0, Math.min(100, fengari.lua.lua_tonumber(L, 3))) / 100;
     
     let r, g, b;
     const i = Math.floor(h * 6);

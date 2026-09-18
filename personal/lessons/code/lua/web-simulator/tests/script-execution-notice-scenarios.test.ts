@@ -39,7 +39,7 @@ end`;
         expect(harness.getShownNotice()).toBeNull();
     });
 
-    test('explains that only the first mission command will run without callback(event)', () => {
+    test('accepts a timer-sequenced mission without callback(event)', () => {
         const code = `ap.push(Ev.MCE_PREFLIGHT)
 Timer.callLater(2, function()
     ap.push(Ev.MCE_TAKEOFF)
@@ -48,9 +48,7 @@ end)`;
         const result = harness.showScenarioValidationNotice('lua', code);
 
         expect(result.shouldBlock).toBe(false);
-        expect(harness.getShownNotice()).not.toBeNull();
-        expect(String(harness.getShownNotice().detailsHtml || '')).toContain('только первую команду миссии');
-        expect(String(harness.getShownNotice().detailsHtml || '')).toContain('подтверждающие события');
+        expect(harness.getShownNotice()).toBeNull();
     });
 
     test('warns for immediate lua mission commands', () => {
@@ -68,7 +66,7 @@ ap.push(Ev.MCE_LANDING)`;
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('<code>Ev.ENGINES_STARTED</code> -> <code>Ev.TAKEOFF_COMPLETE</code> -> <code>Ev.POINT_REACHED</code>');
     });
 
-    test('warns for lua mission separated by sleep calls when callback(event) is absent', () => {
+    test('accepts a mission separated by sleep calls without callback(event)', () => {
         const code = `ap.push(Ev.MCE_PREFLIGHT)
 sleep(1)
 ap.push(Ev.MCE_TAKEOFF)
@@ -79,8 +77,7 @@ ap.push(Ev.MCE_LANDING)`;
 
         harness.showScenarioValidationNotice('lua', code);
 
-        expect(harness.getShownNotice()).not.toBeNull();
-        expect(String(harness.getShownNotice().detailsHtml || '')).toContain('только первую команду миссии');
+        expect(harness.getShownNotice()).toBeNull();
     });
 
     test('does not warn for timer-driven route during takeoff when callback(event) exists', () => {

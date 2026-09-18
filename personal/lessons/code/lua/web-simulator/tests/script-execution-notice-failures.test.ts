@@ -121,7 +121,7 @@ describe('lua script execution notice failure rendering', () => {
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('IDLE -&gt; PREFLIGHT');
     });
 
-    test('replaces opaque numeric runtime error with stored failure hint', () => {
+    test.each(['1', 'Unknown Lua Error (no message)', 'Empty Lua Error message'])('replaces opaque runtime error %s with stored failure hint', (rawError) => {
         const drone = harness.createDroneState('notice_numeric_error', 'Notice Numeric Error');
         harness.rememberLuaFailureHint(
             drone,
@@ -132,7 +132,7 @@ describe('lua script execution notice failure rendering', () => {
         harness.recordLuaApiCall(drone, 'Timer.callLater', '[string "..."]:8 [callLater]', '0.5, function: 0x59');
         harness.recordLuaApiCall(drone, 'ap.push', '[string "..."]:9 [push]', 'event=1');
         drone.luaDiagnostics.currentPhase = 'main chunk';
-        drone.luaDiagnostics.lastErrorStack = '1';
+        drone.luaDiagnostics.lastErrorStack = rawError;
         drone.luaDiagnostics.fsmTransitions.push({
             timeMs: 0,
             from: 'IDLE',
@@ -141,7 +141,7 @@ describe('lua script execution notice failure rendering', () => {
             source: 'system'
         });
 
-        const error = harness.createLuaRuntimeFailureError(drone, 'main chunk', '1');
+        const error = harness.createLuaRuntimeFailureError(drone, 'main chunk', rawError);
         harness.showScriptFailureNotice('lua', error);
 
         expect(harness.getShownNotice()).not.toBeNull();
@@ -149,6 +149,8 @@ describe('lua script execution notice failure rendering', () => {
         expect(String(harness.getShownNotice().detailsHtml || '')).not.toContain('<div class="is-critical">1</div>');
         expect(String(harness.getShownNotice().detailsHtml || '')).not.toContain('&lt;div');
         expect(String(harness.getShownNotice().detailsHtml || '')).not.toContain('Стек вызовов');
+        expect(String(harness.getShownNotice().detailsHtml || '')).not.toContain('Unknown Lua Error');
+        expect(String(harness.getShownNotice().detailsHtml || '')).not.toContain('Empty Lua Error');
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('Ev.ENGINES_STARTED');
         expect(String(harness.getShownNotice().detailsHtml || '')).not.toContain('Техническая деталь:');
         expect(String(harness.getShownNotice().detailsHtml || '')).not.toContain('[DEBUG] ap.push');
@@ -183,7 +185,7 @@ end)`;
         expect(String(harness.getShownNotice().title || '')).toContain('Проверьте сценарий перед запуском');
     });
 
-    test('suppresses runtime missing callback notice when it was already shown before launch', () => {
+    test('does not show a missing callback warning for a timer-based mission', () => {
         const code = `ap.push(Ev.MCE_PREFLIGHT)
 Timer.callLater(2, function()
     ap.push(Ev.MCE_TAKEOFF)
@@ -195,13 +197,6 @@ end)`;
         harness.showScenarioValidationNotice('lua', code);
         const firstNotice = harness.getShownNotice();
 
-        expect(firstNotice).not.toBeNull();
-        expect(String(firstNotice.message || '')).toContain('Проверьте код перед запуском');
-        expect(String(firstNotice.detailsHtml || '')).toContain('только первую команду миссии');
-
-        harness.showMissingCallbackMissionNotice('ap.push(2 (Взлет))');
-
-        expect(harness.getShownNotice()).toBe(firstNotice);
-        expect(String(harness.getShownNotice().title || '')).toContain('Проверьте сценарий перед запуском');
+        expect(firstNotice).toBeNull();
     });
 });

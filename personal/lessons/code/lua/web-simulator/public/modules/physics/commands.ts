@@ -7,6 +7,7 @@ import {
     withCommandSource
 } from '../autopilot/fsm.js';
 import { triggerLuaCallback } from '../lua/index.js';
+import { shouldDispatchLuaEvent } from '../lua/mission-guard.js';
 import {
     AIRBORNE_ALTITUDE_EPSILON,
     beginDisarmedFall
@@ -23,7 +24,7 @@ export function processCommandQueue(simState: DroneState, id: string): CommandQu
     withCommandSource(simState, next.source, () => {
         if (next.commandId === 1 || next.commandId === 4) {
             if (enterPreflight(simState)) {
-                triggerLuaCallback(id, 11);
+                if (shouldDispatchLuaEvent(simState, 11)) triggerLuaCallback(id, 11);
             }
         }
 

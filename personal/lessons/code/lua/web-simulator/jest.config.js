@@ -8,7 +8,7 @@ export default {
   },
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
-    '\\.(obj|stl)$': '<rootDir>/tests/asset-stub.ts',
+    '\\.(obj|stl|glb)(\\?url)?$': '<rootDir>/tests/asset-stub.ts',
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
 };

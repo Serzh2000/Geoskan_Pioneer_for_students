@@ -147,21 +147,21 @@ export function triggerLuaCallback(id: string, eventId: number) {
 
     const lua = fengari.lua;
     const baseTop = lua.lua_gettop(L);
-    lua.lua_getglobal(L, fengari.to_luastring('__traceback_handler'));
-    const errorHandlerIndex = lua.lua_gettop(L);
+    // lua_newthread() pushes the new thread onto L, so obtain the callback
+    // only after creating it; otherwise lua_xmove() would move the thread
+    // object instead of the callback function.
+    const callbackThread = lua.lua_newthread(L);
     lua.lua_getglobal(L, fengari.to_luastring('callback'));
     if (lua.lua_isfunction(L, -1)) {
-        lua.lua_pushinteger(L, eventId);
+        // The real autopilot invokes callback(event) from a resumable Lua
+        // context. Official scripts can therefore call sleep() from inside
+        // callback; sleep yields the current coroutine. Calling callback via
+        // lua_pcall() on the main state incorrectly produces
+        // "attempt to yield from outside a coroutine".
+        lua.lua_xmove(L, callbackThread, 1);
+        lua.lua_pushinteger(callbackThread, eventId);
         try {
-            if (lua.lua_pcall(L, 1, 0, errorHandlerIndex) !== 0) {
-                const errVal = lua.lua_tostring(L, -1);
-                const errorMsg = luaToStr(errVal, L);
-                rememberLuaErrorStack(drone, errorMsg);
-                console.error(`[Lua Error] callback(${eventId}) on ${id}:`, errorMsg);
-                log(`[Lua Error] ${errorMsg}`, 'error');
-                failScriptRun(drone, 'lua', createLuaRuntimeFailureError(drone, `callback(event=${eventId})`, errorMsg));
-                lua.lua_pop(L, 1);
-            }
+            runCoroutine(L, callbackThread, 1, id, `callback(event=${eventId})`);
         } catch (e) {
             console.error(`[JS Error] Fatal error in triggerLuaCallback(${eventId}):`, e);
             log(`[JS Error] Fatal callback error ${eventId}: ${e}`, 'error');

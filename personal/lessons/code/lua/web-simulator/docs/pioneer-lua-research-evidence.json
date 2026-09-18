@@ -1,0 +1,1068 @@
+{
+  "schema": 1,
+  "images": [
+    {
+      "source": "C:\\PioneerStation\\firmware\\pioneer_base_V1_0-1.5.6173-8efaccb93_838.bin",
+      "size": 964272,
+      "sha256": "11e4fd2d5e6f70596be6b874bf40c81e581680b63326def112b1baeaba56bec0",
+      "crc32": "cc815c24",
+      "entropy": 7.999828265032835,
+      "size_mod_16": 0,
+      "prefix32": "1771a15ec39d41f11370a2c949b78cdf7d39860585ef2d34b41332dbab288147",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.996928,
+        7.997189,
+        7.997339,
+        7.997366,
+        7.997239,
+        7.996569,
+        7.997473,
+        7.997394,
+        7.997056,
+        7.997025,
+        7.997323,
+        7.997238,
+        7.997406,
+        7.997072,
+        7.996294
+      ]
+    },
+    {
+      "source": "C:\\PioneerStation\\firmware\\pioneer_base_V1_1-boot_pioneer-1.5.6173-8efaccb93_837.bin",
+      "size": 964208,
+      "sha256": "af69e47a013beb9d790b30ad88f0da8643645f59f207c310e10ff70bb523154e",
+      "crc32": "5efc048d",
+      "entropy": 7.999818237361052,
+      "size_mod_16": 0,
+      "prefix32": "c1cc4b7a42bb15909a47c161cb6453157db14f203d828c8e26a3a04a91f39c4e",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.997033,
+        7.996987,
+        7.997017,
+        7.997216,
+        7.997127,
+        7.997523,
+        7.997136,
+        7.997548,
+        7.997213,
+        7.997082,
+        7.997159,
+        7.997316,
+        7.997157,
+        7.996981,
+        7.995698
+      ]
+    },
+    {
+      "source": "C:\\PioneerStation\\firmware\\pioneer_base_V1_2-boot_pioneer-1.5.6173-8efaccb93_836.bin",
+      "size": 964576,
+      "sha256": "f6d3fe7b879c97f7d85efbfad96448161971495ecb9f8e1587ce1f1c8f484362",
+      "crc32": "3b8159de",
+      "entropy": 7.99983018251073,
+      "size_mod_16": 0,
+      "prefix32": "ac5187bd2d3555c09306b64f6297779d30ba444461f720b367a1ff81bb8aa6c6",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.997125,
+        7.997412,
+        7.997806,
+        7.997393,
+        7.997198,
+        7.997361,
+        7.996979,
+        7.997467,
+        7.997738,
+        7.996858,
+        7.996973,
+        7.996967,
+        7.99749,
+        7.997274,
+        7.995923
+      ]
+    },
+    {
+      "source": "C:\\PioneerStation\\firmware\\Pioneer_Beacon_USNav_V2_1_gs-2.1.bin",
+      "size": 34880,
+      "sha256": "1348dabaccf65a4979c00162f0dc56404f862f88c5c2af24ddfaf608ce3aaa3b",
+      "crc32": "efa5322e",
+      "entropy": 7.9946930303499375,
+      "size_mod_16": 0,
+      "prefix32": "c06871b2ce60e3d189dadba7be43d106184768fa30d82c755352d556b74daf92",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.994693
+      ]
+    },
+    {
+      "source": "C:\\PioneerStation\\firmware\\Pioneer_Beacon_USNav_V4_1_gs-2.1.bin",
+      "size": 34880,
+      "sha256": "1348dabaccf65a4979c00162f0dc56404f862f88c5c2af24ddfaf608ce3aaa3b",
+      "crc32": "efa5322e",
+      "entropy": 7.9946930303499375,
+      "size_mod_16": 0,
+      "prefix32": "c06871b2ce60e3d189dadba7be43d106184768fa30d82c755352d556b74daf92",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.994693
+      ]
+    },
+    {
+      "source": "C:\\PioneerStation\\firmware\\pioneer_mini_V1_1-boot-pioneer-1.6.7011.bin",
+      "size": 884080,
+      "sha256": "13cdc222ca1fd094ff2c397daf42546fc1995e145ea93502bf511351e7e19d4c",
+      "crc32": "fc5259d7",
+      "entropy": 7.999845665466646,
+      "size_mod_16": 0,
+      "prefix32": "cfbacf0c395b236607afa9e128a86be5f98a86321f26f1edba52f9b20e4008b9",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.997199,
+        7.997304,
+        7.997056,
+        7.996995,
+        7.997125,
+        7.997146,
+        7.997421,
+        7.997365,
+        7.997235,
+        7.997464,
+        7.99714,
+        7.997385,
+        7.997243,
+        7.99369
+      ]
+    },
+    {
+      "source": "C:\\PioneerStation\\firmware\\Pioneer_Module_Otical_Flow_V1_0_gs-1.0.bin",
+      "size": 10496,
+      "sha256": "37d911ee24b48f06c55d864f2468ea04111ad76297626ee683db66e6ee43e775",
+      "crc32": "691a81ab",
+      "entropy": 7.981965580185958,
+      "size_mod_16": 0,
+      "prefix32": "c06871b2ce60e3d189dadba7be43d1068e18f3f19f1ba2ce753f8d2104f1bce3",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.981966
+      ]
+    },
+    {
+      "source": "C:\\PioneerStation\\firmware\\Pioneer_Module_USNav_V3_1_gs-2.1.bin",
+      "size": 34880,
+      "sha256": "1348dabaccf65a4979c00162f0dc56404f862f88c5c2af24ddfaf608ce3aaa3b",
+      "crc32": "efa5322e",
+      "entropy": 7.9946930303499375,
+      "size_mod_16": 0,
+      "prefix32": "c06871b2ce60e3d189dadba7be43d106184768fa30d82c755352d556b74daf92",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.994693
+      ]
+    },
+    {
+      "source": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\geoskan\\Прошивка\\Модуль LPS\\USNav_2.9.1971b32_aes.bin",
+      "size": 35104,
+      "sha256": "568366528a8a862d999d0a0fe95b5ddcdb4c0186c616c046cc76f40ae0e583b8",
+      "crc32": "ea18a953",
+      "entropy": 7.994502128324471,
+      "size_mod_16": 0,
+      "prefix32": "c06871b2ce60e3d189dadba7be43d1065a137c078bbb587673a37991f1d6e638",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.994502
+      ]
+    },
+    {
+      "source": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\geoskan\\Прошивка\\Модуль OPT\\ModuleOpticalFlow_1.7.b5ce74c_aes.bin",
+      "size": 4080,
+      "sha256": "4eabdd5c24055d09e9e4165e1308816fc1b43abad9f3179421ecf8a15f2db270",
+      "crc32": "0dd6ba95",
+      "entropy": 7.9382313103626325,
+      "size_mod_16": 0,
+      "prefix32": "c06871b2ce60e3d189dadba7be43d106182fe926cb76dacbe50d49d109b5a3ac",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.938231
+      ]
+    },
+    {
+      "source": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\geoskan\\Прошивка\\Плата Пионер\\pioneer_lua-education-v12-boot_gs_dev-1.6.7178-113a71fd6.bin",
+      "size": 978592,
+      "sha256": "dd157981d0c7abf9b7cd6a424aef2c5923e634c9e68732b399474c613b8af3a7",
+      "crc32": "e4f121b7",
+      "entropy": 7.999820344674236,
+      "size_mod_16": 0,
+      "prefix32": "3409f9da695d6eb64e2d3347a2e04dfa192ed2de64554130e12f32f3c1ef3cf6",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.997455,
+        7.997164,
+        7.997136,
+        7.996991,
+        7.997338,
+        7.997217,
+        7.997217,
+        7.997524,
+        7.997318,
+        7.997219,
+        7.997012,
+        7.99751,
+        7.997536,
+        7.997248,
+        7.996822
+      ]
+    },
+    {
+      "source": "C:\\PioneerStation\\plugins\\aero.geoscan.pioneer.firmware.module_1.0.0.202009231222.jar!/resources/MODULEUSNAV/3_1/Pioneer_Module_USNav_V3_1_gs-2.1.bin",
+      "size": 34880,
+      "sha256": "1348dabaccf65a4979c00162f0dc56404f862f88c5c2af24ddfaf608ce3aaa3b",
+      "crc32": "efa5322e",
+      "entropy": 7.9946930303499375,
+      "size_mod_16": 0,
+      "prefix32": "c06871b2ce60e3d189dadba7be43d106184768fa30d82c755352d556b74daf92",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.994693
+      ],
+      "jar_sha256": "ebf70257c266c66042243a9dae95843b2f26995e8e310f78b68b28336bdb1900"
+    },
+    {
+      "source": "C:\\PioneerStation\\plugins\\aero.geoscan.pioneer.firmware.module_1.0.0.202009231222.jar!/resources/MODULEUSNAV/3_3/Pioneer_Module_USNav_V3_1_gs-2.1.bin",
+      "size": 34880,
+      "sha256": "1348dabaccf65a4979c00162f0dc56404f862f88c5c2af24ddfaf608ce3aaa3b",
+      "crc32": "efa5322e",
+      "entropy": 7.9946930303499375,
+      "size_mod_16": 0,
+      "prefix32": "c06871b2ce60e3d189dadba7be43d106184768fa30d82c755352d556b74daf92",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.994693
+      ],
+      "jar_sha256": "ebf70257c266c66042243a9dae95843b2f26995e8e310f78b68b28336bdb1900"
+    },
+    {
+      "source": "C:\\PioneerStation\\plugins\\aero.geoscan.pioneer.firmware.module_1.0.0.202009231222.jar!/resources/BEACONUSNAV/2_1/Pioneer_Beacon_USNav_V2_1_gs-2.1.bin",
+      "size": 34880,
+      "sha256": "1348dabaccf65a4979c00162f0dc56404f862f88c5c2af24ddfaf608ce3aaa3b",
+      "crc32": "efa5322e",
+      "entropy": 7.9946930303499375,
+      "size_mod_16": 0,
+      "prefix32": "c06871b2ce60e3d189dadba7be43d106184768fa30d82c755352d556b74daf92",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.994693
+      ],
+      "jar_sha256": "ebf70257c266c66042243a9dae95843b2f26995e8e310f78b68b28336bdb1900"
+    },
+    {
+      "source": "C:\\PioneerStation\\plugins\\aero.geoscan.pioneer.firmware.module_1.0.0.202009231222.jar!/resources/BEACONUSNAV/4_1/Pioneer_Beacon_USNav_V4_1_gs-2.1.bin",
+      "size": 34880,
+      "sha256": "1348dabaccf65a4979c00162f0dc56404f862f88c5c2af24ddfaf608ce3aaa3b",
+      "crc32": "efa5322e",
+      "entropy": 7.9946930303499375,
+      "size_mod_16": 0,
+      "prefix32": "c06871b2ce60e3d189dadba7be43d106184768fa30d82c755352d556b74daf92",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.994693
+      ],
+      "jar_sha256": "ebf70257c266c66042243a9dae95843b2f26995e8e310f78b68b28336bdb1900"
+    },
+    {
+      "source": "C:\\PioneerStation\\plugins\\aero.geoscan.pioneer.firmware.module_1.0.0.202009231222.jar!/resources/MODULEOPTICALFLOW/1_0/Pioneer_Module_Otical_Flow_V1_0_gs-1.0.bin",
+      "size": 10496,
+      "sha256": "37d911ee24b48f06c55d864f2468ea04111ad76297626ee683db66e6ee43e775",
+      "crc32": "691a81ab",
+      "entropy": 7.981965580185958,
+      "size_mod_16": 0,
+      "prefix32": "c06871b2ce60e3d189dadba7be43d1068e18f3f19f1ba2ce753f8d2104f1bce3",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.981966
+      ],
+      "jar_sha256": "ebf70257c266c66042243a9dae95843b2f26995e8e310f78b68b28336bdb1900"
+    },
+    {
+      "source": "C:\\PioneerStation\\plugins\\aero.geoscan.pioneer.firmware_1.5.6173.202009231222.jar!/resources/PIONEERBASE/1_1/pioneer_base_V1_1-boot_pioneer-1.5.6173-8efaccb93_837.bin",
+      "size": 964208,
+      "sha256": "af69e47a013beb9d790b30ad88f0da8643645f59f207c310e10ff70bb523154e",
+      "crc32": "5efc048d",
+      "entropy": 7.999818237361052,
+      "size_mod_16": 0,
+      "prefix32": "c1cc4b7a42bb15909a47c161cb6453157db14f203d828c8e26a3a04a91f39c4e",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.997033,
+        7.996987,
+        7.997017,
+        7.997216,
+        7.997127,
+        7.997523,
+        7.997136,
+        7.997548,
+        7.997213,
+        7.997082,
+        7.997159,
+        7.997316,
+        7.997157,
+        7.996981,
+        7.995698
+      ],
+      "jar_sha256": "99f8afec43d37416d48e8afcd13618ddc533580c7bfe8410ac6500612030bd3c"
+    },
+    {
+      "source": "C:\\PioneerStation\\plugins\\aero.geoscan.pioneer.firmware_1.5.6173.202009231222.jar!/resources/PIONEERBASE/1_2/pioneer_base_V1_2-boot_pioneer-1.5.6173-8efaccb93_836.bin",
+      "size": 964576,
+      "sha256": "f6d3fe7b879c97f7d85efbfad96448161971495ecb9f8e1587ce1f1c8f484362",
+      "crc32": "3b8159de",
+      "entropy": 7.99983018251073,
+      "size_mod_16": 0,
+      "prefix32": "ac5187bd2d3555c09306b64f6297779d30ba444461f720b367a1ff81bb8aa6c6",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.997125,
+        7.997412,
+        7.997806,
+        7.997393,
+        7.997198,
+        7.997361,
+        7.996979,
+        7.997467,
+        7.997738,
+        7.996858,
+        7.996973,
+        7.996967,
+        7.99749,
+        7.997274,
+        7.995923
+      ],
+      "jar_sha256": "99f8afec43d37416d48e8afcd13618ddc533580c7bfe8410ac6500612030bd3c"
+    },
+    {
+      "source": "C:\\PioneerStation\\plugins\\aero.geoscan.pioneer.firmware_1.5.6173.202009231222.jar!/resources/PIONEERBASE/1_0/pioneer_base_V1_0-1.5.6173-8efaccb93_838.bin",
+      "size": 964272,
+      "sha256": "11e4fd2d5e6f70596be6b874bf40c81e581680b63326def112b1baeaba56bec0",
+      "crc32": "cc815c24",
+      "entropy": 7.999828265032835,
+      "size_mod_16": 0,
+      "prefix32": "1771a15ec39d41f11370a2c949b78cdf7d39860585ef2d34b41332dbab288147",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.996928,
+        7.997189,
+        7.997339,
+        7.997366,
+        7.997239,
+        7.996569,
+        7.997473,
+        7.997394,
+        7.997056,
+        7.997025,
+        7.997323,
+        7.997238,
+        7.997406,
+        7.997072,
+        7.996294
+      ],
+      "jar_sha256": "99f8afec43d37416d48e8afcd13618ddc533580c7bfe8410ac6500612030bd3c"
+    },
+    {
+      "source": "C:\\PioneerStation\\plugins\\aero.geoscan.pioneer.firmware_1.5.6173.202009231222.jar!/resources/DFUPIONEER-MINI-A/1_1/pioneer_mini_V1_1-boot-pioneer-1.6.7011.bin",
+      "size": 884080,
+      "sha256": "13cdc222ca1fd094ff2c397daf42546fc1995e145ea93502bf511351e7e19d4c",
+      "crc32": "fc5259d7",
+      "entropy": 7.999845665466646,
+      "size_mod_16": 0,
+      "prefix32": "cfbacf0c395b236607afa9e128a86be5f98a86321f26f1edba52f9b20e4008b9",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.997199,
+        7.997304,
+        7.997056,
+        7.996995,
+        7.997125,
+        7.997146,
+        7.997421,
+        7.997365,
+        7.997235,
+        7.997464,
+        7.99714,
+        7.997385,
+        7.997243,
+        7.99369
+      ],
+      "jar_sha256": "99f8afec43d37416d48e8afcd13618ddc533580c7bfe8410ac6500612030bd3c"
+    },
+    {
+      "source": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\logic-0.9.174794.jar!/firmware/autopilot/PioneerBase/pioneer-base_1.6.10332.bin",
+      "size": 719680,
+      "sha256": "8b55a6df2013f7e8af4cd97a83253eba3f7649ee95684beba5b31d51be56b82b",
+      "crc32": "e03ea421",
+      "entropy": 7.999741479814477,
+      "size_mod_16": 0,
+      "prefix32": "1ec1ba15e7edd1e869101cd306f95b855a92b41a470d7e676e93b0666c635237",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.997093,
+        7.997028,
+        7.997227,
+        7.997303,
+        7.997078,
+        7.997493,
+        7.997087,
+        7.997295,
+        7.997089,
+        7.997566,
+        7.996948
+      ],
+      "jar_sha256": "37cc1c2e1c8f97185369d874faf73ac84f288f4b0791ec95757ea77265777166"
+    },
+    {
+      "source": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\logic-0.9.174794.jar!/firmware/autopilot/PioneerBaseOld/pioneer-base_1.6.10332.bin",
+      "size": 719680,
+      "sha256": "8b55a6df2013f7e8af4cd97a83253eba3f7649ee95684beba5b31d51be56b82b",
+      "crc32": "e03ea421",
+      "entropy": 7.999741479814477,
+      "size_mod_16": 0,
+      "prefix32": "1ec1ba15e7edd1e869101cd306f95b855a92b41a470d7e676e93b0666c635237",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.997093,
+        7.997028,
+        7.997227,
+        7.997303,
+        7.997078,
+        7.997493,
+        7.997087,
+        7.997295,
+        7.997089,
+        7.997566,
+        7.996948
+      ],
+      "jar_sha256": "37cc1c2e1c8f97185369d874faf73ac84f288f4b0791ec95757ea77265777166"
+    },
+    {
+      "source": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\logic-0.9.174794.jar!/firmware/autopilot/PioneerFPV/pioneer-fpv_1.6.10483.bin",
+      "size": 665520,
+      "sha256": "8af3a9fc9c0a8747f2868a751edf93d09cf1699a2dee88c4876addbc0b127bd5",
+      "crc32": "70a4ab79",
+      "entropy": 7.999737812458578,
+      "size_mod_16": 0,
+      "prefix32": "fc85cb5423292f4daaefaeea8f23eea8281a2df3cb328060e3d80f4f0301ba37",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.997079,
+        7.996914,
+        7.997234,
+        7.997385,
+        7.997359,
+        7.997317,
+        7.996828,
+        7.99707,
+        7.997127,
+        7.997098,
+        7.980408
+      ],
+      "jar_sha256": "37cc1c2e1c8f97185369d874faf73ac84f288f4b0791ec95757ea77265777166"
+    },
+    {
+      "source": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\logic-0.9.174794.jar!/firmware/autopilot/PioneerMini/pioneer-mini_1.6.9202.bin",
+      "size": 1298368,
+      "sha256": "7e68c0c54825b139dd117b49602b586c38f1f2723515dda87d98561d56de9e1b",
+      "crc32": "646c032c",
+      "entropy": 7.999847998893667,
+      "size_mod_16": 0,
+      "prefix32": "f4365e1f00fb35c4ccce33c3f4a80670b98358220fa53dfe0bf38cbb4cb42c42",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.997514,
+        7.997533,
+        7.997443,
+        7.996993,
+        7.997279,
+        7.99643,
+        7.996756,
+        7.997578,
+        7.997185,
+        7.99729,
+        7.997193,
+        7.99724,
+        7.997091,
+        7.99698,
+        7.997152,
+        7.997768,
+        7.997263,
+        7.99733,
+        7.997181,
+        7.996492
+      ],
+      "jar_sha256": "37cc1c2e1c8f97185369d874faf73ac84f288f4b0791ec95757ea77265777166"
+    },
+    {
+      "source": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\logic-0.9.174794.jar!/firmware/autopilot/PioneerMiniA/pioneer-mini-v1_1.6.9202.bin",
+      "size": 1298368,
+      "sha256": "02788b4544d425e5c02650f856d972ecd7466a0b98e731532b8d0aca1fb7fa39",
+      "crc32": "f8094269",
+      "entropy": 7.999870395186365,
+      "size_mod_16": 0,
+      "prefix32": "73bf732f891c000379302c0bb5b2bac01ae4b08ca40fa40b17c8f14de1b7eaaf",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.997127,
+        7.9972,
+        7.997417,
+        7.997277,
+        7.997046,
+        7.997234,
+        7.997169,
+        7.997302,
+        7.997258,
+        7.997101,
+        7.997419,
+        7.997281,
+        7.997096,
+        7.997224,
+        7.997376,
+        7.997564,
+        7.997045,
+        7.997085,
+        7.996899,
+        7.996914
+      ],
+      "jar_sha256": "37cc1c2e1c8f97185369d874faf73ac84f288f4b0791ec95757ea77265777166"
+    },
+    {
+      "source": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\logic-0.9.174794.jar!/firmware/autopilot/PioneerMiniV2/pioneer-mini-v2_1.6.10620.bin",
+      "size": 474656,
+      "sha256": "5b5b05477dca9a6ac84bb81566e124e80a985b72fe7f76f58f179ca350cd804c",
+      "crc32": "69c43566",
+      "entropy": 7.99962769742759,
+      "size_mod_16": 0,
+      "prefix32": "6a29b8109150d4e85a0b4c2269e0a7b2eee5123a2721a828485e73387bdc586d",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.996866,
+        7.997078,
+        7.997304,
+        7.997182,
+        7.996593,
+        7.997411,
+        7.997254,
+        7.988914
+      ],
+      "jar_sha256": "37cc1c2e1c8f97185369d874faf73ac84f288f4b0791ec95757ea77265777166"
+    },
+    {
+      "source": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\logic-0.9.174794.jar!/firmware/chip/loader/MiniLoaderAll.bin",
+      "size": 766457,
+      "sha256": "0b98ab7fc96328bdff72311c3d596ba9565ec2c81cd93bfe27c7d2636d6c97e6",
+      "crc32": "27eb15c7",
+      "entropy": 7.052779765565571,
+      "size_mod_16": 9,
+      "prefix32": "4c44522066006401000000000001e8070c1310380a3637353302660000003901",
+      "duplicate_aligned_16byte_blocks": 5377,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        6.346364,
+        5.979257,
+        6.394939,
+        6.415952,
+        5.054504,
+        3.451446,
+        6.146401,
+        7.967174,
+        7.972748,
+        7.973599,
+        7.942154,
+        7.786925
+      ],
+      "jar_sha256": "37cc1c2e1c8f97185369d874faf73ac84f288f4b0791ec95757ea77265777166"
+    },
+    {
+      "source": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\logic-0.9.174794.jar!/firmware/modules/IRNav/IRNav_0.1.19_aes.bin",
+      "size": 23136,
+      "sha256": "07d8d071041cb0c772faa23682cd47922b827750dee1e8963a22f5937935c22e",
+      "crc32": "cf5021e9",
+      "entropy": 7.992387587793697,
+      "size_mod_16": 0,
+      "prefix32": "c06871b2ce60e3d189dadba7be43d106cdbe6e7b8d4e493269361ec58644bf1e",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.992388
+      ],
+      "jar_sha256": "37cc1c2e1c8f97185369d874faf73ac84f288f4b0791ec95757ea77265777166"
+    },
+    {
+      "source": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\logic-0.9.174794.jar!/firmware/modules/ModuleUSNav/USNav_2.13.276.760ad52_aes.bin",
+      "size": 37056,
+      "sha256": "047573ac54cbaae1ec15957c2f2c2713bfba20d16c3034d4c16fee93b99593d3",
+      "crc32": "3f8e5bac",
+      "entropy": 7.995301785997931,
+      "size_mod_16": 0,
+      "prefix32": "c06871b2ce60e3d189dadba7be43d106e483548387202d4a28a791a8085ca3ed",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.995302
+      ],
+      "jar_sha256": "37cc1c2e1c8f97185369d874faf73ac84f288f4b0791ec95757ea77265777166"
+    },
+    {
+      "source": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\logic-0.9.174794.jar!/firmware/modules/PioneerAdapter/ModuleOpticalFlow_1.25.bin",
+      "size": 4528,
+      "sha256": "032f308fb2464559bdd41f97e940811f4a54cc07e0efa23a98f1733f872bd198",
+      "crc32": "d84b9a3d",
+      "entropy": 7.96291746826657,
+      "size_mod_16": 0,
+      "prefix32": "c06871b2ce60e3d189dadba7be43d106d2297ed69cf8e0b909029ba546ea7c57",
+      "duplicate_aligned_16byte_blocks": 0,
+      "prefix_signature": [],
+      "lua53_signature_offsets": [],
+      "candidate_stm32_vector_offsets": [],
+      "lua_api_strings": [],
+      "entropy_64k": [
+        7.962917
+      ],
+      "jar_sha256": "37cc1c2e1c8f97185369d874faf73ac84f288f4b0791ec95757ea77265777166"
+    }
+  ],
+  "classes": [
+    {
+      "class": "aero.geoscan.gcs.uav.payload.impl.FlashingJob",
+      "jar": "C:\\PioneerStation\\plugins\\aero.geoscan.gcs-payload_1.0.0.jar",
+      "jar_sha256": "8041f745d86781ff22d987e7253adb88fd9692c0750a66dcee7eb4b636586775",
+      "class_sha256": "9efbab2f4efd0198fb0c4f822d0c73c6342b75d5f1a192d18002dccb11c17e5d",
+      "javap_file": "aero.geoscan.gcs.uav.payload.impl.FlashingJob.txt"
+    },
+    {
+      "class": "aero.geoscan.gcs.plazlink.control.Plazlink1_4FileUploader",
+      "jar": "C:\\PioneerStation\\plugins\\aero.geoscan.gcs-plazlink_1.6.0.jar",
+      "jar_sha256": "20535e2eeb9573fd9af7946c94e99d3b7c49f2ff2326bec16f50ea6fad9fadcf",
+      "class_sha256": "8ec35663a2952f628e3b065d7932e43e610720f39852675f14af73b229a6082b",
+      "javap_file": "aero.geoscan.gcs.plazlink.control.Plazlink1_4FileUploader.txt"
+    },
+    {
+      "class": "aero.geoscan.gcs.plazlink.control.pl1_4.Plazlink1_4LuaScriptBinding$LuaScriptStartHandler",
+      "jar": "C:\\PioneerStation\\plugins\\aero.geoscan.gcs.plazlink1_x.control_1.0.0.v20200923-8542.jar",
+      "jar_sha256": "f2273988ad9187bc1e67d22eb555e2caeb29ff20dd14f7f765ff3632d9784407",
+      "class_sha256": "d10fcba5bec8e15da71f204ee6c88d78bbc3c783c672f068f6a9b721144c6058",
+      "javap_file": "aero.geoscan.gcs.plazlink.control.pl1_4.Plazlink1_4LuaScriptBinding$LuaScriptStartHandler.txt"
+    },
+    {
+      "class": "aero.geoscan.gcs.plazlink.control.pl1_4.Plazlink1_4LuaScriptBinding$LuaScriptStopHandler",
+      "jar": "C:\\PioneerStation\\plugins\\aero.geoscan.gcs.plazlink1_x.control_1.0.0.v20200923-8542.jar",
+      "jar_sha256": "f2273988ad9187bc1e67d22eb555e2caeb29ff20dd14f7f765ff3632d9784407",
+      "class_sha256": "f4a75f8c3bbc231328c1849f5a803dae01d009a9008168d7abe7b384cabce269",
+      "javap_file": "aero.geoscan.gcs.plazlink.control.pl1_4.Plazlink1_4LuaScriptBinding$LuaScriptStopHandler.txt"
+    },
+    {
+      "class": "aero.geoscan.gcs.plazlink.control.pl1_4.Plazlink1_4LuaScriptBinding$LuaScriptUploadHandler",
+      "jar": "C:\\PioneerStation\\plugins\\aero.geoscan.gcs.plazlink1_x.control_1.0.0.v20200923-8542.jar",
+      "jar_sha256": "f2273988ad9187bc1e67d22eb555e2caeb29ff20dd14f7f765ff3632d9784407",
+      "class_sha256": "459257f949bf6f426e4fd581fc213e8563869aaef76a08caf4c5c7fbb855b0f1",
+      "javap_file": "aero.geoscan.gcs.plazlink.control.pl1_4.Plazlink1_4LuaScriptBinding$LuaScriptUploadHandler.txt"
+    },
+    {
+      "class": "aero.geoscan.gcs.uav.devhub.cmd.LuaScriptUploadCommand",
+      "jar": "C:\\PioneerStation\\plugins\\aero.geoscan.gcs.uav.devhub_1.0.0.v20200923-8542.jar",
+      "jar_sha256": "31b0a9a7809644b448bf59ddefd563a73b854ea220dc2fcf039f0f088a3427e3",
+      "class_sha256": "5243fcbd88f9f86152362ca52980213d5cdfc266aaa38d139469796a9e9a02b9",
+      "javap_file": "aero.geoscan.gcs.uav.devhub.cmd.LuaScriptUploadCommand.txt"
+    },
+    {
+      "class": "aero.geoscan.pioneer.app.flashing.FlashingWizard",
+      "jar": "C:\\PioneerStation\\plugins\\aero.geoscan.pioneer.app_1.0.4.202009231222.jar",
+      "jar_sha256": "f2f14c7305b21913deb3e7add714949fbb83f6ce1a66756742e9868a2f27a33f",
+      "class_sha256": "c7ec7cb1474d6d15e8a43a6bbc5bfb574850b613c4ffd292f2f5a8b6b04a5304",
+      "javap_file": "aero.geoscan.pioneer.app.flashing.FlashingWizard.txt"
+    },
+    {
+      "class": "aero.geoscan.pioneer.app.fastload.com.UploadLuaScriptFLJob",
+      "jar": "C:\\PioneerStation\\plugins\\aero.geoscan.pioneer.app_1.0.4.202009231222.jar",
+      "jar_sha256": "f2f14c7305b21913deb3e7add714949fbb83f6ce1a66756742e9868a2f27a33f",
+      "class_sha256": "68768466752f13998339c349f5f15828d8329545546cf104850876a16f7c9075",
+      "javap_file": "aero.geoscan.pioneer.app.fastload.com.UploadLuaScriptFLJob.txt"
+    },
+    {
+      "class": "aero.geoscan.pioneer.lua.LuaCompiler",
+      "jar": "C:\\PioneerStation\\plugins\\aero.geoscan.pioneer.lua_1.0.0.202009231222.jar",
+      "jar_sha256": "439a2065c2970276d373ddef4e918f49cccb7e1a3728abb0b6a7345e852d5417",
+      "class_sha256": "22b7e28a6c3f1d1aca3d84ae027058c06a75710dab1798319f4effbefb58a641",
+      "javap_file": "aero.geoscan.pioneer.lua.LuaCompiler.txt"
+    },
+    {
+      "class": "aero.geoscan.gcs3.control.plazlink.model.device.component.definition.flags.luascript.LuaScript$1",
+      "jar": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\control.plazlink-0.9.174794.jar",
+      "jar_sha256": "25144569fefb76185f81f3d1863e64981b991948e4dc0d1eccdd55bdf0032b64",
+      "class_sha256": "67f5877c0588e01ddf9484299def227b91fd23d4f0eb3260d8c268773642661b",
+      "javap_file": "aero.geoscan.gcs3.control.plazlink.model.device.component.definition.flags.luascript.LuaScript$1.txt"
+    },
+    {
+      "class": "aero.geoscan.gcs3.control.plazlink.model.device.component.definition.flags.luascript.LuaScript",
+      "jar": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\control.plazlink-0.9.174794.jar",
+      "jar_sha256": "25144569fefb76185f81f3d1863e64981b991948e4dc0d1eccdd55bdf0032b64",
+      "class_sha256": "df3cd26083ab581b21c2e32e713c5409af5ef23f7f9b560fd0fc828126e8e834",
+      "javap_file": "aero.geoscan.gcs3.control.plazlink.model.device.component.definition.flags.luascript.LuaScript.txt"
+    },
+    {
+      "class": "aero.geoscan.gcs.uav.payload.impl.FlashingJob",
+      "jar": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\gcs-payload-1.1.1.jar",
+      "jar_sha256": "5fb0848472058a0a11b36b46785ad96d4395a1fb77b357ce7fe687d4f2762d4c",
+      "class_sha256": "51d4376610c1e1bd6e185eb83a90bfc65f83f04815afbc99810500ff37a9526d",
+      "javap_file": "aero.geoscan.gcs.uav.payload.impl.FlashingJob.txt"
+    },
+    {
+      "class": "aero.geoscan.gcs3.logic.file.PioneerUploadFirmwareService",
+      "jar": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\logic-0.9.174794.jar",
+      "jar_sha256": "37cc1c2e1c8f97185369d874faf73ac84f288f4b0791ec95757ea77265777166",
+      "class_sha256": "be598f733dea8970e8eac1ebe62214a0bc8b4b71ea3eb34b4e283d26308a590e",
+      "javap_file": "aero.geoscan.gcs3.logic.file.PioneerUploadFirmwareService.txt"
+    },
+    {
+      "class": "aero.geoscan.gcs3.logic.firmware.impl.FirmwareValidatorImpl",
+      "jar": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\logic-0.9.174794.jar",
+      "jar_sha256": "37cc1c2e1c8f97185369d874faf73ac84f288f4b0791ec95757ea77265777166",
+      "class_sha256": "53d93ad1d0004e9109549062a9d45bb4b37cf50e65a7882efac3edcf34e44610",
+      "javap_file": "aero.geoscan.gcs3.logic.firmware.impl.FirmwareValidatorImpl.txt"
+    },
+    {
+      "class": "aero.geoscan.gcs3.logic.flashing.strategy.payload.PayloadFlashingStrategy",
+      "jar": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\logic-0.9.174794.jar",
+      "jar_sha256": "37cc1c2e1c8f97185369d874faf73ac84f288f4b0791ec95757ea77265777166",
+      "class_sha256": "68413d407eb19a2978a25db7305bdadf768328d06e458031a9ecb1a11870b889",
+      "javap_file": "aero.geoscan.gcs3.logic.flashing.strategy.payload.PayloadFlashingStrategy.txt"
+    },
+    {
+      "class": "aero.geoscan.gcs3.logic.flashing.strategy.plazlink.PlazlinkFlashingStrategy",
+      "jar": "C:\\Program Files\\Pioneer-Station-2.0\\libs\\logic-0.9.174794.jar",
+      "jar_sha256": "37cc1c2e1c8f97185369d874faf73ac84f288f4b0791ec95757ea77265777166",
+      "class_sha256": "95ec8284027319487cfcb4a73b003e7f5d7340b3f84d1dfa29a87625cf28d4a8",
+      "javap_file": "aero.geoscan.gcs3.logic.flashing.strategy.plazlink.PlazlinkFlashingStrategy.txt"
+    }
+  ],
+  "compiler": {
+    "path": "C:\\PioneerStation\\tools\\luac.exe",
+    "sha256": "9675f0950826d98dc47d83bdf7d93768a77d92f9ae22735686f8a4f848084e06",
+    "version": "Lua 5.3.3  Copyright (C) 1994-2016 Lua.org, PUC-Rio",
+    "probe_source": "return 1.5, 16777217.0, 2147483647, math.maxinteger, 1 << 31, 7 // 2\n",
+    "probe_sha256": "33970da701fa5f43fa9c2995cc7d1985c150d548f054bc18b0d96f3faecb56c3",
+    "header_hex": "1b 4c 75 61 53 00 19 93 0d 0a 1a 0a 04 04 04 04 08 78 56 00 00 00 00 00 00 00 28 77 40",
+    "sizes_bytes": {
+      "int": 4,
+      "size_t": 4,
+      "instruction": 4,
+      "lua_Integer": 4,
+      "lua_Number": 8
+    },
+    "byteorder": "little"
+  },
+  "missing_classes": [],
+  "probe_compilation": [
+    {
+      "file": "01-api-surface.lua",
+      "sha256": "9446da20b58686acd2db046278c86e7a244c387246b7e62fb31baf17945139d9",
+      "status": "passed"
+    },
+    {
+      "file": "02-timer-lifecycle.lua",
+      "sha256": "e214e7ead73962c485ab766794396729882636d4eabf11e42c46dc03fba80a3e",
+      "status": "passed"
+    },
+    {
+      "file": "03-sleep-dispatch.lua",
+      "sha256": "649fe52f9103401776b4cd59379ef7d6cc802dfa941ac00b9eb5fe34ff4d6024",
+      "status": "passed"
+    },
+    {
+      "file": "04-pending-timer-capacity.lua",
+      "sha256": "7986d6fa69782e91789433e510a14b80d3a0e501c074c1da5f4d8f6de84d169f",
+      "status": "passed"
+    },
+    {
+      "file": "05-no-callback.lua",
+      "sha256": "cc602c2b56d8b2cee6ad1209a77018c8b0328bca7e456a29f9e00684e841cc95",
+      "status": "passed"
+    }
+  ],
+  "official_example_compilation": [
+    {
+      "source": "C:\\PioneerStation\\examples\\example_cargo.lua",
+      "source_sha256": "b3e9816510e84e2385759a096b5e457481c1af45f8864fc799f309202abf237e",
+      "status": "passed",
+      "binary": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_cargo.luac",
+      "binary_sha256": "e75a094d3943bff6996a197883a62a089f8d27ebdfad6bbc2583e76198ef3cc4"
+    },
+    {
+      "source": "C:\\PioneerStation\\examples\\example_default.lua",
+      "source_sha256": "2bfae2883c5ded64e0eab27d3ec9fa62c1b109b76f25161f435a0ace15211841",
+      "status": "passed",
+      "binary": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_default.luac",
+      "binary_sha256": "a5b07cb9853b2caebda41890c5aa5b84dd254f7bade46d3af2e561c9236c8333"
+    },
+    {
+      "source": "C:\\PioneerStation\\examples\\example_get_accel.lua",
+      "source_sha256": "4784310d8e7fb162a33291bdcfd54fac0f0d88c912b7bb7a6f933bc95337d5f6",
+      "status": "passed",
+      "binary": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_get_accel.luac",
+      "binary_sha256": "477eab4bfea138bb000836692443a21d2ca684eb7c6e941681126acde4a0c603"
+    },
+    {
+      "source": "C:\\PioneerStation\\examples\\example_get_gyro.lua",
+      "source_sha256": "5c12e735295d148c84e1d144b9277a539a21fc9f6998f1932ddf2dbdd6d4160e",
+      "status": "passed",
+      "binary": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_get_gyro.luac",
+      "binary_sha256": "7851bad41b07b326c0c1dc900f23d44e947e4951c31681b6aee9cb2479817112"
+    },
+    {
+      "source": "C:\\PioneerStation\\examples\\example_get_orientation.lua",
+      "source_sha256": "3a8af27924f8601af879c63dad5dbdee32b9e1116b63c674e3100b701498aa71",
+      "status": "passed",
+      "binary": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_get_orientation.luac",
+      "binary_sha256": "975082717d2a3f9dba62df3a4e68fd5b2c90cbe98ac4a085fdf6a8463df065e0"
+    },
+    {
+      "source": "C:\\PioneerStation\\examples\\example_get_position.lua",
+      "source_sha256": "9ca8258f5789037d6cf079ec7f289deec152e111175d3f6dfc92991797a20444",
+      "status": "passed",
+      "binary": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_get_position.luac",
+      "binary_sha256": "3ac669a66e50d06fa0aa787cf5320de8bced70b0ff07fe3dcf0245a016861521"
+    },
+    {
+      "source": "C:\\PioneerStation\\examples\\example_get_tof.lua",
+      "source_sha256": "e6833ad6f53a99396e1805a4dca1f966a64e7113fff9e3f4f79476613b4e5c8e",
+      "status": "passed",
+      "binary": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_get_tof.luac",
+      "binary_sha256": "54b2a8768aaa9fbc903f885cc8f52334385326bdb32892d0eb02fddc17dc9f1f"
+    },
+    {
+      "source": "C:\\PioneerStation\\examples\\example_get_velocity.lua",
+      "source_sha256": "c396a2b7500261710dc8c9ea626ffaad70bbac7f3e0b6aa66d3e99f59db84a67",
+      "status": "passed",
+      "binary": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_get_velocity.luac",
+      "binary_sha256": "b2edf99903c2f6000512b57e6e49a626aff6b1a24f99ce57f6a9a82f89ca0a0e"
+    },
+    {
+      "source": "C:\\PioneerStation\\examples\\example_go_to_point.lua",
+      "source_sha256": "d9b4829c7db5da613a7cbf63c3757b34b2693b9f79a2984e381d558879921d9d",
+      "status": "passed",
+      "binary": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_go_to_point.luac",
+      "binary_sha256": "e52b3a19933582183ebdb847c542b34002d0b7555370ba1f33b8e664f06b89f9"
+    },
+    {
+      "source": "C:\\PioneerStation\\examples\\example_led.lua",
+      "source_sha256": "5083c426bc4726f761749d6b33a0ad3bf9cd3fa7748436bfc6e1d455969bb6f9",
+      "status": "passed",
+      "binary": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_led.luac",
+      "binary_sha256": "e7f71cf793e0a8384d753e344a8d214b487d83342591c2f67a9cf549eb077f66"
+    },
+    {
+      "source": "C:\\PioneerStation\\examples\\example_path.lua",
+      "source_sha256": "159bf1c980aa71dfeaedc61e357aa50138c6db689990fa083082d9c42d61f748",
+      "status": "passed",
+      "binary": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_path.luac",
+      "binary_sha256": "c3d5419449f9499ae7f9c4a5962b4611b368e31807cd7b35cdbe1d5e1942807a"
+    },
+    {
+      "source": "C:\\PioneerStation\\examples\\learnlua.lua",
+      "source_sha256": "6190d275da7e0edfeffbbed019c3013ebd94e5358ded0930d830d9dc856b19ae",
+      "status": "passed",
+      "binary": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\learnlua.luac",
+      "binary_sha256": "16afc1702f60eba51c1144a710eac9bfb7593a55f68f8a6b30a2c0410b9fdf25"
+    }
+  ],
+  "fengari_execution": {
+    "loadStatus": 0,
+    "runStatus": 0,
+    "values": [
+      {
+        "value": 1.5,
+        "integer": false
+      },
+      {
+        "value": 16777217,
+        "integer": false
+      },
+      {
+        "value": 2147483647,
+        "integer": true
+      },
+      {
+        "value": 2147483647,
+        "integer": true
+      },
+      {
+        "value": -2147483648,
+        "integer": true
+      },
+      {
+        "value": 3,
+        "integer": true
+      }
+    ],
+    "officialExampleLoads": [
+      {
+        "file": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_cargo.luac",
+        "loadStatus": 0
+      },
+      {
+        "file": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_default.luac",
+        "loadStatus": 0
+      },
+      {
+        "file": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_get_accel.luac",
+        "loadStatus": 0
+      },
+      {
+        "file": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_get_gyro.luac",
+        "loadStatus": 0
+      },
+      {
+        "file": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_get_orientation.luac",
+        "loadStatus": 0
+      },
+      {
+        "file": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_get_position.luac",
+        "loadStatus": 0
+      },
+      {
+        "file": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_get_tof.luac",
+        "loadStatus": 0
+      },
+      {
+        "file": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_get_velocity.luac",
+        "loadStatus": 0
+      },
+      {
+        "file": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_go_to_point.luac",
+        "loadStatus": 0
+      },
+      {
+        "file": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_led.luac",
+        "loadStatus": 0
+      },
+      {
+        "file": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\example_path.luac",
+        "loadStatus": 0
+      },
+      {
+        "file": "C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\personal\\lessons\\code\\lua\\web-simulator\\.tmp\\pioneer-firmware-research\\repro\\compiled-examples\\learnlua.luac",
+        "loadStatus": 0
+      }
+    ]
+  }
+}

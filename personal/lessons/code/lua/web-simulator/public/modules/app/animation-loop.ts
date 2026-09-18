@@ -38,6 +38,22 @@ const RAF_STALL_THRESHOLD_MS = 250;
 let animationFrameId = 0;
 let lastTime = 0;
 let physicsAccumulator = 0;
+let fpsFrameCount = 0;
+let fpsLastUpdate = 0;
+
+function updateFpsCounter(time: number): void {
+    fpsFrameCount += 1;
+    if (!fpsLastUpdate) fpsLastUpdate = time;
+
+    const elapsed = time - fpsLastUpdate;
+    if (elapsed < 1000) return;
+
+    const fps = Math.round((fpsFrameCount * 1000) / elapsed);
+    const element = document.getElementById('scene-fps');
+    if (element) element.textContent = `FPS: ${fps}`;
+    fpsFrameCount = 0;
+    fpsLastUpdate = time;
+}
 
 function stepPhysics(rawDt: number): void {
     const scaledDt = rawDt * simSettings.simSpeed;
@@ -57,6 +73,7 @@ function stepPhysics(rawDt: number): void {
 export function startAnimationLoop(callbacks: LoopCallbacks): void {
     const animate = (time: number) => {
         animationFrameId = requestAnimationFrame(animate);
+        updateFpsCounter(time);
 
         if (!lastTime) lastTime = time;
         let rawDt = (time - lastTime) / 1000;

@@ -60,6 +60,8 @@ export function createDroneRecord(
         name,
         running: false,
         luaHasEventCallback: false,
+        luaHandlesEnginesStarted: false,
+        luaHandlesPointReached: false,
         luaMissionCommandsAcceptedWithoutCallback: 0,
         luaMissingCallbackNoticeShown: false,
         current_time: 0,
@@ -79,6 +81,7 @@ export function createDroneRecord(
         fsmState: 'IDLE',
         flightMode: 'AUTO',
         rcChannels: [1500, 1500, 1000, 1500, 1000, 1000, 1000, 1000],
+        previousRcArmActive: null,
         magnetGripper: {
             active: false,
             attachedObjectId: null
@@ -111,6 +114,8 @@ export function createDroneRecord(
 export function resetDroneRuntimeState(drone: DroneState) {
     drone.running = false;
     drone.luaHasEventCallback = false;
+    drone.luaHandlesEnginesStarted = false;
+    drone.luaHandlesPointReached = false;
     drone.luaMissionCommandsAcceptedWithoutCallback = 0;
     drone.luaMissingCallbackNoticeShown = false;
     drone.current_time = 0;
@@ -134,6 +139,7 @@ export function resetDroneRuntimeState(drone: DroneState) {
     drone.timers = [];
     drone.leds = Array.from({ length: 29 }, () => ({ r: 0, g: 0, b: 0, w: 0 }));
     drone.rcChannels = [1500, 1500, 1000, 1500, 1000, 1000, 1000, 1000];
+    drone.previousRcArmActive = null;
     drone.magnetGripper.active = false;
     drone.magnetGripper.attachedObjectId = null;
     drone.pendingLocalPoint = false;

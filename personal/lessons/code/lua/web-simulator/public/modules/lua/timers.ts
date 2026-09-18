@@ -8,7 +8,9 @@ const MIN_LUA_TIMER_DELAY_SECONDS = 0.05;
 function normalizeLuaDelay(value: number) {
     if (!Number.isFinite(value)) return MIN_LUA_TIMER_DELAY_SECONDS;
     if (value <= 0) return MIN_LUA_TIMER_DELAY_SECONDS;
-    return Math.max(MIN_LUA_TIMER_DELAY_SECONDS, value);
+    // The official LED-matrix example requests 0.003 seconds. Preserve positive
+    // delays; actual dispatch remains bounded by the simulation update rate.
+    return value;
 }
 
 export const timer_callLater = function(L: any) {
@@ -43,9 +45,10 @@ export const timer_new = function(L: any) {
     const timer_obj = {
         period: period,
         callback_ref: func_ref,
-        next_trigger: simState.current_time + period,
-        trigger_time: simState.current_time + period,
+        next_trigger: Number.POSITIVE_INFINITY,
+        trigger_time: Number.POSITIVE_INFINITY,
         one_shot: false,
+        // Pioneer Station examples explicitly call :start() after Timer.new().
         running: false,
         kind: 'callback' as const,
         sourceState: simState.fsmState
@@ -53,7 +56,7 @@ export const timer_new = function(L: any) {
     
     simState.timers.push(timer_obj);
     pushLuaRuntimeLog(simState, 'info', 'Timer.new/js', `Периодический таймер создан: period=${period}s; sourceState=${simState.fsmState}`, null);
-    log(`[Lua Timer] new(${period}s) created`, 'info');
+    log(`[Lua Timer] new(${period}s) created (stopped)`, 'info');
     
     fengari.lua.lua_newtable(L);
     fengari.lua.lua_pushlightuserdata(L, timer_obj);

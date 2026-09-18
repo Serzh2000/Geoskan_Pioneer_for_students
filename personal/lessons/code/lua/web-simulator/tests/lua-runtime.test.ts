@@ -215,7 +215,9 @@ describe('lua runtime (runLuaScript / triggerLuaCallback)', () => {
 
         test('marks the drone failed and emits a lua script-failure notice when callback(event) errors', () => {
             callbackIsFunction = true;
-            pcallResult = 1;
+            // callback(event) is resumed as a coroutine, so errors come from
+            // lua_resume rather than the old main-state lua_pcall path.
+            resumeStatus = 2;
             resumeErrorMessage = 'division by zero';
 
             expect(() => triggerLuaCallback(drone.id, 7)).not.toThrow();

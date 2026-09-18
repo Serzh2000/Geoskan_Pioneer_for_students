@@ -51,7 +51,6 @@ end`;
 }
 
 export function renderSimultaneousCommandsHtml(commands: string[]): string {
-    const uniqueCommands = Array.from(new Set(commands));
     const example = `ap.push(Ev.MCE_PREFLIGHT)
 
 function callback(event)
@@ -68,7 +67,8 @@ end`;
 
     return `
         <div class="simulation-notice__list">
-            <div class="is-critical">Несколько команд запущены одновременно: ${uniqueCommands.join(', ')}.</div>
+            <div class="is-critical">Вызовы за один шаг симуляции: ${commands.join(', ')}.</div>
+            <div>Если команды уже разделены таймерами, проверьте, не создаются ли эти таймеры заново при каждом событии callback(event). Запускайте расписание один раз, например внутри условия Ev.TAKEOFF_COMPLETE с флагом запуска.</div>
             <div>Команды миссии нужно выполнять по этапам и дожидаться завершения шага.</div>
             <div>Используйте паузы через Timer.callLater(...) или продолжайте сценарий из callback(event).</div>
         </div>

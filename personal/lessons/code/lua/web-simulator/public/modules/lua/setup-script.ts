@@ -254,6 +254,7 @@ export const LUA_SETUP_SCRIPT = `
 
         Ledbar = {}
         Ledbar.fromHSV = js_ledbar_fromHSV
+        fromHSV = js_ledbar_fromHSV
         Ledbar.__index = Ledbar
         function Ledbar.new(count)
             local obj = setmetatable({ count = count }, Ledbar)

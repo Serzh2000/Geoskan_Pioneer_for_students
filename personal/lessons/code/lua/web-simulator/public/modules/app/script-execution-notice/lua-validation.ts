@@ -10,46 +10,44 @@ function hasLuaEarlyRouteIssue(code: string) {
     return false;
 }
 
-function countLuaBlockOpeners(line: string) {
-    let count = 0;
-    count += (line.match(/\bfunction\b/g) || []).length;
-    count += (line.match(/\bif\b.*\bthen\b/g) || []).length;
-    count += (line.match(/\bfor\b.*\bdo\b/g) || []).length;
-    count += (line.match(/\bwhile\b.*\bdo\b/g) || []).length;
-    return count;
+function blankLuaText(text: string) {
+    return text.replace(/[^\r\n]/g, ' ');
 }
 
-function countLuaBlockClosers(line: string) {
-    return (line.match(/\bend\b/g) || []).length;
+function stripLuaCommentsAndStrings(code: string) {
+    return code.replace(
+        /--\[(=*)\[[\s\S]*?\]\1\]|--[^\r\n]*|\[(=*)\[[\s\S]*?\]\2\]|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g,
+        blankLuaText
+    );
+}
+
+// Only compare commands known to execute together. A function declaration is
+// not an invocation: Path methods and event handlers run at different times.
+function luaFunctionRanges(code: string) {
+    const stack: Array<{ kind: string; start: number }> = [];
+    const ranges: Array<{ start: number; end: number }> = [];
+    for (const match of code.matchAll(/\b(function|if|do|repeat|end|until)\b/g)) {
+        const kind = match[1];
+        if (kind === 'end' || kind === 'until') {
+            const block = stack.pop();
+            if (block?.kind === 'function') ranges.push({ start: block.start, end: match.index! + kind.length });
+        } else {
+            stack.push({ kind, start: match.index! });
+        }
+    }
+    return ranges;
 }
 
 function stripLuaManagedBlocks(code: string) {
-    const lines = code.split(/\r?\n/);
-    const remainingLines: string[] = [];
-    let skipDepth = 0;
-
-    for (const line of lines) {
-        const trimmed = line.trim();
-
-        if (skipDepth > 0) {
-            skipDepth += countLuaBlockOpeners(trimmed);
-            skipDepth -= countLuaBlockClosers(trimmed);
-            if (skipDepth < 0) skipDepth = 0;
-            continue;
-        }
-
-        const isCallbackStart = /^function\s+callback\s*\(/.test(trimmed);
-        const isTimerFunctionStart = /timer\.(calllater|new)\s*\([\s\S]*\bfunction\b/.test(trimmed);
-
-        if (isCallbackStart || isTimerFunctionStart) {
-            skipDepth = 1;
-            continue;
-        }
-
-        remainingLines.push(line);
+    const ranges = luaFunctionRanges(code).sort((a, b) => a.start - b.start);
+    let result = '';
+    let offset = 0;
+    for (const range of ranges) {
+        if (range.start < offset) continue;
+        result += code.slice(offset, range.start) + blankLuaText(code.slice(range.start, range.end));
+        offset = range.end;
     }
-
-    return remainingLines.join('\n');
+    return result + code.slice(offset);
 }
 
 function collectLuaMissionCommands(fragment: string): string[] {
@@ -69,11 +67,18 @@ function collectLuaMissionCommands(fragment: string): string[] {
 
 function collectLuaDelayedMissionCommands(code: string): Map<string, string[]> {
     const grouped = new Map<string, string[]>();
-    const timerPattern = /timer\.calllater\s*\(\s*([0-9]*\.?[0-9]+)\s*,\s*function\s*\([^)]*\)\s*([\s\S]*?)end\s*\)/g;
+    const ranges = luaFunctionRanges(code);
+    const timerPattern = /timer\.calllater\s*\(\s*([0-9]*\.?[0-9]+)\s*,\s*(function)\s*\([^)]*\)/g;
     for (const match of code.matchAll(timerPattern)) {
-        const delay = match[1];
-        const body = match[2] || '';
-        const commands = collectLuaMissionCommands(body);
+        // Timers inside helper functions may be registered in different calls
+        // or exclusive branches. Equal delays do not establish equal deadlines.
+        if (ranges.some(range => range.start < match.index! && range.end > match.index!)) continue;
+        const functionStart = match.index! + match[0].indexOf('function');
+        const range = ranges.find(candidate => candidate.start === functionStart);
+        if (!range) continue;
+        const delay = String(Number(match[1]));
+        const body = code.slice(match.index! + match[0].length, range.end - 3);
+        const commands = collectLuaMissionCommands(stripLuaManagedBlocks(body));
         if (!commands.length) continue;
         const bucket = grouped.get(delay) || [];
         bucket.push(...commands);
@@ -136,7 +141,7 @@ function collectLuaMissionCommandGroups(fragment: string): string[][] {
 }
 
 export function collectLuaIssues(code: string): string[] {
-    const normalized = (code || '').toLowerCase();
+    const normalized = stripLuaCommentsAndStrings(code || '').toLowerCase();
     const issues: string[] = [];
     const hasPreflight = normalized.includes('ev.mce_preflight');
     const hasTakeoff = normalized.includes('ev.mce_takeoff');
@@ -151,11 +156,10 @@ export function collectLuaIssues(code: string): string[] {
     if (hasLedbar && !hasLedSet) {
         issues.push('Лента светодиодов создана, но `leds:set(...)` ни разу не вызывается.');
     }
-    if (hasLuaAutopilotMissionApiUsage(code) && !hasCallback) {
-        issues.push(
-            'В сценарии нет `function callback(event) ... end`. Симулятор выполнит только первую команду миссии, а следующие команды автопилота проигнорирует, потому что подтверждающие события некому обработать в Lua.'
-        );
-    }
+    // callback(event) is required for event-driven continuation, but it is
+    // not required when the script sequences commands with Timer.callLater()
+    // (a valid pattern used by Pioneer Station examples). Do not report its
+    // absence as a generic launch problem here.
     if (hasTakeoff && !hasPreflight) {
         issues.push('Команда взлета используется без `Ev.MCE_PREFLIGHT`. Начните со стадии предполета.');
     }

@@ -111,6 +111,10 @@ export interface DroneState {
     name: string;
     running: boolean;
     luaHasEventCallback: boolean;
+    /** True when the current script explicitly consumes Ev.ENGINES_STARTED. */
+    luaHandlesEnginesStarted: boolean;
+    /** True when the current script explicitly consumes Ev.POINT_REACHED. */
+    luaHandlesPointReached: boolean;
     luaMissionCommandsAcceptedWithoutCallback: number;
     luaMissingCallbackNoticeShown: boolean;
     current_time: number;
@@ -130,6 +134,7 @@ export interface DroneState {
     fsmState: DroneFsmState;
     flightMode: FlightMode;
     rcChannels: number[];
+    previousRcArmActive: boolean | null;
     magnetGripper: {
         active: boolean;
         attachedObjectId: string | null;

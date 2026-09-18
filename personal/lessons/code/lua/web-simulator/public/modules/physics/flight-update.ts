@@ -5,6 +5,7 @@ import { emitMissionGamepadOverride } from '../core/mission-notices.js';
 import { enterPreflight, enterTakeoffProcess, setDroneFsmState } from '../autopilot/fsm.js';
 import { matchesAuxRange, simSettings } from '../core/state.js';
 import { triggerLuaCallback } from '../lua/index.js';
+import { shouldDispatchLuaEvent } from '../lua/mission-guard.js';
 import {
     AIRBORNE_ALTITUDE_EPSILON,
     beginDisarmedFall
@@ -33,7 +34,10 @@ function isAutonomousMissionControlling(simState: DroneState) {
 }
 
 function updateFlightModeFromRc(simState: DroneState, id: string, isFlying: boolean) {
-    if (!simSettings.gamepadConnected) return;
+    if (!simSettings.gamepadConnected) {
+        simState.previousRcArmActive = null;
+        return;
+    }
 
     const ch5 = simState.rcChannels[4];
     if (matchesAuxRange(ch5, simSettings.gamepadModeRanges.loiter)) simState.flightMode = 'LOITER';
@@ -42,14 +46,19 @@ function updateFlightModeFromRc(simState: DroneState, id: string, isFlying: bool
 
     const ch6 = simState.rcChannels[5];
     const armActive = matchesAuxRange(ch6, simSettings.gamepadAuxRanges.arm);
+    // An idle arm switch is not a repeated disarm command. Scripts may start
+    // a mission using another RC channel (the official example uses CH8).
+    // A deliberate armed -> disarmed switch transition still stops the motors.
+    const disarmRequested = !armActive && (simState.previousRcArmActive === true || !simState.running);
+    simState.previousRcArmActive = armActive;
     const isAirborne = simState.pos.z > AIRBORNE_ALTITUDE_EPSILON;
     if (armActive && simState.fsmState === 'IDLE' && simState.status !== 'DISARMED_FALL') {
         if (enterPreflight(simState)) {
             // Manual arming should stay latched while the arm switch remains active.
             simState.preflightDeadlineMs = null;
-            triggerLuaCallback(id, 11);
+            if (shouldDispatchLuaEvent(simState, 11)) triggerLuaCallback(id, 11);
         }
-    } else if (!armActive && (simState.fsmState === 'PREFLIGHT' || isFlying)) {
+    } else if (disarmRequested && (simState.fsmState === 'PREFLIGHT' || isFlying)) {
         if (isAirborne) {
             beginDisarmedFall(simState, id, 'DISARM в воздухе: двигатели отключены, начинается свободное падение.');
         } else {

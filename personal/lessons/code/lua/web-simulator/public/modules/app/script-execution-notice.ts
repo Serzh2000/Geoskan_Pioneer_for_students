@@ -206,13 +206,15 @@ export function showSimultaneousCommandsNotice(commands: string[]) {
     const uniqueCommands = Array.from(new Set(commands));
     const message = uniqueCommands.length > 1
         ? `Команды выполняются одновременно: ${uniqueCommands.join(', ')}.`
+        : commands.length > 1
+        ? `Команда ${uniqueCommands[0]} вызвана несколько раз за один шаг симуляции (${commands.length}).`
         : `Команда ${uniqueCommands[0] || 'миссии'} выполняется одновременно с другой операцией.`;
 
     if (!(window as any).showSimulationNotice) return;
     (window as any).showSimulationNotice({
         title: 'Команды пересекаются',
         message,
-        detailsHtml: renderSimultaneousCommandsHtml(uniqueCommands),
+        detailsHtml: renderSimultaneousCommandsHtml(commands),
         level: 'warn'
     });
 }
