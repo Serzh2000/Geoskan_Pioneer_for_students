@@ -68,7 +68,12 @@ export interface UICallbacks {
         add: (
             type: string,
             options?: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number; markerMap?: MarkerMapOptions }
-        ) => void;
+        ) => string | null;
+        setTransform: (
+            position: { x: number; y: number; z: number },
+            rotation: { x: number; y: number; z: number },
+            scale: { x: number; y: number; z: number }
+        ) => boolean;
         updateSelected: (params: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number }) => boolean;
         appendPoint: () => boolean;
         startLinearEditing: () => boolean;

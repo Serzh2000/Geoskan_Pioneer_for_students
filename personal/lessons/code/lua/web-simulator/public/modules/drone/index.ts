@@ -27,7 +27,7 @@ export {
     listSceneObjects, selectSceneObjectById, focusSceneObjectById, deleteSceneObjectById,
     appendPointToSelectedLinearObject, updateSelectedSceneObject,
     setSceneObjectTransformMode, getSelectedSceneObjectId,
-    clearSceneSelection, rotateSelectedSceneObjectByDegrees, resetSelectedSceneObjectTransform,
+    clearSceneSelection, rotateSelectedSceneObjectByDegrees, resetSelectedSceneObjectTransform, setSelectedObjectTransform,
     startSelectedLinearObjectEditing, finishSelectedLinearObjectEditing,
     isSelectedLinearObjectEditingActive, getSelectedLinearObjectEditingTargetId
 } from '../scene/objects/object-manager.js';

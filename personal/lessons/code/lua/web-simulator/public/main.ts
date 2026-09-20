@@ -2,7 +2,7 @@
 /// <reference path="./global.d.ts" />
 /// <reference path="./shims.d.ts" />
 import { resetState, resetRuntimeStatePreservePose, drones, currentDroneId, currentScriptLanguage } from './modules/core/state.js';
-import { init3D, updateDrone3D, is3DActive, addObject, appendPointToSelectedLinearObject, clearSceneSelection, deleteSelectedObject, finishSelectedLinearObjectEditing, getSelectedSceneObjectId, isSelectedLinearObjectEditingActive, listSceneObjects, focusSceneObjectById, resetDroneToOrigin, resetSelectedSceneObjectTransform, rotateSelectedSceneObjectByDegrees, selectSceneObjectById, setSceneObjectTransformMode, startSelectedLinearObjectEditing, updateSelectedSceneObject, deleteSceneObjectById } from './modules/drone/index.js';
+import { init3D, updateDrone3D, is3DActive, addObject, appendPointToSelectedLinearObject, clearSceneSelection, deleteSelectedObject, finishSelectedLinearObjectEditing, getSelectedSceneObjectId, isSelectedLinearObjectEditingActive, listSceneObjects, focusSceneObjectById, resetDroneToOrigin, resetSelectedSceneObjectTransform, rotateSelectedSceneObjectByDegrees, selectSceneObjectById, setSceneObjectTransformMode, setSelectedObjectTransform, startSelectedLinearObjectEditing, updateSelectedSceneObject, deleteSceneObjectById } from './modules/drone/index.js';
 import { runLuaScript, stopLuaScript } from './modules/lua/index.js';
 import { setLocalFrameOrigin } from './modules/lua/autopilot.js';
 import { runPythonScript, stopPythonScript } from './modules/python/index.js';
@@ -59,6 +59,11 @@ function init() {
                 type: string,
                 options?: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number; markerMap?: MarkerMapOptions }
             ) => addObject(type, options),
+            setTransform: (
+                position: { x: number; y: number; z: number },
+                rotation: { x: number; y: number; z: number },
+                scale: { x: number; y: number; z: number }
+            ) => setSelectedObjectTransform(position, rotation, scale),
             updateSelected: (params: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number }) => updateSelectedSceneObject(params),
             appendPoint: () => appendPointToSelectedLinearObject(),
             startLinearEditing: () => startSelectedLinearObjectEditing(),

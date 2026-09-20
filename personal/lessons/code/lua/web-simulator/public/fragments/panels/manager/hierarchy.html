@@ -227,6 +227,16 @@
                                     <p class="scene-preset-note">Добавится отдельной группой. Объекты на сцене сохранятся.</p>
                                     <button id="scene-preset-btn" class="btn-secondary scene-btn scene-btn--neutral">Добавить сцену</button>
                                 </div>
+
+                                <div class="scene-subsection">
+                                    <div class="scene-subsection__title">Файл сцены</div>
+                                    <p class="scene-preset-note">Сохраните расставленные объекты в файл, чтобы открыть эту же сцену на другом компьютере.</p>
+                                    <div class="scene-action-stack">
+                                        <button id="scene-export-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral">Скачать сцену</button>
+                                        <button id="scene-import-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral">Загрузить сцену</button>
+                                    </div>
+                                    <input type="file" id="scene-import-input" style="display:none" accept=".json">
+                                </div>
                             </div>
                         </section>
                         <div id="scene-type-modal" class="scene-type-modal" aria-hidden="true">

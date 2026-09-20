@@ -7,6 +7,7 @@ import {
     registerTransformBindings
 } from './bindings/actions.js';
 import { registerAddFormBindings } from './bindings/add-form.js';
+import { registerSceneIoBindings } from './bindings/scene-io.js';
 import type { BindingOptions } from './bindings/shared.js';
 
 function registerTabBindings({ callbacks, elements, setActiveTab }: BindingOptions) {
@@ -64,6 +65,7 @@ export function registerSceneManagerBindings(options: BindingOptions) {
     registerTabBindings(options);
     registerTreeBindings(options);
     registerAddFormBindings(options);
+    registerSceneIoBindings(options);
     registerIncidentBindings(options);
     registerCreationBindings(options);
     registerSelectionBindings(options);

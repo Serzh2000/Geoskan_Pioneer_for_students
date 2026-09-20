@@ -9,7 +9,7 @@ import { handleSelection, updateObjectSelectionVisuals } from '../interaction/in
 import { findSceneObjectById, getSceneTopLevelObjects, isTransformableObject, listSceneObjects, normalizePoints, parsePointsText } from './object-catalog.js';
 import { OBJECT_TYPE } from '../../shared/object-types.js';
 import type { RotationAxis, TransformMode } from './object-transform.js';
-import { activateTransformMode, clearSelectedObjectInitialTransform, getRotationStepDegrees, getRotationStepOptions, rememberSelectedObjectInitialTransform, resetSelectedObjectToInitialTransform, rotateSelectedObjectByDegrees, setRotationStepDegrees } from './object-transform.js';
+import { activateTransformMode, clearSelectedObjectInitialTransform, getRotationStepDegrees, getRotationStepOptions, rememberSelectedObjectInitialTransform, resetSelectedObjectToInitialTransform, rotateSelectedObjectByDegrees, setRotationStepDegrees, setSelectedObjectTransform } from './object-transform.js';
 import { finishLinearFeatureEditing, getLinearFeatureEditingTargetId, isLinearFeatureEditingActive, startLinearFeatureEditing } from '../interaction/linear-editing.js';
 import {
     detachObjectFromGroupPreservingWorldTransform,
@@ -88,6 +88,7 @@ export {
     clearSelectedObjectInitialTransform,
     rotateSelectedObjectByDegrees,
     resetSelectedObjectToInitialTransform,
+    setSelectedObjectTransform,
     activateTransformMode
 } from './object-transform.js';
 
@@ -226,7 +227,7 @@ export function duplicateObject() {
 export function addObject(
     type: string,
     options: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number; markerMap?: MarkerMapOptions } = {}
-) {
+): string | null {
     const parsedPoints = options.pointsText ? parsePointsText(options.pointsText) : [];
     const objectOptions: SceneObjectOptions = {
         value: options.value,
@@ -241,9 +242,11 @@ export function addObject(
         const viewportCenter = getViewportCenterSelectionPoint();
         handleSelection(obj, viewportCenter.x, viewportCenter.y, false, false);
         log(`Добавлен объект: ${obj.userData?.type || obj.name}`, 'success');
-    } else {
-        log(`Не удалось добавить объект типа "${type}"`, 'warn');
+        return obj.uuid;
     }
+
+    log(`Не удалось добавить объект типа "${type}"`, 'warn');
+    return null;
 }
 
 export function updateSelectedSceneObject(params: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number }) {

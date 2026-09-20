@@ -62,6 +62,25 @@ export function rotateSelectedObjectByDegrees(axis: RotationAxis, deltaDegrees: 
     return true;
 }
 
+// Used by scene import: place a just-created object exactly where it was in
+// the saved scene, bypassing the gizmo (there is nothing to drag yet).
+export function setSelectedObjectTransform(
+    position: { x: number; y: number; z: number },
+    rotation: { x: number; y: number; z: number },
+    scale: { x: number; y: number; z: number }
+) {
+    if (!selectedObject) return false;
+    selectedObject.position.set(position.x, position.y, position.z);
+    selectedObject.rotation.set(rotation.x, rotation.y, rotation.z);
+    selectedObject.scale.set(scale.x, scale.y, scale.z);
+    selectedObject.updateMatrixWorld(true);
+    if (transformControl?.object === selectedObject) {
+        transformControl.dispatchEvent({ type: 'change' });
+        updateTransformModeDecorations(transformControl.getMode(), selectedObject);
+    }
+    return true;
+}
+
 export function resetSelectedObjectToInitialTransform() {
     if (!selectedObject || !transformControl || !isTransformableObject(selectedObject) || drones[currentDroneId].running) return false;
     if (!initialTransformTarget || !initialTransformSnapshot || selectedObject !== initialTransformTarget) return false;
