@@ -57,6 +57,11 @@ for i, center in enumerate(centers):
     group(f'rotor_{i}', center).parent = motors
 for i in range(4):
     group(f'base_led_{i}')
+# Optional accessory board (05B): plugs onto the autopilot's X8/X9 headers.
+# Present only when the source .blend has the LED module collection.
+led_module = group('led_module')
+for i in range(25):
+    group(f'module_led_{i}').parent = led_module
 
 buckets = {}
 source_counts = {}
@@ -67,8 +72,17 @@ for original in objects:
     bell = re.match(r'Motor (\d) • (bell lower ring|top cap|shaft)', name)
     rib = re.match(r'M(\d) bell rib', name)
     rotating = match or bell or rib
+    module_pixel = re.match(r'LED • WS2812B (emitter die|clear lens)\.r(\d+)c(\d+)', name)
     if rotating:
         bucket = f'rotor_{motor_indices[int(rotating[1])]}'
+    elif module_pixel:
+        # Light-emitting surfaces of the LED module (5x5), row-major from the top-left.
+        row, col = int(module_pixel[2]), int(module_pixel[3])
+        bucket = f'module_led_{row * 5 + col}'
+    elif name.startswith('LED • '):
+        # Everything else on the module (PCB, connectors, mounting, silkscreen)
+        # stays static, merged with the rest of the module's own group.
+        bucket = 'led_module'
     elif 'WS2812B' in name and ('transparent window' in name or 'RGB die' in name):
         center = sum((original.matrix_world @ Vector(c) for c in original.bound_box), Vector()) / 8
         # Upper right, upper left, underside left, underside right.

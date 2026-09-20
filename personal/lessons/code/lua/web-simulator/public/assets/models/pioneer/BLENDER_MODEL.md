@@ -15,15 +15,27 @@ are combined by material; tiny component bevels are omitted for browser use.
 - `rotor_2` / `rotor_3`: opposite CCW propellers, including bells and shafts.
 - `base_led_0` / `base_led_1`: upper right / upper left luminous surfaces.
 - `base_led_2` / `base_led_3`: underside left / underside right luminous surfaces.
+- `led_module`: the optional 05B accessory board (plugs onto the autopilot's
+  X8/X9 headers), present only when the source `.blend` has that collection.
+- `module_led_0` .. `module_led_24`: the board's 5×5 pixels, row-major from
+  the top-left (`index = row * 5 + col`), each holding that pixel's emitter
+  dies and lens. Everything else on the board (PCB, connectors, mounting,
+  silkscreen) is merged into `led_module` itself as static geometry.
 
 Left/right refers to the source model's X axis. LED package bodies stay part
 of the frame; the windows and dies receive individually cloned emissive
 materials at runtime. Geometry is shared between drone instances.
 
-The Basic model has no 5×5 matrix. The simulator retains its teaching matrix
-as an optional module above the board, visible when any matrix pixel is on.
-The legacy CAD assembly is used only if the GLB fails to load. Export tools
-must await `whenDroneModelReady()` before exporting the new model.
+When the source `.blend` has no LED module collection, `led_module` is an
+empty node and the simulator falls back to its synthetic teaching matrix
+(`led_matrix_group` / `matrix_led_N`), shown as an optional module above the
+board whenever a program lights a pixel past index 3. Once the asset does
+provide a real module, `attachBlenderModel` prefers it and removes the
+synthetic one. Both are hidden until a program actually calls
+`Ledbar.new(count)` with `count > 4` and lights a pixel — see
+`updateLEDs()` in `drone-model/index.ts`. The legacy CAD assembly is used
+only if the GLB fails to load. Export tools must await
+`whenDroneModelReady()` before exporting the new model.
 
 To regenerate (replace the source path with the local `.blend` path):
 

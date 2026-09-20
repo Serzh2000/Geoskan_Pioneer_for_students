@@ -62,6 +62,8 @@ function createLegacyDroneModel() {
     return droneGroup;
 }
 
+const MODULE_LED_COUNT = 25;
+
 export function updateLEDs(droneMesh: THREE.Object3D, droneState: any) {
     if (!droneState.leds || droneState.leds.length === 0) return;
 
@@ -73,7 +75,7 @@ export function updateLEDs(droneMesh: THREE.Object3D, droneState: any) {
     for (let i = 0; i < 4; i++) {
         const led = droneState.leds[i] || {r:0, g:0, b:0, w:0};
         const ledObject = droneMesh.getObjectByName(`base_led_${i}`);
-        
+
         if (ledObject) {
             const r = (led.r || 0) / 255;
             const g = (led.g || 0) / 255;
@@ -81,7 +83,7 @@ export function updateLEDs(droneMesh: THREE.Object3D, droneState: any) {
             const color = new THREE.Color(r, g, b);
             const ledStrength = Math.max(r, g, b);
             applyLedMaterialState(ledObject, color, ledStrength);
-            
+
             const light = ledObject.getObjectByName(`base_led_light_${i}`) as THREE.PointLight | undefined;
             if (light) {
                 light.color.set(color);
@@ -92,15 +94,18 @@ export function updateLEDs(droneMesh: THREE.Object3D, droneState: any) {
         }
     }
 
-    // Update Matrix LEDs (4-28) using physical meshes
-    for (let i = 0; i < 25; i++) {
+    // Update the LED module (indices 4-28): the real accessory board exported from
+    // Blender (`led_module` / `module_led_N`) when the asset provides one, otherwise
+    // the synthetic teaching matrix (`led_matrix_group` / `matrix_led_N`).
+    const usingRealModule = !!droneMesh.getObjectByName('led_module');
+    for (let i = 0; i < MODULE_LED_COUNT; i++) {
         const stateIdx = i + 4;
         if (stateIdx >= droneState.leds.length) break;
-        
+
         const led = droneState.leds[stateIdx];
         if (!led) continue;
 
-        const ledObject = droneMesh.getObjectByName(`matrix_led_${i}`);
+        const ledObject = droneMesh.getObjectByName(usingRealModule ? `module_led_${i}` : `matrix_led_${i}`);
         if (ledObject) {
             const r = (led.r || 0) / 255;
             const g = (led.g || 0) / 255;
@@ -117,8 +122,10 @@ export function updateLEDs(droneMesh: THREE.Object3D, droneState: any) {
         }
     }
 
-    const matrixGlowLight = droneMesh.getObjectByName('led_matrix_glow_light') as THREE.PointLight | undefined;
-    const matrix = droneMesh.getObjectByName('led_matrix_group');
+    const groupName = usingRealModule ? 'led_module' : 'led_matrix_group';
+    const glowLightName = usingRealModule ? 'led_module_glow_light' : 'led_matrix_glow_light';
+    const matrixGlowLight = droneMesh.getObjectByName(glowLightName) as THREE.PointLight | undefined;
+    const matrix = droneMesh.getObjectByName(groupName);
     if (matrix?.userData.showWhenActive) matrix.visible = matrixActiveCount > 0;
     if (matrixGlowLight) {
         if (matrixActiveCount > 0) {

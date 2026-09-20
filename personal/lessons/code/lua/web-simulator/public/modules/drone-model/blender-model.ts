@@ -95,6 +95,22 @@ export function attachBlenderModel(model: THREE.Group, template: THREE.Group): v
         led.add(light);
         leds.add(led);
     }
+    // Optional accessory board (05B in the source .blend): only present once a
+    // program actually drives more than the 4 onboard LEDs. Real geometry
+    // supersedes the synthetic teaching matrix when the asset provides it.
+    const ledModule = instance.getObjectByName('led_module');
+    if (ledModule && ledModule.children.length > 0) {
+        model.getObjectByName('led_matrix_group')?.removeFromParent();
+        const moduleCenter = new THREE.Box3().setFromObject(ledModule).getCenter(new THREE.Vector3());
+        const glow = new THREE.PointLight(0x000000, 0, 0.26);
+        glow.name = 'led_module_glow_light';
+        glow.position.copy(moduleCenter);
+        glow.position.z += 0.01;
+        ledModule.add(glow);
+        ledModule.visible = false;
+        ledModule.userData.showWhenActive = true;
+        leds.add(ledModule);
+    }
     model.add(leds);
 }
 
