@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { drones } from '../../core/state.js';
+import { drones, pathPoints, pathPointsVersion, setSceneEditDragActive } from '../../core/state.js';
 import { droneMeshes, selectedObject, transformControl, controls, selectionHelper } from '../core/scene-init.js';
 import { envGroup } from '../../environment/index.js';
 import { snapMarkerToSurface } from '../../environment/obstacles.js';
@@ -169,6 +169,20 @@ export function setupTransformControlListeners() {
     transformControl.addEventListener('dragging-changed', (event: any) => {
         const isDragging = event.value;
         (window as any).isTransforming = isDragging;
+        setSceneEditDragActive(isDragging);
         if (controls) controls.enabled = !isDragging && getCameraMode() === 'free';
+
+        // A manual reposition is a teleport, not a flight: without this, physics
+        // resuming after the drag sees the drone "jump" from its last flown point
+        // to the drop point and draws one straight tracer segment across the gap.
+        if (isDragging && selectedObject) {
+            for (const id in droneMeshes) {
+                if (selectedObject === droneMeshes[id]) {
+                    pathPoints[id] = [];
+                    pathPointsVersion[id] = (pathPointsVersion[id] || 0) + 1;
+                    break;
+                }
+            }
+        }
     });
 }

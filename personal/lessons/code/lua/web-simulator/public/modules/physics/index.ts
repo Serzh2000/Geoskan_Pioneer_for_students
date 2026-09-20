@@ -5,7 +5,7 @@
  * расчет скоростей, координат, ориентации (кватернионов),
  * а также обработку столкновений с объектами сцены (препятствиями).
  */
-import { drones } from '../core/state.js';
+import { drones, isSceneEditDragActive } from '../core/state.js';
 import { updateAutopilotParameterEffects } from '../autopilot/params-effects.js';
 import { handlePreflightTimeout } from '../autopilot/fsm.js';
 import { updateTimers } from '../lua/index.js';
@@ -25,6 +25,11 @@ import {
 import { updateTracePath } from './tracing.js';
 
 export function updatePhysics(dt: number) {
+    // The user is manually repositioning an object with the scene-editor gizmo -
+    // hold the whole simulation still so ground contact / autopilot tracking
+    // doesn't fight the drag, and so the tracer doesn't log it as a flight.
+    if (isSceneEditDragActive) return;
+
     updateTimers();
     updateDetachedCargoPhysics(dt, getObstacles);
 

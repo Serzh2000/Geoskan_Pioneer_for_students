@@ -63,6 +63,15 @@ export const pathPoints: Record<string, Vector3[]> = { 'drone_1': [] };
 // так что индексы «старых» точек меняются при переполнении).
 export const pathPointsVersion: Record<string, number> = { 'drone_1': 0 };
 
+// Set while the user is dragging an object with the scene-editor's transform
+// gizmo. Physics stands still for that duration so it doesn't fight the manual
+// placement (ground contact snapping it back, autopilot chasing the old
+// target) and so the tracer doesn't record the drag as if it were a flight.
+export let isSceneEditDragActive = false;
+export function setSceneEditDragActive(active: boolean) {
+    isSceneEditDragActive = active;
+}
+
 export let currentScriptLanguage: ScriptLanguage = 'lua';
 
 export function setCurrentScriptLanguage(language: ScriptLanguage) {
