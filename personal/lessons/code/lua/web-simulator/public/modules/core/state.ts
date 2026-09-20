@@ -155,7 +155,7 @@ export function createDroneState(id: string, name: string, x: number = 0, y: num
 }
 
 // Initialize the first default drone
-createDroneState('drone_1', 'Pioneer 1');
+createDroneState('drone_1', 'Пионер Базовый 1');
 
 export function setCurrentDrone(id: string) {
     if (!drones[id]) return;

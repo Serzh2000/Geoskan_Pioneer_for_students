@@ -45,8 +45,8 @@ export function getNextAvailableCameraPort(preferredPort: number): number {
 export function getDroneTransportSummary(droneId: string): string {
     const connection = ensureDronePythonConnectionSettings(droneId);
     if (connection.connectionMethod === 'serial') {
-        return `${connection.connectionMethod} ${connection.device} · camera:${connection.cameraPort}`;
+        return `MAVLink порт: ${connection.device} · порт камеры: ${connection.cameraPort}`;
     }
 
-    return `${connection.connectionMethod} ${connection.ip}:${connection.mavlinkPort} · camera:${connection.cameraPort}`;
+    return `MAVLink порт: ${connection.ip}:${connection.mavlinkPort} · порт камеры: ${connection.cameraPort}`;
 }

@@ -204,7 +204,7 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
         dom.addBtn?.addEventListener('click', () => {
             const num = Object.keys(drones).length + 1;
             const id = `drone_${num}_${Date.now()}`;
-            const name = `Pioneer ${num}`;
+            const name = `Пионер Базовый ${num}`;
             const sourceDroneId = getActiveDroneId() || currentDroneId;
             const sourceConnection = ensureDronePythonConnectionSettings(sourceDroneId);
             const nextPort = getNextAvailableMavlinkPort(sourceConnection.mavlinkPort || 8001);
