@@ -1,4 +1,5 @@
-import type { ScriptLanguage } from '../../core/state.js';
+import { currentScriptLanguage, type ScriptLanguage } from '../../core/state.js';
+import { getEditorValue } from '../../editor/index.js';
 import type { UICallbacks } from '../index.js';
 
 // Human-readable labels for the lesson example folders served alongside this
@@ -116,4 +117,16 @@ export function initFileControls(callbacks: UICallbacks, language: ScriptLanguag
             reader.readAsText(file);
         });
     }
+
+    const downloadBtn = document.getElementById('download-code-btn') as HTMLButtonElement | null;
+    downloadBtn?.addEventListener('click', () => {
+        const extension = currentScriptLanguage === 'python' ? 'py' : 'lua';
+        const blob = new Blob([getEditorValue()], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `pioneer-script.${extension}`;
+        link.click();
+        URL.revokeObjectURL(url);
+    });
 }
