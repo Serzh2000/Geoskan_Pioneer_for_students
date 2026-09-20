@@ -221,7 +221,7 @@ function resetSimulation() {
 
 async function loadFileContent(path: string) {
     try {
-        const res = await fetch(`/api/file-content?path=${encodeURIComponent(path)}`);
+        const res = await fetch(`/api/file-content?path=${encodeURIComponent(path)}&lang=${currentScriptLanguage}`);
         const data = await res.json();
         setEditorValue(data.content);
         log(`Файл загружен: ${path}`, 'success');

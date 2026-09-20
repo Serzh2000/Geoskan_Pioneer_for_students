@@ -55,13 +55,47 @@ function resolvePublicPath(): string {
     ]);
 }
 
-function resolveExamplesPath(): string {
-    return resolveFirstExistingPath([
+type ScriptLanguage = 'lua' | 'python';
+
+function dedupeExistingPaths(candidates: string[]): string[] {
+    const seen = new Set<string>();
+    const roots: string[] = [];
+    for (const candidate of candidates) {
+        const resolved = path.resolve(candidate);
+        if (seen.has(resolved) || !fs.existsSync(resolved)) continue;
+        seen.add(resolved);
+        roots.push(resolved);
+    }
+    return roots.length > 0 ? roots : [path.resolve(candidates[0])];
+}
+
+// All of these can hold examples at once in a dev checkout (this project's own
+// `examples/`, plus the full lesson library one level up); a packaged build
+// only ever has one. Every existing candidate is kept, not just the first
+// match, so `/api/files` can offer the whole set instead of whichever
+// directory happens to be checked first.
+function resolveExamplesRoots(): string[] {
+    return dedupeExistingPaths([
         ...(resourcesDir ? [path.join(resourcesDir, 'examples')] : []),
         path.join(runtimeDir, 'examples'),
         path.join(projectRoot, 'examples'),
         path.resolve(projectRoot, '..', 'examples')
     ]);
+}
+
+// Mirrors resolveExamplesRoots(), but for the Python lesson library, which
+// lives as a sibling of `lua/` rather than under it.
+function resolvePythonExamplesRoots(): string[] {
+    return dedupeExistingPaths([
+        ...(resourcesDir ? [path.join(resourcesDir, 'examples-python')] : []),
+        path.join(runtimeDir, 'examples-python'),
+        path.join(projectRoot, 'examples-python'),
+        path.resolve(projectRoot, '..', '..', 'python', 'examples')
+    ]);
+}
+
+function examplesRootsFor(lang: ScriptLanguage, luaRoots: string[], pythonRoots: string[]): string[] {
+    return lang === 'python' ? pythonRoots : luaRoots;
 }
 
 function resolveAutopilotParametersPath(): string {
@@ -134,7 +168,8 @@ function createApp(options: StartServerOptions): express.Express {
     const vitePort = options.vitePort ?? 3001;
     const packagedRuntime = options.packaged ?? (Boolean(processWithPackaging.pkg) || Boolean(resourcesDir));
     const publicPath = resolvePublicPath();
-    const luaExamplesPath = resolveExamplesPath();
+    const luaExamplesRoots = resolveExamplesRoots();
+    const pythonExamplesRoots = resolvePythonExamplesRoots();
     const autopilotParametersPath = resolveAutopilotParametersPath();
     const shouldServeStaticUi = isDistBuild || packagedRuntime;
 
@@ -144,13 +179,31 @@ function createApp(options: StartServerOptions): express.Express {
     app.use('/api', createSensitiveRouteLimiter());
     app.use(EXTERNAL_BRIDGE_ROUTE_PREFIX, createExternalBridgeLimiter());
 
-    app.get('/api/files', async (_req: express.Request, res: express.Response) => {
-        console.log('Listing files in:', luaExamplesPath);
+    // `lang` picks which lesson library (and file extension) to search; the
+    // editor sends the language it currently has selected, so switching to
+    // Python never offers a Lua script and vice versa. Defaults to Lua for
+    // callers that predate this parameter.
+    app.get('/api/files', async (req: express.Request, res: express.Response) => {
+        const lang: ScriptLanguage = req.query.lang === 'python' ? 'python' : 'lua';
+        const roots = examplesRootsFor(lang, luaExamplesRoots, pythonExamplesRoots);
+        const extension = lang === 'python' ? 'py' : 'lua';
+        console.log(`Listing ${lang} files in:`, roots.join(', '));
 
         try {
-            const files = await glob('**/*.lua', { cwd: luaExamplesPath, nodir: true });
-            const normalizedFiles = files.map((filePath) => filePath.replace(/\\/g, '/'));
-            res.json(normalizedFiles);
+            const seen = new Set<string>();
+            const allFiles: string[] = [];
+            for (const root of roots) {
+                const files = await glob(`**/*.${extension}`, { cwd: root, nodir: true });
+                for (const filePath of files) {
+                    const normalized = filePath.replace(/\\/g, '/');
+                    // Earlier roots (this project's own examples/) win on a name collision.
+                    if (seen.has(normalized)) continue;
+                    seen.add(normalized);
+                    allFiles.push(normalized);
+                }
+            }
+            allFiles.sort((a, b) => a.localeCompare(b));
+            res.json(allFiles);
         } catch (error) {
             console.error('Glob error:', error);
             res.status(500).json({ error: 'Failed to list files' });
@@ -162,24 +215,24 @@ function createApp(options: StartServerOptions): express.Express {
         if (!relativePath) {
             return res.status(400).json({ error: 'Path required' });
         }
+        const lang: ScriptLanguage = req.query.lang === 'python' ? 'python' : 'lua';
+        const roots = examplesRootsFor(lang, luaExamplesRoots, pythonExamplesRoots);
 
-        const examplesRoot = path.resolve(luaExamplesPath);
-        const filePath = path.resolve(examplesRoot, relativePath);
+        for (const examplesRoot of roots) {
+            const filePath = path.resolve(examplesRoot, relativePath);
+            if (filePath !== examplesRoot && !filePath.startsWith(examplesRoot + path.sep)) continue;
+            if (!fs.existsSync(filePath)) continue;
 
-        if (!filePath.startsWith(examplesRoot + path.sep) && filePath !== examplesRoot) {
-            return res.status(403).json({ error: 'Access denied' });
-        }
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ error: 'File not found' });
+            try {
+                const content = await readFile(filePath, 'utf8');
+                return res.json({ content });
+            } catch (error) {
+                console.error('Failed to read file content:', error);
+                return res.status(500).json({ error: 'Failed to read file' });
+            }
         }
 
-        try {
-            const content = await readFile(filePath, 'utf8');
-            res.json({ content });
-        } catch (error) {
-            console.error('Failed to read file content:', error);
-            res.status(500).json({ error: 'Failed to read file' });
-        }
+        return res.status(404).json({ error: 'File not found' });
     });
 
     app.get('/api/autopilot-parameters', async (_req: express.Request, res: express.Response) => {

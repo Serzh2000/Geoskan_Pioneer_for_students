@@ -1,6 +1,7 @@
 import { currentDroneId, currentScriptLanguage, drones, setCurrentScriptLanguage, type ScriptLanguage } from '../core/state.js';
 import { renderMissionGuidePanel } from '../ui/mission-guide/panel.js';
 import { renderApiDocs } from '../ui/api-docs/index.js';
+import { refreshFileList } from '../ui/controls/file-controls.js';
 import { log } from '../shared/logging/logger.js';
 import {
     getEditorValue,
@@ -29,6 +30,9 @@ export function initScriptLanguageSelector(): void {
     if (savedLanguage && savedLanguage !== currentScriptLanguage) {
         setCurrentScriptLanguage(savedLanguage);
     }
+    // initUI() already populated the file list, but too early to know about a
+    // language restored from storage just above — correct it here.
+    refreshFileList(currentScriptLanguage);
 
     // Blockly — третье значение этого же списка, а не отдельный переключатель.
     // Включённость режима восстанавливает initEditor() из сессии редактора
@@ -86,6 +90,7 @@ export function initScriptLanguageSelector(): void {
         setEditorValue(code);
         renderApiDocs(lang);
         renderMissionGuidePanel(lang);
+        refreshFileList(lang);
         log(`Язык скрипта: ${lang.toUpperCase()}`, 'info');
     });
 }

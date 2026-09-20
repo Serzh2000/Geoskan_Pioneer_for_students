@@ -24,6 +24,7 @@ import { initFileControls } from './controls/file-controls.js';
 import { initWorkspaceView } from './workspace-view.js';
 import { initMobileEditorViewport } from './mobile-editor-viewport.js';
 import type { MarkerMapOptions } from '../environment/obstacles.js';
+import { currentScriptLanguage } from '../core/state.js';
 
 export interface UICallbacks {
     onEditorResize?: () => void;
@@ -111,5 +112,5 @@ export function initUI(callbacks: UICallbacks) {
     if (stopBtn) stopBtn.addEventListener('click', callbacks.onStop);
     if (restartBtn) restartBtn.addEventListener('click', callbacks.onRestart);
 
-    initFileControls(callbacks);
+    initFileControls(callbacks, currentScriptLanguage);
 }
