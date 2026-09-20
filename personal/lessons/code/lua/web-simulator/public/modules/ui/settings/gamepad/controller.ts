@@ -175,7 +175,11 @@ export function createGamepadSettingsController(dom: SettingsDomRefs, state: Set
         }
 
         if (dom.gamepadInfoEl) {
-            dom.gamepadInfoEl.style.display = gamepad ? 'block' : 'none';
+            // Keep the mapping workspace visible without hardware connected:
+            // users can review the channel map and start the setup flow instead
+            // of being left with an empty panel.
+            dom.gamepadInfoEl.style.display = 'grid';
+            dom.gamepadInfoEl.classList.toggle('is-disconnected', !gamepad);
         }
 
         if (gamepad && (!wasConnected || controllerChanged)) {

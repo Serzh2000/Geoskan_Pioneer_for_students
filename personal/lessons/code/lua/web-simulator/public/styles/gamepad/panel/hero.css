@@ -92,6 +92,22 @@
     height: auto;
 }
 
+.gamepad-disconnected-note {
+    display: none;
+    gap: 5px;
+    padding: 13px 15px;
+    border: 1px solid #f1c4a4;
+    border-radius: 10px;
+    background: #fff8f3;
+    color: #8c3e0a;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.gamepad-disconnected-note strong { color: #6f2f08; font-size: 13px; }
+.gamepad-disconnected-note span { color: #775c4b; }
+.gamepad-stage.is-disconnected .gamepad-disconnected-note { display: grid; }
+
 .gamepad-stage-top {
     display: flex;
     align-items: center;
