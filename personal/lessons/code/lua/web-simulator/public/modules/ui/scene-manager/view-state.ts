@@ -37,11 +37,13 @@ export function isSplitLayout(elements: SceneManagerDomRefs): boolean {
     return !!root && root.clientWidth >= SPLIT_LAYOUT_MIN_WIDTH;
 }
 
-export function syncTabVisibility(elements: SceneManagerDomRefs, activeTab: SceneManagerTab) {
+export function syncTabVisibility(elements: SceneManagerDomRefs, activeTab: SceneManagerTab, hasSelection: boolean) {
     const split = isSplitLayout(elements);
     const isInspector = activeTab === 'inspector';
+    const solo = split && !hasSelection;
 
     elements.rootEl?.classList.toggle('is-split', split);
+    elements.rootEl?.classList.toggle('is-split-solo', solo);
     if (elements.tabsEl) elements.tabsEl.hidden = split;
 
     elements.hierarchyTabBtn?.classList.toggle('is-active', !isInspector);
@@ -52,8 +54,13 @@ export function syncTabVisibility(elements: SceneManagerDomRefs, activeTab: Scen
     if (elements.hierarchyTabBtn) elements.hierarchyTabBtn.tabIndex = isInspector ? -1 : 0;
     if (elements.inspectorTabBtn) elements.inspectorTabBtn.tabIndex = isInspector ? 0 : -1;
 
-    const hierarchyVisible = split || !isInspector;
-    const inspectorVisible = split || isInspector;
+    // Solo (split, nothing selected): the hierarchy is the only pane worth
+    // showing, regardless of which tab was last active - an unselected
+    // inspector column has nothing to show but its own empty state.
+    // Split with a selection: both panes show side by side.
+    // Not split: exactly one shows, per activeTab.
+    const hierarchyVisible = solo || split || !isInspector;
+    const inspectorVisible = !solo && (split || isInspector);
     elements.hierarchyPanelEl?.classList.toggle('is-active', hierarchyVisible);
     elements.inspectorPanelEl?.classList.toggle('is-active', inspectorVisible);
     if (elements.hierarchyPanelEl) elements.hierarchyPanelEl.hidden = !hierarchyVisible;
@@ -62,11 +69,16 @@ export function syncTabVisibility(elements: SceneManagerDomRefs, activeTab: Scen
 
 export function syncInspectorAvailability(elements: SceneManagerDomRefs, state: SceneManagerViewState) {
     const hasSelection = !!state.lastSelectedId;
-    elements.inspectorTabBtn?.removeAttribute('disabled');
+    // Nothing to inspect yet - keep the tab reachable in the (non-split) tabbed
+    // layout, but there is no point opening it: it can only show the empty state.
+    if (!hasSelection && state.activeTab === 'inspector' && !isSplitLayout(elements)) {
+        state.activeTab = 'hierarchy';
+    }
+    elements.inspectorTabBtn?.toggleAttribute('disabled', !hasSelection);
     document.getElementById('scene-open-properties')?.toggleAttribute('disabled', !hasSelection);
     elements.inspectorTabBtn?.classList.toggle('has-selection', hasSelection);
     elements.inspectorPanelEl?.classList.toggle('is-empty', !hasSelection);
-    syncTabVisibility(elements, state.activeTab);
+    syncTabVisibility(elements, state.activeTab, hasSelection);
 }
 
 export function syncTransformModeState(elements: SceneManagerDomRefs, activeTransformMode: TransformMode) {

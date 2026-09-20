@@ -20,9 +20,9 @@
     --sm-tint: #302820;
 }
 #manager-panel .panel-content--scene-manager { background: var(--sm-bg); }
-#manager-panel .scene-manager { height: auto; min-height: 100%; padding: 0 16px 20px; gap: 0; background: var(--sm-bg); color: var(--sm-text); }
+#manager-panel .scene-manager { height: auto; min-height: 100%; padding: 0 22px 20px; gap: 0; background: var(--sm-bg); color: var(--sm-text); }
 #manager-panel .scene-manager-tabs {
-    position: sticky; top: 0; z-index: 5; margin: 0 -16px 4px; padding: 0 16px;
+    position: sticky; top: 0; z-index: 5; margin: 0 -22px 4px; padding: 0 22px;
     gap: 20px; border: 0; border-bottom: 1px solid var(--sm-line); border-radius: 0;
     background: var(--sm-bg); box-shadow: none;
 }
@@ -104,6 +104,14 @@
 #manager-panel [hidden], #scene-type-modal [hidden] { display: none !important; }
 #manager-panel :is(button, input, select, textarea):focus-visible, #scene-type-modal :is(button, input, select):focus-visible { outline: 2px solid #eb964b; outline-offset: 2px; }
 #manager-panel .scene-manager.is-split { display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: 24px; }
+/* Nothing selected: the inspector column would only hold its empty state, so
+   let the hierarchy column use the full width instead of splitting for no reason.
+   The width cap goes on the column's content, never on .scene-manager itself -
+   that element's own clientWidth is what decides is-split, and capping it here
+   would feed back into that measurement and flip the layout in and out of split
+   on every subsequent check. */
+#manager-panel .scene-manager.is-split.is-split-solo { grid-template-columns: minmax(0, 1fr); }
+#manager-panel .scene-manager.is-split.is-split-solo > #scene-panel-hierarchy { max-width: 620px; margin-inline: auto; width: 100%; }
 /* Catalog keeps its preview, with searchable, readable object tiles. */
 #scene-type-modal .scene-type-modal__dialog { background: var(--sm-bg); border: 1px solid var(--sm-line); box-shadow: 0 24px 90px #0006; border-radius: 16px; color: var(--sm-text); }
 #scene-type-modal .scene-type-modal__header { background: transparent; border-color: var(--sm-line); }
