@@ -82,5 +82,342 @@
 #mission-guide-overlay .guide-lesson-page { max-width:1000px; margin:auto; }
 #mission-guide-overlay .guide-lesson-page__header, #mission-guide-overlay .guide-lesson-section, #mission-guide-overlay .guide-panel-card { background:var(--work-surface); border:1px solid var(--work-line); box-shadow:none; border-radius:12px; }
 #mission-guide-overlay .guide-lesson-page__meta-item, #mission-guide-overlay .guide-workspace-health, #mission-guide-overlay .guide-editor-bridge { background:var(--work-bg); border:1px solid var(--work-line); box-shadow:none; }
+#mission-guide-overlay .academy-detail { display:grid; gap:22px; }
+#mission-guide-overlay .academy-detail .guide-lesson-page__header { display:flex; justify-content:space-between; align-items:flex-start; gap:28px; padding:28px 30px; margin:0; }
+#mission-guide-overlay .academy-detail .guide-lesson-page__header-copy { min-width:0; }
+#mission-guide-overlay .academy-detail .guide-lesson-page__badge, #mission-guide-overlay .academy-detail .guide-panel-card__badge { display:inline-flex; align-items:center; min-height:25px; padding:0 10px; border:1px solid color-mix(in srgb, #f77817 35%, var(--work-line)); border-radius:99px; background:rgba(247,120,23,.08); color:var(--work-accent); font-size:10px; letter-spacing:.09em; font-weight:700; text-transform:uppercase; }
+#mission-guide-overlay .academy-detail .guide-lesson-page__title { margin-top:11px; color:var(--work-text); font-size:31px; line-height:1.15; letter-spacing:-.035em; font-weight:700; }
+#mission-guide-overlay .academy-detail .guide-lesson-page__summary { max-width:640px; margin-top:9px; color:var(--work-muted); font-size:14px; line-height:1.65; }
+#mission-guide-overlay .academy-detail .guide-lesson-page__header-actions { display:grid; justify-items:end; gap:10px; flex:0 0 auto; }
+#mission-guide-overlay .academy-detail .guide-lesson-page__header-pill { padding:8px 11px; border:1px solid var(--work-line); border-radius:99px; color:var(--work-accent); background:var(--work-bg); font-size:11px; font-weight:650; white-space:nowrap; }
+#mission-guide-overlay .academy-detail .guide-page-tabs { display:flex; gap:0; width:max-content; max-width:100%; overflow:auto; padding:4px; border:1px solid var(--work-line); border-radius:10px; background:var(--work-surface); box-shadow:none; }
+#mission-guide-overlay .academy-detail .guide-page-tab { display:flex; align-items:center; gap:8px; min-height:38px; padding:0 13px; border:0; border-radius:7px; background:transparent; color:var(--work-muted); box-shadow:none; white-space:nowrap; font-size:12px; }
+#mission-guide-overlay .academy-detail .guide-page-tab:hover { background:var(--work-soft); }
+#mission-guide-overlay .academy-detail .guide-page-tab.is-active { background:rgba(247,120,23,.11); color:var(--work-text); box-shadow:inset 0 -2px #f77817; }
+#mission-guide-overlay .academy-detail .guide-page-tab__step { display:grid; place-items:center; width:19px; height:19px; border-radius:50%; background:var(--work-soft); color:var(--work-muted); font:10px/1 var(--font-mono, monospace); }
+#mission-guide-overlay .academy-detail .guide-page-tab.is-active .guide-page-tab__step { background:#f77817; color:#24160b; }
+#mission-guide-overlay .academy-detail .guide-lesson-section { padding:0; overflow:hidden; }
+#mission-guide-overlay .academy-detail .guide-lesson-section__header { padding:22px 24px 16px; border-bottom:1px solid var(--work-line); }
+#mission-guide-overlay .academy-detail .guide-panel-card__title { color:var(--work-text); font-size:15px; font-weight:700; }
+#mission-guide-overlay .academy-detail .guide-panel-card__text { margin-top:5px; color:var(--work-muted); font-size:12px; line-height:1.55; }
+#mission-guide-overlay .academy-detail .guide-lesson-page__meta { display:grid; grid-template-columns:1fr 1fr; gap:0; margin:0; border:0; }
+#mission-guide-overlay .academy-detail .guide-lesson-page__meta-item { min-height:132px; padding:20px 24px; border:0; border-right:1px solid var(--work-line); border-bottom:1px solid var(--work-line); border-radius:0; }
+#mission-guide-overlay .academy-detail .guide-lesson-page__meta-item:nth-child(2n) { border-right:0; }
+#mission-guide-overlay .academy-detail .guide-lesson-page__meta-item--wide { grid-column:1 / -1; min-height:auto; border-right:0; }
+#mission-guide-overlay .academy-detail .guide-lesson-page__meta-item:last-child { border-bottom:0; }
+#mission-guide-overlay .academy-detail .guide-lesson-page__meta-label { margin-bottom:9px; color:var(--work-accent); font-size:10px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; }
+#mission-guide-overlay .academy-detail .guide-lesson-page__goal { color:var(--work-text); font-size:13px; line-height:1.6; }
+#mission-guide-overlay .academy-detail .guide-api-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+#mission-guide-overlay .academy-detail .guide-api-item { padding:15px; border:1px solid var(--work-line); border-radius:9px; background:var(--work-surface); box-shadow:none; }
+#mission-guide-overlay .academy-detail .guide-api-item__name { color:var(--work-text); font-size:13px; font-weight:700; }
+#mission-guide-overlay .academy-detail .guide-api-item__text { color:var(--work-muted); font-size:12px; line-height:1.6; }
+#mission-guide-overlay .academy-detail code { padding:2px 5px; border:1px solid color-mix(in srgb, #f77817 24%, var(--work-line)); border-radius:5px; background:rgba(247,120,23,.08); color:var(--work-accent); font-size:.9em; }
+#mission-guide-overlay .academy-detail .guide-panel-card { padding:24px; }
+#mission-guide-overlay .academy-detail .guide-panel-card__top { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:0 0 18px; border-bottom:1px solid var(--work-line); }
+#mission-guide-overlay .academy-detail .guide-workspace-health { display:grid; grid-template-columns:repeat(3,1fr); gap:0; margin:18px 0; border-radius:9px; overflow:hidden; }
+#mission-guide-overlay .academy-detail .guide-workspace-health__item { padding:14px; border-right:1px solid var(--work-line); }
+#mission-guide-overlay .academy-detail .guide-workspace-health__item:last-child { border:0; }
+#mission-guide-overlay .academy-detail .guide-workspace-health__label { color:var(--work-muted); font-size:10px; text-transform:uppercase; letter-spacing:.08em; }
+#mission-guide-overlay .academy-detail .guide-workspace-health__value { margin-top:7px; color:var(--work-text); font-size:14px; font-weight:700; }
+#mission-guide-overlay .academy-detail .guide-editor-bridge { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:18px; border-radius:9px; }
+#mission-guide-overlay .academy-detail .guide-editor-bridge__title { color:var(--work-text); font-size:13px; font-weight:700; }
+#mission-guide-overlay .academy-detail .guide-editor-bridge__hint { margin-top:5px; color:var(--work-muted); font-size:12px; line-height:1.55; max-width:600px; }
+#mission-guide-overlay .academy-detail .guide-editor-bridge__actions, #mission-guide-overlay .academy-detail .guide-actions { display:flex; flex-wrap:wrap; gap:9px; }
+#mission-guide-overlay .academy-detail .guide-actions { margin-top:18px; }
+#mission-guide-overlay .academy-detail .guide-workbench-layout { display:grid; grid-template-columns:minmax(360px,.85fr) minmax(0,1.15fr); gap:18px; }
+#mission-guide-overlay .academy-detail .guide-workbench-layout__main, #mission-guide-overlay .academy-detail .guide-workbench-layout__scene { min-width:0; }
+#mission-guide-overlay .academy-detail .guide-result-hero, #mission-guide-overlay .academy-detail .guide-check-status, #mission-guide-overlay .academy-detail .guide-diagnostic, #mission-guide-overlay .academy-detail .guide-empty-state { border-color:var(--work-line); box-shadow:none; }
+
+/* These components still shipped the old orange-glow "guide" design (separate
+   --guide-* tokens, radial-gradient hero, translucent status pills) even
+   inside the academy surface. Re-skin them on the same --work-* tokens so the
+   check/build tabs read as one system instead of two designs stitched together. */
+#mission-guide-overlay .academy-detail .guide-result-hero { background:var(--work-surface); padding:16px 18px; }
+#mission-guide-overlay .academy-detail .guide-result-hero::before { display:none; }
+#mission-guide-overlay .academy-detail .guide-result-hero__label { color:var(--work-accent); }
+#mission-guide-overlay .academy-detail .guide-result-hero__title, #mission-guide-overlay .academy-detail .guide-result-hero__text { color:var(--work-text); }
+#mission-guide-overlay .academy-detail .guide-result-hero--idle { border-left:4px solid var(--work-line); }
+#mission-guide-overlay .academy-detail .guide-result-hero--success { border-left:4px solid #3f9a5c; }
+#mission-guide-overlay .academy-detail .guide-result-hero--warning { border-left:4px solid var(--work-accent); }
+#mission-guide-overlay .academy-detail .guide-check-status, #mission-guide-overlay .academy-detail .guide-empty-state, #mission-guide-overlay .academy-detail .guide-run-banner { background:var(--work-bg); color:var(--work-text); border:1px solid var(--work-line); border-left-width:4px; }
+#mission-guide-overlay .academy-detail .guide-check-status--info, #mission-guide-overlay .academy-detail .guide-empty-state, #mission-guide-overlay .academy-detail .guide-run-banner--info { border-left-color:#4c8bd6; color:var(--work-muted); }
+#mission-guide-overlay .academy-detail .guide-check-status--success, #mission-guide-overlay .academy-detail .guide-run-banner--success { border-left-color:#3f9a5c; }
+#mission-guide-overlay .academy-detail .guide-check-status--warning, #mission-guide-overlay .academy-detail .guide-run-banner--warning { border-left-color:var(--work-accent); }
+#mission-guide-overlay .academy-detail .guide-diagnostic { display:flex; flex-direction:column; gap:6px; background:var(--work-bg); border:1px solid var(--work-line); }
+#mission-guide-overlay .academy-detail .guide-diagnostic--error { border-left:4px solid #d0453a; }
+#mission-guide-overlay .academy-detail .guide-diagnostic--warning { border-left:4px solid var(--work-accent); }
+#mission-guide-overlay .academy-detail .guide-diagnostic--success { border-left:4px solid #3f9a5c; }
+#mission-guide-overlay .academy-detail .guide-diagnostic--info { border-left:4px solid #4c8bd6; }
+#mission-guide-overlay .academy-detail .guide-diagnostic__badge { background:var(--work-soft); border:1px solid var(--work-line); color:var(--work-muted); }
+#mission-guide-overlay .academy-detail .guide-diagnostic__title { color:var(--work-text); }
+#mission-guide-overlay .academy-detail .guide-diagnostic__reason, #mission-guide-overlay .academy-detail .guide-diagnostic__fix { color:var(--work-muted); }
+#mission-guide-overlay .academy-detail .guide-method-chip { background:var(--work-surface); border:1px solid var(--work-line); color:var(--work-text); }
+#mission-guide-overlay .academy-detail .guide-lesson__code { background:var(--work-bg); border:1px solid var(--work-line); color:var(--work-text); }
+#mission-guide-overlay .academy-detail .guide-lesson-footer { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:18px 22px; border:1px solid var(--work-line); border-radius:10px; background:var(--work-surface); }
+#mission-guide-overlay .academy-detail .guide-panel-note { color:var(--work-muted); font-size:12px; line-height:1.55; }
+#mission-guide-overlay .academy-detail .guide-lesson-footer__actions { display:flex; gap:9px; flex:0 0 auto; }
 #mission-guide-overlay :is(button,select,a):focus-visible, #logs-panel :is(button,input,select):focus-visible { outline:2px solid #f77817; outline-offset:3px; }
 @media(max-width:760px) { #mission-guide-overlay .guide-modal-layout { padding:16px; } .academy-hero { grid-template-columns:1fr; padding:24px; } .academy-hero__visual { display:none; } .academy-body { grid-template-columns:1fr; gap:24px; } .academy-sidebar { grid-template-columns:1fr; } .academy-how,.academy-note { display:none; } .academy-section-heading>span { display:none; } .academy-lesson { grid-template-columns:22px 1fr; padding:14px; } .academy-lesson__state { grid-column:2; } }
+@media(max-width:760px) { #mission-guide-overlay .academy-detail .guide-lesson-page__header, #mission-guide-overlay .academy-detail .guide-editor-bridge, #mission-guide-overlay .academy-detail .guide-lesson-footer { display:grid; padding:20px; } #mission-guide-overlay .academy-detail .guide-lesson-page__header-actions { justify-items:start; } #mission-guide-overlay .academy-detail .guide-lesson-page__meta, #mission-guide-overlay .academy-detail .guide-api-grid, #mission-guide-overlay .academy-detail .guide-workbench-layout { grid-template-columns:1fr; } #mission-guide-overlay .academy-detail .guide-lesson-page__meta-item { border-right:0; } #mission-guide-overlay .academy-detail .guide-workspace-health { grid-template-columns:1fr; } #mission-guide-overlay .academy-detail .guide-workspace-health__item { border-right:0; border-bottom:1px solid var(--work-line); } #mission-guide-overlay .academy-detail .guide-workspace-health__item:last-child { border-bottom:0; } }
+
+/* Lesson pages are a quiet study surface: one background, one card level and
+   one orange accent. These rules intentionally neutralise the legacy blue
+   gradients and elevated cards that made the lesson read as several UIs. */
+#mission-guide-overlay {
+    --work-bg: #f7f7f5;
+    --work-surface: #ffffff;
+    --work-text: #162235;
+    --work-muted: #647286;
+    --work-line: #e0e5ea;
+    --work-soft: #f2f4f6;
+    --work-accent: #c95e09;
+}
+
+:root[data-theme='dark'] #mission-guide-overlay {
+    --work-bg: #111923;
+    --work-surface: #182331;
+    --work-text: #edf2f7;
+    --work-muted: #a9b7c8;
+    --work-line: #2b3b4d;
+    --work-soft: #202e3e;
+    --work-accent: #ffad68;
+}
+
+#mission-guide-overlay .guide-modal,
+#mission-guide-overlay .guide-modal__header,
+#mission-guide-overlay .guide-modal__body {
+    background: var(--work-bg);
+    box-shadow: none;
+}
+
+#mission-guide-overlay .academy-detail {
+    gap: 24px;
+    padding-bottom: 28px;
+}
+
+#mission-guide-overlay .academy-detail .guide-lesson-page__header {
+    padding: 32px;
+    border-color: var(--work-line);
+    background: var(--work-surface);
+    box-shadow: 0 1px 2px rgba(22, 34, 53, .04);
+}
+
+#mission-guide-overlay .academy-detail .guide-lesson-page__title {
+    font-size: clamp(28px, 3vw, 36px);
+    letter-spacing: -.04em;
+}
+
+#mission-guide-overlay .academy-detail .guide-page-tabs {
+    padding: 4px;
+    border-radius: 11px;
+    background: var(--work-surface);
+    box-shadow: 0 1px 2px rgba(22, 34, 53, .035);
+}
+
+#mission-guide-overlay .academy-detail .guide-page-tab.is-active {
+    background: #fff4ea;
+    color: #312012;
+    box-shadow: inset 0 -2px #ec7416;
+}
+
+#mission-guide-overlay .academy-detail .guide-page-tab {
+    min-height: 46px;
+    gap: 10px;
+    padding-inline: 18px;
+    font-size: 13px;
+}
+
+#mission-guide-overlay .academy-detail .guide-page-tab__step {
+    width: 23px;
+    height: 23px;
+    font-size: 11px;
+}
+
+:root[data-theme='dark'] #mission-guide-overlay .academy-detail .guide-page-tab.is-active {
+    background: rgba(247, 120, 23, .13);
+    color: var(--work-text);
+}
+
+#mission-guide-overlay .academy-detail .guide-lesson-section {
+    background: var(--work-surface);
+    border-color: var(--work-line);
+    box-shadow: 0 1px 2px rgba(22, 34, 53, .035);
+}
+
+#mission-guide-overlay .academy-detail .guide-lesson-section__header {
+    padding: 23px 25px 17px;
+    background: var(--work-surface);
+}
+
+#mission-guide-overlay .academy-detail .guide-lesson-page__meta-item {
+    background: var(--work-surface);
+    min-width: 0;
+    border-color: var(--work-line) !important;
+}
+
+#mission-guide-overlay .academy-detail .guide-lesson-page__meta-item--wide {
+    background: var(--work-surface);
+    border-inline: 0 !important;
+}
+
+#mission-guide-overlay .academy-detail .guide-api-item {
+    min-width: 0;
+    padding: 16px;
+    border-color: var(--work-line);
+    border-radius: 10px;
+    background: var(--work-surface);
+    box-shadow: none;
+}
+
+#mission-guide-overlay .academy-detail .guide-workspace-health,
+#mission-guide-overlay .academy-detail .guide-editor-bridge {
+    background: var(--work-surface);
+    border-color: var(--work-line);
+}
+
+#mission-guide-overlay .academy-detail .guide-workspace-health__item {
+    background: var(--work-surface);
+}
+
+#mission-guide-overlay .academy-detail :is(code, .guide-inline-code) {
+    display: inline;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    background: #fff1e7;
+    border-color: #f1c4a4;
+    color: #a74808;
+}
+
+:root[data-theme='dark'] #mission-guide-overlay .academy-detail :is(code, .guide-inline-code) {
+    background: rgba(247, 120, 23, .12);
+    border-color: rgba(255, 173, 104, .3);
+    color: #ffbc82;
+}
+
+#mission-guide-overlay .academy-detail .guide-primary-action {
+    background: #ec7416;
+    border-color: #ec7416;
+    color: #211408;
+    box-shadow: 0 1px 1px rgba(117, 50, 6, .12);
+}
+
+#mission-guide-overlay .academy-detail .guide-primary-action:hover {
+    background: #db650b;
+    border-color: #db650b;
+}
+
+#mission-guide-overlay .academy-detail .guide-lesson__action {
+    background: var(--work-surface);
+    border-color: var(--work-line);
+}
+
+/* Controller workspace: a dedicated configuration desk with a clear sequence
+   (connection → primary axes → auxiliary functions), rather than a generic
+   settings form stretched across the screen. */
+#gamepad-panel {
+    --gp-bg: #f7f7f5;
+    --gp-surface: #fff;
+    --gp-soft: #f4f6f8;
+    --gp-line: #e0e5ea;
+    --gp-text: #162235;
+    --gp-muted: #647286;
+}
+
+#gamepad-panel .settings-panel-content { background: var(--gp-bg); padding: 24px; }
+#gamepad-panel .settings-stack { width: min(1420px, 100%); margin: 0 auto; }
+#gamepad-panel .settings-group--gamepad { display: grid; gap: 18px; }
+#gamepad-panel .gamepad-hero { min-height: 112px; padding: 24px 26px; border: 1px solid var(--gp-line); border-radius: 14px; background: var(--gp-surface); box-shadow: none; }
+#gamepad-panel .gamepad-hero-eyebrow { letter-spacing: .1em; text-transform: uppercase; font-size: 10px; }
+#gamepad-panel .gamepad-hero-title { color: var(--gp-text); font-size: 26px; }
+#gamepad-panel .gamepad-hero-subtitle { max-width:620px; color:var(--gp-muted); font-size:13px; line-height:1.55; }
+#gamepad-panel .gamepad-status-pill { border-color:var(--gp-line); background:var(--gp-soft); color:var(--gp-muted); box-shadow:none; }
+#gamepad-panel .gamepad-panel-tabs { padding:4px; border-color:var(--gp-line); border-radius:10px; background:var(--gp-surface); }
+#gamepad-panel .gamepad-panel-tab { min-height:42px; padding:0 18px; font-size:12px; }
+#gamepad-panel .gamepad-panel-tab.is-active { background:#fff4ea; color:#a74808; border-color:#f1c4a4; box-shadow:none; }
+#gamepad-panel .gamepad-stage { gap:18px; }
+#gamepad-panel .gamepad-disconnected-note { padding:16px 18px; border-color:#f1c4a4; border-radius:12px; background:#fff8f3; }
+#gamepad-panel .gamepad-dashboard-grid { grid-template-columns:300px minmax(0,1fr); grid-template-areas:'quick primary' 'aux aux'; gap:18px; }
+#gamepad-panel .gamepad-section { gap:16px; padding:20px; border-color:var(--gp-line); border-radius:14px; background:var(--gp-surface); box-shadow:none; }
+#gamepad-panel .gamepad-section-title { color:var(--gp-text); font-size:15px; }
+#gamepad-panel .gamepad-section-caption { color:var(--gp-muted); }
+#gamepad-panel .gamepad-section--quick { background:var(--gp-soft); }
+#gamepad-panel .gamepad-auto-status, #gamepad-panel .gamepad-channel-status { border-color:var(--gp-line); background:var(--gp-surface); color:var(--gp-muted); }
+#gamepad-panel .gamepad-config-field span, #gamepad-panel .gp-channel-select span, #gamepad-panel .gp-aux-field span { color:var(--gp-muted); font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+#gamepad-panel select { min-height:40px; border-color:var(--gp-line); border-radius:8px; background:var(--gp-surface); color:var(--gp-text); }
+#gamepad-panel .gamepad-toolbar-actions { gap:8px; }
+#gamepad-panel .gamepad-action-btn { min-height:42px; border-radius:8px; box-shadow:none; }
+#gamepad-panel .gamepad-stage .btn-primary { background:#ec7416; box-shadow:none; }
+#gamepad-panel .gamepad-stage .btn-secondary { border-color:var(--gp-line); background:var(--gp-surface); }
+#gamepad-panel .gp-channel-row { grid-template-columns:minmax(270px,1fr) minmax(170px,.7fr) auto; min-height:82px; padding:13px 14px; border-color:var(--gp-line); border-radius:10px; background:var(--gp-surface); box-shadow:none; }
+#gamepad-panel .gp-channel-main { grid-template-columns:42px 74px minmax(150px,1fr); gap:10px; }
+#gamepad-panel .gp-channel-badge { min-width:38px; color:var(--gp-muted); border-color:var(--gp-line); background:var(--gp-soft); }
+#gamepad-panel .gp-channel-title, #gamepad-panel .gp-aux-card-title { color:var(--gp-text); font-size:13px; }
+#gamepad-panel .gp-channel-subtitle, #gamepad-panel .gp-aux-card-subtitle { color:var(--gp-muted); }
+#gamepad-panel .gp-bar-bg { background:#e7ebef; }
+#gamepad-panel .gp-channel-value, #gamepad-panel .gp-aux-value { border-color:var(--gp-line); background:var(--gp-soft); color:var(--gp-text); }
+#gamepad-panel .gp-invert-checkbox { border-color:var(--gp-line); background:var(--gp-surface); color:var(--gp-muted); }
+#gamepad-panel .gp-aux-card { min-height:190px; padding:16px; border-color:var(--gp-line); border-radius:10px; background:var(--gp-soft); box-shadow:none; }
+#gamepad-panel .gp-range-editor { border-color:var(--gp-line); background:var(--gp-surface); }
+
+:root[data-theme='dark'] #gamepad-panel { --gp-bg:#111923; --gp-surface:#182331; --gp-soft:#202e3e; --gp-line:#2b3b4d; --gp-text:#edf2f7; --gp-muted:#a9b7c8; }
+:root[data-theme='dark'] #gamepad-panel :is(.settings-panel-content,.gamepad-hero,.gamepad-panel-tabs,.gamepad-section,.gamepad-section--quick,.gp-channel-row,.gp-aux-card,.gp-range-editor,.gamepad-status-pill,.gamepad-auto-status,.gamepad-channel-status,.gamepad-stage .btn-secondary,.gp-invert-checkbox) { background:var(--gp-surface); border-color:var(--gp-line); box-shadow:none; }
+:root[data-theme='dark'] #gamepad-panel :is(.gp-channel-badge,.gp-channel-value,.gp-aux-value) { background:var(--gp-soft); border-color:var(--gp-line); }
+
+@media(max-width:1100px) {
+    #gamepad-panel .gamepad-dashboard-grid { grid-template-columns:1fr; grid-template-areas:'quick' 'primary' 'aux'; }
+    #gamepad-panel .gp-channel-row { grid-template-columns:1fr; }
+    #gamepad-panel .gp-channel-actions { justify-content:flex-start; }
+}
+
+/* The chapter "Теория главы" block reuses the pre-existing (previously
+   unused) guide-theory-card markup. It still ships the old orange-glow
+   --guide-* design tokens, so re-skin it on --work-* the same way the rest
+   of this file re-skins the check/build tabs, to keep the Theory tab
+   reading as one surface. */
+#mission-guide-overlay .academy-detail .guide-theory-sections { display:grid; gap:14px; }
+#mission-guide-overlay .academy-detail .guide-theory-card { background:var(--work-surface); border:1px solid var(--work-line); box-shadow:none; border-radius:10px; }
+#mission-guide-overlay .academy-detail .guide-theory-card__content { color:var(--work-text); }
+#mission-guide-overlay .academy-detail .guide-theory-card__content > p { color:var(--work-muted); }
+#mission-guide-overlay .academy-detail .guide-theory-card__index { background:rgba(247,120,23,.11); border-color:color-mix(in srgb, #f77817 35%, var(--work-line)); color:var(--work-accent); }
+#mission-guide-overlay .academy-detail .guide-theory-card__takeaway { background:rgba(247,120,23,.08); border-color:color-mix(in srgb, #f77817 30%, var(--work-line)); color:var(--work-text); }
+#mission-guide-overlay .academy-detail .guide-theory-card__takeaway-label { color:var(--work-accent); }
+#mission-guide-overlay .academy-detail .guide-theory-card__spoiler { background:var(--work-bg); border:1px solid var(--work-line); }
+#mission-guide-overlay .academy-detail .guide-theory-card__spoiler summary { color:var(--work-text); }
+#mission-guide-overlay .academy-detail .guide-theory-card__spoiler summary:hover { background:var(--work-soft); color:var(--work-accent); }
+#mission-guide-overlay .academy-detail .guide-theory-card__spoiler summary::before { color:var(--work-accent); }
+#mission-guide-overlay .academy-detail .guide-theory-card__spoiler-body { color:var(--work-muted); }
+#mission-guide-overlay .academy-detail .guide-theory-card__list--ordered li::marker { color:var(--work-accent); }
+
+/* Blockly build-tab preview host: embeds the live Blockly workspace into the
+   "Собрать" step (see public/modules/ui/mission-guide/support/blockly-preview.ts),
+   the same way .guide-scene-preview-host already embeds the 3D scene into the
+   "Проверка" step. Re-skinned on this file's --work-* tokens instead of the
+   --guide-* tokens .guide-scene-preview-host itself uses, since this rule set
+   only ever applies inside #mission-guide-overlay. */
+#mission-guide-overlay .academy-detail .guide-blockly-preview-host { position:relative; min-height:420px; border-radius:12px; border:1px dashed var(--work-line); background:var(--work-bg); overflow:hidden; }
+#mission-guide-overlay .academy-detail .guide-blockly-preview-host.is-active { border-style:solid; border-color:color-mix(in srgb, var(--work-accent) 35%, var(--work-line)); }
+#mission-guide-overlay .academy-detail .guide-blockly-preview-host > #blockly-editor-canvas-host { min-height:420px; }
+#mission-guide-overlay .academy-detail .guide-blockly-preview__placeholder { display:grid; place-items:center; min-height:420px; padding:24px; color:var(--work-muted); font:13px/1.6 var(--font-sans); text-align:center; }
+#mission-guide-overlay .academy-detail .guide-build-target { margin:16px 0; }
+#mission-guide-overlay .academy-detail .guide-build-target .guide-lesson-page__meta-label { margin-bottom:8px; }
+
+/* Track switch (Blockly / Lua / Python) in the modal's static header, next to
+   the title. Same segmented-pill look as .guide-page-tabs/.guide-page-tab
+   above, just smaller and living in the header row instead of the body. */
+#mission-guide-overlay .guide-track-switch { display:inline-flex; gap:2px; width:max-content; margin-top:10px; padding:3px; border:1px solid var(--work-line); border-radius:9px; background:var(--work-surface); }
+#mission-guide-overlay .guide-track-switch__btn { display:inline-flex; align-items:center; min-height:28px; padding:0 12px; border:0; border-radius:6px; background:transparent; color:var(--work-muted); font:600 11px var(--font-sans); cursor:pointer; white-space:nowrap; }
+#mission-guide-overlay .guide-track-switch__btn:hover { background:var(--work-soft); color:var(--work-text); }
+#mission-guide-overlay .guide-track-switch__btn.is-active { background:rgba(247,120,23,.11); color:var(--work-text); box-shadow:inset 0 -2px #f77817; }
+:root[data-theme='dark'] #mission-guide-overlay .guide-track-switch__btn.is-active { background:rgba(247,120,23,.16); }
+
+/* Monaco build-tab preview host: embeds the live text (Lua/Python) editor into
+   the "Собрать" step for the hand-written-code tracks (see
+   public/modules/ui/mission-guide/support/monaco-preview.ts), the same way
+   .guide-blockly-preview-host above embeds the Blockly workspace for the
+   Blockly track. Blockly and text tracks are mutually exclusive, so only one
+   of these two hosts is ever .is-active at a time. */
+#mission-guide-overlay .academy-detail .guide-monaco-preview-host { position:relative; min-height:420px; border-radius:12px; border:1px dashed var(--work-line); background:var(--work-bg); overflow:hidden; }
+#mission-guide-overlay .academy-detail .guide-monaco-preview-host.is-active { border-style:solid; border-color:color-mix(in srgb, var(--work-accent) 35%, var(--work-line)); }
+#mission-guide-overlay .academy-detail .guide-monaco-preview-host > #monaco-editor-root { min-height:420px; height:100%; }
+#mission-guide-overlay .academy-detail .guide-monaco-preview__placeholder { display:grid; place-items:center; min-height:420px; padding:24px; color:var(--work-muted); font:13px/1.6 var(--font-sans); text-align:center; }

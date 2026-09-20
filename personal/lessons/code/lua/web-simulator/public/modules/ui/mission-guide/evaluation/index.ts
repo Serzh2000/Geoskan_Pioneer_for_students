@@ -195,6 +195,14 @@ export function evaluateLesson(lesson: GuideLesson, sequenceIds: string[], works
         }
     }
 
+    for (const check of lesson.fieldChecks || []) {
+        const xmlRoot = parseWorkspaceXml(workspaceXml);
+        const block = findFirstBlockByType(xmlRoot, check.blockType);
+        if (block && !hasNumericFieldValue(block, check.field, check.expected)) {
+            diagnostics.push(check.diagnostic);
+        }
+    }
+
     for (const blockId of sequenceIds) {
         if (targetSet.has(blockId)) continue;
         const diagnostic = lesson.extraBlockDiagnostics?.[blockId];

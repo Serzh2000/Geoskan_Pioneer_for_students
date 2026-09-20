@@ -1,6 +1,7 @@
 import {
     getActiveChapter,
-    getActiveLesson
+    getActiveLesson,
+    getActivePracticeTrack
 } from './state.js';
 import { getGuideLessonState } from './lessons.js';
 import { logGuideEvent } from './support/logging.js';
@@ -14,6 +15,18 @@ export function attachGuideInteractions(
     language: ScriptLanguage,
     rerender: RenderMissionGuidePanel
 ): void {
+    const track = getActivePracticeTrack();
+    if (track !== 'blockly') {
+        void import('./interactions/text-actions.js')
+            .then(({ attachTextGuideBindings }) => {
+                attachTextGuideBindings(container, track, rerender);
+            })
+            .catch((error) => {
+                console.error('Failed to load text-track interactions', error);
+            });
+        return;
+    }
+
     const state = getGuideLessonState(language);
     const lesson = getActiveLesson(state, language);
     const activeChapter = getActiveChapter(state, language);

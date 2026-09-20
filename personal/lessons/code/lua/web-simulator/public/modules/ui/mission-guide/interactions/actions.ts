@@ -10,6 +10,7 @@ import {
     loadMainBlocklyXml,
     setBlocklyEditorEnabled
 } from '../../../editor/index.js';
+import { mountMissionGuideBlocklyPreview } from '../support/blockly-preview.js';
 import {
     setLessonBanner,
     setLessonChecked,
@@ -102,9 +103,28 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
     container.querySelectorAll<HTMLElement>('[data-guide-open-editor]').forEach((element) => {
         element.addEventListener('click', () => {
             logGuideEvent('open_main_editor_requested', buildGuideEventContext(context));
+            // Раньше эта кнопка закрывала весь гайд, чтобы освободить место под
+            // основной редактор. Теперь вместо этого встраиваем живой
+            // Blockly-воркспейс прямо в шаг "Собрать" (см.
+            // support/blockly-preview.ts) — ученик не теряет инструкции урока
+            // во время сборки цепочки.
+            setBlocklyEditorEnabled(true);
+            mountMissionGuideBlocklyPreview();
+            rerender(language);
+            logGuideEvent('open_main_editor_applied', buildGuideEventContext(context), 'success');
+        });
+    });
+
+    // Аварийный вариант на случай проблем с переносом Blockly-воркспейса в
+    // гайд (см. отчёт по задаче) — делает ровно то, что раньше делала кнопка
+    // [data-guide-open-editor]: закрывает гайд и включает Blockly в основном
+    // редакторе на весь экран.
+    container.querySelectorAll<HTMLElement>('[data-guide-open-editor-fallback]').forEach((element) => {
+        element.addEventListener('click', () => {
+            logGuideEvent('open_main_editor_fallback_requested', buildGuideEventContext(context));
             (window as any).closeMissionGuideModal?.();
             setBlocklyEditorEnabled(true);
-            logGuideEvent('open_main_editor_applied', buildGuideEventContext(context), 'success');
+            logGuideEvent('open_main_editor_fallback_applied', buildGuideEventContext(context), 'success');
         });
     });
 

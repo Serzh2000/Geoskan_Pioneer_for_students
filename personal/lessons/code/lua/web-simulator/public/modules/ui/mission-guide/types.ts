@@ -53,6 +53,8 @@ export type GuideThemeId = 'dark' | 'light';
 
 export type GuidePortalPageId = 'intro' | 'lesson';
 
+export type GuidePracticeTrack = 'blockly' | 'lua' | 'python';
+
 export type GuideLessonProgressState = 'locked' | 'available' | 'in_progress' | 'completed';
 
 export type GuideTheorySpoiler = {
@@ -113,6 +115,12 @@ export type GuideLesson = {
     missingBlockDiagnostics: Record<string, GuideDiagnostic>;
     extraBlockDiagnostics?: Record<string, GuideDiagnostic>;
     orderRules?: GuideOrderRule[];
+    fieldChecks?: Array<{
+        blockType: string;
+        field: string;
+        expected: number;
+        diagnostic: GuideDiagnostic;
+    }>;
     compile: (sequenceIds: string[], blocks: GuideBlock[]) => string;
 };
 
@@ -124,6 +132,33 @@ export type GuideLessonState = {
     heroFlow: string;
     chapters: GuideChapter[];
     lessons: GuideLesson[];
+};
+
+export type GuideTextLesson = {
+    id: string;
+    topicId: string;
+    chapterId: string;
+    badge: string;
+    title: string;
+    goal: string;
+    summary: string;
+    lessonIntro: string;
+    expectedOutcome: string;
+    builderHint: string;
+    apiFocus: GuideApiFocusItem[];
+    links: GuideMethodLink[];
+    starterCode: string;
+    solutionCode: string;
+};
+
+export type GuideTextLessonState = {
+    activeLessonId: string;
+    heroEyebrow: string;
+    heroTitle: string;
+    heroText: string;
+    heroFlow: string;
+    chapters: GuideChapter[];
+    lessons: GuideTextLesson[];
 };
 
 export type GuideEvaluation = {

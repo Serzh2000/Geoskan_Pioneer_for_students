@@ -31,7 +31,7 @@ function renderTheorySpoiler(spoiler: GuideTheorySpoiler): string {
     `;
 }
 
-function renderTheorySection(section: { title: string; paragraphs: string[]; bullets?: string[]; ordered?: string[]; spoilers?: GuideTheorySpoiler[]; takeaway?: string }, index: number): string {
+export function renderTheorySection(section: { title: string; paragraphs: string[]; bullets?: string[]; ordered?: string[]; spoilers?: GuideTheorySpoiler[]; takeaway?: string }, index: number): string {
     return `
         <article class="guide-theory-card">
             <div class="guide-theory-card__head">

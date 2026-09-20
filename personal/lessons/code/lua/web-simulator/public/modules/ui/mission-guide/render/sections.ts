@@ -7,13 +7,15 @@ import {
     getLessonsForChapter,
     isLessonCompleted
 } from '../state.js';
-import type { GuideLessonState } from '../types.js';
+import type { GuideChapter, GuideLesson, GuideLessonState } from '../types.js';
 import {
     escapeHtml,
     renderApiFocusItem,
     renderInline,
     renderTargetRoute
 } from './support.js';
+import { renderDocLink } from './shared.js';
+import { renderTheorySection } from './theory.js';
 import { ICON_BOOK } from './icons.js';
 
 export function renderLessonOverview(
@@ -63,7 +65,7 @@ export function renderLessonOverview(
     `;
 }
 
-export function renderLessonTheory(lesson: GuideLessonState['lessons'][number]): string {
+export function renderLessonTheory(lesson: GuideLesson, chapter: GuideChapter): string {
     return `
         <section class="guide-lesson-section">
             <div class="guide-lesson-section__header">
@@ -90,8 +92,28 @@ export function renderLessonTheory(lesson: GuideLessonState['lessons'][number]):
                         ${lesson.apiFocus.map(renderApiFocusItem).join('')}
                     </div>
                 </article>
+                ${lesson.links.length > 0 ? `
+                <article class="guide-lesson-page__meta-item guide-lesson-page__meta-item--wide">
+                    <div class="guide-lesson-page__meta-label">Где почитать в справочнике</div>
+                    <div class="guide-target-route">
+                        ${lesson.links.map(renderDocLink).join('')}
+                    </div>
+                </article>
+                ` : ''}
             </div>
         </section>
+
+        ${chapter.theorySections.length > 0 ? `
+        <section class="guide-lesson-section">
+            <div class="guide-lesson-section__header">
+                <div class="guide-panel-card__title">Теория главы</div>
+                <div class="guide-panel-card__text">Развернутое объяснение темы главы «${escapeHtml(chapter.title)}».</div>
+            </div>
+            <div class="guide-theory-sections">
+                ${chapter.theorySections.map(renderTheorySection).join('')}
+            </div>
+        </section>
+        ` : ''}
     `;
 }
 

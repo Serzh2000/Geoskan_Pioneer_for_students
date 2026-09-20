@@ -1,12 +1,16 @@
 import type { ScriptLanguage } from '../api-docs/sections.js';
 import type {
     GuideChapter,
+    GuideEvaluation,
     GuideLesson,
     GuideLessonProgressState,
     GuideLessonState,
     GuideLessonStepId,
     GuidePortalPageId,
+    GuidePracticeTrack,
     GuideTabId,
+    GuideTextLesson,
+    GuideTextLessonState,
     GuideThemeId,
     RuntimeBanner
 } from './types.js';
@@ -23,11 +27,13 @@ const activeLessonByLanguage: Record<ScriptLanguage, string> = loadedSessionStat
 const activeChapterByLanguage: Record<ScriptLanguage, string> = loadedSessionState.activeChapterByLanguage;
 const activeTabByLanguage: Record<ScriptLanguage, GuideTabId> = loadedSessionState.activeTabByLanguage;
 const activePortalPageByLanguage: Record<ScriptLanguage, GuidePortalPageId> = loadedSessionState.activePortalPageByLanguage;
+const activeStepByLessonKey: Record<string, GuideLessonStepId> = loadedSessionState.activeStepByLessonKey;
+let activePracticeTrack: GuidePracticeTrack = loadedSessionState.activePracticeTrack;
 let activeGuideTheme: GuideThemeId = 'dark';
 
 const lessonBanners = new Map<string, RuntimeBanner>();
 const lessonChecks = new Map<string, boolean>();
-const activeLessonStepByKey = new Map<string, GuideLessonStepId>();
+const lastTextEvaluationByKey = new Map<string, GuideEvaluation>();
 const completedLessonsByLanguage: Record<ScriptLanguage, Set<string>> = loadGuideProgress();
 
 function persistCurrentGuideSessionState(): void {
@@ -35,7 +41,9 @@ function persistCurrentGuideSessionState(): void {
         activeLessonByLanguage,
         activeChapterByLanguage,
         activeTabByLanguage,
-        activePortalPageByLanguage
+        activePortalPageByLanguage,
+        activeStepByLessonKey,
+        activePracticeTrack
     });
 }
 
@@ -59,16 +67,17 @@ export function ensureActiveChapterId(language: ScriptLanguage, chapterId: strin
 
 export function setActiveLessonId(language: ScriptLanguage, lessonId: string): void {
     activeLessonByLanguage[language] = lessonId;
-    activeLessonStepByKey.set(getStateKey(language, lessonId), 'theory');
+    activeStepByLessonKey[getStateKey(language, lessonId)] = 'theory';
     persistCurrentGuideSessionState();
 }
 
 export function getActiveGuideStep(language: ScriptLanguage, lessonId: string): GuideLessonStepId {
-    return activeLessonStepByKey.get(getStateKey(language, lessonId)) || 'theory';
+    return activeStepByLessonKey[getStateKey(language, lessonId)] || 'theory';
 }
 
 export function setActiveGuideStep(language: ScriptLanguage, lessonId: string, step: GuideLessonStepId): void {
-    activeLessonStepByKey.set(getStateKey(language, lessonId), step);
+    activeStepByLessonKey[getStateKey(language, lessonId)] = step;
+    persistCurrentGuideSessionState();
 }
 
 export function setActiveChapterId(language: ScriptLanguage, chapterId: string): void {
@@ -100,6 +109,15 @@ export function getActiveGuideTheme(): GuideThemeId {
 
 export function setActiveGuideTheme(theme: GuideThemeId): void {
     activeGuideTheme = theme;
+}
+
+export function getActivePracticeTrack(): GuidePracticeTrack {
+    return activePracticeTrack;
+}
+
+export function setActivePracticeTrack(track: GuidePracticeTrack): void {
+    activePracticeTrack = track;
+    persistCurrentGuideSessionState();
 }
 
 export function getActiveLesson(state: GuideLessonState, language: ScriptLanguage): GuideLesson {
@@ -196,4 +214,39 @@ export function setLessonChecked(language: ScriptLanguage, lessonId: string, che
 
 export function isLessonChecked(language: ScriptLanguage, lessonId: string): boolean {
     return lessonChecks.get(getStateKey(language, lessonId)) || false;
+}
+
+export function setLastTextEvaluation(track: 'lua' | 'python', lessonId: string, evaluation: GuideEvaluation): void {
+    lastTextEvaluationByKey.set(getStateKey(track, lessonId), evaluation);
+}
+
+export function getLastTextEvaluation(track: 'lua' | 'python', lessonId: string): GuideEvaluation | null {
+    return lastTextEvaluationByKey.get(getStateKey(track, lessonId)) || null;
+}
+
+// Text-track (hand-typed Lua/Python) equivalents of the Blockly-track helpers
+// above. `track` reuses the same string keyspace as `language` (activeLessonByLanguage`
+// etc. are keyed by plain strings), so lesson/step/checked/banner/progress state
+// naturally stays separate between e.g. Blockly-lua ('lua-led-single') and
+// Lua-text ('lua-led-single-text') lessons without any extra bookkeeping — the ids
+// never collide.
+export function getActiveTextLesson(state: GuideTextLessonState, track: 'lua' | 'python'): GuideTextLesson {
+    const desiredId = activeLessonByLanguage[track] || state.activeLessonId;
+    return state.lessons.find((lesson) => lesson.id === desiredId) || state.lessons[0];
+}
+
+export function getTextLessonIndex(state: GuideTextLessonState, lessonId: string): number {
+    return state.lessons.findIndex((lesson) => lesson.id === lessonId);
+}
+
+export function getNextTextLesson(state: GuideTextLessonState, lessonId: string): GuideTextLesson | null {
+    const currentIndex = getTextLessonIndex(state, lessonId);
+    if (currentIndex < 0 || currentIndex >= state.lessons.length - 1) return null;
+    return state.lessons[currentIndex + 1] || null;
+}
+
+export function getPreviousTextLesson(state: GuideTextLessonState, lessonId: string): GuideTextLesson | null {
+    const currentIndex = getTextLessonIndex(state, lessonId);
+    if (currentIndex <= 0) return null;
+    return state.lessons[currentIndex - 1] || null;
 }

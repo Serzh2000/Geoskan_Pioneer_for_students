@@ -1,5 +1,5 @@
 import type { ScriptLanguage } from '../../api-docs/sections.js';
-import type { GuidePortalPageId, GuideTabId } from '../types.js';
+import type { GuideLessonStepId, GuidePortalPageId, GuidePracticeTrack, GuideTabId } from '../types.js';
 
 const GUIDE_PROGRESS_STORAGE_KEY = 'pioneer:mission-guide:progress:v1';
 const GUIDE_SESSION_STORAGE_KEY = 'pioneer:mission-guide:session:v1';
@@ -9,6 +9,8 @@ export type GuidePersistedSessionState = {
     activeChapterByLanguage?: Partial<Record<ScriptLanguage, string>>;
     activeTabByLanguage?: Partial<Record<ScriptLanguage, GuideTabId>>;
     activePortalPageByLanguage?: Partial<Record<ScriptLanguage, GuidePortalPageId>>;
+    activeStepByLessonKey?: Record<string, string>;
+    activePracticeTrack?: string;
 };
 
 export type GuideLoadedSessionState = {
@@ -16,6 +18,8 @@ export type GuideLoadedSessionState = {
     activeChapterByLanguage: Record<ScriptLanguage, string>;
     activeTabByLanguage: Record<ScriptLanguage, GuideTabId>;
     activePortalPageByLanguage: Record<ScriptLanguage, GuidePortalPageId>;
+    activeStepByLessonKey: Record<string, GuideLessonStepId>;
+    activePracticeTrack: GuidePracticeTrack;
 };
 
 export function createDefaultSessionState(): GuideLoadedSessionState {
@@ -35,7 +39,9 @@ export function createDefaultSessionState(): GuideLoadedSessionState {
         activePortalPageByLanguage: {
             lua: 'intro',
             python: 'intro'
-        }
+        },
+        activeStepByLessonKey: {},
+        activePracticeTrack: 'blockly'
     };
 }
 
@@ -63,11 +69,28 @@ export function loadGuideSessionState(): GuideLoadedSessionState {
             activePortalPageByLanguage: {
                 lua: parsed.activePortalPageByLanguage?.lua === 'lesson' ? 'lesson' : 'intro',
                 python: parsed.activePortalPageByLanguage?.python === 'lesson' ? 'lesson' : 'intro'
-            }
+            },
+            activeStepByLessonKey: parseActiveStepByLessonKey(parsed.activeStepByLessonKey),
+            activePracticeTrack: parsed.activePracticeTrack === 'lua' || parsed.activePracticeTrack === 'python'
+                ? parsed.activePracticeTrack
+                : 'blockly'
         };
     } catch {
         return defaultState;
     }
+}
+
+function parseActiveStepByLessonKey(raw: Record<string, string> | undefined): Record<string, GuideLessonStepId> {
+    const result: Record<string, GuideLessonStepId> = {};
+    if (!raw || typeof raw !== 'object') return result;
+
+    for (const [key, value] of Object.entries(raw)) {
+        if (value === 'theory' || value === 'build' || value === 'check') {
+            result[key] = value;
+        }
+    }
+
+    return result;
 }
 
 export function loadGuideProgress(): Record<ScriptLanguage, Set<string>> {
@@ -105,13 +128,17 @@ export function persistGuideSessionState(params: {
     activeChapterByLanguage: Record<ScriptLanguage, string>;
     activeTabByLanguage: Record<ScriptLanguage, GuideTabId>;
     activePortalPageByLanguage: Record<ScriptLanguage, GuidePortalPageId>;
+    activeStepByLessonKey: Record<string, GuideLessonStepId>;
+    activePracticeTrack: GuidePracticeTrack;
 }): void {
     try {
         window.localStorage.setItem(GUIDE_SESSION_STORAGE_KEY, JSON.stringify({
             activeLessonByLanguage: params.activeLessonByLanguage,
             activeChapterByLanguage: params.activeChapterByLanguage,
             activeTabByLanguage: params.activeTabByLanguage,
-            activePortalPageByLanguage: params.activePortalPageByLanguage
+            activePortalPageByLanguage: params.activePortalPageByLanguage,
+            activeStepByLessonKey: params.activeStepByLessonKey,
+            activePracticeTrack: params.activePracticeTrack
         } satisfies GuidePersistedSessionState));
     } catch {
         // Ignore storage failures in embedded/private browsing contexts.
