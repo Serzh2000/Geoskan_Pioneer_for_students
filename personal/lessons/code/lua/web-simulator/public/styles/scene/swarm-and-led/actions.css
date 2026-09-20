@@ -43,15 +43,18 @@
     opacity: 0.55;
 }
 
+/* Adding a drone is this panel's primary action, so it reads as a solid
+   button rather than the same pale wash as the secondary/destructive ones -
+   the muted look was easy to mistake for "disabled". */
 .swarm-action-btn--add {
-    background: rgba(255, 107, 0, 0.1);
-    border-color: rgba(255, 107, 0, 0.16);
-    color: var(--accent-color);
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: #fff;
 }
 
 .swarm-action-btn--add:hover:not(:disabled) {
-    background: rgba(255, 107, 0, 0.14);
-    border-color: rgba(255, 107, 0, 0.22);
+    background: #e65f00;
+    border-color: #e65f00;
 }
 
 .swarm-action-btn--delete {
