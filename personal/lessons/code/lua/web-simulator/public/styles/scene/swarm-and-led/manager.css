@@ -8,7 +8,7 @@
 
 .panel-content--drones {
     padding: var(--panel-pad-x);
-    background: linear-gradient(180deg, #f7f8fa 0%, #f2f4f7 100%);
+    background: #f8fafc;
 }
 
 .swarm-manager {
@@ -23,15 +23,16 @@
     gap: 8px;
     padding: 14px 16px;
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.82);
-    border: 1px solid rgba(9, 9, 11, 0.07);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: none;
 }
 
 .swarm-manager__eyebrow {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: #4b5563;
+    color: #172033;
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -60,5 +61,33 @@
     font-size: 12px;
     line-height: 1.55;
     color: var(--text-muted);
+}
+
+/* One surface system for the swarm workflow: the active drone is the only
+   highlighted item, and an empty list no longer consumes the whole panel. */
+.panel-content--drones .swarm-list-card,
+.panel-content--drones .swarm-bridge-card,
+.panel-content--drones .swarm-connection-card {
+    border-color: #e2e8f0;
+    background: #ffffff;
+    box-shadow: none;
+}
+
+.panel-content--drones .swarm-list {
+    min-height: 0;
+    max-height: 270px;
+    padding: 6px;
+    background: #f8fafc;
+    border-color: #e5eaf0;
+}
+
+.panel-content--drones .swarm-list__item.is-active {
+    background: #fff7ed;
+    border-color: #fed7aa;
+}
+
+.panel-content--drones .swarm-bridge-card__detail {
+    background: #f8fafc;
+    border-color: #e2e8f0;
 }
 
