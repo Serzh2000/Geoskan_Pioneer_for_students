@@ -1,0 +1,12 @@
+{
+  "map_name": "Warehouse_Zone_A",
+  "origin": {"lat": 59.9, "lon": 30.3},
+  "markers": [
+    {
+      "id": 10,
+      "size": 0.2,
+      "position": {"x": 5.0, "y": 0.0, "z": 1.5},
+      "orientation": {"yaw": 90.0}
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+<map>
+    <name>Warehouse_Zone_A</name>
+    <marker id="10">
+        <size>0.2</size>
+        <position>
+            <x>5.0</x> <y>0.0</y> <z>1.5</z>
+        </position>
+    </marker>
+</map>
