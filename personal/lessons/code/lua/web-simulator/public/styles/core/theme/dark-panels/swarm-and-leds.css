@@ -13,6 +13,10 @@
     color: var(--text-muted);
 }
 
+:root[data-theme='dark'] .swarm-manager__eyebrow {
+    color: var(--text-strong);
+}
+
 :root[data-theme='dark'] .swarm-list-card__title,
 :root[data-theme='dark'] .swarm-list__item-name {
     color: var(--text-strong);
