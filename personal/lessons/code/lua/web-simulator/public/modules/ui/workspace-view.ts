@@ -27,6 +27,9 @@ export function initWorkspaceView(): void {
     const applyPage = (page: WorkspacePage) => {
         const isMobile = mediaQuery.matches;
         container.dataset.mobileWorkspacePage = page;
+        // Desktop uses the same explicit state: editor mode is a real workspace
+        // view, so it can take over the scene canvas instead of sharing its width.
+        container.dataset.workspacePage = page;
 
         pagePanels.forEach((panel) => {
             const isActive = panel.dataset.mobileWorkspacePanel === page;
@@ -51,7 +54,7 @@ export function initWorkspaceView(): void {
 
         // На узком экране страница «Код» показывает боковую панель целиком,
         // поэтому она нужна для любой открытой панели, а не только редактора.
-        applyPage(hasOpenPanel() ? 'code' : 'scene');
+        applyPage(mediaQuery.matches && hasOpenPanel() ? 'code' : editorOpen ? 'code' : 'scene');
     };
 
     buttons.forEach((button) => {

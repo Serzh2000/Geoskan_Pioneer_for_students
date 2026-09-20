@@ -105,6 +105,7 @@ export function initSidebar(callbacks: UICallbacks) {
         panels.classList.remove('is-closing');
         setActiveTabButton(null);
         persistActivePanel(null);
+        window.dispatchEvent(new CustomEvent('sidebar-panel-change', { detail: { panelId: null } }));
         refreshViewportLayout();
     };
 
@@ -159,6 +160,7 @@ export function initSidebar(callbacks: UICallbacks) {
         panel.classList.add('active');
         setActiveTabButton(panelId);
         persistActivePanel(panelId);
+        window.dispatchEvent(new CustomEvent('sidebar-panel-change', { detail: { panelId } }));
 
         if (panelName) {
             log(`Opening panel: ${panelName}`, 'info');
@@ -183,6 +185,10 @@ export function initSidebar(callbacks: UICallbacks) {
     (window as any).closePanel = function() {
         closePanelWithAnimation();
     };
+    // Public aliases are deliberately narrow: the header control needs the same
+    // closing path as a panel's own close button, including the animation.
+    (window as any).closeSidebarPanel = closePanelWithAnimation;
+    (window as any).openSidebarPanel = openPanel;
 
     resizer.addEventListener('mousedown', () => {
         if (isMobileSidebar()) return;

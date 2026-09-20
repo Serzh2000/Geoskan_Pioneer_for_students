@@ -54,3 +54,27 @@
     min-height: 0;
 }
 
+/* The Code tab is a primary workspace mode on desktop. It keeps the tool rail
+   available, while Blockly/Monaco receives the full area previously used by 3D. */
+@media (min-width: 981px) {
+    .container[data-workspace-page='code'] .mobile-scene-page {
+        display: none;
+    }
+
+    .container[data-workspace-page='code'] .mobile-workspace-track {
+        gap: 0;
+    }
+
+    .container[data-workspace-page='code'] .workspace-sidebar {
+        width: 100%;
+        min-width: 0;
+        border-radius: 18px;
+    }
+
+    .container[data-workspace-page='code'] .sidebar-panels {
+        width: auto !important;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+}
+

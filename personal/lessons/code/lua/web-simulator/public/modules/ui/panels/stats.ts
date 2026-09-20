@@ -15,12 +15,22 @@ const hudStatMode = document.getElementById('hud-stat-mode') as HTMLElement | nu
 const camParams = document.getElementById('cam-params') as HTMLElement | null;
 const runBtn = document.getElementById('run-btn') as HTMLButtonElement | null;
 const stopBtn = document.getElementById('stop-btn') as HTMLButtonElement | null;
-const ledElements = Array.from({ length: 29 }, (_unused, index) => {
-    if (index < 4) {
-        return document.getElementById(`led-base-${index}`) as HTMLElement | null;
-    }
-    return document.getElementById(`led-pixel-${index}`) as HTMLElement | null;
-});
+
+// `led-pixel-*` cells are created at runtime by initLEDMatrixUI(), which can
+// run after this module is first evaluated, so the lookup is deferred to
+// first use (and retried while any id is still missing) rather than done
+// once at import time, or every matrix cell would stay stuck at null.
+let ledElements: Array<HTMLElement | null> | null = null;
+function getLedElements(): Array<HTMLElement | null> {
+    if (ledElements && ledElements.every((el) => el !== null)) return ledElements;
+    ledElements = Array.from({ length: 29 }, (_unused, index) => {
+        if (index < 4) {
+            return document.getElementById(`led-base-${index}`) as HTMLElement | null;
+        }
+        return document.getElementById(`led-pixel-${index}`) as HTMLElement | null;
+    });
+    return ledElements;
+}
 
 let lastAltText = '';
 let lastSpeedText = '';
@@ -148,10 +158,11 @@ function updateButtons(): void {
 
 function updateLeds(): void {
     if (!drones[currentDroneId].leds) return;
+    const elements = getLedElements();
 
     for (let i = 0; i < drones[currentDroneId].leds.length; i += 1) {
         const led = drones[currentDroneId].leds[i];
-        if (!led || i >= ledElements.length) continue;
+        if (!led || i >= elements.length) continue;
 
         const r = Math.round(led.r || 0);
         const g = Math.round(led.g || 0);
@@ -160,7 +171,7 @@ function updateLeds(): void {
         if (lastLedStyles[i] === signature) continue;
 
         const colorStr = `rgb(${r},${g},${b})`;
-        const ledEl = ledElements[i];
+        const ledEl = elements[i];
         if (!ledEl) continue;
 
         // Погашенный светодиод возвращаем стилям панели, иначе он станет
@@ -174,9 +185,9 @@ function updateLeds(): void {
         lastLedStyles[i] = signature;
     }
 
-    for (let i = drones[currentDroneId].leds.length; i < ledElements.length; i += 1) {
+    for (let i = drones[currentDroneId].leds.length; i < elements.length; i += 1) {
         if (!lastLedStyles[i]) continue;
-        const ledEl = ledElements[i];
+        const ledEl = elements[i];
         if (!ledEl) continue;
 
         ledEl.style.backgroundColor = '';

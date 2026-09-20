@@ -72,14 +72,21 @@ export function initRailVisibility(): void {
         if (active || pinned) {
             if (active) lastPanelId = active.id;
             pinned = false;
-            (window as any).closePanel?.();
+            (window as any).closeSidebarPanel?.();
         } else {
             pinned = true;
-            (window as any).openPanel?.(lastPanelId);
+            (window as any).openSidebarPanel?.(lastPanelId);
         }
         localStorage.setItem(RAIL_PINNED_STORAGE_KEY, pinned ? '1' : '0');
         peeking = false;
         cancelHide();
+        sync();
+        window.setTimeout(sync, 260);
+    });
+
+    window.addEventListener('sidebar-panel-change', (event) => {
+        const panelId = (event as CustomEvent<{ panelId?: string | null }>).detail?.panelId;
+        if (panelId) lastPanelId = panelId;
         sync();
     });
 
