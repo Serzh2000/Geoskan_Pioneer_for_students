@@ -1,0 +1,43 @@
+{
+	"nodes":[
+		{"id":"title","type":"text","text":"# Web Simulator\nклиент/сервер, поток данных","x":-700,"y":-760,"width":500,"height":90,"color":"6"},
+		{"id":"app","type":"file","file":"Модули/App.md","x":-960,"y":-520,"width":510,"height":180},
+		{"id":"ui","type":"file","file":"UI/UI обзор.md","x":-960,"y":-230,"width":510,"height":180,"color":"5"},
+		{"id":"editor","type":"file","file":"Модули/Editor.md","x":-1595,"y":-230,"width":475,"height":180},
+		{"id":"lua","type":"file","file":"Модули/Lua.md","x":-2000,"y":75,"width":475,"height":150,"color":"4"},
+		{"id":"autopilot","type":"file","file":"Модули/Autopilot.md","x":-2000,"y":375,"width":460,"height":180},
+		{"id":"python","type":"file","file":"Модули/Python.md","x":-1382,"y":75,"width":555,"height":140,"color":"4"},
+		{"id":"physics","type":"file","file":"Модули/Physics.md","x":-2000,"y":680,"width":460,"height":160},
+		{"id":"shared","type":"file","file":"Модули/Shared.md","x":-2800,"y":677,"width":465,"height":163},
+		{"id":"drone","type":"file","file":"Модули/Drone.md","x":-2000,"y":920,"width":460,"height":160},
+		{"id":"scene","type":"file","file":"Модули/Scene.md","x":-1450,"y":2120,"width":490,"height":185},
+		{"id":"env","type":"file","file":"Модули/Environment.md","x":-1995,"y":1480,"width":455,"height":200},
+		{"id":"state","type":"file","file":"Архитектура/Состояние (simState).md","x":-960,"y":1680,"width":490,"height":200,"color":"5"},
+		{"id":"mg","type":"file","file":"UI/Mission Guide.md","x":-315,"y":-225,"width":555,"height":175},
+		{"id":"server","type":"file","file":"Сервер/Сервер обзор.md","x":320,"y":-225,"width":560,"height":175,"color":"3"},
+		{"id":"pyrun","type":"file","file":"Сервер/Python Runtime.md","x":-1382,"y":920,"width":555,"height":160,"color":"3"},
+		{"id":"extbridge","type":"file","file":"Сервер/External Python Bridge.md","x":-315,"y":920,"width":555,"height":160,"color":"3"},
+		{"id":"mavlink","type":"file","file":"Сервер/MAVLink Bridge.md","x":320,"y":920,"width":560,"height":160,"color":"3"}
+	],
+	"edges":[
+		{"id":"e1","fromNode":"app","fromSide":"bottom","toNode":"ui","toSide":"top"},
+		{"id":"e2","fromNode":"ui","fromSide":"left","toNode":"editor","toSide":"right"},
+		{"id":"e3","fromNode":"ui","fromSide":"right","toNode":"mg","toSide":"left"},
+		{"id":"e4","fromNode":"editor","fromSide":"bottom","toNode":"lua","toSide":"top"},
+		{"id":"e5","fromNode":"editor","fromSide":"bottom","toNode":"python","toSide":"top"},
+		{"id":"e6","fromNode":"lua","fromSide":"bottom","toNode":"autopilot","toSide":"top"},
+		{"id":"e7","fromNode":"python","fromSide":"bottom","toNode":"autopilot","toSide":"top"},
+		{"id":"e8","fromNode":"autopilot","fromSide":"bottom","toNode":"physics","toSide":"top"},
+		{"id":"e9","fromNode":"shared","fromSide":"right","toNode":"physics","toSide":"left","label":"мат. утилиты"},
+		{"id":"e10","fromNode":"physics","fromSide":"bottom","toNode":"drone","toSide":"top"},
+		{"id":"e11","fromNode":"drone","fromSide":"bottom","toNode":"state","toSide":"top"},
+		{"id":"e13","fromNode":"state","fromSide":"bottom","toNode":"scene","toSide":"top"},
+		{"id":"e14","fromNode":"env","fromSide":"bottom","toNode":"scene","toSide":"top","label":"объекты окружения"},
+		{"id":"e15","fromNode":"python","fromSide":"bottom","toNode":"pyrun","toSide":"top","label":"HTTP /api/python-runtime"},
+		{"id":"e16","fromNode":"python","fromSide":"bottom","toNode":"extbridge","toSide":"top","label":"внешний Python-процесс"},
+		{"id":"e17","fromNode":"server","fromSide":"bottom","toNode":"pyrun","toSide":"top"},
+		{"id":"e18","fromNode":"server","fromSide":"bottom","toNode":"mavlink","toSide":"top"},
+		{"id":"e19","fromNode":"server","fromSide":"bottom","toNode":"extbridge","toSide":"top"},
+		{"id":"e12","fromNode":"ui","fromSide":"bottom","toNode":"state","toSide":"top","label":"читает/пишет simState"}
+	]
+}

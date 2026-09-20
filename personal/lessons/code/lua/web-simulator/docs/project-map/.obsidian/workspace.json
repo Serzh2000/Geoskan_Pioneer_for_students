@@ -1,0 +1,206 @@
+{
+  "main": {
+    "id": "e8b039741da743a3",
+    "type": "split",
+    "children": [
+      {
+        "id": "8f90f41cbdac0d25",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "4a73f2905d6f8716",
+            "type": "leaf",
+            "state": {
+              "type": "canvas",
+              "state": {
+                "file": "Карта проекта.canvas",
+                "viewState": {
+                  "x": -308.50408303538524,
+                  "y": 981.4398881640261,
+                  "zoom": -1.7251526081913922
+                }
+              },
+              "icon": "lucide-layout-dashboard",
+              "title": "Карта проекта"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "8b31cd44ce2bf927",
+    "type": "split",
+    "children": [
+      {
+        "id": "9e8fa75f457b87eb",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b7bcd22bf7d08d8c",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Файловый менеджер"
+            }
+          },
+          {
+            "id": "2a1b8ca4120a7848",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Поиск"
+            }
+          },
+          {
+            "id": "875e2965a916e4e9",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Закладки"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 200,
+    "collapsed": true
+  },
+  "right": {
+    "id": "d3a5c58cb866a01f",
+    "type": "split",
+    "children": [
+      {
+        "id": "57e4bf0f374f57a0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "5530894b76f80584",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Карта проекта.canvas",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Обратные ссылки"
+            }
+          },
+          {
+            "id": "14558e2130d2663b",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Карта проекта.canvas",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Исходящие ссылки"
+            }
+          },
+          {
+            "id": "bd19e6a9cd104027",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Теги"
+            }
+          },
+          {
+            "id": "5be12a5afa58ccad",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Все свойства"
+            }
+          },
+          {
+            "id": "38b002626fbc83f1",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Карта проекта.canvas",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Структура"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Меню быстрого перехода": false,
+      "graph:Граф": false,
+      "canvas:Создать новый холст": false,
+      "daily-notes:Сегодняшняя заметка": false,
+      "templates:Вставить шаблон": false,
+      "command-palette:Открыть палитру команд": false,
+      "bases:Создать новую базу": false
+    }
+  },
+  "active": "5530894b76f80584",
+  "lastOpenFiles": [
+    "Модули/Core.md",
+    "Модули/Physics.md",
+    "Модули/Autopilot.md",
+    "Модули/Drone.md",
+    "Модули/Scene.md",
+    "Карта проекта.canvas",
+    "UI/UI обзор.md",
+    "Архитектура/Состояние (simState).md",
+    "00 Карта проекта.md"
+  ]
+}
