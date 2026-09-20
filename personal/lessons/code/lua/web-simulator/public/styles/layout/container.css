@@ -44,6 +44,9 @@
 .workspace-sidebar.is-collapsed {
     width: 64px;
     min-width: 64px;
+    border: none;
+    box-shadow: none;
+    background: transparent;
 }
 
 .mobile-scene-page {

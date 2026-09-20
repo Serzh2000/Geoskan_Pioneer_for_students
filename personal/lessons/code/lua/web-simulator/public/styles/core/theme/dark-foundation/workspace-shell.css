@@ -7,6 +7,10 @@
     background: rgba(15, 23, 42, 0.84);
 }
 
+:root[data-theme='dark'] .workspace-sidebar.is-collapsed {
+    background: transparent;
+}
+
 :root[data-theme='dark'] .sidebar-tabs {
     background: #0f172a;
     border-right-color: rgba(148, 163, 184, 0.12);
