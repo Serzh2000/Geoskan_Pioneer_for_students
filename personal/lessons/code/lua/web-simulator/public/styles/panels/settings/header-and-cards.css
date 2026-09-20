@@ -41,6 +41,58 @@
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
 }
 
+/* The settings panel is a control centre, not a long form. Each subject is a
+   native disclosure, preserving keyboard support and keeping infrequent
+   options out of the way until the user asks for them. */
+#settings-panel details.settings-card {
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: none;
+}
+
+#settings-panel details.settings-card > summary.settings-card__header {
+    min-height: 72px;
+    padding: 17px 46px 17px 18px;
+    cursor: pointer;
+    list-style: none;
+    position: relative;
+}
+
+#settings-panel details.settings-card > summary.settings-card__header::-webkit-details-marker {
+    display: none;
+}
+
+#settings-panel details.settings-card > summary.settings-card__header::after {
+    content: '';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-right: 1.5px solid #64748b;
+    border-bottom: 1.5px solid #64748b;
+    transform: translateY(-70%) rotate(45deg);
+    transition: transform .16s ease;
+}
+
+#settings-panel details.settings-card[open] > summary.settings-card__header::after {
+    transform: translateY(-30%) rotate(225deg);
+}
+
+#settings-panel details.settings-card > .settings-card__body {
+    padding: 0 18px 18px;
+}
+
+#settings-panel details.settings-card > .settings-card__body::before {
+    content: '';
+    display: block;
+    height: 1px;
+    margin-bottom: 16px;
+    background: #e7ebef;
+}
+
 #settings-panel .settings-card__header {
     display: flex;
     align-items: flex-start;
