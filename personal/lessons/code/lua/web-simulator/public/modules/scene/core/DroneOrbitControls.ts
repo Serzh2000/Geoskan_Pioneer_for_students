@@ -7,7 +7,10 @@ import * as THREE from 'three';
  */
 const MIN_RADIUS = 0.5;
 const MAX_RADIUS = 120;
-const MIN_TARGET_Z = 0;
+// A hard floor at 0 stopped a downward right-click pan dead the instant the
+// focus point touched ground level, even though the camera itself was still
+// well above it. Some negative headroom lets that gesture keep moving.
+const MIN_TARGET_Z = -8;
 const MAX_TARGET_Z = 12;
 const MAX_TARGET_DISTANCE = 150;
 
