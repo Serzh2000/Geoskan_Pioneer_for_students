@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { loadTrainingTemplate } from '../training-props.js';
+import { hasTrainingPropsAsset, loadTrainingTemplate } from '../training-props.js';
 import { BuildingWindowSlot } from './shared.js';
 
 let templatePromise: Promise<THREE.Group> | undefined;
@@ -62,10 +62,11 @@ export async function populateWindowsAndEntrance(
     resolveWindowGlassMaterial: (slot: BuildingWindowSlot) => THREE.Material,
     windowMaterials: WindowModuleMaterials,
     entranceMaterials: EntranceModuleMaterials
-): Promise<void> {
+): Promise<boolean> {
+    if (!hasTrainingPropsAsset) return false;
     const generation = group.userData.rebuildGeneration;
     const template = await loadTemplate();
-    if (group.userData.rebuildGeneration !== generation) return;
+    if (group.userData.rebuildGeneration !== generation) return false;
     const windowSource = template.getObjectByName('V2_WindowModule');
     const entranceSource = template.getObjectByName('V2_EntranceModule');
     const floorSource = template.getObjectByName('V2_BuildingFloor');
@@ -97,4 +98,5 @@ export async function populateWindowsAndEntrance(
         applyNamedMaterials(instance, entranceMaterials);
         group.add(instance);
     }
+    return true;
 }

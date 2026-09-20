@@ -62,6 +62,16 @@ function rebuildApartmentBuilding(group: THREE.Group) {
     const base = new THREE.Mesh(new THREE.BoxGeometry(width + 0.16, depth + 0.16, 0.65), baseMat);
     base.position.z = 0.325; group.add(base);
 
+    // Keep a compact, proportionate shell while the authored Blender modules load.
+    // This also makes the object usable in non-browser previews where asset URLs are absent.
+    const proxy = new THREE.Group();
+    proxy.name = '__apartment_proxy';
+    const proxyBody = new THREE.Mesh(new THREE.BoxGeometry(width, depth, floors * floorHeight), bodyMat);
+    proxyBody.position.z = 0.65 + floors * floorHeight / 2;
+    const proxyRoof = new THREE.Mesh(new THREE.BoxGeometry(width + 0.12, depth + 0.12, 0.22), roofMat);
+    proxyRoof.position.z = 0.65 + floors * floorHeight + 0.11;
+    proxy.add(proxyBody, proxyRoof); group.add(proxy);
+
     // Merge+shadow the shell now so it stays a handful of draw calls even before the
     // async window/entrance modules (below) arrive; the merge runs again once they land.
     mergeBuildingShell(group);
@@ -121,8 +131,15 @@ function rebuildApartmentBuilding(group: THREE.Group) {
         }
     ).catch((error) => {
         console.error('[Buildings] Failed to load window/entrance modules', error);
-    }).then(() => {
+        return false;
+    }).then((loaded) => {
         if (group.userData.rebuildGeneration !== generation) return;
+        if (!loaded) return;
+        const loadingProxy = group.getObjectByName('__apartment_proxy');
+        loadingProxy?.removeFromParent();
+        loadingProxy?.traverse((item) => {
+            if (item instanceof THREE.Mesh) item.geometry.dispose();
+        });
 
         mergeBuildingShell(group);
         if (!windowIncidents.some(incident => incident.kind === 'fire')) fireWindowMat.dispose();
