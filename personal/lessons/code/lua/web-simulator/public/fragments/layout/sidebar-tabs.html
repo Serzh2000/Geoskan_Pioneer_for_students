@@ -79,6 +79,12 @@
                     <path d="M21 6l0 13"></path>
                 </svg>
             </button>
+            <!-- Логи: hidden from the rail, kept for future use. The Логи
+                 fragment/module code (logger.ts, journal.ts, logs.html/css) is
+                 untouched and still records every log() call - only this
+                 entry point is disabled, replaced by the editor's own
+                 read-only terminal drawer. Restore this button
+                 (openPanel('logs-panel')) to bring the sidebar entry back.
             <button class="sidebar-tab-btn" type="button" onclick="openPanel('logs-panel')" title="Логи" aria-label="Логи">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-list-details" aria-hidden="true">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -90,6 +96,8 @@
                     <path d="M3 15a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4"></path>
                 </svg>
             </button>
+            -->
+
             <div class="sidebar-tabs__spacer" aria-hidden="true"></div>
             <button
                 id="theme-toggle"

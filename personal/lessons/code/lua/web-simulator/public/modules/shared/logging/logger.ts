@@ -37,6 +37,16 @@ const MAX_LOG_ENTRIES = 400;
 const logEntries: LogRecord[] = [];
 let activeCategory: LogCategoryKey = 'all';
 let renderScheduled = false;
+const logListeners = new Set<() => void>();
+
+export function getLogEntries(): readonly LogRecord[] {
+    return logEntries;
+}
+
+export function onLogsChanged(callback: () => void): () => void {
+    logListeners.add(callback);
+    return () => logListeners.delete(callback);
+}
 
 export function extractTagAndMessage(rawMessage: string): ParsedLogMessage {
     const trimmedMessage = rawMessage.trim();
@@ -75,7 +85,7 @@ function classifyLogTone(level: LogLevel, tag: string): LogTone {
     return 'info';
 }
 
-function createLogEntryElement(record: LogRecord): HTMLElement {
+export function createLogEntryElement(record: LogRecord): HTMLElement {
     const entry = document.createElement('article');
     entry.className = `log-entry log-entry--${record.tone}`;
     entry.dataset.category = record.category;
@@ -178,6 +188,7 @@ function renderLogsUI() {
     }
 
     renderJournal(logs, logEntries);
+    logListeners.forEach((callback) => callback());
 }
 
 function scheduleLogsRender() {

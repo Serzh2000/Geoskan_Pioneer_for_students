@@ -25,9 +25,59 @@
                             Скачать код
                         </button>
                     </div>
-                    <button class="panel-close-btn" onclick="closePanel()">✕</button>
+                    <div class="editor-header-actions">
+                        <button
+                            type="button"
+                            id="editor-terminal-toggle-btn"
+                            class="panel-close-btn"
+                            title="Терминал"
+                            aria-label="Открыть терминал"
+                            aria-pressed="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-terminal-2" aria-hidden="true">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M6 9l4 4l-4 4"></path>
+                                <path d="M13 17l6 0"></path>
+                            </svg>
+                        </button>
+                        <button
+                            type="button"
+                            id="editor-notifications-toggle-btn"
+                            class="panel-close-btn"
+                            title="Уведомления"
+                            aria-label="Открыть уведомления"
+                            aria-pressed="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-bell" aria-hidden="true">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6"></path>
+                                <path d="M9 17v1a3 3 0 0 0 6 0v-1"></path>
+                            </svg>
+                            <span id="editor-notifications-badge" class="editor-header-actions__badge" hidden>0</span>
+                        </button>
+                        <button class="panel-close-btn" onclick="closePanel()">✕</button>
+                    </div>
                 </div>
                 <div class="panel-content panel-content--editor">
                     <div id="editor" class="editor-panel-host"></div>
+
+                    <aside id="editor-terminal" class="editor-terminal" hidden aria-label="Терминал (только чтение)">
+                        <div class="editor-terminal__header">
+                            <span class="editor-terminal__title">Терминал</span>
+                            <button type="button" id="editor-terminal-close-btn" class="panel-close-btn" aria-label="Закрыть терминал">✕</button>
+                        </div>
+                        <div id="editor-terminal-stream" class="editor-terminal__stream" role="log" aria-live="polite">
+                            <div class="editor-terminal__empty">Событий пока нет.</div>
+                        </div>
+                    </aside>
+
+                    <aside id="editor-notifications-center" class="editor-notifications" hidden aria-label="Центр уведомлений">
+                        <div class="editor-notifications__header">
+                            <span class="editor-notifications__title">Уведомления</span>
+                            <button type="button" id="editor-notifications-clear-btn" class="editor-notifications__clear">Очистить</button>
+                            <button type="button" id="editor-notifications-close-btn" class="panel-close-btn" aria-label="Закрыть уведомления">✕</button>
+                        </div>
+                        <div id="editor-notifications-list" class="editor-notifications__list">
+                            <div class="editor-notifications__empty">Уведомлений нет.</div>
+                        </div>
+                    </aside>
                 </div>
             </div>

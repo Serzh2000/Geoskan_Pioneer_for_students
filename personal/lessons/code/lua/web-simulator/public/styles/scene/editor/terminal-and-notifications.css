@@ -1,0 +1,288 @@
+/*
+ * Editor header action buttons (terminal, notifications) and the two
+ * drawers they open: a read-only terminal mirroring the log stream, and a
+ * notification-center history for the toast popups (overlays/simulation-toast.css).
+ */
+.editor-header-actions {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.editor-header-actions__badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 14px;
+    height: 14px;
+    padding: 0 3px;
+    border-radius: 999px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 14px;
+    text-align: center;
+}
+
+#editor-terminal-toggle-btn,
+#editor-notifications-toggle-btn {
+    position: relative;
+}
+
+#editor-terminal-toggle-btn[aria-pressed='true'],
+#editor-notifications-toggle-btn[aria-pressed='true'] {
+    color: var(--accent-color);
+    background: var(--accent-soft);
+}
+
+.panel-content--editor {
+    position: relative;
+}
+
+/* Read-only terminal drawer - slides in from the right, docked over the
+   editor host rather than replacing existing layout/resize logic. */
+.editor-terminal {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(360px, 90%);
+    display: flex;
+    flex-direction: column;
+    background: #0b1120;
+    color: #d1d9e6;
+    border-left: 1px solid rgba(148, 163, 184, 0.18);
+    box-shadow: -12px 0 32px rgba(15, 23, 42, 0.22);
+    z-index: 8;
+    transform: translateX(100%);
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.editor-terminal:not([hidden]) {
+    transform: translateX(0);
+}
+
+.editor-terminal[hidden] {
+    display: flex;
+    pointer-events: none;
+}
+
+.editor-terminal__header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--panel-header-height);
+    padding: 0 var(--panel-pad-x);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.editor-terminal__title {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+}
+
+.editor-terminal .panel-close-btn {
+    color: #94a3b8;
+}
+
+.editor-terminal .panel-close-btn:hover {
+    color: #fff;
+    background: rgba(148, 163, 184, 0.16);
+    border-color: transparent;
+}
+
+.editor-terminal__stream {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--panel-pad-x);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.editor-terminal__stream .log-entry {
+    background: rgba(255, 255, 255, 0.04);
+    color: #cbd5e1;
+}
+
+.editor-terminal__stream .log-entry:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(148, 163, 184, 0.14);
+    box-shadow: none;
+}
+
+.editor-terminal__stream .log-entry--warn { color: #fbbf6a; }
+.editor-terminal__stream .log-entry--warn .log-entry__tag { color: #fbbf6a; }
+.editor-terminal__stream .log-entry--error { color: #fca5a5; }
+.editor-terminal__stream .log-entry--error .log-entry__tag { color: #fca5a5; }
+.editor-terminal__stream .log-entry--success { color: #86efac; }
+.editor-terminal__stream .log-entry--success .log-entry__tag { color: #86efac; }
+.editor-terminal__stream .log-entry__time { color: #64748b; }
+
+.editor-terminal__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+    padding: var(--panel-gap) var(--panel-pad-x);
+    color: #64748b;
+    text-align: center;
+    font-family: var(--font-sans);
+    font-size: 13px;
+}
+
+/* Notification center - browsable history of every toast, docked the same
+   way as the terminal so the two drawers share one visual language. */
+.editor-notifications {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(360px, 90%);
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 248, 250, 0.98) 100%);
+    border-left: 1px solid rgba(9, 9, 11, 0.08);
+    box-shadow: -12px 0 32px rgba(15, 23, 42, 0.1);
+    z-index: 9;
+    transform: translateX(100%);
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.editor-notifications:not([hidden]) {
+    transform: translateX(0);
+}
+
+.editor-notifications[hidden] {
+    display: flex;
+    pointer-events: none;
+}
+
+.editor-notifications__header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: var(--panel-header-height);
+    padding: 0 var(--panel-pad-x);
+    border-bottom: 1px solid rgba(9, 9, 11, 0.08);
+}
+
+.editor-notifications__title {
+    flex: 1;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-color);
+}
+
+.editor-notifications__clear {
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: var(--radius-sm);
+}
+
+.editor-notifications__clear:hover {
+    color: var(--danger);
+    background: rgba(209, 59, 46, 0.08);
+}
+
+.editor-notifications__list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--panel-pad-x);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.editor-notifications__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+    padding: var(--panel-gap) var(--panel-pad-x);
+    color: var(--text-muted);
+    text-align: center;
+    font-size: 13px;
+}
+
+.editor-notifications__item {
+    padding: 10px var(--panel-pad-x);
+    border-radius: var(--panel-radius-inner);
+    border: 1px solid rgba(9, 9, 11, 0.07);
+    background: rgba(255, 255, 255, 0.7);
+    border-left: 3px solid var(--text-muted);
+}
+
+.editor-notifications__meta {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+.editor-notifications__item-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.editor-notifications__item-message {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    word-break: break-word;
+}
+
+.editor-notifications__item-details {
+    margin-top: 6px;
+    font-size: 12px;
+}
+
+.editor-notifications__item--info { border-left-color: #2563eb; }
+.editor-notifications__item--warn { border-left-color: var(--warning); }
+.editor-notifications__item--error { border-left-color: var(--danger); }
+
+:root[data-theme='dark'] .editor-notifications {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(2, 6, 23, 0.98) 100%);
+    border-left-color: rgba(148, 163, 184, 0.18);
+}
+
+:root[data-theme='dark'] .editor-notifications__header {
+    border-bottom-color: rgba(148, 163, 184, 0.16);
+}
+
+:root[data-theme='dark'] .editor-notifications__item {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(148, 163, 184, 0.14);
+}
+
+:root[data-theme='dark'] .editor-notifications__item-title {
+    color: var(--text-color);
+}
+
+@media (max-width: 640px) {
+    .editor-terminal,
+    .editor-notifications {
+        width: 100%;
+    }
+}
