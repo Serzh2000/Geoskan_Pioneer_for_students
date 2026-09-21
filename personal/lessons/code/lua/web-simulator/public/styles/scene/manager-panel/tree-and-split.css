@@ -358,7 +358,7 @@
 
 :root[data-theme='dark'] .scene-tree-search input,
 :root[data-theme='dark'] .scene-tree-toolbar__btn {
-    background: rgba(15, 23, 42, 0.88);
+    background: rgba(10, 10, 10, 0.88);
     border-color: rgba(148, 163, 184, 0.18);
     color: var(--text-color);
 }
@@ -368,7 +368,7 @@
 }
 
 :root[data-theme='dark'] .scene-tree-toolbar__btn:hover {
-    background: rgba(30, 41, 59, 0.96);
+    background: rgba(26, 26, 26, 0.96);
     border-color: rgba(255, 107, 0, 0.32);
     color: var(--text-strong);
 }
@@ -390,18 +390,18 @@
 }
 
 :root[data-theme='dark'] .scene-tree-row:hover .scene-tree-main {
-    background: rgba(30, 41, 59, 0.9);
+    background: rgba(26, 26, 26, 0.9);
     border-color: rgba(255, 107, 0, 0.2);
 }
 
 :root[data-theme='dark'] .scene-tree-row.is-selected .scene-tree-main {
-    background: linear-gradient(90deg, rgba(255, 122, 0, 0.16), rgba(30, 41, 59, 0.92) 42%);
+    background: linear-gradient(90deg, rgba(255, 122, 0, 0.16), rgba(26, 26, 26, 0.92) 42%);
     border-color: rgba(255, 107, 0, 0.26);
     box-shadow: inset 2px 0 0 #ff6b00;
 }
 
 :root[data-theme='dark'] .scene-tree-kind {
-    background: rgba(15, 23, 42, 0.9);
+    background: rgba(10, 10, 10, 0.9);
     border-color: rgba(148, 163, 184, 0.18);
     color: var(--text-muted);
 }
@@ -419,7 +419,7 @@
 
 /* The tree row owns its own surface now; the legacy per-item card styling would double it up. */
 :root[data-theme='dark'] .scene-tree-main .scene-manager-item__icon {
-    background: rgba(30, 41, 59, 0.9);
+    background: rgba(26, 26, 26, 0.9);
 }
 
 @media (max-width: 900px) {

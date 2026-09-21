@@ -33,7 +33,7 @@
 }
 
 :root[data-theme='dark'] .scene-hotbar-toggle-btn {
-    background: rgba(15, 23, 42, 0.92);
+    background: rgba(10, 10, 10, 0.92);
     border-color: rgba(148, 163, 184, 0.18);
     color: #e2e8f0;
 }
@@ -224,7 +224,7 @@ body.is-scene-hotbar-active .scene-hotbar {
 }
 
 :root[data-theme='dark'] .scene-hotbar {
-    background: rgba(15, 23, 42, 0.96);
+    background: rgba(10, 10, 10, 0.96);
     border-color: rgba(148, 163, 184, 0.18);
 }
 
@@ -239,7 +239,7 @@ body.is-scene-hotbar-active .scene-hotbar {
 }
 
 :root[data-theme='dark'] .scene-hotbar__item {
-    background: rgba(30, 41, 59, 0.7);
+    background: rgba(26, 26, 26, 0.7);
     border-color: rgba(148, 163, 184, 0.18);
     color: #e2e8f0;
 }

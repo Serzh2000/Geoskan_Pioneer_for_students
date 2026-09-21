@@ -79,7 +79,7 @@
 
 :root[data-theme="dark"] .logs-tab-btn {
     border-color: rgba(148, 163, 184, 0.15);
-    background: rgba(15, 23, 42, 0.78);
+    background: rgba(10, 10, 10, 0.78);
     color: #94a3b8;
 }
 

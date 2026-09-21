@@ -70,7 +70,7 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
 
     const scene = new THREE.Scene();
     let activeTheme: PreviewTheme = getPreviewTheme();
-    scene.background = new THREE.Color(activeTheme === 'dark' ? 0x0f172a : 0xf8f9fa);
+    scene.background = new THREE.Color(activeTheme === 'dark' ? 0x0a0a0a : 0xf8f9fa);
 
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 200);
     camera.up.set(0, 0, 1);
@@ -125,9 +125,9 @@ export function initSceneTypePreview(elements: SceneManagerDomRefs): SceneTypePr
 
     const applyPreviewTheme = (theme: PreviewTheme) => {
         activeTheme = theme;
-        scene.background = new THREE.Color(theme === 'dark' ? 0x0f172a : 0xf8f9fa);
+        scene.background = new THREE.Color(theme === 'dark' ? 0x0a0a0a : 0xf8f9fa);
         ambient.color.set(theme === 'dark' ? 0xe2e8f0 : 0xffffff);
-        ambient.groundColor.set(theme === 'dark' ? 0x020617 : 0xdfe7ef);
+        ambient.groundColor.set(theme === 'dark' ? 0x000000 : 0xdfe7ef);
         ambient.intensity = theme === 'dark' ? 1.3 : 1.55;
         keyLight.intensity = theme === 'dark' ? 1.85 : 1.5;
         fillLight.color.set(theme === 'dark' ? 0xffb067 : 0xfff3e8);

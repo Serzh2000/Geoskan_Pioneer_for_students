@@ -3,7 +3,7 @@
 :root[data-theme='dark'] .led-matrix-card,
 :root[data-theme='dark'] .swarm-bridge-card,
 :root[data-theme='dark'] .swarm-connection-card {
-    background: rgba(15, 23, 42, 0.92) !important;
+    background: rgba(10, 10, 10, 0.92) !important;
     border-color: rgba(148, 163, 184, 0.12);
     box-shadow: none;
 }
@@ -24,7 +24,7 @@
 
 :root[data-theme='dark'] .swarm-list {
     border-color: rgba(148, 163, 184, 0.12);
-    background: rgba(2, 6, 23, 0.32);
+    background: rgba(0, 0, 0, 0.32);
 }
 
 :root[data-theme='dark'] .swarm-list__item {
@@ -34,7 +34,7 @@
 }
 
 :root[data-theme='dark'] .swarm-list__item:hover {
-    background: rgba(30, 41, 59, 0.82);
+    background: rgba(26, 26, 26, 0.82);
     box-shadow: none;
     border-color: rgba(148, 163, 184, 0.08);
 }
@@ -47,7 +47,7 @@
 :root[data-theme='dark'] .swarm-list__item-icon,
 :root[data-theme='dark'] .swarm-list__item-badge,
 :root[data-theme='dark'] .swarm-list__empty {
-    background: rgba(15, 23, 42, 0.74);
+    background: rgba(10, 10, 10, 0.74);
     border-color: rgba(148, 163, 184, 0.12);
     color: var(--text-muted);
     box-shadow: none;
@@ -104,7 +104,7 @@
 }
 
 :root[data-theme='dark'] .swarm-bridge-card__detail {
-    background: rgba(2, 6, 23, 0.42);
+    background: rgba(0, 0, 0, 0.42);
     border-color: rgba(148, 163, 184, 0.12);
     color: #cbd5e1;
 }
@@ -154,13 +154,13 @@
 
 :root[data-theme='dark'] .swarm-field input,
 :root[data-theme='dark'] .swarm-field select {
-    background: rgba(15, 23, 42, 0.96);
+    background: rgba(10, 10, 10, 0.96);
     border-color: rgba(148, 163, 184, 0.18);
     color: var(--text-strong);
 }
 
 :root[data-theme='dark'] .swarm-check {
-    background: rgba(2, 6, 23, 0.42);
+    background: rgba(0, 0, 0, 0.42);
     border-color: rgba(148, 163, 184, 0.12);
     color: var(--text-color);
 }

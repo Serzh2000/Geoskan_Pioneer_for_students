@@ -263,7 +263,7 @@
 .editor-notifications__item--error { border-left-color: var(--danger); }
 
 :root[data-theme='dark'] .editor-notifications {
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(2, 6, 23, 0.98) 100%);
+    background: linear-gradient(180deg, rgba(10, 10, 10, 0.98) 0%, rgba(0, 0, 0, 0.98) 100%);
     border-left-color: rgba(148, 163, 184, 0.18);
 }
 

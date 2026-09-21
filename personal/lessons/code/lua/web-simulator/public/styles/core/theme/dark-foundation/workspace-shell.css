@@ -4,7 +4,7 @@
 
 :root[data-theme='dark'] .workspace-sidebar {
     border-color: rgba(148, 163, 184, 0.14);
-    background: rgba(15, 23, 42, 0.84);
+    background: rgba(10, 10, 10, 0.84);
 }
 
 :root[data-theme='dark'] .workspace-sidebar.is-collapsed {
@@ -12,7 +12,7 @@
 }
 
 :root[data-theme='dark'] .sidebar-tabs {
-    background: #0f172a;
+    background: #0a0a0a;
 }
 
 :root[data-theme='dark'] .sidebar-tab-btn {
@@ -28,13 +28,13 @@
 }
 
 :root[data-theme='dark'] .sidebar-tab-btn.active {
-    background: rgba(30, 41, 59, 0.9);
+    background: rgba(26, 26, 26, 0.9);
     border-color: rgba(148, 163, 184, 0.12);
     color: #f8fafc;
 }
 
 :root[data-theme='dark'] .sidebar-panels {
-    background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+    background: linear-gradient(180deg, #0a0a0a 0%, #111111 100%);
 }
 
 /* Higher specificity than the base .sidebar-panels rule below would
@@ -46,7 +46,7 @@
 
 :root[data-theme='dark'] .panel-header {
     border-bottom-color: rgba(148, 163, 184, 0.12);
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(17, 24, 39, 0.92) 100%);
+    background: linear-gradient(180deg, rgba(10, 10, 10, 0.96) 0%, rgba(17, 17, 17, 0.92) 100%);
 }
 
 :root[data-theme='dark'] .panel-title,
@@ -66,11 +66,11 @@
 
 :root[data-theme='dark'] .settings-panel-content,
 :root[data-theme='dark'] .sidebar-panel#channel-monitor-panel .settings-panel-content {
-    background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+    background: linear-gradient(180deg, #0a0a0a 0%, #111111 100%);
 }
 
 :root[data-theme='dark'] .sidebar-panel#docs-panel .panel-content,
 :root[data-theme='dark'] .sidebar-panels.is-fullscreen {
-    background: #0b1220;
+    background: #080808;
 }
 

@@ -185,14 +185,14 @@ export function setupSyntaxHighlighting(monaco: any) {
             { token: 'keyword', foreground: 'c084fc', fontStyle: 'bold' }
         ],
         colors: {
-            'editor.background': '#0f172a',
+            'editor.background': '#0a0a0a',
             'editor.foreground': '#e5e7eb',
-            'editor.lineHighlightBackground': '#172033',
+            'editor.lineHighlightBackground': '#161616',
             'editorLineNumber.foreground': '#64748b',
             'editorLineNumber.activeForeground': '#e5e7eb',
             'editorCursor.foreground': '#ff9c53',
             'editor.selectionBackground': '#7c2d1238',
-            'editor.inactiveSelectionBackground': '#33415588'
+            'editor.inactiveSelectionBackground': '#3a3a3a88'
         }
     });
 }

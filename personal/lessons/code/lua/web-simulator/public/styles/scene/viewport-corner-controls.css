@@ -68,7 +68,7 @@
 }
 
 :root[data-theme='dark'] .viewport-corner-btn {
-    background: rgba(30, 41, 59, 0.94);
+    background: rgba(26, 26, 26, 0.94);
     border-color: rgba(148, 163, 184, 0.24);
     color: #cbd5e1;
 }

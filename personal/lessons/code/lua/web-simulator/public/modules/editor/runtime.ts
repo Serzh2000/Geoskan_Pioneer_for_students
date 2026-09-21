@@ -43,12 +43,12 @@ function ensureBlocklyThemesBuilt(): boolean {
             size: 12
         },
         componentStyles: {
-            workspaceBackgroundColour: '#0f172a',
-            toolboxBackgroundColour: '#0f172a',
+            workspaceBackgroundColour: '#0a0a0a',
+            toolboxBackgroundColour: '#0a0a0a',
             toolboxForegroundColour: '#e2e8f0',
-            flyoutBackgroundColour: '#0f172a',
+            flyoutBackgroundColour: '#0a0a0a',
             flyoutForegroundColour: '#e2e8f0',
-            scrollbarColour: '#334155',
+            scrollbarColour: '#3a3a3a',
             insertionMarkerColour: '#7dd3fc',
             insertionMarkerOpacity: 0.32,
             markerColour: '#7dd3fc',

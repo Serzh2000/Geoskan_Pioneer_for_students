@@ -61,7 +61,7 @@
 .simulation-toast--error .simulation-toast__title { color: var(--danger); }
 
 :root[data-theme='dark'] .simulation-toast {
-    background: rgba(15, 23, 42, 0.97);
+    background: rgba(10, 10, 10, 0.97);
     border-color: rgba(148, 163, 184, 0.16);
 }
 
