@@ -7,6 +7,7 @@ import {
     LED_MATRIX_PANEL_PLACEMENT,
     PlacementConfig
 } from './layout.js';
+import { createLedGlowSprite } from './led-glow.js';
 
 const objLoader = new OBJLoader();
 const baseLedModelCache = new Map<string, Promise<THREE.Group>>();
@@ -14,13 +15,17 @@ const BASE_LED_PACKAGE_TOP_Z = 1.57 * CAD_MM_TO_SCENE_SCALE;
 const BASE_LED_LIGHT_Z = BASE_LED_PACKAGE_TOP_Z;
 const BASE_LED_MODEL_Z_OFFSET = 0.00015;
 const MATRIX_GLOW_LIGHT_Z = 0.02;
+const BASE_LED_GLOW_DIAMETER = 15 * CAD_MM_TO_SCENE_SCALE;
+const MATRIX_LED_GLOW_DIAMETER = 5.5 * CAD_MM_TO_SCENE_SCALE;
 
 export function createLEDs() {
     const ledGroup = new THREE.Group();
-    
+
     // 4 discrete WS2812B LEDs mounted directly on the frame plate.
     BASE_LED_PLACEMENTS.forEach((config, i) => {
-        ledGroup.add(createLedAssembly(`base_led_${i}`, `base_led_body_${i}`, `base_led_light_${i}`, config, true));
+        ledGroup.add(createLedAssembly(
+            `base_led_${i}`, `base_led_body_${i}`, `base_led_light_${i}`, config, true, BASE_LED_GLOW_DIAMETER
+        ));
     });
 
     ledGroup.add(createLEDMatrix());
@@ -56,7 +61,9 @@ export function createLEDMatrix() {
                 `matrix_led_${index}`,
                 `matrix_led_body_${index}`,
                 undefined,
-                { position: [xOffset, yOffset, 0.002] }
+                { position: [xOffset, yOffset, 0.002] },
+                false,
+                MATRIX_LED_GLOW_DIAMETER
             ));
         }
     }
@@ -70,7 +77,8 @@ function createLedAssembly(
     bodyName: string,
     lightName: string | undefined,
     config: PlacementConfig,
-    withPointLight = false
+    withPointLight = false,
+    glowDiameter = BASE_LED_GLOW_DIAMETER
 ) {
     const ledContainer = new THREE.Group();
     ledContainer.name = objectName;
@@ -96,6 +104,10 @@ function createLedAssembly(
         light.position.z = BASE_LED_LIGHT_Z;
         ledContainer.add(light);
     }
+
+    const glow = createLedGlowSprite(glowDiameter);
+    glow.position.z = BASE_LED_PACKAGE_TOP_Z;
+    ledContainer.add(glow);
 
     return ledContainer;
 }

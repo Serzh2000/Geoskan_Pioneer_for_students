@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import pioneerUrl from '../../assets/models/pioneer/pioneer-basic.glb?url';
+import { createLedGlowSprite } from './led-glow.js';
+import { CAD_MM_TO_SCENE_SCALE } from './layout.js';
+
+const BASE_LED_GLOW_DIAMETER = 15 * CAD_MM_TO_SCENE_SCALE;
+const MODULE_LED_GLOW_DIAMETER = 5.5 * CAD_MM_TO_SCENE_SCALE;
+const MODULE_LED_GLOW_Z_OFFSET = 0.0015;
 
 let templatePromise: Promise<THREE.Group> | undefined;
 const pendingModels = new WeakMap<THREE.Object3D, Promise<void>>();
@@ -93,6 +99,9 @@ export function attachBlenderModel(model: THREE.Group, template: THREE.Group): v
         light.position.copy(center);
         light.position.z += i < 2 ? 0.004 : -0.004;
         led.add(light);
+        const glow = createLedGlowSprite(BASE_LED_GLOW_DIAMETER);
+        glow.position.copy(light.position);
+        led.add(glow);
         leds.add(led);
     }
     // Optional accessory board (05B in the source .blend): only present once a
@@ -107,6 +116,15 @@ export function attachBlenderModel(model: THREE.Group, template: THREE.Group): v
         glow.position.copy(moduleCenter);
         glow.position.z += 0.01;
         ledModule.add(glow);
+        for (let i = 0; i < 25; i++) {
+            const pixel = ledModule.getObjectByName(`module_led_${i}`);
+            if (!pixel) continue;
+            const pixelCenter = new THREE.Box3().setFromObject(pixel).getCenter(new THREE.Vector3());
+            const pixelGlow = createLedGlowSprite(MODULE_LED_GLOW_DIAMETER);
+            pixelGlow.position.copy(pixelCenter);
+            pixelGlow.position.z += MODULE_LED_GLOW_Z_OFFSET;
+            pixel.add(pixelGlow);
+        }
         ledModule.visible = false;
         ledModule.userData.showWhenActive = true;
         leds.add(ledModule);
