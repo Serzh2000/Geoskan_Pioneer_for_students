@@ -1,0 +1,91 @@
+/*
+ * Header replacement: the run/stop/reset buttons and the sidebar-rail toggle
+ * now float over the whole app instead of sitting in a page header (removed -
+ * the viewport fills the page). Fixed to the viewport itself, as direct
+ * children of <main class="container"> - NOT of .scene-container, which
+ * disappears entirely while the code editor is in full-width mode
+ * (.container[data-workspace-page='code'] hides .mobile-scene-page), and
+ * these need to stay reachable (to get back out of the editor) regardless.
+ * z-index sits just above the rail's own peek overlay (310) so the toggle
+ * stays clickable over it, matching the old header's precedence.
+ */
+
+.viewport-corner-btn {
+    position: fixed;
+    top: var(--panel-pad-x);
+    left: var(--panel-pad-x);
+    z-index: 315;
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    background: rgba(255, 255, 255, 0.94);
+    color: #6b7280;
+    cursor: pointer;
+    transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease, left 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.viewport-corner-btn:hover {
+    color: #4b5563;
+    border-color: rgba(100, 116, 139, 0.28);
+    background: rgba(255, 255, 255, 0.98);
+}
+
+.viewport-corner-btn.is-active,
+.viewport-corner-btn[aria-pressed='true'] {
+    color: var(--accent-color);
+    border-color: rgba(255, 107, 0, 0.24);
+    background: rgba(255, 107, 0, 0.1);
+}
+
+.viewport-corner-btn.is-active:hover {
+    color: var(--accent-color);
+    background: rgba(255, 107, 0, 0.14);
+}
+
+.viewport-run-controls {
+    position: fixed;
+    bottom: var(--panel-pad-x);
+    right: var(--panel-pad-x);
+    z-index: 315;
+    display: flex;
+    gap: 8px;
+}
+
+.viewport-run-controls button {
+    height: 38px;
+    padding: 0 16px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+:root[data-theme='dark'] .viewport-corner-btn {
+    background: rgba(30, 41, 59, 0.94);
+    border-color: rgba(148, 163, 184, 0.24);
+    color: #cbd5e1;
+}
+
+:root[data-theme='dark'] .viewport-corner-btn:hover {
+    background: rgba(51, 65, 85, 0.96);
+    color: #f8fafc;
+}
+
+/* A real panel is docked and has its own close button - the floating
+   toggle would just sit on top of the panel header, so it steps aside. */
+body.has-open-panel .viewport-corner-btn--rail {
+    display: none;
+}
+
+/* The rail is pinned open with no panel (bare icon strip) - shift the
+   toggle past it instead of sitting on top of its first icon. */
+body.is-rail-docked:not(.has-open-panel) .viewport-corner-btn--rail {
+    left: calc(14px + var(--rail-width) + 12px + var(--panel-pad-x));
+}

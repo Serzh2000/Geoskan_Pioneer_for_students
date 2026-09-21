@@ -11,7 +11,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
 
 :root {
-    --header-height: 60px;
+    /* The top header is gone - the viewport now fills the page. Kept at 0
+       (not deleted) since container.css, panel-shell.css and sidebar-tabs.css
+       all still reference it for their fixed-position offsets. */
+    --header-height: 0px;
     --bg-color: #ffffff;
     --bg-muted: #f4f5f7;
     --bg-elevated: #fafafa;

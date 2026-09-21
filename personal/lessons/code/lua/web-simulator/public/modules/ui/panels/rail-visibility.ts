@@ -30,6 +30,11 @@ export function initRailVisibility(): void {
         const docked = pinned || hasOpenPanel() || mobileQuery.matches;
         document.body.classList.toggle('is-rail-docked', docked);
         document.body.classList.toggle('is-rail-peek', !docked && peeking);
+        // The floating corner toggle would otherwise sit right on top of the
+        // rail/panel it's toggling once either is actually docked - a real
+        // panel already has its own close button, so the corner toggle only
+        // needs to reposition (not disappear) for the bare pinned-rail case.
+        document.body.classList.toggle('has-open-panel', hasOpenPanel());
         const expanded = pinned || hasOpenPanel();
         toggleButton?.setAttribute('aria-pressed', String(expanded));
         toggleButton?.setAttribute('aria-expanded', String(expanded));
@@ -74,8 +79,9 @@ export function initRailVisibility(): void {
             pinned = false;
             (window as any).closeSidebarPanel?.();
         } else {
+            // Just reveal the bare icon rail - it shouldn't guess which tab
+            // the user wants and open one for them.
             pinned = true;
-            (window as any).openSidebarPanel?.(lastPanelId);
         }
         localStorage.setItem(RAIL_PINNED_STORAGE_KEY, pinned ? '1' : '0');
         peeking = false;

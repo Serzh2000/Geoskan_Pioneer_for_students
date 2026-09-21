@@ -26,7 +26,6 @@
     <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
 </head>
 <body>
-    <!-- @include ./fragments/layout/global-header.html -->
     <main class="container" data-mobile-workspace-page="code">
         <div class="mobile-workspace-track">
             <aside class="workspace-sidebar" data-mobile-workspace-panel="code">
@@ -38,6 +37,56 @@
             <!-- @include ./fragments/layout/main-scene.html -->
         </div>
     </main>
+
+    <!--
+        These two live as direct children of <body> - not inside .container -
+        so .container's own `overflow: hidden` can never clip them and no
+        transformed/positioned ancestor can hijack their fixed positioning.
+        They must stay reachable from every workspace page and every panel
+        state, which is exactly what being outside .container guarantees.
+    -->
+    <button
+        id="rail-toggle-btn"
+        type="button"
+        class="viewport-corner-btn viewport-corner-btn--rail"
+        title="Показать панели инструментов"
+        aria-label="Показать панели инструментов"
+        aria-pressed="false">
+        <span class="header-icon-btn__glyph" aria-hidden="true">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="header-icon-btn__svg header-rail-toggle__icon header-rail-toggle__icon--expand">
+                <path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" />
+                <path d="M9 4v16" />
+                <path d="M14 10l2 2l-2 2" />
+            </svg>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="header-icon-btn__svg header-rail-toggle__icon header-rail-toggle__icon--collapse">
+                <path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" />
+                <path d="M9 4v16" />
+                <path d="M15 10l-2 2l2 2" />
+            </svg>
+        </span>
+    </button>
+
+    <div class="viewport-run-controls">
+        <button id="run-btn" class="btn-primary">ЗАПУСТИТЬ</button>
+        <button id="stop-btn" class="btn-secondary header-danger-btn">СТОП</button>
+        <button id="restart-btn" class="btn-secondary">СБРОС</button>
+    </div>
 
     <!-- @include ./fragments/modals/gamepad-wizard.html -->
     <script type="module" src="main.ts"></script>

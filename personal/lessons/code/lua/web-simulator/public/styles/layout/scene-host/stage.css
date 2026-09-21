@@ -29,11 +29,12 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 
-/* Счётчик кадров поверх сцены — вместо прежней шапки вьюпорта. */
+/* Счётчик кадров поверх сцены — вместо прежней шапки вьюпорта.
+   left is offset past the rail-toggle button in the same corner. */
 .scene-hud-readout {
     position: absolute;
     top: 10px;
-    left: 12px;
+    left: 58px;
     z-index: 2;
     pointer-events: none;
     display: inline-flex;

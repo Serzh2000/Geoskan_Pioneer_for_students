@@ -1,12 +1,7 @@
 @media (max-width: 640px) {
     :root {
-        --header-height: 56px;
         /* На узких экранах заголовки панелей компактнее, остальное — общие токены. */
         --panel-header-height: 44px;
-    }
-
-    .header-brand-copy {
-        display: none;
     }
 
     .header-brand {
