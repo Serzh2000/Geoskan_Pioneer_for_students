@@ -9,9 +9,9 @@ import { envGroup } from '../environment/index.js';
 import { createDroneModel, updateLEDs, animateRotors } from '../drone-model/index.js';
 import { updateCamera } from '../scene/core/camera.js';
 import { getCameraMode } from '../scene/core/camera-mode-state.js';
-import { 
-    initScene, scene, camera, renderer, controls, transformControl, 
-    transformHelper, selectionHelper, 
+import {
+    initScene, scene, camera, renderer, controls, freeFlyControls, transformControl,
+    transformHelper, selectionHelper,
     droneMeshes, is3DActive, selectedObject, canvasContainer,
     setSelectedObject, setIsHittingGizmo,
     onWindowResize, syncViewportDependentSceneVisuals
@@ -184,7 +184,7 @@ export function init3D(container: HTMLElement) {
 
         log('3D-сцена загружена.', 'success');
         log('[3D-CLICK] Обработчики pointerdown/pointerup подключены через document capture', 'info');
-        updateCamera(camera, droneMeshes[currentDroneId] || null, controls, getCameraMode());
+        updateCamera(camera, droneMeshes[currentDroneId] || null, controls, getCameraMode(), freeFlyControls);
         
     } catch (e: any) {
         console.error('[3D] Critical error during init3D:', e);
@@ -299,7 +299,7 @@ export function updateDrone3D(dt: number) {
     }
 
     if (droneMeshes[currentDroneId]) {
-        updateCamera(camera, droneMeshes[currentDroneId], controls, cameraMode);
+        updateCamera(camera, droneMeshes[currentDroneId], controls, cameraMode, freeFlyControls, dt);
     }
 
     syncDronePrintBubbles();

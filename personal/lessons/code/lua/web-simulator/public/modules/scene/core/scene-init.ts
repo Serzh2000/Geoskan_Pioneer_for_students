@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { DroneOrbitControls } from './DroneOrbitControls.js';
+import { FreeFlyControls } from './FreeFlyControls.js';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
 import { log } from '../../shared/logging/logger.js';
 import { setupEnvironment, envGroup } from '../../environment/index.js';
@@ -11,6 +12,7 @@ export let scene: THREE.Scene;
 export let camera: THREE.PerspectiveCamera;
 export let renderer: THREE.WebGLRenderer;
 export let controls: DroneOrbitControls;
+export let freeFlyControls: FreeFlyControls;
 
 export let transformControl: TransformControls;
 export let transformHelper: THREE.Object3D;
@@ -218,6 +220,9 @@ export function initScene(container: HTMLElement) {
     controls.addEventListener('change', () => {
         // Убрано сверхподробное логирование вращения камеры
     });
+
+    freeFlyControls = new FreeFlyControls(camera, renderer.domElement);
+    freeFlyControls.enabled = false;
 
     transformControl = new TransformControls(camera, renderer.domElement);
     transformControl.size = 1.15;

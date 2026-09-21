@@ -25,11 +25,19 @@
                             <p class="scene-onboarding__hint">Остальные инструменты — у левого края экрана</p>
                         </div>
 
-                        <div class="camera-controls">
-                            <button onclick="setCameraMode('ground')">Земля</button>
-                            <button onclick="setCameraMode('drone')">Дрон</button>
-                            <button onclick="setCameraMode('fpv')">FPV</button>
-                            <button onclick="setCameraMode('free')">Свободно</button>
+                        <div class="viewport-camera-controls-row">
+                            <div class="camera-controls">
+                                <div class="camera-controls__indicator" aria-hidden="true"></div>
+                                <button onclick="setCameraMode('ground')">Земля</button>
+                                <button onclick="setCameraMode('drone')">Дрон</button>
+                                <button onclick="setCameraMode('fpv')">FPV</button>
+                                <button onclick="setCameraMode('free')">Свободно</button>
+                            </div>
+                            <div class="camera-controls camera-free-mode-controls" id="camera-free-mode-controls" hidden>
+                                <div class="camera-controls__indicator" aria-hidden="true"></div>
+                                <button type="button" onclick="setCameraFreeSubMode('orbit')" title="Вращение вокруг точки">Орбита</button>
+                                <button type="button" onclick="setCameraFreeSubMode('fly')" title="Свободный полёт (WASD)">Полёт</button>
+                            </div>
                         </div>
                     </div>
                 </div>

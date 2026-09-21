@@ -5,6 +5,7 @@ import {
     raycaster,
     mouse,
     camera,
+    controls,
     multiSelectedObjects,
     renderer,
     toggleMultiSelectObject
@@ -24,7 +25,7 @@ import {
     traceClick
 } from './input-helpers.js';
 import { handleSelection, updateObjectSelectionVisuals } from './selection-ui.js';
-import { getCameraMode } from '../core/camera-mode-state.js';
+import { getCameraMode, getFreeCameraSubMode } from '../core/camera-mode-state.js';
 
 export { handleSelection, updateObjectSelectionVisuals };
 
@@ -145,5 +146,28 @@ export function onPointerUp(event: PointerEvent) {
     }
 
     handleDeselection();
+}
+
+// Only meaningful for the free camera's orbit sub-mode - moves the orbit
+// target to whatever was double-clicked (an object, or the ground/an
+// obstacle's surface under the cursor) instead of requiring the Scene
+// Manager's "Навести камеру" action for the same thing.
+export function onSceneDoubleClick(event: MouseEvent) {
+    if (getCameraMode() !== 'free' || getFreeCameraSubMode() !== 'orbit') return;
+    if (!renderer || !camera || !raycaster || !controls) return;
+    if (isLinearFeatureEditingActive()) return;
+
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+
+    try {
+        const intersects = raycaster.intersectObjects(collectPointerTargets(), true);
+        const point = intersects[0]?.point ?? getGroundPointFromPointer();
+        if (point) controls.setTarget(point, true, true);
+    } catch (e) {
+        console.warn('[3D] Double-click focus raycasting failed:', e);
+    }
 }
 

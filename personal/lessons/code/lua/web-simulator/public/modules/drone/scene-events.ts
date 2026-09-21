@@ -1,6 +1,6 @@
 import { log } from '../shared/logging/logger.js';
 import { renderer, selectedObject, transformControl } from '../scene/core/scene-init.js';
-import { onPointerDown, onPointerUp } from '../scene/interaction/input.js';
+import { onPointerDown, onPointerUp, onSceneDoubleClick } from '../scene/interaction/input.js';
 import { handleLinearEditingKeyDown, handleLinearEditingPointerMove } from '../scene/interaction/linear-editing.js';
 import { handleDeselection } from '../scene/interaction/selection.js';
 import { activateTransformMode, deleteSelectedObject } from '../scene/objects/object-manager.js';
@@ -8,8 +8,9 @@ import { activateTransformMode, deleteSelectedObject } from '../scene/objects/ob
 let scenePointerDownCaptureHandler: ((event: PointerEvent) => void) | null = null;
 let scenePointerUpCaptureHandler: ((event: PointerEvent) => void) | null = null;
 let scenePointerMoveCaptureHandler: ((event: PointerEvent) => void) | null = null;
+let sceneDoubleClickCaptureHandler: ((event: MouseEvent) => void) | null = null;
 
-function isScenePointerEvent(event: PointerEvent) {
+function isScenePointerEvent(event: Event) {
     if (!renderer?.domElement) return false;
     const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
     return path.includes(renderer.domElement) || event.target === renderer.domElement;
@@ -26,6 +27,9 @@ export function registerScenePointerHandlers() {
     }
     if (scenePointerMoveCaptureHandler) {
         document.removeEventListener('pointermove', scenePointerMoveCaptureHandler, true);
+    }
+    if (sceneDoubleClickCaptureHandler) {
+        document.removeEventListener('dblclick', sceneDoubleClickCaptureHandler, true);
     }
 
     scenePointerDownCaptureHandler = (event: PointerEvent) => {
@@ -45,9 +49,15 @@ export function registerScenePointerHandlers() {
         handleLinearEditingPointerMove(event);
     };
 
+    sceneDoubleClickCaptureHandler = (event: MouseEvent) => {
+        if (!isScenePointerEvent(event)) return;
+        onSceneDoubleClick(event);
+    };
+
     document.addEventListener('pointerdown', scenePointerDownCaptureHandler, true);
     document.addEventListener('pointerup', scenePointerUpCaptureHandler, true);
     document.addEventListener('pointermove', scenePointerMoveCaptureHandler, true);
+    document.addEventListener('dblclick', sceneDoubleClickCaptureHandler, true);
 }
 
 export function handleSceneKeyDown(event: KeyboardEvent) {

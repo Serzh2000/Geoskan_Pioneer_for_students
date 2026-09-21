@@ -12,6 +12,9 @@ const MAX_RADIUS = 120;
 // well above it. Some negative headroom lets that gesture keep moving.
 const MIN_TARGET_Z = -8;
 const MAX_TARGET_Z = 12;
+// The target is allowed below ground level (for the pan gesture above), but
+// the camera itself never should be - clamped separately in update().
+const MIN_CAMERA_Z = 0.15;
 const MAX_TARGET_DISTANCE = 150;
 
 export class DroneOrbitControls {
@@ -245,7 +248,7 @@ export class DroneOrbitControls {
         const y = this.radius * Math.cos(this.elevation) * Math.sin(this.azimuth);
         const z = this.radius * Math.sin(this.elevation);
 
-        const newPos = new THREE.Vector3(this.target.x + x, this.target.y + y, this.target.z + z);
+        const newPos = new THREE.Vector3(this.target.x + x, this.target.y + y, Math.max(MIN_CAMERA_Z, this.target.z + z));
         this.camera.position.copy(newPos);
 
         // Вычисляем правильный up вектор
