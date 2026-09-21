@@ -57,14 +57,14 @@
     gap: 8px;
 }
 
-.viewport-run-controls button {
+.viewport-run-controls__btn {
+    width: 38px;
     height: 38px;
-    padding: 0 16px;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 12px;
-    white-space: nowrap;
 }
 
 :root[data-theme='dark'] .viewport-corner-btn {
@@ -84,8 +84,8 @@ body.has-open-panel .viewport-corner-btn--rail {
     display: none;
 }
 
-/* The rail is pinned open with no panel (bare icon strip) - shift the
-   toggle past it instead of sitting on top of its first icon. */
-body.is-rail-docked:not(.has-open-panel) .viewport-corner-btn--rail {
-    left: calc(14px + var(--rail-width) + 12px + var(--panel-pad-x));
-}
+/* Base top/left/right/bottom above are only the pre-JS fallback for the
+   first paint - viewport-anchor.ts repositions both controls every frame
+   against the real scene-viewport-card rect (and the docked rail's real
+   right edge), since their inset from the window varies by breakpoint and
+   sidebar state in ways plain CSS can't track. */

@@ -22,6 +22,7 @@ import { initSceneOnboarding } from './scene-onboarding.js';
 import { initCameraModeUI } from './controls/camera-mode.js';
 import { initSceneHotbar } from './scene-hotbar/index.js';
 import { initEditorTerminal } from './panels/editor-terminal.js';
+import { initViewportAnchor } from './viewport-anchor.js';
 import { initFileControls } from './controls/file-controls.js';
 import { initWorkspaceView } from './workspace-view.js';
 import { initMobileEditorViewport } from './mobile-editor-viewport.js';
@@ -109,6 +110,7 @@ export function initUI(callbacks: UICallbacks) {
     initCameraModeUI();
     initSceneHotbar();
     initEditorTerminal();
+    initViewportAnchor();
     initMobileEditorViewport({ onEditorResize: callbacks.onEditorResize });
     initWorkspaceView();
 

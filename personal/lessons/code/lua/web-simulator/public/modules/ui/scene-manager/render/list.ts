@@ -8,11 +8,13 @@ import {
     getEntryKind,
     getEntryMeta,
     getEntryTitle,
+    isProtectedEntry,
     matchesQuery
 } from './label.js';
 
 const TWISTY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>';
 const FOCUS_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 3v3"></path><path d="M12 18v3"></path><path d="M3 12h3"></path><path d="M18 12h3"></path></svg>';
+const DELETE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7V4a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path></svg>';
 
 type VisibleRow = {
     entry: SceneManagerEntry;
@@ -158,6 +160,21 @@ function createRow(
     });
     actions.appendChild(focusBtn);
 
+    if (!isProtectedEntry(entry)) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'scene-tree-action scene-tree-action--danger';
+        deleteBtn.innerHTML = DELETE_ICON;
+        deleteBtn.title = 'Удалить объект';
+        deleteBtn.setAttribute('aria-label', `Удалить: ${getEntryTitle(entry)}`);
+        deleteBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            tree.suppressInspectorJump = true;
+            callbacks.sceneManager?.remove(entry.id);
+            rerender();
+        });
+        actions.appendChild(deleteBtn);
+    }
 
     item.append(twisty, main, actions);
     return item;

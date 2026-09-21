@@ -179,7 +179,7 @@ export function initSimulationNotice() {
 
     centerClearBtn?.addEventListener('click', () => {
         notices.length = 0;
-        if (centerList) renderNotificationCenter(centerList);
+        closeCenter();
     });
 
     centerList?.addEventListener('click', (event) => {
