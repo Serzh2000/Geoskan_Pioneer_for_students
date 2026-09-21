@@ -13,7 +13,6 @@
 
 :root[data-theme='dark'] .sidebar-tabs {
     background: #0f172a;
-    border-right-color: rgba(148, 163, 184, 0.12);
 }
 
 :root[data-theme='dark'] .sidebar-tab-btn {
@@ -36,6 +35,12 @@
 
 :root[data-theme='dark'] .sidebar-panels {
     background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+}
+
+/* Higher specificity than the base .sidebar-panels rule below would
+   otherwise let this beat .is-collapsed's border-right-color: transparent,
+   leaving a stray line down the collapsed icon rail in dark mode. */
+:root[data-theme='dark'] .sidebar-panels:not(.is-collapsed) {
     border-right-color: rgba(148, 163, 184, 0.1);
 }
 
