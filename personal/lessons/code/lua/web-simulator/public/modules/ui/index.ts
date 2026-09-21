@@ -20,6 +20,7 @@ import { initSidebar } from './panels/sidebar.js';
 import { initRailVisibility } from './panels/rail-visibility.js';
 import { initSceneOnboarding } from './scene-onboarding.js';
 import { initCameraModeUI } from './controls/camera-mode.js';
+import { initSceneHotbar } from './scene-hotbar/index.js';
 import { initFileControls } from './controls/file-controls.js';
 import { initWorkspaceView } from './workspace-view.js';
 import { initMobileEditorViewport } from './mobile-editor-viewport.js';
@@ -105,6 +106,7 @@ export function initUI(callbacks: UICallbacks) {
     initRailVisibility();
     initSceneOnboarding();
     initCameraModeUI();
+    initSceneHotbar();
     initMobileEditorViewport({ onEditorResize: callbacks.onEditorResize });
     initWorkspaceView();
 

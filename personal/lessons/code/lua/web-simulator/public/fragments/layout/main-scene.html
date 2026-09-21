@@ -38,6 +38,24 @@
                                 <button type="button" onclick="setCameraFreeSubMode('orbit')" title="Вращение вокруг точки">Орбита</button>
                                 <button type="button" onclick="setCameraFreeSubMode('fly')" title="Свободный полёт (WASD)">Полёт</button>
                             </div>
+                            <button
+                                type="button"
+                                id="scene-hotbar-toggle-btn"
+                                class="scene-hotbar-toggle-btn"
+                                title="Расставить объекты"
+                                aria-label="Расставить объекты"
+                                aria-pressed="false">
+                                Объекты
+                            </button>
+                        </div>
+
+                        <div id="scene-hotbar" class="scene-hotbar">
+                            <div class="scene-hotbar__categories" id="scene-hotbar-categories"></div>
+                            <div class="scene-hotbar__row">
+                                <div class="scene-hotbar__items" id="scene-hotbar-items"></div>
+                                <button type="button" id="scene-hotbar-close-btn" class="scene-hotbar__close" title="Выйти из режима расстановки" aria-label="Выйти из режима расстановки">✕</button>
+                            </div>
+                            <p class="scene-hotbar__hint">Выберите предмет и кликните в сцене, чтобы поставить его. Esc — выход.</p>
                         </div>
                     </div>
                 </div>

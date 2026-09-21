@@ -20,6 +20,7 @@
 @import url('./styles/overlays/hud-and-settings/autopilot-params-modal.css');
 @import url('./styles/scene/camera-controls.css');
 @import url('./styles/scene/viewport-corner-controls.css');
+@import url('./styles/scene/scene-hotbar.css');
 @import url('./styles/core/forms.css');
 @import url('./styles/panels/telemetry.css');
 @import url('./styles/scene/editor.css');
