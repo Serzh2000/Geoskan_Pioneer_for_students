@@ -10,10 +10,10 @@
     --sm-tint: #fff1e6;
 }
 :root[data-theme='dark'] #manager-panel, :root[data-theme='dark'] #scene-type-modal {
-    --sm-bg: #101925;
-    --sm-surface: #162231;
-    --sm-hover: #1e2d3f;
-    --sm-line: #2a3a4d;
+    --sm-bg: #0d0d0d;
+    --sm-surface: #151515;
+    --sm-hover: #1e1e1e;
+    --sm-line: #2a2a2a;
     --sm-text: #e4ebf3;
     --sm-muted: #a0b0c3;
     --sm-accent: #ffad71;

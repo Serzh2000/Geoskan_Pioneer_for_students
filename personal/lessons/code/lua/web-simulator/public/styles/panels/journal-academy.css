@@ -174,12 +174,12 @@
 }
 
 :root[data-theme='dark'] #mission-guide-overlay {
-    --work-bg: #111923;
-    --work-surface: #182331;
+    --work-bg: #0d0d0d;
+    --work-surface: #161616;
     --work-text: #edf2f7;
     --work-muted: #a9b7c8;
-    --work-line: #2b3b4d;
-    --work-soft: #202e3e;
+    --work-line: #2b2b2b;
+    --work-soft: #1f1f1f;
     --work-accent: #ffad68;
 }
 
@@ -360,7 +360,7 @@
 #gamepad-panel .gp-aux-card { min-height:190px; padding:16px; border-color:var(--gp-line); border-radius:10px; background:var(--gp-soft); box-shadow:none; }
 #gamepad-panel .gp-range-editor { border-color:var(--gp-line); background:var(--gp-surface); }
 
-:root[data-theme='dark'] #gamepad-panel { --gp-bg:#111923; --gp-surface:#182331; --gp-soft:#202e3e; --gp-line:#2b3b4d; --gp-text:#edf2f7; --gp-muted:#a9b7c8; }
+:root[data-theme='dark'] #gamepad-panel { --gp-bg:#0d0d0d; --gp-surface:#161616; --gp-soft:#1f1f1f; --gp-line:#2b2b2b; --gp-text:#edf2f7; --gp-muted:#a9b7c8; }
 :root[data-theme='dark'] #gamepad-panel :is(.settings-panel-content,.gamepad-hero,.gamepad-panel-tabs,.gamepad-section,.gamepad-section--quick,.gp-channel-row,.gp-aux-card,.gp-range-editor,.gamepad-status-pill,.gamepad-auto-status,.gamepad-channel-status,.gamepad-stage .btn-secondary,.gp-invert-checkbox) { background:var(--gp-surface); border-color:var(--gp-line); box-shadow:none; }
 :root[data-theme='dark'] #gamepad-panel :is(.gp-channel-badge,.gp-channel-value,.gp-aux-value) { background:var(--gp-soft); border-color:var(--gp-line); }
 

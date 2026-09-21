@@ -123,10 +123,10 @@
 .autopilot-param__fact { border-color: var(--ap-line); background: var(--ap-soft); }
 
 :root[data-theme='dark'] .autopilot-params-modal {
-    --ap-bg: #111923;
-    --ap-surface: #182331;
-    --ap-soft: #202e3e;
-    --ap-line: #2b3b4d;
+    --ap-bg: #0d0d0d;
+    --ap-surface: #161616;
+    --ap-soft: #1f1f1f;
+    --ap-line: #2b2b2b;
     --ap-text: #edf2f7;
     --ap-muted: #a9b7c8;
     box-shadow: 0 24px 70px rgba(0, 0, 0, .38);

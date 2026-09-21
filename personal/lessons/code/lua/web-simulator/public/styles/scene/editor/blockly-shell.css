@@ -11,7 +11,7 @@
     gap: 12px;
     min-height: 0;
     overflow: hidden;
-    background: #0f172a;
+    background: #0a0a0a;
 }
 
 .blockly-editor-canvas {
@@ -21,7 +21,7 @@
     overflow: hidden;
     border-radius: 12px;
     border: 1px solid rgba(148, 163, 184, 0.14);
-    background: #0f172a;
+    background: #0a0a0a;
 }
 
 .blockly-editor-canvas .blocklySvg {
@@ -34,7 +34,7 @@
 
 .blockly-editor-canvas .blocklyToolboxDiv {
     background:
-        linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.94)) !important;
+        linear-gradient(180deg, rgba(10, 10, 10, 0.96), rgba(26, 26, 26, 0.94)) !important;
     border-right: 1px solid rgba(148, 163, 184, 0.12);
     box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03);
     font-family: var(--font-sans);
@@ -66,7 +66,7 @@
 }
 
 .blockly-editor-canvas .blocklyFlyoutBackground {
-    fill: rgba(15, 23, 42, 0.96) !important;
+    fill: rgba(10, 10, 10, 0.96) !important;
     stroke: rgba(148, 163, 184, 0.12);
     stroke-width: 1px;
 }
@@ -96,9 +96,9 @@
 .blocklyWidgetDiv .goog-menu {
     border: 1px solid rgba(148, 163, 184, 0.28);
     border-radius: 10px;
-    background: #1e293b;
+    background: #1a1a1a;
     color: #e2e8f0;
-    box-shadow: 0 18px 42px rgba(2, 6, 23, 0.36);
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.36);
     font-family: var(--font-sans);
 }
 
