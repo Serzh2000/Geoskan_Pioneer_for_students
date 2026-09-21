@@ -24,7 +24,7 @@ import { initTrailForDrone, disposeTrailForDrone, updateTrailForDrone } from './
 export { is3DActive, selectedObject, droneMeshes, envGroup, scene };
 export { 
     addObject, deleteSelectedObject, duplicateObject, resetDroneToOrigin,
-    listSceneObjects, selectSceneObjectById, focusSceneObjectById, deleteSceneObjectById,
+    listSceneObjects, selectSceneObjectById, toggleMultiSelectObjectById, focusSceneObjectById, deleteSceneObjectById,
     appendPointToSelectedLinearObject, updateSelectedSceneObject,
     setSceneObjectTransformMode, getSelectedSceneObjectId,
     clearSceneSelection, rotateSelectedSceneObjectByDegrees, resetSelectedSceneObjectTransform, setSelectedObjectTransform,

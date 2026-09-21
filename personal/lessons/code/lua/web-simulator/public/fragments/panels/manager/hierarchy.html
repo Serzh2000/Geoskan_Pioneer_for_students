@@ -21,27 +21,17 @@
                             </div>
 
                             <div class="scene-panel-card scene-panel-card--composer">
-                                <div class="scene-panel-card__header">
-                                    <div>
-                                        <div class="scene-panel-card__title">Новый объект</div>
-
-                                    </div>
-                                </div>
-                                <div class="scene-form-grid">
-                                    <div class="scene-type-picker">
-                                        <div class="scene-type-picker__selection">
-
-                                            <div id="scene-add-type-selection-card" class="scene-type-picker__selection-card">
-                                                <span id="scene-add-type-current-icon" class="scene-type-picker__selection-icon" aria-hidden="true"></span>
-                                                <span class="scene-type-picker__selection-content">
-                                                    <strong id="scene-add-type-current">Ворота</strong>
-                                                    <span id="scene-add-type-current-text" class="scene-type-picker__selection-text"></span>
-                                                </span>
-                                            </div>
-                                            <button id="scene-add-type-open-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral scene-btn--catalog">Открыть каталог →</button>
-                                        </div>
-                                    </div>
-                                    <div hidden aria-hidden="true">
+<!--
+                                    Adding individual scene objects moved to the viewport hotbar
+                                    (ui/scene-hotbar) - the hidden data/trigger pair right after this
+                                    comment is all that's kept: #scene-add-type is still the hotbar's
+                                    catalog data source, and #scene-add-type-open-btn is still the
+                                    real trigger behind #scene-type-modal (its search/filter/3D-preview
+                                    logic in add-form.ts is untouched), just proxy-clicked by the
+                                    hotbar's own expand button instead of a visible button here.
+                                -->
+                                <div hidden aria-hidden="true">
+                                    <button id="scene-add-type-open-btn" type="button" tabindex="-1">Открыть каталог</button>
                                         <select id="scene-add-type" class="scene-type-select__native" tabindex="-1">
                                             <option value="gate">Ворота</option>
                                             <option value="pylon">Пилон</option>
@@ -72,145 +62,6 @@
                                             <option value="pad-charge">Площадка ⚡</option>
                                         </select>
                                     </div>
-                                    <label id="scene-add-dictionary-wrap" class="scene-field">
-                                        <span>Словарь</span>
-                                        <select id="scene-add-dictionary">
-                                            <option value="">Выберите словарь</option>
-                                        </select>
-                                    </label>
-                                    <label id="scene-add-value-wrap" class="scene-field">
-                                        <span>Значение</span>
-                                        <input id="scene-add-value" type="text" placeholder="Значение маркера">
-                                    </label>
-                                    <label id="scene-add-floors-wrap" class="scene-field" style="display: none;">
-                                        <span>Этажей</span>
-                                        <input id="scene-add-floors" type="number" min="5" max="20" step="1" value="9">
-                                    </label>
-                                </div>
-
-                                <div id="scene-add-building-settings" class="scene-building-settings">
-                                    <div class="scene-building-settings-header">
-                                        <div class="scene-building-settings-title">Сценарии по окнам</div>
-                                    </div>
-                                    <div class="scene-building-controls-row">
-                                        <div class="scene-building-settings-grid">
-                                            <label class="scene-field">
-                                                <span>Этаж</span>
-                                                <input id="scene-add-building-floor" type="number" min="1" max="20" step="1" value="3">
-                                            </label>
-                                            <label class="scene-field">
-                                                <span>Сторона</span>
-                                                <select id="scene-add-building-face">
-                                                    <option value="front">Перед</option>
-                                                    <option value="back">Зад</option>
-                                                </select>
-                                            </label>
-                                            <label class="scene-field">
-                                                <span>Окно</span>
-                                                <select id="scene-add-building-window">
-                                                    <option value="1">1</option>
-                                                    <option value="2">2</option>
-                                                    <option value="3">3</option>
-                                                </select>
-                                            </label>
-                                            <label class="scene-field">
-                                                <span>Событие</span>
-                                                <select id="scene-add-building-kind">
-                                                    <option value="smoke">Дым</option>
-                                                    <option value="fire">Пожар</option>
-                                                    <option value="thief">Вор</option>
-                                                </select>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="scene-building-settings-note">Подберите этажность и добавляйте события по окнам.</div>
-                                    <div class="action-row">
-                                        <button id="scene-add-building-append-btn" type="button" class="btn-secondary">+ Сценарий</button>
-                                        <button id="scene-add-building-clear-btn" type="button" class="btn-secondary">Очистить</button>
-                                    </div>
-                                    <div class="scene-building-list-label">Активные сценарии</div>
-                                    <textarea id="scene-add-building-incidents" rows="4" placeholder="Список сценариев для окон"></textarea>
-                                </div>
-
-                                <div id="scene-add-map-settings" class="scene-map-settings">
-                                    <div class="scene-map-settings-title">Настройки карты маркеров</div>
-                                    <div id="scene-add-map-summary" class="scene-map-summary">5 x 5, старт ID 0, по строкам</div>
-                                    <div class="scene-map-settings-grid">
-                                        <label class="scene-field">
-                                            <span>Строки</span>
-                                            <input id="scene-add-map-rows" type="number" min="1" max="20" value="5">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Столбцы</span>
-                                            <input id="scene-add-map-columns" type="number" min="1" max="20" value="5">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Стартовый ID</span>
-                                            <input id="scene-add-map-start-id" type="number" min="0" step="1" value="0">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Шаг ID</span>
-                                            <input id="scene-add-map-id-step" type="number" min="1" step="1" value="1">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Размер маркера, м</span>
-                                            <input id="scene-add-map-marker-size" type="number" min="0.2" max="5" step="0.05" value="1.05">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Поворот, °</span>
-                                            <input id="scene-add-map-rotation" type="number" min="-180" max="180" step="1" value="0">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Зазор X, м</span>
-                                            <input id="scene-add-map-gap-x" type="number" min="0" max="10" step="0.05" value="0.2">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Зазор Y, м</span>
-                                            <input id="scene-add-map-gap-y" type="number" min="0" max="10" step="0.05" value="0.2">
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Порядок обхода</span>
-                                            <select id="scene-add-map-traversal">
-                                                <option value="row-major">По строкам</option>
-                                                <option value="column-major">По столбцам</option>
-                                            </select>
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Старт нумерации</span>
-                                            <select id="scene-add-map-start-corner">
-                                                <option value="top-left">Сверху слева</option>
-                                                <option value="top-right">Сверху справа</option>
-                                                <option value="bottom-left">Снизу слева</option>
-                                                <option value="bottom-right">Снизу справа</option>
-                                            </select>
-                                        </label>
-                                        <label class="scene-field">
-                                            <span>Точка привязки</span>
-                                            <select id="scene-add-map-anchor">
-                                                <option value="center">Центр карты</option>
-                                                <option value="start">Стартовая ячейка</option>
-                                                <option value="top-left">Верхний левый угол</option>
-                                                <option value="top-right">Верхний правый угол</option>
-                                                <option value="bottom-left">Нижний левый угол</option>
-                                                <option value="bottom-right">Нижний правый угол</option>
-                                            </select>
-                                        </label>
-                                        <label class="scene-check">
-                                            <input id="scene-add-map-snake" type="checkbox">
-                                            <span>Нумерация змейкой</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <label id="scene-add-points-wrap" class="scene-field">
-                                    <span>Точки маршрута</span>
-                                    <textarea id="scene-add-points" rows="2" placeholder="Каждая строка: X, Y, Z"></textarea>
-                                </label>
-
-                                <div class="scene-action-stack">
-                                    <button id="scene-add-btn" class="btn-primary scene-btn scene-btn--primary">Добавить объект</button>
-                                </div>
-
                                 <div class="scene-subsection">
                                     <div class="scene-subsection__title">Готовые сцены</div>
                                     <div class="scene-form-grid">

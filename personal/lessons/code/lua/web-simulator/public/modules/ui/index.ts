@@ -66,6 +66,7 @@ export interface UICallbacks {
             pointCount?: number;
         }>;
         select: (id: string) => boolean;
+        toggleMultiSelect: (id: string) => boolean;
         focus: (id: string) => boolean;
         remove: (id: string) => boolean;
         add: (

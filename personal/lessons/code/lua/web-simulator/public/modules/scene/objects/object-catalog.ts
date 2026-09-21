@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { droneMeshes, selectedObject } from '../core/scene-init.js';
+import { droneMeshes, multiSelectedObjects, selectedObject } from '../core/scene-init.js';
 import { envGroup } from '../../environment/index.js';
 import { type ScenePathPoint } from '../../environment/obstacles.js';
 import { OBJECT_TYPE } from '../../shared/object-types.js';
@@ -96,6 +96,10 @@ export function listSceneObjects(): any[] {
 
 function buildSceneEntry(obj: THREE.Object3D, depth: number, parentId: string, childCount: number): any {
     const selectedId = selectedObject ? selectedObject.uuid : '';
+    // Ctrl+click can multi-select several objects at once (viewport or list) -
+    // once that's active, membership in the set is what "selected" means,
+    // not just the single last-clicked one that selectedObject tracks.
+    const isMultiSelected = multiSelectedObjects.length > 1 && multiSelectedObjects.some((o) => o.uuid === obj.uuid);
     let isDrone = false;
     for (const id in droneMeshes) {
         if (obj === droneMeshes[id]) isDrone = true;
@@ -126,7 +130,7 @@ function buildSceneEntry(obj: THREE.Object3D, depth: number, parentId: string, c
         objectType: obj.type,
         draggable: !!obj.userData?.draggable,
         isDrone,
-        selected: obj.uuid === selectedId,
+        selected: isMultiSelected || obj.uuid === selectedId,
         position: { x: obj.position.x, y: obj.position.y, z: obj.position.z },
         rotation: { x: obj.rotation.x, y: obj.rotation.y, z: obj.rotation.z },
         scale: { x: obj.scale.x, y: obj.scale.y, z: obj.scale.z },

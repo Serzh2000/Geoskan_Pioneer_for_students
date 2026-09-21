@@ -67,7 +67,9 @@ function createRow(
 ): HTMLElement {
     const { entry, hasChildren, expanded } = row;
     const depth = Number(entry.depth || 0);
-    const isSelected = entry.id === selectedId;
+    // entry.selected also covers Ctrl+click multi-selection (viewport or
+    // list); selectedId alone only ever tracks the single "last" one.
+    const isSelected = entry.selected || entry.id === selectedId;
     const kind = getEntryKind(entry);
 
     const item = document.createElement('div');
@@ -132,9 +134,13 @@ function createRow(
         </span>
         ${kind ? `<span class="scene-tree-kind">${escapeHtml(kind)}</span>` : ''}
     `;
-    main.addEventListener('click', () => {
+    main.addEventListener('click', (event) => {
         tree.suppressInspectorJump = true;
-        callbacks.sceneManager?.select(entry.id);
+        if (event.ctrlKey || event.metaKey) {
+            callbacks.sceneManager?.toggleMultiSelect(entry.id);
+        } else {
+            callbacks.sceneManager?.select(entry.id);
+        }
         rerender();
     });
     main.addEventListener('dblclick', () => {

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { log } from '../../shared/logging/logger.js';
-import { transformControl, transformHelper, controls, droneMeshes, selectedObject, multiSelectedObjects, setSelectedObject } from '../core/scene-init.js';
+import { transformControl, transformHelper, controls, droneMeshes, selectedObject, multiSelectedObjects, setSelectedObject, toggleMultiSelectObject } from '../core/scene-init.js';
 import { drones, currentDroneId, simSettings } from '../../core/state.js';
 import { envGroup, addObjectToScene, updateSceneObjectPoints, updateSceneObjectValue } from '../../environment/index.js';
 import { MarkerMapOptions, SceneObjectOptions, ScenePathPoint } from '../../environment/obstacles.js';
@@ -107,6 +107,16 @@ export function selectSceneObjectById(id: string) {
         finishLinearFeatureEditing(true);
     }
     handleSelection(obj, window.innerWidth / 2, window.innerHeight / 2, false);
+    return true;
+}
+
+// Same Ctrl+click multi-select interaction.ts's onPointerUp gives the 3D
+// viewport, exposed by id for the scene-manager list rows.
+export function toggleMultiSelectObjectById(id: string) {
+    const obj = findSceneObjectById(id);
+    if (!obj || (!isDroneSceneObject(obj, droneMeshes) && !isTransformableObject(obj))) return false;
+    toggleMultiSelectObject(obj);
+    multiSelectedObjects.forEach((selected) => updateObjectSelectionVisuals(selected, true));
     return true;
 }
 
