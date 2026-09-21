@@ -10,7 +10,12 @@
  * whenever the sidebar resizes. Track the card's real bounding rect every
  * frame instead and position the controls relative to ITS edges.
  */
-const PAD = 12; // matches --panel-pad-x, the gap kept between the card edge and a button
+// The card's corners are rounded (--panel-radius: 16px) - a button inset by
+// a plain --panel-pad-x (12px) from both edges at once still overlaps that
+// curve, since a straight-line offset doesn't clear the arc along the
+// diagonal. Both controls here sit at a literal 2-axis corner, so they need
+// more clearance than an edge-only control would.
+const CORNER_PAD = 18;
 
 function getAnchorRect(): DOMRect | null {
     const card = document.querySelector('.scene-viewport-card') as HTMLElement | null;
@@ -32,25 +37,22 @@ function syncPositions() {
 
     const rail = document.getElementById('rail-toggle-btn');
     const runControls = document.querySelector('.viewport-run-controls') as HTMLElement | null;
-    const sidebar = document.querySelector('.workspace-sidebar') as HTMLElement | null;
 
     if (runControls) {
         runControls.style.top = '';
         runControls.style.left = '';
-        runControls.style.right = `${Math.max(0, Math.round(window.innerWidth - rect.right + PAD))}px`;
-        runControls.style.bottom = `${Math.max(0, Math.round(window.innerHeight - rect.bottom + PAD))}px`;
+        runControls.style.right = `${Math.max(0, Math.round(window.innerWidth - rect.right + CORNER_PAD))}px`;
+        runControls.style.bottom = `${Math.max(0, Math.round(window.innerHeight - rect.bottom + CORNER_PAD))}px`;
     }
 
     if (rail) {
-        // The rail is pinned open with no panel (bare icon strip) - shift
-        // past its real right edge instead of the card's left edge.
-        const dockedBare = document.body.classList.contains('is-rail-docked')
-            && !document.body.classList.contains('has-open-panel');
-        const left = dockedBare && sidebar ? sidebar.getBoundingClientRect().right + PAD : rect.left + PAD;
+        // rect already IS the true rendered position of the card - whatever
+        // sits to its left (docked rail, gap between them, etc.) is already
+        // baked into rect.left, so no extra sidebar-specific case is needed.
         rail.style.bottom = '';
         rail.style.right = '';
-        rail.style.top = `${Math.round(rect.top + PAD)}px`;
-        rail.style.left = `${Math.round(left)}px`;
+        rail.style.top = `${Math.round(rect.top + CORNER_PAD)}px`;
+        rail.style.left = `${Math.round(rect.left + CORNER_PAD)}px`;
     }
 }
 
