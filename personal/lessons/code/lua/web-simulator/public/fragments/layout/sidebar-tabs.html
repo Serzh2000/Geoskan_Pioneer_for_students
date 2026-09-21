@@ -1,5 +1,13 @@
         <!-- Sidebar Tabs -->
         <div class="sidebar-tabs">
+            <button class="sidebar-tab-btn" type="button" onclick="openPanel('editor-panel')" title="Код" aria-label="Код">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-code" aria-hidden="true">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M7 8l-4 4l4 4"></path>
+                    <path d="M17 8l4 4l-4 4"></path>
+                    <path d="M14 4l-4 16"></path>
+                </svg>
+            </button>
             <button class="sidebar-tab-btn" type="button" onclick="openPanel('telemetry-panel')" title="Телеметрия" aria-label="Телеметрия и LED-матрица">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-gauge" aria-hidden="true">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -40,6 +48,9 @@
                     <path d="M9 14l2 3"></path>
                 </svg>
             </button>
+            <!-- Справочник API: hidden from the rail, kept for future use.
+                 docs-panel's fragment/module code is untouched - restore this
+                 button (openPanel('docs-panel')) to bring the entry point back.
             <button class="sidebar-tab-btn" type="button" onclick="openPanel('docs-panel')" title="API" aria-label="Справочник API">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-api-book" aria-hidden="true">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -57,6 +68,7 @@
                     <path d="M20.733 20l1.3 .75"></path>
                 </svg>
             </button>
+            -->
             <button id="sidebar-guide-btn" class="sidebar-tab-btn" type="button" onclick="openMissionGuideModal()" title="Руководство" aria-label="Руководство">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-book" aria-hidden="true">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -79,6 +91,45 @@
                 </svg>
             </button>
             <div class="sidebar-tabs__spacer" aria-hidden="true"></div>
+            <button
+                id="theme-toggle"
+                type="button"
+                class="sidebar-tab-btn header-theme-toggle"
+                title="Переключить тему"
+                aria-label="Переключить тему"
+                aria-pressed="false">
+                <span class="header-icon-btn__glyph" aria-hidden="true">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="header-icon-btn__svg header-theme-toggle__icon header-theme-toggle__icon--light">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                        <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
+                    </svg>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="header-icon-btn__svg header-theme-toggle__icon header-theme-toggle__icon--dark">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                    </svg>
+                </span>
+            </button>
             <button class="sidebar-tab-btn" type="button" onclick="openPanel('gamepad-panel')" title="Пульт" aria-label="Пульт">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-device-gamepad-2" aria-hidden="true">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
