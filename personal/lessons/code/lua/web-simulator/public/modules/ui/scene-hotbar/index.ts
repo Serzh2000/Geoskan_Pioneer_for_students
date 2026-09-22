@@ -63,7 +63,12 @@ function setMarkerVisible(visible: boolean): void {
 
 // Only the ground and existing objects are valid placement surfaces - no
 // fallback onto an infinite math plane, which used to let objects land far
-// outside the visible arena (effectively "in mid-air").
+// outside the visible arena (effectively "in mid-air"). The hit's X/Y is
+// still useful even when it lands on another object (e.g. the drone's
+// frame, a pylon's shaft) - but using its Z directly put the new object's
+// origin at whatever height was clicked, visibly floating since most
+// models assume their own origin sits at their own base. Every placement
+// is projected straight down onto the ground plane (Z=0) instead.
 function raycastPlaceableSurface(clientX: number, clientY: number): THREE.Vector3 | null {
     if (!camera || !raycaster || !renderer) return null;
     const rect = renderer.domElement.getBoundingClientRect();
@@ -71,7 +76,9 @@ function raycastPlaceableSurface(clientX: number, clientY: number): THREE.Vector
     mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
     try {
-        return raycaster.intersectObjects(collectPointerTargets(), true)[0]?.point ?? null;
+        const point = raycaster.intersectObjects(collectPointerTargets(), true)[0]?.point ?? null;
+        if (point) point.z = 0;
+        return point;
     } catch (e) {
         console.warn('[scene-hotbar] Placement raycasting failed:', e);
         return null;
