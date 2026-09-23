@@ -18,7 +18,7 @@ export function renderSelectedDetailsMarkup(selected: SceneManagerEntry) {
     return `<div class="scene-details-card">
         <div class="scene-details-heading">
             <span class="scene-details-heading__title">${escapeHtml(getEntryTitle(selected))}</span>
-            ${kind ? `<span class="scene-tree-kind">${escapeHtml(kind)}</span>` : ''}
+            ${kind && kind !== getEntryTitle(selected) ? `<span class="scene-tree-kind">${escapeHtml(kind)}</span>` : ''}
         </div>
         <div class="scene-details-grid">
             <div class="scene-details-row"><span class="scene-details-row__label">Доступ</span><span class="scene-details-row__value">${selected.draggable ? 'Можно перемещать' : 'Зафиксирован'}</span></div>

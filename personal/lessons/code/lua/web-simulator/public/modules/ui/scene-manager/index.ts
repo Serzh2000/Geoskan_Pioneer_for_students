@@ -37,6 +37,9 @@ function buildSceneManagerRenderSignature(
             name: item.name,
             sceneType: item.sceneType,
             isDrone: item.isDrone,
+            selected: item.selected,
+            parentId: item.parentId,
+            childCount: item.childCount,
             draggable: item.draggable
         })),
         selected: selected ? {
