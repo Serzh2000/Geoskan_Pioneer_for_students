@@ -139,7 +139,7 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         insertText: 'battery()'
     },
     'Sensors.range': {
-        desc: 'Высота по дальномеру (лазер/ультразвук).',
+        desc: 'Расстояние до поверхности прямо под дроном по дальномеру: до земли, крыши дома или крыши едущего поезда.',
         syntax: 'Sensors.range()',
         params: 'none',
         returns: 'dist (метры)',
@@ -148,13 +148,59 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         insertText: 'range()'
     },
     'Sensors.tof': {
-        desc: 'Данные с TOF-сенсора.',
+        desc: 'Расстояние до поверхности под дроном по TOF-сенсору, в миллиметрах (земля, крыша, крыша поезда).',
         syntax: 'Sensors.tof()',
         params: 'none',
         returns: 'dist (мм)',
         example: 'local d = Sensors.tof()',
         kind: 'Method',
         insertText: 'tof()'
+    },
+
+    'Sensors.opticalFlow': {
+        desc: "Датчик оптического потока (как PMW3901): как быстро поверхность под дроном «уезжает» в кадре. Над едущим поездом показывает движение относительно крыши: если дрон держится ровно над ней, поток близок к нулю. Шумит; качество падает ниже 8 см и выше 3 м. Скорость относительно поверхности: v = (flow - вращение) * высота.",
+        syntax: "Sensors.opticalFlow()",
+        params: "none",
+        returns: "flowX, flowY (рад/с, оси дрона: X - вперёд, Y - вправо), quality (0..255)",
+        example: "local fx, fy, q = Sensors.opticalFlow()\nlocal h = Sensors.range()\nif q > 100 then\n    local vForward = fx * h  -- м/с относительно поверхности\nend",
+        kind: "Method",
+        insertText: "opticalFlow()"
+    },
+    'Vehicle.start': {
+        desc: "Только в симуляторе: трогает с места машину или поезд по названию из их настроек.",
+        syntax: "Vehicle.start(name)",
+        params: "name (string) - название, например \"Поезд 1\"",
+        returns: "true",
+        example: "Vehicle.start(\"Поезд 1\")",
+        kind: "Method",
+        insertText: "Vehicle.start(\"${1:Поезд 1}\")"
+    },
+    'Vehicle.stop': {
+        desc: "Только в симуляторе: плавно останавливает машину или поезд.",
+        syntax: "Vehicle.stop(name)",
+        params: "name (string)",
+        returns: "true",
+        example: "Vehicle.stop(\"Поезд 1\")",
+        kind: "Method",
+        insertText: "Vehicle.stop(\"${1:Поезд 1}\")"
+    },
+    'Vehicle.setSpeed': {
+        desc: "Только в симуляторе: задаёт скорость машины или поезда (0-15 м/с, разгон плавный).",
+        syntax: "Vehicle.setSpeed(name, speed)",
+        params: "name (string), speed (м/с)",
+        returns: "true",
+        example: "Vehicle.setSpeed(\"Поезд 1\", 3)",
+        kind: "Method",
+        insertText: "Vehicle.setSpeed(\"${1:Поезд 1}\", ${2:3})"
+    },
+    'Vehicle.state': {
+        desc: "Только в симуляторе: истинное положение и скорость машины или поезда - для настройки сценария и проверки. В самой миссии слежения используйте камеру и оптический поток.",
+        syntax: "Vehicle.state(name)",
+        params: "name (string)",
+        returns: "x, y, z (м), heading (рад), speed (м/с), moving (bool)",
+        example: "local x, y, z, heading, speed = Vehicle.state(\"Поезд 1\")",
+        kind: "Method",
+        insertText: "Vehicle.state(\"${1:Поезд 1}\")"
     },
 
     'camera.requestMakeShot': {

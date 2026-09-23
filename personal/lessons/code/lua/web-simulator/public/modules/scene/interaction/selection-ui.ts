@@ -19,6 +19,7 @@ import {
 import { isTransformableObject } from '../objects/object-catalog.js';
 import { getObjectDisplayName, isDroneObject, traceClick } from './input-helpers.js';
 import { getCameraMode } from '../core/camera-mode-state.js';
+import { tablerIcon } from '../../ui/icons/tabler.js';
 
 type ObjectContextMenuAction = {
     label: string;
@@ -132,6 +133,28 @@ export function handleSelection(obj: THREE.Object3D | null, x: number, y: number
         } catch (error) {
             console.warn('[3D] Failed to build object context actions:', error);
         }
+    }
+
+    // ArUco/AprilTag markers and marker maps: their ID, dictionary and grid
+    // are set in a popover (ui/marker-settings.ts) opened from here.
+    const markerData = obj?.userData || {};
+    if (obj && (markerData.isMarkerMap || markerData.markerKind === 'ArUco' || markerData.markerKind === 'AprilTag')) {
+        const settingsAction: ObjectContextMenuAction = {
+            label: markerData.isMarkerMap ? 'Настроить карту…' : 'Настроить маркер…',
+            icon: tablerIcon('adjustments').replace('width="24" height="24"', 'width="16" height="16"'),
+            action: () => (window as any).openMarkerSettings?.(obj, x, y)
+        };
+        objectActionsTitle = objectActionsTitle || 'Маркер';
+        objectActions = [settingsAction, ...(objectActions || [])];
+    }
+
+    if (obj?.userData?.isVehicle) {
+        objectActionsTitle = 'Транспорт';
+        objectActions = [{
+            label: 'Настроить транспорт…',
+            icon: tablerIcon('adjustments').replace('width="24" height="24"', 'width="16" height="16"'),
+            action: () => (window as any).openVehicleSettings?.(obj, x, y)
+        }, ...(objectActions || [])];
     }
 
     (window as any).showContextMenu(

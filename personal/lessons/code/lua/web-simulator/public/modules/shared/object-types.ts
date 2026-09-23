@@ -29,7 +29,9 @@ export const OBJECT_TYPE = {
     CHARGE_STATION: 'Станция заряда',
     CARGO: 'Груз',
     CARGO_SMALL: 'Грузик',
-    VIDEO_TOWER: 'Видеомачта'
+    VIDEO_TOWER: 'Видеомачта',
+    CAR: 'Автомобиль',
+    TRAIN: 'Поезд'
 } as const;
 
 export type ObjectTypeTag = typeof OBJECT_TYPE[keyof typeof OBJECT_TYPE];

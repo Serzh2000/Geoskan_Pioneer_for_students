@@ -196,8 +196,20 @@ export const LUA_SETUP_SCRIPT = `
             range = js_sensors_range,
             battery = js_sensors_battery,
             tof = js_sensors_tof,
-            rc = js_sensors_rc
+            rc = js_sensors_rc,
+            opticalFlow = js_sensors_opticalFlow
         }
+        -- Симулятор: машины и поезда на сцене (по названию из их настроек).
+        Vehicle = {}
+        local function __vehicle_call(fn, level, ...)
+            local results = table.pack(fn(...))
+            if results[1] == nil and type(results[2]) == 'string' then error(results[2], level + 1) end
+            return table.unpack(results, 1, results.n)
+        end
+        function Vehicle.start(name) return __vehicle_call(js_vehicle_start, 2, name) end
+        function Vehicle.stop(name) return __vehicle_call(js_vehicle_stop, 2, name) end
+        function Vehicle.setSpeed(name, speed) return __vehicle_call(js_vehicle_setSpeed, 2, name, speed) end
+        function Vehicle.state(name) return __vehicle_call(js_vehicle_state, 2, name) end
         Timer = {}
         function Timer.callLater(delay, callback)
             local location = __diag_location(2)

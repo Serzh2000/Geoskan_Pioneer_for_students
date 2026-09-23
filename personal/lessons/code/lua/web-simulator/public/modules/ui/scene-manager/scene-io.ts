@@ -1,4 +1,5 @@
 import type { UICallbacks } from '../index.js';
+import type { MarkerMapOptions, VehicleConfig } from '../../environment/obstacles.js';
 
 export type SceneExportEntry = {
     sceneType: string;
@@ -9,6 +10,14 @@ export type SceneExportEntry = {
     markerDictionary?: string;
     floors?: number;
     pointsText?: string;
+    closed?: boolean;
+    /** Marker maps: their exact grid (rows, columns, IDs, spacing...). */
+    markerMap?: MarkerMapOptions;
+    /**
+     * Cars/trains: their settings, with the route they drive on stored as
+     * the index of that road/railway in this same objects list.
+     */
+    vehicle?: Omit<VehicleConfig, 'routeId'> & { routeIndex: number | null };
 };
 
 export type SceneExportFile = {
@@ -40,6 +49,8 @@ const SCENE_TYPE_TO_CATALOG_SLUG: Record<string, string> = {
     'Лесной массив': 'forest-patch',
     'Макет поселения': 'settlement',
     'Транспорт': 'transport',
+    'Автомобиль': 'car',
+    'Поезд': 'train',
     'Грузик': 'cargo',
     'Стартовая позиция': 'start-position',
     'Хелипорт': 'heliport',
@@ -57,15 +68,17 @@ const SCENE_TYPE_TO_CATALOG_SLUG: Record<string, string> = {
 };
 
 // Only top-level, user-placed objects are portable: the ground/boundary/drone
-// are recreated by the simulator itself on every load, groups have no
+// are recreated by the simulator itself on every load, and groups have no
 // catalog slug of their own to re-add them by (their members export as
 // independent objects instead, since members are nested at depth > 0 and
-// already skipped here), and a multi-marker map's exact grid (rows/columns/
-// start id/spacing) isn't tracked per-object so it comes back at its default
-// layout rather than the one that was configured.
+// already skipped here). Vehicles go last, so the route each one references
+// by index is always already in the file (and re-created first on import).
 export function buildSceneExport(callbacks: UICallbacks): SceneExportFile {
-    const entries = callbacks.sceneManager?.list() || [];
+    const all = (callbacks.sceneManager?.list() || []).filter((entry) => !entry.vehicle);
+    const vehicles = (callbacks.sceneManager?.list() || []).filter((entry) => !!entry.vehicle);
+    const entries = [...all, ...vehicles];
     const objects: SceneExportEntry[] = [];
+    const indexById = new Map<string, number>();
     for (const entry of entries) {
         if (!entry.draggable || entry.isDrone || (entry.depth ?? 0) !== 0) continue;
         const slug = SCENE_TYPE_TO_CATALOG_SLUG[entry.sceneType];
@@ -81,8 +94,15 @@ export function buildSceneExport(callbacks: UICallbacks): SceneExportFile {
             value: entry.value || undefined,
             markerDictionary: entry.markerDictionary || undefined,
             floors: entry.floors,
-            pointsText: entry.pointsText || undefined
+            pointsText: entry.pointsText || undefined,
+            closed: entry.closed || undefined,
+            markerMap: entry.markerMap,
+            vehicle: entry.vehicle ? (({ routeId, ...rest }) => ({
+                ...rest,
+                routeIndex: routeId && indexById.has(routeId) ? indexById.get(routeId)! : null
+            }))(entry.vehicle) : undefined
         });
+        indexById.set(entry.id, objects.length - 1);
     }
     return { format: 'pioneer-scene', version: 1, objects };
 }
@@ -101,20 +121,39 @@ export function applySceneImport(callbacks: UICallbacks, data: SceneExportFile):
 
     let added = 0;
     let failed = 0;
+    // Index in the file -> id of the object re-created from it, so vehicles
+    // can find their route again.
+    const newIds: Array<string | null> = [];
     for (const entry of data.objects) {
         if (!entry || typeof entry.sceneType !== 'string') {
             failed++;
+            newIds.push(null);
             continue;
         }
 
+        const vehicle = entry.vehicle
+            ? (({ routeIndex, ...rest }) => ({
+                ...rest,
+                routeId: routeIndex !== null && routeIndex !== undefined ? newIds[routeIndex] ?? null : null
+            }))(entry.vehicle)
+            : undefined;
         const id = sceneManager.add(entry.sceneType, {
             value: entry.value,
             markerDictionary: entry.markerDictionary,
             pointsText: entry.pointsText,
-            floors: entry.floors
+            closed: entry.closed,
+            floors: entry.floors,
+            markerMap: entry.markerMap,
+            vehicle
         });
+        newIds.push(id);
         if (!id) {
             failed++;
+            continue;
+        }
+        if (vehicle) {
+            // Placed by the vehicle engine on its route, not by a transform.
+            added++;
             continue;
         }
 

@@ -33,9 +33,9 @@
 }
 
 :root[data-theme='dark'] .scene-hotbar-toggle-btn {
-    background: rgba(10, 10, 10, 0.92);
-    border-color: rgba(148, 163, 184, 0.18);
-    color: #e2e8f0;
+    background: rgba(26, 26, 26, 0.92);
+    border-color: rgba(162, 162, 162, 0.18);
+    color: #e7e7e7;
 }
 
 :root[data-theme='dark'] .scene-hotbar-toggle-btn[aria-pressed='true'] {
@@ -54,7 +54,36 @@ body.is-scene-hotbar-active .viewport-corner-btn--rail {
     display: none !important;
 }
 
+/*
+ * The hotbar panel. Every color goes through the --hb-* tokens (light here,
+ * dark in the :root[data-theme='dark'] block) so both themes share one set
+ * of structural rules. Orange is reserved for the armed item - the one thing
+ * that changes what a click in the scene does - while the category tabs are
+ * a neutral segmented control so they never compete with it.
+ */
 .scene-hotbar {
+    --hb-bg: rgba(255, 255, 255, 0.97);
+    --hb-border: rgba(9, 9, 11, 0.1);
+    --hb-track: #f0f1f3;
+    --hb-tab-text: #5b616a;
+    --hb-tab-active-bg: #ffffff;
+    --hb-tab-active-text: #151515;
+    --hb-tab-active-shadow: 0 1px 2px rgba(9, 9, 11, 0.1), 0 0 0 1px rgba(9, 9, 11, 0.06);
+    --hb-tile-bg: #f6f7f8;
+    --hb-tile-hover: #eceef1;
+    --hb-tile-border: rgba(9, 9, 11, 0.07);
+    --hb-tile-border-hover: rgba(9, 9, 11, 0.14);
+    --hb-text: #1f2328;
+    --hb-muted: #5f6670;
+    --hb-icon: #3d434b;
+    --hb-accent: #ff6b00;
+    --hb-accent-text: #b34d00;
+    --hb-accent-tint: rgba(255, 107, 0, 0.1);
+    --hb-focus: rgba(255, 107, 0, 0.55);
+    --hb-kbd-bg: #ffffff;
+    --hb-kbd-border: rgba(9, 9, 11, 0.14);
+    --hb-scrollbar: rgba(9, 9, 11, 0.18);
+
     display: none;
     position: absolute;
     left: 50%;
@@ -63,90 +92,204 @@ body.is-scene-hotbar-active .viewport-corner-btn--rail {
     z-index: 15;
     width: min(920px, calc(100% - 2 * var(--panel-pad-x)));
     flex-direction: column;
-    gap: 8px;
-    padding: 10px 12px;
-    background: rgba(255, 255, 255, 0.96);
-    border: 1px solid rgba(148, 163, 184, 0.2);
+    gap: 10px;
+    padding: 10px;
+    background: var(--hb-bg);
+    border: 1px solid var(--hb-border);
     border-radius: 16px;
     box-shadow: var(--shadow-card);
+    color: var(--hb-text);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+:root[data-theme='dark'] .scene-hotbar {
+    --hb-bg: rgba(26, 26, 26, 0.96);
+    --hb-border: rgba(255, 255, 255, 0.08);
+    --hb-track: #121212;
+    --hb-tab-text: #a2a2a2;
+    --hb-tab-active-bg: #2e2e2e;
+    --hb-tab-active-text: #f2f2f2;
+    --hb-tab-active-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    --hb-tile-bg: #222222;
+    --hb-tile-hover: #2c2c2c;
+    --hb-tile-border: rgba(255, 255, 255, 0.06);
+    --hb-tile-border-hover: rgba(255, 255, 255, 0.14);
+    --hb-text: #e3e3e3;
+    --hb-muted: #9a9a9a;
+    --hb-icon: #cfcfcf;
+    --hb-accent: #ff7a1a;
+    --hb-accent-text: #ffb067;
+    --hb-accent-tint: rgba(255, 122, 26, 0.14);
+    --hb-focus: rgba(255, 154, 82, 0.7);
+    --hb-kbd-bg: #2a2a2a;
+    --hb-kbd-border: rgba(255, 255, 255, 0.12);
+    --hb-scrollbar: rgba(255, 255, 255, 0.16);
 }
 
 body.is-scene-hotbar-active .scene-hotbar {
     display: flex;
 }
 
+.scene-hotbar button {
+    font-family: inherit;
+}
+
+.scene-hotbar button:focus-visible {
+    outline: 2px solid var(--hb-focus);
+    outline-offset: 2px;
+}
+
+/* ---- Top row: category tabs + actions ---- */
+
 .scene-hotbar__top {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 12px;
+    min-width: 0;
 }
 
+/* Scrolls sideways instead of wrapping onto a second line on narrow screens. */
 .scene-hotbar__categories {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    gap: 2px;
+    min-width: 0;
+    padding: 3px;
+    background: var(--hb-track);
+    border-radius: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
 }
 
-.scene-hotbar__expand {
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    border: 1px solid rgba(148, 163, 184, 0.24);
-    border-radius: 8px;
-    background: transparent;
-    color: #64748b;
-    cursor: pointer;
-    transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
-}
-
-.scene-hotbar__expand:hover {
-    color: #1d1d20;
-    border-color: rgba(255, 107, 0, 0.28);
-    background: rgba(255, 107, 0, 0.08);
+.scene-hotbar__categories::-webkit-scrollbar {
+    display: none;
 }
 
 .scene-hotbar__category {
-    padding: 5px 10px;
-    border: 1px solid rgba(148, 163, 184, 0.24);
-    border-radius: 999px;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 7px;
     background: transparent;
-    color: #64748b;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    color: var(--hb-tab-text);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.14s ease, color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.scene-hotbar__category:hover {
+    color: var(--hb-tab-active-text);
+}
+
+.scene-hotbar__category[aria-selected='true'] {
+    background: var(--hb-tab-active-bg);
+    color: var(--hb-tab-active-text);
+    font-weight: 600;
+    box-shadow: var(--hb-tab-active-shadow);
+}
+
+.scene-hotbar__category-count {
+    margin-left: 6px;
+    color: var(--hb-muted);
+    font-size: 11px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+.scene-hotbar__actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.scene-hotbar__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--hb-muted);
+    font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
     transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
 }
 
-.scene-hotbar__category:hover {
-    color: #1d1d20;
+.scene-hotbar__action--labeled {
+    width: auto;
+    padding: 0 10px;
+    border-color: var(--hb-tile-border);
 }
 
-.scene-hotbar__category.is-active {
-    background: rgba(255, 107, 0, 0.12);
-    border-color: rgba(255, 107, 0, 0.24);
-    color: #a74808;
+.scene-hotbar__action:hover {
+    background: var(--hb-tile-hover);
+    border-color: var(--hb-tile-border-hover);
+    color: var(--hb-text);
 }
 
-.scene-hotbar__row {
-    display: flex;
-    align-items: stretch;
-    gap: 8px;
+.scene-hotbar__action svg {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+}
+
+/* ---- Item strip ---- */
+
+.scene-hotbar__items-wrap {
+    position: relative;
+    min-width: 0;
+}
+
+/* Edge fades only on the side that can still scroll - the cut-off tile then
+   reads as "there's more this way" instead of a rendering glitch. */
+.scene-hotbar__items-wrap.can-scroll-left .scene-hotbar__items {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 32px);
+    mask-image: linear-gradient(90deg, transparent 0, #000 32px);
+}
+
+.scene-hotbar__items-wrap.can-scroll-right .scene-hotbar__items {
+    -webkit-mask-image: linear-gradient(270deg, transparent 0, #000 32px);
+    mask-image: linear-gradient(270deg, transparent 0, #000 32px);
+}
+
+.scene-hotbar__items-wrap.can-scroll-left.can-scroll-right .scene-hotbar__items {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 32px, #000 calc(100% - 32px), transparent 100%);
 }
 
 .scene-hotbar__items {
-    flex: 1 1 auto;
     display: flex;
-    gap: 8px;
+    gap: 6px;
     overflow-x: auto;
-    padding-bottom: 2px;
+    padding: 2px 2px 8px;
+    scroll-padding-inline: 32px;
     scrollbar-width: thin;
+    scrollbar-color: var(--hb-scrollbar) transparent;
+}
+
+.scene-hotbar__items::-webkit-scrollbar {
+    height: 6px;
+}
+
+.scene-hotbar__items::-webkit-scrollbar-thumb {
+    background: var(--hb-scrollbar);
+    border-radius: 999px;
+}
+
+.scene-hotbar__items::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .scene-hotbar__item {
@@ -154,32 +297,44 @@ body.is-scene-hotbar-active .scene-hotbar {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    width: 76px;
-    padding: 8px 6px;
-    border: 1px solid rgba(148, 163, 184, 0.2);
+    justify-content: flex-start;
+    gap: 6px;
+    width: 96px;
+    min-height: 78px;
+    padding: 10px 6px 8px;
+    border: 1px solid var(--hb-tile-border);
     border-radius: 12px;
-    background: #f8fafc;
-    color: #334155;
+    background: var(--hb-tile-bg);
+    color: var(--hb-text);
     cursor: pointer;
-    transition: background 0.14s ease, border-color 0.14s ease, transform 0.1s ease;
+    transition: background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, transform 0.1s ease;
 }
 
 .scene-hotbar__item:hover {
-    border-color: rgba(255, 107, 0, 0.28);
-    transform: translateY(-1px);
+    background: var(--hb-tile-hover);
+    border-color: var(--hb-tile-border-hover);
+}
+
+.scene-hotbar__item:active {
+    transform: scale(0.97);
 }
 
 .scene-hotbar__item.is-armed {
-    background: rgba(255, 107, 0, 0.14);
-    border-color: #ff6b00;
-    color: #a74808;
+    background: var(--hb-accent-tint);
+    border-color: var(--hb-accent);
+    box-shadow: inset 0 0 0 1px var(--hb-accent);
 }
 
 .scene-hotbar__item-icon {
     display: inline-flex;
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
+    color: var(--hb-icon);
+    transition: color 0.14s ease;
+}
+
+.scene-hotbar__item.is-armed .scene-hotbar__item-icon {
+    color: var(--hb-accent-text);
 }
 
 .scene-hotbar__item-icon svg {
@@ -187,81 +342,80 @@ body.is-scene-hotbar-active .scene-hotbar {
     height: 100%;
 }
 
+/* Two lines instead of a one-line ellipsis - "Многоэтажка" and
+   "AprilTag маркер" now read in full; the full name is also the tooltip. */
 .scene-hotbar__item-label {
-    font-size: 10px;
-    font-weight: 600;
-    text-align: center;
-    line-height: 1.2;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     overflow: hidden;
-    text-overflow: ellipsis;
     max-width: 100%;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.25;
+    text-align: center;
+    overflow-wrap: break-word;
+    hyphens: auto;
 }
 
-.scene-hotbar__close {
-    flex: 0 0 auto;
-    align-self: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    border: 1px solid rgba(148, 163, 184, 0.24);
-    background: transparent;
-    color: #64748b;
-    font-size: 14px;
-    cursor: pointer;
+.scene-hotbar__item.is-armed .scene-hotbar__item-label {
+    font-weight: 600;
 }
 
-.scene-hotbar__close:hover {
-    color: #1d1d20;
-    border-color: rgba(148, 163, 184, 0.4);
+.scene-hotbar__empty {
+    flex: 1 0 100%;
+    padding: 22px 0;
+    color: var(--hb-muted);
+    font-size: 12px;
+    text-align: center;
 }
+
+/* ---- Contextual hint ---- */
 
 .scene-hotbar__hint {
     margin: 0;
-    font-size: 11px;
-    color: #94a3b8;
+    color: var(--hb-muted);
+    font-size: 12px;
+    line-height: 1.5;
     text-align: center;
 }
 
-:root[data-theme='dark'] .scene-hotbar {
-    background: rgba(10, 10, 10, 0.96);
-    border-color: rgba(148, 163, 184, 0.18);
+.scene-hotbar__hint strong {
+    color: var(--hb-accent-text);
+    font-weight: 600;
 }
 
-:root[data-theme='dark'] .scene-hotbar__category {
-    color: #94a3b8;
+.scene-hotbar__hint kbd {
+    display: inline-block;
+    min-width: 20px;
+    padding: 0 5px;
+    border: 1px solid var(--hb-kbd-border);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    background: var(--hb-kbd-bg);
+    color: var(--hb-text);
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: center;
 }
 
-:root[data-theme='dark'] .scene-hotbar__category.is-active {
-    background: rgba(255, 107, 0, 0.2);
-    border-color: rgba(255, 176, 103, 0.28);
-    color: #ffb067;
+@media (max-width: 650px) {
+    .scene-hotbar__action--labeled {
+        width: 32px;
+        padding: 0;
+    }
+
+    .scene-hotbar__action--labeled span {
+        display: none;
+    }
 }
 
-:root[data-theme='dark'] .scene-hotbar__item {
-    background: rgba(26, 26, 26, 0.7);
-    border-color: rgba(148, 163, 184, 0.18);
-    color: #e2e8f0;
-}
-
-:root[data-theme='dark'] .scene-hotbar__item.is-armed {
-    background: rgba(255, 107, 0, 0.22);
-    border-color: #ff9a52;
-    color: #ffedd5;
-}
-
-:root[data-theme='dark'] .scene-hotbar__close,
-:root[data-theme='dark'] .scene-hotbar__expand {
-    color: #94a3b8;
-    border-color: rgba(148, 163, 184, 0.2);
-}
-
-:root[data-theme='dark'] .scene-hotbar__expand:hover {
-    color: #ffb067;
-    border-color: rgba(255, 176, 103, 0.28);
-    background: rgba(255, 107, 0, 0.14);
-}
-
-:root[data-theme='dark'] .scene-hotbar__hint {
-    color: #64748b;
+@media (prefers-reduced-motion: reduce) {
+    .scene-hotbar,
+    .scene-hotbar * {
+        transition: none !important;
+    }
 }

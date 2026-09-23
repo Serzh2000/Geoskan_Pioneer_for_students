@@ -3,7 +3,7 @@ import { log } from '../../shared/logging/logger.js';
 import { transformControl, transformHelper, controls, droneMeshes, selectedObject, multiSelectedObjects, setSelectedObject, toggleMultiSelectObject } from '../core/scene-init.js';
 import { drones, currentDroneId, simSettings } from '../../core/state.js';
 import { envGroup, addObjectToScene, updateSceneObjectPoints, updateSceneObjectValue } from '../../environment/index.js';
-import { MarkerMapOptions, SceneObjectOptions, ScenePathPoint } from '../../environment/obstacles.js';
+import { MarkerMapOptions, SceneObjectOptions, ScenePathPoint, updateMarkerMapSettings } from '../../environment/obstacles.js';
 import { handleDeselection, deselectObject } from '../interaction/selection.js';
 import { handleSelection, updateObjectSelectionVisuals } from '../interaction/input.js';
 import { findSceneObjectById, getSceneTopLevelObjects, isTransformableObject, listSceneObjects, normalizePoints, parsePointsText } from './object-catalog.js';
@@ -234,17 +234,26 @@ export function duplicateObject() {
     }
 }
 
-export function addObject(
-    type: string,
-    options: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number; markerMap?: MarkerMapOptions } = {}
-): string | null {
+export type AddObjectOptions = {
+    value?: string;
+    markerDictionary?: string;
+    pointsText?: string;
+    closed?: boolean;
+    floors?: number;
+    markerMap?: MarkerMapOptions;
+    vehicle?: SceneObjectOptions['vehicle'];
+};
+
+export function addObject(type: string, options: AddObjectOptions = {}): string | null {
     const parsedPoints = options.pointsText ? parsePointsText(options.pointsText) : [];
     const objectOptions: SceneObjectOptions = {
         value: options.value,
         markerDictionary: options.markerDictionary,
         floors: options.floors,
         points: parsedPoints.length >= 2 ? parsedPoints : undefined,
-        markerMap: options.markerMap
+        markerMap: options.markerMap,
+        vehicle: options.vehicle,
+        closed: options.closed
     };
     const obj = addObjectToScene(type, controls?.camera || null, objectOptions);
     if (obj) {
@@ -291,6 +300,25 @@ export function updateSelectedSceneObject(params: { value?: string; markerDictio
     }
 
     return updated;
+}
+
+/*
+ * Applies marker settings from the right-click settings popover
+ * (ui/marker-settings) to one specific marker or marker map - not
+ * necessarily the selected one. Maps are rebuilt in place.
+ */
+export function updateMarkerObjectSettings(
+    object: THREE.Object3D,
+    params: { value?: string; markerDictionary?: string; markerMap?: MarkerMapOptions }
+): boolean {
+    const updated = object.userData?.isMarkerMap
+        ? updateMarkerMapSettings(object, { dictionaryId: params.markerDictionary, options: params.markerMap })
+        : updateSceneObjectValue(object, { value: params.value, markerDictionary: params.markerDictionary });
+    if (!updated) return false;
+    // Fresh child meshes don't carry the selection tint or fit the old box.
+    if (selectedObject === object) updateObjectSelectionVisuals(object, true);
+    (window as any).updateSceneManager?.();
+    return true;
 }
 
 export function appendPointToSelectedLinearObject() {

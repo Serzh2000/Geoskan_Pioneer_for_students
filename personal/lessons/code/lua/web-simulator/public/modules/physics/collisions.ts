@@ -21,15 +21,6 @@ function isGateObject(obj: THREE.Object3D | null | undefined) {
     return String(obj?.userData?.type || obj?.name || '') === OBJECT_TYPE.GATE;
 }
 
-function findGateAncestor(obj: THREE.Object3D | null) {
-    let current = obj;
-    while (current) {
-        if (isGateObject(current)) return current;
-        current = current.parent;
-    }
-    return null;
-}
-
 export function sampleSegmentPoints(start: THREE.Vector3, end: THREE.Vector3) {
     const distance = start.distanceTo(end);
     const steps = Math.max(1, Math.ceil(distance / COLLISION_SAMPLE_STEP));
@@ -97,17 +88,38 @@ export function obstacleHasCollision(obj: THREE.Object3D, samples: THREE.Vector3
         }
     }
 
-    let hit = false;
     obj.updateWorldMatrix(true, true);
-    obj.traverse((node: any) => {
-        if (hit || !node.isMesh || !node.visible) return;
-        if (findGateAncestor(node.parent)) return;
-        const material = Array.isArray(node.material) ? node.material[0] : node.material;
-        if (material && 'opacity' in material && material.opacity !== undefined && material.opacity < 0.2) return;
-        const box = new THREE.Box3().setFromObject(node);
-        if (!box.isEmpty() && intersectsExpandedBox(box, samples)) {
-            hit = true;
-        }
-    });
-    return hit;
+    if ((obj as THREE.Mesh).isMesh && obj.visible && meshBlocks(obj as THREE.Mesh, samples)) return true;
+    return meshesHit(obj, samples);
+}
+
+/*
+ * Walks the object's own meshes, but not into a nested part that is itself
+ * a non-collidable type: a preset scene is one group whose children include
+ * start positions, roads, rails and pads, and checking only the preset's own
+ * top-level type let those flat parts count as walls - a drone taking off
+ * from a preset's start position crashed at 10 cm. Gates are skipped here
+ * because obstacleHasCollision already tested them with their real shape.
+ */
+function meshesHit(node: THREE.Object3D, samples: THREE.Vector3[]): boolean {
+    for (const child of node.children) {
+        if (!child.visible) continue;
+        if (isGateObject(child) || shouldSkipCollisionForObject(child)) continue;
+        if ((child as THREE.Mesh).isMesh && meshBlocks(child as THREE.Mesh, samples)) return true;
+        if (meshesHit(child, samples)) return true;
+    }
+    return false;
+}
+
+// Anything that doesn't rise above this is ground markings (marker sheets,
+// marker maps, decals): something to land on, not to crash into. Hitting
+// the ground itself is handled by the ground-impact physics.
+const FLAT_SURFACE_MAX_TOP = 0.08;
+
+function meshBlocks(mesh: THREE.Mesh, samples: THREE.Vector3[]): boolean {
+    const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+    if (material && 'opacity' in material && material.opacity !== undefined && material.opacity < 0.2) return false;
+    const box = new THREE.Box3().setFromObject(mesh);
+    if (box.isEmpty() || box.max.z <= FLAT_SURFACE_MAX_TOP) return false;
+    return intersectsExpandedBox(box, samples);
 }

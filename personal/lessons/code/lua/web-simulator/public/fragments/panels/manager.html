@@ -8,8 +8,15 @@
                 <div class="panel-content panel-content--scene-manager">
                     <div class="scene-manager">
                         <div class="scene-manager-tabs" role="tablist" aria-label="Режим панели менеджера сцены">
-                            <button id="scene-tab-hierarchy" class="scene-manager-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="scene-panel-hierarchy">Объекты</button>
-                            <button id="scene-tab-inspector" class="scene-manager-tab" type="button" role="tab" aria-selected="false" aria-controls="scene-panel-inspector">Свойства</button>
+                            <button id="scene-tab-hierarchy" class="scene-manager-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="scene-panel-hierarchy">
+                                <svg class="scene-manager-tab__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l11 0"></path><path d="M9 12l11 0"></path><path d="M9 18l11 0"></path><path d="M5 6l0 .01"></path><path d="M5 12l0 .01"></path><path d="M5 18l0 .01"></path></svg>
+                                <span>Объекты</span>
+                            </button>
+                            <button id="scene-tab-inspector" class="scene-manager-tab" type="button" role="tab" aria-selected="false" aria-controls="scene-panel-inspector">
+                                <svg class="scene-manager-tab__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M6 4v4"></path><path d="M6 12v8"></path><path d="M10 16a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M12 4v10"></path><path d="M12 18v2"></path><path d="M16 7a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path><path d="M18 4v1"></path><path d="M18 9v11"></path></svg>
+                                <span>Свойства</span>
+                                <span class="scene-manager-tab__dot" aria-hidden="true"></span>
+                            </button>
                         </div>
 
                         <div id="scene-operation-status" class="scene-operation-status" role="status" aria-live="polite" hidden></div>

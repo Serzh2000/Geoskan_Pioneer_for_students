@@ -1,5 +1,7 @@
 import { drones, simSettings, ensureDronePythonConnectionSettings } from '../core/state.js';
 import { getAutopilotRuntimeConfig } from '../autopilot/params-runtime.js';
+import { measureSurfaceBelow, readOpticalFlow } from '../sensors/downward.js';
+import { vehicleGetState, vehicleSetSpeed, vehicleStart, vehicleStop } from '../vehicles/api.js';
 import {
     applyGoToLocalPointRequest,
     enterLandingProcess,
@@ -149,6 +151,7 @@ export function installJsRuntimeAPI() {
         return val;
     };
 
+    const MANUAL_SPEED_TIMEOUT_MS = 500;
     w.pioneer_set_manual_speed = (id: string, vx: any, vy: any, vz: any, yaw_rate: any) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
@@ -170,11 +173,12 @@ export function installJsRuntimeAPI() {
         d.pendingLocalPoint = false;
         d.pendingLocalPointSource = null;
         d.pendingLocalPointTarget = null;
-        d.target_pos = {
-            x: d.pos.x + vxn * dt,
-            y: d.pos.y + vyn * dt,
-            z: Math.max(0, d.pos.z + vzn * dt)
-        };
+        // A velocity command, not a nudge of the target point: the autopilot
+        // tracks this speed until commands stop arriving for 0.5 s, then holds
+        // position (physics/flight-update.ts). Previously target_pos moved by
+        // v*dt, which capped real speed at a fraction of what was asked.
+        d.manualVelocity = { x: vxn, y: vyn, z: vzn, expiresAt: now + MANUAL_SPEED_TIMEOUT_MS };
+        d.target_pos = { ...d.pos };
         d.target_yaw = d.target_yaw + yrn * dt;
         d.pointReachedFlag = false;
         return true;
@@ -195,8 +199,33 @@ export function installJsRuntimeAPI() {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
         const minHeight = getAutopilotRuntimeConfig().sensors.altMinHeight;
-        return d.pos.z >= minHeight ? d.pos.z : 0;
+        // Distance to whatever is straight below - ground, a roof, a moving train.
+        const range = measureSurfaceBelow(d.pos).range;
+        return range >= minHeight ? range : 0;
     };
+
+    w.pioneer_get_optical_flow = (id: string) => {
+        if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
+        const reading = readOpticalFlow(getDroneOrDefault(id));
+        return [reading.flowX, reading.flowY, reading.quality];
+    };
+
+    // Simulator-only scenario API: cars and trains on the scene, by name.
+    // Errors come back as [false, message] so Python can raise its own exception.
+    const vehicleCall = <T>(run: () => T) => {
+        try {
+            return [true, run()];
+        } catch (error) {
+            return [false, error instanceof Error ? error.message : String(error)];
+        }
+    };
+    w.pioneer_vehicle_start = (name: string) => vehicleCall(() => vehicleStart(name));
+    w.pioneer_vehicle_stop = (name: string) => vehicleCall(() => vehicleStop(name));
+    w.pioneer_vehicle_set_speed = (name: string, speed: number) => vehicleCall(() => vehicleSetSpeed(name, speed));
+    w.pioneer_vehicle_state = (name: string) => vehicleCall(() => {
+        const s = vehicleGetState(name);
+        return [s.name, s.kind, s.x, s.y, s.z, s.heading, s.speed, s.moving, s.markerId];
+    });
 
     w.pioneer_get_battery_status = (id: string) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');

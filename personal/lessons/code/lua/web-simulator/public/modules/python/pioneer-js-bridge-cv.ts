@@ -1,3 +1,4 @@
+import { latestMarkerDetections } from './marker-detection.js';
 type CvWindowState = {
     root: HTMLDivElement;
     title: HTMLDivElement;
@@ -168,6 +169,9 @@ function renderCvFrameSummary(frame: unknown) {
 
 export function installCvRuntimeAPI(w: any) {
     installCvKeyboardBridge();
+    // [[id, [[x, y] x4]], ...] for the last captured frame, one dictionary.
+    w.pioneer_cv_detect_markers = (dictionary: string) =>
+        latestMarkerDetections(String(dictionary || '')).map((marker) => [marker.id, marker.corners]);
     w.pioneer_cv_imshow = (windowName: string, frame: unknown) => {
         const cvWindow = ensureCvWindow(String(windowName || 'OpenCV Preview'));
         if (!cvWindow) return null;

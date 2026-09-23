@@ -29,4 +29,5 @@ export interface SceneObjectOptions {
     floors?: number;
     roadWidth?: number;
     markerMap?: MarkerMapOptions;
+    vehicle?: Partial<import('./vehicles.js').VehicleConfig>;
 }

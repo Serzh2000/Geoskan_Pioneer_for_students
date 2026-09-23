@@ -133,16 +133,10 @@ function renderFact(label: string, value: string): string {
 function renderEntryBody(entry: ApiEntryView): string {
     const isInteractive = !!entry.previewScenario;
     const isPreviewOpen = uiState.openPreviewKey === entry.name && isInteractive;
-    const directionLabel = entry.doc.direction === 'to-autopilot'
-        ? 'В автопилот'
-        : entry.doc.direction === 'from-autopilot'
-            ? 'От автопилота'
-            : '';
-
+    // Direction is shown as a badge in the entry head (renderDirectionBadge).
     const facts = [
         entry.doc.params ? renderFact('Аргументы', highlightApiCode(entry.doc.params)) : '',
-        entry.doc.returns ? renderFact('Возвращает', highlightApiCode(entry.doc.returns)) : '',
-        directionLabel ? renderFact('Направление', escapeHtml(directionLabel)) : ''
+        entry.doc.returns ? renderFact('Возвращает', highlightApiCode(entry.doc.returns)) : ''
     ].join('');
 
     return `
@@ -174,6 +168,23 @@ function renderEntryBody(entry: ApiEntryView): string {
     `;
 }
 
+// Visible without expanding the entry: is this something the script sends
+// to the autopilot (a command), or something the autopilot sends back into
+// callback(event)? The two look alike (both are Ev.*) and are easy to mix up.
+function renderDirectionBadge(direction: ApiEntryView['doc']['direction']): string {
+    if (direction === 'to-autopilot') {
+        return `<span class="api-badge-direction api-badge-direction--to" title="Команда: скрипт отправляет её автопилоту">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6l-6 6"/></svg>
+            в автопилот</span>`;
+    }
+    if (direction === 'from-autopilot') {
+        return `<span class="api-badge-direction api-badge-direction--from" title="Событие: автопилот присылает его в callback(event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6l6 6"/></svg>
+            от автопилота</span>`;
+    }
+    return '';
+}
+
 function renderEntry(entry: ApiEntryView): string {
     const isInteractive = !!entry.previewScenario;
     const isExpanded = uiState.expanded.has(entry.name);
@@ -187,6 +198,7 @@ function renderEntry(entry: ApiEntryView): string {
                 aria-expanded="${isExpanded}">
                 <span class="api-entry__title">
                     <span class="api-name">${escapeHtml(entry.name)}</span>
+                    ${renderDirectionBadge(entry.doc.direction)}
                     ${isInteractive ? '<span class="api-badge-3d">3D</span>' : ''}
                 </span>
                 <span class="api-entry__desc">${entry.doc.desc || 'Описание пока не добавлено.'}</span>
@@ -388,6 +400,13 @@ export function openApiDocsCatalog(options: {
         uiState.expanded.add(options.previewKey);
     }
 
-    (window as any).openPanel?.('docs-panel');
+    // The reference now lives in a drawer inside the code editor
+    // (panels/editor-docs.ts) - open the editor, then the drawer.
+    // openPanel is a toggle: calling it for the active editor would hide
+    // the reference along with the editor instead of revealing it.
+    if (!document.getElementById('editor-panel')?.classList.contains('active')) {
+        (window as any).openPanel?.('editor-panel');
+    }
+    document.dispatchEvent(new CustomEvent('editor-docs:open'));
     renderApiDocs(language);
 }

@@ -10,17 +10,23 @@ import { registerAddFormBindings } from './bindings/add-form.js';
 import { registerSceneIoBindings } from './bindings/scene-io.js';
 import type { BindingOptions } from './bindings/shared.js';
 
-function registerTabBindings({ callbacks, elements, setActiveTab }: BindingOptions) {
+function registerTabBindings({ callbacks, elements, setActiveTab: setActiveTabUnchecked }: BindingOptions) {
+    // The inspector tab is aria-disabled (not natively disabled) until
+    // something is selected, so clicks and arrow keys must be gated here.
+    const setActiveTab = (tab: Parameters<typeof setActiveTabUnchecked>[0]) => {
+        if (tab === 'inspector' && elements.inspectorTabBtn?.getAttribute('aria-disabled') === 'true') return;
+        setActiveTabUnchecked(tab);
+    };
     elements.hierarchyTabBtn?.addEventListener('click', () => {
         setActiveTab('hierarchy');
     });
     elements.rootEl?.addEventListener('click', event => {
         const target = event.target as HTMLElement;
         if (target.closest('[data-scene-browse]')) setActiveTab('hierarchy');
-        if (target.closest('#scene-open-properties')) {
-            setActiveTab('inspector');
-            document.getElementById('scene-tab-inspector')?.focus();
-        }
+    });
+    document.getElementById('scene-open-properties')?.addEventListener('click', () => {
+        setActiveTab('inspector');
+        elements.inspectorTabBtn?.focus();
     });
     elements.tabsEl?.addEventListener('keydown', event => {
         if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;

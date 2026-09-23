@@ -10,6 +10,8 @@
  * history, browsable via the bell-icon notification center next to the
  * editor's terminal button (see editor-terminal.ts).
  */
+import { EDITOR_DRAWER_OPEN_EVENT, announceEditorDrawerOpen } from './editor-drawers.js';
+
 type NoticeLevel = 'warn' | 'info' | 'error';
 
 type SimulationNoticePayload = string | {
@@ -160,10 +162,7 @@ export function initSimulationNotice() {
             closeCenter();
             return;
         }
-        // Only one side drawer at a time - they occupy the same docked slot.
-        document.getElementById('editor-terminal-toggle-btn')?.dispatchEvent(
-            new CustomEvent('editor-drawer:close-if-open')
-        );
+        announceEditorDrawerOpen('notifications');
         renderNotificationCenter(centerList);
         centerPanel.hidden = false;
         bellBtn.setAttribute('aria-pressed', 'true');
@@ -171,8 +170,9 @@ export function initSimulationNotice() {
         updateBadge(bellBadge, unreadCount);
     });
 
-    bellBtn?.addEventListener('editor-drawer:close-if-open', () => {
-        if (centerPanel && !centerPanel.hidden) closeCenter();
+    // Only one side drawer at a time - they occupy the same docked slot.
+    document.addEventListener(EDITOR_DRAWER_OPEN_EVENT, (event) => {
+        if ((event as CustomEvent<string>).detail !== 'notifications' && centerPanel && !centerPanel.hidden) closeCenter();
     });
 
     centerCloseBtn?.addEventListener('click', closeCenter);

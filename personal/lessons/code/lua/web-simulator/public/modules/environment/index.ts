@@ -38,6 +38,7 @@ import {
     createTransportMesh,
     updateApartmentBuildingMetadata,
     createVideoTowerMesh,
+    createVehicleMesh,
     SceneObjectOptions,
     ScenePathPoint,
     snapMarkerToSurface,
@@ -65,6 +66,8 @@ export function createSceneObjectByType(type: string, options: SceneObjectOption
     else if (type === 'forest-patch') obj = createForestPatchMesh();
     else if (type === 'settlement') obj = createSettlementMesh();
     else if (type === 'transport') obj = createTransportMesh();
+    else if (type === 'car') obj = createVehicleMesh('car', options.vehicle);
+    else if (type === 'train') obj = createVehicleMesh('train', options.vehicle);
     else if (type === 'cargo') obj = createCargoMesh();
     else if (type === 'start-position') obj = createStartPositionMesh(options.value || '1');
     else if (type === 'heliport') obj = createArenaHeliportMesh();

@@ -71,6 +71,8 @@ export function isTransformableObject(target: THREE.Object3D | null | undefined)
     }
 
     if (target.userData?.isMarkerMap) return true;
+    // Vehicles are placed by vehicles/engine.ts along their route.
+    if (target.userData?.transformLocked) return false;
     return !!target.userData?.draggable;
 }
 
@@ -115,6 +117,14 @@ function buildSceneEntry(obj: THREE.Object3D, depth: number, parentId: string, c
     if (obj.userData?.presetName) metaLines.push(`Пресет: ${obj.userData.presetName}`);
     if (Array.isArray(obj.userData?.windowIncidentsSummaryLines)) metaLines.push(...obj.userData.windowIncidentsSummaryLines);
     if (Array.isArray(obj.userData?.markerMapSummaryLines)) metaLines.push(...obj.userData.markerMapSummaryLines);
+    const vehicle = obj.userData?.vehicle;
+    if (vehicle) {
+        const modes: Record<string, string> = { loop: 'по кругу', pingpong: 'туда-обратно', once: 'до конца' };
+        metaLines.push(`Скорость: ${vehicle.speed} м/с, ${modes[vehicle.mode] || vehicle.mode}`);
+        if (vehicle.kind === 'train') metaLines.push(`Вагонов: ${vehicle.wagons}`);
+        metaLines.push(vehicle.marker?.enabled ? `Маркер на крыше: ${vehicle.marker.kind} #${vehicle.marker.id}` : 'Без маркера');
+        if (!vehicle.routeId) metaLines.push('Нет маршрута');
+    }
 
     const points = normalizePoints(obj.userData?.points);
     return {
@@ -142,6 +152,9 @@ function buildSceneEntry(obj: THREE.Object3D, depth: number, parentId: string, c
         markerDictionary: obj.userData?.markerDictionary ? String(obj.userData.markerDictionary) : '',
         value: obj.userData?.value !== undefined ? String(obj.userData.value) : '',
         pointsText: points.length ? formatPoints(points) : '',
+        closed: obj.userData?.supportsPoints ? !!obj.userData.closed : undefined,
+        markerMap: obj.userData?.isMarkerMap ? { ...obj.userData.markerMapConfig } : undefined,
+        vehicle: vehicle ? structuredClone(vehicle) : undefined,
         metaLines
     };
 }

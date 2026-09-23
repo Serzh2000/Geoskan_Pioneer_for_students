@@ -144,3 +144,36 @@ export function createArucoMarkerMapMesh(dictionaryId?: string, options?: Marker
 export function createAprilTagMarkerMapMesh(dictionaryId?: string, options?: MarkerMapOptions) {
     return createMarkerMapMesh('AprilTag', dictionaryId, options);
 }
+
+/*
+ * Rebuilds an existing marker map in place with new settings: the markers
+ * inside are regenerated, while the group itself - its id, position, the
+ * rotation the user gave it with the gizmo, its parent - stays untouched.
+ * Rotation therefore isn't a setting here; the stored rotationDeg is kept.
+ */
+export function updateMarkerMapSettings(
+    object: THREE.Object3D,
+    params: { dictionaryId?: string; options?: MarkerMapOptions }
+) {
+    const group = object as THREE.Group;
+    if (!group.userData?.isMarkerMap) return false;
+
+    const kind: MarkerKind = group.userData.markerMapKind === 'AprilTag' ? 'AprilTag' : 'ArUco';
+    const previous = (group.userData.markerMapConfig || {}) as MarkerMapOptions;
+    const fresh = createMarkerMapMesh(
+        kind,
+        params.dictionaryId || String(group.userData.markerDictionary || ''),
+        { ...previous, ...params.options, rotationDeg: previous.rotationDeg }
+    );
+
+    for (const child of [...group.children]) {
+        if (!child.userData?.partOfMarkerMap) continue;
+        group.remove(child);
+        child.traverse((node) => (node as THREE.Mesh).geometry?.dispose?.());
+    }
+    for (const child of [...fresh.children]) group.add(child);
+
+    group.name = fresh.name;
+    group.userData = { ...group.userData, ...fresh.userData };
+    return true;
+}

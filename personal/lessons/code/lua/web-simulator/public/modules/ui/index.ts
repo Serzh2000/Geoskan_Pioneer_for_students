@@ -22,11 +22,17 @@ import { initSceneOnboarding } from './scene-onboarding.js';
 import { initCameraModeUI } from './controls/camera-mode.js';
 import { initSceneHotbar } from './scene-hotbar/index.js';
 import { initEditorTerminal } from './panels/editor-terminal.js';
+import { initEditorDocs } from './panels/editor-docs.js';
+import { initRailTooltip } from './panels/rail-tooltip.js';
+import { initOnboardingTour } from './onboarding-tour.js';
+import { initMarkerSettings } from './marker-settings.js';
+import { initVehicleSettings } from './vehicle-settings.js';
 import { initViewportAnchor } from './viewport-anchor.js';
 import { initFileControls } from './controls/file-controls.js';
 import { initWorkspaceView } from './workspace-view.js';
 import { initMobileEditorViewport } from './mobile-editor-viewport.js';
-import type { MarkerMapOptions } from '../environment/obstacles.js';
+import type { MarkerMapOptions, VehicleConfig } from '../environment/obstacles.js';
+import type { AddObjectOptions } from '../scene/objects/object-manager.js';
 import { currentScriptLanguage } from '../core/state.js';
 
 export interface UICallbacks {
@@ -64,15 +70,15 @@ export interface UICallbacks {
             parentId?: string;
             childCount?: number;
             pointCount?: number;
+            closed?: boolean;
+            markerMap?: MarkerMapOptions;
+            vehicle?: VehicleConfig;
         }>;
         select: (id: string) => boolean;
         toggleMultiSelect: (id: string) => boolean;
         focus: (id: string) => boolean;
         remove: (id: string) => boolean;
-        add: (
-            type: string,
-            options?: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number; markerMap?: MarkerMapOptions }
-        ) => string | null;
+        add: (type: string, options?: AddObjectOptions) => string | null;
         setTransform: (
             position: { x: number; y: number; z: number },
             rotation: { x: number; y: number; z: number },
@@ -111,6 +117,11 @@ export function initUI(callbacks: UICallbacks) {
     initCameraModeUI();
     initSceneHotbar();
     initEditorTerminal();
+    initEditorDocs();
+    initRailTooltip();
+    initMarkerSettings();
+    initVehicleSettings();
+    initOnboardingTour();
     initViewportAnchor();
     initMobileEditorViewport({ onEditorResize: callbacks.onEditorResize });
     initWorkspaceView();

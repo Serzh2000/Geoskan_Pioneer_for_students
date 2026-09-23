@@ -1,4 +1,5 @@
 import { getLogEntries, onLogsChanged, createLogEntryElement } from '../../shared/logging/logger.js';
+import { EDITOR_DRAWER_OPEN_EVENT, announceEditorDrawerOpen } from './editor-drawers.js';
 
 /*
  * Read-only terminal drawer inside the code editor - a second, faster way
@@ -43,10 +44,7 @@ export function initEditorTerminal(): void {
             close();
             return;
         }
-        // Only one side drawer at a time - they occupy the same docked slot.
-        (document.getElementById('editor-notifications-toggle-btn') as HTMLButtonElement | null)?.dispatchEvent(
-            new CustomEvent('editor-drawer:close-if-open')
-        );
+        announceEditorDrawerOpen('terminal');
         render();
         panel.hidden = false;
         toggleBtn.setAttribute('aria-pressed', 'true');
@@ -55,8 +53,9 @@ export function initEditorTerminal(): void {
 
     closeBtn.addEventListener('click', close);
 
-    toggleBtn.addEventListener('editor-drawer:close-if-open', () => {
-        if (!panel.hidden) close();
+    // Only one side drawer at a time - they occupy the same docked slot.
+    document.addEventListener(EDITOR_DRAWER_OPEN_EVENT, (event) => {
+        if ((event as CustomEvent<string>).detail !== 'terminal' && !panel.hidden) close();
     });
 
     document.addEventListener('keydown', (event) => {

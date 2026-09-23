@@ -133,6 +133,13 @@ class Pioneer:
     def get_autopilot_state(self):
         return js.pioneer_get_autopilot_state(self._id)
 
+    def get_optical_flow(self, get_last_received=True):
+        # (flow_x, flow_y, quality): угловая скорость потока, рад/с, в осях дрона
+        # (x - вперёд, y - вправо) и качество 0..255. Относительная скорость
+        # над поверхностью: v = (flow - вращение) * высота.
+        flow_x, flow_y, quality = js.pioneer_get_optical_flow(self._id).to_py()
+        return flow_x, flow_y, int(quality)
+
     def led_control(self, led_id=255, r=0, g=0, b=0):
         return bool(js.pioneer_led_control(self._id, led_id, r, g, b))
 
@@ -216,7 +223,42 @@ class VideoStream:
     def connected(self):
         return self.camera.connected()
 
+class VehicleError(Exception):
+    pass
+
+def _vehicle_result(raw):
+    ok, value = raw.to_py() if hasattr(raw, 'to_py') else raw
+    if not ok:
+        raise VehicleError(value)
+    return value
+
+class Vehicle:
+    # Только в симуляторе: машина или поезд на сцене, по названию из их настроек.
+    def __init__(self, name):
+        self.name = str(name)
+
+    # async, like Thread.start in this runtime: the script runner awaits every
+    # .start()/.stop() call automatically, so for the student it is still train.start().
+    async def start(self):
+        return bool(_vehicle_result(js.pioneer_vehicle_start(self.name)))
+
+    async def stop(self):
+        return bool(_vehicle_result(js.pioneer_vehicle_stop(self.name)))
+
+    def set_speed(self, speed):
+        return bool(_vehicle_result(js.pioneer_vehicle_set_speed(self.name, float(speed))))
+
+    def get_state(self):
+        # Истинное положение - для настройки сценария и проверки результата.
+        # В миссии слежения ориентируйтесь на камеру и оптический поток.
+        name, kind, x, y, z, heading, speed, moving, marker_id = _vehicle_result(js.pioneer_vehicle_state(self.name))
+        return {'name': name, 'kind': kind, 'x': x, 'y': y, 'z': z, 'heading': heading,
+                'speed': speed, 'moving': bool(moving), 'marker_id': marker_id}
+
+
 m.Pioneer = Pioneer
+m.Vehicle = Vehicle
+m.VehicleError = VehicleError
 m.Camera = Camera
 m.VideoStream = VideoStream
 sys.modules['pioneer_sdk'] = m

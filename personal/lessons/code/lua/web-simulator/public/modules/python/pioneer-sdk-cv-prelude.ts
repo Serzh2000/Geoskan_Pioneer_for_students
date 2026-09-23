@@ -101,29 +101,93 @@ class _CvFileStorage:
     def release(self):
         return None
 
+class _ArucoDictionary:
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return 'aruco.Dictionary(%s)' % self.name
+
+def _aruco_dictionary_name(dictionary):
+    if isinstance(dictionary, _ArucoDictionary):
+        return dictionary.name
+    if isinstance(dictionary, dict):
+        return str(dictionary.get('kind', ''))
+    return str(dictionary or '')
+
+def _aruco_detect(dictionary):
+    # Симулятор знает, где на сцене лежат маркеры: при съёмке кадра он проецирует их
+    # в изображение камеры (видно целиком, повёрнут к камере, не закрыт). Результат
+    # в том же виде, что у OpenCV: corners - по массиву (1, 4, 2) на маркер,
+    # углы по часовой с верхнего левого; ids - массив (N, 1) или None.
+    raw = js.pioneer_cv_detect_markers(_aruco_dictionary_name(dictionary))
+    found = raw.to_py() if hasattr(raw, 'to_py') else list(raw or [])
+    numpy = _numpy_or_none()
+    corners = []
+    ids = []
+    for marker_id, points in found:
+        pts = [[float(x), float(y)] for x, y in points]
+        corners.append(numpy.array([pts], dtype=numpy.float32) if numpy is not None else [pts])
+        ids.append(int(marker_id))
+    if not ids:
+        return tuple(), None, tuple()
+    ids_out = numpy.array([[i] for i in ids], dtype=numpy.int32) if numpy is not None else [[i] for i in ids]
+    return tuple(corners), ids_out, tuple()
+
 class _ArucoDetector:
     def __init__(self, dictionary=None, params=None):
         self.dictionary = dictionary
         self.params = params
 
     def detectMarkers(self, frame):
-        return [], None, []
+        return _aruco_detect(self.dictionary)
 
 class _ArucoNamespace:
-    DICT_4X4_50 = 0
-    DICT_6X6_50 = 1
+    DICT_4X4_50 = 'DICT_4X4_50'
+    DICT_4X4_100 = 'DICT_4X4_100'
+    DICT_4X4_250 = 'DICT_4X4_250'
+    DICT_4X4_1000 = 'DICT_4X4_1000'
+    DICT_5X5_50 = 'DICT_5X5_50'
+    DICT_5X5_100 = 'DICT_5X5_100'
+    DICT_5X5_250 = 'DICT_5X5_250'
+    DICT_5X5_1000 = 'DICT_5X5_1000'
+    DICT_6X6_50 = 'DICT_6X6_50'
+    DICT_6X6_100 = 'DICT_6X6_100'
+    DICT_6X6_250 = 'DICT_6X6_250'
+    DICT_6X6_1000 = 'DICT_6X6_1000'
+    DICT_7X7_50 = 'DICT_7X7_50'
+    DICT_7X7_100 = 'DICT_7X7_100'
+    DICT_7X7_250 = 'DICT_7X7_250'
+    DICT_7X7_1000 = 'DICT_7X7_1000'
+    DICT_ARUCO_ORIGINAL = 'DICT_ARUCO_ORIGINAL'
+    DICT_APRILTAG_16h5 = 'DICT_APRILTAG_16h5'
+    DICT_APRILTAG_25h9 = 'DICT_APRILTAG_25h9'
+    DICT_APRILTAG_36h10 = 'DICT_APRILTAG_36h10'
+    DICT_APRILTAG_36h11 = 'DICT_APRILTAG_36h11'
 
     @staticmethod
     def getPredefinedDictionary(kind):
-        return {"kind": kind}
+        return _ArucoDictionary(_aruco_dictionary_name(kind))
+
+    @staticmethod
+    def Dictionary_get(kind):
+        return _ArucoDictionary(_aruco_dictionary_name(kind))
 
     @staticmethod
     def DetectorParameters():
         return {}
 
     @staticmethod
-    def ArucoDetector(dictionary, params):
+    def DetectorParameters_create():
+        return {}
+
+    @staticmethod
+    def ArucoDetector(dictionary, params=None):
         return _ArucoDetector(dictionary, params)
+
+    @staticmethod
+    def detectMarkers(image, dictionary, parameters=None, **kwargs):
+        return _aruco_detect(dictionary)
 
     @staticmethod
     def drawDetectedMarkers(frame, corners, ids=None):

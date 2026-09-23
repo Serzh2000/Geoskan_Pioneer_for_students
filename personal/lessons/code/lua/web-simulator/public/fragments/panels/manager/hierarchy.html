@@ -1,23 +1,40 @@
                         <section id="scene-panel-hierarchy" class="scene-panel-view is-active" role="tabpanel" aria-labelledby="scene-tab-hierarchy">
+                            <div class="scene-workspace-intro">
+                                <span class="scene-workspace-intro__eyebrow">Рабочее пространство</span>
+                                <h2>Соберите свой полигон</h2>
+                                <p>Добавляйте объекты, выбирайте их на сцене и настраивайте детали.</p>
+                            </div>
                             <div class="scene-panel-card scene-panel-card--tree">
                                 <div class="scene-panel-card__header">
-                                    <div>
+                                    <div class="scene-panel-card__heading">
                                         <div class="scene-panel-card__title">Объекты сцены</div>
-                                        <p class="scene-panel-card__description">Выберите объект в списке или на сцене.</p>
+                                        <span id="scene-object-count" class="scene-panel-card__badge">0 объектов</span>
                                     </div>
-                                    <span id="scene-object-count" class="scene-panel-card__badge">0 объектов</span>
+                                    <!-- Opens the viewport's placement hotbar (ui/scene-hotbar) - the
+                                         one place objects get added, surfaced here too so the
+                                         panel that lists objects also says how to add one. -->
+                                    <button id="scene-add-object-btn" type="button" class="scene-btn scene-btn--primary scene-btn--sm" title="Открыть панель расстановки объектов в сцене">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-plus" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
+                                        <span>Добавить объект</span>
+                                    </button>
                                 </div>
                                 <div class="scene-tree-toolbar">
                                     <div class="scene-tree-search">
-                                        <svg class="scene-tree-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="m15.5 15.5 4 4"></path></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="scene-tree-search__icon icon icon-tabler icons-tabler-outline icon-tabler-search" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg>
                                         <input id="scene-tree-filter" type="search" autocomplete="off" placeholder="Найти объект…" aria-label="Поиск объектов сцены" aria-controls="scene-object-list">
                                         <button id="scene-tree-filter-clear" type="button" class="scene-tree-search__clear" aria-label="Очистить поиск">×</button>
                                     </div>
-                                    <button id="scene-tree-collapse" type="button" class="scene-tree-toolbar__btn" title="Свернуть все группы" aria-label="Свернуть все группы"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m8 8 4-4 4 4M8 16l4 4 4-4M5 12h14"/></svg></button>
+                                    <button id="scene-tree-collapse" type="button" class="scene-tree-toolbar__btn" title="Свернуть все группы" aria-label="Свернуть все группы"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-fold" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3v6l3 -3m-6 0l3 3"/><path d="M12 21v-6l3 3m-6 0l3 -3"/><path d="M4 12l1 0"/><path d="M9 12l1 0"/><path d="M14 12l1 0"/><path d="M19 12l1 0"/></svg></button>
                                 </div>
                                 <div id="scene-click-coords" class="scene-click-coords" style="display: none;"></div>
                                 <div id="scene-object-list" class="scene-manager-list" role="tree" aria-label="Дерево объектов сцены"></div>
-                                <div class="scene-tree-footer"><span>Двойной щелчок — приблизить</span><button id="scene-open-properties" type="button" disabled>Свойства →</button></div>
+                                <div class="scene-selection-bar">
+                                    <span class="scene-selection-bar__content"><span class="scene-selection-bar__label">Выбор объекта</span><strong id="scene-selection-summary" aria-live="polite">Выберите объект в списке или на сцене</strong></span>
+                                    <button id="scene-open-properties" type="button" disabled>Свойства →</button>
+                                </div>
+                                <div class="scene-tree-footer">
+                                    <span class="scene-tree-footer__hint">Двойной щелчок — к объекту · <kbd>Ctrl</kbd> / <kbd>⌘</kbd> + щелчок — выбрать несколько</span>
+                                </div>
                             </div>
 
                             <div class="scene-panel-card scene-panel-card--composer">
@@ -49,6 +66,8 @@
                                             <option value="forest-patch">Лесной массив</option>
                                             <option value="settlement">Макет поселения</option>
                                             <option value="transport">Транспорт</option>
+                                            <option value="car">Автомобиль</option>
+                                            <option value="train">Поезд</option>
                                             <option value="cargo">Грузик</option>
                                             <option value="start-position">Стартовая позиция</option>
                                             <option value="heliport">Хелипорт</option>
@@ -63,31 +82,37 @@
                                         </select>
                                     </div>
                                 <div class="scene-subsection">
-                                    <div class="scene-subsection__title">Готовые сцены</div>
-                                    <div class="scene-form-grid">
-                                        <label class="scene-field">
-                                            <span>Сценарий</span>
-                                            <select id="scene-preset-type">
-                                                <option value="preset-race-track">Гоночная трасса</option>
-                                                <option value="preset-residential">Спальный район</option>
-                                                <option value="preset-geoskan-arena">Геоскан Арена</option>
-                                            </select>
-                                        </label>
-                                    </div>
-                                    <div id="scene-preset-summary" class="scene-preset-summary"></div>
-                                    <p class="scene-preset-note">Добавится отдельной группой. Объекты на сцене сохранятся.</p>
-                                    <button id="scene-preset-btn" class="btn-secondary scene-btn scene-btn--neutral">Добавить сцену</button>
+                                    <div class="scene-library-heading"><div><div class="scene-subsection__title">Начните с готовой сцены</div><p class="scene-panel-card__description">Выберите основу для своей миссии</p></div><span class="scene-panel-card__badge">3 шаблона</span></div>
+                                    <!-- The select stays the source of truth for scene-io/actions
+                                         bindings; the radio cards below it (rendered by
+                                         experience.ts) just drive its value. -->
+                                    <select id="scene-preset-type" hidden aria-hidden="true" tabindex="-1">
+                                        <option value="preset-race-track">Гоночная трасса</option>
+                                        <option value="preset-residential">Спальный район</option>
+                                        <option value="preset-geoskan-arena">Геоскан Арена</option>
+                                    </select>
+                                    <div id="scene-preset-options" class="scene-preset-options" role="radiogroup" aria-label="Готовая сцена"></div>
+                                    <button id="scene-preset-btn" class="scene-btn scene-btn--neutral">Добавить «Гоночная трасса»</button>
+                                    <p class="scene-preset-note">Шаблон добавится отдельной группой. Ваши объекты сохранятся.</p>
                                 </div>
 
-                                <div class="scene-subsection">
-                                    <div class="scene-subsection__title">Файл сцены</div>
-                                    <p class="scene-preset-note">Сохраните расставленные объекты в файл, чтобы открыть эту же сцену на другом компьютере.</p>
+                                <details class="scene-subsection scene-file-section">
+                                    <summary><span class="scene-file-icon" aria-hidden="true">↗</span><span><strong>Сохранить или открыть сцену</strong><small>Перенос расстановки между компьютерами · JSON</small></span><span class="scene-disclosure-chevron" aria-hidden="true">›</span></summary>
+                                    <div class="scene-file-section__body">
+                                    <p class="scene-preset-note">Сохраните расстановку в файл, чтобы открыть её на другом компьютере.</p>
                                     <div class="scene-action-stack">
-                                        <button id="scene-export-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral">Скачать сцену</button>
-                                        <button id="scene-import-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral">Загрузить сцену</button>
+                                        <button id="scene-export-btn" type="button" class="scene-btn scene-btn--neutral">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path><path d="M7 11l5 5l5 -5"></path><path d="M12 4l0 12"></path></svg>
+                                            <span>Скачать сцену</span>
+                                        </button>
+                                        <button id="scene-import-btn" type="button" class="scene-btn scene-btn--neutral">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path><path d="M7 9l5 -5l5 5"></path><path d="M12 4l0 12"></path></svg>
+                                            <span>Открыть файл</span>
+                                        </button>
                                     </div>
                                     <input type="file" id="scene-import-input" style="display:none" accept=".json">
-                                </div>
+                                    </div>
+                                </details>
                             </div>
                         </section>
                         <div id="scene-type-modal" class="scene-type-modal" aria-hidden="true">

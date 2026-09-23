@@ -142,6 +142,12 @@ export interface DroneState {
     target_alt: number;
     target_pos: Vector3;
     target_yaw: number;
+    /**
+     * Velocity setpoint from set_manual_speed (m/s, world frame), valid until
+     * expiresAt (performance.now() ms). While fresh, the autopilot tracks this
+     * velocity instead of target_pos - like the real Pioneer's speed setpoints.
+     */
+    manualVelocity?: { x: number; y: number; z: number; expiresAt: number } | null;
     pendingLocalPoint?: boolean;
     pendingLocalPointSource?: CommandSource | null;
     pendingLocalPointTarget?: Vector3 | null;

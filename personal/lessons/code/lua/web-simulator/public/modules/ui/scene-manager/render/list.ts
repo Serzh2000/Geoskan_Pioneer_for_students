@@ -3,6 +3,7 @@ import type { SceneManagerDomRefs, SceneManagerEntry } from '../types.js';
 import type { SceneTreeState } from '../view-state.js';
 import { escapeHtml } from './format.js';
 import { getSceneObjectIcon } from './icons.js';
+import { tablerIcon } from '../../icons/tabler.js';
 import {
     formatObjectCount,
     getEntryKind,
@@ -12,9 +13,9 @@ import {
     matchesQuery
 } from './label.js';
 
-const TWISTY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>';
-const FOCUS_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 3v3"></path><path d="M12 18v3"></path><path d="M3 12h3"></path><path d="M18 12h3"></path></svg>';
-const DELETE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"></path><path d="M9 7V4a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"></path></svg>';
+const TWISTY_ICON = tablerIcon('chevron-right');
+const FOCUS_ICON = tablerIcon('focus-2');
+const DELETE_ICON = tablerIcon('trash');
 
 type VisibleRow = {
     entry: SceneManagerEntry;
@@ -197,8 +198,18 @@ export function renderObjectList(
     if (!elements.listEl || !callbacks.sceneManager) return;
 
     const rows = buildVisibleRows(objects, tree);
+    const selected = objects.filter(entry => entry.selected || entry.id === selectedId);
+    const summary = document.getElementById('scene-selection-summary');
+    if (summary) {
+        const label = selected.length > 1 ? `Выбрано объектов: ${selected.length}`
+            : selected.length === 1 ? getEntryTitle(selected[0]) : 'Выберите объект в списке или на сцене';
+        if (summary.textContent !== label) summary.textContent = label;
+        summary.closest('.scene-selection-bar')?.classList.toggle('has-selection', selected.length > 0);
+    }
     if (elements.listCountEl) {
-        elements.listCountEl.textContent = formatObjectCount(objects.length);
+        const matchCount = objects.filter(entry => matchesQuery(entry, tree.query.trim().toLowerCase())).length;
+        elements.listCountEl.textContent = tree.query.trim()
+            ? `${matchCount} из ${objects.length}` : formatObjectCount(objects.length);
     }
 
     const focused = document.activeElement as HTMLElement | null;

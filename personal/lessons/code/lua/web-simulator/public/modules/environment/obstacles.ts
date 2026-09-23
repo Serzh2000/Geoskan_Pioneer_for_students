@@ -11,6 +11,7 @@ export * from './obstacles/competition.js';
 export * from './obstacles/pads.js';
 export * from './obstacles/arena.js';
 export * from './obstacles/presets.js';
+export * from './obstacles/vehicles.js';
 
 import { Group } from 'three';
 export function createObstacles(_envGroup: Group) {

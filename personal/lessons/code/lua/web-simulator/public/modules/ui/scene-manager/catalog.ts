@@ -3,7 +3,7 @@ export type CatalogCategory = 'all' | 'flight' | 'markers' | 'landscape' | 'equi
 export function getCatalogCategory(type: string): CatalogCategory {
     if (['aruco', 'aruco-map', 'apriltag', 'apriltag-map'].includes(type)) return 'markers';
     if (['gate', 'pylon', 'flag', 'start-position', 'heliport', 'pad-h', 'pad-charge', 'charge-station'].includes(type)) return 'flight';
-    if (['building', 'road', 'rail', 'hill', 'arena-hills', 'tree', 'forest-patch', 'settlement', 'transport'].includes(type)) return 'landscape';
+    if (['building', 'road', 'rail', 'hill', 'arena-hills', 'tree', 'forest-patch', 'settlement', 'transport', 'car', 'train'].includes(type)) return 'landscape';
     return 'equipment';
 }
 

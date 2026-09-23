@@ -1,6 +1,7 @@
 import * as fengari from 'fengari-web';
 import { getDroneFromLua, simSettings } from '../core/state.js';
 import { getAutopilotRuntimeConfig } from '../autopilot/params-runtime.js';
+import { measureSurfaceBelow, readOpticalFlow } from '../sensors/downward.js';
 
 export const sensors_pos = function(L: any) {
     const simState = getDroneFromLua(L);
@@ -42,10 +43,15 @@ export const sensors_orientation = function(L: any) {
     return 3;
 };
 
-export const sensors_range = function(L: any) {
-    const simState = getDroneFromLua(L);
+// Distance to whatever is straight below - ground, a roof, a moving train.
+function rangeBelow(simState: any) {
     const minHeight = getAutopilotRuntimeConfig().sensors.altMinHeight;
-    fengari.lua.lua_pushnumber(L, simState.pos.z >= minHeight ? simState.pos.z : 0);
+    const range = measureSurfaceBelow(simState.pos).range;
+    return range >= minHeight ? range : 0;
+}
+
+export const sensors_range = function(L: any) {
+    fengari.lua.lua_pushnumber(L, rangeBelow(getDroneFromLua(L)));
     return 1;
 };
 
@@ -56,11 +62,17 @@ export const sensors_battery = function(L: any) {
 };
 
 export const sensors_tof = function(L: any) {
-    const simState = getDroneFromLua(L);
-    const minHeight = getAutopilotRuntimeConfig().sensors.altMinHeight;
-    const rangeMeters = simState.pos.z >= minHeight ? simState.pos.z : 0;
-    fengari.lua.lua_pushnumber(L, rangeMeters * 1000);
+    fengari.lua.lua_pushnumber(L, rangeBelow(getDroneFromLua(L)) * 1000);
     return 1;
+};
+
+/** flowX, flowY (rad/s, body frame), quality 0..255 - see sensors/downward.ts. */
+export const sensors_opticalFlow = function(L: any) {
+    const reading = readOpticalFlow(getDroneFromLua(L));
+    fengari.lua.lua_pushnumber(L, reading.flowX);
+    fengari.lua.lua_pushnumber(L, reading.flowY);
+    fengari.lua.lua_pushinteger(L, reading.quality);
+    return 3;
 };
 
 function normalizeRcPwmToUnit(channel: number, neutral = 1500) {

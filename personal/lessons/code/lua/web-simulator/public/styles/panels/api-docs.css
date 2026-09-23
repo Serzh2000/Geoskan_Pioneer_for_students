@@ -198,7 +198,8 @@
     grid-area: title;
     display: flex;
     align-items: center;
-    gap: 7px;
+    flex-wrap: wrap;
+    gap: 4px 7px;
     min-width: 0;
 }
 
@@ -219,6 +220,46 @@
     font-size: 9px;
     font-weight: 800;
     letter-spacing: 0.06em;
+}
+
+/* Command vs. event: blue arrow out = the script sends it to the autopilot,
+   green arrow in = the autopilot sends it back into callback(event). */
+.api-badge-direction {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 7px 2px 5px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+.api-badge-direction svg {
+    width: 11px;
+    height: 11px;
+}
+
+.api-badge-direction--to {
+    background: rgba(37, 99, 235, 0.1);
+    color: #1d4ed8;
+}
+
+.api-badge-direction--from {
+    background: rgba(22, 163, 74, 0.12);
+    color: #15803d;
+}
+
+:root[data-theme='dark'] .api-badge-direction--to {
+    background: rgba(96, 165, 250, 0.14);
+    color: #93c5fd;
+}
+
+:root[data-theme='dark'] .api-badge-direction--from {
+    background: rgba(74, 222, 128, 0.14);
+    color: #86efac;
 }
 
 .api-entry__desc {

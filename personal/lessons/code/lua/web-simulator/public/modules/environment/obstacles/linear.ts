@@ -71,6 +71,19 @@ function buildRibbon(curve: THREE.CatmullRomCurve3, width: number, offset: numbe
     return mesh;
 }
 
+/**
+ * The exact centerline a road/rail is drawn along, in the group's local
+ * space - vehicles (vehicles/engine.ts) drive along this same curve.
+ */
+export function getLinearFeatureCurve(group: THREE.Object3D) {
+    return makePathCurve(toPointList(group.userData.points), !!group.userData.closed);
+}
+
+/** Height of the surface a vehicle rolls on, above the route's origin. */
+export function getLinearFeatureSurfaceHeight(group: THREE.Object3D) {
+    return group.userData.featureKind === 'rail' ? 0.19 : 0.04;
+}
+
 export function rebuildLinearFeature(group: THREE.Group) {
     clearGeneratedChildren(group);
 

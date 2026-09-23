@@ -49,28 +49,27 @@
                             </button>
                         </div>
 
-                        <div id="scene-hotbar" class="scene-hotbar">
+                        <div id="scene-hotbar" class="scene-hotbar" role="region" aria-label="Расстановка объектов">
                             <div class="scene-hotbar__top">
-                                <div class="scene-hotbar__categories" id="scene-hotbar-categories"></div>
-                                <button type="button" id="scene-hotbar-expand-btn" class="scene-hotbar__expand" title="Открыть полный каталог" aria-label="Открыть полный каталог">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-maximize" aria-hidden="true">
-                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                                        <path d="M16 4l4 0l0 4"></path>
-                                        <path d="M14 10l6 -6"></path>
-                                        <path d="M8 20l-4 0l0 -4"></path>
-                                        <path d="M4 20l6 -6"></path>
-                                        <path d="M16 20l4 0l0 -4"></path>
-                                        <path d="M14 14l6 6"></path>
-                                        <path d="M8 4l-4 0l0 4"></path>
-                                        <path d="M4 4l6 6"></path>
-                                    </svg>
-                                </button>
+                                <div class="scene-hotbar__categories" id="scene-hotbar-categories" role="tablist" aria-label="Категории объектов"></div>
+                                <div class="scene-hotbar__actions">
+                                    <button type="button" id="scene-hotbar-expand-btn" class="scene-hotbar__action scene-hotbar__action--labeled" title="Открыть полный каталог с поиском и 3D-превью">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-layout-grid" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4"/><path d="M14 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4"/><path d="M4 15a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4"/><path d="M14 15a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4"/></svg>
+                                        <span>Каталог</span>
+                                    </button>
+                                    <button type="button" id="scene-hotbar-close-btn" class="scene-hotbar__action" title="Выйти из режима расстановки (Esc)" aria-label="Выйти из режима расстановки">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-x" aria-hidden="true">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                            <path d="M18 6l-12 12"></path>
+                                            <path d="M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="scene-hotbar__row">
-                                <div class="scene-hotbar__items" id="scene-hotbar-items"></div>
-                                <button type="button" id="scene-hotbar-close-btn" class="scene-hotbar__close" title="Выйти из режима расстановки" aria-label="Выйти из режима расстановки">✕</button>
+                            <div class="scene-hotbar__items-wrap" id="scene-hotbar-items-wrap">
+                                <div class="scene-hotbar__items" id="scene-hotbar-items" role="tabpanel" aria-labelledby="scene-hotbar-categories"></div>
                             </div>
-                            <p class="scene-hotbar__hint">Выберите предмет и кликните в сцене, чтобы поставить его. Esc — выход.</p>
+                            <p class="scene-hotbar__hint" id="scene-hotbar-hint" aria-live="polite"></p>
                         </div>
                     </div>
                 </div>

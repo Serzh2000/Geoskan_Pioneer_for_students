@@ -12,6 +12,7 @@ export type ApiCategoryId =
     | 'peripherals'
     | 'globals'
     | 'events'
+    | 'vehicles'
     | 'misc';
 
 export type ApiEntryView = {
@@ -66,6 +67,10 @@ const categoryMeta: Record<ApiCategoryId, { title: string; description: string }
         title: 'События FSM',
         description: 'Константы событий автопилота, которые приходят в `callback(event)`.'
     },
+    vehicles: {
+        title: 'Транспорт (симулятор)',
+        description: 'Машины и поезда на сцене: запуск, остановка, скорость. Только в симуляторе - на реальном полигоне дрон ими не управляет.'
+    },
     misc: {
         title: 'Прочее',
         description: 'Служебные методы, которые не попали в основные категории.'
@@ -99,6 +104,7 @@ function classifyEntry(name: string, language: ScriptLanguage): ApiCategoryId {
     const lowerName = name.toLowerCase();
 
     if (name.startsWith('Ev.')) return 'events';
+    if (name.startsWith('Vehicle')) return 'vehicles';
     if (name.startsWith('ap.')) return 'autopilot';
     if (name.startsWith('Timer.')) return 'timers';
     if (name.startsWith('Sensors.')) return 'sensors';
@@ -113,7 +119,7 @@ function classifyEntry(name: string, language: ScriptLanguage): ApiCategoryId {
         if (/(arm|disarm|takeoff|land|go_to_|point_reached|set_manual_speed|get_autopilot_state)/.test(lowerName)) {
             return 'autopilot';
         }
-        if (/(get_local_position_lps|get_dist_sensor_data|get_battery_status)/.test(lowerName)) return 'sensors';
+        if (/(get_local_position_lps|get_dist_sensor_data|get_battery_status|get_optical_flow)/.test(lowerName)) return 'sensors';
         if (/send_rc_channels/.test(lowerName)) return 'control';
     }
 

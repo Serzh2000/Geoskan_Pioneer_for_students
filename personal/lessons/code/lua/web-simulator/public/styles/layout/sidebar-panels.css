@@ -26,6 +26,7 @@
 .sidebar-panels.is-collapsed {
     width: 0 !important;
     min-width: 0;
+    flex-grow: 0;
     flex-basis: 0;
     border-right-color: transparent;
     box-shadow: none;

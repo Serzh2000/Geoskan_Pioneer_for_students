@@ -54,13 +54,13 @@ export function syncTabVisibility(elements: SceneManagerDomRefs, activeTab: Scen
     if (elements.hierarchyTabBtn) elements.hierarchyTabBtn.tabIndex = isInspector ? -1 : 0;
     if (elements.inspectorTabBtn) elements.inspectorTabBtn.tabIndex = isInspector ? 0 : -1;
 
-    // Solo (split, nothing selected): the hierarchy is the only pane worth
-    // showing, regardless of which tab was last active - an unselected
-    // inspector column has nothing to show but its own empty state.
-    // Split with a selection: both panes show side by side.
+    // Split: both panes always show side by side - with nothing selected the
+    // inspector column holds its "pick an object" empty state, so the layout
+    // stays put instead of jumping between one and two columns on every
+    // selection change (is-split-solo still marks that state for styling).
     // Not split: exactly one shows, per activeTab.
-    const hierarchyVisible = solo || split || !isInspector;
-    const inspectorVisible = !solo && (split || isInspector);
+    const hierarchyVisible = split || !isInspector;
+    const inspectorVisible = split || isInspector;
     elements.hierarchyPanelEl?.classList.toggle('is-active', hierarchyVisible);
     elements.inspectorPanelEl?.classList.toggle('is-active', inspectorVisible);
     if (elements.hierarchyPanelEl) elements.hierarchyPanelEl.hidden = !hierarchyVisible;
@@ -74,7 +74,12 @@ export function syncInspectorAvailability(elements: SceneManagerDomRefs, state: 
     if (!hasSelection && state.activeTab === 'inspector' && !isSplitLayout(elements)) {
         state.activeTab = 'hierarchy';
     }
-    elements.inspectorTabBtn?.toggleAttribute('disabled', !hasSelection);
+    // aria-disabled rather than the native attribute: the tab stays hoverable
+    // and focusable, so its tooltip can explain *why* it can't open yet.
+    if (elements.inspectorTabBtn) {
+        elements.inspectorTabBtn.setAttribute('aria-disabled', String(!hasSelection));
+        elements.inspectorTabBtn.title = hasSelection ? '' : 'Выберите объект в списке или на сцене, чтобы открыть его свойства';
+    }
     document.getElementById('scene-open-properties')?.toggleAttribute('disabled', !hasSelection);
     elements.inspectorTabBtn?.classList.toggle('has-selection', hasSelection);
     elements.inspectorPanelEl?.classList.toggle('is-empty', !hasSelection);

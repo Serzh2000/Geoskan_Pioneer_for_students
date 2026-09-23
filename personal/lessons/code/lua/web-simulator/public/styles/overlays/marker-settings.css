@@ -1,0 +1,222 @@
+/*
+ * ArUco/AprilTag marker and marker-map settings popover
+ * (ui/marker-settings.ts), opened from the object's right-click menu and
+ * right after placing one from the viewport hotbar.
+ */
+.mset {
+    --mset-bg: #ffffff;
+    --mset-border: rgba(9, 9, 11, 0.1);
+    --mset-text: #1f2328;
+    --mset-muted: #5d6570;
+    --mset-field-bg: #ffffff;
+    --mset-field-border: #cfd5db;
+    --mset-hover: #f1f2f4;
+    --mset-accent: #ff6b00;
+    --mset-accent-hover: #ff7f24;
+    --mset-on-accent: #1c1000;
+    --mset-tint: #fff2e8;
+    --mset-warning: #9a5b00;
+    --mset-focus: rgba(255, 107, 0, 0.55);
+
+    position: fixed;
+    z-index: 1500;
+    width: min(340px, calc(100vw - 24px));
+    padding: 14px;
+    border: 1px solid var(--mset-border);
+    border-radius: 12px;
+    background: var(--mset-bg);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+    color: var(--mset-text);
+    font-family: var(--font-sans);
+    animation: mset-in 0.14s ease-out;
+}
+
+:root[data-theme='dark'] .mset {
+    --mset-bg: #242424;
+    --mset-border: rgba(255, 255, 255, 0.1);
+    --mset-text: #e6e6e6;
+    --mset-muted: #a2a2a2;
+    --mset-field-bg: #1c1c1c;
+    --mset-field-border: rgba(255, 255, 255, 0.14);
+    --mset-hover: #2e2e2e;
+    --mset-accent: #ff7a1a;
+    --mset-accent-hover: #ff8c3a;
+    --mset-tint: rgba(255, 122, 26, 0.14);
+    --mset-warning: #fbbf6a;
+    --mset-focus: rgba(255, 154, 82, 0.7);
+}
+
+@keyframes mset-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+}
+
+.mset__head {
+    margin-bottom: 12px;
+}
+
+.mset__title {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.mset__subtitle {
+    margin-top: 2px;
+    color: var(--mset-muted);
+    font-size: 12px;
+}
+
+.mset__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 8px;
+}
+
+.mset__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.mset__field--wide {
+    grid-column: 1 / -1;
+}
+
+.mset__field > span {
+    color: var(--mset-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.mset input[type='number'],
+.mset input[type='text'],
+.mset select {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 34px;
+    padding: 6px 9px;
+    border: 1px solid var(--mset-field-border);
+    border-radius: 8px;
+    background: var(--mset-field-bg);
+    color: var(--mset-text);
+    font: inherit;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+.mset input[type='number']:focus,
+.mset input[type='text']:focus,
+.mset select:focus {
+    border-color: var(--mset-accent);
+    box-shadow: 0 0 0 3px var(--mset-tint);
+    outline: none;
+}
+
+.mset__check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--mset-text);
+    font-size: 12px;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.mset__check input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--mset-accent);
+}
+
+.mset [hidden] {
+    display: none !important;
+}
+
+/* The vehicle form is taller: scroll inside instead of running off-screen. */
+.mset--vehicle {
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+}
+
+.mset__section {
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px solid var(--mset-border);
+    color: var(--mset-text);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.mset input[type='range'] {
+    width: 100%;
+    margin: 4px 0 0;
+    accent-color: var(--mset-accent);
+}
+
+.mset__field output {
+    color: var(--mset-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.mset__summary {
+    margin: 12px 0 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--mset-hover);
+    color: var(--mset-muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.mset__summary.is-warning {
+    color: var(--mset-warning);
+}
+
+.mset__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.mset__btn {
+    min-height: 32px;
+    padding: 0 14px;
+    border: 1px solid var(--mset-field-border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--mset-text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.mset__btn:hover {
+    background: var(--mset-hover);
+}
+
+.mset__btn--primary {
+    border-color: var(--mset-accent);
+    background: var(--mset-accent);
+    color: var(--mset-on-accent);
+    font-weight: 700;
+}
+
+.mset__btn--primary:hover {
+    border-color: var(--mset-accent-hover);
+    background: var(--mset-accent-hover);
+}
+
+.mset :is(button, input, select):focus-visible {
+    outline: 2px solid var(--mset-focus);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mset {
+        animation: none;
+    }
+}

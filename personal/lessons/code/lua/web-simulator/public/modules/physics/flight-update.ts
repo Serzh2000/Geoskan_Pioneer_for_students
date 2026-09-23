@@ -184,8 +184,17 @@ function updateAutoFlight(simState: DroneState, dt: number) {
         downwardVelocityLimit = Math.min(downwardVelocityLimit, config.mission.vLanding);
     }
 
+    // set_manual_speed: follow the commanded velocity while it's fresh; once
+    // commands stop, hold the position reached.
+    const manual = simState.manualVelocity;
+    const manualActive = !!manual && performance.now() < manual.expiresAt;
+    if (manual && !manualActive) {
+        simState.manualVelocity = null;
+        simState.target_pos = { ...simState.pos };
+    }
+
     const errZ = simState.target_pos.z - simState.pos.z;
-    const desiredVz = Math.max(-downwardVelocityLimit, Math.min(upwardVelocityLimit, errZ * kp));
+    const desiredVz = Math.max(-downwardVelocityLimit, Math.min(upwardVelocityLimit, manualActive ? manual!.z : errZ * kp));
     const az = (desiredVz - simState.vel.z) * kd;
     simState.vel.z += az * dt;
     simState.vel.z = Math.max(-downwardVelocityLimit, Math.min(upwardVelocityLimit, simState.vel.z));
@@ -193,8 +202,8 @@ function updateAutoFlight(simState: DroneState, dt: number) {
 
     const errX = simState.target_pos.x - simState.pos.x;
     const errY = simState.target_pos.y - simState.pos.y;
-    const desiredVx = Math.max(-config.mission.vMax, Math.min(config.mission.vMax, errX * kp));
-    const desiredVy = Math.max(-config.mission.vMax, Math.min(config.mission.vMax, errY * kp));
+    const desiredVx = Math.max(-config.mission.vMax, Math.min(config.mission.vMax, manualActive ? manual!.x : errX * kp));
+    const desiredVy = Math.max(-config.mission.vMax, Math.min(config.mission.vMax, manualActive ? manual!.y : errY * kp));
     let ax = (desiredVx - simState.vel.x) * kd;
     let ay = (desiredVy - simState.vel.y) * kd;
     const accelMagnitude = Math.hypot(ax, ay);

@@ -42,9 +42,12 @@
     transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Exactly the rail's width: a fixed 64px here used to leave a 12px strip of
+   the (collapsed) panels column inside the rail, so the icons sat 20px from
+   its left edge but 32px from its right. */
 .workspace-sidebar.is-collapsed {
-    width: 64px;
-    min-width: 64px;
+    width: var(--rail-width);
+    min-width: var(--rail-width);
     border: none;
     box-shadow: none;
     background: transparent;
