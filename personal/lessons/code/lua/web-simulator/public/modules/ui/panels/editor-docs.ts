@@ -1,4 +1,4 @@
-import { EDITOR_DRAWER_OPEN_EVENT, announceEditorDrawerOpen } from './editor-drawers.js';
+import { EDITOR_DRAWER_OPEN_EVENT, announceEditorDrawerOpen, pinEditorPanelHorizontalScroll } from './editor-drawers.js';
 
 /*
  * API reference drawer inside the code editor, next to the terminal and the
@@ -16,6 +16,7 @@ export function initEditorDocs(): void {
     const body = document.getElementById('editor-docs-body');
     const docs = document.getElementById('api-docs');
     if (!toggleBtn || !closeBtn || !panel || !body) return;
+    pinEditorPanelHorizontalScroll();
 
     if (docs && docs.parentElement !== body) body.appendChild(docs);
 

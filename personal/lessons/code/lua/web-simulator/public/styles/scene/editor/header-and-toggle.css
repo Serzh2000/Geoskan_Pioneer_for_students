@@ -53,8 +53,11 @@
 
 .panel-content--editor {
     width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
+    /* The drawers (docs, terminal, notifications) park off to the right with
+       translateX(100%). A scrollable overflow let focus inside a drawer scroll
+       the panel sideways: the editor slid off-screen and the close buttons
+       left the viewport. clip cannot be scrolled at all. */
+    overflow: clip;
     min-height: 0;
 }
 
