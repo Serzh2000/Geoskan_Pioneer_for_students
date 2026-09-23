@@ -38,3 +38,5 @@
 @import url('./styles/overlays/marker-settings.css');
 
 @import './styles/panels/journal-academy.css';
+
+@import url('./styles/gamepad/workspace.css');

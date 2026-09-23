@@ -219,7 +219,7 @@ export function renderCalibrationState(dom: SettingsDomRefs, state: SettingsRunt
             : 0;
         setTextIfChanged(dom.gpBtnCalibrate, state.isCalibrating
             ? `\u041a\u0410\u041b. ${remainingSeconds}\u0441`
-            : '\u041a\u0410\u041b\u0418\u0411\u0420\u041e\u0412\u041a\u0410');
+            : 'Начать калибровку');
         setStyleIfChanged(dom.gpBtnCalibrate, 'color', state.isCalibrating ? '#f87171' : '');
         setDisabledIfChanged(dom.gpBtnCalibrate, !simSettings.gamepadConnected);
     }

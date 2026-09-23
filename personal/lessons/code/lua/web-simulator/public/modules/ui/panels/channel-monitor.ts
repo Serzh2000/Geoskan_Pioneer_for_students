@@ -201,10 +201,23 @@ export function initChannelMonitor(): void {
             monitorTab.classList.toggle('is-active', showMonitor);
             mappingTab.setAttribute('aria-selected', String(!showMonitor));
             monitorTab.setAttribute('aria-selected', String(showMonitor));
+            mappingTab.tabIndex = showMonitor ? -1 : 0;
+            monitorTab.tabIndex = showMonitor ? 0 : -1;
         };
 
         mappingTab.addEventListener('click', () => setActivePane('mapping'));
         monitorTab.addEventListener('click', () => setActivePane('monitor'));
+        [mappingTab, monitorTab].forEach((tab) => {
+            tab.addEventListener('keydown', (event) => {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                event.preventDefault();
+                const next = event.key === 'Home' ? mappingTab
+                    : event.key === 'End' ? monitorTab
+                    : tab === mappingTab ? monitorTab : mappingTab;
+                setActivePane(next === monitorTab ? 'monitor' : 'mapping');
+                next.focus();
+            });
+        });
         setActivePane('mapping');
     }
 

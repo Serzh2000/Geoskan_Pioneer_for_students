@@ -7,7 +7,7 @@ export function stopAutoDetection(
     state: SettingsRuntimeState,
     setAutoStatus: (mode: 'idle' | 'success', text: string) => void,
     mode: 'idle' | 'success',
-    text = 'Нажмите AUTO и подвигайте нужный стик или тумблер.'
+    text = 'Нажмите «Авто» и подвигайте нужный стик или тумблер.'
 ): void {
     state.autoDetectState = null;
     setAutoStatus(mode, text);

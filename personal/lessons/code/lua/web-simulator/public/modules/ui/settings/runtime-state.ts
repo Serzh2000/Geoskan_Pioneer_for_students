@@ -34,7 +34,7 @@ export function createSettingsRuntimeState(): SettingsRuntimeState {
         activeGamepadHasChannelData: false,
         observedInputStats: new Map<GamepadInputRef, ObservedInputStats>(),
         autoStatusMode: 'idle',
-        autoStatusText: 'Нажмите AUTO и подвигайте нужный стик или тумблер.',
+        autoStatusText: 'Нажмите «Авто» и подвигайте нужный стик или тумблер.',
         autoDetectState: null
     };
 }

@@ -1,0 +1,121 @@
+/* Controller workspace: scoped to avoid affecting the standalone monitor or wizard. */
+#gamepad-panel {
+    --gp-surface: #fff;
+    --gp-canvas: #f5f6f8;
+    --gp-line: #e2e6ec;
+    --gp-text: #202b3d;
+    --gp-muted: #68758a;
+    --gp-accent: #c95108;
+    --gp-tint: #fff3e9;
+}
+:root[data-theme='dark'] #gamepad-panel {
+    --gp-surface: #292929;
+    --gp-canvas: #222222;
+    --gp-line: #3e3e3e;
+    --gp-text: #eef1f5;
+    --gp-muted: #a9a9a9;
+    --gp-accent: #ff9c5b;
+    --gp-tint: #30231c;
+}
+.sidebar-panel#gamepad-panel .settings-panel-content { background: var(--gp-canvas); padding: 28px 32px 44px; }
+#gamepad-panel .settings-stack { max-width: 1240px; width: 100%; margin: 0 auto; }
+#gamepad-panel .settings-group--gamepad { gap: 24px; }
+#gamepad-panel h1, #gamepad-panel h2, #gamepad-panel p { margin: 0; }
+#gamepad-panel .gamepad-hero { padding: 0; border: 0; background: none; box-shadow: none; gap: 24px; }
+#gamepad-panel .gamepad-hero-copy { gap: 8px; }
+#gamepad-panel .gamepad-hero-eyebrow { font-size: 10px; letter-spacing: .12em; color: var(--gp-muted); }
+#gamepad-panel .gamepad-hero-title { font-size: 28px; font-weight: 750; letter-spacing: -.035em; color: var(--gp-text); }
+#gamepad-panel .gamepad-hero-subtitle { font-size: 13px; color: var(--gp-muted); }
+#gamepad-panel .gamepad-status-pill { border: 1px solid var(--gp-line); background: var(--gp-surface); box-shadow: none; color: var(--gp-muted); padding: 10px 14px; font-weight: 500; font-size: 12px; }
+#gamepad-panel .gamepad-status-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #96a0af; flex: 0 0 7px; }
+#gamepad-panel .gamepad-status-pill.is-connected::before { background: #29a16d; }
+#gamepad-panel .gamepad-panel-tabs { border: 0; border-bottom: 1px solid var(--gp-line); border-radius: 0; background: none; padding: 0; gap: 24px; width: 100%; box-shadow: none; }
+#gamepad-panel .gamepad-panel-tab { border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 13px 0; color: var(--gp-muted); font-size: 13px; letter-spacing: 0; background: none; box-shadow: none; }
+#gamepad-panel .gamepad-panel-tab.is-active { background: none; color: var(--gp-accent); border-bottom-color: var(--gp-accent); }
+#gamepad-panel .gamepad-stage { gap: 22px; }
+#gamepad-panel .gamepad-disconnected-note { padding: 16px 20px; border: 1px solid var(--gp-line); border-radius: 12px; background: var(--gp-surface); grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 16px; }
+#gamepad-panel .gp-connect-icon { display: grid; place-items: center; width: 40px; height: 40px; background: var(--gp-tint); color: var(--gp-accent); border-radius: 10px; font-size: 25px; }
+#gamepad-panel .gamepad-disconnected-note strong { display: block; color: var(--gp-text); font-size: 13px; margin-bottom: 3px; }
+#gamepad-panel .gamepad-disconnected-note div > span { color: var(--gp-muted); font-size: 12px; }
+#gamepad-panel .gamepad-disconnected-note .gp-connect-hint { color: var(--gp-muted); font-size: 11px; }
+#gamepad-panel .gamepad-dashboard-grid { grid-template-columns: 260px minmax(0, 1fr); grid-template-areas: 'quick primary' 'quick aux'; gap: 18px 24px; }
+#gamepad-panel .gamepad-setup-rail { grid-area: quick; display: grid; gap: 16px; }
+#gamepad-panel .gamepad-section { border: 1px solid var(--gp-line); border-radius: 12px; background: var(--gp-surface); box-shadow: none; padding: 22px; gap: 16px; min-width: 0; }
+#gamepad-panel .gamepad-section--quick { grid-area: auto; }
+#gamepad-panel .gp-step-label { color: var(--gp-accent); font-size: 10px; font-weight: 700; letter-spacing: .1em; }
+#gamepad-panel .gamepad-section-title { color: var(--gp-text); font-size: 16px; font-weight: 700; line-height: 1.35; }
+#gamepad-panel .gamepad-section-caption { display: block; color: var(--gp-muted); font-size: 12px; line-height: 1.65; margin-top: 5px; }
+#gamepad-panel .gp-quiet-note { color: var(--gp-muted); font-size: 11px; line-height: 1.6; }
+#gamepad-panel .gamepad-action-btn { min-height: 40px; border-radius: 7px; width: 100%; font-size: 12px; text-transform: none; letter-spacing: 0; }
+#gamepad-panel #gp-btn-wizard { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; background: #e9640d; color: white; border-color: #e9640d; box-shadow: none; }
+#gamepad-panel .gp-reset-link { background: none; border: none; color: var(--gp-muted); min-height: 26px; font-size: 11px; padding: 0; }
+#gamepad-panel .gamepad-section-heading { flex-wrap: nowrap; align-items: center; }
+#gamepad-panel .gp-section-count { font-size: 11px; color: var(--gp-muted); white-space: nowrap; }
+#gamepad-panel .gamepad-auto-status { background: var(--gp-canvas); border: 0; border-radius: 6px; padding: 10px 12px; font-size: 12px; font-weight: 400; color: var(--gp-muted); }
+#gamepad-panel .gamepad-auto-status.is-listening { background: var(--gp-tint); color: var(--gp-accent); }
+#gamepad-panel .gamepad-auto-status.is-success { color: #248453; }
+#gamepad-panel .gamepad-mapping-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+#gamepad-panel .gp-channel-row { grid-template-columns: minmax(0, 1fr) auto; gap: 12px 16px; padding: 18px 0; min-height: 0; border: 0; border-bottom: 1px solid var(--gp-line); border-radius: 0; background: none; box-shadow: none; }
+#gamepad-panel .gp-channel-row:last-child { border-bottom: 0; padding-bottom: 4px; }
+#gamepad-panel .gp-channel-main { grid-column: 1 / -1; display: grid; grid-template-columns: 38px minmax(90px, 1fr) minmax(145px, 1fr); gap: 12px; }
+#gamepad-panel .gp-channel-badge { min-width: 0; height: 30px; padding: 0 6px; border: 0; border-radius: 6px; background: var(--gp-canvas); color: var(--gp-muted); font-size: 10px; }
+#gamepad-panel .gp-channel-title { color: var(--gp-text); font-size: 14px; font-weight: 650; }
+#gamepad-panel .gp-channel-subtitle { color: var(--gp-muted); font-size: 11px; }
+#gamepad-panel .gp-channel-select > span { display: none; }
+.sidebar-panel#gamepad-panel select { background: var(--gp-surface); border: 1px solid var(--gp-line); color: var(--gp-text); border-radius: 7px; min-height: 38px; box-shadow: none; font-size: 12px; width: 100%; }
+.sidebar-panel#gamepad-panel select option { background: var(--gp-surface); color: var(--gp-text); }
+#gamepad-panel .gp-channel-meter { padding-left: 50px; }
+#gamepad-panel .gp-bar-bg { height: 5px; background: var(--gp-line); }
+#gamepad-panel .gp-channel-actions { flex-wrap: nowrap; gap: 10px; justify-content: flex-end; }
+#gamepad-panel .gp-auto-btn { min-height: 30px; border-radius: 6px; font-size: 11px; background: var(--gp-surface); border-color: var(--gp-line); color: var(--gp-text); }
+#gamepad-panel .gp-invert-checkbox { border: 0; background: none; color: var(--gp-muted); padding: 0; min-height: 30px; font-size: 11px; }
+#gamepad-panel .gp-invert-checkbox .gp-checkmark { display: inline-flex; position: static; background: var(--gp-surface); border-color: var(--gp-line); }
+#gamepad-panel .gp-channel-value, #gamepad-panel .gp-aux-value { min-width: 48px; background: var(--gp-canvas); border: 0; color: var(--gp-text); border-radius: 5px; font-size: 12px; }
+#gamepad-panel .gamepad-channel-status { border: 0; background: none; padding: 0; min-height: 20px; justify-content: flex-start; font-size: 11px; font-weight: 400; color: var(--gp-muted); }
+#gamepad-panel .gamepad-section--aux { display: block; padding: 0; }
+#gamepad-panel .gp-aux-summary { cursor: pointer; padding: 20px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; list-style: none; }
+#gamepad-panel .gp-aux-summary::-webkit-details-marker { display: none; }
+#gamepad-panel .gp-aux-summary .gamepad-section-title { font-size: 14px; }
+#gamepad-panel .gp-disclosure { font-size: 22px; color: var(--gp-muted); }
+#gamepad-panel details[open] .gp-disclosure { transform: rotate(45deg); }
+#gamepad-panel .gp-aux-grid { grid-template-columns: 1fr; padding: 0 22px 22px; gap: 16px; }
+#gamepad-panel .gp-aux-card { border: 1px solid var(--gp-line); background: var(--gp-canvas); border-radius: 8px; box-shadow: none; padding: 16px; }
+#gamepad-panel .gp-range-editor { box-shadow: none; background: var(--gp-surface); border-color: var(--gp-line); }
+#gamepad-panel button:disabled, .sidebar-panel#gamepad-panel select:disabled { opacity: .55; cursor: not-allowed; }
+#gamepad-panel :is(button, select, summary):focus-visible, #gamepad-panel .gp-invert-checkbox:has(input:focus-visible) { outline: 2px solid var(--gp-accent); outline-offset: 3px; }
+#gamepad-panel .channel-monitor-hero { padding: 0 0 18px; background: none; border: 0; box-shadow: none; }
+#gamepad-panel .channel-monitor-hero-eyebrow { display: none; }
+#gamepad-panel .channel-monitor-hero-title { font-size: 18px; }
+@media (min-width: 1450px) {
+    #gamepad-panel .gp-aux-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+    .sidebar-panel#gamepad-panel .settings-panel-content { padding: 24px 20px; }
+    #gamepad-panel .gamepad-dashboard-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'quick' 'primary' 'aux'; }
+    #gamepad-panel .gamepad-setup-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #gamepad-panel .gamepad-hero { grid-template-columns: minmax(0, 1fr) auto; }
+    #gamepad-panel .gp-connect-hint { display: none; }
+    #gamepad-panel .gamepad-disconnected-note { grid-template-columns: 40px minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+    .sidebar-panel#gamepad-panel .settings-panel-content { padding: 20px 14px; }
+    #gamepad-panel .gamepad-hero { grid-template-columns: 1fr; gap: 14px; }
+    #gamepad-panel .gamepad-hero-title { font-size: 25px; }
+    #gamepad-panel .gamepad-setup-rail { grid-template-columns: 1fr; }
+    #gamepad-panel .gamepad-section { padding: 18px; }
+    #gamepad-panel .gamepad-section--aux { padding: 0; }
+    #gamepad-panel .gp-channel-main { grid-template-columns: 38px minmax(0, 1fr); }
+    #gamepad-panel .gp-channel-select { grid-column: 1 / -1; }
+    #gamepad-panel .gp-channel-row { grid-template-columns: minmax(30px, 1fr) auto; }
+    #gamepad-panel .gp-channel-meter { padding-left: 0; }
+    #gamepad-panel .gp-channel-actions { gap: 8px; }
+    #gamepad-panel .gamepad-disconnected-note { padding: 14px; gap: 12px; }
+}
+@media (min-width: 1100px) {
+    #gamepad-panel .gp-channel-row { gap: 9px 20px; padding: 15px 0; }
+    #gamepad-panel .gp-channel-main { grid-column: 1; grid-row: 1; grid-template-columns: 38px 100px minmax(120px, 1fr); }
+    #gamepad-panel .gp-channel-actions { grid-column: 2; grid-row: 1 / 3; }
+    #gamepad-panel .gp-channel-meter { grid-column: 1; grid-row: 2; padding-left: 162px; }
+}
+
+:root[data-theme="dark"] #gamepad-panel .settings-panel-content { background: var(--gp-canvas); }
