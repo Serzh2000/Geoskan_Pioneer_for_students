@@ -1,3 +1,4 @@
+import { openGuideReference } from './reference.js';
 import { restartAndRunSimulation } from '../../../app/simulation-controls.js';
 import { setCurrentScriptLanguage } from '../../../core/state.js';
 import { getEditorValue, setEditorLanguage } from '../../../editor/index.js';
@@ -12,6 +13,7 @@ import {
     getNextTextLesson,
     getPreviousTextLesson,
     isLessonCompleted,
+    isTextLessonUnlocked,
     setActiveGuideStep,
     setActiveLessonId,
     setLastTextEvaluation,
@@ -54,6 +56,22 @@ export function attachTextGuideBindings(
             if (step !== 'theory' && step !== 'build' && step !== 'check') return;
             setActiveGuideStep(track, lesson.id, step);
             rerender(track);
+        });
+    });
+
+    container.querySelectorAll<HTMLButtonElement>('[data-guide-text-lesson]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const lessonId = button.dataset.guideTextLesson;
+            if (!lessonId || !isTextLessonUnlocked(state, track, lessonId)) return;
+            resetGuideRuntimeView();
+            setActiveLessonId(track, lessonId);
+            rerender(track);
+        });
+    });
+
+    container.querySelectorAll<HTMLButtonElement>('[data-guide-query]').forEach((button) => {
+        button.addEventListener('click', () => {
+            openGuideReference({ language: track, query: button.dataset.guideQuery || '', previewKey: button.dataset.guidePreview || null });
         });
     });
 

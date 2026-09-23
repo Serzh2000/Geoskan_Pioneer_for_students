@@ -195,7 +195,7 @@ export function getLessonProgressState(
 }
 
 export function getFirstUnlockedLesson(state: GuideLessonState, language: ScriptLanguage): GuideLesson {
-    return state.lessons.find((lesson) => isLessonUnlocked(state, language, lesson.id)) || state.lessons[0];
+    return state.lessons.find((lesson) => !isLessonCompleted(language, lesson.id) && isLessonUnlocked(state, language, lesson.id)) || state.lessons[0];
 }
 
 export function setLessonBanner(language: ScriptLanguage, lessonId: string, banner: RuntimeBanner | null): void {
@@ -249,4 +249,9 @@ export function getPreviousTextLesson(state: GuideTextLessonState, lessonId: str
     const currentIndex = getTextLessonIndex(state, lessonId);
     if (currentIndex <= 0) return null;
     return state.lessons[currentIndex - 1] || null;
+}
+export function isTextLessonUnlocked(state: GuideTextLessonState, track: 'lua' | 'python', lessonId: string): boolean {
+    const index = state.lessons.findIndex((lesson) => lesson.id === lessonId);
+    if (index < 0) return false;
+    return index === 0 || isLessonCompleted(track, lessonId) || isLessonCompleted(track, state.lessons[index - 1].id);
 }

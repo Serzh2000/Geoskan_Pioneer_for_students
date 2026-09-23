@@ -52,18 +52,29 @@ export function renderDiagnosticCard(diagnostic: GuideDiagnostic): string {
                 <div class="guide-diagnostic__title">${renderInline(diagnostic.title)}</div>
             </div>
             <div class="guide-diagnostic__reason">${renderInline(diagnostic.reason)}</div>
-            <div class="guide-diagnostic__fix"><strong>Исправить:</strong> ${renderInline(diagnostic.fix)}</div>
+            <div class="guide-diagnostic__fix"><strong>${diagnostic.kind === 'success' || diagnostic.kind === 'info' ? 'Дальше:' : 'Как исправить:'}</strong> ${renderInline(diagnostic.fix)}</div>
         </article>
     `;
 }
+
+const BLOCK_LABELS: Record<string, string> = {
+    lua_ledbar_new: 'Создать ленту Ledbar', lua_led_set: 'Задать цвет LED',
+    lua_timer_calllater: 'Отложить действие', lua_ap_push: 'Команда автопилоту',
+    lua_callback_open: 'Начало обработчика', lua_callback_end: 'Конец обработчика',
+    lua_event_callback: 'При наступлении события', lua_print: 'Сообщение в журнал',
+    lua_goto_local_point: 'Перейти к точке', py_led_control: 'Задать цвет LED',
+    py_time_sleep: 'Подождать', py_arm: 'Подготовить двигатели', py_takeoff: 'Взлететь',
+    py_print: 'Сообщение в журнал', py_goto_local_point: 'Перейти к точке',
+    py_wait_point_reached: 'Дождаться прибытия', py_land: 'Приземлиться'
+};
 
 export function renderTargetRoute(lesson: GuideLesson): string {
     const blockMap = getBlockMap(lesson);
     return `
         <div class="guide-target-route">
-            ${lesson.targetBlockIds.map((blockId) => {
+            ${lesson.targetBlockIds.map((blockId, index) => {
                 const block = blockMap.get(blockId);
-                return `<span class="guide-target-chip">${escapeHtml(block?.label || blockId)}</span>`;
+                return `<span class="guide-target-chip"><span class="guide-target-chip__number">${index + 1}</span> ${escapeHtml(BLOCK_LABELS[blockId] || block?.label || 'Действие')}</span>`;
             }).join('')}
         </div>
     `;

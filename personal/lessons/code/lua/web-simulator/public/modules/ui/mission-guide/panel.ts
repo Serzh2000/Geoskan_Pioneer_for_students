@@ -1,3 +1,4 @@
+import { attachLearningInteractions } from './interactions/learning.js';
 import type { ScriptLanguage } from '../api-docs/sections.js';
 import { logGuideEvent } from './support/logging.js';
 import { getGuideLessonState } from './lessons.js';
@@ -6,7 +7,7 @@ import { getPythonTextLessonState } from './lessons/catalog/python-text.js';
 import { renderGuide } from './render.js';
 import { renderTextGuide } from './render/text-guide.js';
 import { mountMissionGuideScenePreview } from './support/scene-preview.js';
-import { mountMissionGuideMonacoPreview } from './support/monaco-preview.js';
+import { mountMissionGuideMonacoPreview, saveMissionGuideDraft } from './support/monaco-preview.js';
 import {
     ensureActiveChapterId,
     ensureActiveLessonId,
@@ -55,14 +56,36 @@ export function renderMissionGuidePanel(language: ScriptLanguage = 'lua'): void 
         totalLessons
     });
 
+    saveMissionGuideDraft();
+    const previousView = container.dataset.learningView;
+    const restoreTabFocus = container.contains(document.activeElement)
+        && document.activeElement?.getAttribute('role') === 'tab';
     container.innerHTML = bodyHtml;
+    const selectedTab = container.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]');
+    const page = container.querySelector<HTMLElement>('[data-guide-portal-page]')?.dataset.guidePortalPage;
+    const view = `${track}:${activeLessonId}:${page}:${selectedTab?.id}`;
+    if (previousView !== view) container.scrollTop = 0;
+    container.dataset.learningView = view;
+    if (restoreTabFocus) selectedTab?.focus({ preventScroll: true });
+    container.querySelector<HTMLElement>('[role="tablist"]')?.addEventListener('keydown', (event) => {
+        const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+        if (!keys.includes(event.key)) return;
+        const tabs = Array.from(container.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+        const current = tabs.indexOf(document.activeElement as HTMLButtonElement);
+        if (current < 0) return;
+        event.preventDefault();
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
+            : (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+        tabs[next].click();
+    });
+    attachLearningInteractions(container);
     if (!isVisible) return;
 
     mountMissionGuideScenePreview();
     if (track !== 'blockly') {
         const textState = track === 'python' ? getPythonTextLessonState() : getLuaTextLessonState();
         const activeLesson = getActiveTextLesson(textState, track);
-        void mountMissionGuideMonacoPreview(track, activeLesson.starterCode);
+        void mountMissionGuideMonacoPreview(track, activeLesson.starterCode, activeLesson.id);
     }
 
     void import('./interactions.js')

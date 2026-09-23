@@ -1,4 +1,4 @@
-import { openApiDocsCatalog } from '../../api-docs/index.js';
+import { openGuideReference } from './reference.js';
 import { setCurrentScriptLanguage } from '../../../core/state.js';
 import { logGuideEvent } from '../support/logging.js';
 import { buildGuideEventContext, resetGuideRuntimeView, type GuideInteractionContext } from './context.js';
@@ -34,47 +34,6 @@ export function attachGuideNavigationBindings(context: GuideInteractionContext):
         });
     });
 
-    const lessonStepTablist = container.querySelector<HTMLElement>('[role="tablist"][aria-label="Шаги урока"]');
-    if (lessonStepTablist) {
-        lessonStepTablist.addEventListener('keydown', (event) => {
-            const tabs = Array.from(lessonStepTablist.querySelectorAll<HTMLButtonElement>('[data-guide-step]'));
-            if (tabs.length === 0) return;
-
-            if (event.key === ' ') {
-                event.preventDefault();
-                return;
-            }
-
-            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight' && event.key !== 'Home' && event.key !== 'End') {
-                return;
-            }
-
-            event.preventDefault();
-
-            const currentIndex = tabs.findIndex((tab) => tab === document.activeElement);
-            let nextIndex: number;
-            if (event.key === 'Home') {
-                nextIndex = 0;
-            } else if (event.key === 'End') {
-                nextIndex = tabs.length - 1;
-            } else {
-                const baseIndex = currentIndex === -1 ? 0 : currentIndex;
-                const delta = event.key === 'ArrowRight' ? 1 : -1;
-                nextIndex = (baseIndex + delta + tabs.length) % tabs.length;
-            }
-
-            const nextTab = tabs[nextIndex];
-            const step = nextTab.dataset.guideStep;
-            if (step !== 'theory' && step !== 'build' && step !== 'check') return;
-
-            tabs.forEach((tab) => {
-                tab.tabIndex = tab === nextTab ? 0 : -1;
-            });
-            nextTab.focus();
-            activateGuideStep(step);
-        });
-    }
-
     container.querySelectorAll<HTMLButtonElement>('button[data-guide-portal-page]').forEach((element) => {
         element.addEventListener('click', () => {
             const nextPage = element.dataset.guidePortalPage;
@@ -106,7 +65,7 @@ export function attachGuideNavigationBindings(context: GuideInteractionContext):
                 query,
                 previewKey
             });
-            openApiDocsCatalog({ language, query, previewKey });
+            openGuideReference({ language, query, previewKey });
         });
     });
 

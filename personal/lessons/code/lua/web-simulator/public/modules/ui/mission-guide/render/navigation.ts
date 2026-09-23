@@ -9,12 +9,12 @@ const LESSON_STEPS: Array<{ id: GuideLessonStepId; label: string }> = [
     { id: 'check', label: 'Проверка' }
 ];
 
-export function renderLessonSteps(activeStep: GuideLessonStepId, hasChecked: boolean, solved: boolean): string {
+export function renderLessonSteps(activeStep: GuideLessonStepId, hasChecked: boolean, solved: boolean, buildLabel = 'Собрать'): string {
     return `
         <div class="guide-page-tabs" role="tablist" aria-label="Шаги урока">
             ${LESSON_STEPS.map((step, index) => {
         const isActive = activeStep === step.id;
-        const isSolvedStep = step.id === 'check' && solved;
+        const isSolvedStep = step.id === 'check' && hasChecked && solved;
         const suffix = step.id === 'check' && hasChecked
             ? (solved ? ' · принято' : ' · есть замечания')
             : '';
@@ -30,7 +30,7 @@ export function renderLessonSteps(activeStep: GuideLessonStepId, hasChecked: boo
                         tabindex="${isActive ? '0' : '-1'}"
                     >
                         <span class="guide-page-tab__step">${index + 1}</span>
-                        <span class="guide-page-tab__text">${escapeHtml(step.label)}${suffix}</span>
+                        <span class="guide-page-tab__text">${escapeHtml(step.id === 'build' ? buildLabel : step.label)}${suffix}</span>
                     </button>
                 `;
     }).join('')}

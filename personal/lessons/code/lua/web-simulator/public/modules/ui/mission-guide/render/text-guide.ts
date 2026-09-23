@@ -1,3 +1,4 @@
+import { renderLearningNote, renderPracticeBrief, renderObservation } from './learning.js';
 import { isMissionGuideScenePreviewActive } from '../support/scene-preview.js';
 import {
     getActiveGuideStep,
@@ -6,6 +7,7 @@ import {
     getNextTextLesson,
     getPreviousTextLesson,
     isLessonChecked,
+    isTextLessonUnlocked,
     isLessonCompleted
 } from '../state.js';
 import type { GuideDiagnostic, GuideTextLessonState } from '../types.js';
@@ -31,7 +33,7 @@ function renderTextTheoryStep(lesson: GuideTextLessonState['lessons'][number]): 
     return `
         <section class="guide-lesson-section">
             <div class="guide-lesson-section__header">
-                <div class="guide-panel-card__title">Теория урока</div>
+                <h2 class="guide-panel-card__title">Разберёмся перед практикой</h2>
                 <div class="guide-panel-card__text">Короткая база перед практикой.</div>
             </div>
 
@@ -64,6 +66,7 @@ function renderTextTheoryStep(lesson: GuideTextLessonState['lessons'][number]): 
                 ` : ''}
             </div>
         </section>
+        ${renderLearningNote(lesson)}
         <div class="guide-actions guide-actions--primary">
             <button type="button" class="guide-primary-action" data-guide-step="build">Дальше: написать код</button>
         </div>
@@ -80,7 +83,7 @@ function renderTextBuildStep(track: 'lua' | 'python', lesson: GuideTextLessonSta
                 </div>
                 <div class="guide-panel-card__badge">${track === 'python' ? 'Python' : 'Lua'}</div>
             </div>
-            <div class="guide-panel-note">${renderInline(lesson.builderHint)}</div>
+            ${renderPracticeBrief(lesson)}
             <div id="mission-guide-monaco-preview-host" class="guide-monaco-preview-host">
                 <div class="guide-monaco-preview__placeholder">Загружаю редактор…</div>
             </div>
@@ -107,6 +110,7 @@ function renderTextCheckStep(
     const previewActive = isMissionGuideScenePreviewActive();
 
     return `
+        ${renderObservation(lesson, solved)}
         <div class="guide-workbench-layout">
             <div class="guide-workbench-layout__main">
                 <section class="guide-panel-card guide-panel-card--result">
@@ -115,14 +119,12 @@ function renderTextCheckStep(
                             <div class="guide-panel-card__title">Проверка и разбор</div>
                             <div class="guide-panel-card__text">Короткий вердикт и список того, что исправить.</div>
                         </div>
-                        <div class="guide-panel-card__badge">Фидбек</div>
+                        <div class="guide-panel-card__badge">Разбор</div>
                     </div>
                     ${renderCheckVerdict(hasChecked, solved, diagnostics.length, false)}
-                    ${hasChecked ? `
                     <div class="guide-actions guide-actions--primary">
                         <button type="button" class="guide-primary-action" data-guide-step="build">Вернуться к коду</button>
                     </div>
-                    ` : ''}
                     <div class="guide-diagnostics" id="diagnostics-container">
                         ${hasChecked ? sortedDiagnostics.map(renderDiagnosticCard).join('') : ''}
                     </div>
@@ -134,7 +136,7 @@ function renderTextCheckStep(
                     <div class="guide-panel-card__top">
                         <div>
                             <div class="guide-panel-card__title">Живая сцена</div>
-                            <div class="guide-panel-card__text">Показывает поведение текущего скрипта и ошибки рантайма.</div>
+                            <div class="guide-panel-card__text">Показывает поведение текущего скрипта и ошибки выполнения.</div>
                         </div>
                         <div class="guide-panel-card__badge">3D</div>
                     </div>
@@ -176,26 +178,37 @@ export function renderTextGuide(state: GuideTextLessonState, track: 'lua' | 'pyt
                 <div class="guide-lesson-page__header">
                     <div class="guide-lesson-page__header-copy">
                         <div class="guide-lesson-page__badge">${escapeHtml(lesson.badge)}</div>
-                        <div class="guide-lesson-page__title">${escapeHtml(lesson.title)}</div>
+                        <h1 class="guide-lesson-page__title">${escapeHtml(lesson.title)}</h1>
                         <div class="guide-lesson-page__summary">${renderInline(lesson.summary)}</div>
                     </div>
                     <div class="guide-lesson-page__header-actions">
                         <div class="guide-lesson-page__header-pill">Урок ${lessonIndex + 1} из ${state.lessons.length}</div>
                         <div class="guide-actions">
-                            <button type="button" class="guide-lesson__action" data-guide-nav="prev" ${previousLesson ? '' : 'disabled'}>Назад</button>
-                            <button type="button" class="guide-lesson__action" data-guide-nav="next" ${nextLesson && isCompleted ? '' : 'disabled'}>Далее</button>
+                            <button type="button" class="guide-lesson__action" data-guide-nav="prev" ${previousLesson ? '' : 'disabled'}>Предыдущий урок</button>
+                            <button type="button" class="guide-lesson__action" data-guide-nav="next" ${nextLesson && isCompleted ? '' : 'disabled'}>Следующий урок</button>
                         </div>
                     </div>
                 </div>
 
-                ${renderLessonSteps(activeStep, hasChecked, solved)}
+                <details class="guide-course-map">
+                    <summary>Все уроки ${track === 'python' ? 'Python' : 'Lua'} · Пройдено ${state.lessons.filter((item) => isLessonCompleted(track, item.id)).length} из ${state.lessons.length}</summary>
+                    <p>Следующее задание откроется после успешной проверки предыдущего. К пройденным можно вернуться в любой момент.</p>
+                    <nav aria-label="Уроки курса" class="guide-course-map__list">
+                        ${state.lessons.map((item, index) => {
+                            const unlocked = isTextLessonUnlocked(state, track, item.id);
+                            const done = isLessonCompleted(track, item.id);
+                            return `<button type="button" class="guide-lesson__action" data-guide-text-lesson="${escapeHtml(item.id)}" ${unlocked ? '' : 'disabled'} ${item.id === lesson.id ? 'aria-current="step"' : ''}><span>${index + 1}. ${escapeHtml(item.title)}</span><small>${done ? 'Пройден' : item.id === lesson.id ? 'Текущий урок' : unlocked ? 'Доступен' : `После урока ${index}`}</small></button>`;
+                        }).join('')}
+                    </nav>
+                </details>
+                ${renderLessonSteps(activeStep, hasChecked, solved, 'Написать код')}
 
                 ${stepContent}
 
                 ${isCompleted ? `<section class="guide-lesson-footer">
                     <div class="guide-panel-note">
                         ${nextLesson
-                ? 'Урок принят. Можно перейти к следующему заданию кнопкой «Далее».'
+                ? 'Урок принят. Можно перейти к следующему заданию кнопкой «Следующий урок».'
                 : 'Урок принят. Это последнее задание текущего трека.'}
                     </div>
                 </section>` : ''}

@@ -1,4 +1,4 @@
-import { setBlocklyEditorEnabled, setEditorLanguage, setEditorValue } from '../../../editor/index.js';
+import { getEditorValue, setBlocklyEditorEnabled, setEditorLanguage, setEditorValue } from '../../../editor/index.js';
 
 // Зеркалит support/blockly-preview.ts: та же идея переноса живого DOM-узла в
 // хост внутри гайда, но для текстового (Monaco) редактора вместо Blockly-
@@ -36,13 +36,14 @@ let originalNextSibling: ChildNode | null = null;
 let cachedMonacoRoot: HTMLElement | null = null;
 let modalBodyObserver: MutationObserver | null = null;
 
-// Черновик последнего стартового кода, который мы сами загрузили в редактор —
-// используется, чтобы не затирать код, который студент уже начал печатать на
-// повторном рендере ТОГО ЖЕ шага той же лекции (renderMissionGuidePanel
-// пересоздаёт DOM, но не должен сбрасывать прогресс). Если starterCode
-// отличается от этого значения — значит студент перешёл на другую лекцию, и
-// подставить новый стартовый код безопасно и нужно.
-let lastLoadedStarterCode: string | null = null;
+// Drafts are scoped to a lesson and preserved for the current page session.
+const lessonDrafts = new Map<string, string>();
+let activeDraftKey: string | null = null;
+let mountVersion = 0;
+
+export function saveMissionGuideDraft(): void {
+    if (previewActive && activeDraftKey) lessonDrafts.set(activeDraftKey, getEditorValue());
+}
 
 function getMonacoRoot(): HTMLElement | null {
     if (cachedMonacoRoot && document.documentElement.contains(cachedMonacoRoot)) {
@@ -102,7 +103,13 @@ export function isMissionGuideMonacoPreviewActive(): boolean {
     return previewActive;
 }
 
-export async function mountMissionGuideMonacoPreview(language: 'lua' | 'python', starterCode: string): Promise<void> {
+export async function mountMissionGuideMonacoPreview(language: 'lua' | 'python', starterCode: string, lessonId: string): Promise<void> {
+    const previewHost = getPreviewHost();
+    if (!previewHost) return;
+    const version = ++mountVersion;
+    const draftKey = `${language}:${lessonId}`;
+    const loadDraft = !previewActive || draftKey !== activeDraftKey;
+    saveMissionGuideDraft();
     // Трек с текстом — не Blockly, редактор должен показывать код, а не блоки.
     // setBlocklyEditorEnabled синхронно проставляет флаг состояния (см.
     // toggle-controller.ts), поэтому дальнейший setEditorValue() ниже уже
@@ -110,9 +117,9 @@ export async function mountMissionGuideMonacoPreview(language: 'lua' | 'python',
     setBlocklyEditorEnabled(false);
     await setEditorLanguage(language);
 
+    if (version !== mountVersion || !previewHost.isConnected) return;
     const monacoRoot = getMonacoRoot();
-    const previewHost = getPreviewHost();
-    if (!monacoRoot || !previewHost) return;
+    if (!monacoRoot) return;
 
     if (!originalParent) {
         originalParent = monacoRoot.parentNode;
@@ -131,17 +138,18 @@ export async function mountMissionGuideMonacoPreview(language: 'lua' | 'python',
     previewActive = true;
     ensureModalBodyObserver();
 
-    // Не затираем код, который студент уже печатает на этой же лекции —
-    // подставляем стартовый код только когда лекция реально сменилась.
-    if (starterCode !== lastLoadedStarterCode) {
-        await setEditorValue(starterCode);
-        lastLoadedStarterCode = starterCode;
+    if (loadDraft) {
+        await setEditorValue(lessonDrafts.get(draftKey) ?? starterCode);
+        if (version !== mountVersion || !previewHost.isConnected) return;
+        activeDraftKey = draftKey;
     }
 
     layoutMonacoSoon();
 }
 
 export function restoreMissionGuideMonacoPreview(): void {
+    saveMissionGuideDraft();
+    mountVersion += 1;
     const monacoRoot = cachedMonacoRoot || document.getElementById('monaco-editor-root');
 
     if (monacoRoot && originalParent) {

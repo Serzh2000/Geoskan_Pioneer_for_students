@@ -86,7 +86,7 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
         element.addEventListener('click', () => {
             logGuideEvent('solution_fill_requested', buildGuideEventContext(context));
             loadMainBlocklyXml(buildTargetWorkspaceXml(lesson.id, lesson.targetBlockIds)).then(() => {
-                setLessonChecked(language, lesson.id, true);
+                setLessonChecked(language, lesson.id, false);
                 setLessonBanner(language, lesson.id, {
                     kind: 'info',
                     message: 'Эталонная последовательность загружена в редактор Blockly.'

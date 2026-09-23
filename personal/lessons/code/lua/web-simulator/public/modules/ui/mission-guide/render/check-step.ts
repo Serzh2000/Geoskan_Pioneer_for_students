@@ -45,9 +45,10 @@ export function renderCheckStep(params: {
                             <div class="guide-panel-card__title">Проверка и разбор</div>
                             <div class="guide-panel-card__text">Короткий вердикт и список того, что исправить.</div>
                         </div>
-                        <div class="guide-panel-card__badge">Фидбек</div>
+                        <div class="guide-panel-card__badge">Разбор</div>
                     </div>
                     ${renderCheckVerdict(hasChecked, solved, diagnostics.length, launchedWithWarnings)}
+                    <div class="guide-actions"><button type="button" class="guide-primary-action" data-guide-step="build">${hasChecked ? 'Вернуться к сборке' : 'Перейти к практике'}</button></div>
                     ${hasChecked
             ? `
                     <div class="guide-actions guide-actions--primary">
@@ -69,7 +70,7 @@ export function renderCheckStep(params: {
                     <div class="guide-panel-card__top">
                         <div>
                             <div class="guide-panel-card__title">Живая сцена</div>
-                            <div class="guide-panel-card__text">Показывает поведение текущего скрипта и ошибки рантайма.</div>
+                            <div class="guide-panel-card__text">Показывает поведение текущего скрипта и ошибки выполнения.</div>
                         </div>
                         <div class="guide-panel-card__badge">3D</div>
                     </div>

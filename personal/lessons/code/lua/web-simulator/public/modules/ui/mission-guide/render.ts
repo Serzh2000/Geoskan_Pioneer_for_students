@@ -1,3 +1,4 @@
+import { renderPracticeBrief, renderObservation } from './render/learning.js';
 import type { ScriptLanguage } from '../api-docs/sections.js';
 import { evaluateLesson } from './evaluation/index.js';
 import { isMissionGuideScenePreviewActive } from './support/scene-preview.js';
@@ -47,7 +48,7 @@ export function renderGuide(state: GuideLessonState, language: ScriptLanguage): 
     const isCompleted = isLessonCompleted(language, lesson.id);
     const hasWorkspaceContent = sequenceIds.length > 0;
     const lessonIndex = state.lessons.findIndex((item) => item.id === lesson.id);
-    const buildStatusLabel = hasWorkspaceContent ? `${sequenceIds.length} блоков` : 'Пусто';
+    const buildStatusLabel = hasWorkspaceContent ? `${sequenceIds.length} шт.` : 'Пусто';
     const validationStatusLabel = !hasChecked
         ? 'Еще не запускалась'
         : evaluation.solved
@@ -76,6 +77,7 @@ export function renderGuide(state: GuideLessonState, language: ScriptLanguage): 
                 </div>
                 <div class="guide-panel-card__badge">Сборка</div>
             </div>
+            ${renderPracticeBrief(lesson)}
             <div class="guide-workspace-health">
                 <div class="guide-workspace-health__item">
                     <div class="guide-workspace-health__label">Сборка</div>
@@ -97,12 +99,7 @@ export function renderGuide(state: GuideLessonState, language: ScriptLanguage): 
             </div>
 
             <div id="mission-guide-blockly-preview-host" class="guide-blockly-preview-host ${blocklyPreviewActive ? 'is-active' : ''}">
-                ${blocklyPreviewActive ? '' : '<div class="guide-blockly-preview__placeholder">Нажмите «Открыть редактор Blockly», чтобы собрать цепочку прямо здесь.</div>'}
-            </div>
-
-            <div class="guide-actions">
-                <button type="button" class="guide-primary-action" data-guide-open-editor>${blocklyPreviewActive ? 'Редактор открыт ниже' : 'Открыть редактор Blockly'}</button>
-                <button type="button" class="guide-lesson__action" data-guide-fill="${escapeHtml(lesson.id)}">Подставить эталон</button>
+                ${blocklyPreviewActive ? '' : '<div class="guide-blockly-preview__placeholder"><p>Откройте редактор и соедините блоки сверху вниз. Текущая программа останется в рабочей области.</p><button type="button" class="guide-primary-action" data-guide-open-editor>Открыть редактор Blockly</button></div>'}
             </div>
 
             <div class="guide-actions guide-actions--primary">
@@ -110,6 +107,7 @@ export function renderGuide(state: GuideLessonState, language: ScriptLanguage): 
                 <button type="button" class="guide-lesson__action" data-guide-launch="${hasChecked ? 'checked' : 'unchecked'}" ${hasWorkspaceContent ? '' : 'disabled'}>Перезапустить сцену</button>
                 <button type="button" class="guide-lesson__action" data-guide-reset="${escapeHtml(lesson.id)}">Сбросить проверку</button>
             </div>
+            <details class="guide-learning-disclosure guide-solution-help"><summary>Посмотреть готовое решение</summary><p>Сначала попробуйте собрать программу самостоятельно. Загрузка решения заменит текущие блоки в редакторе.</p><button type="button" class="guide-lesson__action" data-guide-fill="${escapeHtml(lesson.id)}">Заменить блоки готовым решением</button></details>
             <div class="guide-panel-note">
                 <a href="#" data-guide-open-editor-fallback>Открыть в полноэкранном редакторе вместо этого</a>
             </div>
@@ -117,7 +115,7 @@ export function renderGuide(state: GuideLessonState, language: ScriptLanguage): 
         </section>
     `;
 
-    const checkStep = renderCheckStep({
+    const checkStep = renderObservation(lesson, hasChecked && evaluation.solved) + renderCheckStep({
         language,
         lessonId: lesson.id,
         hasChecked,
@@ -144,12 +142,12 @@ export function renderGuide(state: GuideLessonState, language: ScriptLanguage): 
                 <div class="guide-lesson-page__header">
                     <div class="guide-lesson-page__header-copy">
                         <div class="guide-lesson-page__badge">${escapeHtml(lesson.badge)}</div>
-                        <div class="guide-lesson-page__title">${escapeHtml(lesson.title)}</div>
+                        <h1 class="guide-lesson-page__title">${escapeHtml(lesson.title)}</h1>
                         <div class="guide-lesson-page__summary">${renderInline(lesson.summary)}</div>
                     </div>
                     <div class="guide-lesson-page__header-actions">
                         <div class="guide-lesson-page__header-pill">Урок ${lessonIndex + 1} из ${state.lessons.length}</div>
-                        <button type="button" class="guide-lesson__action" data-guide-portal-page="intro">На основную страницу</button>
+                        <button type="button" class="guide-lesson__action" data-guide-portal-page="intro">← Все уроки</button>
                     </div>
                 </div>
 

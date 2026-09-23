@@ -1,3 +1,4 @@
+import { renderLearningNote } from './learning.js';
 import type { ScriptLanguage } from '../../api-docs/sections.js';
 import {
     getActiveLesson,
@@ -69,7 +70,7 @@ export function renderLessonTheory(lesson: GuideLesson, chapter: GuideChapter): 
     return `
         <section class="guide-lesson-section">
             <div class="guide-lesson-section__header">
-                <div class="guide-panel-card__title">Теория урока</div>
+                <h2 class="guide-panel-card__title">Разберёмся перед практикой</h2>
                 <div class="guide-panel-card__text">Короткая база перед практикой.</div>
             </div>
 
@@ -103,8 +104,10 @@ export function renderLessonTheory(lesson: GuideLesson, chapter: GuideChapter): 
             </div>
         </section>
 
+        ${renderLearningNote(lesson)}
         ${chapter.theorySections.length > 0 ? `
-        <section class="guide-lesson-section">
+        <details class="guide-lesson-section guide-chapter-reading">
+            <summary>Углубиться: ${escapeHtml(chapter.title)}</summary>
             <div class="guide-lesson-section__header">
                 <div class="guide-panel-card__title">Теория главы</div>
                 <div class="guide-panel-card__text">Развернутое объяснение темы главы «${escapeHtml(chapter.title)}».</div>
@@ -112,7 +115,7 @@ export function renderLessonTheory(lesson: GuideLesson, chapter: GuideChapter): 
             <div class="guide-theory-sections">
                 ${chapter.theorySections.map(renderTheorySection).join('')}
             </div>
-        </section>
+        </details>
         ` : ''}
     `;
 }

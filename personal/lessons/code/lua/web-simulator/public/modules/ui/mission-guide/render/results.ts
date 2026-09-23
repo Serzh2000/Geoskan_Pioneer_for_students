@@ -4,7 +4,7 @@ export function renderCheckVerdict(hasChecked: boolean, solved: boolean, diagnos
             <div class="guide-result-hero guide-result-hero--idle">
                 <div class="guide-result-hero__label">Статус</div>
                 <div class="guide-result-hero__title">Пока не проверено</div>
-                <div class="guide-result-hero__text">Соберите цепочку и запустите проверку. Сцена откроется автоматически.</div>
+                <div class="guide-result-hero__text">Выполните задание на шаге практики и запустите проверку. Сцена откроется автоматически.</div>
             </div>
         `;
     }
@@ -14,7 +14,7 @@ export function renderCheckVerdict(hasChecked: boolean, solved: boolean, diagnos
             <div class="guide-result-hero guide-result-hero--success">
                 <div class="guide-result-hero__label">Статус</div>
                 <div class="guide-result-hero__title">Решение принято</div>
-                <div class="guide-result-hero__text">Решение принято. Сценарий уже запущен.</div>
+                <div class="guide-result-hero__text">Автопроверка пройдена. Сравните поведение сцены с ожидаемым результатом.</div>
             </div>
         `;
     }
