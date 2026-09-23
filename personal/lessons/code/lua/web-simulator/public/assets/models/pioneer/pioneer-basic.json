@@ -1,11 +1,11 @@
 {
-  "source_file": "Geoscan_Pioneer_Basic.blend",
-  "source_sha256": "3b3f82fae98ee0de26e2beacb7745868d3420646a336aaf75367c580ccc94a1e",
-  "output_sha256": "57ab756a7e6f3b00c2e9b1257c999b24c2851d6787f5cb73ab4b0316b6c805b5",
+  "source_file": "Geoscan_Pioneer_with_LED_module.blend",
+  "source_sha256": "050de4d4983ad8bf310833f0e56057aef361895f8ab2762c8a42027c021ea54c",
+  "output_sha256": "6d02c9bfdb199c47773351631a5fa6974c21a323f0cec268a8573887afa5fa1e",
   "coordinate_system": "Z-up; 2 scene units per physical metre; feet at z=0",
   "web_optimization": "Static parts merged; small-component bevels omitted; propeller subdivision level 1",
   "source_objects_by_group": {
-    "frame": 1273,
+    "frame": 1738,
     "rotor_0": 20,
     "rotor_2": 20,
     "rotor_1": 20,
@@ -39,28 +39,29 @@
     "module_led_21": 4,
     "module_led_22": 4,
     "module_led_23": 4,
-    "module_led_24": 4
+    "module_led_24": 4,
+    "esp32_module": 231
   },
   "rotor_centers": [
     [
       0.1343500018119812,
       0.1343500018119812,
-      0.20000000298023224
+      0.1910400092601776
     ],
     [
       -0.1343500018119812,
       -0.1343500018119812,
-      0.20000000298023224
+      0.1910400092601776
     ],
     [
       -0.1343500018119812,
       0.1343500018119812,
-      0.20000000298023224
+      0.1910400092601776
     ],
     [
       0.1343500018119812,
       -0.1343500018119812,
-      0.20000000298023224
+      0.1910400092601776
     ]
   ],
   "led_order": [
@@ -68,6 +69,12 @@
     "upper left",
     "underside left",
     "underside right"
+  ],
+  "source_scene": "Pioneer • LED + ESP32",
+  "esp32_camera": [
+    -0.0010599963134154677,
+    0.16010001301765442,
+    0.06704000383615494
   ],
   "provenance": "User-provided Blender reconstruction; original rights retained; no new license assigned"
 }

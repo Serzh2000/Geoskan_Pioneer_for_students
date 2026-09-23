@@ -20,6 +20,9 @@ import { initScriptLanguageSelector } from './modules/app/language-selector.js';
 import { initThemeToggle } from './modules/app/theme-toggle.js';
 import { registerGlobalErrorHandler } from './modules/app/global-error.js';
 import { startAnimationLoop } from './modules/app/animation-loop.js';
+import type { AddObjectOptions } from './modules/scene/objects/object-manager.js';
+import { resetVehicles, startVehicleSession, stopVehicleSession } from './modules/vehicles/engine.js';
+import { setDroneEsp32Attached } from './modules/drone/index.js';
 
 // Global Loop
 
@@ -56,10 +59,7 @@ function init() {
             toggleMultiSelect: (id: string) => toggleMultiSelectObjectById(id),
             focus: (id: string) => focusSceneObjectById(id),
             remove: (id: string) => deleteSceneObjectById(id),
-            add: (
-                type: string,
-                options?: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number; markerMap?: MarkerMapOptions }
-            ) => addObject(type, options),
+            add: (type: string, options?: AddObjectOptions) => addObject(type, options),
             setTransform: (
                 position: { x: number; y: number; z: number },
                 rotation: { x: number; y: number; z: number },
@@ -136,6 +136,9 @@ async function startSimulation() {
 
         try {
             await runPythonScript(id, code);
+            // On the real Pioneer, Python runs on the ESP32 module - plug it in.
+            setDroneEsp32Attached(id, true);
+            startVehicleSession();
             log(`Python-скрипт запущен для ${drone.name}`, 'success');
         } catch (e: any) {
             drone.running = false;
@@ -191,9 +194,13 @@ async function startSimulation() {
     if (!anyAttempted) {
         log('Нет сценариев для запуска', 'warn');
     }
+    // Cars and trains set to start with the program move from here on.
+    if (Object.values(drones).some((drone) => drone.running)) startVehicleSession();
 }
 
 function stopSimulation() {
+    stopVehicleSession();
+    setDroneEsp32Attached(null, false);
     for (const id in drones) {
         const drone = drones[id];
         if (drone.running) {
@@ -219,6 +226,8 @@ function resetSimulation() {
         drone.target_pos = { x: 0, y: 0, z: 0 };
         drone.target_yaw = 0;
     }
+
+    resetVehicles();
 
     // Force one frame update so the UI immediately reflects the reset state.
     if (is3DActive) updateDrone3D(0);

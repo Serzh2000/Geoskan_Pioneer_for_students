@@ -7,6 +7,7 @@ import { drones, currentDroneId, simSettings } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 import { envGroup } from '../environment/index.js';
 import { createDroneModel, updateLEDs, animateRotors } from '../drone-model/index.js';
+import { setEsp32Attached, updateEsp32Module } from '../drone-model/esp32-module.js';
 import { updateCamera } from '../scene/core/camera.js';
 import { getCameraMode } from '../scene/core/camera-mode-state.js';
 import {
@@ -215,6 +216,13 @@ export function syncDrones() {
     }
 }
 
+/** Python runs on the ESP32 module: plug it into the optical-flow board (or pull it out). */
+export function setDroneEsp32Attached(id: string | null, attached: boolean) {
+    for (const droneId in droneMeshes) {
+        if (id === null || droneId === id) setEsp32Attached(droneMeshes[droneId], attached);
+    }
+}
+
 export function getObstacles() {
     return envGroup ? envGroup.children : [];
 }
@@ -289,6 +297,7 @@ export function updateDrone3D(dt: number) {
         }
 
         updateTrailForDrone(id);
+        updateEsp32Module(mesh, dt);
 
         const arrow = mesh.userData.orientationArrow as THREE.Object3D | null | undefined;
         if (arrow) {

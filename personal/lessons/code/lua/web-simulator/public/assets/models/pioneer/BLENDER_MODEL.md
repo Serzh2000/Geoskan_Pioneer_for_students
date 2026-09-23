@@ -1,7 +1,10 @@
 # Pioneer Basic in the simulator
 
 `pioneer-basic.glb` is exported from the user-provided
-`Geoscan_Pioneer/Geoscan_Pioneer_Basic.blend`, scene `Pioneer • assembled`.
+`Geoscan_Pioneer/Geoscan_Pioneer_with_LED_module.blend`, scene
+`Pioneer • LED + ESP32`: frame, optical-flow board (05C) with its mounting,
+the optional LED module, and the ESP32 camera module (05D) seated in the
+flow board's white 1×8 headers.
 The source `.blend` is not modified. Source and output hashes and ownership
 information are recorded in `pioneer-basic.json`.
 
@@ -17,6 +20,12 @@ are combined by material; tiny component bevels are omitted for browser use.
 - `base_led_2` / `base_led_3`: underside left / underside right luminous surfaces.
 - `led_module`: the optional 05B accessory board (plugs onto the autopilot's
   X8/X9 headers), present only when the source `.blend` has that collection.
+- `esp32_module`: the ESP32 camera module, its node at the module's centre.
+  Hidden until a Python script runs; then it slides up into the headers
+  (`drone-model/esp32-module.ts`) and back out on Стоп/Сброс.
+- `esp32_camera`: empty node at the ESP32 lens. The simulator puts
+  `fpv_camera` (FPV view, Python `Camera.get_frame`/`get_cv_frame`) there,
+  looking forward (+Y) with a slight downward tilt.
 - `module_led_0` .. `module_led_24`: the board's 5×5 pixels, row-major from
   the top-left (`index = row * 5 + col`), each holding that pixel's emitter
   dies and lens. Everything else on the board (PCB, connectors, mounting,
@@ -40,7 +49,7 @@ only if the GLB fails to load. Export tools must await
 To regenerate (replace the source path with the local `.blend` path):
 
 ```powershell
-& 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe' --background 'SOURCE.blend' --python tools/export_pioneer_blend.py -- public/assets/models/pioneer/pioneer-basic.glb
+& 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe' --background 'SOURCE.blend' --python tools/export_pioneer_blend.py -- public/assets/models/pioneer/pioneer-basic.glb 'Pioneer • LED + ESP32'
 ```
 
 Regression checks are in `tests/pioneer-blender-model.test.ts`; they load the

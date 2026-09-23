@@ -1,6 +1,10 @@
 """Export the user-provided Pioneer assembly without changing the .blend source.
 
-blender --background SOURCE.blend --python tools/export_pioneer_blend.py -- OUTPUT.glb
+blender --background SOURCE.blend --python tools/export_pioneer_blend.py -- OUTPUT.glb [SCENE]
+
+SCENE defaults to "Pioneer • assembled". With "Pioneer • LED + ESP32" the ESP32 module
+(05D) is exported as its own esp32_module node, plugged into the optical-flow
+board's headers; the simulator shows it while a Python script runs.
 The simulator uses Z-up and twice real-world scale, matching its existing CAD model.
 """
 import bpy
@@ -11,9 +15,11 @@ import sys
 from pathlib import Path
 from mathutils import Matrix, Vector
 
-output = Path(sys.argv[sys.argv.index('--') + 1]).resolve()
+args = sys.argv[sys.argv.index('--') + 1:]
+output = Path(args[0]).resolve()
+scene_name = args[1] if len(args) > 1 else 'Pioneer • assembled'
 source = Path(bpy.data.filepath)
-scene = bpy.data.scenes['Pioneer • assembled']
+scene = bpy.data.scenes[scene_name]
 bpy.context.window.scene = scene
 allowed = {c for c in scene.collection.children
            if not c.hide_render and re.match(r'0[1-7]', c.name)}
@@ -62,6 +68,23 @@ for i in range(4):
 led_module = group('led_module')
 for i in range(25):
     group(f'module_led_{i}').parent = led_module
+# ESP32 camera module (05D): plugs into the optical-flow board's white headers.
+# Its node sits at the module's own centre so the simulator can slide it in and
+# out along Z; esp32_camera marks the lens (the Python camera looks from there).
+esp32_parts = [o for o in objects if o.name.startswith('ESP32 • ')]
+if esp32_parts:
+    corners = [transform @ o.matrix_world @ Vector(c) for o in esp32_parts for c in o.bound_box]
+    esp32_center = sum(corners, Vector()) / len(corners)
+    lens = (next((o for o in esp32_parts if o.name.startswith('ESP32 • convex front lens')), None)
+            or next((o for o in esp32_parts if 'camera glass' in o.name), None))
+    lens_center = (sum((transform @ lens.matrix_world @ Vector(c) for c in lens.bound_box), Vector()) / 8
+                   if lens else esp32_center)
+else:
+    esp32_center = Vector()
+    lens_center = None
+group('esp32_module', esp32_center)
+if lens_center is not None:
+    group('esp32_camera', lens_center)
 
 buckets = {}
 source_counts = {}
@@ -79,6 +102,8 @@ for original in objects:
         # Light-emitting surfaces of the LED module (5x5), row-major from the top-left.
         row, col = int(module_pixel[2]), int(module_pixel[3])
         bucket = f'module_led_{row * 5 + col}'
+    elif name.startswith('ESP32 • '):
+        bucket = 'esp32_module'
     elif name.startswith('LED • '):
         # Everything else on the module (PCB, connectors, mounting, silkscreen)
         # stays static, merged with the rest of the module's own group.
@@ -124,6 +149,8 @@ report = {
     'source_objects_by_group': source_counts,
     'rotor_centers': [list(c) for c in centers],
     'led_order': ['upper right', 'upper left', 'underside left', 'underside right'],
+    'source_scene': scene_name,
+    'esp32_camera': list(lens_center) if lens_center is not None else None,
     'provenance': 'User-provided Blender reconstruction; original rights retained; no new license assigned',
 }
 output.with_suffix('.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

@@ -86,3 +86,30 @@ test('invalid assets are rejected before adding any geometry', () => {
     expect(model.children).toHaveLength(4);
     expect(model.children.every((rotor) => rotor.children.length === 0)).toBe(true);
 });
+
+test('ESP32 module starts hidden, plugs into the flow-board headers, and hosts the camera', async () => {
+    const { setEsp32Attached, updateEsp32Module } = await import('../public/modules/drone-model/esp32-module.js');
+    const model = shell();
+    attachBlenderModel(model, asset.scene);
+    const esp32 = model.getObjectByName('esp32_module')!;
+    const camera = model.getObjectByName('fpv_camera') as THREE.PerspectiveCamera;
+    expect(esp32).toBeDefined();
+    expect(esp32.visible).toBe(false);
+    expect(camera).toBeInstanceOf(THREE.PerspectiveCamera);
+    // The lens is at the front (+Y), above the ground.
+    expect(camera.position.y).toBeGreaterThan(0.1);
+    expect(camera.position.z).toBeGreaterThan(0);
+
+    const seated = esp32.position.clone();
+    setEsp32Attached(model, true);
+    updateEsp32Module(model, 0.1);
+    expect(esp32.visible).toBe(true);
+    expect(esp32.position.z).toBeLessThan(seated.z);  // still rising into the headers
+    for (let i = 0; i < 20; i++) updateEsp32Module(model, 0.1);
+    expect(esp32.position.distanceTo(seated)).toBeLessThan(1e-9);
+
+    setEsp32Attached(model, false);
+    for (let i = 0; i < 20; i++) updateEsp32Module(model, 0.1);
+    expect(esp32.visible).toBe(false);
+    expect(new THREE.Box3().setFromObject(model).min.z).toBeCloseTo(0, 5);
+});

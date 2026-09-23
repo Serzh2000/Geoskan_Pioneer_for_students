@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import pioneerUrl from '../../assets/models/pioneer/pioneer-basic.glb?url';
 import { createLedGlowSprite } from './led-glow.js';
 import { CAD_MM_TO_SCENE_SCALE } from './layout.js';
+import { setupEsp32Module } from './esp32-module.js';
 
 const BASE_LED_GLOW_DIAMETER = 15 * CAD_MM_TO_SCENE_SCALE;
 const MODULE_LED_GLOW_DIAMETER = 5.5 * CAD_MM_TO_SCENE_SCALE;
@@ -130,6 +131,7 @@ export function attachBlenderModel(model: THREE.Group, template: THREE.Group): v
         leds.add(ledModule);
     }
     model.add(leds);
+    setupEsp32Module(model, instance);
 }
 
 /** Exporters must wait for the real asset, rather than exporting an empty shell. */
