@@ -120,49 +120,49 @@
 :root[data-theme='dark'] .info-modal {
     background:
         radial-gradient(circle at top right, rgba(255, 107, 0, 0.12), transparent 30%),
-        linear-gradient(180deg, rgba(10, 10, 10, 0.98), rgba(0, 0, 0, 0.98));
-    border: 1px solid rgba(148, 163, 184, 0.16);
+        linear-gradient(180deg, rgba(26, 26, 26, 0.98), rgba(18, 18, 18, 0.98));
+    border: 1px solid rgba(162, 162, 162, 0.16);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
 }
 
 :root[data-theme='dark'] .info-modal__header {
-    border-bottom-color: rgba(148, 163, 184, 0.12);
+    border-bottom-color: rgba(162, 162, 162, 0.12);
 }
 
 :root[data-theme='dark'] .info-modal__close {
-    border-color: rgba(148, 163, 184, 0.18);
+    border-color: rgba(162, 162, 162, 0.18);
     color: var(--text-muted);
-    background: rgba(10, 10, 10, 0.88);
+    background: rgba(26, 26, 26, 0.88);
 }
 
 :root[data-theme='dark'] .info-modal__close:hover {
     color: #ffb067;
-    background: rgba(26, 26, 26, 0.96);
+    background: rgba(39, 39, 39, 0.96);
     border-color: rgba(255, 107, 0, 0.28);
 }
 
 :root[data-theme='dark'] .info-modal__body {
-    scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+    scrollbar-color: rgba(162, 162, 162, 0.35) transparent;
 }
 
 :root[data-theme='dark'] .info-modal__lead {
-    color: #e2e8f0;
+    color: #e7e7e7;
 }
 
 :root[data-theme='dark'] .info-modal__fact {
-    background: rgba(10, 10, 10, 0.74);
-    border-color: rgba(148, 163, 184, 0.14);
+    background: rgba(26, 26, 26, 0.74);
+    border-color: rgba(162, 162, 162, 0.14);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
     transition: background-color 0.18s ease, border-color 0.18s ease;
 }
 
 :root[data-theme='dark'] .info-modal__fact:hover {
-    border-color: rgba(148, 163, 184, 0.24);
-    background: rgba(26, 26, 26, 0.65);
+    border-color: rgba(162, 162, 162, 0.24);
+    background: rgba(39, 39, 39, 0.65);
 }
 
 :root[data-theme='dark'] .info-modal__fact-label {
-    color: #94a3b8;
+    color: #a2a2a2;
 }
 
 :root[data-theme='dark'] .info-modal__fact-value {
@@ -170,8 +170,8 @@
 }
 
 :root[data-theme='dark'] .info-modal__footnote {
-    color: #94a3b8;
-    border-top: 1px solid rgba(148, 163, 184, 0.1);
+    color: #a2a2a2;
+    border-top: 1px solid rgba(162, 162, 162, 0.1);
     padding-top: 12px;
 }
 

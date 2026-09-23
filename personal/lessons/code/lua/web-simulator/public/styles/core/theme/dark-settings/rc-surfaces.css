@@ -1,4 +1,4 @@
-﻿:root[data-theme='dark'] #rc-settings-panel .settings-group,
+:root[data-theme='dark'] #rc-settings-panel .settings-group,
 :root[data-theme='dark'] .rc-channel-card,
 :root[data-theme='dark'] .rc-source-card,
 :root[data-theme='dark'] .rc-focus-card,
@@ -25,8 +25,8 @@
 :root[data-theme='dark'] .rc-viewport-bridge__card,
 :root[data-theme='dark'] .rc-viewport-bridge__footer,
 :root[data-theme='dark'] .rc-drone-telemetry__chip {
-    background: linear-gradient(180deg, rgba(10, 10, 10, 0.96), rgba(17, 17, 17, 0.96));
-    border-color: rgba(148, 163, 184, 0.14);
+    background: linear-gradient(180deg, rgba(26, 26, 26, 0.96), rgba(32, 32, 32, 0.96));
+    border-color: rgba(162, 162, 162, 0.14);
     color: var(--text-color);
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
 }

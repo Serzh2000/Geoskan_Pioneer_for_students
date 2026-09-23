@@ -68,13 +68,13 @@
 }
 
 :root[data-theme='dark'] .viewport-corner-btn {
-    background: rgba(26, 26, 26, 0.94);
-    border-color: rgba(148, 163, 184, 0.24);
-    color: #cbd5e1;
+    background: rgba(39, 39, 39, 0.94);
+    border-color: rgba(162, 162, 162, 0.24);
+    color: #d4d4d4;
 }
 
 :root[data-theme='dark'] .viewport-corner-btn:hover {
-    background: rgba(51, 65, 85, 0.96);
+    background: rgba(70, 70, 70, 0.96);
     color: #f8fafc;
 }
 

@@ -1,8 +1,8 @@
 :root[data-theme='dark'] .metric,
 :root[data-theme='dark'] .telemetry-battery,
 :root[data-theme='dark'] .telemetry-status {
-    background: rgba(10, 10, 10, 0.96);
-    border-color: rgba(148, 163, 184, 0.16);
+    background: rgba(26, 26, 26, 0.96);
+    border-color: rgba(162, 162, 162, 0.16);
 }
 
 :root[data-theme='dark'] .telemetry-status[data-tone='flying'] {
@@ -24,50 +24,50 @@
 }
 
 :root[data-theme='dark'] .telemetry-battery__track {
-    background: rgba(148, 163, 184, 0.16);
+    background: rgba(162, 162, 162, 0.16);
 }
 
 :root[data-theme='dark'] .panel-content--drones {
     background:
         radial-gradient(circle at top left, rgba(255, 107, 0, 0.08), transparent 32%),
-        linear-gradient(180deg, #080808 0%, #111111 100%);
+        linear-gradient(180deg, #191919 0%, #202020 100%);
 }
 
 :root[data-theme='dark'] .panel-content--logs {
-    background: linear-gradient(180deg, #080808 0%, #111111 100%);
+    background: linear-gradient(180deg, #191919 0%, #202020 100%);
 }
 
 :root[data-theme='dark'] .logs-console__stream {
-    border-color: rgba(148, 163, 184, 0.12);
-    background: linear-gradient(180deg, rgba(10, 10, 10, 0.98) 0%, rgba(17, 17, 17, 0.98) 100%);
+    border-color: rgba(162, 162, 162, 0.12);
+    background: linear-gradient(180deg, rgba(26, 26, 26, 0.98) 0%, rgba(32, 32, 32, 0.98) 100%);
     box-shadow:
         0 10px 24px rgba(0, 0, 0, 0.24),
         inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 :root[data-theme='dark'] .log-entry {
-    background: rgba(10, 10, 10, 0.7);
+    background: rgba(26, 26, 26, 0.7);
     color: var(--text-color);
 }
 
 :root[data-theme='dark'] .log-entry:hover {
-    background: rgba(26, 26, 26, 0.9);
-    border-color: rgba(148, 163, 184, 0.12);
+    background: rgba(39, 39, 39, 0.9);
+    border-color: rgba(162, 162, 162, 0.12);
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
 }
 
 :root[data-theme='dark'] .log-entry__time {
-    color: #94a3b8;
+    color: #a2a2a2;
 }
 
 :root[data-theme='dark'] .log-entry--info,
 :root[data-theme='dark'] .log-entry--info .log-entry__tag {
-    color: #cbd5e1;
+    color: #d4d4d4;
 }
 
 :root[data-theme='dark'] .log-entry--action,
 :root[data-theme='dark'] .log-entry--action .log-entry__tag {
-    color: #a5b4c8;
+    color: #b2b2b2;
 }
 
 :root[data-theme='dark'] .log-entry--warn,

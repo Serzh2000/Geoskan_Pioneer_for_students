@@ -123,16 +123,16 @@
 .autopilot-param__fact { border-color: var(--ap-line); background: var(--ap-soft); }
 
 :root[data-theme='dark'] .autopilot-params-modal {
-    --ap-bg: #0d0d0d;
-    --ap-surface: #161616;
-    --ap-soft: #1f1f1f;
-    --ap-line: #2b2b2b;
-    --ap-text: #edf2f7;
-    --ap-muted: #a9b7c8;
+    --ap-bg: #1d1d1d;
+    --ap-surface: #242424;
+    --ap-soft: #2b2b2b;
+    --ap-line: #353535;
+    --ap-text: #f1f1f1;
+    --ap-muted: #b5b5b5;
     box-shadow: 0 24px 70px rgba(0, 0, 0, .38);
 }
 
 :root[data-theme='dark'] .autopilot-params-modal :is(.autopilot-params-sidebar, .autopilot-params-main, .autopilot-params-modal__header, .autopilot-toolbar, .autopilot-summary-card, .autopilot-section, .autopilot-param) { background: var(--ap-surface); border-color: var(--ap-line); }
 :root[data-theme='dark'] .autopilot-params-modal :is(.autopilot-summary-card__metric, .autopilot-group, .autopilot-param__fact) { background: var(--ap-soft); border-color: var(--ap-line); }
 :root[data-theme='dark'] .autopilot-params-modal :is(.autopilot-params-main__note, .autopilot-action-btn, .autopilot-toolbar__action, .autopilot-toolbar__clear, .autopilot-filter-chip) { background: var(--ap-surface); border-color: var(--ap-line); color: var(--ap-muted); }
-:root[data-theme='dark'] .autopilot-params-modal :is(.autopilot-params-sidebar input, .autopilot-toolbar__search-wrap input, .autopilot-param__input) { background: #101824; border-color: var(--ap-line); color: var(--ap-text); }
+:root[data-theme='dark'] .autopilot-params-modal :is(.autopilot-params-sidebar input, .autopilot-toolbar__search-wrap input, .autopilot-param__input) { background: #262626; border-color: var(--ap-line); color: var(--ap-text); }

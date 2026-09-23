@@ -182,17 +182,17 @@
 
 :root[data-theme="dark"] .scene-segmented-btn.is-active {
     color: #e9ecef;
-    background: #2d3748;
+    background: #3f3f3f;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 :root[data-theme="dark"] .scene-transform-field span {
-    color: #94a3b8;
+    color: #a2a2a2;
 }
 
 :root[data-theme="dark"] .scene-transform-field input[readonly] {
-    background: #1a2332;
-    border-color: #2d3748;
+    background: #2e2e2e;
+    border-color: #3f3f3f;
     color: #e9ecef;
 }
 

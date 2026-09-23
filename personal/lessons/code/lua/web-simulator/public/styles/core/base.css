@@ -45,7 +45,7 @@
      * --panel-*       — заголовки, контент панелей и карточка сцены;
      * --panel-gap-sm  — компактный зазор, --panel-gap — базовый.
      */
-    --rail-width: 52px;
+    --rail-width: 56px;
     --rail-btn-size: 40px;
     --panel-header-height: 48px;
     --panel-pad-x: 12px;
@@ -73,34 +73,40 @@
     --input-bg-focus: #ffffff;
 }
 
+/*
+ * Тёмная тема — нейтральный графит, а не чистый чёрный:
+ * #121212 (фон) → #1a1a1a (панели) → #202020 (контролы) → #272727 (приподнятые)
+ * → #333333 (hover). Глубина передаётся светлотой поверхности, т.к. тени на
+ * тёмном почти не видны. Текст не белее #f2f2f2 — меньше «ореола» букв.
+ */
 :root[data-theme='dark'] {
-    --bg-color: #000000;
-    --bg-muted: #0a0a0a;
-    --bg-elevated: #111111;
-    --card-bg: #0a0a0a;
-    --panel-bg: #0a0a0a;
-    --panel-bg-strong: #1a1a1a;
-    --text-color: #dbe4f0;
-    --text-strong: #f8fafc;
-    --text-muted: #94a3b8;
-    --border-color: rgba(148, 163, 184, 0.2);
-    --border-strong: rgba(148, 163, 184, 0.34);
+    --bg-color: #121212;
+    --bg-muted: #1a1a1a;
+    --bg-elevated: #202020;
+    --card-bg: #1a1a1a;
+    --panel-bg: #1a1a1a;
+    --panel-bg-strong: #272727;
+    --text-color: #e3e3e3;
+    --text-strong: #f2f2f2;
+    --text-muted: #a2a2a2;
+    --border-color: rgba(162, 162, 162, 0.2);
+    --border-strong: rgba(162, 162, 162, 0.34);
     --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.4);
     --shadow-soft: 0 14px 32px rgba(0, 0, 0, 0.3);
-    --glass-border: 1px solid rgba(148, 163, 184, 0.14);
-    --body-gradient-start: #0a0a0a;
-    --body-gradient-end: #000000;
-    --header-bg: rgba(10, 10, 10, 0.9);
-    --header-border: rgba(148, 163, 184, 0.16);
+    --glass-border: 1px solid rgba(162, 162, 162, 0.14);
+    --body-gradient-start: #1a1a1a;
+    --body-gradient-end: #121212;
+    --header-bg: rgba(26, 26, 26, 0.9);
+    --header-border: rgba(162, 162, 162, 0.16);
     --header-shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
     --control-group-bg: transparent;
-    --control-bg: #111111;
-    --control-bg-hover: #1f2937;
-    --control-text: #e5e7eb;
-    --control-border: rgba(148, 163, 184, 0.24);
+    --control-bg: #202020;
+    --control-bg-hover: #333333;
+    --control-text: #e5e5e5;
+    --control-border: rgba(162, 162, 162, 0.24);
     --control-focus-ring: rgba(255, 107, 0, 0.24);
-    --input-bg: #0a0a0a;
-    --input-bg-focus: #111111;
+    --input-bg: #1a1a1a;
+    --input-bg-focus: #202020;
 }
 
 body {

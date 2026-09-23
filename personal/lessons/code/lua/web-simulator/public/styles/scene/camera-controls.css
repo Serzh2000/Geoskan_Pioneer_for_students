@@ -79,8 +79,8 @@
 }
 
 :root[data-theme='dark'] .camera-controls {
-    background: rgba(10, 10, 10, 0.92);
-    border-color: rgba(148, 163, 184, 0.18);
+    background: rgba(26, 26, 26, 0.92);
+    border-color: rgba(162, 162, 162, 0.18);
 }
 
 :root[data-theme='dark'] .camera-controls__indicator {
@@ -89,7 +89,7 @@
 }
 
 :root[data-theme='dark'] .camera-controls button {
-    color: #e2e8f0;
+    color: #e7e7e7;
 }
 
 :root[data-theme='dark'] .camera-controls button:hover {

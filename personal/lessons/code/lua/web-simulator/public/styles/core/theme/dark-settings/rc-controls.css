@@ -1,4 +1,4 @@
-﻿:root[data-theme='dark'] #rc-settings-panel .settings-group input[type="text"]:disabled,
+:root[data-theme='dark'] #rc-settings-panel .settings-group input[type="text"]:disabled,
 :root[data-theme='dark'] #rc-settings-panel .settings-group select,
 :root[data-theme='dark'] #rc-settings-panel .settings-group input[type="range"],
 :root[data-theme='dark'] .rc-action-btn,
@@ -17,29 +17,29 @@
 :root[data-theme='dark'] .rc-drone-viewport__status--live,
 :root[data-theme='dark'] .rc-drone-viewport__status--caution,
 :root[data-theme='dark'] .rc-drone-viewport__status--offline {
-    border-color: rgba(148, 163, 184, 0.16);
-    background: rgba(10, 10, 10, 0.88);
+    border-color: rgba(162, 162, 162, 0.16);
+    background: rgba(26, 26, 26, 0.88);
     color: var(--text-color);
 }
 
 :root[data-theme='dark'] #rc-settings-panel .settings-group select,
 :root[data-theme='dark'] #rc-settings-panel .settings-group input[type="text"]:disabled {
-    background: rgba(10, 10, 10, 0.92);
+    background: rgba(26, 26, 26, 0.92);
     color: var(--text-color);
 }
 
 :root[data-theme='dark'] #rc-settings-panel .settings-group input[type="range"],
 :root[data-theme='dark'] #rc-settings-panel .settings-group input[type="range"]::-moz-range-track {
-    background: #334155;
+    background: #464646;
 }
 
 :root[data-theme='dark'] #rc-settings-panel .settings-group input[type="range"]::-webkit-slider-runnable-track {
-    background: linear-gradient(90deg, #ff8c00, #ff8c00) left/var(--range-progress, 50%) 100% no-repeat, #334155;
+    background: linear-gradient(90deg, #ff8c00, #ff8c00) left/var(--range-progress, 50%) 100% no-repeat, #464646;
 }
 
 :root[data-theme='dark'] #rc-settings-panel .settings-group input[type="range"]::-webkit-slider-thumb,
 :root[data-theme='dark'] #rc-settings-panel .settings-group input[type="range"]::-moz-range-thumb {
-    border-color: rgba(10, 10, 10, 0.96);
-    background: #e2e8f0;
+    border-color: rgba(26, 26, 26, 0.96);
+    background: #e7e7e7;
     box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
 }

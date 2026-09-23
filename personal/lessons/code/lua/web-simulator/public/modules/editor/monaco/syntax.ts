@@ -179,20 +179,20 @@ export function setupSyntaxHighlighting(monaco: any) {
             { token: 'keyword.class', foreground: 'cbd5f5', fontStyle: 'bold' },
             { token: 'function.call', foreground: 'ff9c53', fontStyle: 'bold' },
             { token: 'constant', foreground: '60a5fa', fontStyle: 'bold' },
-            { token: 'comment', foreground: '94a3b8' },
+            { token: 'comment', foreground: 'a2a2a2' },
             { token: 'string', foreground: 'fdba74' },
             { token: 'number', foreground: '5eead4' },
             { token: 'keyword', foreground: 'c084fc', fontStyle: 'bold' }
         ],
         colors: {
-            'editor.background': '#0a0a0a',
-            'editor.foreground': '#e5e7eb',
-            'editor.lineHighlightBackground': '#161616',
-            'editorLineNumber.foreground': '#64748b',
-            'editorLineNumber.activeForeground': '#e5e7eb',
+            'editor.background': '#1a1a1a',
+            'editor.foreground': '#e5e5e5',
+            'editor.lineHighlightBackground': '#242424',
+            'editorLineNumber.foreground': '#737373',
+            'editorLineNumber.activeForeground': '#e5e5e5',
             'editorCursor.foreground': '#ff9c53',
             'editor.selectionBackground': '#7c2d1238',
-            'editor.inactiveSelectionBackground': '#3a3a3a88'
+            'editor.inactiveSelectionBackground': '#44444488'
         }
     });
 }

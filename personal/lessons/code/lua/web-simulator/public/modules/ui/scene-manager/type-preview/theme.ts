@@ -13,7 +13,7 @@ export function getPreviewTheme(): PreviewTheme {
 export function createPreviewGround(size: number, theme: PreviewTheme) {
     const geometry = new THREE.CircleGeometry(size, 64);
     const material = new THREE.MeshStandardMaterial({
-        color: theme === 'dark' ? 0x1a1a1a : 0xffffff,
+        color: theme === 'dark' ? 0x272727 : 0xffffff,
         roughness: theme === 'dark' ? 0.94 : 0.98,
         metalness: theme === 'dark' ? 0.06 : 0.02
     });

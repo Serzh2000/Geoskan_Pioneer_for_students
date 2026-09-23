@@ -1,4 +1,4 @@
-﻿:root[data-theme='dark'] .rc-action-btn:hover,
+:root[data-theme='dark'] .rc-action-btn:hover,
 :root[data-theme='dark'] .rc-action-btn:focus-visible,
 :root[data-theme='dark'] .rc-nav-btn:hover,
 :root[data-theme='dark'] .rc-nav-btn:focus-visible,
@@ -10,7 +10,7 @@
 :root[data-theme='dark'] .rc-stick-mode-toggle__option:hover,
 :root[data-theme='dark'] .rc-stick-mode-toggle__option:focus-visible {
     border-color: rgba(255, 107, 0, 0.3);
-    background: rgba(26, 26, 26, 0.96);
+    background: rgba(39, 39, 39, 0.96);
     box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.14);
 }
 
@@ -27,14 +27,14 @@
 :root[data-theme='dark'] .rc-listening-state,
 :root[data-theme='dark'] .rc-step-hint {
     border-color: rgba(255, 107, 0, 0.24);
-    background: linear-gradient(135deg, rgba(255, 107, 0, 0.14), rgba(26, 26, 26, 0.96));
+    background: linear-gradient(135deg, rgba(255, 107, 0, 0.14), rgba(39, 39, 39, 0.96));
     color: #ffb067;
 }
 
 :root[data-theme='dark'] .rc-setup-note--warning,
 :root[data-theme='dark'] .rc-raw-chip--warning {
     border-color: rgba(245, 158, 11, 0.28);
-    background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(26, 26, 26, 0.96));
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(39, 39, 39, 0.96));
     color: #fbbf24;
 }
 
@@ -42,7 +42,7 @@
 :root[data-theme='dark'] .rc-conflict-panel,
 :root[data-theme='dark'] .rc-conflict-item {
     border-color: rgba(248, 113, 113, 0.28);
-    background: linear-gradient(135deg, rgba(127, 29, 29, 0.18), rgba(26, 26, 26, 0.96));
+    background: linear-gradient(135deg, rgba(127, 29, 29, 0.18), rgba(39, 39, 39, 0.96));
     color: #fecaca;
 }
 
@@ -72,7 +72,7 @@
 :root[data-theme='dark'] .rc-wizard-modal__progress-item--done,
 :root[data-theme='dark'] .rc-guided-progress__item--done {
     border-color: rgba(74, 222, 128, 0.26);
-    background: linear-gradient(135deg, rgba(34, 197, 94, 0.14), rgba(10, 10, 10, 0.96));
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.14), rgba(26, 26, 26, 0.96));
     color: #86efac;
 }
 

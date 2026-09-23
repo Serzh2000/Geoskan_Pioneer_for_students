@@ -1,5 +1,5 @@
-﻿:root[data-theme='dark'] textarea,
+:root[data-theme='dark'] textarea,
 :root[data-theme='dark'] .fallback-editor {
-    background: #0a0a0a;
+    background: #1a1a1a;
     color: var(--text-color);
 }

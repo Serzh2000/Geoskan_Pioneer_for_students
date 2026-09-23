@@ -2,8 +2,8 @@ export const CONTEXT_MENU_STYLES = `
     #object-context-menu {
         position: fixed;
         min-width: 170px;
-        background: rgba(15, 23, 42, 0.96);
-        border: 1px solid #334155;
+        background: rgba(38, 38, 38, 0.96);
+        border: 1px solid #464646;
         border-radius: 10px;
         padding: 6px;
         display: none;
@@ -18,16 +18,16 @@ export const CONTEXT_MENU_STYLES = `
     }
     #object-context-menu .ctx-header {
         font-size: 11px;
-        color: #94a3b8;
+        color: #a2a2a2;
         padding: 6px 10px;
-        border-bottom: 1px solid #334155;
+        border-bottom: 1px solid #464646;
         margin-bottom: 4px;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
     #object-context-menu .ctx-section-label {
         font-size: 11px;
-        color: #94a3b8;
+        color: #a2a2a2;
         padding: 8px 10px 4px;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -39,29 +39,29 @@ export const CONTEXT_MENU_STYLES = `
         margin: 2px 4px 4px;
         padding: 8px 10px;
         border-radius: 8px;
-        background: rgba(30, 41, 59, 0.72);
-        border: 1px solid rgba(71, 85, 105, 0.6);
+        background: rgba(51, 51, 51, 0.72);
+        border: 1px solid rgba(86, 86, 86, 0.6);
     }
     #object-context-menu .ctx-info-title {
         font-size: 12px;
         font-weight: 600;
-        color: #e2e8f0;
+        color: #e7e7e7;
     }
     #object-context-menu .ctx-info-text {
         font-size: 12px;
         line-height: 1.45;
-        color: #cbd5e1;
+        color: #d4d4d4;
         white-space: pre-line;
     }
     #object-context-menu .ctx-separator {
         height: 1px;
         margin: 4px 2px;
-        background: rgba(51, 65, 85, 0.9);
+        background: rgba(70, 70, 70, 0.9);
     }
     #object-context-menu .ctx-btn {
         background: transparent;
         border: none;
-        color: #e2e8f0;
+        color: #e7e7e7;
         text-align: left;
         padding: 8px 10px;
         border-radius: 6px;
@@ -73,21 +73,21 @@ export const CONTEXT_MENU_STYLES = `
     }
     #object-context-menu .ctx-btn:hover,
     #object-context-menu .ctx-btn:focus {
-        background: rgba(56, 189, 248, 0.12);
-        color: #38bdf8;
+        background: rgba(255, 122, 26, 0.12);
+        color: #ffb067;
         outline: none;
     }
     #object-context-menu .ctx-btn.active {
-        background: rgba(56, 189, 248, 0.16);
-        color: #38bdf8;
-        box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.18);
+        background: rgba(255, 122, 26, 0.16);
+        color: #ffb067;
+        box-shadow: inset 0 0 0 1px rgba(255, 122, 26, 0.18);
     }
     #object-context-menu .ctx-btn.danger {
         color: #f87171;
     }
     #object-context-menu .ctx-btn.cancel {
-        color: #94a3b8;
-        border-top: 1px solid #334155;
+        color: #a2a2a2;
+        border-top: 1px solid #464646;
         margin-top: 4px;
     }
     #transform-toolbar {
@@ -98,10 +98,10 @@ export const CONTEXT_MENU_STYLES = `
         min-width: 320px;
         max-width: min(92vw, 560px);
         padding: 10px 12px;
-        border: 1px solid rgba(56, 189, 248, 0.2);
+        border: 1px solid rgba(255, 122, 26, 0.2);
         border-radius: 16px;
-        background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
-        box-shadow: 0 18px 40px rgba(2, 6, 23, 0.45);
+        background: linear-gradient(180deg, rgba(38, 38, 38, 0.96), rgba(38, 38, 38, 0.9));
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
         backdrop-filter: blur(14px);
         display: none;
         flex-direction: column;
@@ -124,14 +124,14 @@ export const CONTEXT_MENU_STYLES = `
     #transform-toolbar .transform-toolbar-title {
         font-size: 13px;
         font-weight: 600;
-        color: #e2e8f0;
+        color: #e7e7e7;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
     #transform-toolbar .transform-toolbar-hint {
         font-size: 11px;
-        color: #94a3b8;
+        color: #a2a2a2;
         white-space: nowrap;
     }
     #transform-toolbar .transform-toolbar-actions {
@@ -141,9 +141,9 @@ export const CONTEXT_MENU_STYLES = `
         flex-wrap: wrap;
     }
     #transform-toolbar .transform-btn {
-        border: 1px solid rgba(148, 163, 184, 0.28);
-        background: rgba(30, 41, 59, 0.9);
-        color: #cbd5e1;
+        border: 1px solid rgba(162, 162, 162, 0.28);
+        background: rgba(51, 51, 51, 0.9);
+        color: #d4d4d4;
         border-radius: 12px;
         padding: 9px 12px;
         font-size: 13px;
@@ -154,16 +154,16 @@ export const CONTEXT_MENU_STYLES = `
     #transform-toolbar .transform-btn:hover,
     #transform-toolbar .transform-btn:focus {
         outline: none;
-        border-color: rgba(56, 189, 248, 0.55);
+        border-color: rgba(255, 122, 26, 0.55);
         color: #f8fafc;
-        background: rgba(30, 41, 59, 1);
+        background: rgba(51, 51, 51, 1);
         transform: translateY(-1px);
     }
     #transform-toolbar .transform-btn.active {
-        border-color: rgba(56, 189, 248, 0.65);
-        background: rgba(56, 189, 248, 0.16);
-        color: #38bdf8;
-        box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.12);
+        border-color: rgba(255, 122, 26, 0.65);
+        background: rgba(255, 122, 26, 0.16);
+        color: #ffb067;
+        box-shadow: inset 0 0 0 1px rgba(255, 122, 26, 0.12);
     }
     #transform-toolbar .transform-btn.exit {
         margin-left: auto;
@@ -174,13 +174,13 @@ export const CONTEXT_MENU_STYLES = `
     #transform-toolbar .transform-toolbar-subtitle {
         width: 100%;
         font-size: 11px;
-        color: #94a3b8;
+        color: #a2a2a2;
         margin-top: 2px;
     }
     #transform-toolbar .transform-toolbar-separator {
         width: 1px;
         align-self: stretch;
-        background: rgba(148, 163, 184, 0.2);
+        background: rgba(162, 162, 162, 0.2);
         margin: 0 2px;
     }
     #transform-toolbar .transform-step-group {
@@ -189,12 +189,12 @@ export const CONTEXT_MENU_STYLES = `
         gap: 6px;
         padding: 4px 6px;
         border-radius: 12px;
-        background: rgba(15, 23, 42, 0.42);
-        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(38, 38, 38, 0.42);
+        border: 1px solid rgba(162, 162, 162, 0.18);
     }
     #transform-toolbar .transform-step-label {
         font-size: 11px;
-        color: #94a3b8;
+        color: #a2a2a2;
         margin-right: 2px;
     }
     #transform-toolbar .transform-step-btn {

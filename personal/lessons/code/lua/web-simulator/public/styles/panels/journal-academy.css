@@ -1,6 +1,6 @@
 /* Journal and learning workspace: shared restrained surfaces, readable at panel widths. */
 #logs-panel, #mission-guide-overlay { --work-bg:#f5f7fa; --work-surface:#fff; --work-text:#202d3a; --work-muted:#627181; --work-line:#dce3eb; --work-soft:#edf2f7; --work-accent:#ad4a06; }
-:root[data-theme='dark'] #logs-panel, :root[data-theme='dark'] #mission-guide-overlay { --work-bg:#101824; --work-surface:#172230; --work-text:#e5ecf4; --work-muted:#a1b0c2; --work-line:#2c3a4a; --work-soft:#1d2c3d; --work-accent:#ffa767; }
+:root[data-theme='dark'] #logs-panel, :root[data-theme='dark'] #mission-guide-overlay { --work-bg:#262626; --work-surface:#2d2d2d; --work-text:#ebebeb; --work-muted:#aeaeae; --work-line:#404040; --work-soft:#353535; --work-accent:#ffa767; }
 #logs-panel .panel-content--logs { background:var(--work-bg); }
 #logs-panel .logs-panel-content { padding:14px; gap:12px; min-height:0; }
 #logs-panel input[type='search'], #logs-panel select { width:100%; min-width:0; height:38px; padding:0 10px; border:1px solid var(--work-line); border-radius:8px; background:var(--work-surface); color:var(--work-text); font:12px var(--font-sans); }
@@ -174,12 +174,12 @@
 }
 
 :root[data-theme='dark'] #mission-guide-overlay {
-    --work-bg: #0d0d0d;
-    --work-surface: #161616;
-    --work-text: #edf2f7;
-    --work-muted: #a9b7c8;
-    --work-line: #2b2b2b;
-    --work-soft: #1f1f1f;
+    --work-bg: #1d1d1d;
+    --work-surface: #242424;
+    --work-text: #f1f1f1;
+    --work-muted: #b5b5b5;
+    --work-line: #353535;
+    --work-soft: #2b2b2b;
     --work-accent: #ffad68;
 }
 
@@ -360,7 +360,7 @@
 #gamepad-panel .gp-aux-card { min-height:190px; padding:16px; border-color:var(--gp-line); border-radius:10px; background:var(--gp-soft); box-shadow:none; }
 #gamepad-panel .gp-range-editor { border-color:var(--gp-line); background:var(--gp-surface); }
 
-:root[data-theme='dark'] #gamepad-panel { --gp-bg:#0d0d0d; --gp-surface:#161616; --gp-soft:#1f1f1f; --gp-line:#2b2b2b; --gp-text:#edf2f7; --gp-muted:#a9b7c8; }
+:root[data-theme='dark'] #gamepad-panel { --gp-bg:#1d1d1d; --gp-surface:#242424; --gp-soft:#2b2b2b; --gp-line:#353535; --gp-text:#f1f1f1; --gp-muted:#b5b5b5; }
 :root[data-theme='dark'] #gamepad-panel :is(.settings-panel-content,.gamepad-hero,.gamepad-panel-tabs,.gamepad-section,.gamepad-section--quick,.gp-channel-row,.gp-aux-card,.gp-range-editor,.gamepad-status-pill,.gamepad-auto-status,.gamepad-channel-status,.gamepad-stage .btn-secondary,.gp-invert-checkbox) { background:var(--gp-surface); border-color:var(--gp-line); box-shadow:none; }
 :root[data-theme='dark'] #gamepad-panel :is(.gp-channel-badge,.gp-channel-value,.gp-aux-value) { background:var(--gp-soft); border-color:var(--gp-line); }
 

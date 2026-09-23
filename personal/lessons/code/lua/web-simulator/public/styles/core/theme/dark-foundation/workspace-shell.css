@@ -1,10 +1,10 @@
-﻿:root[data-theme='dark'] {
+:root[data-theme='dark'] {
     color-scheme: dark;
 }
 
 :root[data-theme='dark'] .workspace-sidebar {
-    border-color: rgba(148, 163, 184, 0.14);
-    background: rgba(10, 10, 10, 0.84);
+    border-color: rgba(162, 162, 162, 0.14);
+    background: rgba(26, 26, 26, 0.84);
 }
 
 :root[data-theme='dark'] .workspace-sidebar.is-collapsed {
@@ -12,41 +12,41 @@
 }
 
 :root[data-theme='dark'] .sidebar-tabs {
-    background: #0a0a0a;
+    background: #1a1a1a;
 }
 
 :root[data-theme='dark'] .sidebar-tab-btn {
-    color: #94a3b8;
+    color: #a2a2a2;
     background: transparent;
     border-color: transparent;
 }
 
 :root[data-theme='dark'] .sidebar-tab-btn:hover {
-    background: rgba(148, 163, 184, 0.08);
-    color: #f8fafc;
-    border-color: rgba(148, 163, 184, 0.08);
+    background: rgba(255, 255, 255, 0.06);
+    color: #f2f2f2;
+    border-color: transparent;
 }
 
 :root[data-theme='dark'] .sidebar-tab-btn.active {
-    background: rgba(26, 26, 26, 0.9);
-    border-color: rgba(148, 163, 184, 0.12);
-    color: #f8fafc;
+    background: rgba(255, 122, 26, 0.14);
+    border-color: transparent;
+    color: #ffb067;
 }
 
 :root[data-theme='dark'] .sidebar-panels {
-    background: linear-gradient(180deg, #0a0a0a 0%, #111111 100%);
+    background: linear-gradient(180deg, #1a1a1a 0%, #202020 100%);
 }
 
 /* Higher specificity than the base .sidebar-panels rule below would
    otherwise let this beat .is-collapsed's border-right-color: transparent,
    leaving a stray line down the collapsed icon rail in dark mode. */
 :root[data-theme='dark'] .sidebar-panels:not(.is-collapsed) {
-    border-right-color: rgba(148, 163, 184, 0.1);
+    border-right-color: rgba(162, 162, 162, 0.1);
 }
 
 :root[data-theme='dark'] .panel-header {
-    border-bottom-color: rgba(148, 163, 184, 0.12);
-    background: linear-gradient(180deg, rgba(10, 10, 10, 0.96) 0%, rgba(17, 17, 17, 0.92) 100%);
+    border-bottom-color: rgba(162, 162, 162, 0.12);
+    background: linear-gradient(180deg, rgba(26, 26, 26, 0.96) 0%, rgba(32, 32, 32, 0.92) 100%);
 }
 
 :root[data-theme='dark'] .panel-title,
@@ -61,16 +61,16 @@
 
 :root[data-theme='dark'] .panel-close-btn:hover {
     background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(148, 163, 184, 0.12);
+    border-color: rgba(162, 162, 162, 0.12);
 }
 
 :root[data-theme='dark'] .settings-panel-content,
 :root[data-theme='dark'] .sidebar-panel#channel-monitor-panel .settings-panel-content {
-    background: linear-gradient(180deg, #0a0a0a 0%, #111111 100%);
+    background: linear-gradient(180deg, #1a1a1a 0%, #202020 100%);
 }
 
 :root[data-theme='dark'] .sidebar-panel#docs-panel .panel-content,
 :root[data-theme='dark'] .sidebar-panels.is-fullscreen {
-    background: #080808;
+    background: #191919;
 }
 

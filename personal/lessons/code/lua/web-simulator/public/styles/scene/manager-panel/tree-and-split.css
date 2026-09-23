@@ -358,8 +358,8 @@
 
 :root[data-theme='dark'] .scene-tree-search input,
 :root[data-theme='dark'] .scene-tree-toolbar__btn {
-    background: rgba(10, 10, 10, 0.88);
-    border-color: rgba(148, 163, 184, 0.18);
+    background: rgba(26, 26, 26, 0.88);
+    border-color: rgba(162, 162, 162, 0.18);
     color: var(--text-color);
 }
 
@@ -368,7 +368,7 @@
 }
 
 :root[data-theme='dark'] .scene-tree-toolbar__btn:hover {
-    background: rgba(26, 26, 26, 0.96);
+    background: rgba(39, 39, 39, 0.96);
     border-color: rgba(255, 107, 0, 0.32);
     color: var(--text-strong);
 }
@@ -382,7 +382,7 @@
 }
 
 :root[data-theme='dark'] .scene-tree-row:not([aria-level='1'])::before {
-    background: rgba(148, 163, 184, 0.18);
+    background: rgba(162, 162, 162, 0.18);
 }
 
 :root[data-theme='dark'] .scene-tree-main {
@@ -390,25 +390,25 @@
 }
 
 :root[data-theme='dark'] .scene-tree-row:hover .scene-tree-main {
-    background: rgba(26, 26, 26, 0.9);
+    background: rgba(39, 39, 39, 0.9);
     border-color: rgba(255, 107, 0, 0.2);
 }
 
 :root[data-theme='dark'] .scene-tree-row.is-selected .scene-tree-main {
-    background: linear-gradient(90deg, rgba(255, 122, 0, 0.16), rgba(26, 26, 26, 0.92) 42%);
+    background: linear-gradient(90deg, rgba(255, 122, 0, 0.16), rgba(39, 39, 39, 0.92) 42%);
     border-color: rgba(255, 107, 0, 0.26);
     box-shadow: inset 2px 0 0 #ff6b00;
 }
 
 :root[data-theme='dark'] .scene-tree-kind {
-    background: rgba(10, 10, 10, 0.9);
-    border-color: rgba(148, 163, 184, 0.18);
+    background: rgba(26, 26, 26, 0.9);
+    border-color: rgba(162, 162, 162, 0.18);
     color: var(--text-muted);
 }
 
 :root[data-theme='dark'] .scene-tree-twisty:hover:not(.is-empty),
 :root[data-theme='dark'] .scene-tree-action:hover {
-    background: rgba(148, 163, 184, 0.16);
+    background: rgba(162, 162, 162, 0.16);
     color: var(--text-strong);
 }
 
@@ -419,7 +419,7 @@
 
 /* The tree row owns its own surface now; the legacy per-item card styling would double it up. */
 :root[data-theme='dark'] .scene-tree-main .scene-manager-item__icon {
-    background: rgba(26, 26, 26, 0.9);
+    background: rgba(39, 39, 39, 0.9);
 }
 
 @media (max-width: 900px) {

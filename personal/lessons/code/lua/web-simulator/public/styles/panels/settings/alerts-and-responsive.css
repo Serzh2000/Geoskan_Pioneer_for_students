@@ -72,7 +72,7 @@
 }
 
 :root[data-theme="dark"] #settings-panel .settings-alert__text {
-    color: #94a3b8;
+    color: #a2a2a2;
 }
 
 @media (max-width: 980px) {

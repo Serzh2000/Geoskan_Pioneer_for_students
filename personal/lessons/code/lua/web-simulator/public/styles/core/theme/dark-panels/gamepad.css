@@ -3,28 +3,28 @@
 :root[data-theme='dark'] .gp-aux-card,
 :root[data-theme='dark'] .channel-monitor-toolbar-card,
 :root[data-theme='dark'] .channel-monitor-board-card {
-    background: linear-gradient(180deg, rgba(10, 10, 10, 0.96), rgba(17, 17, 17, 0.96));
-    border-color: rgba(148, 163, 184, 0.14);
+    background: linear-gradient(180deg, rgba(26, 26, 26, 0.96), rgba(32, 32, 32, 0.96));
+    border-color: rgba(162, 162, 162, 0.14);
     box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
 }
 
 :root[data-theme='dark'] .gamepad-panel-tabs {
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.62), rgba(10, 10, 10, 0.78));
-    border-color: rgba(148, 163, 184, 0.18);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.62), rgba(26, 26, 26, 0.78));
+    border-color: rgba(162, 162, 162, 0.18);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 :root[data-theme='dark'] .gamepad-panel-tab {
-    color: #94a3b8;
+    color: #a2a2a2;
 }
 
 :root[data-theme='dark'] .gamepad-panel-tab:hover {
-    color: #e2e8f0;
-    background: rgba(26, 26, 26, 0.92);
+    color: #e7e7e7;
+    background: rgba(39, 39, 39, 0.92);
 }
 
 :root[data-theme='dark'] .gamepad-panel-tab.is-active {
-    background: linear-gradient(180deg, rgba(51, 65, 85, 0.96), rgba(26, 26, 26, 0.96));
+    background: linear-gradient(180deg, rgba(70, 70, 70, 0.96), rgba(39, 39, 39, 0.96));
     color: #ff9a4d;
     border-color: rgba(255, 107, 0, 0.28);
     box-shadow:
@@ -68,22 +68,22 @@
 :root[data-theme='dark'] .channel-monitor-checkbox,
 :root[data-theme='dark'] .channel-monitor-cell,
 :root[data-theme='dark'] .channel-monitor-meter {
-    background: rgba(10, 10, 10, 0.88);
-    border-color: rgba(148, 163, 184, 0.16);
+    background: rgba(26, 26, 26, 0.88);
+    border-color: rgba(162, 162, 162, 0.16);
     color: var(--text-color);
 }
 
 :root[data-theme='dark'] .channel-monitor-toolbar-btn:hover {
-    background: rgba(26, 26, 26, 0.94);
-    border-color: rgba(148, 163, 184, 0.24);
+    background: rgba(39, 39, 39, 0.94);
+    border-color: rgba(162, 162, 162, 0.24);
 }
 
 :root[data-theme='dark'] .channel-monitor-meter::before {
-    background: rgba(148, 163, 184, 0.24);
+    background: rgba(162, 162, 162, 0.24);
 }
 
 :root[data-theme='dark'] .channel-monitor-fill {
-    background: #475569;
+    background: #565656;
 }
 
 :root[data-theme='dark'] .gp-channel-row,
@@ -93,8 +93,8 @@
 :root[data-theme='dark'] .gp-wizard-summary-lead,
 :root[data-theme='dark'] .gp-wizard-summary-card,
 :root[data-theme='dark'] .modal-content {
-    background: linear-gradient(180deg, rgba(10, 10, 10, 0.96), rgba(17, 17, 17, 0.96));
-    border-color: rgba(148, 163, 184, 0.16);
+    background: linear-gradient(180deg, rgba(26, 26, 26, 0.96), rgba(32, 32, 32, 0.96));
+    border-color: rgba(162, 162, 162, 0.16);
     box-shadow: 0 18px 36px rgba(0, 0, 0, 0.34);
 }
 
@@ -106,8 +106,8 @@
 :root[data-theme='dark'] .gp-wizard-invert-checkbox,
 :root[data-theme='dark'] .gp-wizard-stick-status,
 :root[data-theme='dark'] .gp-wizard-summary-badge {
-    background: rgba(10, 10, 10, 0.9);
-    border-color: rgba(148, 163, 184, 0.18);
+    background: rgba(26, 26, 26, 0.9);
+    border-color: rgba(162, 162, 162, 0.18);
     color: var(--text-color);
 }
 
@@ -133,23 +133,23 @@
 
 :root[data-theme='dark'] .gp-bar-bg,
 :root[data-theme='dark'] .gp-range-track {
-    background: rgba(51, 65, 85, 0.82);
+    background: rgba(70, 70, 70, 0.82);
 }
 
 :root[data-theme='dark'] .gp-bar-bg::after {
-    background: rgba(148, 163, 184, 0.26);
+    background: rgba(162, 162, 162, 0.26);
 }
 
 :root[data-theme='dark'] .gp-invert-checkbox:hover,
 :root[data-theme='dark'] .gp-wizard-invert-checkbox:hover,
 :root[data-theme='dark'] .modal-close-btn:hover {
-    background: rgba(26, 26, 26, 0.96);
+    background: rgba(39, 39, 39, 0.96);
     border-color: rgba(255, 107, 0, 0.24);
 }
 
 :root[data-theme='dark'] .gp-checkmark {
-    background: rgba(10, 10, 10, 0.94);
-    border-color: rgba(148, 163, 184, 0.22);
+    background: rgba(26, 26, 26, 0.94);
+    border-color: rgba(162, 162, 162, 0.22);
 }
 
 :root[data-theme='dark'] .gp-channel-value,
@@ -160,9 +160,9 @@
 :root[data-theme='dark'] .gp-range-marker,
 :root[data-theme='dark'] .gp-range-dual-slider input[type="range"]::-webkit-slider-thumb,
 :root[data-theme='dark'] .gp-range-dual-slider input[type="range"]::-moz-range-thumb {
-    background: #e2e8f0;
+    background: #e7e7e7;
     border-color: #ff6b00;
-    box-shadow: 0 0 0 1px rgba(51, 65, 85, 0.9), 0 0 10px rgba(255, 107, 0, 0.16);
+    box-shadow: 0 0 0 1px rgba(64, 64, 64, 0.9), 0 0 10px rgba(255, 107, 0, 0.16);
 }
 
 :root[data-theme='dark'] .gamepad-action-btn--danger {
@@ -183,23 +183,23 @@
 }
 
 :root[data-theme='dark'] .modal-header {
-    border-bottom-color: rgba(148, 163, 184, 0.14);
+    border-bottom-color: rgba(162, 162, 162, 0.14);
 }
 
 :root[data-theme='dark'] .gp-wizard-body {
-    background: linear-gradient(180deg, #080808 0%, #111111 100%);
+    background: linear-gradient(180deg, #191919 0%, #202020 100%);
 }
 
 :root[data-theme='dark'] .gp-wizard-drone-stage {
     background:
         radial-gradient(circle at 50% 22%, rgba(255, 107, 0, 0.16), transparent 24%),
-        linear-gradient(180deg, rgba(26, 26, 26, 0.96) 0%, rgba(10, 10, 10, 0.98) 48%, rgba(8, 8, 8, 0.98) 100%);
+        linear-gradient(180deg, rgba(39, 39, 39, 0.96) 0%, rgba(26, 26, 26, 0.98) 48%, rgba(25, 25, 25, 0.98) 100%);
     border-color: rgba(96, 165, 250, 0.16);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 :root[data-theme='dark'] .gp-wizard-footer {
-    border-top-color: rgba(148, 163, 184, 0.14);
+    border-top-color: rgba(162, 162, 162, 0.14);
 }
 
 :root[data-theme='dark'] .gp-wizard-stick-card.is-active {
@@ -209,8 +209,8 @@
 
 :root[data-theme='dark'] .gp-wizard-stick-shell {
     background:
-        radial-gradient(circle at 50% 48%, #1a1a1a 0%, #0a0a0a 72%, #000000 100%);
-    border-color: rgba(148, 163, 184, 0.24);
+        radial-gradient(circle at 50% 48%, #272727 0%, #1a1a1a 72%, #121212 100%);
+    border-color: rgba(162, 162, 162, 0.24);
     box-shadow:
         inset 0 10px 20px rgba(255, 255, 255, 0.04),
         inset 0 -6px 18px rgba(0, 0, 0, 0.4),
@@ -218,23 +218,23 @@
 }
 
 :root[data-theme='dark'] .gp-wizard-stick-shell::before {
-    border-color: rgba(148, 163, 184, 0.22);
-    background: radial-gradient(circle at 50% 50%, rgba(26, 26, 26, 0.82) 0%, rgba(10, 10, 10, 0.92) 100%);
+    border-color: rgba(162, 162, 162, 0.22);
+    background: radial-gradient(circle at 50% 50%, rgba(39, 39, 39, 0.82) 0%, rgba(26, 26, 26, 0.92) 100%);
     box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.3);
 }
 
 :root[data-theme='dark'] .gp-wizard-stick-shell::after {
-    background: #475569;
-    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(148, 163, 184, 0.18);
+    background: #565656;
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(162, 162, 162, 0.18);
 }
 
 :root[data-theme='dark'] .gp-wizard-stick-guides,
 :root[data-theme='dark'] .gp-wizard-stick-guides::before {
-    background: rgba(148, 163, 184, 0.18);
+    background: rgba(162, 162, 162, 0.18);
 }
 
 :root[data-theme='dark'] .gp-wizard-stick-knob {
-    background: radial-gradient(circle at 35% 35%, #f8fafc 0%, #94a3b8 28%, #334155 72%, #0a0a0a 100%);
+    background: radial-gradient(circle at 35% 35%, #f8fafc 0%, #a2a2a2 28%, #464646 72%, #1a1a1a 100%);
     box-shadow:
         inset 0 -3px 8px rgba(0, 0, 0, 0.4),
         inset 0 3px 6px rgba(255, 255, 255, 0.14),
@@ -244,11 +244,11 @@
 
 :root[data-theme='dark'] .gp-wizard-stick-knob::before {
     background:
-        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(148, 163, 184, 0.12) 2px, rgba(148, 163, 184, 0.12) 4px),
-        repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(148, 163, 184, 0.12) 2px, rgba(148, 163, 184, 0.12) 4px);
+        repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(162, 162, 162, 0.12) 2px, rgba(162, 162, 162, 0.12) 4px),
+        repeating-linear-gradient(-45deg, transparent, transparent 2px, rgba(162, 162, 162, 0.12) 2px, rgba(162, 162, 162, 0.12) 4px);
 }
 
 :root[data-theme='dark'] .gp-wizard-stick-knob::after {
-    background: radial-gradient(circle at 50% 50%, #94a3b8 0%, #475569 100%);
+    background: radial-gradient(circle at 50% 50%, #a2a2a2 0%, #565656 100%);
     box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.14), 0 1px 1px rgba(0, 0, 0, 0.12);
 }
