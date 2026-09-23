@@ -21,7 +21,9 @@ const ICONS = [
     'car', 'charging-pile', 'christmas-tree', 'device-cctv', 'device-desktop', 'drone',
     'fence', 'flag', 'frame', 'grid-4x4', 'grid-pattern', 'helicopter-landing',
     'lamp-2', 'map-pin', 'mountain', 'package', 'qrcode', 'road', 'square-letter-h',
-    'stack-2', 'traffic-cone', 'train', 'trees', 'track', 'car-suv'
+    'stack-2', 'traffic-cone', 'train', 'trees', 'track', 'car-suv',
+    // route drawing HUD
+    'route-2', 'check', 'arrow-back-up', 'repeat', 'x', 'player-track-next'
 ];
 
 const root = path.resolve(__dirname, '..');

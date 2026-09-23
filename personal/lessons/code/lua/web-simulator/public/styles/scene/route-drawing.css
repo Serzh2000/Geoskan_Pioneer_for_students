@@ -1,0 +1,323 @@
+/*
+ * Route laying for roads and railways (scene/interaction/linear-editing.ts):
+ * a toolbar docked to the top of the viewport and a small readout that
+ * follows the cursor. Same visual language as the placement hotbar; colors
+ * go through --rt-* tokens, light here and dark below.
+ */
+
+.route-hud {
+    --rt-bg: rgba(255, 255, 255, 0.97);
+    --rt-border: rgba(9, 9, 11, 0.1);
+    --rt-text: #1f2328;
+    --rt-muted: #5f6670;
+    --rt-btn-bg: #f3f4f6;
+    --rt-btn-hover: #e8eaed;
+    --rt-btn-border: rgba(9, 9, 11, 0.08);
+    --rt-accent: #ff6b00;
+    --rt-accent-hover: #f25f00;
+    --rt-accent-text: #b34d00;
+    --rt-accent-tint: rgba(255, 107, 0, 0.1);
+    --rt-road: #0284c7;
+    --rt-road-tint: rgba(56, 189, 248, 0.16);
+    --rt-rail: #b45309;
+    --rt-rail-tint: rgba(245, 158, 11, 0.16);
+    --rt-warn: #b91c1c;
+    --rt-warn-tint: rgba(239, 68, 68, 0.08);
+    --rt-kbd-bg: #ffffff;
+    --rt-kbd-border: rgba(9, 9, 11, 0.14);
+    --rt-focus: rgba(255, 107, 0, 0.55);
+
+    position: absolute;
+    top: var(--panel-pad-x, 16px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 16;
+    width: min(600px, calc(100% - 160px));
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: var(--rt-bg);
+    border: 1px solid var(--rt-border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-card);
+    color: var(--rt-text);
+    font-size: 13px;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+:root[data-theme='dark'] .route-hud {
+    --rt-bg: rgba(26, 26, 26, 0.96);
+    --rt-border: rgba(255, 255, 255, 0.08);
+    --rt-text: #e3e3e3;
+    --rt-muted: #9a9a9a;
+    --rt-btn-bg: #262626;
+    --rt-btn-hover: #303030;
+    --rt-btn-border: rgba(255, 255, 255, 0.08);
+    --rt-accent: #ff7a1a;
+    --rt-accent-hover: #ff8a33;
+    --rt-accent-text: #ffb067;
+    --rt-accent-tint: rgba(255, 122, 26, 0.14);
+    --rt-road: #7dd3fc;
+    --rt-road-tint: rgba(56, 189, 248, 0.14);
+    --rt-rail: #fbbf24;
+    --rt-rail-tint: rgba(245, 158, 11, 0.14);
+    --rt-warn: #fca5a5;
+    --rt-warn-tint: rgba(239, 68, 68, 0.12);
+    --rt-kbd-bg: #2a2a2a;
+    --rt-kbd-border: rgba(255, 255, 255, 0.12);
+    --rt-focus: rgba(255, 154, 82, 0.7);
+}
+
+/* The hotbar steps aside while a route is being laid - the toolbar is the
+   only thing that changes what a click in the scene does. */
+body.is-route-drawing.is-scene-hotbar-active .scene-hotbar {
+    display: none;
+}
+
+.route-hud__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.route-hud__icon {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+}
+
+.route-hud__icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.route-hud__icon--road {
+    color: var(--rt-road);
+    background: var(--rt-road-tint);
+}
+
+.route-hud__icon--rail {
+    color: var(--rt-rail);
+    background: var(--rt-rail-tint);
+}
+
+.route-hud__titles {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.route-hud__titles strong {
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.25;
+}
+
+.route-hud__stats {
+    color: var(--rt-muted);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.route-hud__mode {
+    flex-shrink: 0;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--rt-accent-tint);
+    color: var(--rt-accent-text);
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+}
+
+.route-hud__hint,
+.route-hud__rule,
+.route-hud__keys {
+    margin: 0;
+    line-height: 1.45;
+}
+
+.route-hud__hint {
+    color: var(--rt-text);
+}
+
+.route-hud__hint.is-warning {
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: var(--rt-warn-tint);
+    color: var(--rt-warn);
+    font-weight: 550;
+}
+
+.route-hud__rule {
+    color: var(--rt-muted);
+    font-size: 12px;
+}
+
+.route-hud__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.route-hud__spacer {
+    flex: 1;
+}
+
+.route-hud__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--rt-btn-border);
+    border-radius: 9px;
+    background: var(--rt-btn-bg);
+    color: var(--rt-text);
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 550;
+    cursor: pointer;
+    transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+
+.route-hud__btn svg {
+    flex-shrink: 0;
+}
+
+.route-hud__btn:hover:not(:disabled) {
+    background: var(--rt-btn-hover);
+}
+
+.route-hud__btn:focus-visible {
+    outline: 2px solid var(--rt-focus);
+    outline-offset: 2px;
+}
+
+.route-hud__btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.route-hud__btn[aria-pressed='true'] {
+    background: var(--rt-accent-tint);
+    border-color: transparent;
+    color: var(--rt-accent-text);
+}
+
+.route-hud__btn--ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--rt-muted);
+}
+
+.route-hud__btn--primary {
+    background: var(--rt-accent);
+    border-color: transparent;
+    color: #ffffff;
+}
+
+.route-hud__btn--primary:hover:not(:disabled) {
+    background: var(--rt-accent-hover);
+}
+
+.route-hud__keys {
+    color: var(--rt-muted);
+    font-size: 11.5px;
+}
+
+.route-hud__keys kbd {
+    display: inline-block;
+    min-width: 18px;
+    padding: 0 5px;
+    border: 1px solid var(--rt-kbd-border);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    background: var(--rt-kbd-bg);
+    color: var(--rt-text);
+    font: inherit;
+    font-size: 11px;
+    line-height: 16px;
+    text-align: center;
+}
+
+/* Readout next to the cursor: length, direction, turn. */
+.route-label {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    background: rgba(17, 17, 17, 0.86);
+    color: #f2f2f2;
+    font-size: 12px;
+    line-height: 1.35;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+}
+
+.route-label b {
+    font-weight: 650;
+}
+
+.route-label span {
+    color: #c8c8c8;
+}
+
+.route-label .route-label__ok {
+    color: #86efac;
+}
+
+.route-label .route-label__problem {
+    color: #fca5a5;
+    font-weight: 550;
+}
+
+.route-label.is-invalid {
+    background: rgba(69, 10, 10, 0.9);
+}
+
+/* Narrow viewports: the toolbar moves to the bottom edge (the hotbar is
+   hidden meanwhile) and drops the keyboard legend. */
+@media (max-width: 720px) {
+    .route-hud {
+        top: auto;
+        bottom: var(--panel-pad-x, 12px);
+        width: calc(100% - 24px);
+    }
+
+    .route-hud__keys {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Icon-only, but the label stays for screen readers. */
+    .route-hud__btn span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .route-hud__btn {
+        padding: 0 10px;
+    }
+}

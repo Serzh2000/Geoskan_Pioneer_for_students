@@ -20,6 +20,7 @@ import { isTransformableObject } from '../objects/object-catalog.js';
 import { getObjectDisplayName, isDroneObject, traceClick } from './input-helpers.js';
 import { getCameraMode } from '../core/camera-mode-state.js';
 import { tablerIcon } from '../../ui/icons/tabler.js';
+import { startLinearFeatureEditing } from './linear-editing.js';
 
 type ObjectContextMenuAction = {
     label: string;
@@ -146,6 +147,15 @@ export function handleSelection(obj: THREE.Object3D | null, x: number, y: number
         };
         objectActionsTitle = objectActionsTitle || 'Маркер';
         objectActions = [settingsAction, ...(objectActions || [])];
+    }
+
+    if (obj?.userData?.supportsPoints) {
+        objectActionsTitle = obj.userData.featureKind === 'rail' ? 'Железная дорога' : 'Дорога';
+        objectActions = [{
+            label: 'Изменить маршрут…',
+            icon: tablerIcon('route-2').replace('width="24" height="24"', 'width="16" height="16"'),
+            action: () => startLinearFeatureEditing(obj)
+        }, ...(objectActions || [])];
     }
 
     if (obj?.userData?.isVehicle) {

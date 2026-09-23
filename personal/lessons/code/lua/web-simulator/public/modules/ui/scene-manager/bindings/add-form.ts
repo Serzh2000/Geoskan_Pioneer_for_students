@@ -206,6 +206,9 @@ export function registerAddFormBindings({ callbacks, elements, tree, render, typ
         // the inspector would hide this very form after each one.
         tree.suppressInspectorJump = true;
         callbacks.sceneManager?.add(draft.type, draft.options);
+        // A new road/railway opens straight into route editing: its handles
+        // are the way to shape it, the template path is only a start.
+        if (draft.type === 'road' || draft.type === 'rail') callbacks.sceneManager?.startLinearEditing();
         render();
     });
     elements.addTypeModalApplyBtn?.addEventListener('click', applyPendingSelection);

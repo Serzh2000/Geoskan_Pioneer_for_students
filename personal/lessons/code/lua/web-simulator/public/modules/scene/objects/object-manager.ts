@@ -238,6 +238,8 @@ export type AddObjectOptions = {
     value?: string;
     markerDictionary?: string;
     pointsText?: string;
+    /** Road/railway points in the object's own space (takes precedence over pointsText). */
+    points?: ScenePathPoint[];
     closed?: boolean;
     floors?: number;
     markerMap?: MarkerMapOptions;
@@ -250,7 +252,7 @@ export function addObject(type: string, options: AddObjectOptions = {}): string 
         value: options.value,
         markerDictionary: options.markerDictionary,
         floors: options.floors,
-        points: parsedPoints.length >= 2 ? parsedPoints : undefined,
+        points: options.points && options.points.length >= 2 ? options.points : parsedPoints.length >= 2 ? parsedPoints : undefined,
         markerMap: options.markerMap,
         vehicle: options.vehicle,
         closed: options.closed

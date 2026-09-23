@@ -181,6 +181,6 @@ export function updateSelectedControls(
         elements.visualEditBtn.toggleAttribute('disabled', isAnyLinearEditing && !isVisualEditing);
         elements.visualEditBtn.title = isVisualEditing
             ? 'Завершить визуальную прокладку'
-            : 'Добавлять точки маршрута кликами по сцене';
+            : 'Тянуть точки маршрута прямо в сцене, добавлять и удалять их';
     }
 }

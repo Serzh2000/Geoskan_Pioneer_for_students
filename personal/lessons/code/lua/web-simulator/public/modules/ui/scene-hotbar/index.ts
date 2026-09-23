@@ -9,6 +9,7 @@ import { getSceneTypePreviewConfig } from '../scene-manager/support/type-preview
 import { isConfigurableMarker, openMarkerSettings } from '../marker-settings.js';
 import { getLinearFeatureCurve } from '../../environment/obstacles.js';
 import { listVehicles } from '../../vehicles/engine.js';
+import { isLinearFeatureEditingActive, startRouteDrawing, type RouteKind } from '../../scene/interaction/linear-editing.js';
 
 const VEHICLE_ROUTE: Record<string, { feature: 'road' | 'rail'; where: string; missing: string }> = {
     car: { feature: 'road', where: 'по дороге', missing: 'Автомобиль ездит только по дороге — кликните по дороге (её можно добавить из этого же списка).' },
@@ -151,8 +152,32 @@ function placeVehicleAt(event: PointerEvent, type: string): void {
     (window as any).openVehicleSettings?.(selectedObject, event.clientX, event.clientY);
 }
 
+// Roads and railways are drawn, not dropped: the click is the route's first
+// point, the rest is laid out point by point (scene/interaction/linear-editing.ts).
+// The object only appears on "Готово", positioned at its first point.
+function startRouteAt(event: PointerEvent, type: RouteKind): void {
+    const start = raycastPlaceableSurface(event.clientX, event.clientY);
+    if (!start) return;
+    setArmed(null);
+    startRouteDrawing(type, {
+        start,
+        create: (points, closed) => {
+            const origin = points[0];
+            const local = points.map((p) => ({ x: p.x - origin.x, y: p.y - origin.y, z: 0 }));
+            const id = addObject(type, { points: local, closed });
+            if (!id) return;
+            setSelectedObjectTransform({ x: origin.x, y: origin.y, z: 0 }, { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1 });
+            (window as any).updateSceneManager?.();
+        }
+    });
+}
+
 function placeArmedObjectAt(event: PointerEvent): void {
     if (!armedType) return;
+    if (armedType === 'road' || armedType === 'rail') {
+        startRouteAt(event, armedType);
+        return;
+    }
     if (VEHICLE_ROUTE[armedType]) {
         placeVehicleAt(event, armedType);
         return;
@@ -213,7 +238,10 @@ function escapeHtml(text: string): string {
 function renderHint(label: string | null): void {
     const hint = document.getElementById('scene-hotbar-hint');
     if (!hint) return;
-    hint.innerHTML = label
+    const isRoute = armedType === 'road' || armedType === 'rail';
+    hint.innerHTML = label && isRoute
+        ? `Кликните, где начнётся <strong>${escapeHtml(label)}</strong>, дальше — точка за точкой. <kbd>ПКМ</kbd> или <kbd>Esc</kbd> — отмена.`
+        : label
         ? `Кликните ${escapeHtml(VEHICLE_ROUTE[armedType ?? '']?.where ?? 'в сцене')}, чтобы поставить <strong>${escapeHtml(label)}</strong>. <kbd>ПКМ</kbd> или <kbd>Esc</kbd> — отмена.`
         : 'Выберите предмет, затем кликните в сцене. <kbd>Esc</kbd> — выйти.';
 }
@@ -387,7 +415,8 @@ export function initSceneHotbar(): void {
     });
 
     document.addEventListener('keydown', (event) => {
-        if (event.key !== 'Escape') return;
+        // Esc while laying a route belongs to the route (cancel), not to the hotbar.
+        if (event.key !== 'Escape' || event.defaultPrevented || isLinearFeatureEditingActive()) return;
         if (armedType) {
             setArmed(null);
         } else if (document.body.classList.contains('is-scene-hotbar-active')) {
