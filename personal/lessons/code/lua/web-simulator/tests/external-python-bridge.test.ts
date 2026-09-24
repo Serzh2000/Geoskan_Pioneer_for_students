@@ -104,6 +104,7 @@ describe('POST/GET /api/external-python-bridge/state', () => {
         expect(res.body).toMatchObject({
             ok: true,
             droneId: 'drone_1',
+            pointReached: true,
             cameraConnected: false,
             autopilotState: 'MISSION',
             localPosition: { x: 1, y: 2, z: 3 }

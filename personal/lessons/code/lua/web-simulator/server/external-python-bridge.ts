@@ -1,6 +1,5 @@
 import express from 'express';
 import type { PioneerConnectionMethod } from './pioneer-connection.js';
-import { FsmStatus, isPointReachedFromFsmStatus } from '../public/modules/autopilot/fsm-status.js';
 
 export interface ExternalPythonBridgeEvent {
     id: number;
@@ -229,12 +228,14 @@ export function registerExternalPythonBridgeRoutes(app: express.Express): void {
             connectionMethod
         });
 
-        const fsmState = state?.autopilotState ?? null;
-        const fsmStatus = fsmState === null ? null : (fsmState as FsmStatus);
-
         return res.json({
             ok: true,
-            pointReached: isPointReachedFromFsmStatus(fsmStatus, state?.pointReached),
+            // The browser computes this from the FSM (autopilot/fsm.ts isPointReached)
+            // and reports it as is - like the MAVLink bridge does. Re-deriving it here
+            // from autopilotState never matched: that field carries Pioneer names
+            // (TAKEOFF/MISSION/LANDING), not FSM statuses, so point_reached() in
+            // external Python was always False.
+            pointReached: Boolean(state?.pointReached),
             cameraConnected: state?.cameraConnected ?? false,
             cameraFrameDataUrl: state?.cameraFrameDataUrl ?? null,
             autopilotState: state?.autopilotState ?? null,

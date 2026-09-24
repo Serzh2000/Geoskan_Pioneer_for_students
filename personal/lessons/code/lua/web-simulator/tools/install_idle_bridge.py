@@ -53,6 +53,12 @@ def install() -> None:
     print(f"User site-packages: {USER_SITE}")
     verify_installation()
     print("Restart Python IDLE after installation.")
+    print()
+    print("Симулятор на другом компьютере/сервере: укажите его адрес как ip, например")
+    print("    Pioneer(ip='https://simulator.sakoryagin.ru', mavlink_port=8001)")
+    print("    Camera(ip='https://simulator.sakoryagin.ru', port=18001)")
+    print("и нажмите «Разрешить внешние команды» у дрона в открытом симуляторе.")
+    print("Обычный IP (192.168.4.1) без запущенного рядом симулятора - настоящий дрон.")
 
 
 if __name__ == "__main__":

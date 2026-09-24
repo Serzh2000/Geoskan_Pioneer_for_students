@@ -106,11 +106,23 @@ API-роутов:
 - `server/mavlink-bridge.ts` — мост к реальному MAVLink/дрону по UDP.
 - `server/pioneer-connection.ts` — общие типы конфигурации подключения.
 
-### Python-раннер (`python_bridge/`, `.tmp/`)
+### Внешний Python (`python_bridge/`)
 
-Вспомогательные Python-скрипты, которые `python-runtime.ts` инжектирует в
-запускаемый процесс, чтобы подменить `pioneer_sdk.Pioneer`/`Camera` параметрами
-из браузера.
+Хук для Python пользователя (IDLE, PyCharm, консоль): `python tools/install_idle_bridge.py`
+кладёт `pioneer_browser_bridge_*.py` и `.pth`-файл в user site-packages, после чего
+`pioneer_sdk.Pioneer`/`Camera` при создании выбирают, куда слать команды:
+
+- `ip` — адрес сайта (`https://simulator.sakoryagin.ru`) — всё идёт по HTTPS в этот
+  симулятор, включая кадры камеры. Работает через NAT/прокси; нужен только открытый
+  симулятор с нажатой у дрона кнопкой «Разрешить внешние команды».
+- переменная `PIONEER_BROWSER_BRIDGE_URL` — то же, на этот адрес.
+- на этом компьютере запущен симулятор (localhost:3000/3001/1234) — в него (режим IDLE).
+- иначе — настоящий `pioneer_sdk`: реальный дрон работает и с установленным хуком.
+
+Без хука до сервера можно достучаться и напрямую по MAVLink
+(`Pioneer(ip='simulator.sakoryagin.ru', mavlink_port=8001)`, UDP 8001), но камера
+Pioneer через интернет так не работает: кадры идут по UDP на порт клиента, и домашний
+роутер их отбрасывает. Для камеры нужен HTTPS-режим выше.
 
 ## Документация
 

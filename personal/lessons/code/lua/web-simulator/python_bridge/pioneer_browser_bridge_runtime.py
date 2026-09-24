@@ -1,10 +1,24 @@
-"""Runtime patch that mirrors pioneer_sdk commands into the web simulator."""
+"""Runtime patch that mirrors pioneer_sdk commands into the web simulator.
+
+Which transport a Pioneer/Camera object gets is decided when it is created:
+
+* ``ip`` is a URL (``Pioneer(ip="https://simulator.example.org")``) - every
+  command and camera frame goes over HTTP(S) to that simulator. This is the
+  way to reach a simulator on another machine: it passes home routers,
+  school proxies and firewalls, unlike the drone's own UDP camera protocol.
+* ``PIONEER_BROWSER_BRIDGE_URL`` is set - the same, to that URL.
+* otherwise, if a simulator answers on this computer (localhost:3000/3001/
+  1234) - mirror into it, as the IDLE integration always did;
+* otherwise - the real, unpatched pioneer_sdk: a real drone keeps working
+  with this hook installed.
+"""
 
 from __future__ import annotations
 
 import json
 import os
 import base64
+import sys
 import threading
 import urllib.error
 import urllib.parse
@@ -25,6 +39,15 @@ DEFAULT_BRIDGE_URLS = [
 ]
 SESSION_ID = os.environ.get("PIONEER_BROWSER_BRIDGE_SESSION_ID", uuid.uuid4().hex)
 TIMEOUT_SECONDS = float(os.environ.get("PIONEER_BROWSER_BRIDGE_TIMEOUT", "0.35"))
+# A simulator on another machine is behind TLS and the internet: a command
+# lost to a 0.35 s timeout would be a silently skipped arm()/takeoff().
+REMOTE_POST_TIMEOUT_SECONDS = float(os.environ.get("PIONEER_BROWSER_BRIDGE_REMOTE_TIMEOUT", "5"))
+REMOTE_GET_TIMEOUT_SECONDS = float(os.environ.get("PIONEER_BROWSER_BRIDGE_REMOTE_STATE_TIMEOUT", "3"))
+# In URL mode the commands are meant for "the simulator's drone": they carry
+# the default simulator address, which every simulated drone matches.
+SIMULATOR_DRONE_IP = "127.0.0.1"
+_warned_unreachable: set[str] = set()
+_local_bridge_available: bool | None = None
 PATCH_MARKER = "__pioneer_browser_bridge_patched__"
 ORIGINAL_MARKER = "__pioneer_browser_bridge_original_pioneer__"
 CAMERA_PATCH_MARKER = "__pioneer_browser_bridge_camera_patched__"
@@ -72,7 +95,44 @@ _CAMERA_CONNECTION_DEFAULTS = {
 }
 
 
-def _candidate_bridge_urls() -> list[str]:
+def bridge_base_from_ip(ip: Any) -> str | None:
+    """``https://host[:port][/path]`` in ``ip`` -> that simulator's base URL."""
+    if not isinstance(ip, str):
+        return None
+    value = ip.strip()
+    if not value.lower().startswith(("http://", "https://")):
+        return None
+    parsed = urllib.parse.urlsplit(value)
+    if not parsed.netloc:
+        return None
+    path = parsed.path.rstrip("/")
+    # Someone may paste the full endpoint instead of the site address.
+    for suffix in (BRIDGE_PATH, BRIDGE_STATE_PATH):
+        if path.endswith(suffix):
+            path = path[: -len(suffix)]
+    return urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, path, "", "")).rstrip("/")
+
+
+def _warn_unreachable(base: str, error: BaseException) -> None:
+    if base in _warned_unreachable:
+        return
+    _warned_unreachable.add(base)
+    reason = getattr(error, "reason", None) or error
+    hint = ""
+    if urllib.parse.urlsplit(base).port is not None:
+        hint = " Обычно адрес симулятора указывается без порта, как в адресной строке браузера."
+    print(
+        f"[pioneer-sim] Не удаётся связаться с симулятором {base}: {reason}.{hint}",
+        file=sys.stderr,
+        flush=True,
+    )
+
+
+def _candidate_bridge_urls(connection: dict[str, Any] | None = None) -> list[str]:
+    base = (connection or {}).get("bridge_base")
+    if base:
+        return [f"{base}{BRIDGE_PATH}"]
+
     if _CONFIGURED_BRIDGE_URL:
         return [_CONFIGURED_BRIDGE_URL]
 
@@ -89,8 +149,29 @@ def _bridge_state_url_from_event_url(bridge_url: str) -> str:
     return bridge_url.rstrip("/")
 
 
-def _candidate_bridge_state_urls() -> list[str]:
-    return [_bridge_state_url_from_event_url(url) for url in _candidate_bridge_urls()]
+def _candidate_bridge_state_urls(connection: dict[str, Any] | None = None) -> list[str]:
+    return [_bridge_state_url_from_event_url(url) for url in _candidate_bridge_urls(connection)]
+
+
+def _is_local_bridge_available() -> bool:
+    """Is a simulator listening on this computer? Checked once per process."""
+    global _local_bridge_available
+    if _local_bridge_available is None:
+        _local_bridge_available = False
+        for state_url in _candidate_bridge_state_urls():
+            query = urllib.parse.urlencode({"sessionId": SESSION_ID})
+            try:
+                with urllib.request.urlopen(f"{state_url}?{query}", timeout=TIMEOUT_SECONDS) as response:
+                    if json.loads(response.read().decode("utf-8")).get("ok") is True:
+                        _local_bridge_available = True
+                        break
+            except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+                continue
+    return _local_bridge_available
+
+
+def _should_use_bridge(ip: Any) -> bool:
+    return bool(bridge_base_from_ip(ip) or _CONFIGURED_BRIDGE_URL or _is_local_bridge_available())
 
 
 def _resolve_connection_settings(args: tuple[Any, ...], kwargs: dict[str, Any]) -> dict[str, Any]:
@@ -100,6 +181,7 @@ def _resolve_connection_settings(args: tuple[Any, ...], kwargs: dict[str, Any]) 
             break
         resolved[_PIONEER_INIT_KEYS[index]] = value
     resolved.update(kwargs)
+    resolved["bridge_base"] = bridge_base_from_ip(resolved.get("ip"))
     return resolved
 
 
@@ -112,6 +194,7 @@ def _resolve_camera_connection_settings(args: tuple[Any, ...], kwargs: dict[str,
     resolved.update(kwargs)
     resolved["bridge_port"] = int(resolved.get("port", _CAMERA_CONNECTION_DEFAULTS["port"]))
     resolved["bridge_connection_method"] = "camera"
+    resolved["bridge_base"] = bridge_base_from_ip(resolved.get("ip"))
     return resolved
 
 
@@ -132,13 +215,27 @@ def _get_connection_settings(instance: Any) -> dict[str, Any]:
     }
 
 
+def _payload_drone_ip(connection: dict[str, Any]) -> str:
+    # The URL addresses the simulator, not a drone inside it.
+    if connection.get("bridge_base"):
+        return SIMULATOR_DRONE_IP
+    return str(connection.get("ip", "") or "")
+
+
+def _timeouts(connection: dict[str, Any]) -> tuple[float, float]:
+    """(POST, GET) timeouts: generous for a simulator across the internet."""
+    if connection.get("bridge_base") or _CONFIGURED_BRIDGE_URL.startswith("https://"):
+        return REMOTE_POST_TIMEOUT_SECONDS, REMOTE_GET_TIMEOUT_SECONDS
+    return TIMEOUT_SECONDS, TIMEOUT_SECONDS
+
+
 def _build_bridge_payload(connection: dict[str, Any], method: str, args: tuple[Any, ...], kwargs: dict[str, Any]) -> dict[str, Any]:
     bridge_port = int(connection.get("bridge_port", connection.get("mavlink_port", _PIONEER_CONNECTION_DEFAULTS["mavlink_port"])))
     bridge_connection_method = str(connection.get("bridge_connection_method", connection.get("connection_method", _PIONEER_CONNECTION_DEFAULTS["connection_method"])) or "udpout")
     return {
         "sessionId": SESSION_ID,
         "droneName": str(connection.get("name", "pioneer") or "pioneer"),
-        "droneIp": str(connection.get("ip", "") or ""),
+        "droneIp": _payload_drone_ip(connection),
         "mavlinkPort": bridge_port,
         "connectionMethod": bridge_connection_method,
         "device": str(connection.get("device", _PIONEER_CONNECTION_DEFAULTS["device"]) or ""),
@@ -151,10 +248,12 @@ def _build_bridge_payload(connection: dict[str, Any], method: str, args: tuple[A
 
 def _safe_post_bridge_event(connection: dict[str, Any], method: str, args: tuple[Any, ...], kwargs: dict[str, Any]) -> None:
     payload = _build_bridge_payload(connection, method, args, kwargs)
-    encoded = json.dumps(payload).encode("utf-8")
+    encoded = json.dumps(payload, default=str).encode("utf-8")
+    post_timeout, _ = _timeouts(connection)
     global _resolved_bridge_url
     with _post_lock:
-        for bridge_url in _candidate_bridge_urls():
+        last_error: BaseException | None = None
+        for bridge_url in _candidate_bridge_urls(connection):
             request = urllib.request.Request(
                 bridge_url,
                 data=encoded,
@@ -162,12 +261,18 @@ def _safe_post_bridge_event(connection: dict[str, Any], method: str, args: tuple
                 method="POST",
             )
             try:
-                with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS):
+                with urllib.request.urlopen(request, timeout=post_timeout):
                     pass
-                _resolved_bridge_url = bridge_url
+                if not connection.get("bridge_base"):
+                    _resolved_bridge_url = bridge_url
                 return
-            except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError, ValueError):
+            except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError, ValueError) as error:
+                last_error = error
                 continue
+        # A simulator the script names explicitly must not fail silently.
+        base = connection.get("bridge_base")
+        if base and last_error is not None:
+            _warn_unreachable(base, last_error)
 
 
 def _safe_post_event(instance: Any, method: str, args: tuple[Any, ...], kwargs: dict[str, Any]) -> None:
@@ -181,22 +286,28 @@ def _safe_get_external_state(instance: Any) -> dict[str, Any] | None:
     query = urllib.parse.urlencode(
         {
             "sessionId": SESSION_ID,
-            "droneIp": str(connection.get("ip", "") or ""),
+            "droneIp": _payload_drone_ip(connection),
             "mavlinkPort": bridge_port,
             "connectionMethod": bridge_connection_method,
         }
     )
+    _, get_timeout = _timeouts(connection)
 
-    for state_url in _candidate_bridge_state_urls():
+    last_error: BaseException | None = None
+    for state_url in _candidate_bridge_state_urls(connection):
         request = urllib.request.Request(f"{state_url}?{query}", method="GET")
         try:
-            with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
+            with urllib.request.urlopen(request, timeout=get_timeout) as response:
                 payload = json.loads(response.read().decode("utf-8"))
             if payload.get("ok") is True:
                 return payload
-        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError, ValueError, json.JSONDecodeError):
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError, ValueError, json.JSONDecodeError) as error:
+            last_error = error
             continue
 
+    base = connection.get("bridge_base")
+    if base and last_error is not None:
+        _warn_unreachable(base, last_error)
     return None
 
 
@@ -225,6 +336,12 @@ def _is_point_reached_from_autopilot_state(autopilot_state: str | None, point_re
 
 def _build_browser_mirrored_pioneer(original_class: type) -> type:
     class BrowserMirroredPioneer(original_class):  # type: ignore[misc, valid-type]
+        def __new__(cls, *args: Any, **kwargs: Any):
+            if not _should_use_bridge(_resolve_connection_settings(args, kwargs).get("ip")):
+                # No simulator to mirror into: a real drone over real MAVLink.
+                return original_class(*args, **kwargs)
+            return object.__new__(cls)
+
         def __init__(self, *args: Any, **kwargs: Any) -> None:
             connection = _resolve_connection_settings(args, kwargs)
             self._browser_bridge_connection = connection
@@ -328,6 +445,11 @@ def _build_browser_mirrored_pioneer(original_class: type) -> type:
 
 def _build_browser_mirrored_camera(original_class: type) -> type:
     class BrowserMirroredCamera:
+        def __new__(cls, *args: Any, **kwargs: Any):
+            if not _should_use_bridge(_resolve_camera_connection_settings(args, kwargs).get("ip")):
+                return original_class(*args, **kwargs)
+            return object.__new__(cls)
+
         def __init__(self, *args: Any, **kwargs: Any) -> None:
             connection = _resolve_camera_connection_settings(args, kwargs)
             self._browser_bridge_connection = connection
@@ -380,6 +502,12 @@ def _build_browser_mirrored_camera(original_class: type) -> type:
 
 def _build_browser_mirrored_video_stream(camera_class: type, original_class: type | None) -> type:
     class BrowserMirroredVideoStream:
+        def __new__(cls, *args: Any, **kwargs: Any):
+            # The real VideoStream takes no address: bridge only if configured or local.
+            if original_class is not None and not _should_use_bridge(kwargs.get("ip")):
+                return original_class(*args, **kwargs)
+            return object.__new__(cls)
+
         def __init__(self, *args: Any, **kwargs: Any) -> None:
             self.camera = camera_class(*args, **kwargs)
             self.running = False
