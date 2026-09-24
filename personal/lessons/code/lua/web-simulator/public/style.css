@@ -37,6 +37,7 @@
 @import url('./styles/scene/manager-panel/workbench.css');
 @import url('./styles/overlays/onboarding-tour.css');
 @import url('./styles/overlays/marker-settings.css');
+@import url('./styles/overlays/building-settings.css');
 
 @import './styles/panels/journal-academy.css';
 

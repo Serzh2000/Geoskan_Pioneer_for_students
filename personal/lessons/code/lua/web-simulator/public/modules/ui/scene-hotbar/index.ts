@@ -9,6 +9,7 @@ import { getSceneTypePreviewConfig } from '../scene-manager/support/type-preview
 import { isConfigurableMarker, openMarkerSettings } from '../marker-settings.js';
 import { getLinearFeatureCurve } from '../../environment/obstacles.js';
 import { listVehicles } from '../../vehicles/engine.js';
+import { OBJECT_TYPE } from '../../shared/object-types.js';
 import { isLinearFeatureEditingActive, startRouteDrawing, type RouteKind } from '../../scene/interaction/linear-editing.js';
 
 const VEHICLE_ROUTE: Record<string, { feature: 'road' | 'rail'; where: string; missing: string }> = {
@@ -196,6 +197,10 @@ function placeArmedObjectAt(event: PointerEvent): void {
     // Markers and maps need an ID / grid to be useful - ask right away, at
     // the spot where it landed, instead of silently using defaults.
     if (isConfigurableMarker(selectedObject)) openMarkerSettings(selectedObject!, event.clientX, event.clientY);
+    // Same for a building: floors, what happens behind which window, roof marker.
+    else if (selectedObject?.userData?.type === OBJECT_TYPE.BUILDING) {
+        (window as any).openBuildingSettings?.(selectedObject, event.clientX, event.clientY);
+    }
 }
 
 // Registered once, early (before scene-events.ts's own document-capture

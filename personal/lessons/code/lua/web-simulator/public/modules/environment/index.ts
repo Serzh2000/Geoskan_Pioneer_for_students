@@ -129,12 +129,13 @@ export function addObjectToScene(type: string, camera?: THREE.Camera | null, opt
 
 export function updateSceneObjectValue(
     object: THREE.Object3D,
-    params: { value?: string; markerDictionary?: string; floors?: number }
+    params: { value?: string; markerDictionary?: string; floors?: number; building?: SceneObjectOptions['building'] }
 ) {
     if (object.userData?.type === OBJECT_TYPE.BUILDING) {
         return updateApartmentBuildingMetadata(object, {
             value: params.value,
-            floors: params.floors
+            floors: params.floors,
+            building: params.building
         });
     }
     return updateMarkerValue(object, { value: params.value, dictionaryId: params.markerDictionary });

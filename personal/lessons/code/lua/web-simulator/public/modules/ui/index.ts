@@ -27,11 +27,12 @@ import { initRailTooltip } from './panels/rail-tooltip.js';
 import { initOnboardingTour } from './onboarding-tour.js';
 import { initMarkerSettings } from './marker-settings.js';
 import { initVehicleSettings } from './vehicle-settings.js';
+import { initBuildingSettings } from './building-settings.js';
 import { initViewportAnchor } from './viewport-anchor.js';
 import { initFileControls } from './controls/file-controls.js';
 import { initWorkspaceView } from './workspace-view.js';
 import { initMobileEditorViewport } from './mobile-editor-viewport.js';
-import type { MarkerMapOptions, VehicleConfig } from '../environment/obstacles.js';
+import type { BuildingConfig, MarkerMapOptions, VehicleConfig } from '../environment/obstacles.js';
 import type { AddObjectOptions } from '../scene/objects/object-manager.js';
 import { currentScriptLanguage } from '../core/state.js';
 
@@ -73,6 +74,7 @@ export interface UICallbacks {
             closed?: boolean;
             markerMap?: MarkerMapOptions;
             vehicle?: VehicleConfig;
+            building?: BuildingConfig;
         }>;
         select: (id: string) => boolean;
         toggleMultiSelect: (id: string) => boolean;
@@ -121,6 +123,7 @@ export function initUI(callbacks: UICallbacks) {
     initRailTooltip();
     initMarkerSettings();
     initVehicleSettings();
+    initBuildingSettings();
     initOnboardingTour();
     initViewportAnchor();
     initMobileEditorViewport({ onEditorResize: callbacks.onEditorResize });

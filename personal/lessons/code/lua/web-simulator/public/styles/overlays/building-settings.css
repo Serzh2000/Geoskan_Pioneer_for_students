@@ -1,0 +1,246 @@
+/*
+ * Apartment building settings popover (ui/building-settings.ts). Builds on
+ * the shared .mset popover (marker-settings.css): only the parts that are
+ * new here - colour swatches, incident brushes and the facade grid.
+ */
+
+.mset--building {
+    --bset-fire: #d9480f;
+    --bset-fire-bg: #fff0e6;
+    --bset-smoke: #5b6470;
+    --bset-smoke-bg: #eef0f3;
+    --bset-thief: #6d28d9;
+    --bset-thief-bg: #f3eefe;
+    --bset-wall: #e9e6df;
+    --bset-window: #ffffff;
+    --bset-window-border: #c9ced4;
+
+    width: min(372px, calc(100vw - 24px));
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+}
+
+:root[data-theme='dark'] .mset--building {
+    --bset-fire: #ff8a4c;
+    --bset-fire-bg: rgba(255, 110, 40, 0.18);
+    --bset-smoke: #c3c8cf;
+    --bset-smoke-bg: rgba(200, 205, 212, 0.14);
+    --bset-thief: #c4a7ff;
+    --bset-thief-bg: rgba(160, 120, 255, 0.18);
+    --bset-wall: #2e2e2e;
+    --bset-window: #1c1c1c;
+    --bset-window-border: rgba(255, 255, 255, 0.16);
+}
+
+/* ---- facade colour */
+
+.bset-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.bset-swatch {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 50%;
+    background: var(--swatch);
+    cursor: pointer;
+}
+
+.bset-swatch[aria-checked='true'] {
+    box-shadow: 0 0 0 2px var(--mset-bg), 0 0 0 4px var(--mset-accent);
+}
+
+/* ---- brushes */
+
+.bset-tools {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    padding: 3px;
+    border-radius: 10px;
+    background: var(--mset-hover);
+}
+
+.bset-tool {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 30px;
+    padding: 0 6px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--mset-muted);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.bset-tool svg {
+    flex-shrink: 0;
+}
+
+.bset-tool[aria-checked='true'] {
+    background: var(--mset-bg);
+    color: var(--mset-text);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.bset-tool--fire[aria-checked='true'] svg { color: var(--bset-fire); }
+.bset-tool--smoke[aria-checked='true'] svg { color: var(--bset-smoke); }
+.bset-tool--thief[aria-checked='true'] svg { color: var(--bset-thief); }
+
+/* ---- facade switch */
+
+.bset-faces {
+    display: flex;
+    gap: 16px;
+    border-bottom: 1px solid var(--mset-border);
+}
+
+.bset-face {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: -1px;
+    padding: 6px 0 7px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--mset-muted);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.bset-face[aria-selected='true'] {
+    border-bottom-color: var(--mset-accent);
+    color: var(--mset-text);
+}
+
+.bset-face__count:not(:empty) {
+    min-width: 16px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--mset-tint);
+    color: var(--mset-text);
+    font-size: 11px;
+    line-height: 16px;
+    text-align: center;
+}
+
+/* ---- the facade itself: a small elevation drawing */
+
+.bset-facade {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-height: 250px;
+    margin-top: 8px;
+    padding: 0 10px 0 4px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    user-select: none;
+    touch-action: none;
+}
+
+.bset-roof {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    height: 16px;
+    margin: 0 0 2px 26px;
+    border-radius: 4px 4px 0 0;
+    background: #7b838c;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 16px;
+    text-align: center;
+}
+
+.bset-row {
+    display: grid;
+    grid-template-columns: 22px repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    align-items: center;
+}
+
+.bset-row__floor {
+    color: var(--mset-muted);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.bset-window {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    padding: 0;
+    border: 1px solid var(--bset-window-border);
+    border-radius: 4px;
+    background: var(--bset-window);
+    box-shadow: inset 0 0 0 3px var(--bset-wall);
+    cursor: pointer;
+}
+
+.bset-window:hover {
+    border-color: var(--mset-accent);
+}
+
+.bset-window--fire {
+    border-color: var(--bset-fire);
+    background: var(--bset-fire-bg);
+    color: var(--bset-fire);
+}
+
+.bset-window--smoke {
+    border-color: var(--bset-smoke);
+    background: var(--bset-smoke-bg);
+    color: var(--bset-smoke);
+}
+
+.bset-window--thief {
+    border-color: var(--bset-thief);
+    background: var(--bset-thief-bg);
+    color: var(--bset-thief);
+}
+
+.bset-ground {
+    display: flex;
+    justify-content: center;
+    height: 12px;
+    margin: 2px 0 0 26px;
+    border-top: 2px solid #7b838c;
+}
+
+.bset-door {
+    width: 18px;
+    height: 10px;
+    border-radius: 0 0 3px 3px;
+    background: #4b5563;
+}
+
+.bset-facade-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.mset__btn.bset-small {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+}

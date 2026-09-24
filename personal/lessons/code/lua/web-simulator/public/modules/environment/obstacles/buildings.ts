@@ -5,8 +5,38 @@ import { setCommonMeta, applyShadows, clearGeneratedChildren } from './utils.js'
 import { OBJECT_TYPE } from '../../shared/object-types.js';
 import { addIncidentEffect } from './buildings/effects.js';
 import { getWindowSlots, parseWindowIncidents, summarizeWindowIncidents } from './buildings/incidents.js';
-import { BuildingWindowSlot, clampBuildingFloors } from './buildings/shared.js';
+import {
+    BUILDING_BASE_HEIGHT,
+    BUILDING_DEPTH,
+    BUILDING_FLOOR_HEIGHT,
+    BUILDING_WIDTH,
+    BuildingConfig,
+    BuildingWindowSlot,
+    clampBuildingFloors,
+    normalizeBuildingConfig
+} from './buildings/shared.js';
 import { populateWindowsAndEntrance } from './buildings/modules.js';
+import { createMarkerMeshForMap } from './markers/object.js';
+import { SHEET_SIZE, SHEET_THICKNESS } from './markers/shared.js';
+
+export type { BuildingConfig, BuildingRoofMarker } from './buildings/shared.js';
+export { normalizeBuildingConfig, MIN_BUILDING_FLOORS, MAX_BUILDING_FLOORS, BUILDING_FLOOR_HEIGHT, BUILDING_BASE_HEIGHT } from './buildings/shared.js';
+export { parseWindowIncidents } from './buildings/incidents.js';
+
+const ROOF_MARKER_NAME = 'building-roof-marker';
+
+/** Window slots of a building with this many floors, in its local space. */
+export function getBuildingWindowSlots(floors: number) {
+    return getWindowSlots(clampBuildingFloors(floors), BUILDING_DEPTH, BUILDING_FLOOR_HEIGHT);
+}
+
+/** Does this node sit inside a subtree that must keep its own objects (the roof marker)? */
+function isKeptSeparate(node: THREE.Object3D, root: THREE.Object3D) {
+    for (let current: THREE.Object3D | null = node; current && current !== root; current = current.parent) {
+        if (current.userData?.keepSeparate) return true;
+    }
+    return false;
+}
 
 /** Bake only static opaque architecture. Incident effects keep their own objects. */
 function mergeBuildingShell(group: THREE.Group) {
@@ -15,6 +45,9 @@ function mergeBuildingShell(group: THREE.Group) {
     const batches = new Map<THREE.Material, THREE.Mesh[]>();
     group.traverse(node => {
         if (!(node instanceof THREE.Mesh) || Array.isArray(node.material) || node.material.transparent) return;
+        // A marker sheet merged into the shell would lose its name, and with it
+        // detection (cv2.aruco looks for the sheet itself).
+        if (isKeptSeparate(node, group)) return;
         const batch = batches.get(node.material) ?? [];
         batch.push(node); batches.set(node.material, batch);
     });
@@ -31,19 +64,59 @@ function mergeBuildingShell(group: THREE.Group) {
     }
 }
 
+/** Top of the roof under its centre, in the building's local space. */
+function measureRoofTop(group: THREE.Group, fallback: number) {
+    group.updateWorldMatrix(true, true);
+    const targets: THREE.Object3D[] = [];
+    group.traverse((node) => {
+        if ((node as THREE.Mesh).isMesh && !isKeptSeparate(node, group) && !node.userData?.isIncidentEffect) targets.push(node);
+    });
+    const origin = group.localToWorld(new THREE.Vector3(0, 0, fallback + 20));
+    const below = group.localToWorld(new THREE.Vector3(0, 0, fallback + 19)).sub(origin).normalize();
+    const hit = new THREE.Raycaster(origin, below).intersectObjects(targets, false)[0];
+    return hit ? group.worldToLocal(hit.point.clone()).z : fallback;
+}
+
+/** (Re)places the configured roof marker lying flat at `roofTop`. */
+function placeRoofMarker(group: THREE.Group, roofTop: number) {
+    const previous = group.getObjectByName(ROOF_MARKER_NAME);
+    if (previous) {
+        previous.removeFromParent();
+        previous.traverse((node) => (node as THREE.Mesh).geometry?.dispose?.());
+    }
+    const config = group.userData.building as BuildingConfig;
+    if (!config.roofMarker.enabled) return;
+
+    const marker = config.roofMarker;
+    const sheet = createMarkerMeshForMap(marker.kind, marker.id, marker.dictionary);
+    const scale = marker.size / SHEET_SIZE;
+    sheet.scale.setScalar(scale);
+    sheet.position.set(0, 0, roofTop + (SHEET_THICKNESS * scale) / 2 + 0.003);
+    sheet.name = ROOF_MARKER_NAME;
+    // Part of the building, not a scene object of its own.
+    sheet.userData = { ...sheet.userData, draggable: false, keepSeparate: true, isBuildingRoofMarker: true };
+    // What the settings popover reports back (dictionary/id after normalisation).
+    marker.dictionary = sheet.userData.markerDictionary;
+    marker.id = String(sheet.userData.value);
+    group.add(sheet);
+}
+
 function rebuildApartmentBuilding(group: THREE.Group) {
     clearGeneratedChildren(group);
 
     const floors = clampBuildingFloors(group.userData.floors);
     group.userData.floors = floors;
-    const bodyColor = Number(group.userData.bodyColor) || 0xe5e7eb;
+    const config = normalizeBuildingConfig(group.userData.building);
+    group.userData.building = config;
+    group.userData.bodyColor = config.bodyColor;
+    const bodyColor = config.bodyColor;
     const windowIncidents = parseWindowIncidents(group.userData.value, floors);
     group.userData.windowIncidentsSummaryLines = summarizeWindowIncidents(windowIncidents);
 
-    const width = 4.8;
-    const depth = 3.6;
-    const floorHeight = 0.72;
-    const height = floors * floorHeight + 0.8;
+    const width = BUILDING_WIDTH;
+    const depth = BUILDING_DEPTH;
+    const floorHeight = BUILDING_FLOOR_HEIGHT;
+    const proxyRoofTop = BUILDING_BASE_HEIGHT + floors * floorHeight + 0.22;
     const baseMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.96 });
     const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.92, metalness: 0.02 });
     const accentMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.88 });
@@ -75,6 +148,7 @@ function rebuildApartmentBuilding(group: THREE.Group) {
     // Merge+shadow the shell now so it stays a handful of draw calls even before the
     // async window/entrance modules (below) arrive; the merge runs again once they land.
     mergeBuildingShell(group);
+    placeRoofMarker(group, proxyRoofTop);
     applyShadows(group);
 
     const windowSlots = getWindowSlots(floors, depth, floorHeight);
@@ -142,6 +216,8 @@ function rebuildApartmentBuilding(group: THREE.Group) {
         });
 
         mergeBuildingShell(group);
+        // The authored roof has its own height (parapet, slab): put the marker on it.
+        placeRoofMarker(group, measureRoofTop(group, proxyRoofTop));
         if (!windowIncidents.some(incident => incident.kind === 'fire')) fireWindowMat.dispose();
         for (const incident of windowIncidents) {
             const slot = windowSlots.find((candidate) =>
@@ -157,14 +233,14 @@ function rebuildApartmentBuilding(group: THREE.Group) {
 }
 
 export function createApartmentBuildingMesh(options: SceneObjectOptions = {}) {
-    const bodyColor = 0xc8c4b8;
-    
+    const building = normalizeBuildingConfig(options.building);
     const group = setCommonMeta(new THREE.Group(), OBJECT_TYPE.BUILDING, {
         floors: clampBuildingFloors(options.floors ?? 9),
         collidableRadius: 2.6,
         supportsValue: true,
         value: options.value || '',
-        bodyColor,
+        building,
+        bodyColor: building.bodyColor,
         valueLabel: 'Сценарии в окнах'
     });
     rebuildApartmentBuilding(group);
@@ -173,12 +249,15 @@ export function createApartmentBuildingMesh(options: SceneObjectOptions = {}) {
 
 export function updateApartmentBuildingMetadata(
     object: THREE.Object3D,
-    params: { value?: string; floors?: number }
+    params: { value?: string; floors?: number; building?: Partial<BuildingConfig> }
 ) {
     const group = object as THREE.Group;
     if (group.userData?.type !== OBJECT_TYPE.BUILDING) return false;
     if (params.value !== undefined) group.userData.value = params.value || '';
     if (params.floors !== undefined) group.userData.floors = clampBuildingFloors(params.floors);
+    if (params.building !== undefined) {
+        group.userData.building = normalizeBuildingConfig({ ...group.userData.building, ...params.building });
+    }
     rebuildApartmentBuilding(group);
     return true;
 }

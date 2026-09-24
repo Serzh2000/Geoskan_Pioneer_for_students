@@ -21,6 +21,7 @@ import { getObjectDisplayName, isDroneObject, traceClick } from './input-helpers
 import { getCameraMode } from '../core/camera-mode-state.js';
 import { tablerIcon } from '../../ui/icons/tabler.js';
 import { startLinearFeatureEditing } from './linear-editing.js';
+import { OBJECT_TYPE } from '../../shared/object-types.js';
 
 type ObjectContextMenuAction = {
     label: string;
@@ -147,6 +148,15 @@ export function handleSelection(obj: THREE.Object3D | null, x: number, y: number
         };
         objectActionsTitle = objectActionsTitle || 'Маркер';
         objectActions = [settingsAction, ...(objectActions || [])];
+    }
+
+    if (obj?.userData?.type === OBJECT_TYPE.BUILDING) {
+        objectActionsTitle = 'Многоэтажка';
+        objectActions = [{
+            label: 'Настроить здание…',
+            icon: tablerIcon('adjustments').replace('width="24" height="24"', 'width="16" height="16"'),
+            action: () => (window as any).openBuildingSettings?.(obj, x, y)
+        }, ...(objectActions || [])];
     }
 
     if (obj?.userData?.supportsPoints) {

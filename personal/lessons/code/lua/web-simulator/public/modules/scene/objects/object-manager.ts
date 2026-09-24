@@ -244,6 +244,7 @@ export type AddObjectOptions = {
     floors?: number;
     markerMap?: MarkerMapOptions;
     vehicle?: SceneObjectOptions['vehicle'];
+    building?: SceneObjectOptions['building'];
 };
 
 export function addObject(type: string, options: AddObjectOptions = {}): string | null {
@@ -255,6 +256,7 @@ export function addObject(type: string, options: AddObjectOptions = {}): string 
         points: options.points && options.points.length >= 2 ? options.points : parsedPoints.length >= 2 ? parsedPoints : undefined,
         markerMap: options.markerMap,
         vehicle: options.vehicle,
+        building: options.building,
         closed: options.closed
     };
     const obj = addObjectToScene(type, controls?.camera || null, objectOptions);

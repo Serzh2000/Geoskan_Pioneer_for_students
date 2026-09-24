@@ -23,7 +23,9 @@ const ICONS = [
     'lamp-2', 'map-pin', 'mountain', 'package', 'qrcode', 'road', 'square-letter-h',
     'stack-2', 'traffic-cone', 'train', 'trees', 'track', 'car-suv',
     // route drawing HUD
-    'route-2', 'check', 'arrow-back-up', 'repeat', 'x', 'player-track-next'
+    'route-2', 'check', 'arrow-back-up', 'repeat', 'x', 'player-track-next',
+    // building settings: window incidents
+    'flame', 'cloud', 'spy', 'eraser', 'dice-5'
 ];
 
 const root = path.resolve(__dirname, '..');

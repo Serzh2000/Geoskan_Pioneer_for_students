@@ -19,6 +19,38 @@ describe('environment geometry', () => {
         expect(new THREE.Box3().setFromObject(building).max.z).toBeGreaterThan(initialHeight);
         expect(building.userData.floors).toBe(12);
     });
+    test('roof marker lies on the roof as its own sheet and follows the floor count', () => {
+        // Marker textures are drawn on a canvas; this suite runs without a DOM.
+        const context = new Proxy({}, { get: (target: Record<string, unknown>, key: string) => target[key] ?? (() => ({ data: [] })) });
+        (globalThis as any).document ??= { createElement: () => ({ width: 0, height: 0, getContext: () => context }) };
+        const building = createApartmentBuildingMesh({
+            floors: 6,
+            building: { roofMarker: { enabled: true, kind: 'ArUco', id: '17', size: 1.2 } }
+        });
+        const roofTop = () => {
+            const box = new THREE.Box3();
+            building.traverse(node => {
+                let separate = false;
+                for (let p: THREE.Object3D | null = node; p && p !== building; p = p.parent) separate ||= !!p.userData?.keepSeparate;
+                if (node instanceof THREE.Mesh && !separate) box.expandByObject(node);
+            });
+            return box.max.z;
+        };
+        const marker = () => building.getObjectByName('building-roof-marker');
+
+        expect(marker()).toBeTruthy();
+        // Not merged into the shell: detection needs the sheet itself.
+        expect(marker()!.getObjectByName('marker-sheet')).toBeTruthy();
+        expect(building.userData.building.roofMarker.id).toBe('17');
+        expect(marker()!.position.z).toBeGreaterThanOrEqual(roofTop() - 0.01);
+
+        const low = marker()!.position.z;
+        updateApartmentBuildingMetadata(building, {floors: 14});
+        expect(marker()!.position.z).toBeGreaterThan(low);
+
+        updateApartmentBuildingMetadata(building, {building: {roofMarker: {enabled: false, kind: 'ArUco', id: '17', size: 1.2}}});
+        expect(marker()).toBeUndefined();
+    });
     test('road surfaces face upward and preserve elevation when edited', () => {
         const road = createRoadMesh({ points: [{x:0,y:0,z:1},{x:10,y:0,z:1}] });
         const asphalt = meshes(road)[1];

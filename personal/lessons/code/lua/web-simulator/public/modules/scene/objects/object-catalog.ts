@@ -155,6 +155,7 @@ function buildSceneEntry(obj: THREE.Object3D, depth: number, parentId: string, c
         closed: obj.userData?.supportsPoints ? !!obj.userData.closed : undefined,
         markerMap: obj.userData?.isMarkerMap ? { ...obj.userData.markerMapConfig } : undefined,
         vehicle: vehicle ? structuredClone(vehicle) : undefined,
+        building: obj.userData?.building ? structuredClone(obj.userData.building) : undefined,
         metaLines
     };
 }

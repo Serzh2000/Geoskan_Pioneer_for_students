@@ -1,5 +1,5 @@
 import type { UICallbacks } from '../index.js';
-import type { MarkerMapOptions, VehicleConfig } from '../../environment/obstacles.js';
+import type { BuildingConfig, MarkerMapOptions, VehicleConfig } from '../../environment/obstacles.js';
 
 export type SceneExportEntry = {
     sceneType: string;
@@ -18,6 +18,8 @@ export type SceneExportEntry = {
      * the index of that road/railway in this same objects list.
      */
     vehicle?: Omit<VehicleConfig, 'routeId'> & { routeIndex: number | null };
+    /** Apartment buildings: facade colour and roof marker (floors/incidents are above). */
+    building?: BuildingConfig;
 };
 
 export type SceneExportFile = {
@@ -97,6 +99,7 @@ export function buildSceneExport(callbacks: UICallbacks): SceneExportFile {
             pointsText: entry.pointsText || undefined,
             closed: entry.closed || undefined,
             markerMap: entry.markerMap,
+            building: entry.building,
             vehicle: entry.vehicle ? (({ routeId, ...rest }) => ({
                 ...rest,
                 routeIndex: routeId && indexById.has(routeId) ? indexById.get(routeId)! : null
@@ -144,6 +147,7 @@ export function applySceneImport(callbacks: UICallbacks, data: SceneExportFile):
             closed: entry.closed,
             floors: entry.floors,
             markerMap: entry.markerMap,
+            building: entry.building,
             vehicle
         });
         newIds.push(id);

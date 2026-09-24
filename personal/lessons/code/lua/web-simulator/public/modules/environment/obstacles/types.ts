@@ -30,4 +30,6 @@ export interface SceneObjectOptions {
     roadWidth?: number;
     markerMap?: MarkerMapOptions;
     vehicle?: Partial<import('./vehicles.js').VehicleConfig>;
+    /** Apartment buildings: facade colour and roof marker. */
+    building?: Partial<import('./buildings/shared.js').BuildingConfig>;
 }
