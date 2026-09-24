@@ -25,7 +25,9 @@ const ICONS = [
     // route drawing HUD
     'route-2', 'check', 'arrow-back-up', 'repeat', 'x', 'player-track-next',
     // building settings: window incidents
-    'flame', 'cloud', 'spy', 'eraser', 'dice-5'
+    'flame', 'cloud', 'spy', 'eraser', 'dice-5',
+    // viewport camera windows
+    'video', 'camera-down', 'maximize'
 ];
 
 const root = path.resolve(__dirname, '..');

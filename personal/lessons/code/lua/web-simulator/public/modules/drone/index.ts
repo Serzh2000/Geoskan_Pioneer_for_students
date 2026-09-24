@@ -3,6 +3,7 @@
  * Экспортирует функции для инициализации и обновления сцены.
  */
 import * as THREE from 'three';
+import { renderCameraViews } from './camera-views.js';
 import { drones, currentDroneId, simSettings } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 import { envGroup } from '../environment/index.js';
@@ -316,6 +317,7 @@ export function updateDrone3D(dt: number) {
 
     try {
         renderer.render(scene, camera);
+        renderCameraViews(renderer, scene, droneMeshes[currentDroneId]);
     } catch (e) {
         console.error('[3D] Render error:', e);
     }

@@ -206,11 +206,12 @@ export function initScene(container: HTMLElement) {
     
     canvasContainer.innerHTML = '';
     canvasContainer.appendChild(renderer.domElement);
-    initOrientationWidget(canvasContainer);
 
     controls = new DroneOrbitControls(camera, renderer.domElement);
     controls.target.set(0, 0, 1);
     controls.update();
+    // The compass swings this orbit camera when an axis is clicked.
+    initOrientationWidget(canvasContainer, controls);
     controls.rotateSpeed = 2.0;
     controls.zoomSpeed = 1.2;
     controls.panSpeed = 0.8;

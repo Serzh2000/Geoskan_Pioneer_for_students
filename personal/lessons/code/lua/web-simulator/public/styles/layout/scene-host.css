@@ -5,4 +5,5 @@
 @import url('./scene-host/stage.css');
 @import url('./scene-host/fpv.css');
 @import url('./scene-host/orientation-widget.css');
+@import url('./scene-host/camera-views.css');
 @import url('./scene-host/print-bubbles.css');

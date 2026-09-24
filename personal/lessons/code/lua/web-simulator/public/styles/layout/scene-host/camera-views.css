@@ -1,0 +1,180 @@
+/*
+ * Drone camera windows (drone/camera-views.ts), stacked under the axis
+ * compass. A window's body is a transparent hole: the WebGL canvas draws the
+ * camera image there. Colours go through --cv-* tokens.
+ */
+.scene-camera-views {
+    --cv-bg: rgba(255, 255, 255, 0.94);
+    --cv-border: rgba(9, 9, 11, 0.1);
+    --cv-text: #1f2328;
+    --cv-muted: #5f6670;
+    --cv-hover: rgba(9, 9, 11, 0.06);
+    --cv-on: #b34d00;
+    --cv-on-bg: rgba(255, 107, 0, 0.12);
+    --cv-shadow: 0 10px 26px rgba(15, 23, 42, 0.16);
+    --cv-focus: rgba(255, 107, 0, 0.6);
+
+    position: absolute;
+    top: 114px;
+    right: 14px;
+    z-index: 7;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    pointer-events: none;
+}
+
+:root[data-theme='dark'] .scene-camera-views {
+    --cv-bg: rgba(26, 26, 26, 0.94);
+    --cv-border: rgba(255, 255, 255, 0.09);
+    --cv-text: #e6e6e6;
+    --cv-muted: #a2a2a2;
+    --cv-hover: rgba(255, 255, 255, 0.08);
+    --cv-on: #ffb067;
+    --cv-on-bg: rgba(255, 122, 26, 0.18);
+    --cv-shadow: 0 12px 28px rgba(0, 0, 0, 0.36);
+    --cv-focus: rgba(255, 154, 82, 0.75);
+}
+
+.scene-camera-views > * {
+    pointer-events: auto;
+}
+
+/* ---- the two toggles under the compass */
+
+.scene-camera-views__toggles {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--cv-border);
+    border-radius: 10px;
+    background: var(--cv-bg);
+    box-shadow: var(--cv-shadow);
+}
+
+.scene-camera-views__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--cv-muted);
+    cursor: pointer;
+}
+
+.scene-camera-views__toggle:hover {
+    background: var(--cv-hover);
+    color: var(--cv-text);
+}
+
+.scene-camera-views__toggle[aria-pressed='true'] {
+    background: var(--cv-on-bg);
+    color: var(--cv-on);
+}
+
+/* ---- a camera window */
+
+.scene-camera-view {
+    width: 232px;
+    overflow: hidden;
+    border: 1px solid var(--cv-border);
+    border-radius: 10px;
+    /* No background here: the body below is a see-through hole the camera
+       image is drawn into on the canvas underneath - a panel colour behind
+       it would tint the picture. Only the header is a solid bar. */
+    background: transparent;
+    box-shadow: var(--cv-shadow);
+}
+
+.scene-camera-view[hidden] {
+    display: none;
+}
+
+.scene-camera-view__head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 4px 0 9px;
+    background: var(--cv-bg);
+    color: var(--cv-text);
+    font: 600 12px/1 var(--font-sans, system-ui, sans-serif);
+}
+
+.scene-camera-view__icon {
+    display: inline-flex;
+    color: var(--cv-muted);
+}
+
+.scene-camera-view__title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scene-camera-view__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--cv-muted);
+    cursor: pointer;
+}
+
+.scene-camera-view__btn:hover {
+    background: var(--cv-hover);
+    color: var(--cv-text);
+}
+
+/* 16:9, transparent: the canvas shows through. */
+.scene-camera-view__body {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-top: 1px solid var(--cv-border);
+    background: transparent;
+}
+
+.scene-camera-view__empty {
+    display: none;
+}
+
+.scene-camera-view__body.is-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1b1f24;
+}
+
+.scene-camera-view__body.is-empty .scene-camera-view__empty {
+    display: block;
+    color: #9aa0a6;
+    font: 500 12px/1 var(--font-sans, system-ui, sans-serif);
+}
+
+.scene-camera-views :is(button):focus-visible {
+    outline: 2px solid var(--cv-focus);
+    outline-offset: 1px;
+}
+
+/* The placement hotbar and phone-sized viewports need the room. */
+body.is-scene-hotbar-active .scene-camera-view {
+    width: 184px;
+}
+
+@media (max-width: 720px), (max-height: 560px) {
+    .scene-camera-view {
+        width: 168px;
+    }
+}

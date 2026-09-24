@@ -1,121 +1,170 @@
+/*
+ * Axis compass (scene/core/orientation-widget.ts). Colours go through
+ * --ow-* tokens, light here and dark below. The disc stays quiet until
+ * hovered - the compass is read at a glance far more often than clicked.
+ */
 .scene-orientation-widget {
+    --ow-disc: rgba(255, 255, 255, 0.62);
+    --ow-disc-hover: rgba(255, 255, 255, 0.9);
+    --ow-disc-border: rgba(9, 9, 11, 0.08);
+    --ow-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+    --ow-label: #ffffff;
+    --ow-hollow: rgba(255, 255, 255, 0.85);
+    --ow-home: rgba(9, 9, 11, 0.28);
+    --ow-caption-bg: rgba(17, 17, 17, 0.84);
+    --ow-caption-text: #f2f2f2;
+    --ow-focus: rgba(255, 107, 0, 0.7);
+
     position: absolute;
-    top: 16px;
-    right: 16px;
-    width: 108px;
-    height: 108px;
-    pointer-events: none;
+    top: 14px;
+    right: 14px;
     z-index: 7;
-    filter: drop-shadow(0 14px 26px rgba(15, 23, 42, 0.14));
+    width: 92px;
+    height: 92px;
 }
 
-.scene-orientation-widget__plate {
+:root[data-theme='dark'] .scene-orientation-widget {
+    --ow-disc: rgba(26, 26, 26, 0.55);
+    --ow-disc-hover: rgba(32, 32, 32, 0.9);
+    --ow-disc-border: rgba(255, 255, 255, 0.08);
+    --ow-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
+    --ow-hollow: rgba(26, 26, 26, 0.85);
+    --ow-home: rgba(255, 255, 255, 0.34);
+    --ow-focus: rgba(255, 154, 82, 0.8);
+}
+
+.scene-orientation-widget__disc {
     position: absolute;
     inset: 0;
-    border-radius: 24px;
-    background:
-        radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.9) 40%, rgba(241, 245, 249, 0.92) 100%);
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.92),
-        inset 0 -16px 24px rgba(148, 163, 184, 0.08);
-    backdrop-filter: blur(12px);
-}
-
-.scene-orientation-widget__orbit {
-    position: absolute;
-    inset: 18px;
+    border: 1px solid var(--ow-disc-border);
     border-radius: 50%;
-    border: 1px solid rgba(148, 163, 184, 0.26);
-    background:
-        radial-gradient(circle, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.18) 52%, rgba(148, 163, 184, 0.08) 100%);
-    box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.5),
-        0 10px 22px rgba(148, 163, 184, 0.12);
+    background: var(--ow-disc);
+    box-shadow: var(--ow-shadow);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    transition: background 0.16s ease;
 }
 
-.scene-orientation-widget__center {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background:
-        radial-gradient(circle at 35% 35%, #ffffff 0%, #e2e8f0 70%, #cbd5e1 100%);
-    border: 1px solid rgba(148, 163, 184, 0.65);
-    box-shadow:
-        0 0 0 6px rgba(255, 255, 255, 0.34),
-        0 6px 16px rgba(15, 23, 42, 0.18);
-    transform: translate(-50%, -50%);
+.scene-orientation-widget:hover .scene-orientation-widget__disc,
+.scene-orientation-widget:focus-within .scene-orientation-widget__disc {
+    background: var(--ow-disc-hover);
 }
 
-.scene-orientation-widget__axis {
+/* Everything is positioned from the centre. */
+.scene-orientation-widget__stage {
     position: absolute;
     top: 50%;
     left: 50%;
     width: 0;
     height: 0;
-    transform: translate(-50%, -50%);
-    color: var(--axis-color);
-    transition: opacity 0.08s linear;
 }
 
-.scene-orientation-widget__tail,
-.scene-orientation-widget__shaft {
+.scene-orientation-widget__spoke {
     position: absolute;
-    top: 50%;
+    top: -1px;
     left: 0;
-    width: 20px;
     height: 2px;
     border-radius: 999px;
-    transform-origin: 0 50%;
-}
-
-.scene-orientation-widget__tail {
-    background: color-mix(in srgb, var(--axis-color) 28%, white);
-    opacity: 0.6;
-    filter: blur(0.2px);
-    box-shadow: 0 1px 5px rgba(148, 163, 184, 0.16);
-}
-
-.scene-orientation-widget__shaft {
-    background: linear-gradient(90deg, color-mix(in srgb, var(--axis-color) 82%, white), var(--axis-color));
-    box-shadow:
-        0 0 0 1px rgba(255, 255, 255, 0.16),
-        0 2px 10px color-mix(in srgb, var(--axis-color) 32%, transparent);
-}
-
-.scene-orientation-widget__tip {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 12px;
-    height: 12px;
-    border-radius: 3px 3px 2px 2px;
     background: var(--axis-color);
-    box-shadow:
-        0 0 0 2px rgba(255, 255, 255, 0.9),
-        0 3px 10px color-mix(in srgb, var(--axis-color) 35%, rgba(15, 23, 42, 0.2));
-    clip-path: polygon(100% 50%, 0 0, 18% 50%, 0 100%);
-    transform-origin: 50% 50%;
+    transform-origin: 0 50%;
+    pointer-events: none;
 }
 
-.scene-orientation-widget__label {
+.scene-orientation-widget__bubble {
     position: absolute;
     top: 0;
     left: 0;
-    min-width: 18px;
-    padding: 2px 5px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.84);
-    border: 1px solid color-mix(in srgb, var(--axis-color) 32%, rgba(148, 163, 184, 0.25));
-    color: var(--axis-color);
-    font-size: 10px;
-    font-weight: 800;
-    line-height: 1;
-    letter-spacing: 0.04em;
-    text-align: center;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.92);
-    box-shadow: 0 2px 8px rgba(148, 163, 184, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    font: 700 11px/1 var(--font-sans, system-ui, sans-serif);
+    cursor: pointer;
+    transition: opacity 0.12s linear, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.scene-orientation-widget__bubble.is-positive {
+    width: 20px;
+    height: 20px;
+    background: var(--axis-color);
+    color: var(--ow-label);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.scene-orientation-widget__bubble.is-negative {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--axis-color);
+    background: var(--ow-hollow);
+}
+
+/* Turned away from the viewer: still readable, clearly "behind". */
+.scene-orientation-widget__bubble.is-behind,
+.scene-orientation-widget__spoke.is-behind {
+    opacity: 0.45;
+}
+
+.scene-orientation-widget__bubble:hover:not([aria-disabled='true']),
+.scene-orientation-widget__bubble:focus-visible {
+    opacity: 1;
+    filter: brightness(1.12);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--axis-color) 35%, transparent);
+    outline: none;
+}
+
+.scene-orientation-widget__bubble[aria-disabled='true'] {
+    cursor: default;
+}
+
+.scene-orientation-widget__home {
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    z-index: 60;
+    width: 10px;
+    height: 10px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--ow-home);
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.scene-orientation-widget__home:hover,
+.scene-orientation-widget__home:focus-visible {
+    background: var(--ow-focus);
+    transform: scale(1.3);
+    outline: none;
+}
+
+.scene-orientation-widget__caption {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: var(--ow-caption-bg);
+    color: var(--ow-caption-text);
+    font: 600 11px/1.3 var(--font-sans, system-ui, sans-serif);
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    pointer-events: none;
+}
+
+.scene-orientation-widget__caption.is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scene-orientation-widget__bubble,
+    .scene-orientation-widget__disc,
+    .scene-orientation-widget__caption {
+        transition: none;
+    }
 }
