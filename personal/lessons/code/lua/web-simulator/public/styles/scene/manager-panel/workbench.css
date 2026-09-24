@@ -1,5 +1,10 @@
 /* Scene workbench: object work first, reusable starting points second. */
+/* One column at any panel width; a wide panel does not stretch rows and
+   fields across the screen. */
 #manager-panel .scene-manager { container-type: inline-size; padding: 0 22px 24px; }
+#manager-panel .scene-manager > :not(.scene-manager-tabs) { width: 100%; max-width: 716px; }
+/* The tab bar lines up with the content under it (its 22px bleed on each side included). */
+#manager-panel .scene-manager > .scene-manager-tabs { box-sizing: border-box; max-width: 760px; }
 #manager-panel .scene-manager-tabs { margin: 0 -22px; padding: 0 22px; }
 #manager-panel .scene-workspace-intro { padding: 18px 0; }
 #manager-panel .scene-workspace-intro__eyebrow { color: var(--sm-muted); font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
@@ -12,12 +17,18 @@
 #manager-panel .scene-tree-toolbar__btn:disabled { display: none; }
 #manager-panel .scene-manager-list { gap: 3px; max-height: min(38vh, 420px); }
 #manager-panel .scene-tree-row { min-height: 48px; flex-shrink: 0; }
-#manager-panel .scene-manager-item__icon { width: 34px; height: 34px; border-radius: 10px; background: var(--sm-bg); border-color: var(--sm-line); }
-#manager-panel .scene-tree-row.is-selected .scene-manager-item__icon { color: var(--sm-accent); background: var(--sm-surface); border-color: transparent; }
+/* Quiet tiles: the row, not the icon, is the thing you click. */
+#manager-panel .scene-manager-item__icon { width: 32px; height: 32px; border: 0; border-radius: 9px; background: color-mix(in srgb, var(--sm-text) 6%, transparent); color: var(--sm-muted); }
+#manager-panel .scene-tree-row:hover .scene-manager-item__icon { color: var(--sm-text); }
+#manager-panel .scene-tree-row.is-selected .scene-manager-item__icon { color: var(--sm-accent); background: color-mix(in srgb, var(--sm-accent) 14%, transparent); }
 #manager-panel .scene-tree-action { width: 32px; height: 32px; }
-#manager-panel .scene-tree-actions { opacity: .6; }
+/* Row actions appear where the pointer is, not as a column of grey targets. */
+#manager-panel .scene-tree-actions { opacity: 0; transition: opacity .12s ease; }
+#manager-panel .scene-tree-row:is(:hover, :focus-within, .is-selected) .scene-tree-actions { opacity: 1; }
 #manager-panel .scene-tree-action--danger { display: none; }
 #manager-panel .scene-tree-row:is(:hover, :focus-within, .is-selected) .scene-tree-action--danger { display: grid; }
+/* A jump to the properties tab, shown only once something is selected. */
+#manager-panel .scene-selection-bar:not(.has-selection) { display: none !important; }
 #manager-panel .scene-selection-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid var(--sm-line); border-radius: 9px; background: var(--sm-bg); }
 #manager-panel .scene-selection-bar__content { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 #manager-panel .scene-selection-bar__label { font-size: 10px; font-weight: 650; color: var(--sm-muted); }
@@ -47,14 +58,12 @@
 #manager-panel .scene-file-section summary:focus-visible { outline: 2px solid var(--sm-focus); outline-offset: 2px; border-radius: 11px; }
 #manager-panel .scene-file-section summary strong { display: block; color: var(--sm-text); font-size: 12px; font-weight: 650; }
 #manager-panel .scene-file-section summary small { display: block; margin-top: 5px; color: var(--sm-muted); font-size: 11px; line-height: 1.4; }
-#manager-panel .scene-file-icon { display: grid; place-items: center; width: 32px; height: 36px; flex-shrink: 0; border-radius: 8px; background: var(--sm-bg); color: var(--sm-muted); font-size: 21px; }
-#manager-panel .scene-disclosure-chevron { margin-left: auto; color: var(--sm-muted); font-size: 23px; transition: transform .15s; }
+/* Same quiet square tile as the object list icons. */
+#manager-panel .scene-file-icon { display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px; background: color-mix(in srgb, var(--sm-text) 6%, transparent); color: var(--sm-text); }
+#manager-panel .scene-disclosure-chevron { display: grid; place-items: center; margin-left: auto; color: var(--sm-muted); transition: transform .15s; }
+#manager-panel .scene-file-section summary:hover .scene-disclosure-chevron { color: var(--sm-text); }
 #manager-panel .scene-file-section[open] .scene-disclosure-chevron { transform: rotate(90deg); }
 #manager-panel .scene-file-section__body { display: flex; flex-direction: column; gap: 12px; padding: 0 15px 15px; }
-#manager-panel .scene-manager.is-split .scene-workspace-intro { padding-top: 20px; }
-#manager-panel .scene-manager.is-split .scene-preset-options { grid-template-columns: 1fr; }
-#manager-panel .scene-manager.is-split .scene-preset-card { flex-direction: row; }
-#manager-panel .scene-manager.is-split .scene-preset-card__preview { flex: 0 0 80px; border-bottom: 0; }
 @container (max-width: 440px) {
     #manager-panel .scene-workspace-intro h2 { font-size: 21px; }
     #manager-panel .scene-panel-card--tree { padding: 12px; }
@@ -66,8 +75,15 @@
     #manager-panel .scene-preset-card__body { padding: 10px 12px; }
     #manager-panel .scene-selection-bar { flex-wrap: wrap; }
 }
-@media (hover: none) { #manager-panel .scene-tree-action--danger { display: grid; } }
+@media (hover: none) { #manager-panel .scene-tree-action--danger { display: grid; } #manager-panel .scene-tree-actions { opacity: 1; } }
 @media (max-width: 650px) {
     #manager-panel .scene-manager { padding: 0 12px 20px; }
     #manager-panel .scene-manager-tabs { margin: 0 -12px; padding: 0 12px; }
 }
+
+/* Nothing selected (only reachable if the tab is forced): a one-line hint. */
+#manager-panel .scene-details-empty { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--sm-line); border-radius: 12px; background: var(--sm-surface); text-align: left; }
+#manager-panel .scene-details-empty__icon { flex-shrink: 0; color: var(--sm-accent); }
+#manager-panel .scene-details-empty__body { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; }
+#manager-panel .scene-details-empty__title { font-size: 13px; }
+#manager-panel .scene-details-empty__text { max-width: none; }

@@ -74,17 +74,6 @@
     border-color: rgba(162, 162, 162, 0.16);
 }
 
-:root[data-theme='dark'] #manager-panel .scene-manager-list,
-:root[data-theme='dark'] .scene-manager-list {
-    background:
-        radial-gradient(circle at top left, rgba(255, 107, 0, 0.05), transparent 38%),
-        linear-gradient(180deg, #1a1a1a 0%, #202020 100%);
-    border-color: rgba(162, 162, 162, 0.12);
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.03),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-}
-
 :root[data-theme='dark'] #manager-panel .scene-manager-item,
 :root[data-theme='dark'] .scene-manager-item,
 :root[data-theme='dark'] .scene-type-picker__selection-card,

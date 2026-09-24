@@ -2,11 +2,14 @@ import type { SceneManagerEntry } from '../../types.js';
 import { escapeHtml } from '../format.js';
 import { getEntryKind, getEntryTitle } from '../label.js';
 
+/** Nothing selected: a one-line hint, not a placeholder card - the pane below it has real content. */
 export function renderEmptyStateMarkup() {
     return `<div class="scene-details-empty">
-        <svg viewBox="0 0 48 48" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m24 5 17 10v18L24 43 7 33V15Z M7 15l17 10 17-10M24 25v18"/></svg>
-        <div class="scene-details-empty__title">Выберите объект</div>
-        <div class="scene-details-empty__text">Нажмите на объект в сцене или выберите его в списке. Здесь появятся его свойства.</div>
+        <svg class="scene-details-empty__icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg>
+        <div class="scene-details-empty__body">
+            <div class="scene-details-empty__title">Объект не выбран</div>
+            <div class="scene-details-empty__text">Кликните по объекту в сцене или в списке — здесь откроются его свойства.</div>
+        </div>
         <button type="button" data-scene-browse>К списку объектов →</button>
     </div>`;
 }

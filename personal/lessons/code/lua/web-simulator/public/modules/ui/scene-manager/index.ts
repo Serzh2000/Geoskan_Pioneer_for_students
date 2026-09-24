@@ -172,7 +172,7 @@ export function initSceneManager(callbacks: UICallbacks) {
         typePreview,
         setActiveTab: (tab) => {
             viewState.activeTab = tab;
-            syncTabVisibility(elements, viewState.activeTab, !!viewState.lastSelectedId);
+            syncTabVisibility(elements, viewState.activeTab);
         },
         setActiveTransformMode: (mode: TransformMode) => {
             viewState.activeTransformMode = mode;
@@ -194,11 +194,7 @@ export function initSceneManager(callbacks: UICallbacks) {
         visibilityObserver.observe(managerPanel);
     }
     document.addEventListener('visibilitychange', () => ensurePolling(true));
-    if (elements.rootEl && typeof ResizeObserver === 'function') {
-        const layoutObserver = new ResizeObserver(() => syncTabVisibility(elements, viewState.activeTab, !!viewState.lastSelectedId));
-        layoutObserver.observe(elements.rootEl);
-    }
-    syncTabVisibility(elements, viewState.activeTab, !!viewState.lastSelectedId);
+    syncTabVisibility(elements, viewState.activeTab);
     syncTransformModeState(elements, viewState.activeTransformMode);
     render(true);
     ensurePolling(false);

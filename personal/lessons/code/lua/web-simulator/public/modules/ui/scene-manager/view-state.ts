@@ -29,22 +29,14 @@ export function createSceneManagerViewState(): SceneManagerViewState {
     };
 }
 
-/** Below this the two panes stack and the tab bar takes over. */
-export const SPLIT_LAYOUT_MIN_WIDTH = 880;
-
-export function isSplitLayout(elements: SceneManagerDomRefs): boolean {
-    const root = elements.rootEl;
-    return !!root && root.clientWidth >= SPLIT_LAYOUT_MIN_WIDTH;
-}
-
-export function syncTabVisibility(elements: SceneManagerDomRefs, activeTab: SceneManagerTab, hasSelection: boolean) {
-    const split = isSplitLayout(elements);
+/*
+ * One pane at a time, at any panel width: "Объекты" or "Свойства" behind the
+ * tab bar. (A wide panel used to pull the properties out into a second
+ * column; a tab reads calmer and the panel does not change shape.)
+ */
+export function syncTabVisibility(elements: SceneManagerDomRefs, activeTab: SceneManagerTab) {
     const isInspector = activeTab === 'inspector';
-    const solo = split && !hasSelection;
-
-    elements.rootEl?.classList.toggle('is-split', split);
-    elements.rootEl?.classList.toggle('is-split-solo', solo);
-    if (elements.tabsEl) elements.tabsEl.hidden = split;
+    if (elements.tabsEl) elements.tabsEl.hidden = false;
 
     elements.hierarchyTabBtn?.classList.toggle('is-active', !isInspector);
     elements.hierarchyTabBtn?.setAttribute('aria-selected', String(!isInspector));
@@ -54,24 +46,17 @@ export function syncTabVisibility(elements: SceneManagerDomRefs, activeTab: Scen
     if (elements.hierarchyTabBtn) elements.hierarchyTabBtn.tabIndex = isInspector ? -1 : 0;
     if (elements.inspectorTabBtn) elements.inspectorTabBtn.tabIndex = isInspector ? 0 : -1;
 
-    // Split: both panes always show side by side - with nothing selected the
-    // inspector column holds its "pick an object" empty state, so the layout
-    // stays put instead of jumping between one and two columns on every
-    // selection change (is-split-solo still marks that state for styling).
-    // Not split: exactly one shows, per activeTab.
-    const hierarchyVisible = split || !isInspector;
-    const inspectorVisible = split || isInspector;
-    elements.hierarchyPanelEl?.classList.toggle('is-active', hierarchyVisible);
-    elements.inspectorPanelEl?.classList.toggle('is-active', inspectorVisible);
-    if (elements.hierarchyPanelEl) elements.hierarchyPanelEl.hidden = !hierarchyVisible;
-    if (elements.inspectorPanelEl) elements.inspectorPanelEl.hidden = !inspectorVisible;
+    elements.hierarchyPanelEl?.classList.toggle('is-active', !isInspector);
+    elements.inspectorPanelEl?.classList.toggle('is-active', isInspector);
+    if (elements.hierarchyPanelEl) elements.hierarchyPanelEl.hidden = isInspector;
+    if (elements.inspectorPanelEl) elements.inspectorPanelEl.hidden = !isInspector;
 }
 
 export function syncInspectorAvailability(elements: SceneManagerDomRefs, state: SceneManagerViewState) {
     const hasSelection = !!state.lastSelectedId;
-    // Nothing to inspect yet - keep the tab reachable in the (non-split) tabbed
-    // layout, but there is no point opening it: it can only show the empty state.
-    if (!hasSelection && state.activeTab === 'inspector' && !isSplitLayout(elements)) {
+    // Nothing to inspect yet - the tab stays visible, but there is no point
+    // opening it: it could only show the empty state.
+    if (!hasSelection && state.activeTab === 'inspector') {
         state.activeTab = 'hierarchy';
     }
     // aria-disabled rather than the native attribute: the tab stays hoverable
@@ -83,7 +68,7 @@ export function syncInspectorAvailability(elements: SceneManagerDomRefs, state: 
     document.getElementById('scene-open-properties')?.toggleAttribute('disabled', !hasSelection);
     elements.inspectorTabBtn?.classList.toggle('has-selection', hasSelection);
     elements.inspectorPanelEl?.classList.toggle('is-empty', !hasSelection);
-    syncTabVisibility(elements, state.activeTab, hasSelection);
+    syncTabVisibility(elements, state.activeTab);
 }
 
 export function syncTransformModeState(elements: SceneManagerDomRefs, activeTransformMode: TransformMode) {

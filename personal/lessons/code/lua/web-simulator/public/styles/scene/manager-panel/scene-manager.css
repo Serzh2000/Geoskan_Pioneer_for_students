@@ -986,11 +986,6 @@
     cursor: pointer;
 }
 
-/* In the split layout the list is right there - no need for a way back. */
-#manager-panel .scene-manager.is-split [data-scene-browse] {
-    display: none;
-}
-
 #manager-panel .scene-details-card {
     display: flex;
     flex-direction: column;
@@ -1348,48 +1343,6 @@
 
 #manager-panel .scene-inspector-actions .scene-btn {
     flex: 1 1 110px;
-}
-
-/* ================================================================
-   Split layout (panel ≥ 880px): list | inspector, always both
-   ================================================================ */
-
-#manager-panel .scene-manager.is-split,
-#manager-panel .scene-manager.is-split.is-split-solo {
-    display: grid;
-    grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
-    align-items: start;
-    gap: 0 32px;
-    padding-top: 4px;
-}
-
-#manager-panel .scene-manager.is-split > #scene-operation-status {
-    grid-column: 1 / -1;
-}
-
-#manager-panel .scene-manager.is-split > .scene-panel-view {
-    display: flex;
-    width: auto;
-    max-width: none;
-    margin: 0;
-}
-
-/* The inspector column reads as its own pane: hairline divider, capped
-   line length so fields don't stretch across a wide monitor. */
-#manager-panel .scene-manager.is-split > #scene-panel-inspector {
-    max-width: 640px;
-    padding-left: 32px;
-    border-left: 1px solid var(--sm-line);
-    margin-left: -32px;
-    align-self: stretch;
-}
-
-#manager-panel .scene-manager.is-split .scene-manager-list {
-    max-height: 420px;
-}
-
-#manager-panel .scene-manager.is-split #scene-open-properties {
-    display: none;
 }
 
 /* ================================================================
