@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Модели для учебных миссий</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f2f4f6;color:#202b35;font:14px system-ui}header{padding:30px 4vw 18px}h1{margin:0 0 8px;font-size:26px}p{color:#647382;margin:0}main{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;padding:0 4vw 30px}article{background:white;border:1px solid #dce2e7;border-radius:16px;overflow:hidden}h2{font-size:15px;margin:16px 18px 4px}article p{margin:0 18px 14px;font-size:12px}.view{height:280px;touch-action:none}.view canvas{display:block;width:100%;height:100%}@media(max-width:850px){main{grid-template-columns:1fr 1fr}}@media(max-width:520px){main{grid-template-columns:1fr}}
+</style><header><h1>Модели для учебных миссий</h1><p>Автомобиль, поезд и события в окнах. Перетаскивайте модель, чтобы рассмотреть её.</p></header><main></main>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { createMissionAsset } from './modules/environment/obstacles/mission-assets.ts';
+import { createVehicleMesh } from './modules/environment/obstacles/vehicles.ts';
+import { createApartmentBuildingMesh } from './modules/environment/obstacles/buildings.ts';
+import { addIncidentEffect } from './modules/environment/obstacles/buildings/effects.ts';
+const entries=[['Автомобиль','Кузов, остекление, диски и светотехника',()=>createVehicleMesh('car')],['Поезд','Локомотив и два отдельных вагона',()=>createVehicleMesh('train')],['Многоэтажка','Три события на фасаде',()=>createApartmentBuildingMesh({floors:5,value:'3:front:1=thief;3:front:2=fire;3:front:3=smoke'})],['Вор','Маска, мешок и спуск по верёвке',()=>incident('thief')],['Пожар','Языки пламени, яркое ядро и дым',()=>incident('fire')],['Дым','Плотный шлейф над окном',()=>incident('smoke')]];
+function incident(kind){const g=new THREE.Group();addIncidentEffect(g,{position:new THREE.Vector3(),outward:1,floor:1,face:'front',window:1},{kind,floor:1,face:'front',window:1});return g}
+const views=[];
+for(const [title,description,build] of entries){
+const article=document.createElement('article'); article.innerHTML=`<h2>${title}</h2><p>${description}</p><div class="view"></div>`;document.querySelector('main').append(article);
+const host=article.querySelector('.view'), scene=new THREE.Scene();scene.background=new THREE.Color(0xf8fafb);
+const object=build(); scene.add(object); const bounds=new THREE.Box3().setFromObject(object),center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3()),r=size.length()*.5/Math.sin(Math.PI/10)*1.08;
+const camera=new THREE.PerspectiveCamera(36,1,.01,300); camera.up.set(0,0,1);camera.position.copy(center).add(new THREE.Vector3(1.25,1.75,1.05).normalize().multiplyScalar(r));camera.lookAt(center);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;host.append(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff,0x687681,2));const sun=new THREE.DirectionalLight(0xffffff,3);sun.position.set(4,6,10);scene.add(sun);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.copy(center);controls.update();
+new ResizeObserver(()=>{renderer.setSize(host.clientWidth,host.clientHeight);camera.aspect=host.clientWidth/host.clientHeight;camera.updateProjectionMatrix();renderer.render(scene,camera)}).observe(host);
+controls.addEventListener('change',()=>renderer.render(scene,camera));
+views.push({renderer,scene,camera,object});
+}
+let attempts=0; function render(){for(const v of views)v.renderer.render(v.scene,v.camera); if(views.some(v=>v.object.getObjectByName('__apartment_proxy')) && attempts++<120)setTimeout(render,250)}render();
+</script></html>

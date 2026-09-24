@@ -3,6 +3,7 @@ import { OBJECT_TYPE } from '../../shared/object-types.js';
 import { applyShadows, setCommonMeta } from './utils.js';
 import { createMarkerMeshForMap } from './markers/object.js';
 import { SHEET_SIZE, SHEET_THICKNESS } from './markers/shared.js';
+import { createMissionAsset } from './mission-assets.js';
 
 /*
  * Vehicles that drive along a road (car) or a railway (train).
@@ -111,96 +112,20 @@ export function normalizeVehicleConfig(kind: VehicleKind, raw: Partial<VehicleCo
 
 // ---------------------------------------------------------------- models
 
-function mat(color: number, options: Partial<THREE.MeshStandardMaterialParameters> = {}) {
-    return new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.1, ...options });
-}
-
-function box(w: number, d: number, h: number, material: THREE.Material, x = 0, y = 0, z = 0) {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, d, h), material);
-    mesh.position.set(x, y, z);
-    return mesh;
-}
-
-function wheel(radius: number, width: number, material: THREE.Material, x: number, y: number) {
-    const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, width, 18), material);
-    mesh.position.set(x, y, radius);
-    // CylinderGeometry's axis is Y - already the car's left/right axis.
-    return mesh;
-}
-
 type Unit = { group: THREE.Group; length: number; roofZ: number };
 
-/** Forward is +X, left is +Y, up is +Z; origin at the ground, centered. */
+/** Blender assets retain the engine's +X forward, +Z up convention. */
 function buildCar(): Unit {
-    const group = new THREE.Group();
-    const body = mat(0x2f6fb0, { roughness: 0.35, metalness: 0.35 });
-    const glass = mat(0x1b242c, { roughness: 0.15, metalness: 0.6 });
-    const tyre = mat(0x1a1a1a, { roughness: 0.9, metalness: 0 });
-    const trim = mat(0x2a2a2a, { roughness: 0.7 });
-
-    group.add(box(4.0, 1.76, 0.62, body, 0, 0, 0.66));            // lower body
-    group.add(box(2.2, 1.62, 0.5, body, -0.25, 0, 1.2));          // cabin
-    group.add(box(2.24, 1.5, 0.36, glass, -0.25, 0, 1.2));        // window band
-    group.add(box(0.06, 1.3, 0.32, glass, 0.87, 0, 1.18));        // windscreen
-    group.add(box(4.04, 1.8, 0.1, trim, 0, 0, 0.36));             // skirt
-    const headlight = mat(0xfff4d6, { emissive: 0xfff1c4, emissiveIntensity: 0.6 });
-    const taillight = mat(0xd32f2f, { emissive: 0x9c1c1c, emissiveIntensity: 0.5 });
-    for (const side of [-1, 1]) {
-        group.add(box(0.05, 0.34, 0.14, headlight, 2.01, side * 0.62, 0.78));
-        group.add(box(0.05, 0.3, 0.12, taillight, -2.01, side * 0.64, 0.8));
-        for (const x of [-1.3, 1.3]) group.add(wheel(0.34, 0.24, tyre, x, side * 0.8));
-    }
-    return { group, length: 4.0, roofZ: 1.45 };
-}
-
-function bogie(x: number, frame: THREE.Material, tyre: THREE.Material) {
-    const group = new THREE.Group();
-    group.add(box(1.6, 1.3, 0.22, frame, x, 0, 0.42));
-    for (const dx of [-0.5, 0.5]) {
-        for (const side of [-1, 1]) {
-            const w = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.1, 16), tyre);
-            w.position.set(x + dx, side * 0.55, 0.28);
-            group.add(w);
-        }
-    }
-    return group;
+    return { group: createMissionAsset('Car'), length: 4.0, roofZ: 1.48 };
 }
 
 function buildLocomotive(): Unit {
-    const group = new THREE.Group();
-    const paint = mat(0xd9481c, { roughness: 0.45, metalness: 0.25 });
-    const stripe = mat(0xf2f2f2, { roughness: 0.5 });
-    const glass = mat(0x1b242c, { roughness: 0.15, metalness: 0.6 });
-    const frame = mat(0x2b2b2b, { roughness: 0.8 });
-    const tyre = mat(0x3a3a3a, { roughness: 0.5, metalness: 0.6 });
-
-    group.add(box(6.0, 2.3, 1.95, paint, 0, 0, 1.6));             // body 0.62..2.58
-    group.add(box(6.04, 2.34, 0.14, stripe, 0, 0, 1.2));          // side stripe
-    group.add(box(0.06, 1.9, 0.6, glass, 3.01, 0, 2.1));          // cab windscreen
-    for (const side of [-1, 1]) group.add(box(0.9, 0.06, 0.5, glass, 2.3, side * 1.16, 2.1));
-    group.add(box(6.0, 2.36, 0.12, frame, 0, 0, 0.62));           // underframe
-    group.add(bogie(-1.9, frame, tyre), bogie(1.9, frame, tyre));
-    const lamp = mat(0xfff4d6, { emissive: 0xfff1c4, emissiveIntensity: 0.7 });
-    group.add(box(0.05, 0.5, 0.18, lamp, 3.02, 0, 1.25));
-    return { group, length: 6.0, roofZ: 2.58 };
+    return { group: createMissionAsset('Locomotive'), length: 6.0, roofZ: 2.68 };
 }
 
 function buildWagon(): Unit {
-    const group = new THREE.Group();
-    const paint = mat(0x3a6ea5, { roughness: 0.5, metalness: 0.2 });
-    const glass = mat(0x1b242c, { roughness: 0.15, metalness: 0.6 });
-    const frame = mat(0x2b2b2b, { roughness: 0.8 });
-    const tyre = mat(0x3a3a3a, { roughness: 0.5, metalness: 0.6 });
-
-    group.add(box(5.6, 2.3, 1.8, paint, 0, 0, 1.52));             // body 0.62..2.42
-    for (let i = 0; i < 4; i++) {
-        for (const side of [-1, 1]) group.add(box(0.9, 0.06, 0.55, glass, -2.0 + i * 1.33, side * 1.16, 1.75));
-    }
-    group.add(box(5.6, 2.36, 0.12, frame, 0, 0, 0.62));
-    group.add(bogie(-1.9, frame, tyre), bogie(1.9, frame, tyre));
-    return { group, length: 5.6, roofZ: 2.42 };
+    return { group: createMissionAsset('Wagon'), length: 5.6, roofZ: 2.52 };
 }
-
 function addRoofMarker(unit: Unit, marker: VehicleMarkerConfig) {
     const sheetGroup = createMarkerMeshForMap(marker.kind, marker.id, marker.dictionary);
     const scale = marker.size / SHEET_SIZE;
@@ -218,14 +143,24 @@ export function rebuildVehicle(group: THREE.Object3D) {
     const config = group.userData.vehicle as VehicleConfig;
     for (const child of [...group.children]) {
         group.remove(child);
-        child.traverse((node) => (node as THREE.Mesh).geometry?.dispose?.());
+        child.traverse((node) => {
+            if (!(node instanceof THREE.Mesh)) return;
+            node.geometry.dispose();
+            const materials = Array.isArray(node.material) ? node.material : [node.material];
+            materials.forEach(material => material.dispose());
+        });
     }
 
     const units: Unit[] = config.kind === 'car'
         ? [buildCar()]
         : [buildLocomotive(), ...Array.from({ length: config.wagons }, buildWagon)];
 
+    let parkedOffset = 0;
     units.forEach((unit, index) => {
+        if (index > 0) parkedOffset += units[index - 1].length / 2 + unit.length / 2 + 0.45;
+        // Catalog previews have no route engine: place each wagon behind the
+        // locomotive instead of stacking all units at the same origin.
+        unit.group.position.x = -parkedOffset;
         unit.group.name = VEHICLE_UNIT_NAME;
         unit.group.userData = { vehicleUnitIndex: index, unitLength: unit.length, roofZ: unit.roofZ };
         group.add(unit.group);

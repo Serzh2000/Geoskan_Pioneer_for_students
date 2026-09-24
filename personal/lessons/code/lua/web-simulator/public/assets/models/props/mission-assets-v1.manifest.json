@@ -1,0 +1,125 @@
+{
+  "source": "Original geometry authored locally through Blender MCP; no third-party models or textures",
+  "license": "ISC (project license)",
+  "request": "используя blender mcp перерисовать поезд и автомобиль в селекторе объектов. а еще прорисовать в многоэтажке индиденты - вора пожар и дым",
+  "coordinates": "Z up, +X vehicle forward; incident +Y outward",
+  "specification": "Metres; existing vehicle dimensions and marker anchors; window-centre incident anchors; under 8000 triangles and 8 draw calls per asset; no textures",
+  "sourceScript": "tools/build_mission_assets.py",
+  "runtime": "mission-assets-v1.mesh.json contains the same Blender mesh data for synchronous catalog rendering; each instance owns its geometry and materials",
+  "validation": "GLB header and embedded buffers; mesh indices, finite coordinates, material references, bounds and triangle budgets verified",
+  "assets": {
+    "Car": {
+      "triangles": 2300,
+      "drawCalls": 8,
+      "bounds": {
+        "min": [
+          -2.016,
+          -1.045,
+          0
+        ],
+        "max": [
+          2.06,
+          1.045,
+          1.4725
+        ]
+      }
+    },
+    "Locomotive": {
+      "triangles": 6342,
+      "drawCalls": 7,
+      "bounds": {
+        "min": [
+          -3.3,
+          -1.365,
+          0
+        ],
+        "max": [
+          3.3,
+          1.365,
+          2.661
+        ]
+      }
+    },
+    "Wagon": {
+      "triangles": 4784,
+      "drawCalls": 6,
+      "bounds": {
+        "min": [
+          -3.1,
+          -1.21,
+          0
+        ],
+        "max": [
+          3.1,
+          1.21,
+          2.51
+        ]
+      }
+    },
+    "Thief": {
+      "triangles": 1148,
+      "drawCalls": 6,
+      "bounds": {
+        "min": [
+          -0.22511,
+          0.048,
+          -0.62
+        ],
+        "max": [
+          0.2628,
+          0.42648,
+          0.91
+        ]
+      }
+    },
+    "Fire": {
+      "triangles": 1132,
+      "drawCalls": 4,
+      "bounds": {
+        "min": [
+          -0.33821,
+          0.02,
+          -0.18
+        ],
+        "max": [
+          0.34242,
+          0.36191,
+          0.767
+        ]
+      }
+    },
+    "Smoke": {
+      "triangles": 1004,
+      "drawCalls": 5,
+      "bounds": {
+        "min": [
+          -0.345,
+          0.0125,
+          -0.1928
+        ],
+        "max": [
+          0.55325,
+          0.9035,
+          1.4614
+        ]
+      }
+    }
+  },
+  "files": [
+    {
+      "name": "mission-assets-v1.blend",
+      "bytes": 322532,
+      "sha256": "4172f5f5ebf872b619bb015364194b0252fea873349895c47949132abbd400d5"
+    },
+    {
+      "name": "mission-assets-v1.glb",
+      "bytes": 1018908,
+      "sha256": "e01d22165c1a507bb3d81c0eca5a80b9cdb19103e4ba1249d91d503db767d0e1"
+    },
+    {
+      "name": "mission-assets-v1.mesh.json",
+      "bytes": 1299382,
+      "sha256": "5a77d8b9b58f98a610201b07c3823c75558ce66aaf08dfb891db13bc7e0221a6"
+    }
+  ]
+}
