@@ -228,7 +228,13 @@ export function getObstacles() {
     return envGroup ? envGroup.children : [];
 }
 
-export function updateDrone3D(dt: number) {
+/**
+ * Moves the 3D scene to the current simulation state and draws it. With
+ * render = false only the first part: a background tab (see app/animation-loop)
+ * still needs the drone model where the physics put it - the camera rides on
+ * it - but has nobody to draw the scene for.
+ */
+export function updateDrone3D(dt: number, render = true) {
     if (!is3DActive || !renderer || !camera) return;
     const cameraMode = getCameraMode();
 
@@ -310,6 +316,11 @@ export function updateDrone3D(dt: number) {
 
     if (droneMeshes[currentDroneId]) {
         updateCamera(camera, droneMeshes[currentDroneId], controls, cameraMode, freeFlyControls, dt);
+    }
+
+    if (!render) {
+        scene.updateMatrixWorld();
+        return;
     }
 
     syncDronePrintBubbles();

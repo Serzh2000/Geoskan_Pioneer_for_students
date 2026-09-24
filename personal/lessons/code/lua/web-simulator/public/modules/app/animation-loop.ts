@@ -5,7 +5,8 @@ import { updateStats } from '../ui/panels/stats.js';
 import { startBackgroundTicker, type BackgroundTicker } from '../shared/background-ticker.js';
 
 type LoopCallbacks = {
-    updateDrone3D: (dt: number) => void;
+    /** render = false: move the 3D models to the physics state without drawing. */
+    updateDrone3D: (dt: number, render?: boolean) => void;
     is3DActive: () => boolean;
     /** While true, the fallback tick runs on a worker clock (see below). */
     keepPhysicsInBackground?: () => boolean;
@@ -104,9 +105,8 @@ export function startAnimationLoop(callbacks: LoopCallbacks): void {
     animate(0);
 
     // Резервный тик: если rAF не отмечался дольше порога — вкладка не
-    // рисуется, — сами продвигаем физику по настенному времени. Рендер и
-    // статистику здесь намеренно не трогаем: рисовать всё равно некому, нужно
-    // только не дать застыть симулированному времени дрона.
+    // рисуется, — сами продвигаем физику по настенному времени и переносим её
+    // на 3D-модели. Рисовать сцену и статистику здесь не нужно — некому.
     const fallbackTick = () => {
         const now = performance.now();
         // A tab opened straight into the background never gets a rAF frame:
@@ -121,6 +121,12 @@ export function startAnimationLoop(callbacks: LoopCallbacks): void {
         const rawDt = Math.min(Math.max(0, (now - lastTime) / 1000), MAX_FALLBACK_DT);
         lastTime = now;
         stepPhysics(rawDt);
+        // The 3D models follow the physics even unseen: the drone camera (Python
+        // Camera, external camera stream) rides on the model, and without this it
+        // kept filming from where the drone stood when the tab went to the back.
+        if (callbacks.is3DActive()) {
+            callbacks.updateDrone3D(rawDt * simSettings.simSpeed, false);
+        }
     };
     // Обычный таймер страницы в фоне Chrome душит примерно до раза в секунду:
     // физика шла бы рывками и вдвое медленнее реального времени (шаг не больше
