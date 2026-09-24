@@ -30,11 +30,21 @@ export interface ExternalPythonBridgeState {
     droneId: string;
     pointReached: boolean;
     cameraConnected: boolean;
-    cameraFrameDataUrl: string | null;
+    /** Latest camera frame, JPEG bytes (POST /frame, or a data URL on /state). */
+    cameraFrame: Buffer | null;
     autopilotState: string | null;
     localPosition: ExternalPythonBridgePosition | null;
     updatedAt: string;
 }
+
+/**
+ * State as the browser reports it. The frame is optional: absent - keep the
+ * last one (frames arrive separately on POST /frame); a data URL or null -
+ * replace it (older browsers and the IDLE hook still send it inline).
+ */
+export type ExternalPythonBridgeStateUpdate = Omit<ExternalPythonBridgeState, 'updatedAt' | 'cameraFrame'> & {
+    cameraFrameDataUrl?: string | null;
+};
 
 const externalPythonBridgeEvents: ExternalPythonBridgeEvent[] = [];
 const externalPythonBridgeStates = new Map<string, ExternalPythonBridgeState>();
@@ -86,13 +96,64 @@ export function recordExternalPythonBridgeEvent(payload: Omit<ExternalPythonBrid
     return event;
 }
 
-export function updateExternalPythonBridgeState(payload: Omit<ExternalPythonBridgeState, 'updatedAt'>): ExternalPythonBridgeState {
+function decodeJpegDataUrl(dataUrl: string | null): Buffer | null {
+    if (!dataUrl) return null;
+    const comma = dataUrl.indexOf(',');
+    if (comma < 0) return null;
+    const buffer = Buffer.from(dataUrl.slice(comma + 1), 'base64');
+    return buffer.length ? buffer : null;
+}
+
+export function updateExternalPythonBridgeState(payload: ExternalPythonBridgeStateUpdate): ExternalPythonBridgeState {
+    const { cameraFrameDataUrl, ...rest } = payload;
+    const key = buildExternalBridgeStateKey(rest);
+    const previous = externalPythonBridgeStates.get(key);
     const state: ExternalPythonBridgeState = {
-        ...payload,
+        ...rest,
+        cameraFrame: cameraFrameDataUrl === undefined
+            ? previous?.cameraFrame ?? null
+            : decodeJpegDataUrl(cameraFrameDataUrl),
         updatedAt: new Date().toISOString()
     };
-    externalPythonBridgeStates.set(buildExternalBridgeStateKey(state), state);
+    externalPythonBridgeStates.set(key, state);
     return state;
+}
+
+/** A new camera frame for this session (raw JPEG from the browser). */
+export function updateExternalPythonBridgeFrame(input: {
+    sessionId: string;
+    droneIp: string;
+    mavlinkPort: number;
+    connectionMethod: PioneerConnectionMethod;
+}, frame: Buffer): void {
+    const key = buildExternalBridgeStateKey(input);
+    const previous = externalPythonBridgeStates.get(key);
+    externalPythonBridgeStates.set(key, {
+        sessionId: input.sessionId,
+        droneIp: input.droneIp,
+        mavlinkPort: input.mavlinkPort,
+        connectionMethod: input.connectionMethod,
+        droneId: previous?.droneId ?? '',
+        pointReached: previous?.pointReached ?? false,
+        cameraConnected: previous?.cameraConnected ?? true,
+        autopilotState: previous?.autopilotState ?? null,
+        localPosition: previous?.localPosition ?? null,
+        cameraFrame: frame,
+        updatedAt: new Date().toISOString()
+    });
+}
+
+// GET /state hands the frame out as a data URL (the IDLE hook reads it that
+// way); encode each frame once, not on every poll.
+const frameDataUrls = new WeakMap<Buffer, string>();
+function frameToDataUrl(frame: Buffer | null): string | null {
+    if (!frame) return null;
+    let dataUrl = frameDataUrls.get(frame);
+    if (!dataUrl) {
+        dataUrl = `data:image/jpeg;base64,${frame.toString('base64')}`;
+        frameDataUrls.set(frame, dataUrl);
+    }
+    return dataUrl;
 }
 
 export function getExternalPythonBridgeState(input: {
@@ -178,9 +239,12 @@ export function registerExternalPythonBridgeRoutes(app: express.Express): void {
         const droneId = typeof req.body?.droneId === 'string' ? req.body.droneId.trim() : '';
         const pointReached = Boolean(req.body?.pointReached);
         const cameraConnected = Boolean(req.body?.cameraConnected);
-        const cameraFrameDataUrl = typeof req.body?.cameraFrameDataUrl === 'string' && req.body.cameraFrameDataUrl.trim()
-            ? req.body.cameraFrameDataUrl
-            : null;
+        // Absent key = frame sent separately (POST /frame): keep it.
+        const cameraFrameDataUrl = !req.body || !('cameraFrameDataUrl' in req.body)
+            ? undefined
+            : typeof req.body.cameraFrameDataUrl === 'string' && req.body.cameraFrameDataUrl.trim()
+                ? req.body.cameraFrameDataUrl as string
+                : null;
         const autopilotState = typeof req.body?.autopilotState === 'string' && req.body.autopilotState.trim()
             ? req.body.autopilotState.trim()
             : null;
@@ -237,13 +301,35 @@ export function registerExternalPythonBridgeRoutes(app: express.Express): void {
             // external Python was always False.
             pointReached: Boolean(state?.pointReached),
             cameraConnected: state?.cameraConnected ?? false,
-            cameraFrameDataUrl: state?.cameraFrameDataUrl ?? null,
+            cameraFrameDataUrl: frameToDataUrl(state?.cameraFrame ?? null),
             autopilotState: state?.autopilotState ?? null,
             localPosition: state?.localPosition ?? null,
             droneId: state?.droneId ?? null,
             updatedAt: state?.updatedAt ?? null
         });
     });
+
+    // Raw JPEG frames from the browser's camera upload loop (no base64, no JSON).
+    app.post(
+        '/api/external-python-bridge/frame',
+        express.raw({ type: 'image/jpeg', limit: '4mb' }),
+        (req: express.Request, res: express.Response) => {
+            const sessionId = typeof req.query.sessionId === 'string' ? req.query.sessionId.trim() : '';
+            const droneIp = typeof req.query.droneIp === 'string' ? req.query.droneIp.trim() : '';
+            const mavlinkPort = Number.parseInt(typeof req.query.mavlinkPort === 'string' ? req.query.mavlinkPort : '8001', 10) || 8001;
+            const connectionMethod = req.query.connectionMethod === 'serial' || req.query.connectionMethod === 'udpin' || req.query.connectionMethod === 'camera'
+                ? req.query.connectionMethod as PioneerConnectionMethod
+                : 'udpout';
+            if (!sessionId) {
+                return res.status(400).json({ ok: false, error: 'sessionId обязателен.' });
+            }
+            if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+                return res.status(400).json({ ok: false, error: 'Ожидается кадр image/jpeg.' });
+            }
+            updateExternalPythonBridgeFrame({ sessionId, droneIp, mavlinkPort, connectionMethod }, req.body);
+            return res.status(204).end();
+        }
+    );
 
     app.get('/api/external-python-bridge/events', (req: express.Request, res: express.Response) => {
         const afterId = Number.parseInt(typeof req.query.afterId === 'string' ? req.query.afterId : '0', 10) || 0;

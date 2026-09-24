@@ -170,3 +170,36 @@ describe('POST /api/external-python-bridge/clear', () => {
         expect(state.body.droneId).toBeNull();
     });
 });
+
+describe('POST /api/external-python-bridge/frame', () => {
+    const camera = { sessionId: 'camera-127.0.0.1-18001', droneIp: '127.0.0.1', mavlinkPort: '18001', connectionMethod: 'camera' };
+    const jpeg = Buffer.from([0xff, 0xd8, 9, 8, 7, 0xff, 0xd9]);
+
+    test('stores a raw JPEG frame; /state hands it out as a data URL', async () => {
+        const posted = await request(app)
+            .post('/api/external-python-bridge/frame')
+            .query(camera)
+            .set('Content-Type', 'image/jpeg')
+            .send(jpeg);
+        expect(posted.status).toBe(204);
+
+        const res = await request(app).get('/api/external-python-bridge/state').query(camera);
+        expect(res.body.cameraFrameDataUrl).toBe(`data:image/jpeg;base64,${jpeg.toString('base64')}`);
+    });
+
+    test('a state update without a frame keeps the last frame', async () => {
+        await request(app).post('/api/external-python-bridge/frame').query(camera).set('Content-Type', 'image/jpeg').send(jpeg);
+        await request(app)
+            .post('/api/external-python-bridge/state')
+            .send({ ...camera, mavlinkPort: 18001, droneId: 'drone_1', cameraConnected: true, autopilotState: 'MISSION' });
+
+        const res = await request(app).get('/api/external-python-bridge/state').query(camera);
+        expect(res.body).toMatchObject({ cameraConnected: true, autopilotState: 'MISSION' });
+        expect(res.body.cameraFrameDataUrl).toBe(`data:image/jpeg;base64,${jpeg.toString('base64')}`);
+    });
+
+    test('rejects an empty body', async () => {
+        const res = await request(app).post('/api/external-python-bridge/frame').query(camera).set('Content-Type', 'image/jpeg').send(Buffer.alloc(0));
+        expect(res.status).toBe(400);
+    });
+});

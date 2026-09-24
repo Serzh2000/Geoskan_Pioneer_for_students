@@ -1,6 +1,7 @@
 import { getDroneOrDefault } from './runtime-shared.js';
 import { log } from '../shared/logging/logger.js';
 import {
+    captureDroneCameraFrameBlob,
     captureDroneCameraFrameDataUrl as captureDroneCameraFrameImageDataUrl,
     captureDroneCameraFramePixels,
     type CameraFramePixels
@@ -127,6 +128,8 @@ export function getDroneCameraCvFrame(id: string): CameraFramePixels | null {
 export function captureDroneCameraFrameDataUrl(id: string) {
     return captureDroneCameraFrameImageDataUrl(id);
 }
+
+export { captureDroneCameraFrameBlob };
 
 function buildTimestampSlug() {
     return new Date().toISOString().replace(/[:.]/g, '-');

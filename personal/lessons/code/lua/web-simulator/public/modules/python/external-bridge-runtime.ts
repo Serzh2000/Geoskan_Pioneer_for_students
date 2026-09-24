@@ -1,8 +1,9 @@
 import { drones } from '../core/state.js';
 import { beginEventCallbackPhase, isPointReached } from '../autopilot/fsm.js';
 import { installJsRuntimeAPI } from './pioneer-js-bridge.js';
-import { captureDroneCameraFrameDataUrl, isDroneCameraConnected } from './pioneer-js-bridge-camera.js';
+import { captureDroneCameraFrameBlob, isDroneCameraConnected } from './pioneer-js-bridge-camera.js';
 import { localOriginByDrone } from './runtime-shared.js';
+import { startBackgroundTicker, type BackgroundTicker } from '../shared/background-ticker.js';
 import {
     type ExternalBridgeState,
     type ExternalDroneBinding,
@@ -170,7 +171,9 @@ export async function syncExternalBridgeStates(
         const drone = drones[binding.droneId];
         if (!drone || !allowDroneId(binding.droneId)) return;
         const cameraConnected = isDroneCameraConnected(binding.droneId);
-        const cameraFrameDataUrl = cameraConnected ? captureDroneCameraFrameDataUrl(binding.droneId) : null;
+        // Frames have their own upload loop (see ensureCameraUploader); the state
+        // post leaves the frame field out so it does not overwrite them.
+        if (cameraConnected) ensureCameraUploader(binding, allowDroneId);
         const autopilotState = String(callPioneerApi('pioneer_get_autopilot_state', binding.droneId) ?? '') || null;
         const rawLocalPosition = callPioneerApi('pioneer_get_local_position_lps', binding.droneId);
         const localPosition = Array.isArray(rawLocalPosition) && rawLocalPosition.length >= 3
@@ -188,7 +191,6 @@ export async function syncExternalBridgeStates(
                 connectionMethod: binding.connectionMethod,
                 pointReached: isPointReached(drone),
                 cameraConnected,
-                cameraFrameDataUrl,
                 autopilotState,
                 localPosition
             })
@@ -196,4 +198,49 @@ export async function syncExternalBridgeStates(
     });
 
     await Promise.all(updates);
+}
+
+/*
+ * Camera frames for the external bridge travel on their own loop, not inside the
+ * command/state poll: that cycle is two network round trips long, which held the
+ * picture near 10 frames/s whatever the renderer could do. Here the next frame
+ * is rendered and JPEG-encoded while up to two earlier ones are still uploading,
+ * as raw bytes (no base64). The rhythm comes from a worker ticker, so a tab
+ * sitting behind IDLE and the cv2 window keeps its frame rate.
+ */
+const CAMERA_UPLOAD_FPS = 30;
+const CAMERA_UPLOADS_IN_FLIGHT = 2;
+const cameraUploaders = new Map<string, BackgroundTicker>();
+
+function ensureCameraUploader(binding: ExternalDroneBinding, allowDroneId: (droneId: string) => boolean): void {
+    if (cameraUploaders.has(binding.bindingKey)) return;
+    const query = new URLSearchParams({
+        sessionId: binding.sessionId,
+        droneIp: binding.droneIp,
+        mavlinkPort: String(binding.mavlinkPort),
+        connectionMethod: binding.connectionMethod
+    }).toString();
+    let inFlight = 0;
+    let capturing = false;
+
+    const ticker = startBackgroundTicker(Math.round(1000 / CAMERA_UPLOAD_FPS), () => {
+        if (!drones[binding.droneId] || !allowDroneId(binding.droneId) || !isDroneCameraConnected(binding.droneId)) {
+            ticker.stop();
+            cameraUploaders.delete(binding.bindingKey);
+            return;
+        }
+        if (capturing || inFlight >= CAMERA_UPLOADS_IN_FLIGHT) return;
+        capturing = true;
+        void captureDroneCameraFrameBlob(binding.droneId).then((blob) => {
+            capturing = false;
+            if (!blob) return;
+            inFlight += 1;
+            fetch(`/api/external-python-bridge/frame?${query}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'image/jpeg' },
+                body: blob
+            }).catch(() => undefined).finally(() => { inFlight -= 1; });
+        });
+    });
+    cameraUploaders.set(binding.bindingKey, ticker);
 }

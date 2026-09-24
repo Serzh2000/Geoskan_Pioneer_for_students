@@ -26,6 +26,7 @@ describe('python camera bridge frames', () => {
         // Реальный рендер тянет three.js и живой WebGL-контекст, которых в jsdom-less окружении
         // нет; проверяется здесь не картинка, а то, что байты кадра доезжают до Python без потерь.
         jest.unstable_mockModule('../public/modules/python/pioneer-js-bridge-camera-render.js', () => ({
+            captureDroneCameraFrameBlob: async () => null,
             captureDroneCameraFrameDataUrl: () => renderMock.dataUrl,
             captureDroneCameraFramePixels: () => renderMock.pixels
         }));

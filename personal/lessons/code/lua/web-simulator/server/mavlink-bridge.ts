@@ -72,7 +72,6 @@ interface CameraClientSession {
     remotePort: number;
     /** Where frames go after the client "punched" our UDP port (see CameraTcpBridge). */
     udpTarget: { address: string; port: number } | null;
-    frameTimer: NodeJS.Timeout | null;
 }
 
 const MAVLINK_V1_MAGIC = 0xFE;
@@ -105,14 +104,8 @@ const MAV_STATE_ACTIVE = 4;
 const HEARTBEAT_BASE_MODE_SAFETY_ARMED = 0x80;
 const HEARTBEAT_INTERVAL_MS = 200;
 const MAVLINK_SESSION_TIMEOUT_MS = 2000;
-// 100 -> 33: раньше этот интервал и браузерный цикл захвата кадра (~100мс с учётом
-// времени самой работы, см. public/modules/python/external-bridge.ts) были двумя
-// независимыми таймерами по 100мс без общей фазы, поэтому часть циклов ретранслятора
-// попадала на уже устаревшую (>100мс) запись кэша кадра (FRAME_CACHE_INTERVAL_MS в
-// pioneer-js-bridge-camera-render.ts) и отправляла клиенту дубликат предыдущего кадра.
-// Снижение обоих интервалов синхронно даёт запас: пока браузер укладывается в целевые
-// ~33мс на кадр (JPEG-кодирование измерено в пределах ~17мс на синтетическом кадре,
-// реальные кадры дешевле), ретранслятор почти всегда находит свежую запись.
+// How often the camera bridge checks for a new frame (the browser uploads them
+// separately, up to 30/s); an unchanged frame is only re-sent as a keep-alive.
 const CAMERA_FRAME_INTERVAL_MS = 33;
 
 const GO_TO_LOCAL_POINT_MASK = 0b0000100111111000;
@@ -714,7 +707,13 @@ class CameraTcpBridge {
     private readonly connection: BridgeConnectionRegistration;
     private readonly server: net.Server;
     private readonly udpSocket: dgram.Socket;
-    private client: CameraClientSession | null;
+    // Several viewers at once: a script restarted while the old one still runs,
+    // or two scripts. Each new connection used to take the stream from the
+    // previous one, so both kept dropping out and reconnecting.
+    private readonly clients = new Set<CameraClientSession>();
+    private frameTimer: NodeJS.Timeout | null = null;
+    private lastSentFrame: Buffer | null = null;
+    private lastSentAt = 0;
     /** Last punch per client IP: it may arrive a moment before the TCP connect is handled. */
     private readonly punches = new Map<string, { port: number; at: number }>();
 
@@ -731,7 +730,16 @@ class CameraTcpBridge {
             console.error(`Camera bridge UDP error on port ${this.connection.cameraPort}:`, error);
         });
         this.udpSocket.bind(this.connection.cameraPort, '0.0.0.0');
-        this.client = null;
+    }
+
+    close(): void {
+        for (const client of this.clients) {
+            if (!client.socket.destroyed) client.socket.destroy();
+        }
+        this.clients.clear();
+        this.stopFrames(true);
+        this.server.close();
+        this.udpSocket.close();
     }
 
     private handlePunch(address: string, port: number): void {
@@ -741,17 +749,11 @@ class CameraTcpBridge {
         }
         const host = normalizeIpv4(address);
         this.punches.set(host, { port, at: now });
-        if (this.client && sameHost(this.client.remoteAddress, host)) {
-            this.client.udpTarget = { address: host, port };
-        }
-    }
-
-    close(): void {
-        if (this.client) {
-            this.stopClient(this.client, true);
-        }
-        this.server.close();
-        this.udpSocket.close();
+        // Behind one NAT (a classroom) several clients share the address: the punch
+        // belongs to the newest one from there that has no target yet.
+        const candidates = Array.from(this.clients).filter((client) => sameHost(client.remoteAddress, host));
+        const target = candidates.reverse().find((client) => !client.udpTarget) ?? candidates[0];
+        if (target) target.udpTarget = { address: host, port };
     }
 
     private handleSocket(socket: net.Socket): void {
@@ -762,10 +764,6 @@ class CameraTcpBridge {
             return;
         }
 
-        if (this.client) {
-            this.stopClient(this.client, true);
-        }
-
         const recentPunch = this.punches.get(normalizeIpv4(remoteAddress));
         const client: CameraClientSession = {
             sessionId: buildCameraSessionId(this.connection),
@@ -773,61 +771,63 @@ class CameraTcpBridge {
             remoteAddress,
             remotePort,
             udpTarget: recentPunch && Date.now() - recentPunch.at < CAMERA_PUNCH_TTL_MS
+                && !Array.from(this.clients).some((other) => other.udpTarget?.port === recentPunch.port && sameHost(other.remoteAddress, remoteAddress))
                 ? { address: normalizeIpv4(remoteAddress), port: recentPunch.port }
-                : null,
-            frameTimer: null
+                : null
         };
-        this.client = client;
-        emitCameraBridgeEvent(this.connection, client.sessionId, 'camera_connect');
-        client.frameTimer = setInterval(() => this.flushFrame(client), CAMERA_FRAME_INTERVAL_MS);
+        const firstClient = this.clients.size === 0;
+        this.clients.add(client);
+        if (firstClient) {
+            emitCameraBridgeEvent(this.connection, client.sessionId, 'camera_connect');
+            this.frameTimer = setInterval(() => this.flushFrame(), CAMERA_FRAME_INTERVAL_MS);
+        }
 
-        socket.on('close', () => {
-            if (this.client === client) {
-                this.stopClient(client, false);
-                this.client = null;
-            }
-        });
-        socket.on('error', () => {
-            if (this.client === client) {
-                this.stopClient(client, false);
-                this.client = null;
-            }
-        });
+        const drop = () => {
+            if (!this.clients.delete(client)) return;
+            if (this.clients.size === 0) this.stopFrames(true);
+        };
+        socket.on('close', drop);
+        socket.on('error', drop);
     }
 
-    private stopClient(client: CameraClientSession, destroySocket: boolean): void {
-        if (client.frameTimer) {
-            clearInterval(client.frameTimer);
-            client.frameTimer = null;
-        }
-        emitCameraBridgeEvent(this.connection, client.sessionId, 'camera_disconnect');
-        if (destroySocket && !client.socket.destroyed) {
-            client.socket.destroy();
+    private stopFrames(announce: boolean): void {
+        if (this.frameTimer) {
+            clearInterval(this.frameTimer);
+            this.frameTimer = null;
+            if (announce) {
+                emitCameraBridgeEvent(this.connection, buildCameraSessionId(this.connection), 'camera_disconnect');
+            }
         }
     }
 
-    private flushFrame(client: CameraClientSession): void {
+    private flushFrame(): void {
         const state = getExternalPythonBridgeState({
-            sessionId: client.sessionId,
+            sessionId: buildCameraSessionId(this.connection),
             droneIp: this.connection.droneIp,
             mavlinkPort: this.connection.cameraPort,
             connectionMethod: 'camera'
         });
-        if (!state?.cameraConnected) {
+        if (!state?.cameraConnected || !state.cameraFrame?.length) {
             return;
         }
-
-        const jpegBuffer = decodeDataUrlToBuffer(state.cameraFrameDataUrl);
-        if (!jpegBuffer?.length) {
+        // New frames go out as they arrive; an unchanged one only as a keep-alive,
+        // often enough that the SDK's receive timeout (0.5 s) never fires.
+        const now = Date.now();
+        if (state.cameraFrame === this.lastSentFrame && now - this.lastSentAt < CAMERA_KEEPALIVE_MS) {
             return;
         }
+        this.lastSentFrame = state.cameraFrame;
+        this.lastSentAt = now;
 
-        const target = client.udpTarget ?? { address: client.remoteAddress, port: client.remotePort };
-        this.udpSocket.send(jpegBuffer, target.port, target.address);
+        for (const client of this.clients) {
+            const target = client.udpTarget ?? { address: client.remoteAddress, port: client.remotePort };
+            this.udpSocket.send(state.cameraFrame, target.port, target.address);
+        }
     }
 }
 
 const CAMERA_PUNCH_TTL_MS = 10_000;
+const CAMERA_KEEPALIVE_MS = 250;
 
 function normalizeIpv4(address: string): string {
     return address.startsWith('::ffff:') ? address.slice('::ffff:'.length) : address;

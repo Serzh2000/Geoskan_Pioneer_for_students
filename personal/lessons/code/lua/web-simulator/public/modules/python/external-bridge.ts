@@ -11,7 +11,6 @@ import {
     ensureExternalBridgeRuntimeInstalled,
     syncExternalBridgeStates
 } from './external-bridge-runtime.js';
-import { isDroneCameraConnected } from './pioneer-js-bridge-camera.js';
 
 const state: ExternalBridgeState = {
     nextAfterId: 0,
@@ -161,18 +160,11 @@ async function pollExternalBridge(): Promise<void> {
         // Поллинг должен быть тихим: bridge может временно отсутствовать.
     }
 
-    // Целевой ПЕРИОД цикла (не пауза после него): раньше setTimeout(..., 100) ставился
-    // ПОСЛЕ захвата кадра (JPEG-рендер + кодирование, до ~45мс, см. syncExternalBridgeStates
-    // -> captureDroneCameraFrameDataUrl) и запроса состояния, так что реальный период
-    // получался 100мс + время самой работы — то есть заведомо меньше 10 кадров/с даже при
-    // целевых 100мс, а при захвате камеры и вовсе около 5.7 кадра/с. Вычитаем время, которое
-    // уже потратил этот цикл, чтобы период держался у цели независимо от того, насколько
-    // тяжёлым был кадр.
-    const targetCycleMs = Array.from(state.bindings.values()).some((binding) => isDroneCameraConnected(binding.droneId))
-        ? 33
-        : state.bindings.size > 0
-            ? 100
-            : 250;
+    // Целевой ПЕРИОД цикла (не пауза после него): вычитаем время, которое уже
+    // потратил этот цикл. Кадры камеры сюда больше не входят — у них свой поток
+    // (external-bridge-runtime.ts, ensureCameraUploader), так что опрос команд
+    // остаётся на 100мс и при включённой камере.
+    const targetCycleMs = state.bindings.size > 0 ? 100 : 250;
     const elapsedMs = performance.now() - cycleStartedAt;
     const pollDelayMs = Math.max(0, targetCycleMs - elapsedMs);
     state.timerId = window.setTimeout(() => {

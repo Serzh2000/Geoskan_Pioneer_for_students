@@ -443,3 +443,59 @@ describe('camera bridge UDP punch (frames across the client router)', () => {
         expect(frame!.fromPort).toBe(cameraPort);
     });
 });
+
+describe('camera bridge with several viewers', () => {
+    const app = express();
+    app.use(express.json());
+    registerMavlinkBridgeRoutes(app);
+
+    afterAll(() => {
+        stopAllMavlinkBridges();
+    });
+
+    const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+    test('a second connection does not take the stream from the first', async () => {
+        const cameraPort = 19402;
+        const connection = sanitizeRegistration({ droneName: 'multi-drone', droneIp: '127.0.0.1', mavlinkPort: 19401, cameraPort, connectionMethod: 'udpout' });
+        await request(app).post('/api/mavlink-bridge/connections').send({ connections: [connection] });
+        await delay(50);
+
+        const viewers = [];
+        for (let i = 0; i < 2; i++) {
+            const tcp = net.connect(cameraPort, '127.0.0.1');
+            await new Promise<void>((resolve) => tcp.once('connect', () => resolve()));
+            const udp = dgram.createSocket('udp4');
+            await new Promise<void>((resolve) => udp.bind(0, '127.0.0.1', () => resolve()));
+            let frames = 0;
+            udp.on('message', () => { frames += 1; });
+            udp.send(Buffer.from('punch'), cameraPort, '127.0.0.1');
+            viewers.push({ tcp, udp, count: () => frames });
+            await delay(30);
+        }
+
+        // Two different frames, both must reach both viewers.
+        for (const byte of [1, 2]) {
+            updateExternalPythonBridgeState({
+                sessionId: buildCameraSessionId(connection),
+                droneIp: '127.0.0.1',
+                mavlinkPort: cameraPort,
+                connectionMethod: 'camera',
+                droneId: 'drone_1',
+                pointReached: false,
+                cameraConnected: true,
+                cameraFrameDataUrl: `data:image/jpeg;base64,${Buffer.from([0xff, 0xd8, byte, 0xff, 0xd9]).toString('base64')}`,
+                autopilotState: null,
+                localPosition: null
+            });
+            await delay(120);
+        }
+
+        for (const viewer of viewers) {
+            viewer.tcp.destroy();
+            viewer.udp.close();
+        }
+        expect(viewers[0].count()).toBeGreaterThanOrEqual(2);
+        expect(viewers[1].count()).toBeGreaterThanOrEqual(2);
+    });
+});

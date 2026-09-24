@@ -142,6 +142,17 @@ function captureFreshFpvCanvas(id: string): HTMLCanvasElement | null {
     return canvas;
 }
 
+/**
+ * A fresh camera frame as JPEG bytes for the external bridge. Unlike toDataURL
+ * this encodes off the main thread and skips base64 (a third more bytes to
+ * upload, and one more decode on the server).
+ */
+export function captureDroneCameraFrameBlob(id: string, quality = 0.65): Promise<Blob | null> {
+    const canvas = captureFreshFpvCanvas(id);
+    if (!canvas) return Promise.resolve(null);
+    return new Promise((resolve) => canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality));
+}
+
 export function captureDroneCameraFrameDataUrl(id: string): string | null {
     const cached = readFreshCacheEntry(id);
     if (cached?.dataUrl) return cached.dataUrl;
