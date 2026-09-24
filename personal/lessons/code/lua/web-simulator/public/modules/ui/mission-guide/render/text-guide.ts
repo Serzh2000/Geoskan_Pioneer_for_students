@@ -20,7 +20,7 @@ import {
     renderLessonSteps,
     renderRunBanner
 } from './support.js';
-import { renderCheckVerdict } from './results.js';
+import { renderCheckVerdict, renderScenePlaceholder } from './results.js';
 
 const DIAGNOSTIC_KIND_RANK: Record<GuideDiagnostic['kind'], number> = {
     error: 0,
@@ -117,13 +117,13 @@ function renderTextCheckStep(
                     <div class="guide-panel-card__top">
                         <div>
                             <div class="guide-panel-card__title">Проверка и разбор</div>
-                            <div class="guide-panel-card__text">Короткий вердикт и список того, что исправить.</div>
+                            <div class="guide-panel-card__text">Результат запуска и рекомендации по решению.</div>
                         </div>
                         <div class="guide-panel-card__badge">Разбор</div>
                     </div>
                     ${renderCheckVerdict(hasChecked, solved, diagnostics.length, false)}
                     <div class="guide-actions guide-actions--primary">
-                        <button type="button" class="guide-primary-action" data-guide-step="build">Вернуться к коду</button>
+                        <button type="button" class="guide-primary-action" data-guide-step="build">${hasChecked ? 'Вернуться к коду' : 'Перейти к коду'}</button>
                     </div>
                     <div class="guide-diagnostics" id="diagnostics-container">
                         ${hasChecked ? sortedDiagnostics.map(renderDiagnosticCard).join('') : ''}
@@ -136,12 +136,12 @@ function renderTextCheckStep(
                     <div class="guide-panel-card__top">
                         <div>
                             <div class="guide-panel-card__title">Живая сцена</div>
-                            <div class="guide-panel-card__text">Показывает поведение текущего скрипта и ошибки выполнения.</div>
+                            <div class="guide-panel-card__text">Наблюдайте, как дрон выполняет вашу программу.</div>
                         </div>
                         <div class="guide-panel-card__badge">3D</div>
                     </div>
                     <div id="mission-guide-scene-preview-host" class="guide-scene-preview-host ${previewActive ? 'is-active' : ''}">
-                        ${previewActive ? '' : '<div class="guide-scene-preview__placeholder">Нажмите "Проверить и запустить" на шаге кода, чтобы увидеть сцену.</div>'}
+                        ${previewActive ? '' : renderScenePlaceholder()}
                     </div>
                 </section>
             </div>
@@ -184,9 +184,10 @@ export function renderTextGuide(state: GuideTextLessonState, track: 'lua' | 'pyt
                     <div class="guide-lesson-page__header-actions">
                         <div class="guide-lesson-page__header-pill">Урок ${lessonIndex + 1} из ${state.lessons.length}</div>
                         <div class="guide-actions">
-                            <button type="button" class="guide-lesson__action" data-guide-nav="prev" ${previousLesson ? '' : 'disabled'}>Предыдущий урок</button>
-                            <button type="button" class="guide-lesson__action" data-guide-nav="next" ${nextLesson && isCompleted ? '' : 'disabled'}>Следующий урок</button>
+                            ${previousLesson ? '<button type="button" class="guide-lesson__action" data-guide-nav="prev">← Предыдущий</button>' : ''}
+                            <button type="button" class="guide-lesson__action" data-guide-nav="next" ${nextLesson && isCompleted ? '' : 'disabled'}>Следующий урок →</button>
                         </div>
+                        ${nextLesson && !isCompleted ? '<span class="guide-lesson-nav-hint">Откроется после успешной проверки</span>' : ''}
                     </div>
                 </div>
 

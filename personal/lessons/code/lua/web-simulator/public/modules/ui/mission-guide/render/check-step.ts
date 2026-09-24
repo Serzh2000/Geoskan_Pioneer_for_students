@@ -1,7 +1,7 @@
 import type { ScriptLanguage } from '../../api-docs/sections.js';
 import type { GuideDiagnostic } from '../types.js';
 import { escapeHtml, renderDiagnosticCard } from './shared.js';
-import { renderCheckVerdict } from './results.js';
+import { renderCheckVerdict, renderScenePlaceholder } from './results.js';
 
 const DIAGNOSTIC_KIND_RANK: Record<GuideDiagnostic['kind'], number> = {
     error: 0,
@@ -43,7 +43,7 @@ export function renderCheckStep(params: {
                     <div class="guide-panel-card__top">
                         <div>
                             <div class="guide-panel-card__title">Проверка и разбор</div>
-                            <div class="guide-panel-card__text">Короткий вердикт и список того, что исправить.</div>
+                            <div class="guide-panel-card__text">Результат запуска и рекомендации по решению.</div>
                         </div>
                         <div class="guide-panel-card__badge">Разбор</div>
                     </div>
@@ -70,12 +70,12 @@ export function renderCheckStep(params: {
                     <div class="guide-panel-card__top">
                         <div>
                             <div class="guide-panel-card__title">Живая сцена</div>
-                            <div class="guide-panel-card__text">Показывает поведение текущего скрипта и ошибки выполнения.</div>
+                            <div class="guide-panel-card__text">Наблюдайте, как дрон выполняет вашу программу.</div>
                         </div>
                         <div class="guide-panel-card__badge">3D</div>
                     </div>
                     <div id="mission-guide-scene-preview-host" class="guide-scene-preview-host ${previewActive ? 'is-active' : ''}">
-                        ${previewActive ? '' : '<div class="guide-scene-preview__placeholder">Нажмите "Проверить и запустить" на шаге сборки, чтобы увидеть сцену.</div>'}
+                        ${previewActive ? '' : renderScenePlaceholder()}
                     </div>
                 </section>
             </div>

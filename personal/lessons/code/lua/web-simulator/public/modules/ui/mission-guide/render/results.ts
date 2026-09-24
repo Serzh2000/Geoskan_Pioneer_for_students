@@ -1,3 +1,12 @@
+export function renderScenePlaceholder(): string {
+    return `<div class="guide-scene-preview__placeholder">
+        <span class="guide-scene-preview__icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m24 5 17 10v18L24 43 7 33V15Z M7 15l17 10 17-10 M24 25v18"/><path d="m19 18 11 6-11 6Z" fill="currentColor" stroke="none"/></svg></span>
+        <strong>Здесь появится ваш результат</strong>
+        <p>Выполните задание и нажмите «Проверить и запустить» на шаге практики.</p>
+        <span class="guide-scene-preview__hint">Сцена откроется автоматически</span>
+    </div>`;
+}
+
 export function renderCheckVerdict(hasChecked: boolean, solved: boolean, diagnosticsCount: number, launchedWithWarnings: boolean): string {
     if (!hasChecked) {
         return `
