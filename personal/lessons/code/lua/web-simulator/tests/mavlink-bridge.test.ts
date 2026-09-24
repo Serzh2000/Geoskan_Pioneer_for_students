@@ -28,6 +28,7 @@ import {
     sanitizeRegistration,
     stopAllMavlinkBridges
 } from '../server/mavlink-bridge.js';
+import { updateExternalPythonBridgeState } from '../server/external-python-bridge.js';
 
 const MAVLINK_MSG_ID_HEARTBEAT = 0;
 const MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED = 84;
@@ -377,5 +378,68 @@ describe('ensureBridgeConnections drone re-registration (connection leak regress
         // succeed.
         expect(await canBindUdp(oldMavlinkPort)).toBe(true);
         expect(await canListenTcp(oldCameraPort)).toBe(true);
+    });
+});
+
+describe('camera bridge UDP punch (frames across the client router)', () => {
+    const app = express();
+    app.use(express.json());
+    registerMavlinkBridgeRoutes(app);
+
+    afterAll(() => {
+        stopAllMavlinkBridges();
+    });
+
+    const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+    test('after a UDP datagram from the client, frames go to where it came from', async () => {
+        const cameraPort = 19302;
+        const connection = sanitizeRegistration({
+            droneName: 'punch-drone',
+            droneIp: '127.0.0.1',
+            mavlinkPort: 19301,
+            cameraPort,
+            connectionMethod: 'udpout'
+        });
+        await request(app).post('/api/mavlink-bridge/connections').send({ connections: [connection] });
+        await delay(50);
+
+        const jpeg = Buffer.from([0xff, 0xd8, 1, 2, 3, 0xff, 0xd9]);
+        updateExternalPythonBridgeState({
+            sessionId: buildCameraSessionId(connection),
+            droneIp: '127.0.0.1',
+            mavlinkPort: cameraPort,
+            connectionMethod: 'camera',
+            droneId: 'drone_1',
+            pointReached: false,
+            cameraConnected: true,
+            cameraFrameDataUrl: `data:image/jpeg;base64,${jpeg.toString('base64')}`,
+            autopilotState: null,
+            localPosition: null
+        });
+
+        const tcp = net.connect(cameraPort, '127.0.0.1');
+        await new Promise<void>((resolve) => tcp.once('connect', () => resolve()));
+
+        // A socket on a different port than the TCP one: frames reaching it prove
+        // they follow the punch, not the TCP peer port.
+        const udp = dgram.createSocket('udp4');
+        await new Promise<void>((resolve) => udp.bind(0, '127.0.0.1', () => resolve()));
+        const received = new Promise<{ data: Buffer; fromPort: number }>((resolve) => {
+            udp.once('message', (data, remote) => resolve({ data, fromPort: remote.port }));
+        });
+        udp.send(Buffer.from('punch'), cameraPort, '127.0.0.1');
+
+        const frame = await Promise.race([
+            received,
+            delay(2000).then(() => null)
+        ]);
+        tcp.destroy();
+        udp.close();
+
+        expect(frame).not.toBeNull();
+        expect(frame!.data.equals(jpeg)).toBe(true);
+        // Sent from the camera port itself, i.e. where the punch went.
+        expect(frame!.fromPort).toBe(cameraPort);
     });
 });

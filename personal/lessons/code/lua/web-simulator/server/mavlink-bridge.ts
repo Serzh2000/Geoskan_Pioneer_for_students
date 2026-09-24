@@ -70,6 +70,8 @@ interface CameraClientSession {
     socket: net.Socket;
     remoteAddress: string;
     remotePort: number;
+    /** Where frames go after the client "punched" our UDP port (see CameraTcpBridge). */
+    udpTarget: { address: string; port: number } | null;
     frameTimer: NodeJS.Timeout | null;
 }
 
@@ -697,11 +699,24 @@ class MavlinkUdpBridge {
     }
 }
 
+/*
+ * Pioneer camera protocol: the client opens TCP to the camera port, binds UDP to
+ * the same local port and waits for JPEG datagrams - it never sends UDP itself.
+ * On a LAN that is enough. Across the internet the client's router drops those
+ * datagrams: it only lets UDP in after the computer sent UDP out from that port
+ * (checked with tcpdump - the server sent every frame, none arrived). So the UDP
+ * socket also listens on the camera port: one datagram from the client's camera
+ * socket ("punch") opens its router, and from then on frames go exactly to the
+ * address the punch came from, sent from the port it was sent to - what even
+ * strict routers let back in. Without a punch nothing changes (TCP peer port).
+ */
 class CameraTcpBridge {
     private readonly connection: BridgeConnectionRegistration;
     private readonly server: net.Server;
     private readonly udpSocket: dgram.Socket;
     private client: CameraClientSession | null;
+    /** Last punch per client IP: it may arrive a moment before the TCP connect is handled. */
+    private readonly punches = new Map<string, { port: number; at: number }>();
 
     constructor(connection: BridgeConnectionRegistration) {
         this.connection = connection;
@@ -711,7 +726,24 @@ class CameraTcpBridge {
         });
         this.server.listen(this.connection.cameraPort, '0.0.0.0');
         this.udpSocket = dgram.createSocket('udp4');
+        this.udpSocket.on('message', (_message, remote) => this.handlePunch(remote.address, remote.port));
+        this.udpSocket.on('error', (error) => {
+            console.error(`Camera bridge UDP error on port ${this.connection.cameraPort}:`, error);
+        });
+        this.udpSocket.bind(this.connection.cameraPort, '0.0.0.0');
         this.client = null;
+    }
+
+    private handlePunch(address: string, port: number): void {
+        const now = Date.now();
+        for (const [host, punch] of this.punches) {
+            if (now - punch.at >= CAMERA_PUNCH_TTL_MS) this.punches.delete(host);
+        }
+        const host = normalizeIpv4(address);
+        this.punches.set(host, { port, at: now });
+        if (this.client && sameHost(this.client.remoteAddress, host)) {
+            this.client.udpTarget = { address: host, port };
+        }
     }
 
     close(): void {
@@ -734,11 +766,15 @@ class CameraTcpBridge {
             this.stopClient(this.client, true);
         }
 
+        const recentPunch = this.punches.get(normalizeIpv4(remoteAddress));
         const client: CameraClientSession = {
             sessionId: buildCameraSessionId(this.connection),
             socket,
             remoteAddress,
             remotePort,
+            udpTarget: recentPunch && Date.now() - recentPunch.at < CAMERA_PUNCH_TTL_MS
+                ? { address: normalizeIpv4(remoteAddress), port: recentPunch.port }
+                : null,
             frameTimer: null
         };
         this.client = client;
@@ -786,8 +822,19 @@ class CameraTcpBridge {
             return;
         }
 
-        this.udpSocket.send(jpegBuffer, client.remotePort, client.remoteAddress);
+        const target = client.udpTarget ?? { address: client.remoteAddress, port: client.remotePort };
+        this.udpSocket.send(jpegBuffer, target.port, target.address);
     }
+}
+
+const CAMERA_PUNCH_TTL_MS = 10_000;
+
+function normalizeIpv4(address: string): string {
+    return address.startsWith('::ffff:') ? address.slice('::ffff:'.length) : address;
+}
+
+function sameHost(a: string, b: string): boolean {
+    return normalizeIpv4(a) === normalizeIpv4(b);
 }
 
 function closeStaleMavlinkBridge(droneName: string, currentMavlinkKey: string): void {
