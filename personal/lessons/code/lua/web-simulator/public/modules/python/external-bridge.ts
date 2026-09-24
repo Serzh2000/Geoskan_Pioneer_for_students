@@ -1,4 +1,5 @@
 import { drones, ensureDronePythonConnectionSettings } from '../core/state.js';
+import { backgroundTimeout, clearBackgroundTimeout } from '../shared/background-ticker.js';
 import { log } from '../shared/logging/logger.js';
 import {
     type ExternalBridgeState,
@@ -167,9 +168,17 @@ async function pollExternalBridge(): Promise<void> {
     const targetCycleMs = state.bindings.size > 0 ? 100 : 250;
     const elapsedMs = performance.now() - cycleStartedAt;
     const pollDelayMs = Math.max(0, targetCycleMs - elapsedMs);
-    state.timerId = window.setTimeout(() => {
+    // A worker-kept timeout: with the tab behind IDLE and the cv2 window a page
+    // timer would fire about once a second, delaying every command by that much.
+    state.timerId = backgroundTimeout(() => {
         void pollExternalBridge();
     }, pollDelayMs);
+}
+
+/** Is any drone accepting external commands? The animation loop keeps physics
+ *  running in a background tab while this is true. */
+export function isAnyExternalBridgeEnabled(): boolean {
+    return hasEnabledExternalBridgeDrones();
 }
 
 export function isExternalBridgeEnabled(droneId: string): boolean {
@@ -196,7 +205,7 @@ export async function setExternalBridgeEnabled(droneId: string, enabled: boolean
             state.bindings.clear();
             await syncConfiguredBridgeConnections();
             if (state.timerId !== null) {
-                window.clearTimeout(state.timerId);
+                clearBackgroundTimeout(state.timerId);
                 state.timerId = null;
             }
             if (bridgeConnectionSyncTimerId !== null) {

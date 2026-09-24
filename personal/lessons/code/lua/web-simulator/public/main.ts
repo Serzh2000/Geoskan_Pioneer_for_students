@@ -20,6 +20,7 @@ import { initScriptLanguageSelector } from './modules/app/language-selector.js';
 import { initThemeToggle } from './modules/app/theme-toggle.js';
 import { registerGlobalErrorHandler } from './modules/app/global-error.js';
 import { startAnimationLoop } from './modules/app/animation-loop.js';
+import { isAnyExternalBridgeEnabled } from './modules/python/external-bridge.js';
 import type { AddObjectOptions } from './modules/scene/objects/object-manager.js';
 import { resetVehicles, startVehicleSession, stopVehicleSession } from './modules/vehicles/engine.js';
 import { setDroneEsp32Attached } from './modules/drone/index.js';
@@ -90,7 +91,8 @@ function init() {
     // Start Loop
     startAnimationLoop({
         updateDrone3D,
-        is3DActive: () => is3DActive
+        is3DActive: () => is3DActive,
+        keepPhysicsInBackground: isAnyExternalBridgeEnabled
     });
 }
 

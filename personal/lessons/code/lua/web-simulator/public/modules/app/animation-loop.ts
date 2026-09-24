@@ -2,10 +2,13 @@ import { simSettings } from '../core/state.js';
 import { updatePhysics } from '../physics/index.js';
 import { PHYSICS_FIXED_DT } from '../physics/constants.js';
 import { updateStats } from '../ui/panels/stats.js';
+import { startBackgroundTicker, type BackgroundTicker } from '../shared/background-ticker.js';
 
 type LoopCallbacks = {
     updateDrone3D: (dt: number) => void;
     is3DActive: () => boolean;
+    /** While true, the fallback tick runs on a worker clock (see below). */
+    keepPhysicsInBackground?: () => boolean;
 };
 
 // Кламп на «сырой» dt между кадрами — защита от одного огромного скачка
@@ -34,9 +37,17 @@ const FALLBACK_TICK_MS = 50;
 // может законно просесть при реальной нагрузке) — иначе резервный тик
 // срабатывал бы и во время нормальной работы, задваивая шаг физики.
 const RAF_STALL_THRESHOLD_MS = 250;
+// Шаг резервного тика: реально прошедшее время, но не больше 0.5с — ровно столько
+// укладывается в MAX_PHYSICS_STEPS_PER_FRAME шагов. От воркера тики идут каждые
+// ~50мс (физика в реальном времени); заторможенный таймер страницы (раз в
+// секунду) даёт хотя бы половину скорости, а не 10%, как при старом клампе 0.1с.
+const MAX_FALLBACK_DT = 0.5;
 
 let animationFrameId = 0;
+let backgroundTicker: BackgroundTicker | null = null;
 let lastTime = 0;
+/** performance.now() of the last real animation frame: tells whether rAF stalled. */
+let lastRafAt = 0;
 let physicsAccumulator = 0;
 let fpsFrameCount = 0;
 let fpsLastUpdate = 0;
@@ -73,10 +84,12 @@ function stepPhysics(rawDt: number): void {
 export function startAnimationLoop(callbacks: LoopCallbacks): void {
     const animate = (time: number) => {
         animationFrameId = requestAnimationFrame(animate);
+        if (time) lastRafAt = performance.now();
         updateFpsCounter(time);
 
         if (!lastTime) lastTime = time;
-        let rawDt = (time - lastTime) / 1000;
+        // max(0): the fallback tick may have moved lastTime a hair past this frame.
+        let rawDt = Math.max(0, (time - lastTime) / 1000);
         if (rawDt > MAX_FRAME_DT) rawDt = MAX_FRAME_DT;
         lastTime = time;
 
@@ -94,12 +107,42 @@ export function startAnimationLoop(callbacks: LoopCallbacks): void {
     // рисуется, — сами продвигаем физику по настенному времени. Рендер и
     // статистику здесь намеренно не трогаем: рисовать всё равно некому, нужно
     // только не дать застыть симулированному времени дрона.
-    window.setInterval(() => {
+    const fallbackTick = () => {
         const now = performance.now();
-        if (!lastTime || now - lastTime < RAF_STALL_THRESHOLD_MS) return;
-        const rawDt = Math.min((now - lastTime) / 1000, MAX_FRAME_DT);
+        // A tab opened straight into the background never gets a rAF frame:
+        // start the clock here instead of waiting for one forever.
+        if (!lastTime) {
+            lastTime = now;
+            return;
+        }
+        // rAF alive - it drives physics itself.
+        if (lastRafAt && now - lastRafAt < RAF_STALL_THRESHOLD_MS) return;
+        // Stalled: every tick advances by the time that really passed.
+        const rawDt = Math.min(Math.max(0, (now - lastTime) / 1000), MAX_FALLBACK_DT);
         lastTime = now;
         stepPhysics(rawDt);
+    };
+    // Обычный таймер страницы в фоне Chrome душит примерно до раза в секунду:
+    // физика шла бы рывками и вдвое медленнее реального времени (шаг не больше
+    // MAX_FALLBACK_DT), а команды попадали бы в один тик. Пока хотя бы один дрон принимает
+    // внешние команды — а это и есть случай "браузер позади IDLE и окна cv2", —
+    // тот же тик идёт от таймера в воркере, которого фоновое ограничение не
+    // касается. Без внешних команд всё как раньше: лишний воркер ни к чему.
+    const syncBackgroundTicker = () => {
+        const wanted = Boolean(callbacks.keepPhysicsInBackground?.());
+        if (wanted && !backgroundTicker) {
+            backgroundTicker = startBackgroundTicker(FALLBACK_TICK_MS, fallbackTick);
+        } else if (!wanted && backgroundTicker) {
+            backgroundTicker.stop();
+            backgroundTicker = null;
+        }
+    };
+    // Switch right when a drone's external commands are allowed or forbidden: a
+    // page timer in a background tab would notice it only a second later.
+    window.addEventListener('external-drone-state-changed', syncBackgroundTicker);
+    window.setInterval(() => {
+        syncBackgroundTicker();
+        fallbackTick();
     }, FALLBACK_TICK_MS);
 }
 
