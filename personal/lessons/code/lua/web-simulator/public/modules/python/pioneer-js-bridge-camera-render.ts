@@ -150,7 +150,23 @@ function captureFreshFpvCanvas(id: string): HTMLCanvasElement | null {
 export function captureDroneCameraFrameBlob(id: string, quality = 0.65): Promise<Blob | null> {
     const canvas = captureFreshFpvCanvas(id);
     if (!canvas) return Promise.resolve(null);
+    // Chrome defers toBlob's encoding to idle time, and a hidden tab gets idle
+    // time about once a second: measured ~1040 ms per frame there against ~25 ms
+    // for toDataURL. With external Python the tab is usually hidden (behind IDLE
+    // and the cv2 window), so there the synchronous encoder is the fast one.
+    if (document.hidden) {
+        return Promise.resolve(dataUrlToBlob(canvas.toDataURL('image/jpeg', quality)));
+    }
     return new Promise((resolve) => canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality));
+}
+
+function dataUrlToBlob(dataUrl: string): Blob | null {
+    const comma = dataUrl.indexOf(',');
+    if (comma < 0) return null;
+    const binary = atob(dataUrl.slice(comma + 1));
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new Blob([bytes], { type: 'image/jpeg' });
 }
 
 export function captureDroneCameraFrameDataUrl(id: string): string | null {
