@@ -540,3 +540,40 @@ describe('camera bridge asks the browser for frames', () => {
         second.destroy();
     });
 });
+
+describe('camera bridge and a leftover frame', () => {
+    const app = express();
+    app.use(express.json());
+    registerMavlinkBridgeRoutes(app);
+    registerExternalPythonBridgeRoutes(app);
+
+    afterAll(() => {
+        stopAllMavlinkBridges();
+    });
+
+    const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+    test('an old frame does not stop the bridge from asking a tab for new ones', async () => {
+        const connection = sanitizeRegistration({ droneName: 'stale-drone', droneIp: '127.0.0.1', mavlinkPort: 19601, cameraPort: 19602, connectionMethod: 'udpout' });
+        await request(app).post('/api/mavlink-bridge/connections').send({ connections: [connection] });
+        await delay(50);
+        // A frame from an earlier run, the tab that sent it is gone.
+        updateExternalPythonBridgeState({
+            sessionId: buildCameraSessionId(connection), droneIp: '127.0.0.1', mavlinkPort: 19602, connectionMethod: 'camera',
+            droneId: 'drone_1', pointReached: false, cameraConnected: true,
+            cameraFrameDataUrl: `data:image/jpeg;base64,${Buffer.from([0xff, 0xd8, 1, 0xff, 0xd9]).toString('base64')}`,
+            autopilotState: null, localPosition: null
+        });
+        await delay(1600);
+        const start = (await request(app).get('/api/external-python-bridge/events').query({ afterId: 0 })).body.latestId as number;
+
+        const viewer = net.connect(19602, '127.0.0.1');
+        await new Promise<void>((resolve) => viewer.once('connect', () => resolve()));
+        await delay(2300);
+        const res = await request(app).get('/api/external-python-bridge/events').query({ afterId: start });
+        const asks = (res.body.events as Array<{ method: string; mavlinkPort: number }>)
+            .filter((event) => event.method === 'camera_connect' && event.mavlinkPort === 19602).length;
+        viewer.destroy();
+        expect(asks).toBeGreaterThanOrEqual(2);
+    });
+});

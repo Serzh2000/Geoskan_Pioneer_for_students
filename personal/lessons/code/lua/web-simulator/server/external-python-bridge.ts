@@ -32,6 +32,8 @@ export interface ExternalPythonBridgeState {
     cameraConnected: boolean;
     /** Latest camera frame, JPEG bytes (POST /frame, or a data URL on /state). */
     cameraFrame: Buffer | null;
+    /** Date.now() when cameraFrame arrived (0 - never): tells a live feed from a leftover one. */
+    cameraFrameAt: number;
     autopilotState: string | null;
     localPosition: ExternalPythonBridgePosition | null;
     updatedAt: string;
@@ -42,7 +44,7 @@ export interface ExternalPythonBridgeState {
  * last one (frames arrive separately on POST /frame); a data URL or null -
  * replace it (older browsers and the IDLE hook still send it inline).
  */
-export type ExternalPythonBridgeStateUpdate = Omit<ExternalPythonBridgeState, 'updatedAt' | 'cameraFrame'> & {
+export type ExternalPythonBridgeStateUpdate = Omit<ExternalPythonBridgeState, 'updatedAt' | 'cameraFrame' | 'cameraFrameAt'> & {
     cameraFrameDataUrl?: string | null;
 };
 
@@ -108,11 +110,11 @@ export function updateExternalPythonBridgeState(payload: ExternalPythonBridgeSta
     const { cameraFrameDataUrl, ...rest } = payload;
     const key = buildExternalBridgeStateKey(rest);
     const previous = externalPythonBridgeStates.get(key);
+    const keepFrame = cameraFrameDataUrl === undefined;
     const state: ExternalPythonBridgeState = {
         ...rest,
-        cameraFrame: cameraFrameDataUrl === undefined
-            ? previous?.cameraFrame ?? null
-            : decodeJpegDataUrl(cameraFrameDataUrl),
+        cameraFrame: keepFrame ? previous?.cameraFrame ?? null : decodeJpegDataUrl(cameraFrameDataUrl),
+        cameraFrameAt: keepFrame ? previous?.cameraFrameAt ?? 0 : Date.now(),
         updatedAt: new Date().toISOString()
     };
     externalPythonBridgeStates.set(key, state);
@@ -139,6 +141,7 @@ export function updateExternalPythonBridgeFrame(input: {
         autopilotState: previous?.autopilotState ?? null,
         localPosition: previous?.localPosition ?? null,
         cameraFrame: frame,
+        cameraFrameAt: Date.now(),
         updatedAt: new Date().toISOString()
     });
 }

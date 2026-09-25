@@ -818,12 +818,16 @@ class CameraTcpBridge {
             mavlinkPort: this.connection.cameraPort,
             connectionMethod: 'camera'
         });
-        if (!state?.cameraConnected || !state.cameraFrame?.length) {
-            // Viewers are waiting but no tab is sending frames (one opened after
-            // the request, or was reloaded): ask again every couple of seconds.
-            if (Date.now() - this.lastConnectAnnouncedAt >= CAMERA_REANNOUNCE_MS) {
-                this.announceConnect();
-            }
+        // Viewers are waiting but no tab is sending frames (one opened after the
+        // request, was reloaded, or stopped): ask again every couple of seconds.
+        // A frame left over from an earlier run does not count - it kept this
+        // quiet while the picture stayed frozen.
+        const live = Boolean(state?.cameraConnected && state.cameraFrame?.length)
+            && Date.now() - (state?.cameraFrameAt ?? 0) < CAMERA_FRAME_STALE_MS;
+        if (!live && Date.now() - this.lastConnectAnnouncedAt >= CAMERA_REANNOUNCE_MS) {
+            this.announceConnect();
+        }
+        if (!state?.cameraFrame?.length) {
             return;
         }
         // New frames go out as they arrive; an unchanged one only as a keep-alive,
@@ -845,6 +849,7 @@ class CameraTcpBridge {
 const CAMERA_PUNCH_TTL_MS = 10_000;
 const CAMERA_KEEPALIVE_MS = 250;
 const CAMERA_REANNOUNCE_MS = 2000;
+const CAMERA_FRAME_STALE_MS = 1500;
 const CAMERA_KEEPALIVE_PROBE_MS = 15_000;
 
 function normalizeIpv4(address: string): string {
