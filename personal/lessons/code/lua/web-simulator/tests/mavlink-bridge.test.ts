@@ -28,7 +28,7 @@ import {
     sanitizeRegistration,
     stopAllMavlinkBridges
 } from '../server/mavlink-bridge.js';
-import { updateExternalPythonBridgeState } from '../server/external-python-bridge.js';
+import { registerExternalPythonBridgeRoutes, updateExternalPythonBridgeState } from '../server/external-python-bridge.js';
 
 const MAVLINK_MSG_ID_HEARTBEAT = 0;
 const MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED = 84;
@@ -497,5 +497,46 @@ describe('camera bridge with several viewers', () => {
         }
         expect(viewers[0].count()).toBeGreaterThanOrEqual(2);
         expect(viewers[1].count()).toBeGreaterThanOrEqual(2);
+    });
+});
+
+describe('camera bridge asks the browser for frames', () => {
+    const app = express();
+    app.use(express.json());
+    registerMavlinkBridgeRoutes(app);
+    registerExternalPythonBridgeRoutes(app);
+
+    afterAll(() => {
+        stopAllMavlinkBridges();
+    });
+
+    const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+    const cameraConnects = async (afterId: number) => {
+        const res = await request(app).get('/api/external-python-bridge/events').query({ afterId });
+        return (res.body.events as Array<{ method: string; mavlinkPort: number }>)
+            .filter((event) => event.method === 'camera_connect' && event.mavlinkPort === 19502).length;
+    };
+
+    test('every new viewer announces itself, and a silent camera is asked again', async () => {
+        const connection = sanitizeRegistration({ droneName: 'announce-drone', droneIp: '127.0.0.1', mavlinkPort: 19501, cameraPort: 19502, connectionMethod: 'udpout' });
+        await request(app).post('/api/mavlink-bridge/connections').send({ connections: [connection] });
+        await delay(50);
+        const start = (await request(app).get('/api/external-python-bridge/events').query({ afterId: 0 })).body.latestId as number;
+
+        const first = net.connect(19502, '127.0.0.1');
+        await new Promise<void>((resolve) => first.once('connect', () => resolve()));
+        const second = net.connect(19502, '127.0.0.1');
+        await new Promise<void>((resolve) => second.once('connect', () => resolve()));
+        await delay(50);
+        // Formerly only the first viewer asked: a tab that missed that request
+        // never started the camera and everyone after got no picture.
+        expect(await cameraConnects(start)).toBe(2);
+
+        // No tab has sent a frame: the request is repeated.
+        await delay(2200);
+        expect(await cameraConnects(start)).toBeGreaterThanOrEqual(3);
+
+        first.destroy();
+        second.destroy();
     });
 });

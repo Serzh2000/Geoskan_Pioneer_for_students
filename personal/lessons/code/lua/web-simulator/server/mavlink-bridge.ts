@@ -713,6 +713,7 @@ class CameraTcpBridge {
     private readonly clients = new Set<CameraClientSession>();
     private frameTimer: NodeJS.Timeout | null = null;
     private lastSentFrame: Buffer | null = null;
+    private lastConnectAnnouncedAt = 0;
     private lastSentAt = 0;
     /** Last punch per client IP: it may arrive a moment before the TCP connect is handled. */
     private readonly punches = new Map<string, { port: number; at: number }>();
@@ -775,10 +776,15 @@ class CameraTcpBridge {
                 ? { address: normalizeIpv4(remoteAddress), port: recentPunch.port }
                 : null
         };
-        const firstClient = this.clients.size === 0;
+        // Dead peers (router forgot the connection, laptop lid closed) otherwise
+        // stay "connected" for hours.
+        socket.setKeepAlive(true, CAMERA_KEEPALIVE_PROBE_MS);
         this.clients.add(client);
-        if (firstClient) {
-            emitCameraBridgeEvent(this.connection, client.sessionId, 'camera_connect');
+        // Every connection asks the browser to start the camera, not only the
+        // first: that one request could have gone to a tab that was reloaded or
+        // closed since, and later viewers then never got a picture.
+        this.announceConnect();
+        if (!this.frameTimer) {
             this.frameTimer = setInterval(() => this.flushFrame(), CAMERA_FRAME_INTERVAL_MS);
         }
 
@@ -800,6 +806,11 @@ class CameraTcpBridge {
         }
     }
 
+    private announceConnect(): void {
+        this.lastConnectAnnouncedAt = Date.now();
+        emitCameraBridgeEvent(this.connection, buildCameraSessionId(this.connection), 'camera_connect');
+    }
+
     private flushFrame(): void {
         const state = getExternalPythonBridgeState({
             sessionId: buildCameraSessionId(this.connection),
@@ -808,6 +819,11 @@ class CameraTcpBridge {
             connectionMethod: 'camera'
         });
         if (!state?.cameraConnected || !state.cameraFrame?.length) {
+            // Viewers are waiting but no tab is sending frames (one opened after
+            // the request, or was reloaded): ask again every couple of seconds.
+            if (Date.now() - this.lastConnectAnnouncedAt >= CAMERA_REANNOUNCE_MS) {
+                this.announceConnect();
+            }
             return;
         }
         // New frames go out as they arrive; an unchanged one only as a keep-alive,
@@ -828,6 +844,8 @@ class CameraTcpBridge {
 
 const CAMERA_PUNCH_TTL_MS = 10_000;
 const CAMERA_KEEPALIVE_MS = 250;
+const CAMERA_REANNOUNCE_MS = 2000;
+const CAMERA_KEEPALIVE_PROBE_MS = 15_000;
 
 function normalizeIpv4(address: string): string {
     return address.startsWith('::ffff:') ? address.slice('::ffff:'.length) : address;
