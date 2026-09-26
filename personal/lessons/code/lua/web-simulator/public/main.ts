@@ -92,7 +92,9 @@ function init() {
     startAnimationLoop({
         updateDrone3D,
         is3DActive: () => is3DActive,
-        keepPhysicsInBackground: isAnyExternalBridgeEnabled
+        // A running script counts time on the sim clock: Timer.callLater and
+        // the goto time would stretch while the tab sits behind other windows.
+        keepPhysicsInBackground: () => isAnyExternalBridgeEnabled() || Object.values(drones).some((drone) => drone.running)
     });
 }
 
