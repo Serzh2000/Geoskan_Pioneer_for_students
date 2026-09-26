@@ -168,6 +168,71 @@ function updateManualFlight(simState: DroneState, dt: number, getObstacles: Obst
     simState.target_yaw = simState.orientation.yaw;
 }
 
+// A timed goto never asks for more than this; a `time` too short for it just
+// arrives later.
+const TIMED_GOTO_MAX_SPEED = 5;
+// Room above the trajectory speed, so the drone can catch up the lag that
+// Copter_pos_aMax gives it at the start.
+const TIMED_GOTO_SPEED_HEADROOM = 1.25;
+
+type TimedGoToStep = {
+    setpoint: { x: number; y: number; z: number };
+    velocity: { x: number; y: number; z: number };
+    planarLimit: number;
+    verticalLimit: number;
+};
+
+/**
+ * ap.goToLocalPoint(x, y, z, time): the setpoint slides from the start to the
+ * target over `time` seconds and the drone tracks it, with the slide's speed
+ * as feed-forward, so it arrives at `time` whatever Copter_pos_vMax says.
+ */
+function resolveTimedGoTo(simState: DroneState): TimedGoToStep | null {
+    const timed = simState.timedGoTo;
+    if (!timed) return null;
+    // A goto queued during takeoff starts once the takeoff completes.
+    if (simState.fsmState === 'TAKEOFF_PROCESS' && simState.pendingLocalPoint) return null;
+    const target = simState.target_pos;
+    // Reached, or another command (a new goto, landing) took over.
+    if (simState.fsmState !== 'FLYING_MOVING'
+        || target.x !== timed.to.x || target.y !== timed.to.y || target.z !== timed.to.z) {
+        simState.timedGoTo = null;
+        return null;
+    }
+    if (!timed.from || timed.startTime === null) {
+        timed.from = { ...simState.pos };
+        timed.startTime = simState.current_time;
+    }
+
+    const from = timed.from;
+    const scale = Math.min(1, TIMED_GOTO_MAX_SPEED * timed.duration / Math.max(1e-6, Math.hypot(
+        timed.to.x - from.x, timed.to.y - from.y, timed.to.z - from.z
+    )));
+    const velocity = {
+        x: (timed.to.x - from.x) / timed.duration * scale,
+        y: (timed.to.y - from.y) / timed.duration * scale,
+        z: (timed.to.z - from.z) / timed.duration * scale
+    };
+    const planarLimit = Math.hypot(velocity.x, velocity.y) * TIMED_GOTO_SPEED_HEADROOM;
+    const verticalLimit = Math.abs(velocity.z) * TIMED_GOTO_SPEED_HEADROOM;
+
+    const progress = (simState.current_time - timed.startTime) * scale / timed.duration;
+    if (progress >= 1) {
+        // The slide is over: hold the target, still allowed the trajectory's speed to catch up.
+        return { setpoint: timed.to, velocity: { x: 0, y: 0, z: 0 }, planarLimit, verticalLimit };
+    }
+    return {
+        setpoint: {
+            x: from.x + (timed.to.x - from.x) * progress,
+            y: from.y + (timed.to.y - from.y) * progress,
+            z: from.z + (timed.to.z - from.z) * progress
+        },
+        velocity,
+        planarLimit,
+        verticalLimit
+    };
+}
+
 function updateAutoFlight(simState: DroneState, dt: number) {
     const config = getAutopilotRuntimeConfig();
     const kp = Math.max(1.2, Math.min(6.5, 2.4 + config.tuning.xyRateKp * 18));
@@ -193,17 +258,26 @@ function updateAutoFlight(simState: DroneState, dt: number) {
         simState.target_pos = { ...simState.pos };
     }
 
-    const errZ = simState.target_pos.z - simState.pos.z;
-    const desiredVz = Math.max(-downwardVelocityLimit, Math.min(upwardVelocityLimit, manualActive ? manual!.z : errZ * kp));
+    const timed = manualActive ? null : resolveTimedGoTo(simState);
+    const setpoint = timed?.setpoint ?? simState.target_pos;
+    const feedForward = timed?.velocity ?? { x: 0, y: 0, z: 0 };
+    const planarVelocityLimit = Math.max(config.mission.vMax, timed?.planarLimit ?? 0);
+    if (timed) {
+        upwardVelocityLimit = Math.max(upwardVelocityLimit, timed.verticalLimit);
+        downwardVelocityLimit = Math.max(downwardVelocityLimit, timed.verticalLimit);
+    }
+
+    const errZ = setpoint.z - simState.pos.z;
+    const desiredVz = Math.max(-downwardVelocityLimit, Math.min(upwardVelocityLimit, manualActive ? manual!.z : feedForward.z + errZ * kp));
     const az = (desiredVz - simState.vel.z) * kd;
     simState.vel.z += az * dt;
     simState.vel.z = Math.max(-downwardVelocityLimit, Math.min(upwardVelocityLimit, simState.vel.z));
     simState.pos.z += simState.vel.z * dt;
 
-    const errX = simState.target_pos.x - simState.pos.x;
-    const errY = simState.target_pos.y - simState.pos.y;
-    const desiredVx = Math.max(-config.mission.vMax, Math.min(config.mission.vMax, manualActive ? manual!.x : errX * kp));
-    const desiredVy = Math.max(-config.mission.vMax, Math.min(config.mission.vMax, manualActive ? manual!.y : errY * kp));
+    const errX = setpoint.x - simState.pos.x;
+    const errY = setpoint.y - simState.pos.y;
+    const desiredVx = Math.max(-planarVelocityLimit, Math.min(planarVelocityLimit, manualActive ? manual!.x : feedForward.x + errX * kp));
+    const desiredVy = Math.max(-planarVelocityLimit, Math.min(planarVelocityLimit, manualActive ? manual!.y : feedForward.y + errY * kp));
     let ax = (desiredVx - simState.vel.x) * kd;
     let ay = (desiredVy - simState.vel.y) * kd;
     const accelMagnitude = Math.hypot(ax, ay);
@@ -216,8 +290,8 @@ function updateAutoFlight(simState: DroneState, dt: number) {
     simState.vel.x += ax * dt;
     simState.vel.y += ay * dt;
     const planarSpeed = Math.hypot(simState.vel.x, simState.vel.y);
-    if (planarSpeed > config.mission.vMax && planarSpeed > 0) {
-        const speedScale = config.mission.vMax / planarSpeed;
+    if (planarSpeed > planarVelocityLimit && planarSpeed > 0) {
+        const speedScale = planarVelocityLimit / planarSpeed;
         simState.vel.x *= speedScale;
         simState.vel.y *= speedScale;
     }

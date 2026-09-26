@@ -151,6 +151,12 @@ export interface DroneState {
     pendingLocalPoint?: boolean;
     pendingLocalPointSource?: CommandSource | null;
     pendingLocalPointTarget?: Vector3 | null;
+    /**
+     * ap.goToLocalPoint(x, y, z, time): the flight to `to` takes `duration`
+     * seconds of sim time. `from`/`startTime` are taken on the first autopilot
+     * step of the flight (a goto queued during takeoff starts later).
+     */
+    timedGoTo?: { to: Vector3; duration: number; from: Vector3 | null; startTime: number | null } | null;
     pointReachedFlag?: boolean;
     traceSampleAccumulator: number;
     command_queue: QueuedMceCommand[];

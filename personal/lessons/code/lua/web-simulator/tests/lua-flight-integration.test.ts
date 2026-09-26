@@ -160,4 +160,40 @@ describe('Lua flight with the simulator bridge and timer scheduler', () => {
         expect(drone.luaDiagnostics.lastFailureReason).toBeNull();
         expect(drone.luaDiagnostics.recentLogs.filter(log => /warning|error/i.test(log.message))).toEqual([]);
     });
+
+    test.each([
+        [3],
+        [20]
+    ])('ap.goToLocalPoint(x, y, z, %d) takes that many seconds', (duration) => {
+        drone.fsmState = 'IDLE' as typeof drone.fsmState;
+        drone.status = 'IDLE';
+        drone.current_time = 0;
+        drone.pos = { x: 0, y: 0, z: 0 };
+        drone.vel = { x: 0, y: 0, z: 0 };
+        drone.timers = [];
+        drone.command_queue = [];
+        drone.tickCommandSignature = null;
+        drone.running = true;
+        runtime.runLuaScript(drone.id, `
+            ap.push(Ev.MCE_PREFLIGHT)
+            Timer.callLater(1, function() ap.push(Ev.MCE_TAKEOFF) end)
+            function callback(event)
+                if event == Ev.TAKEOFF_COMPLETE then
+                    Timer.callLater(1, function() ap.goToLocalPoint(4, 0, 1, ${duration}) end)
+                end
+            end
+        `);
+        let movedAt: number | null = null;
+        let reachedAt: number | null = null;
+        for (let tick = 0; tick < 120 * 40 && reachedAt === null; tick += 1) {
+            updatePhysics(1 / 120);
+            if (movedAt === null && drone.fsmState === 'FLYING_MOVING') movedAt = drone.current_time;
+            if (movedAt !== null && drone.fsmState === 'FLYING_HOVER') reachedAt = drone.current_time;
+        }
+        expect(movedAt).not.toBeNull();
+        expect(reachedAt).not.toBeNull();
+        // Point reached fires inside a small radius, so a slow flight ends a bit early.
+        expect(reachedAt! - movedAt!).toBeGreaterThan(duration - 1);
+        expect(reachedAt! - movedAt!).toBeLessThan(duration + 0.5);
+    });
 });

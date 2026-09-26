@@ -15,7 +15,7 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
     'ap.goToLocalPoint': {
         desc: 'Полет в точку в локальной системе координат (метры).',
         syntax: 'ap.goToLocalPoint(x, y, z, [time])',
-        params: 'x, y, z (числа), time (секунды, опционально)',
+        params: 'x, y, z (числа), time (секунды, опционально: за сколько долететь до точки; без него — со скоростью Copter_pos_vMax)',
         returns: 'nil',
         example: 'ap.goToLocalPoint(1.5, 0, 1.0, 5)',
         kind: 'Method',
