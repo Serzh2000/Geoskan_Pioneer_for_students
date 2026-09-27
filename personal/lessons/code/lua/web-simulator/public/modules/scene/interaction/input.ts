@@ -74,25 +74,34 @@ export function onPointerUp(event: PointerEvent) {
     
     try {
         const intersects = raycaster.intersectObjects(collectPointerTargets(), true);
-        const isCtrl = (event.ctrlKey || event.metaKey) && event.button === 0; // Ctrl + 
-        const isRightClick = event.button === 2; // 
-        
+        // Ctrl+ЛКМ — только координаты точки. Раньше тот же щелчок ещё и
+        // добавлял объект под курсором в выделение или убирал из него: узнал
+        // координаты площадки — площадка молча выделилась. Несколько объектов
+        // во вьюпорте выделяют Shift+ЛКМ (в списке сцены — Ctrl+щелчок).
+        const isCtrl = (event.ctrlKey || event.metaKey) && event.button === 0;
+        const isShift = event.shiftKey && event.button === 0 && !isCtrl;
+        const isRightClick = event.button === 2;
+
         if (intersects.length > 0) {
             const intersect = intersects[0];
             const rootObject = getRootSceneObject(intersect.object);
-            
-            //   Ctrl + 
+
             if (isCtrl) {
                 showGroundPoint(intersect.point);
                 if ((window as any).updateSceneObjectClickCoords) {
                     (window as any).updateSceneObjectClickCoords(intersect.point);
                 }
-                // Ctrl+   
-                if (isDroneObject(rootObject) || isTransformableObject(rootObject)) {
-                    toggleMultiSelectObject(rootObject);
-                    multiSelectedObjects.forEach(obj => updateObjectSelectionVisuals(obj, true));
-                    (window as any).updateSceneManager?.();
-                }
+                return;
+            }
+
+            if (isShift && (isDroneObject(rootObject) || isTransformableObject(rootObject))) {
+                // Повторный Shift+щелчок убирает объект из выделения — вместе
+                // с подсветкой; раньше подсветка на нём оставалась.
+                const wasSelected = multiSelectedObjects.includes(rootObject);
+                toggleMultiSelectObject(rootObject);
+                if (wasSelected) updateObjectSelectionVisuals(rootObject, false);
+                multiSelectedObjects.forEach(obj => updateObjectSelectionVisuals(obj, true));
+                (window as any).updateSceneManager?.();
                 return;
             }
 

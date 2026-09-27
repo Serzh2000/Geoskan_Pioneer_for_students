@@ -21,7 +21,7 @@ import {
 
 export function groupObjects() {
     if (multiSelectedObjects.length < 2) {
-        log('Для группировки нужно выбрать хотя бы два объекта (Ctrl+Click)', 'warn');
+        log('Для группировки нужно выбрать хотя бы два объекта: Ctrl+щелчок в списке или Shift+щелчок в сцене', 'warn');
         return false;
     }
 

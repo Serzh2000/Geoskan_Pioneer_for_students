@@ -3,6 +3,7 @@ import type { PerspectiveCamera, WebGLRenderer } from 'three';
 import { droneMeshes, scene } from '../scene/core/scene-init.js';
 import { reportCameraBridgeDebug, resolveConnectedCameraFeed } from './pioneer-js-bridge-camera-shared.js';
 import { detectVisibleMarkers } from './marker-detection.js';
+import { renderWithoutEditorOverlays } from '../scene/core/editor-overlays.js';
 
 // У железной камеры разрешение своё и постоянное, оно не зависит от того, какого размера
 // окно у оператора. Раньше кадр подстраивался под основной canvas, и frame.shape менялся
@@ -79,7 +80,7 @@ function renderDroneFpvFrame(droneId: string): HTMLCanvasElement | null {
     const previousVisibility = droneMesh.visible;
     droneMesh.visible = false;
     try {
-        renderer.render(scene, fpvCamera);
+        renderWithoutEditorOverlays(scene, () => renderer.render(scene, fpvCamera));
         // What cv2.aruco.detectMarkers will report for this frame.
         detectVisibleMarkers(droneId, fpvCamera, canvas.width, canvas.height);
     } finally {

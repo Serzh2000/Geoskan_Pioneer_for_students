@@ -4,6 +4,7 @@ import type { ScenePathPoint } from '../../environment/obstacles.js';
 import { log } from '../../shared/logging/logger.js';
 import { normalizePoints } from '../objects/object-catalog.js';
 import { camera, raycaster, renderer, scene, selectedObject } from '../core/scene-init.js';
+import { markEditorOnly } from '../core/editor-overlays.js';
 import { exitTransformMode } from './selection.js';
 import { tablerIcon, type TablerIconName } from '../../ui/icons/tabler.js';
 
@@ -358,7 +359,7 @@ function refreshPreview() {
     }
 
     group.traverse((node) => { node.renderOrder = 9800; });
-    scene.add(group);
+    scene.add(markEditorOnly(group));
     s.preview = group;
 }
 

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { MAX_PATH_POINTS, pathPoints, pathPointsVersion, simSettings } from '../core/state.js';
 import { scene, droneTrails, is3DActive } from '../scene/core/scene-init.js';
+import { markEditorOnly } from '../scene/core/editor-overlays.js';
 import { log } from '../shared/logging/logger.js';
 
 // Буфер вдвое больше видимого окна: новые точки дописываются в конец, и лишь
@@ -91,8 +92,9 @@ export function initTrailForDrone(id: string) {
     particles.renderOrder = 8999;
     particles.matrixAutoUpdate = false;
 
-    scene.add(path);
-    scene.add(particles);
+    // След полёта — подсказка редактора, камера дрона его не видит.
+    scene.add(markEditorOnly(path));
+    scene.add(markEditorOnly(particles));
 
     droneTrails[id] = { path, particles, lineGeometry, pointsGeometry };
     log(`[3D-INIT] Трейл для ${id} готов`, 'info');

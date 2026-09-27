@@ -234,6 +234,8 @@ export function initScene(container: HTMLElement) {
     transformHelper = (transformControl as any).getHelper ? (transformControl as any).getHelper() : (transformControl as unknown as THREE.Object3D);
     configureTransformHelperVisuals(transformHelper);
     applyTransformControlsUxTheme(transformControl, transformHelper);
+    // editorOnly: камеры дрона этого не видят (scene/core/editor-overlays.ts).
+    transformHelper.userData.editorOnly = true;
     scene.add(transformHelper);
     transformHelper.visible = false;
     (window as any).transformControl = transformControl;
@@ -247,6 +249,7 @@ export function initScene(container: HTMLElement) {
     }
     selectionHelper.visible = false;
     selectionHelper.renderOrder = 9999;
+    selectionHelper.userData.editorOnly = true;
     scene.add(selectionHelper);
     (window as any).selectionHelper = selectionHelper;
 

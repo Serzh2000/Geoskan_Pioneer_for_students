@@ -14,6 +14,7 @@ import {
 import { OBJECT_TYPE } from '../shared/object-types.js';
 import { updateObjectSelectionVisuals } from '../scene/interaction/input.js';
 import { scene, selectedObject } from '../scene/core/scene-init.js';
+import { markEditorOnly } from '../scene/core/editor-overlays.js';
 import { tablerIcon, type TablerIconName } from './icons/tabler.js';
 
 /*
@@ -118,7 +119,7 @@ function showHighlight(building: THREE.Object3D, face: Face, floor: number, wind
     frame.position.copy(building.localToWorld(slot.position.clone().add(new THREE.Vector3(0, 0.06 * slot.outward, 0))));
     frame.quaternion.copy(building.getWorldQuaternion(new THREE.Quaternion()));
     frame.renderOrder = 9900;
-    scene.add(frame);
+    scene.add(markEditorOnly(frame));
     highlight = frame;
 }
 

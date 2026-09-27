@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { tablerIcon, type TablerIconName } from '../ui/icons/tabler.js';
+import { renderWithoutEditorOverlays } from '../scene/core/editor-overlays.js';
 
 /*
  * Small picture-in-picture windows in the viewport showing what the current
@@ -33,7 +34,13 @@ const BOTTOM_CAMERA_NAME = 'bottom_camera';
 const SKY_COLOR = 0xaebdc8;
 
 const open: Record<ViewId, boolean> = { front: false, bottom: false };
+// Окно, которое перетащили, стоит там, куда его поставили: левый верхний
+// угол в пикселях от левого верхнего угла вьюпорта. null — окно в стопке
+// под компасом.
+type Position = { x: number; y: number };
+const positions: Record<ViewId, Position | null> = { front: null, bottom: null };
 let root: HTMLDivElement | null = null;
+let dock: HTMLDivElement | null = null;
 const slots = new Map<ViewId, HTMLElement>();
 const clearColor = new THREE.Color();
 
@@ -44,7 +51,13 @@ function icon(name: TablerIconName, size = 15) {
 function loadState() {
     try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-        for (const id of ORDER) open[id] = saved[id] === true;
+        for (const id of ORDER) {
+            open[id] = saved[id] === true;
+            const position = saved.positions?.[id];
+            positions[id] = position && Number.isFinite(position.x) && Number.isFinite(position.y)
+                ? { x: position.x, y: position.y }
+                : null;
+        }
     } catch {
         // Private mode or blocked storage: start with the windows closed.
     }
@@ -52,10 +65,41 @@ function loadState() {
 
 function saveState() {
     try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(open));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...open, positions }));
     } catch {
         // Not critical - the windows just will not be remembered.
     }
+}
+
+// Окно внутри вьюпорта целиком: иначе его часть легла бы за край холста и
+// там не нарисовалась.
+function clampPosition(view: HTMLElement, position: Position): Position {
+    if (!root) return position;
+    const maxX = Math.max(0, root.clientWidth - view.offsetWidth);
+    const maxY = Math.max(0, root.clientHeight - view.offsetHeight);
+    return {
+        x: Math.min(Math.max(0, position.x), maxX),
+        y: Math.min(Math.max(0, position.y), maxY)
+    };
+}
+
+function placeView(id: ViewId) {
+    if (!root || !dock) return;
+    const view = root.querySelector<HTMLElement>(`[data-view="${id}"]`);
+    if (!view) return;
+    const position = positions[id];
+    if (!position) {
+        view.classList.remove('is-floating');
+        view.style.left = '';
+        view.style.top = '';
+        if (view.parentElement !== dock) dock.appendChild(view);
+        return;
+    }
+    if (view.parentElement !== root) root.appendChild(view);
+    view.classList.add('is-floating');
+    const clamped = view.hidden ? position : clampPosition(view, position);
+    view.style.left = `${clamped.x}px`;
+    view.style.top = `${clamped.y}px`;
 }
 
 function render() {
@@ -65,7 +109,49 @@ function render() {
         view.hidden = !open[id];
         const toggle = root.querySelector<HTMLButtonElement>(`[data-toggle="${id}"]`)!;
         toggle.setAttribute('aria-pressed', String(open[id]));
+        placeView(id);
     }
+}
+
+// Перетаскивание за заголовок; двойной щелчок по заголовку возвращает окно
+// в стопку под компасом.
+function installDragging(view: HTMLElement, id: ViewId) {
+    const head = view.querySelector<HTMLElement>('.scene-camera-view__head')!;
+    head.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0 || (event.target as HTMLElement).closest('button') || !root) return;
+        event.preventDefault();
+        const rootRect = root.getBoundingClientRect();
+        const viewRect = view.getBoundingClientRect();
+        const grab = { x: event.clientX - viewRect.left, y: event.clientY - viewRect.top };
+        positions[id] = { x: viewRect.left - rootRect.left, y: viewRect.top - rootRect.top };
+        placeView(id);
+        view.classList.add('is-dragging');
+
+        // Движение и отпускание — на window: указатель может уйти с
+        // заголовка быстрее, чем окно за ним успеет, и тогда без захвата
+        // окно «отпустило» бы мышь посреди перетаскивания.
+        const move = (moveEvent: PointerEvent) => {
+            const rect = root!.getBoundingClientRect();
+            positions[id] = clampPosition(view, { x: moveEvent.clientX - rect.left - grab.x, y: moveEvent.clientY - rect.top - grab.y });
+            placeView(id);
+        };
+        const stop = () => {
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', stop);
+            window.removeEventListener('pointercancel', stop);
+            view.classList.remove('is-dragging');
+            saveState();
+        };
+        window.addEventListener('pointermove', move);
+        window.addEventListener('pointerup', stop);
+        window.addEventListener('pointercancel', stop);
+    });
+    head.addEventListener('dblclick', (event) => {
+        if ((event.target as HTMLElement).closest('button')) return;
+        positions[id] = null;
+        saveState();
+        placeView(id);
+    });
 }
 
 function setOpen(id: ViewId, value: boolean) {
@@ -80,20 +166,22 @@ function ensureUi(host: HTMLElement) {
     root = document.createElement('div');
     root.className = 'scene-camera-views';
     root.innerHTML = `
+        <div class="scene-camera-views__dock">
         <div class="scene-camera-views__toggles" role="group" aria-label="Окна камер дрона">
             ${ORDER.map((id) => `<button type="button" class="scene-camera-views__toggle" data-toggle="${id}"
                 aria-pressed="false" aria-label="${VIEWS[id].title}" title="${VIEWS[id].title}">${icon(VIEWS[id].icon, 16)}</button>`).join('')}
         </div>
         ${ORDER.map((id) => `
             <section class="scene-camera-view" data-view="${id}" aria-label="${VIEWS[id].title}" hidden>
-                <header class="scene-camera-view__head" title="${VIEWS[id].hint}">
+                <header class="scene-camera-view__head" title="${VIEWS[id].hint}. Перетащите окно за заголовок; двойной щелчок вернёт его на место.">
                     <span class="scene-camera-view__icon" aria-hidden="true">${icon(VIEWS[id].icon, 14)}</span>
                     <span class="scene-camera-view__title">${VIEWS[id].title}</span>
                     ${id === 'front' ? `<button type="button" class="scene-camera-view__btn" data-fullscreen aria-label="Смотреть с этой камеры на весь экран" title="На весь экран (режим FPV)">${icon('maximize', 14)}</button>` : ''}
                     <button type="button" class="scene-camera-view__btn" data-close="${id}" aria-label="Закрыть окно «${VIEWS[id].title}»">${icon('x', 14)}</button>
                 </header>
                 <div class="scene-camera-view__body" data-slot="${id}"><span class="scene-camera-view__empty">Нет изображения</span></div>
-            </section>`).join('')}`;
+            </section>`).join('')}
+        </div>`;
     root.addEventListener('click', (event) => {
         const target = event.target as HTMLElement;
         const toggle = target.closest<HTMLElement>('[data-toggle]');
@@ -104,10 +192,16 @@ function ensureUi(host: HTMLElement) {
     });
     // Clicks on the windows are not clicks in the scene.
     root.addEventListener('pointerdown', (event) => event.stopPropagation());
+    dock = root.querySelector<HTMLDivElement>('.scene-camera-views__dock');
     slots.clear();
-    for (const id of ORDER) slots.set(id, root.querySelector<HTMLElement>(`[data-slot="${id}"]`)!);
+    for (const id of ORDER) {
+        slots.set(id, root.querySelector<HTMLElement>(`[data-slot="${id}"]`)!);
+        installDragging(root.querySelector<HTMLElement>(`[data-view="${id}"]`)!, id);
+    }
     host.appendChild(root);
     render();
+    // Вьюпорт сузился (панель редактора, окно браузера) — окна остаются внутри.
+    new ResizeObserver(() => ORDER.forEach(placeView)).observe(root);
 }
 
 /** A camera under the drone looking straight down, image top = drone's nose. */
@@ -175,7 +269,7 @@ export function renderCameraViews(renderer: THREE.WebGLRenderer, scene: THREE.Sc
             // background); a camera image gets a plain overcast sky instead,
             // the same in both UI themes.
             renderer.setClearColor(scene.background instanceof THREE.Color ? scene.background : SKY_COLOR, 1);
-            renderer.render(scene, camera);
+            renderWithoutEditorOverlays(scene, () => renderer.render(scene, camera));
         }
     } finally {
         renderer.setScissorTest(false);

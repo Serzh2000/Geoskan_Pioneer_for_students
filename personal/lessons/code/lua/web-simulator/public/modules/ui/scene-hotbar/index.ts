@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { log } from '../../shared/logging/logger.js';
 import { camera, mouse, raycaster, renderer, scene, selectedObject } from '../../scene/core/scene-init.js';
+import { markEditorOnly } from '../../scene/core/editor-overlays.js';
 import { collectPointerTargets } from '../../scene/interaction/input-helpers.js';
 import { addObject } from '../../scene/objects/object-manager.js';
 import { setSelectedObjectTransform } from '../../scene/objects/object-transform.js';
@@ -62,7 +63,7 @@ function ensurePlacementMarker(): THREE.Mesh | null {
         placementMarker = new THREE.Mesh(geometry, material);
         placementMarker.renderOrder = 999;
         placementMarker.visible = false;
-        scene.add(placementMarker);
+        scene.add(markEditorOnly(placementMarker));
     }
     return placementMarker;
 }

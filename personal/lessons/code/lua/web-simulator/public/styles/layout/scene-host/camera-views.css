@@ -14,15 +14,23 @@
     --cv-shadow: 0 10px 26px rgba(15, 23, 42, 0.16);
     --cv-focus: rgba(255, 107, 0, 0.6);
 
+    /* The layer covers the viewport so a dragged window can go anywhere;
+       it lets clicks through to the scene, only the windows catch them. */
+    position: absolute;
+    inset: 0;
+    z-index: 7;
+    pointer-events: none;
+}
+
+/* The toggles and the windows that were not dragged: under the compass. */
+.scene-camera-views__dock {
     position: absolute;
     top: 114px;
     right: 14px;
-    z-index: 7;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     gap: 8px;
-    pointer-events: none;
 }
 
 :root[data-theme='dark'] .scene-camera-views {
@@ -37,7 +45,8 @@
     --cv-focus: rgba(255, 154, 82, 0.75);
 }
 
-.scene-camera-views > * {
+.scene-camera-views__dock > *,
+.scene-camera-view {
     pointer-events: auto;
 }
 
@@ -93,6 +102,20 @@
 
 .scene-camera-view[hidden] {
     display: none;
+}
+
+.scene-camera-view.is-floating {
+    position: absolute;
+}
+
+.scene-camera-view__head {
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.scene-camera-view.is-dragging .scene-camera-view__head {
+    cursor: grabbing;
 }
 
 .scene-camera-view__head {

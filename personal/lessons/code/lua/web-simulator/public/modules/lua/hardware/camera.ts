@@ -4,6 +4,7 @@ import * as fengari from 'fengari-web';
 import { getDroneFromLua } from '../../core/state.js';
 import { log } from '../../shared/logging/logger.js';
 import { droneMeshes, renderer as mainRenderer, scene } from '../../scene/core/scene-init.js';
+import { renderWithoutEditorOverlays } from '../../scene/core/editor-overlays.js';
 
 const CAMERA_CAPTURE_FRAME_INTERVAL_MS = 33;
 
@@ -142,7 +143,7 @@ function renderFpvFrame(droneId: string) {
     const previousVisibility = droneMesh.visible;
     droneMesh.visible = false;
     try {
-        captureRenderer.render(scene, fpvCamera);
+        renderWithoutEditorOverlays(scene, () => captureRenderer.render(scene, fpvCamera));
     } finally {
         droneMesh.visible = previousVisibility;
     }

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { controls, transformControl, transformHelper, selectedObject, setSelectedObject, scene, selectionHelper } from '../core/scene-init.js';
+import { controls, transformControl, transformHelper, selectedObject, setSelectedObject, scene, selectionHelper, multiSelectedObjects } from '../core/scene-init.js';
 import { log } from '../../shared/logging/logger.js';
 import { updateTransformModeDecorations } from './transform.js';
 import { clearSelectedObjectInitialTransform } from '../objects/object-transform.js';
@@ -26,7 +26,10 @@ export function deselectObject() {
     if (!selectedObject) return;
     const objectToClear = selectedObject;
     
-    selectedObject.traverse((node: any) => {
+    // Подсветку снимаем со всех выделенных по Ctrl+щелчку, а не только с
+    // последнего: иначе при нескольких выделенных остальные так и светились.
+    const highlighted = new Set<THREE.Object3D>([selectedObject, ...multiSelectedObjects]);
+    highlighted.forEach((object) => object.traverse((node: any) => {
         if (node.isMesh && node.material) {
             const materials = Array.isArray(node.material) ? node.material : [node.material];
             materials.forEach((mat: any) => {
@@ -36,7 +39,7 @@ export function deselectObject() {
                 }
             });
         }
-    });
+    }));
     
     if (selectionHelper) {
         selectionHelper.visible = false;
