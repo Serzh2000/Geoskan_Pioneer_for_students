@@ -23,7 +23,6 @@ import {
     cancelledRuns,
     getDroneOrDefault,
     lastManualSpeedUpdateMs,
-    localOriginByDrone,
     resolvePythonDroneId
 } from './runtime-shared.js';
 import {
@@ -141,10 +140,10 @@ export function installJsRuntimeAPI() {
     w.pioneer_go_to_local_point = (id: string, x: any, y: any, z: any, yaw: any) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
-        const origin = localOriginByDrone[id] || { x: 0, y: 0, z: 0 };
-        const tx = x == null ? d.pos.x : origin.x + toFiniteNumber(x, 0);
-        const ty = y == null ? d.pos.y : origin.y + toFiniteNumber(y, 0);
-        const tz = z == null ? d.pos.z : origin.z + toFiniteNumber(z, 0);
+        // Координаты сцены, как у get_local_position_lps() и Ctrl+ЛКМ.
+        const tx = x == null ? d.pos.x : toFiniteNumber(x, 0);
+        const ty = y == null ? d.pos.y : toFiniteNumber(y, 0);
+        const tz = z == null ? d.pos.z : toFiniteNumber(z, 0);
         const yawm = yaw == null ? d.target_yaw : toFiniteNumber(yaw, d.target_yaw);
 
         return pythonCommand(d, () => applyGoToLocalPointRequest(d, { x: tx, y: ty, z: tz }, { yaw: yawm }));

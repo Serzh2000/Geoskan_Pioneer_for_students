@@ -11,7 +11,6 @@ describe('lua autopilot bridge (ap_push / ap_goToLocalPoint)', () => {
     let MCECommands: typeof import('../public/modules/autopilot/mce-events.js').MCECommands;
     let ap_push: typeof import('../public/modules/lua/autopilot.js').ap_push;
     let ap_goToLocalPoint: typeof import('../public/modules/lua/autopilot.js').ap_goToLocalPoint;
-    let setLocalFrameOrigin: typeof import('../public/modules/lua/autopilot.js').setLocalFrameOrigin;
     let drone: ReturnType<typeof import('../public/modules/core/state.js').createDroneState>;
 
     // --- fengari-web mock control knobs ---
@@ -54,7 +53,7 @@ describe('lua autopilot bridge (ap_push / ap_goToLocalPoint)', () => {
         ({ setDroneFsmState } = await import('../public/modules/autopilot/fsm.js'));
         ({ resetLuaMissionGuard } = await import('../public/modules/lua/mission-guard.js'));
         ({ MCECommands } = await import('../public/modules/autopilot/mce-events.js'));
-        ({ ap_push, ap_goToLocalPoint, setLocalFrameOrigin } = await import('../public/modules/lua/autopilot.js'));
+        ({ ap_push, ap_goToLocalPoint } = await import('../public/modules/lua/autopilot.js'));
 
         drone = createDroneState(TEST_DRONE_ID, 'Autopilot Test Drone');
     });
@@ -66,7 +65,6 @@ describe('lua autopilot bridge (ap_push / ap_goToLocalPoint)', () => {
         // focus purely on the push/queue mechanism rather than the mission-guard rules
         // (those are covered separately in tests/lua-mission-guard.test.ts).
         resetLuaMissionGuard(drone, 'function callback(event) end');
-        setLocalFrameOrigin(0, 0, 0);
         topValue = 4;
         for (const key of Object.keys(tointegerValues)) delete tointegerValues[Number(key)];
         for (const key of Object.keys(tonumberValues)) delete tonumberValues[Number(key)];
@@ -144,8 +142,8 @@ describe('lua autopilot bridge (ap_push / ap_goToLocalPoint)', () => {
             expect(drone.target_pos).toEqual({ x: 1, y: 2, z: 3 });
         });
 
-        test('honors a non-zero local frame origin', () => {
-            setLocalFrameOrigin(10, 20, 0);
+        test('flies in scene coordinates wherever the drone started', () => {
+            drone.pos = { x: 10, y: 20, z: 1 };
             setDroneFsmState(drone, 'FLYING_HOVER');
             tonumberValues[1] = 1;
             tonumberValues[2] = 1;
@@ -154,7 +152,7 @@ describe('lua autopilot bridge (ap_push / ap_goToLocalPoint)', () => {
 
             ap_goToLocalPoint(FAKE_L);
 
-            expect(drone.target_pos).toEqual({ x: 11, y: 21, z: 1 });
+            expect(drone.target_pos).toEqual({ x: 1, y: 1, z: 1 });
         });
 
         test('is rejected on the ground and does not throw', () => {

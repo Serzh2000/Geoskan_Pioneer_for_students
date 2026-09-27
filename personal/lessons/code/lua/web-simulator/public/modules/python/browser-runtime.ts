@@ -7,7 +7,6 @@ import {
     cancelledRuns,
     cleanupPythonRuntimeState,
     lastManualSpeedUpdateMs,
-    localOriginByDrone,
     resetPythonDroneBindings
 } from './runtime-shared.js';
 import { ensureNumpyLoaded, ensurePyodide } from './pyodide-loader.js';
@@ -76,7 +75,6 @@ export async function runBrowserPythonScript(droneId: string, code: string): Pro
 
     cancelledRuns[droneId] = false;
     lastManualSpeedUpdateMs[droneId] = 0;
-    localOriginByDrone[droneId] = { x: drones[droneId].pos.x, y: drones[droneId].pos.y, z: drones[droneId].pos.z };
     resetPythonDroneBindings(droneId);
 
     (window as any).SIM_DRONE_ID = droneId;

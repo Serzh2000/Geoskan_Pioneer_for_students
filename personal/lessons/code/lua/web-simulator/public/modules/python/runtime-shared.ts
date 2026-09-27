@@ -1,7 +1,6 @@
 import { currentDroneId, drones } from '../core/state.js';
 
 export const cancelledRuns: Record<string, boolean> = {};
-export const localOriginByDrone: Record<string, { x: number; y: number; z: number }> = {};
 export const lastManualSpeedUpdateMs: Record<string, number> = {};
 const pythonDroneBindings = new Map<string, string>();
 
@@ -80,7 +79,6 @@ export function resolvePythonDroneId(
 
 export function cleanupPythonRuntimeState(droneId: string) {
     delete cancelledRuns[droneId];
-    delete localOriginByDrone[droneId];
     delete lastManualSpeedUpdateMs[droneId];
     resetPythonDroneBindings(droneId);
 }

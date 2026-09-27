@@ -7,8 +7,6 @@ import { emitMissingCallbackMission } from '../core/mission-notices.js';
 import { describeCommandId, pushLuaRuntimeLog } from './diagnostics.js';
 import { allowLuaMissionCommand } from './mission-guard.js';
 
-let localFrameOrigin = { x: 0, y: 0, z: 0 };
-
 function ensureLuaMissionCommandAllowed(simState: ReturnType<typeof getDroneFromLua>, apiName: string) {
     if (allowLuaMissionCommand(simState)) return true;
 
@@ -22,11 +20,6 @@ function ensureLuaMissionCommandAllowed(simState: ReturnType<typeof getDroneFrom
     }
 
     return false;
-}
-
-export function setLocalFrameOrigin(x: number, y: number, z: number) {
-    localFrameOrigin = { x, y, z };
-    log(`AP: Локальная система координат установлена в (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`, 'info');
 }
 
 export const ap_push = function(L: any) {
@@ -75,11 +68,12 @@ export const ap_goToLocalPoint = function(L: any) {
     
     const simState = getDroneFromLua(L);
     if (!ensureLuaMissionCommandAllowed(simState, 'ap.goToLocalPoint(...)')) return 0;
-    const target = {
-        x: localFrameOrigin.x + x,
-        y: localFrameOrigin.y + y,
-        z: localFrameOrigin.z + z
-    };
+    // Координаты — в системе позиционирования, то есть сцены: те же, что
+    // отдаёт Sensors.lpsPosition() и показывает Ctrl+ЛКМ. Как на настоящем
+    // Пионере, где точка задаётся в системе навигации, а не от места старта.
+    // Раньше точка отсчитывалась от места старта дрона, а позиция — нет, и
+    // «прочитать позицию и лететь на метр дальше» улетало мимо.
+    const target = { x, y, z };
     const accepted = applyGoToLocalPointRequest(simState, target);
     if (accepted) {
         // The flight follows a trajectory that takes `time` seconds (see
@@ -89,7 +83,7 @@ export const ap_goToLocalPoint = function(L: any) {
             : null;
     }
     if (accepted && getCommandSource(simState) !== 'timer') {
-        log(`[Lua AP] ap.goToLocalPoint(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}) -> глобально (${target.x.toFixed(2)}, ${target.y.toFixed(2)}, ${target.z.toFixed(2)})${time > 0 ? ' за ' + time + 'с' : ''}; FSM=${simState.fsmState}`, 'info');
+        log(`[Lua AP] ap.goToLocalPoint(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})${time > 0 ? ' за ' + time + 'с' : ''}; FSM=${simState.fsmState}`, 'info');
     }
     return 0;
 };

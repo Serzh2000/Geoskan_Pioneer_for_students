@@ -4,7 +4,6 @@
 import { resetState, resetRuntimeStatePreservePose, drones, currentDroneId, currentScriptLanguage } from './modules/core/state.js';
 import { init3D, updateDrone3D, is3DActive, addObject, appendPointToSelectedLinearObject, clearSceneSelection, deleteSelectedObject, finishSelectedLinearObjectEditing, getSelectedSceneObjectId, isSelectedLinearObjectEditingActive, listSceneObjects, focusSceneObjectById, resetDroneToOrigin, resetSelectedSceneObjectTransform, rotateSelectedSceneObjectByDegrees, selectSceneObjectById, toggleMultiSelectObjectById, setSceneObjectTransformMode, setSelectedObjectTransform, startSelectedLinearObjectEditing, updateSelectedSceneObject, deleteSceneObjectById } from './modules/drone/index.js';
 import { runLuaScript, stopLuaScript } from './modules/lua/index.js';
-import { setLocalFrameOrigin } from './modules/lua/autopilot.js';
 import { runPythonScript, stopPythonScript } from './modules/python/index.js';
 /**
  * Main browser entry point for the simulator.
@@ -173,7 +172,6 @@ async function startSimulation() {
 
         stopLuaScript(id);
         resetRuntimeStatePreservePose(id);
-        setLocalFrameOrigin(drone.pos.x, drone.pos.y, drone.pos.z);
         drone.running = true;
         drone.status = 'РАБОТАЕТ';
         

@@ -4,7 +4,6 @@ describe('runtime cleanup', () => {
     let pathPoints: typeof import('../public/modules/core/state.js').pathPoints;
     let removeDroneState: typeof import('../public/modules/core/state.js').removeDroneState;
     let cancelledRuns: typeof import('../public/modules/python/runtime-shared.js').cancelledRuns;
-    let localOriginByDrone: typeof import('../public/modules/python/runtime-shared.js').localOriginByDrone;
     let lastManualSpeedUpdateMs: typeof import('../public/modules/python/runtime-shared.js').lastManualSpeedUpdateMs;
     let cleanupPythonRuntimeState: typeof import('../public/modules/python/runtime-shared.js').cleanupPythonRuntimeState;
 
@@ -12,7 +11,6 @@ describe('runtime cleanup', () => {
         ({ createDroneState, drones, pathPoints, removeDroneState } = await import('../public/modules/core/state.js'));
         ({
             cancelledRuns,
-            localOriginByDrone,
             lastManualSpeedUpdateMs,
             cleanupPythonRuntimeState
         } = await import('../public/modules/python/runtime-shared.js'));
@@ -31,13 +29,11 @@ describe('runtime cleanup', () => {
     test('cleans python runtime dictionaries for removed drone ids', () => {
         const droneId = 'cleanup_python_drone';
         cancelledRuns[droneId] = true;
-        localOriginByDrone[droneId] = { x: 4, y: 5, z: 6 };
         lastManualSpeedUpdateMs[droneId] = 12345;
 
         cleanupPythonRuntimeState(droneId);
 
         expect(cancelledRuns[droneId]).toBeUndefined();
-        expect(localOriginByDrone[droneId]).toBeUndefined();
         expect(lastManualSpeedUpdateMs[droneId]).toBeUndefined();
     });
 });

@@ -55,7 +55,6 @@ async function createLuaSim(): Promise<LuaSim> {
     jest.unstable_mockModule('fengari-web', () => fengari);
     const state = await import('../../public/modules/core/state.js');
     const runtime = await import('../../public/modules/lua/runtime.js');
-    const autopilot = await import('../../public/modules/lua/autopilot.js');
     const { updatePhysics } = await import('../../public/modules/physics/index.js');
     const drone = state.createDroneState('lua_sim_harness', 'Lua harness');
 
@@ -71,7 +70,6 @@ async function createLuaSim(): Promise<LuaSim> {
             drone.fsmState = 'IDLE';
             drone.status = 'IDLE';
             drone.magnetGripper.active = false;
-            autopilot.setLocalFrameOrigin(0, 0, 0);
 
             const events: SimEvent[] = [];
             let lastFsm: string = drone.fsmState;

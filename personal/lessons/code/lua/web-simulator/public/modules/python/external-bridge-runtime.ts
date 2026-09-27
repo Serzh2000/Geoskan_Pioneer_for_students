@@ -2,7 +2,6 @@ import { drones } from '../core/state.js';
 import { beginEventCallbackPhase, isPointReached } from '../autopilot/fsm.js';
 import { installJsRuntimeAPI } from './pioneer-js-bridge.js';
 import { captureDroneCameraFrameBlob, isDroneCameraConnected } from './pioneer-js-bridge-camera.js';
-import { localOriginByDrone } from './runtime-shared.js';
 import { startBackgroundTicker, type BackgroundTicker } from '../shared/background-ticker.js';
 import {
     type ExternalBridgeState,
@@ -45,16 +44,6 @@ function setExternalDroneRuntimeState(droneId: string, active: boolean): void {
     if (drone.status !== 'ОШИБКА' && drone.status !== 'CRASHED' && drone.status !== 'DISARMED_FALL') {
         drone.status = 'ЗАВЕРШЕН';
     }
-}
-
-function syncExternalDroneLocalOrigin(droneId: string): void {
-    const drone = drones[droneId];
-    if (!drone) return;
-    localOriginByDrone[droneId] = {
-        x: drone.pos.x,
-        y: drone.pos.y,
-        z: drone.pos.z
-    };
 }
 
 export function ensureExternalBridgeRuntimeInstalled(): void {
@@ -100,7 +89,6 @@ export function applyExternalEvent(
 
     switch (event.method) {
         case '__init__':
-            syncExternalDroneLocalOrigin(droneId);
             setExternalDroneRuntimeState(droneId, true);
             return;
         case 'arm':
