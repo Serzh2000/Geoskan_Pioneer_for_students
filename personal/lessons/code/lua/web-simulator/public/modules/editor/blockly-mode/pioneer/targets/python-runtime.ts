@@ -1,33 +1,33 @@
-// Python-рантайм для pioneer_*-блоков (§4.4 плана): все команды pioneer_sdk
-// неблокирующие, поэтому последовательность строится опросом состояния —
-// без корутин, в отличие от Lua-таргета (targets/lua-runtime.ts).
-//
-// [пересмотрено 2026-09-14] Раньше здесь был фиксированный пролог с четырьмя
-// именованными обёртками (_pioneer_wait_armed/_takeoff/_landed/_point) и
-// хардкодом `import math` / `_pioneer_t0 = time.time()`, печатавшимися в
-// КАЖДОЙ программе независимо от того, какие блоки реально на холсте
-// (ученику показывали 4 функции ожидания даже для одной команды "взлететь").
-// Теперь единственный по-настоящему общий кусок — сам опрос-примитив
-// `_pioneer_wait(condition, timeout, message)`; конкретные условия ожидания
-// (ARMED/MISSION/DISARMED/point_reached) блоки полёта (blocks/flight.ts)
-// подставляют инлайном прямо в месте вызова, а `_pioneer_wait`, `import math`
-// и `_pioneer_t0` попадают в headerDefinitions через generator.definitions_
-// только когда их реально использует хотя бы один блок на холсте — тем же
-// приёмом, что уже был у LED/position-хелперов (blocks/leds.ts, blocks/sensors.ts).
+// Общий пролог Python-программы совместим с официальным pioneer_sdk.
+// Ожидание завершения движения с ограничением времени создают блоки полёта.
 export type PythonProgramParts = {
     // Хелперы pioneer_*-блоков (definitions_), добавляются только при использовании.
     headerDefinitions: string;
     // Код цепочки pioneer_start (без отступа — тело идёт на верхнем уровне модуля).
     body: string;
+    // Блоки курса и груза требуют pioneer_sdk 0.6.1 (GitFlic) в режиме
+    // симулятора: get_yaw()/cargo_*() без simulator=True там не работают. У
+    // pioneer_sdk 0.5.3 с PyPI аргумента simulator нет вовсе, поэтому без этих
+    // блоков пишем просто Pioneer() — так программа идёт на обеих версиях.
+    simulatorSdk?: boolean;
+    // «Каждые N сек» / «Через N сек» — фоновые потоки. Программа не должна
+    // закончиться и закрыть соединение раньше них: в Lua таймеры тоже живут,
+    // пока работает скрипт.
+    threads?: boolean;
 };
 
-export function buildPythonProgram({ headerDefinitions, body }: PythonProgramParts): string {
+export function buildPythonProgram({ headerDefinitions, body, simulatorSdk = false, threads = false }: PythonProgramParts): string {
+    const tail = threads ? 'for _pioneer_thread in _pioneer_threads:\n    _pioneer_thread.join()' : '';
+    // import time — только если программа им пользуется (паузы, время,
+    // таймеры): как в официальных примерах, без лишних строк.
+    const usesTime = /\btime\./.test(`${headerDefinitions}\n${body}`);
     const sections = [
-        '# @pioneer-blockly v1\nfrom pioneer_sdk import Pioneer\nimport time',
-        'pioneer = Pioneer(simulator=True)'
+        usesTime ? 'from pioneer_sdk import Pioneer\nimport time' : 'from pioneer_sdk import Pioneer',
+        simulatorSdk ? 'pioneer = Pioneer(simulator=True)' : 'pioneer = Pioneer()'
     ];
     if (headerDefinitions) sections.push(headerDefinitions);
     if (body) sections.push(body.replace(/\n+$/, ''));
+    if (tail) sections.push(tail);
     sections.push('pioneer.close_connection()');
     return `${sections.join('\n\n')}\n`;
 }

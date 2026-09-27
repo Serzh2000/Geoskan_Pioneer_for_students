@@ -34,7 +34,7 @@ function compileGeneratorWorkspace(language: ScriptLanguage, workspace: BlocklyN
         'from pioneer_sdk import Pioneer',
         'import time',
         '',
-        'pioneer = Pioneer(simulator=True)',
+        'pioneer = Pioneer()',
         ''
     ];
     const suffix = ['', 'pioneer.close_connection()'];

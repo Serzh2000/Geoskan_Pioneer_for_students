@@ -13,13 +13,14 @@ const CATEGORY_LABELS: Record<PioneerBlockCategory, { name: string; colour: stri
     leds: { name: 'Светодиоды', colour: '#22c55e' },
     sensors: { name: 'Датчики', colour: '#14b8a6' },
     camera: { name: 'Камера', colour: '#0ea5e9' },
-    events: { name: 'События', colour: '#8b5cf6' }
+    events: { name: 'События', colour: '#8b5cf6' },
+    scene: { name: 'Сцена', colour: '#64748b' }
 };
 
 // Камера идёт после датчиков: это тоже «что дрон видит/меряет», а не команда
 // полёта, но в отличие от датчиков она блок-действие, а не значение. События
 // остаются последними — они про устройство программы, а не про дрон.
-const CATEGORY_ORDER: PioneerBlockCategory[] = ['program', 'flight', 'time', 'leds', 'sensors', 'camera', 'events'];
+const CATEGORY_ORDER: PioneerBlockCategory[] = ['program', 'flight', 'time', 'leds', 'sensors', 'camera', 'events', 'scene'];
 
 const NUMBER_SHADOWS: Record<string, Record<string, number>> = {
     pioneer_wait: { SECONDS: 1 },
@@ -27,7 +28,26 @@ const NUMBER_SHADOWS: Record<string, Record<string, number>> = {
     pioneer_go_to: { X: 1, Y: 0, Z: 1 },
     pioneer_set_yaw: { ANGLE: 90 },
     pioneer_led_index: { INDEX: 0 },
-    pioneer_set_manual_speed: { VX: 0, VY: 0, VZ: 0, YAW_RATE: 0 }
+    pioneer_set_manual_speed: { VX: 0, VY: 0, VZ: 0, YAW_RATE: 0 },
+    pioneer_set_manual_speed_body: { VX: 0, VY: 0, VZ: 0, YAW_RATE: 0 },
+    pioneer_go_to_yaw: { X: 1, Y: 0, Z: 1, YAW: 90 },
+    pioneer_go_to_time: { X: 1, Y: 0, Z: 1, TIME: 5 },
+    pioneer_go_to_body: { X: 1, Y: 0, Z: 0 },
+    pioneer_every: { SECONDS: 0.1 },
+    pioneer_after: { SECONDS: 1 },
+    pioneer_colour_hsv: { H: 120, S: 100, V: 100 },
+    pioneer_vehicle_speed: { SPEED: 1 }
+};
+
+// Текстовые входы (имя транспорта на сцене).
+const TEXT_SHADOWS: Record<string, Record<string, string>> = {
+    pioneer_vehicle_run: { NAME: 'Поезд' },
+    pioneer_vehicle_speed: { NAME: 'Поезд' }
+};
+
+// Условие «Ждать, пока» — сравнение, которое остаётся только дополнить.
+const CONDITION_SHADOWS: Record<string, string[]> = {
+    pioneer_wait_until: ['CONDITION']
 };
 
 const COLOUR_SHADOWS: Record<string, string[]> = {
@@ -59,12 +79,21 @@ function disabledAttribute(type: string, target: PioneerTarget | undefined): str
 function renderBlock(type: string, target?: PioneerTarget): string {
     const numberInputs = NUMBER_SHADOWS[type];
     const colourInputs = COLOUR_SHADOWS[type];
+    const textInputs = TEXT_SHADOWS[type];
+    const conditionInputs = CONDITION_SHADOWS[type];
     const disabledAttr = disabledAttribute(type, target);
-    if (!numberInputs && !colourInputs) {
+    if (!numberInputs && !colourInputs && !textInputs && !conditionInputs) {
         return `<block type="${type}"${disabledAttr}></block>`;
     }
 
     const valueTags: string[] = [];
+    Object.entries(textInputs ?? {}).forEach(([name, value]) => {
+        valueTags.push(`<value name="${name}"><shadow type="text"><field name="TEXT">${value}</field></shadow></value>`);
+    });
+    (conditionInputs ?? []).forEach((name) => {
+        valueTags.push(`<value name="${name}"><block type="logic_compare"><field name="OP">GT</field>`
+            + `<value name="B">${numberShadow(0)}</value></block></value>`);
+    });
     if (numberInputs) {
         Object.entries(numberInputs).forEach(([name, value]) => {
             valueTags.push(`<value name="${name}">${numberShadow(value)}</value>`);
@@ -100,18 +129,37 @@ const STANDARD_CATEGORIES = `
         <block type="controls_repeat_ext"></block>
         <block type="controls_whileUntil"></block>
         <block type="controls_for"></block>
+        <block type="controls_forEach"></block>
         <block type="controls_flow_statements"></block>
     </category>
     <category name="Числа" colour="#f59e0b">
         <block type="math_number"></block>
         <block type="math_arithmetic"></block>
         <block type="math_single"></block>
+        <block type="math_trig"></block>
+        <block type="math_constant"></block>
+        <block type="math_number_property"></block>
         <block type="math_round"></block>
+        <block type="math_modulo"></block>
+        <block type="math_constrain"></block>
+        <block type="math_random_int"></block>
+        <block type="math_random_float"></block>
     </category>
     <category name="Текст" colour="#22c55e">
         <block type="text"></block>
         <block type="text_join"></block>
+        <block type="text_length"></block>
         <block type="text_print"></block>
+    </category>
+    <category name="Списки" colour="#0d9488">
+        <block type="lists_create_with"></block>
+        <block type="lists_create_with"><mutation items="0"></mutation></block>
+        <block type="lists_repeat"></block>
+        <block type="lists_length"></block>
+        <block type="lists_isEmpty"></block>
+        <block type="lists_getIndex"></block>
+        <block type="lists_setIndex"></block>
+        <block type="lists_indexOf"></block>
     </category>
     <category name="Переменные" custom="VARIABLE" colour="#14b8a6"></category>
     <category name="Функции" custom="PROCEDURE" colour="#6366f1"></category>

@@ -7,6 +7,9 @@ export const PIONEER_START_TYPE = 'pioneer_start';
 // отличать такие блоки от «сирот» до того, как сам блок появился.
 export const PIONEER_ON_EVENT_TYPE = 'pioneer_on_event';
 
+// Хат-блок «Каждые N сек» (Timer.new в Lua, фоновый поток в Python).
+export const PIONEER_EVERY_TYPE = 'pioneer_every';
+
 // Число светодиодов по умолчанию для Ledbar.new() в сгенерированном Lua.
 // Значение взято из уроков (LED-модуль), см. открытый вопрос №3 плана —
 // выбор между 29 (модуль) и 4 (бортовые) остаётся за владельцем.

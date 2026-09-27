@@ -1,6 +1,7 @@
 import * as Blockly from 'blockly';
 import { definePioneerBlock } from '../registry.js';
 import { PIONEER_LED_COUNT } from '../constants.js';
+import { PY_INDENT } from './shared.js';
 
 const COLOUR_CHECK = 'PioneerColour';
 
@@ -97,6 +98,48 @@ export function registerLedBlocks(): void {
                 return [`(${r}, ${g}, ${b})`, 0] as [string, number];
             }
         }
+    });
+
+    // Цвет по тону/насыщенности/яркости — fromHSV(hue, saturation, value) из
+    // официального API (example_led.lua): тон 0..360, остальное 0..100. В Lua
+    // fromHSV отдаёт компоненты 0..1, а цвет в блоках хранится 0..255 —
+    // пересчитываем. В Python — стандартный colorsys с тем же пересчётом.
+    definePioneerBlock({
+        type: 'pioneer_colour_hsv',
+        category: 'leds',
+        init(this: Blockly.Block) {
+            this.appendValueInput('H').setCheck('Number').appendField('Цвет тон');
+            this.appendValueInput('S').setCheck('Number').appendField('насыщенность');
+            this.appendValueInput('V').setCheck('Number').appendField('яркость');
+            this.setInputsInline(true);
+            this.setOutput(true, COLOUR_CHECK);
+            this.setColour('#22c55e');
+            this.setTooltip('Цвет по тону (0..360°), насыщенности и яркости (0..100).');
+        },
+        targets: {
+            lua: (block, gen) => {
+                definitionsOf(gen).pioneer_hsv_helper = 'local function __hsv(h, s, v) local r, g, b = fromHSV(h, s, v) return {r * 255, g * 255, b * 255} end';
+                const h = gen.valueToCode(block, 'H', 0) || '0';
+                const s = gen.valueToCode(block, 'S', 0) || '100';
+                const v = gen.valueToCode(block, 'V', 0) || '100';
+                return [`__hsv(${h}, ${s}, ${v})`, 0] as [string, number];
+            },
+            python: (block, gen) => {
+                const definitions = definitionsOf(gen);
+                definitions.import_colorsys = 'import colorsys';
+                definitions.pioneer_hsv_helper = [
+                    'def _pioneer_hsv(h, s, v):',
+                    // Насыщенность и яркость обрезаются до 0..100, как у fromHSV.
+                    `${PY_INDENT}r, g, b = colorsys.hsv_to_rgb((h % 360) / 360, max(0, min(100, s)) / 100, max(0, min(100, v)) / 100)`,
+                    `${PY_INDENT}return (round(r * 255), round(g * 255), round(b * 255))`
+                ].join('\n');
+                const h = gen.valueToCode(block, 'H', 0) || '0';
+                const s = gen.valueToCode(block, 'S', 0) || '100';
+                const v = gen.valueToCode(block, 'V', 0) || '100';
+                return [`_pioneer_hsv(${h}, ${s}, ${v})`, 0] as [string, number];
+            }
+        },
+        apiUsage: { lua: ['fromHSV'], python: ['colorsys.hsv_to_rgb', 'round'] }
     });
 
     definePioneerBlock({

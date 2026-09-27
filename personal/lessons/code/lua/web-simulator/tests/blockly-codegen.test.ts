@@ -595,7 +595,7 @@ describe('Кодогенерация Python', () => {
 
         const code = compileMainEditorWorkspace('python', workspace as unknown as Blockly.WorkspaceSvg);
         expect(code).toContain('from pioneer_sdk import Pioneer');
-        expect(code).toContain('pioneer = Pioneer(simulator=True)');
+        expect(code).toContain('pioneer = Pioneer()');
         expect(code).toContain('pioneer.arm()');
         expect(code.trimEnd().endsWith('pioneer.close_connection()')).toBe(true);
     });

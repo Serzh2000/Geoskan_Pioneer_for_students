@@ -47,10 +47,9 @@ describe('Lua: снимок как переход-опрос', () => {
         // Пустая ветка `then` — тот же терминальный шаг, что и пустая
         // `if event == Ev.COPTER_LANDED then ... end` у последней посадки.
         expect(compilePioneerWorkspace(ws, 'lua')).toBe(
-            '-- @pioneer-blockly v1\n'
-            + 'camera.requestMakeShot()\n'
+            'camera.requestMakeShot()\n'
             + 'local function __poll_s0()\n'
-            + '    if camera.checkRequestShot() == 1 then\n'
+            + '    if camera.checkRequestShot() ~= -1 then\n'
             + '    else\n'
             + '        Timer.callLater(0.05, __poll_s0)\n'
             + '    end\n'
@@ -72,11 +71,11 @@ describe('Lua: снимок как переход-опрос', () => {
 
         const code = compilePioneerWorkspace(ws, 'lua');
         // Посадка не должна начаться, пока снимок не сохранён: она обязана
-        // оказаться в ветке `if camera.checkRequestShot() == 1 then`, а не
+        // оказаться в ветке `if camera.checkRequestShot() ~= -1 then`, а не
         // строкой ниже запроса снимка.
         expect(code).toContain(
             'local function __poll_s0()\n'
-            + '    if camera.checkRequestShot() == 1 then\n'
+            + '    if camera.checkRequestShot() ~= -1 then\n'
             + '        ap.push(Ev.MCE_LANDING)\n'
             + '    else\n'
         );
@@ -103,7 +102,7 @@ describe('Lua: снимок как переход-опрос', () => {
         // Второй опрос объявлен ВНУТРИ ветки готовности первого — иначе оба
         // снимка ушли бы в очередь одновременно.
         expect(code).toContain(
-            '    if camera.checkRequestShot() == 1 then\n'
+            '    if camera.checkRequestShot() ~= -1 then\n'
             + '        camera.requestMakeShot()\n'
             + '        local function __poll_s1()\n'
         );
@@ -129,7 +128,7 @@ describe('Lua: снимок как переход-опрос', () => {
             + '  camera.requestMakeShot()\n'
             + '  local function __poll_s2()\n'
             + '      if __state ~= "__s2" then return end\n'
-            + '      if camera.checkRequestShot() == 1 then\n'
+            + '      if camera.checkRequestShot() ~= -1 then\n'
             + '          __state = "__s3"\n'
             + '          __advance()\n'
             + '      else\n'

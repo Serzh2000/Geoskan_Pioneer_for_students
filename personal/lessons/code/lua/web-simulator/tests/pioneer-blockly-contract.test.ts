@@ -36,8 +36,11 @@ const PIONEER_BRIDGE_SOURCE_PATH = path.join(HERE, '../public/modules/python/pio
 
 const CALL_PATTERN = /\b([A-Za-z_][\w]*(?:[.:][A-Za-z_]\w*)*)\s*\(/g;
 
+const KEYWORDS = new Set(['in', 'not', 'and', 'or', 'if', 'elif', 'while', 'return']);
+
 function extractCalls(code: string): string[] {
-    return Array.from(code.matchAll(CALL_PATTERN)).map((match) => match[1]);
+    // `in (...)`, `not (...)` — выражения, а не вызовы API.
+    return Array.from(code.matchAll(CALL_PATTERN)).map((match) => match[1]).filter((name) => !KEYWORDS.has(name));
 }
 
 function buildLuaAllowSet(): Set<string> {
@@ -64,7 +67,9 @@ function buildLuaAllowSet(): Set<string> {
 // 'current' — локальная переменная __advance() в targets/lua-runtime.ts
 // (`local current = action[__state]; if current ~= nil then current() end`):
 // вызов значения, хранящегося в локальной переменной, а не обращение к API.
-const LUA_STD_NAMES = new Set(['print', 'error', 'select', 'tostring', 'callback', 'function', 'current']);
+// 'start'/'stop' — методы объекта таймера (`__timers["имя"]:start()`, Timer.new
+// из официального API): регэксп видит только имя метода после `]:`.
+const LUA_STD_NAMES = new Set(['print', 'error', 'select', 'tostring', 'callback', 'function', 'current', 'start', 'stop']);
 const LUA_STD_PREFIXES = ['math.'];
 
 function isAllowedLuaCall(name: string, allowSet: Set<string>): boolean {
@@ -110,7 +115,12 @@ const CAMERA_METHODS = extractClassMethods(PIONEER_SDK_SOURCE, 'Camera');
 const BRIDGE_GLOBALS = extractBridgeGlobals(fs.readFileSync(PIONEER_BRIDGE_SOURCE_PATH, 'utf8'));
 
 const PYTHON_STD_NAMES = new Set([
-    'time.sleep', 'time.time', 'print', 'RuntimeError', 'Pioneer', 'Camera', 'condition'
+    'time.sleep', 'time.time', 'time.monotonic', 'TimeoutError', 'print', 'RuntimeError', 'Pioneer', 'Camera', 'condition',
+    // Фоновые задачи «Каждые N сек»/«Через N сек» и цвет HSV — стандартная
+    // библиотека Python (thread — локальная переменная потока).
+    'set', 'threading.Thread', 'thread.start', 'colorsys.hsv_to_rgb', 'round', 'max', 'min',
+    // Транспорт на сцене — класс Vehicle симуляторного pioneer_sdk.
+    'Vehicle', 'start', 'stop', 'set_speed'
 ]);
 
 function isAllowedPythonCall(name: string, pioneerMethods: Set<string>): boolean {
@@ -346,21 +356,16 @@ describe('Интеграционный тест: полный полёт (фаз
         expect(checkLuaSyntax(code).ok).toBe(true);
     });
 
-    test('Python: тот же маршрут через pioneer_sdk с ожиданием по опросу состояния', () => {
+    test('Python: тот же маршрут через pioneer_sdk, как в официальных примерах', () => {
         const code = compilePioneerWorkspace(buildFullFlightWorkspace(), 'python');
 
-        // Никакого общего хелпера с таймаутом/сообщением (пересмотрено
-        // 2026-09-14 повторно, см. §4.4 плана) — прямой инлайновый while,
-        // как в официальных примерах Geoscan.
-        expect(code).toContain('pioneer.arm()');
-        expect(code).toContain("while not pioneer.get_autopilot_state() == 'ARMED':\n    time.sleep(0.1)");
-        expect(code).toContain('pioneer.takeoff()');
-        expect(code).toContain("while not pioneer.get_autopilot_state() == 'MISSION':\n    time.sleep(0.1)");
-        expect(code).toContain('pioneer.go_to_local_point(x=1, y=0, z=1)');
-        expect(code).toContain('while not pioneer.point_reached():\n    time.sleep(0.1)');
-        expect(code).toContain('time.sleep(2)');
-        expect(code).toContain('pioneer.land()');
-        expect(code).toContain("while not pioneer.get_autopilot_state() == 'DISARMED':\n    time.sleep(0.1)");
+        // Команды подряд (manual_speed.py), точку ждут point_reached()
+        // (aruco_flight.py); последнюю посадку не ждут.
+        expect(code).toContain('pioneer.arm()\npioneer.takeoff()\n');
+        expect(code).not.toContain('get_autopilot_state');
+        expect(code).not.toContain('raise');
+        expect(code).toContain('pioneer.go_to_local_point(x=1, y=0, z=1, yaw=0)\nwhile not pioneer.point_reached():\n    pass\n');
+        expect(code).toContain('time.sleep(2)\npioneer.land()\n');
         expect(code.trimEnd().endsWith('pioneer.close_connection()')).toBe(true);
 
         expect(code).not.toContain('_pioneer_wait');

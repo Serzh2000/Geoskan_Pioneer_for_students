@@ -155,7 +155,7 @@ describe('pioneer_position / pioneer_distance / pioneer_battery', () => {
 
         const wsPy = makeWorkspace();
         wsPy.newBlock('pioneer_battery');
-        expect(pythonGenerator.workspaceToCode(wsPy)).toContain('pioneer.get_battery_status()');
+        expect(pythonGenerator.workspaceToCode(wsPy)).toContain('pioneer.get_battery_status(get_last_received=True)');
     });
 });
 
@@ -170,7 +170,7 @@ describe('compilePioneerWorkspace: пролог для пустого pioneer_st
         ws.newBlock('pioneer_start');
         const code = compilePioneerWorkspace(ws, 'lua');
 
-        expect(code.startsWith('-- @pioneer-blockly v1')).toBe(true);
+        expect(code).not.toContain('@pioneer-blockly');
         expect(code).toContain('function callback(event)');
         expect(code).not.toContain('local action = {}');
         expect(code).not.toContain('action[');
@@ -185,13 +185,13 @@ describe('compilePioneerWorkspace: пролог для пустого pioneer_st
         expect(code).not.toContain('__t0');
     });
 
-    test('Python: Pioneer(simulator=True), close_connection в конце, без хелперов для пустой программы', () => {
+    test('Python: Pioneer(), close_connection в конце, без хелперов для пустой программы', () => {
         const ws = makeWorkspace();
         ws.newBlock('pioneer_start');
         const code = compilePioneerWorkspace(ws, 'python');
 
-        expect(code.startsWith('# @pioneer-blockly v1')).toBe(true);
-        expect(code).toContain('pioneer = Pioneer(simulator=True)');
+        expect(code).toBe('from pioneer_sdk import Pioneer\n\npioneer = Pioneer()\n\npioneer.close_connection()\n');
+        expect(code).toContain('pioneer = Pioneer()');
         expect(code.trimEnd().endsWith('pioneer.close_connection()')).toBe(true);
 
         // [пересмотрено 2026-09-14, см. §4.4 плана] Пустая программа без
@@ -230,50 +230,43 @@ describe('Lua: __t0/__loop_guard — только когда реально ис
     });
 });
 
-describe('pioneer_preflight / pioneer_takeoff / pioneer_land: опрос состояния инлайновым while', () => {
-    test('Python: инлайновый while без общего хелпера/таймаута (§4.4 плана, облегчено 2026-09-14)', () => {
-        const ws = makeWorkspace();
-        const preflight = ws.newBlock('pioneer_preflight');
-        const takeoff = ws.newBlock('pioneer_takeoff');
-        const land = ws.newBlock('pioneer_land');
-        chainUnderStart(ws, preflight, takeoff, land);
-
-        const code = compilePioneerWorkspace(ws, 'python');
-        // Никакого общего _pioneer_wait(...) с таймаутом/сообщением — только
-        // прямой while, как в официальных примерах Geoscan. Обязательный
-        // time.sleep(0.1) ДО проверки — иначе pioneer.arm() синхронно
-        // переводит дрон в 'ARMED', условие первой же проверки уже истинно, и
-        // pioneer.takeoff() выполнится в тот же тик — рантайм на это кидает
-        // "CRITICAL ERROR: Commands ... run at the same time" (см. flight.ts).
-        // 0.1, а не 0.05 — проверено вживую: 0.05 реального времени не всегда
-        // хватает, чтобы физический тик симулятора успел продвинуться.
-        expect(code).not.toContain('_pioneer_wait');
-        expect(code).toContain(
-            "pioneer.arm()\ntime.sleep(0.1)\nwhile not pioneer.get_autopilot_state() == 'ARMED':\n    time.sleep(0.1)"
-        );
-        expect(code).toContain(
-            "pioneer.takeoff()\ntime.sleep(0.1)\nwhile not pioneer.get_autopilot_state() == 'MISSION':\n    time.sleep(0.1)"
-        );
-        expect(code).toContain(
-            "pioneer.land()\ntime.sleep(0.1)\nwhile not pioneer.get_autopilot_state() == 'DISARMED':\n    time.sleep(0.1)"
-        );
-        // Ни один из этих трёх блоков не использует math.
-        expect(code).not.toContain('import math');
-    });
-
-    test('Python: pioneer_go_to ждёт point_reached() тем же инлайновым while', () => {
+describe('pioneer_preflight / pioneer_takeoff / pioneer_go_to / pioneer_land: Python как в примерах pioneer_sdk', () => {
+    // Официальные примеры (manual_speed.py, aruco_flight.py, circle_flight.py):
+    // команды подряд, точку ждут `while not point_reached(): pass`, никаких
+    // проверок состояния автопилота и таймаутов.
+    test('полёт в точку 1, 0, 1 — ровно как в примерах', () => {
         const ws = makeWorkspace();
         const goTo = ws.newBlock('pioneer_go_to');
         goTo.getInput('X')!.connection!.connect(numberBlock(ws, 1).outputConnection!);
         goTo.getInput('Y')!.connection!.connect(numberBlock(ws, 0).outputConnection!);
         goTo.getInput('Z')!.connection!.connect(numberBlock(ws, 1).outputConnection!);
-        chainUnderStart(ws, goTo);
+        chainUnderStart(ws, ws.newBlock('pioneer_preflight'), ws.newBlock('pioneer_takeoff'), goTo, ws.newBlock('pioneer_land'));
 
-        const code = compilePioneerWorkspace(ws, 'python');
-        expect(code).not.toContain('_pioneer_wait');
-        expect(code).toContain(
-            'pioneer.go_to_local_point(x=1, y=0, z=1)\ntime.sleep(0.1)\nwhile not pioneer.point_reached():\n    time.sleep(0.1)'
+        expect(compilePioneerWorkspace(ws, 'python')).toBe(
+            'from pioneer_sdk import Pioneer\n'
+            + '\n'
+            + 'pioneer = Pioneer()\n'
+            + '\n'
+            + 'pioneer.arm()\n'
+            + 'pioneer.takeoff()\n'
+            + 'pioneer.go_to_local_point(x=1, y=0, z=1, yaw=0)\n'
+            + 'while not pioneer.point_reached():\n'
+            + '    pass\n'
+            + 'pioneer.land()\n'
+            + '\n'
+            + 'pioneer.close_connection()\n'
         );
+        ws.dispose();
+    });
+
+    test('после посадки ждёт её конца, только если дальше ещё есть блоки', () => {
+        const ws = makeWorkspace();
+        chainUnderStart(ws, ws.newBlock('pioneer_preflight'), ws.newBlock('pioneer_takeoff'), ws.newBlock('pioneer_land'), ws.newBlock('pioneer_preflight'));
+        const code = compilePioneerWorkspace(ws, 'python');
+        expect(code).toContain("pioneer.land()\nwhile pioneer.get_autopilot_state() not in ('LANDED', 'DISARMED'):\n    pass\npioneer.arm()");
+        expect(code).not.toContain('MISSION');
+        expect(code).not.toContain('import time');
+        ws.dispose();
     });
 
     test('Python: pioneer_set_yaw добавляет import math один раз, ждёт точку тем же while', () => {
@@ -286,7 +279,7 @@ describe('pioneer_preflight / pioneer_takeoff / pioneer_land: опрос сос�
         expect(code.match(/^import math$/m)).toHaveLength(1);
         expect(code).not.toContain('_pioneer_wait');
         expect(code).toContain('def _pioneer_set_yaw(yaw):');
-        expect(code).toContain('while not pioneer.point_reached():\n        time.sleep(0.1)');
+        expect(code).toContain('while not pioneer.point_reached():\n        pass');
         expect(code).toContain('_pioneer_set_yaw(math.radians(90))');
     });
 

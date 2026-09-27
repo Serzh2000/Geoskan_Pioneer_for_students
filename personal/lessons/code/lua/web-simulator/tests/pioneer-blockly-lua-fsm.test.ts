@@ -12,20 +12,16 @@
  *    плоская ветка сработала бы уже на первой точке. Здесь проверяется
  *    именно ГРАФ СОСТОЯНИЙ (какие сегменты появились, куда ведут переходы).
  *
- * Сюда же — тесты на wait-in-loop-guard.ts: блок-ожидание внутри цикла или
- * «если» отключается для Lua (граница шага внутри них не поддержана —
- * решили не рисковать тихой поломкой рантайма вместо честного отключения) и
- * остаётся включённым для Python (там ожидание — обычный блокирующий опрос,
- * циклы и условия ему не мешают).
+ * Сюда же — тесты на wait-in-loop-guard.ts: внутри циклов и «если» ожидание
+ * поддержано в обоих таргетах (Lua — автомат с развилками,
+ * targets/lua-structured.ts), а внутри функции Lua его отключает: функция
+ * выполняется целиком за один раз, шагу автомата там негде закончиться.
  */
 import * as Blockly from 'blockly';
 import { ensureEditorBlocklyDefinitions } from '../public/modules/editor/blockly-mode/index.js';
 import { compilePioneerWorkspace } from '../public/modules/editor/blockly-mode/pioneer/targets/compile.js';
 import { applyPioneerTargetToWorkspace } from '../public/modules/editor/blockly-mode/pioneer/target-support.js';
-import {
-    WAIT_IN_LOOP_REASON,
-    WAIT_IN_CONDITIONAL_REASON
-} from '../public/modules/editor/blockly-mode/pioneer/disable-reasons.js';
+import { WAIT_IN_FUNCTION_REASON } from '../public/modules/editor/blockly-mode/pioneer/disable-reasons.js';
 
 await import('../public/modules/editor/blockly-mode/blockly-core.js');
 await import('../public/modules/editor/blockly-mode/workspace-xml.js');
@@ -70,8 +66,7 @@ describe('Плоский режим: линейная цепочка без по
         // соответствует такое же пустое последнее состояние (и пустой
         // _FINAL_NODE в референсе TRIK из §2.1 плана).
         expect(compilePioneerWorkspace(workspace, 'lua')).toBe(
-            '-- @pioneer-blockly v1\n'
-            + 'ap.push(Ev.MCE_PREFLIGHT)\n'
+            'ap.push(Ev.MCE_PREFLIGHT)\n'
             + '\n'
             + 'function callback(event)\n'
             + '    if event == Ev.ENGINES_STARTED then\n'
@@ -107,8 +102,7 @@ describe('Плоский режим: линейная цепочка без по
         // физически нельзя завести раньше, чем выполнится тело первого.
         // Ожидания событий вложенности не создают (см. targets/lua-fsm.ts).
         expect(compilePioneerWorkspace(workspace, 'lua')).toBe(
-            '-- @pioneer-blockly v1\n'
-            + 'ap.push(Ev.MCE_PREFLIGHT)\n'
+            'ap.push(Ev.MCE_PREFLIGHT)\n'
             + '\n'
             + 'function callback(event)\n'
             + '    if event == Ev.ENGINES_STARTED then\n'
@@ -161,8 +155,7 @@ describe('Плоский режим: линейная цепочка без по
         // иначе моторы выключились бы ДО того, как автопилот подтвердил
         // касание земли.
         expect(compilePioneerWorkspace(workspace, 'lua')).toBe(
-            '-- @pioneer-blockly v1\n'
-            + 'ap.push(Ev.MCE_LANDING)\n'
+            'ap.push(Ev.MCE_LANDING)\n'
             + '\n'
             + 'function callback(event)\n'
             + '    if event == Ev.COPTER_LANDED then\n'
@@ -193,8 +186,7 @@ describe('FSM: откат при повторяющемся имени собы�
         // Зафиксировано осознанно: этот путь не переписывали, и любое его
         // изменение здесь должно быть видно.
         expect(compilePioneerWorkspace(workspace, 'lua')).toBe(
-            '-- @pioneer-blockly v1\n'
-            + 'local __state = "__s0"\n'
+            'local __state = "__s0"\n'
             + '\n'
             + 'local action = {}\n'
             + '\n'
@@ -213,8 +205,8 @@ describe('FSM: откат при повторяющемся имени собы�
             + '  end\n'
             + '\n'
             + 'function callback(event)\n'
-            + '    if __state == "__s0" and event == Ev.POINT_REACHED then __state = "__s1"; __advance() end\n'
-            + '  if __state == "__s1" and event == Ev.POINT_REACHED then __state = "__s2"; __advance() end\n'
+            + '    if __state == "__s0" and event == Ev.POINT_REACHED then __state = "__s1"; __advance(); return end\n'
+            + '  if __state == "__s1" and event == Ev.POINT_REACHED then __state = "__s2"; __advance(); return end\n'
             + 'end\n'
             + '\n'
             + '__advance()\n'
@@ -250,8 +242,7 @@ describe('FSM: откат при повторяющемся имени собы�
         chainUnderStart(timersOnly, firstWait, secondWait, timersOnly.newBlock('pioneer_disarm'));
 
         expect(compilePioneerWorkspace(timersOnly, 'lua')).toBe(
-            '-- @pioneer-blockly v1\n'
-            + 'Timer.callLater(1, function()\n'
+            'Timer.callLater(1, function()\n'
             + '    Timer.callLater(2, function()\n'
             + '        ap.push(Ev.ENGINES_DISARM)\n'
             + '    end)\n'
@@ -263,125 +254,57 @@ describe('FSM: откат при повторяющемся имени собы�
     });
 });
 
-describe('wait-in-loop-guard: ожидание внутри цикла', () => {
-    test.each(['controls_repeat_ext', 'controls_whileUntil', 'controls_for'])(
-        '%s: pioneer_wait внутри DO отключается в Lua и не генерирует код',
-        async (loopType) => {
+describe('wait-in-loop-guard', () => {
+    test.each(['controls_repeat_ext', 'controls_whileUntil', 'controls_for', 'controls_if'])(
+        '%s: ожидание внутри остаётся включённым и в Lua',
+        async (containerType) => {
             const workspace = makeWorkspace();
-            chainUnderStart(workspace, workspace.newBlock('pioneer_preflight'));
-
-            const loop = workspace.newBlock(loopType);
+            const container = workspace.newBlock(containerType);
             const wait = workspace.newBlock('pioneer_wait');
-            wait.getInput('SECONDS')!.connection!.connect(numberBlock(workspace, 4.25).outputConnection!);
-            const doInputName = loopType === 'controls_for' ? 'DO' : 'DO';
-            loop.getInput(doInputName)!.connection!.connect(wait.previousConnection!);
+            wait.getInput('SECONDS')!.connection!.connect(numberBlock(workspace, 1).outputConnection!);
+            container.getInput(containerType === 'controls_if' ? 'DO0' : 'DO')!.connection!.connect(wait.previousConnection!);
+            chainUnderStart(workspace, container);
 
-            // Цикл сам по себе — сирота (не подключён к pioneer_start): для
-            // этого теста важно только состояние блока, не итоговый код цикла.
             await flushBlocklyEvents();
-
-            expect(wait.isEnabled()).toBe(false);
-            expect(wait.hasDisabledReason(WAIT_IN_LOOP_REASON)).toBe(true);
+            expect(wait.isEnabled()).toBe(true);
+            const lua = compilePioneerWorkspace(workspace, 'lua');
+            expect(lua).not.toMatch(/__wait_(event|seconds|poll)\(/);
+            expect(lua).toContain('Timer.callLater(1, function()');
         }
     );
 
-    test('в Python тот же pioneer_wait внутри цикла остаётся включённым', async () => {
+    test('внутри функции ожидание отключается в Lua и включено в Python', async () => {
         const workspace = makeWorkspace();
-        const loop = workspace.newBlock('controls_repeat_ext');
+        const procedure = workspace.newBlock('procedures_defnoreturn');
         const wait = workspace.newBlock('pioneer_wait');
         wait.getInput('SECONDS')!.connection!.connect(numberBlock(workspace, 1).outputConnection!);
-        loop.getInput('DO')!.connection!.connect(wait.previousConnection!);
+        procedure.getInput('STACK')!.connection!.connect(wait.previousConnection!);
 
         await flushBlocklyEvents();
-        expect(wait.hasDisabledReason(WAIT_IN_LOOP_REASON)).toBe(true); // default target — lua
+        expect(wait.hasDisabledReason(WAIT_IN_FUNCTION_REASON)).toBe(true);
+        expect(compilePioneerWorkspace(workspace, 'lua')).not.toContain('__wait_seconds');
 
         applyPioneerTargetToWorkspace(workspace, 'python');
-        expect(wait.hasDisabledReason(WAIT_IN_LOOP_REASON)).toBe(false);
         expect(wait.isEnabled()).toBe(true);
+        expect(compilePioneerWorkspace(workspace, 'python')).toContain('time.sleep(1)');
 
         applyPioneerTargetToWorkspace(workspace, 'lua');
-        expect(wait.hasDisabledReason(WAIT_IN_LOOP_REASON)).toBe(true);
         expect(wait.isEnabled()).toBe(false);
     });
 
-    test('вложенность глубже одного уровня (если внутри цикла) тоже ловится', async () => {
-        const workspace = makeWorkspace();
-        const loop = workspace.newBlock('controls_repeat_ext');
-        const branch = workspace.newBlock('controls_if');
-        const wait = workspace.newBlock('pioneer_wait');
-        wait.getInput('SECONDS')!.connection!.connect(numberBlock(workspace, 1).outputConnection!);
-        branch.getInput('DO0')!.connection!.connect(wait.previousConnection!);
-        loop.getInput('DO')!.connection!.connect(branch.previousConnection!);
-
-        await flushBlocklyEvents();
-
-        expect(wait.hasDisabledReason(WAIT_IN_LOOP_REASON)).toBe(true);
-    });
-});
-
-describe('wait-in-loop-guard: ожидание внутри «если» (§4.3 плана — сужено до "отключено", см. итоговый отчёт)', () => {
-    test('pioneer_go_to внутри DO0 отключается в Lua', async () => {
-        const workspace = makeWorkspace();
-        const branch = workspace.newBlock('controls_if');
-        const goTo = workspace.newBlock('pioneer_go_to');
-        goTo.getInput('X')!.connection!.connect(numberBlock(workspace, 1).outputConnection!);
-        goTo.getInput('Y')!.connection!.connect(numberBlock(workspace, 0).outputConnection!);
-        goTo.getInput('Z')!.connection!.connect(numberBlock(workspace, 1).outputConnection!);
-        branch.getInput('DO0')!.connection!.connect(goTo.previousConnection!);
-
-        await flushBlocklyEvents();
-
-        expect(goTo.isEnabled()).toBe(false);
-        expect(goTo.hasDisabledReason(WAIT_IN_CONDITIONAL_REASON)).toBe(true);
-    });
-
-    test('в Python тот же блок внутри «если» остаётся включённым', async () => {
-        const workspace = makeWorkspace();
-        const branch = workspace.newBlock('controls_if');
-        const takeoff = workspace.newBlock('pioneer_takeoff');
-        branch.getInput('DO0')!.connection!.connect(takeoff.previousConnection!);
-
-        await flushBlocklyEvents();
-        expect(takeoff.hasDisabledReason(WAIT_IN_CONDITIONAL_REASON)).toBe(true);
-
-        applyPioneerTargetToWorkspace(workspace, 'python');
-        expect(takeoff.hasDisabledReason(WAIT_IN_CONDITIONAL_REASON)).toBe(false);
-        expect(takeoff.isEnabled()).toBe(true);
-    });
-
-    test('вынос блока из «если» обратно в основную цепочку включает его', async () => {
+    test('вынос блока из функции в основную цепочку включает его', async () => {
         const workspace = makeWorkspace();
         const start = workspace.newBlock('pioneer_start');
-        const branch = workspace.newBlock('controls_if');
+        const procedure = workspace.newBlock('procedures_defnoreturn');
         const land = workspace.newBlock('pioneer_land');
-        branch.getInput('DO0')!.connection!.connect(land.previousConnection!);
+        procedure.getInput('STACK')!.connection!.connect(land.previousConnection!);
 
         await flushBlocklyEvents();
         expect(land.isEnabled()).toBe(false);
 
         land.unplug(true);
         start.nextConnection!.connect(land.previousConnection!);
-
         await flushBlocklyEvents();
-
         expect(land.isEnabled()).toBe(true);
-        expect(land.hasDisabledReason(WAIT_IN_CONDITIONAL_REASON)).toBe(false);
-    });
-
-    test('не мешает и не путается с pioneer_on_event guard-ом (обе причины независимы)', async () => {
-        const workspace = makeWorkspace();
-        const onEvent = workspace.newBlock('pioneer_on_event');
-        const branch = workspace.newBlock('controls_if');
-        const wait = workspace.newBlock('pioneer_wait');
-        wait.getInput('SECONDS')!.connection!.connect(numberBlock(workspace, 1).outputConnection!);
-        branch.getInput('DO0')!.connection!.connect(wait.previousConnection!);
-        onEvent.getInput('DO')!.connection!.connect(branch.previousConnection!);
-
-        await flushBlocklyEvents();
-
-        // Блок внутри "если", который сам внутри pioneer_on_event — должны
-        // сработать ОБЕ проверки одновременно, ни одна не должна затереть другую.
-        expect(wait.hasDisabledReason(WAIT_IN_CONDITIONAL_REASON)).toBe(true);
-        expect(wait.isEnabled()).toBe(false);
     });
 });

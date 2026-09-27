@@ -1,7 +1,8 @@
 import * as Blockly from 'blockly';
 import { luaGenerator } from 'blockly/lua';
 import { pythonGenerator } from 'blockly/python';
-import { PIONEER_ON_EVENT_TYPE, PIONEER_START_TYPE } from '../constants.js';
+import { PIONEER_EVERY_TYPE, PIONEER_ON_EVENT_TYPE, PIONEER_START_TYPE } from '../constants.js';
+import { PYTHON_SIMULATOR_SDK_KEY, PYTHON_THREADS_KEY } from '../blocks/shared.js';
 import type { PioneerTarget } from './types.js';
 import { buildFlatLuaProgram, buildLuaProgram } from './lua-runtime.js';
 import { buildLuaSections, indentLuaBlock, type LuaSections } from './lua-fsm.js';
@@ -17,7 +18,7 @@ import { buildPythonProgram } from './python-runtime.js';
 // совпадением с именем маркера, если пользовательский код где-то его
 // процитирует как текст.
 const LUA_RESERVED_WORDS = [
-    '__state', '__t0', '__loop_guard', '__loop_guard_count', 'action',
+    '__state', '__t0', '__loop_guard', '__loop_guard_count', 'action', '__loop',
     '__advance', 'current', '__wait_event', '__wait_seconds', '__wait_poll',
     'ap', 'Ev', 'Timer', 'Sensors', 'Ledbar', 'leds', 'callback', 'time',
     // 'camera' — глобальная таблица рантайма (lua/setup-script.ts), к которой
@@ -61,6 +62,8 @@ type TopLevelParts = {
     firstBodyBlock: Blockly.Block | null;
     eventBlocks: Blockly.Block[];
     procedureBlocks: Blockly.Block[];
+    // «Каждые N сек» — отдельные верхние блоки, как и обработчики событий.
+    timerBlocks: Blockly.Block[];
 };
 
 // Общая часть для Lua и Python (§4.2 плана, шаг 2): находит цепочку под
@@ -71,6 +74,7 @@ type TopLevelParts = {
 // двух таргетов, чтобы иметь общую реализацию.
 function collectTopLevelParts(workspace: Blockly.Workspace, target: PioneerTarget): TopLevelParts {
     const generator = getGenerator(target);
+    if (target === 'python') generator.addReservedWords('pioneer,_pioneer_deadline,time,math,threading,colorsys,Vehicle,_pioneer_yaw,_pioneer_threads,_pioneer_stopped');
     generator.init(workspace);
     if (target === 'lua') {
         generator.addReservedWords(LUA_RESERVED_WORDS);
@@ -79,8 +83,10 @@ function collectTopLevelParts(workspace: Blockly.Workspace, target: PioneerTarge
     const topBlocks = workspace.getTopBlocks(true).filter((block) => !block.isInsertionMarker());
     const startBlocks = topBlocks.filter((block) => block.type === PIONEER_START_TYPE);
     const eventBlocks = topBlocks.filter((block) => block.type === PIONEER_ON_EVENT_TYPE);
+    const timerBlocks = topBlocks.filter((block) => block.type === PIONEER_EVERY_TYPE && block.isEnabled());
     const otherBlocks = topBlocks.filter(
         (block) => block.type !== PIONEER_START_TYPE && block.type !== PIONEER_ON_EVENT_TYPE
+            && block.type !== PIONEER_EVERY_TYPE
     );
 
     // Снимаем предупреждение со ВСЕХ блоков перед перерасчётом, а не только с
@@ -116,8 +122,13 @@ function collectTopLevelParts(workspace: Blockly.Workspace, target: PioneerTarge
         generator,
         firstBodyBlock: mainBlock ? mainBlock.getNextBlock() : null,
         eventBlocks,
-        procedureBlocks
+        procedureBlocks,
+        timerBlocks
     };
+}
+
+function joinStatements(generator: Blockly.CodeGenerator, blocks: Blockly.Block[]): string {
+    return blocks.map((block) => statementCode(generator, block)).filter(Boolean).join('');
 }
 
 function buildHeaderDefinitions(generator: Blockly.CodeGenerator, procedureBlocks: Blockly.Block[]): string {
@@ -144,7 +155,7 @@ export type PioneerLuaCompiledSource = {
 // штатным statementCode() — это не часть цепочки шагов, а независимые побочные
 // обработчики (см. events.ts), одинаковые в обоих режимах.
 export function compilePioneerLuaSource(workspace: Blockly.Workspace): PioneerLuaCompiledSource {
-    const { generator, firstBodyBlock, eventBlocks, procedureBlocks } = collectTopLevelParts(workspace, 'lua');
+    const { generator, firstBodyBlock, eventBlocks, procedureBlocks, timerBlocks } = collectTopLevelParts(workspace, 'lua');
 
     const sections = buildLuaSections(generator, firstBodyBlock);
     const eventBranches = eventBlocks
@@ -152,8 +163,15 @@ export function compilePioneerLuaSource(workspace: Blockly.Workspace): PioneerLu
         .filter(Boolean)
         .join('\n');
 
+    // Таймеры «Каждые N сек» заводятся при загрузке скрипта, до первого шага
+    // программы — как Timer.new(...):start() в официальных примерах.
+    const timerCode = joinStatements(generator, timerBlocks);
+    const headerDefinitions = [buildHeaderDefinitions(generator, procedureBlocks), timerCode.replace(/\n+$/, '')]
+        .filter(Boolean)
+        .join('\n\n');
+
     return {
-        headerDefinitions: buildHeaderDefinitions(generator, procedureBlocks),
+        headerDefinitions,
         eventBranches,
         sections
     };
@@ -162,6 +180,10 @@ export function compilePioneerLuaSource(workspace: Blockly.Workspace): PioneerLu
 export type PioneerPythonCompiledSource = {
     headerDefinitions: string;
     body: string;
+    // Программе нужен pioneer_sdk 0.6.1 с Pioneer(simulator=True).
+    simulatorSdk: boolean;
+    // Есть фоновые потоки — конец программы ждёт их.
+    threads: boolean;
 };
 
 // Python: обычная плоская последовательность — ожидание здесь блокирующий
@@ -169,10 +191,18 @@ export type PioneerPythonCompiledSource = {
 // штатного generator.blockToCode(), обходящего всю цепочку самостоятельно,
 // вполне достаточно (в отличие от Lua-таргета).
 export function compilePioneerPythonSource(workspace: Blockly.Workspace): PioneerPythonCompiledSource {
-    const { generator, firstBodyBlock, procedureBlocks } = collectTopLevelParts(workspace, 'python');
-    const body = firstBodyBlock ? statementCode(generator, firstBodyBlock) : '';
+    const { generator, firstBodyBlock, procedureBlocks, timerBlocks } = collectTopLevelParts(workspace, 'python');
+    // Потоки «Каждые N сек» стартуют первыми, как таймеры в Lua.
+    const body = joinStatements(generator, timerBlocks) + (firstBodyBlock ? statementCode(generator, firstBodyBlock) : '');
+    const headerDefinitions = buildHeaderDefinitions(generator, procedureBlocks);
+    const definitions = (generator as unknown as { definitions_: Record<string, string> }).definitions_;
 
-    return { headerDefinitions: buildHeaderDefinitions(generator, procedureBlocks), body };
+    return {
+        headerDefinitions,
+        body,
+        simulatorSdk: PYTHON_SIMULATOR_SDK_KEY in definitions,
+        threads: PYTHON_THREADS_KEY in definitions
+    };
 }
 
 // Ловушка на случай бесконечного цикла без блоков-ожидания (§4.2 плана): для
@@ -182,19 +212,29 @@ export function compilePioneerPythonSource(workspace: Blockly.Workspace): Pionee
 // время компиляции и снимается сразу после, чтобы не задеть сторонние вызовы
 // generator.workspaceToCode() (стандартные тесты controls_repeat_ext/
 // controls_for и т.п. в blockly-codegen.test.ts).
-function withInfiniteLoopTrap<T>(generator: Blockly.CodeGenerator, trap: string, run: () => T): T {
+// Python-отступ — четыре пробела, как в официальных примерах pioneer_sdk и
+// PEP 8 (у Blockly по умолчанию два). Ставится на время компиляции, как ловушка.
+const PYTHON_INDENT = '    ';
+
+function withInfiniteLoopTrap<T>(generator: Blockly.CodeGenerator, trap: string | null, run: () => T, indent?: string): T {
     const previous = generator.INFINITE_LOOP_TRAP;
+    const previousIndent = generator.INDENT;
     generator.INFINITE_LOOP_TRAP = trap;
+    if (indent) generator.INDENT = indent;
     try {
         return run();
     } finally {
         generator.INFINITE_LOOP_TRAP = previous;
+        generator.INDENT = previousIndent;
     }
 }
 
 export function compilePioneerWorkspace(workspace: Blockly.Workspace, target: PioneerTarget): string {
     const generator = getGenerator(target);
-    const trap = target === 'lua' ? '__loop_guard()\n' : 'time.sleep(0.01)\n';
+    // Python ловушки не получает: официальные примеры пишут циклы без пауз, а
+    // браузерный рантайм и так отдаёт управление в каждом while
+    // (python/browser-runtime.ts, visit_While).
+    const trap = target === 'lua' ? '__loop_guard()\n' : null;
 
     if (target === 'lua') {
         const { headerDefinitions, eventBranches, sections } = withInfiniteLoopTrap(
@@ -218,14 +258,16 @@ export function compilePioneerWorkspace(workspace: Blockly.Workspace, target: Pi
             headerDefinitions,
             segmentsCode: sections.segmentsCode,
             transitionBranches: sections.transitionBranches,
-            eventBranches: generator.prefixLines(eventBranches, generator.INDENT)
+            eventBranches: generator.prefixLines(eventBranches, generator.INDENT),
+            structured: sections.mode === 'structured'
         });
     }
 
-    const { headerDefinitions, body } = withInfiniteLoopTrap(
+    const python = withInfiniteLoopTrap(
         generator,
         trap,
-        () => compilePioneerPythonSource(workspace)
+        () => compilePioneerPythonSource(workspace),
+        PYTHON_INDENT
     );
-    return buildPythonProgram({ headerDefinitions, body });
+    return buildPythonProgram(python);
 }

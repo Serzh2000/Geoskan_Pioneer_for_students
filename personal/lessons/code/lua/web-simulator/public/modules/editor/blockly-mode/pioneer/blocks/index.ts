@@ -5,6 +5,7 @@ import { registerSensorBlocks } from './sensors.js';
 import { registerFlightBlocks } from './flight.js';
 import { registerCameraBlocks } from './camera.js';
 import { registerEventBlocks } from './events.js';
+import { registerSceneBlocks } from './scene.js';
 
 let registered = false;
 
@@ -21,4 +22,5 @@ export function registerPioneerBlocks(): void {
     registerFlightBlocks();
     registerCameraBlocks();
     registerEventBlocks();
+    registerSceneBlocks();
 }

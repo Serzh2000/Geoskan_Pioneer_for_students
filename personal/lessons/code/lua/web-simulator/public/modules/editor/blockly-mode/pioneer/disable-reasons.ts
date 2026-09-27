@@ -9,23 +9,18 @@ import * as Blockly from 'blockly';
 // блок недоступен в текущем языке компиляции).
 export const WAIT_IN_EVENT_REASON = 'wait_in_event';
 export const UNSUPPORTED_TARGET_REASON = 'unsupported_target';
-// FSM-таргет (§4.3 плана, пересмотрено 2026-09-13): у циклов и «если» нет
-// собственного состояния автомата — блок-ожидание внутри них печатал бы
-// маркер __wait_event/__wait_seconds прямо в тело обычного Lua-цикла/if,
-// сгенерированного штатным generator.blockToCode() (а не нашим обходом
-// цепочки в targets/lua-fsm.ts), и получился бы вызов несуществующей функции.
-// Причины разные (см. wait-in-loop-guard.ts): внутри цикла ограничение
-// принципиальное, внутри «если» — временное упрощение реализации (см. план,
-// §4.3, «сузить рамки поддержки»).
-export const WAIT_IN_LOOP_REASON = 'wait_in_loop';
-export const WAIT_IN_CONDITIONAL_REASON = 'wait_in_conditional';
+// Lua: у функции и у тела таймера нет своего состояния автомата — ожиданию
+// там негде закончить шаг (см. wait-in-loop-guard.ts). Внутри циклов и «если»
+// основной программы ожидание поддержано (targets/lua-structured.ts).
+export const WAIT_IN_FUNCTION_REASON = 'wait_in_function';
+export const WAIT_IN_TIMER_REASON = 'wait_in_timer';
 
 const WAIT_IN_EVENT_MESSAGE =
     'Блоки ожидания нельзя использовать внутри «Когда событие»: там нет корутины, программа зависнет.';
-const WAIT_IN_LOOP_MESSAGE =
-    'В Lua ожидание внутри цикла не поддерживается: тело цикла выполняется мгновенно, событию от автопилота негде «приземлиться». Вынесите ожидание из цикла.';
-const WAIT_IN_CONDITIONAL_MESSAGE =
-    'В Lua ожидание внутри «если» пока не реализовано: вынесите блок ожидания за пределы условия, в основную последовательность программы.';
+const WAIT_IN_FUNCTION_MESSAGE =
+    'В Lua ожидание внутри функции не поддерживается: функция выполняется целиком за один раз. Поставьте ожидание в основную программу.';
+const WAIT_IN_TIMER_MESSAGE =
+    'В Lua ожидание внутри «Каждые N сек» и «Через N сек» не поддерживается: это колбэк таймера, он выполняется целиком за один раз.';
 
 // Текст для UNSUPPORTED_TARGET_REASON зависит от того, какой блок и в каком
 // таргете — храним последнее актуальное сообщение по блоку, чтобы
@@ -50,11 +45,11 @@ export function refreshBlockWarning(block: Blockly.Block): void {
     if (block.hasDisabledReason(WAIT_IN_EVENT_REASON)) {
         messages.push(WAIT_IN_EVENT_MESSAGE);
     }
-    if (block.hasDisabledReason(WAIT_IN_LOOP_REASON)) {
-        messages.push(WAIT_IN_LOOP_MESSAGE);
+    if (block.hasDisabledReason(WAIT_IN_FUNCTION_REASON)) {
+        messages.push(WAIT_IN_FUNCTION_MESSAGE);
     }
-    if (block.hasDisabledReason(WAIT_IN_CONDITIONAL_REASON)) {
-        messages.push(WAIT_IN_CONDITIONAL_MESSAGE);
+    if (block.hasDisabledReason(WAIT_IN_TIMER_REASON)) {
+        messages.push(WAIT_IN_TIMER_MESSAGE);
     }
     if (block.hasDisabledReason(UNSUPPORTED_TARGET_REASON)) {
         messages.push(unsupportedTargetMessageByBlock.get(block) ?? 'Недоступно для текущего таргета.');

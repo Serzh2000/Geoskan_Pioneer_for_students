@@ -1,4 +1,5 @@
 import * as Blockly from 'blockly';
+import { buildStructuredLuaSections, chainNeedsStructure, type LuaStructuredSections } from './lua-structured.js';
 
 // Однострочные вызовы-маркеры, которыми блоки модели ожидания (flight.ts:
 // preflight/takeoff/go_to/land, time.ts: pioneer_wait, camera.ts:
@@ -192,7 +193,7 @@ export type LuaFlatSections = {
     callbackBranches: string;
 };
 
-export type LuaSections = LuaFsmSections | LuaFlatSections;
+export type LuaSections = LuaFsmSections | LuaFlatSections | LuaStructuredSections;
 
 // Переход по времени внутри сегмента FSM: Timer.callLater печатаем прямо в
 // теле состояния (§4.3 плана) — ожидание времени не требует ветки в
@@ -254,10 +255,14 @@ function renderFsmSections(generator: Blockly.CodeGenerator, chain: LuaChain): L
         })
         .join('');
 
+    // `return` после перехода обязателен: следующее состояние может ждать то
+    // же самое событие (две точки подряд — оба POINT_REACHED), и его ветка,
+    // стоящая ниже, сработала бы на уже обработанное событие в этом же вызове
+    // callback — вторая точка проскакивала бы мгновенно.
     const transitionBranches = chain.transitions
         .map((transition, index) => (transition.kind === 'event'
             ? `${generator.INDENT}if __state == "${stateName(index)}" and event == Ev.${transition.event} `
-                + `then __state = "${stateName(index + 1)}"; __advance() end\n`
+                + `then __state = "${stateName(index + 1)}"; __advance(); return end\n`
             : ''))
         .join('');
 
@@ -341,6 +346,9 @@ export function buildLuaSections(
     generator: Blockly.CodeGenerator,
     firstBlock: Blockly.Block | null
 ): LuaSections {
+    // Ожидание внутри «если»/цикла — общий автомат с переходами-развилками
+    // (targets/lua-structured.ts). Линейные программы собираются как раньше.
+    if (chainNeedsStructure(firstBlock)) return buildStructuredLuaSections(generator, firstBlock);
     const chain = splitLuaChain(generator, firstBlock);
     return isFlatEligible(chain.transitions)
         ? renderFlatSections(chain)

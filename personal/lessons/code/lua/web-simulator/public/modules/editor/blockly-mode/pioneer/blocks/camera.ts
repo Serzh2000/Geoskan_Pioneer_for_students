@@ -9,7 +9,7 @@ function definitionsOf(gen: Blockly.CodeGenerator): Record<string, string> {
 
 // Одна запись definitions_ на всю камеру — импорт, объект и хелпер вместе.
 // Строку `camera = Camera()` нельзя печатать безусловно рядом с
-// `pioneer = Pioneer(simulator=True)` в targets/python-runtime.ts: Camera()
+// `pioneer = Pioneer()` в targets/python-runtime.ts: Camera()
 // в конструкторе сразу вызывает connect() (pioneer-sdk-module.ts), то есть
 // программа без единого блока камеры подключалась бы к видеопотоку просто так.
 // Тот же принцип «печатаем только то, чем пользуемся», что у
@@ -57,11 +57,11 @@ export function registerCameraBlocks(): void {
             installWaitModelGuards(this);
         },
         targets: {
-            // Семантика проверки — местная, симуляторная: camera.checkRequestShot()
-            // здесь возвращает 0, пока снимок готовится, и 1, когда готов
-            // (modules/lua/hardware/camera.ts), а не -1/0/1 из документации
-            // на железо. Генерируем код против того, что реально реализовано.
-            lua: () => 'camera.requestMakeShot()\n__wait_poll(camera.checkRequestShot() == 1)\n',
+            // Коды ответа — из официальной документации (и так же в
+            // симуляторе, modules/lua/hardware/camera.ts): -1 — ответа ещё
+            // нет, 0 — снимок сделан, 1 — ошибка. Ждём любого ответа, как
+            // официальный take_photo_video.lua: `while ... == -1 do end`.
+            lua: () => 'camera.requestMakeShot()\n__wait_poll(camera.checkRequestShot() ~= -1)\n',
             // В Python ждать нечего: мост рендерит кадр синхронно, внутри того
             // же вызова (pioneer-js-bridge-camera-render.ts) — отдельного
             // «запросили / проверяем готовность» у этого пути нет вовсе.
@@ -74,5 +74,30 @@ export function registerCameraBlocks(): void {
             lua: ['camera.requestMakeShot', 'camera.checkRequestShot', '__wait_poll'],
             python: ['_pioneer_take_photo', 'camera.get_frame', 'js.pioneer_camera_save_photo']
         }
+    });
+
+    // Запись видео — camera.requestRecordStart()/requestRecordStop() из
+    // официального take_photo_video.lua, с тем же ожиданием ответа. У
+    // pioneer_sdk записи видео нет: только Lua.
+    definePioneerBlock({
+        type: 'pioneer_camera_record',
+        category: 'camera',
+        init(this: Blockly.Block) {
+            this.appendDummyInput()
+                .appendField(new Blockly.FieldDropdown([['Начать', 'START'], ['Остановить', 'STOP']]), 'ACTION')
+                .appendField('запись видео');
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour('#0ea5e9');
+            this.setTooltip('Запись видео с камеры дрона. После остановки файл сохраняется в загрузки браузера. Только Lua.');
+            installWaitModelGuards(this);
+        },
+        targets: {
+            lua: (block) => {
+                const request = block.getFieldValue('ACTION') === 'STOP' ? 'requestRecordStop' : 'requestRecordStart';
+                return `camera.${request}()\n__wait_poll(camera.checkRequestRecord() ~= -1)\n`;
+            }
+        },
+        apiUsage: { lua: ['camera.requestRecordStart', 'camera.requestRecordStop', 'camera.checkRequestRecord', '__wait_poll'] }
     });
 }

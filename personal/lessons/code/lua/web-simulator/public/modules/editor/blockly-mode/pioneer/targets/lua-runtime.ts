@@ -31,6 +31,9 @@ export type LuaProgramParts = {
     // Ветки pioneer_on_event (фаза 5): побочные обработчики событий, не
     // двигают __state и не должны получить свой forward-reference (см. ниже).
     eventBranches: string;
+    // Автомат с развилками (targets/lua-structured.ts): состояния возвращают
+    // имя следующего, и __advance крутит такие переходы циклом.
+    structured?: boolean;
 };
 
 // __advance() объявлена в тексте прогрраммы ДО таблицы action[...], а не
@@ -74,27 +77,50 @@ function buildConditionalPreamble(sources: string[]): string {
     return `${clockLine}${loopGuard}`;
 }
 
+// Трамплин для автомата с развилками: немедленные переходы (ветка «если»,
+// проверка цикла) идут циклом, а не вложенными вызовами — тысяча итераций
+// цикла без ожидания не переполнит стек. Предел шагов ловит цикл, в котором
+// ожидание так и не встретилось: без него вкладка зависла бы намертво.
+const STRUCTURED_ADVANCE = `local function __advance()
+    local steps = 0
+    while true do
+        local current = action[__state]
+        if current == nil then return end
+        local nextState = current()
+        if nextState == nil then return end
+        __state = nextState
+        steps = steps + 1
+        if steps > 100000 then
+            error("Похоже, программа зависла в цикле без ожидания")
+        end
+    end
+end
+`;
+
+const LINEAR_ADVANCE = `local function __advance()
+    local current = action[__state]
+    if current ~= nil then current() end
+end
+`;
+
 export function buildLuaProgram({
     headerDefinitions,
     segmentsCode,
     transitionBranches,
-    eventBranches
+    eventBranches,
+    structured = false
 }: LuaProgramParts): string {
     const header = headerDefinitions ? `${headerDefinitions}\n\n` : '';
     const preamble = buildConditionalPreamble([
         headerDefinitions, segmentsCode, eventBranches, transitionBranches
     ]);
+    const loopTable = usesMarker('__loop[', [segmentsCode]) ? 'local __loop = {}\n' : '';
 
-    return `-- @pioneer-blockly v1
-local __state = "__s0"
+    return `local __state = "__s0"
 ${preamble}
 local action = {}
-
-local function __advance()
-    local current = action[__state]
-    if current ~= nil then current() end
-end
-
+${loopTable}
+${structured ? STRUCTURED_ADVANCE : LINEAR_ADVANCE}
 ${header}${segmentsCode}
 function callback(event)
 ${eventBranches}${transitionBranches}end
@@ -139,8 +165,7 @@ export function buildFlatLuaProgram({
     ]);
     const preambleBlock = preamble ? `${preamble}\n` : '';
 
-    return `-- @pioneer-blockly v1
-${preambleBlock}${header}${topLevelCode}
+    return `${preambleBlock}${header}${topLevelCode}
 function callback(event)
 ${eventBranches}${callbackBranches}end
 `;
