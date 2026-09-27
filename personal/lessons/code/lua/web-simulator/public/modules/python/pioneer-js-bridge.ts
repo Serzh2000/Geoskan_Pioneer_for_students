@@ -2,6 +2,8 @@ import { drones, simSettings, ensureDronePythonConnectionSettings } from '../cor
 import { getAutopilotRuntimeConfig } from '../autopilot/params-runtime.js';
 import { measureSurfaceBelow, readOpticalFlow } from '../sensors/downward.js';
 import { vehicleGetState, vehicleSetSpeed, vehicleStart, vehicleStop } from '../vehicles/api.js';
+import { beginEventCallbackPhase } from '../autopilot/fsm-runtime.js';
+import { bodyPlanarToWorld } from '../physics/frames.js';
 import {
     applyGoToLocalPointRequest,
     enterLandingProcess,
@@ -77,10 +79,20 @@ export function installJsRuntimeAPI() {
         showDronePrintBubble(id, String(text ?? ''));
         return null;
     };
+    // Каждый вызов pioneer_sdk — отдельная команда: у настоящего SDK arm() и
+    // takeoff() ждут подтверждения от дрона, и две команды подряд физически
+    // не могут прийти «в одном тике». Без этого официальный manual_speed.py
+    // (arm(); takeoff() подряд) падал бы в симуляторе на проверке
+    // одновременных команд. Так же поступает внешний мост (external-bridge-runtime.ts).
+    const pythonCommand = <T>(d: ReturnType<typeof getDroneOrDefault>, run: () => T): T => {
+        beginEventCallbackPhase(d);
+        return withCommandSource(d, 'python', run);
+    };
+
     w.pioneer_arm = (id: string) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
-        return withCommandSource(d, 'python', () => {
+        return pythonCommand(d, () => {
             recordTickCommand(d, 'preflight');
             const ok = enterPreflight(d);
             if (ok) {
@@ -111,7 +123,7 @@ export function installJsRuntimeAPI() {
     w.pioneer_takeoff = (id: string) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
-        return withCommandSource(d, 'python', () => {
+        return pythonCommand(d, () => {
             recordTickCommand(d, 'takeoff');
             return enterTakeoffProcess(d);
         });
@@ -120,7 +132,7 @@ export function installJsRuntimeAPI() {
     w.pioneer_land = (id: string) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
-        return withCommandSource(d, 'python', () => {
+        return pythonCommand(d, () => {
             recordTickCommand(d, 'landing');
             return enterLandingProcess(d);
         });
@@ -135,12 +147,20 @@ export function installJsRuntimeAPI() {
         const tz = z == null ? d.pos.z : origin.z + toFiniteNumber(z, 0);
         const yawm = yaw == null ? d.target_yaw : toFiniteNumber(yaw, d.target_yaw);
 
-        return withCommandSource(d, 'python', () => applyGoToLocalPointRequest(d, { x: tx, y: ty, z: tz }, { yaw: yawm }));
+        return pythonCommand(d, () => applyGoToLocalPointRequest(d, { x: tx, y: ty, z: tz }, { yaw: yawm }));
     };
 
+    // go_to_local_point_body_fixed: смещение от текущего положения в осях
+    // дрона. pioneer_sdk переводит (x, y, z) в BODY_FRD как y — вперёд, x —
+    // вправо, z — вверх (aruco_flight.py: vy > 0 — к маркеру), а курс —
+    // поворот от текущего. Раньше здесь летели в абсолютную точку.
     w.pioneer_go_to_local_point_body_fixed = (id: string, x: any, y: any, z: any, yaw: any) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
-        return w.pioneer_go_to_local_point(id, x, y, z, yaw);
+        const d = getDroneOrDefault(id);
+        const shift = bodyPlanarToWorld(toFiniteNumber(x, 0), toFiniteNumber(y, 0), d.orientation.yaw);
+        const target = { x: d.pos.x + shift.x, y: d.pos.y + shift.y, z: d.pos.z + toFiniteNumber(z, 0) };
+        const targetYaw = d.target_yaw + toFiniteNumber(yaw, 0);
+        return pythonCommand(d, () => applyGoToLocalPointRequest(d, target, { yaw: targetYaw }));
     };
 
     w.pioneer_point_reached = (id: string) => {
@@ -184,9 +204,14 @@ export function installJsRuntimeAPI() {
         return true;
     };
 
+    // Скорость в осях дрона (vx — вправо, vy — вперёд, как у
+    // go_to_local_point_body_fixed) переводится в мировые оси. Раньше она
+    // шла в мир без поворота.
     w.pioneer_set_manual_speed_body_fixed = (id: string, vx: any, vy: any, vz: any, yaw_rate: any) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
-        return w.pioneer_set_manual_speed(id, vx, vy, vz, yaw_rate);
+        const d = getDroneOrDefault(id);
+        const world = bodyPlanarToWorld(toFiniteNumber(vx, 0), toFiniteNumber(vy, 0), d.orientation.yaw);
+        return w.pioneer_set_manual_speed(id, world.x, world.y, vz, yaw_rate);
     };
 
     w.pioneer_get_local_position_lps = (id: string) => {
@@ -226,6 +251,20 @@ export function installJsRuntimeAPI() {
         const s = vehicleGetState(name);
         return [s.name, s.kind, s.x, s.y, s.z, s.heading, s.speed, s.moving, s.markerId];
     });
+
+    // Курс в радианах, как VISION_POSITION_ESTIMATE.yaw у pioneer_sdk.get_yaw().
+    w.pioneer_get_yaw = (id: string) => {
+        if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
+        return getDroneOrDefault(id).orientation.yaw;
+    };
+
+    // pioneer_sdk.cargo_set(): реле захвата — тот же магнит, что Lua включает
+    // через Gpio (lua/hardware/io.ts).
+    w.pioneer_cargo_set = (id: string, grab: any) => {
+        if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
+        getDroneOrDefault(id).magnetGripper.active = Boolean(grab);
+        return true;
+    };
 
     w.pioneer_get_battery_status = (id: string) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');

@@ -7,8 +7,24 @@ import { droneMeshes, renderer as mainRenderer, scene } from '../../scene/core/s
 
 const CAMERA_CAPTURE_FRAME_INTERVAL_MS = 33;
 
+// Коды ответа camera.checkRequestShot()/checkRequestRecord() из официальной
+// документации Geoscan (Описание методов API, «Объект camera»): -1 — ответ ещё
+// не получен, 0 — команда выполнена, 1 — не выполнена. Раньше симулятор
+// отвечал по-своему (0 — «ещё снимаю», 1 — «готово»), и программа, написанная
+// по документации для настоящего дрона, в симуляторе вела себя иначе.
+//
+// -1 симулятор не отдаёт никогда: официальный take_photo_video.lua ждёт
+// ответ пустым циклом `while camera.checkRequestShot() == -1 do end`, а в
+// браузере такой цикл держит поток, и асинхронное сохранение кадра не
+// закончилось бы никогда — вкладка зависла бы. Запрос принимается сразу (0),
+// а если сохранить файл потом не удалось, следующая проверка вернёт 1.
+const REQUEST_DONE = 0;
+const REQUEST_FAILED = 1;
+
 type CameraCaptureState = {
     shotPending: boolean;
+    shotStatus: number;
+    recordStatus: number;
     isRecording: boolean;
     mediaRecorder: MediaRecorder | null;
     mediaStream: MediaStream | null;
@@ -23,6 +39,8 @@ type CameraCaptureState = {
 
 const cameraCaptureState: CameraCaptureState = {
     shotPending: false,
+    shotStatus: REQUEST_DONE,
+    recordStatus: REQUEST_DONE,
     isRecording: false,
     mediaRecorder: null,
     mediaStream: null,
@@ -202,6 +220,7 @@ export const camera_requestMakeShot = function(L: any) {
     }
 
     cameraCaptureState.shotPending = true;
+    cameraCaptureState.shotStatus = REQUEST_DONE;
     log(`Camera: Запрос снимка для ${drone.id}`, 'info');
     if (window.scene && window.droneMesh) {
         const flash = new THREE.PointLight(0xffffff, 2, 10);
@@ -214,9 +233,11 @@ export const camera_requestMakeShot = function(L: any) {
     window.requestAnimationFrame(() => {
         void downloadCanvasShot(drone.id, fileName)
             .then(() => {
+                cameraCaptureState.shotStatus = REQUEST_DONE;
                 log(`Camera: Снимок сохранен как ${fileName}`, 'success');
             })
             .catch((error) => {
+                cameraCaptureState.shotStatus = REQUEST_FAILED;
                 const message = error instanceof Error ? error.message : String(error);
                 log(`Camera: Не удалось сохранить снимок: ${message}`, 'error');
             })
@@ -229,18 +250,20 @@ export const camera_requestMakeShot = function(L: any) {
 };
 
 export const camera_checkRequestShot = function(L: any) {
-    fengari.lua.lua_pushinteger(L, cameraCaptureState.shotPending ? 0 : 1);
+    fengari.lua.lua_pushinteger(L, cameraCaptureState.shotStatus);
     return 1;
 };
 
 export const camera_requestRecordStart = function(L: any) {
     const drone = getDroneFromLua(L);
     if (cameraCaptureState.isRecording) {
+        cameraCaptureState.recordStatus = REQUEST_FAILED;
         log(`Camera: Запись уже идет для ${drone.id}`, 'warn');
         return 0;
     }
 
     if (typeof MediaRecorder === 'undefined') {
+        cameraCaptureState.recordStatus = REQUEST_FAILED;
         log('Camera: MediaRecorder не поддерживается в этом браузере.', 'error');
         return 0;
     }
@@ -248,6 +271,7 @@ export const camera_requestRecordStart = function(L: any) {
     const captureRenderer = ensureCaptureRenderer();
     const captureStream = captureRenderer.domElement.captureStream?.bind(captureRenderer.domElement);
     if (!captureStream) {
+        cameraCaptureState.recordStatus = REQUEST_FAILED;
         log('Camera: captureStream не поддерживается для canvas.', 'error');
         return 0;
     }
@@ -302,6 +326,7 @@ export const camera_requestRecordStart = function(L: any) {
     };
 
     mediaRecorder.start();
+    cameraCaptureState.recordStatus = REQUEST_DONE;
     startCaptureRenderLoop(drone.id);
     log(`Camera: Старт записи видео для ${drone.id}`, 'info');
     return 0;
@@ -311,16 +336,18 @@ export const camera_requestRecordStop = function(L: any) {
     const drone = getDroneFromLua(L);
     const mediaRecorder = cameraCaptureState.mediaRecorder;
     if (!cameraCaptureState.isRecording || !mediaRecorder) {
+        cameraCaptureState.recordStatus = REQUEST_FAILED;
         log(`Camera: Нет активной записи для остановки у ${drone.id}`, 'warn');
         return 0;
     }
 
     log(`Camera: Стоп записи видео для ${drone.id}`, 'info');
     mediaRecorder.stop();
+    cameraCaptureState.recordStatus = REQUEST_DONE;
     return 0;
 };
 
 export const camera_checkRequestRecord = function(L: any) {
-    fengari.lua.lua_pushinteger(L, cameraCaptureState.isRecording ? 1 : 0);
+    fengari.lua.lua_pushinteger(L, cameraCaptureState.recordStatus);
     return 1;
 };

@@ -31,9 +31,9 @@ export const luaApiDocsRuntime: Record<string, ApiDoc> = {
     },
     'boardNumber': { desc: 'Номер платы (коптера).', syntax: 'boardNumber()', returns: 'number', kind: 'Function', insertText: 'boardNumber()' },
 
-    // Снимок с бортовой камеры. В симуляторе checkRequestShot() возвращает 0,
-    // пока кадр готовится, и 1, когда готов (modules/lua/hardware/camera.ts),
-    // а не -1/0/1 из документации на железо — описываем то, что реализовано.
+    // Снимок с бортовой камеры. Коды ответа — как в документации на железо
+    // (modules/lua/hardware/camera.ts): -1 — ждём, 0 — готово, 1 — ошибка;
+    // симулятор принимает запрос сразу и -1 не отдаёт.
     'camera.requestMakeShot': {
         desc: 'Запрос снимка с камеры. Возвращает управление сразу, кадр сохраняется асинхронно.',
         syntax: 'camera.requestMakeShot()',
@@ -44,11 +44,11 @@ export const luaApiDocsRuntime: Record<string, ApiDoc> = {
         insertText: 'requestMakeShot()'
     },
     'camera.checkRequestShot': {
-        desc: 'Готовность снимка: 1 — сохранён, 0 — ещё готовится.',
+        desc: 'Ответ на запрос снимка: -1 — ещё готовится, 0 — сохранён, 1 — ошибка.',
         syntax: 'camera.checkRequestShot()',
         params: 'none',
-        returns: 'number (0 или 1)',
-        example: 'if camera.checkRequestShot() == 1 then print("готово") end',
+        returns: 'number (-1, 0 или 1)',
+        example: 'while camera.checkRequestShot() == -1 do end',
         kind: 'Method',
         insertText: 'checkRequestShot()'
     },

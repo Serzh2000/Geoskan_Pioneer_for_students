@@ -10,7 +10,7 @@ import {
     js_diag_record_api_call
 } from './diagnostics.js';
 import { ap_push, ap_goToPoint, ap_goToLocalPoint, ap_updateYaw } from './autopilot.js';
-import { sensors_pos, sensors_vel, sensors_accel, sensors_gyro, sensors_orientation, sensors_range, sensors_battery, sensors_tof, sensors_rc, sensors_opticalFlow } from './sensors.js';
+import { sensors_pos, sensors_vel, sensors_accel, sensors_gyro, sensors_orientation, sensors_range, sensors_battery, sensors_tof, sensors_rc, sensors_opticalFlow, sensors_lpsYaw, sensors_altitude } from './sensors.js';
 import { vehicle_setSpeed, vehicle_start, vehicle_state, vehicle_stop } from './vehicles.js';
 import { timer_callLater, timer_new, sys_time, sys_deltaTime, js_sleep } from './timers.js';
 import { camera_requestMakeShot, camera_checkRequestShot, camera_requestRecordStart, camera_requestRecordStop, camera_checkRequestRecord, gpio_new, uart_new, spi_new } from './hardware.js';
@@ -65,6 +65,8 @@ function registerLuaBridgeFunctions(luaState: any) {
     lua.lua_register(luaState, 'js_sensors_tof', sensors_tof);
     lua.lua_register(luaState, 'js_sensors_rc', sensors_rc);
     lua.lua_register(luaState, 'js_sensors_opticalFlow', sensors_opticalFlow);
+    lua.lua_register(luaState, 'js_sensors_lpsYaw', sensors_lpsYaw);
+    lua.lua_register(luaState, 'js_sensors_altitude', sensors_altitude);
     lua.lua_register(luaState, 'js_vehicle_start', vehicle_start);
     lua.lua_register(luaState, 'js_vehicle_stop', vehicle_stop);
     lua.lua_register(luaState, 'js_vehicle_setSpeed', vehicle_setSpeed);

@@ -133,6 +133,20 @@ class Pioneer:
     def get_autopilot_state(self):
         return js.pioneer_get_autopilot_state(self._id)
 
+    # get_yaw и cargo_* есть только в pioneer_sdk 0.6.1 с GitFlic, и там они
+    # работают лишь при Pioneer(simulator=True), иначе NotImplementedError.
+    def get_yaw(self, get_last_received=True):
+        return js.pioneer_get_yaw(self._id)
+
+    def cargo_set(self, grab):
+        return bool(js.pioneer_cargo_set(self._id, bool(grab)))
+
+    def cargo_grab(self):
+        return self.cargo_set(True)
+
+    def cargo_release(self):
+        return self.cargo_set(False)
+
     def get_optical_flow(self, get_last_received=True):
         # (flow_x, flow_y, quality): угловая скорость потока, рад/с, в осях дрона
         # (x - вперёд, y - вправо) и качество 0..255. Относительная скорость

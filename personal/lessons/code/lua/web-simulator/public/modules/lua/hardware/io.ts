@@ -8,8 +8,11 @@ export const gpio_new = function(L: any) {
     const pin = lua.lua_tointeger(L, 2);
     const mode = lua.lua_tointeger(L, 3);
 
+    // Магнит модуля груза висит на разных пинах в разных ревизиях платы:
+    // PA1 — 1.0–1.1, PC3 — 1.2–1.4 (официальная документация API), PC15 — 1.6
+    // (официальный example_cargo.lua).
     const isMagnetPin = (gpioPort: number, gpioPin: number) =>
-        (gpioPort === 3 && gpioPin === 3) || (gpioPort === 1 && gpioPin === 1);
+        (gpioPort === 3 && (gpioPin === 3 || gpioPin === 15)) || (gpioPort === 1 && gpioPin === 1);
 
     const readNumberField = (state: any, field: string) => {
         lua.lua_getfield(state, 1, field);

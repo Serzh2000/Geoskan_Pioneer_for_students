@@ -173,7 +173,11 @@ export function enterTakeoffProcess(drone: DroneState) {
 }
 
 export function enterLandingProcess(drone: DroneState) {
-    if (drone.fsmState !== 'FLYING_HOVER' && drone.fsmState !== 'FLYING_MOVING') {
+    // pioneer_sdk.land() не ждёт конца взлёта (официальные примеры шлют
+    // команды подряд), и настоящий автопилот в этом случае просто садится.
+    // Lua ждёт TAKEOFF_COMPLETE из callback и сюда во время взлёта не попадает.
+    const landsDuringTakeoff = drone.fsmState === 'TAKEOFF_PROCESS' && getCommandSource(drone) === 'python';
+    if (drone.fsmState !== 'FLYING_HOVER' && drone.fsmState !== 'FLYING_MOVING' && !landsDuringTakeoff) {
         if (getCommandSource(drone) === 'timer') {
             log('WARNING: Delayed command was rejected because FSM state has already changed.', 'warn');
             return false;

@@ -112,6 +112,42 @@ export const pythonApiDocs: Record<string, ApiDoc> = {
         kind: 'Method',
         insertText: 'get_battery_status(get_last_received=${1:True})'
     },
+    'Pioneer.get_yaw': {
+        desc: 'Курс дрона в радианах. Есть в pioneer_sdk 0.6.1 (GitFlic) и работает только с Pioneer(simulator=True).',
+        syntax: 'pioneer.get_yaw(get_last_received=True) -> float|None',
+        params: 'get_last_received (bool)',
+        returns: 'yaw (радианы) или None',
+        example: 'yaw = pioneer.get_yaw(get_last_received=True)',
+        kind: 'Method',
+        insertText: 'get_yaw(get_last_received=${1:True})'
+    },
+    'Pioneer.cargo_grab': {
+        desc: 'Включить магнит захвата груза. Есть в pioneer_sdk 0.6.1 (GitFlic) и работает только с Pioneer(simulator=True).',
+        syntax: 'pioneer.cargo_grab() -> bool',
+        params: 'none',
+        returns: 'bool',
+        example: 'pioneer.cargo_grab()',
+        kind: 'Method',
+        insertText: 'cargo_grab()'
+    },
+    'Pioneer.cargo_release': {
+        desc: 'Выключить магнит и отпустить груз. Есть в pioneer_sdk 0.6.1 (GitFlic) и работает только с Pioneer(simulator=True).',
+        syntax: 'pioneer.cargo_release() -> bool',
+        params: 'none',
+        returns: 'bool',
+        example: 'pioneer.cargo_release()',
+        kind: 'Method',
+        insertText: 'cargo_release()'
+    },
+    'Pioneer.cargo_set': {
+        desc: 'True — захватить груз, False — отпустить. Есть в pioneer_sdk 0.6.1 (GitFlic), только с Pioneer(simulator=True).',
+        syntax: 'pioneer.cargo_set(grab) -> bool',
+        params: 'grab (bool)',
+        returns: 'bool',
+        example: 'pioneer.cargo_set(True)',
+        kind: 'Method',
+        insertText: 'cargo_set(${1:True})'
+    },
     'Pioneer.get_autopilot_state': {
         desc: 'Текущее состояние автопилота.',
         syntax: 'pioneer.get_autopilot_state() -> str',

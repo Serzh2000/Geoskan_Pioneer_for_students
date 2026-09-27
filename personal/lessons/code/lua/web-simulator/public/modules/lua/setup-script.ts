@@ -197,7 +197,9 @@ export const LUA_SETUP_SCRIPT = `
             battery = js_sensors_battery,
             tof = js_sensors_tof,
             rc = js_sensors_rc,
-            opticalFlow = js_sensors_opticalFlow
+            opticalFlow = js_sensors_opticalFlow,
+            lpsYaw = js_sensors_lpsYaw,
+            altitude = js_sensors_altitude
         }
         -- Симулятор: машины и поезда на сцене (по названию из их настроек).
         Vehicle = {}

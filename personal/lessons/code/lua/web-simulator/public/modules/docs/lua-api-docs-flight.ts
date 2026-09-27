@@ -87,6 +87,17 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         kind: 'Method',
         insertText: 'fromHSV(${1:h}, ${2:s}, ${3:v})'
     },
+    // В официальной документации fromHSV описан как глобальная функция, и
+    // официальный example_led.lua зовёт именно её, без Ledbar.
+    'fromHSV': {
+        desc: 'Конвертация HSV в RGB (то же, что Ledbar.fromHSV).',
+        syntax: 'fromHSV(h, s, v)',
+        params: 'h (0-360), s (0-100), v (0-100)',
+        returns: 'r, g, b (0-1)',
+        example: 'local r, g, b = fromHSV(120, 100, 100)',
+        kind: 'Function',
+        insertText: 'fromHSV(${1:h}, ${2:s}, ${3:v})'
+    },
     'Ledbar:set': {
         desc: 'Установка цвета светодиода.',
         syntax: 'leds:set(index, r, g, b, [w])',
@@ -213,11 +224,11 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         insertText: 'requestMakeShot()'
     },
     'camera.checkRequestShot': {
-        desc: 'Проверка статуса запроса на снимок.',
+        desc: 'Ответ на последний запрос снимка.',
         syntax: 'camera.checkRequestShot()',
         params: 'none',
-        returns: '1 (готов) или 0 (в процессе)',
-        example: 'if camera.checkRequestShot() == 1 then print("Готово") end',
+        returns: '-1 (ответа ещё нет), 0 (снимок сделан) или 1 (ошибка)',
+        example: 'while camera.checkRequestShot() == -1 do end',
         kind: 'Method',
         insertText: 'checkRequestShot()'
     },
@@ -240,11 +251,11 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         insertText: 'requestRecordStop()'
     },
     'camera.checkRequestRecord': {
-        desc: 'Проверка статуса записи видео.',
+        desc: 'Ответ на последний запрос старта или остановки записи.',
         syntax: 'camera.checkRequestRecord()',
         params: 'none',
-        returns: '1 (запись идет) или 0',
-        example: 'if camera.checkRequestRecord() == 1 then print("Пишем...") end',
+        returns: '-1 (ответа ещё нет), 0 (выполнено) или 1 (ошибка)',
+        example: 'while camera.checkRequestRecord() == -1 do end',
         kind: 'Method',
         insertText: 'checkRequestRecord()'
     }

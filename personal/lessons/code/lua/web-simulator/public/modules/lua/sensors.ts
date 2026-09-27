@@ -43,6 +43,21 @@ export const sensors_orientation = function(L: any) {
     return 3;
 };
 
+// Sensors.lpsYaw() из официального API: курс в системе позиционирования. В
+// симуляторе это тот же курс, что задаёт ap.updateYaw, — в радианах.
+export const sensors_lpsYaw = function(L: any) {
+    fengari.lua.lua_pushnumber(L, getDroneFromLua(L).orientation.yaw);
+    return 1;
+};
+
+// Sensors.altitude() — высота по барометру, в метрах. Барометр меряет высоту
+// над точкой включения, а не до ближайшей поверхности, как дальномер: над
+// крышей дальномер покажет мало, барометр — сколько пролетели вверх.
+export const sensors_altitude = function(L: any) {
+    fengari.lua.lua_pushnumber(L, getDroneFromLua(L).pos.z);
+    return 1;
+};
+
 // Distance to whatever is straight below - ground, a roof, a moving train.
 function rangeBelow(simState: any) {
     const minHeight = getAutopilotRuntimeConfig().sensors.altMinHeight;
