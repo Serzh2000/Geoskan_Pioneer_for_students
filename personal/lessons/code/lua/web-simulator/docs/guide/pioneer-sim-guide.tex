@@ -1,0 +1,482 @@
+% Памятка: программирование в симуляторе Пионера.
+% Сборка: latexmk -xelatex pioneer-sim-guide.tex
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{russian}
+\setotherlanguage{english}
+\setmainfont{Noto Sans}
+\setmonofont{Noto Sans Mono}[Scale=0.9]
+\newfontfamily\cyrillicfont{Noto Sans}
+\newfontfamily\cyrillicfonttt{Noto Sans Mono}[Scale=0.9]
+
+\usepackage[margin=18mm,top=16mm,bottom=18mm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{babel}
+\usepackage{listings}
+\usepackage[most]{tcolorbox}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+\usepackage{multicol}
+\usepackage{caption}
+
+\definecolor{accent}{HTML}{FF6B00}
+\definecolor{ink}{HTML}{1F2328}
+\definecolor{muted}{HTML}{5F6670}
+\definecolor{codebg}{HTML}{F6F7F9}
+\definecolor{codeframe}{HTML}{E3E6EA}
+\definecolor{kw}{HTML}{7C3AED}
+\definecolor{fn}{HTML}{E85D04}
+\definecolor{str}{HTML}{0F766E}
+\definecolor{cmt}{HTML}{6B7280}
+\definecolor{tipbg}{HTML}{EEF6FF}
+\definecolor{tipframe}{HTML}{2563EB}
+\definecolor{warnbg}{HTML}{FFF4EC}
+
+\color{ink}
+\setlength{\parindent}{0pt}
+\setlength{\emergencystretch}{3em}
+\setlength{\parskip}{5pt}
+\captionsetup{font={small,color=muted},labelformat=empty,skip=4pt}
+
+\titleformat{\section}{\Large\bfseries\color{ink}}{\color{accent}\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{ink}}{}{0em}{}
+\titlespacing*{\section}{0pt}{14pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[L]{\small\color{muted}Симулятор Пионера · simulator.sakoryagin.ru}
+\fancyfoot[R]{\small\color{muted}\thepage}
+
+\lstdefinestyle{base}{
+    basicstyle=\ttfamily\small,
+    backgroundcolor=\color{codebg},
+    frame=single, rulecolor=\color{codeframe}, framesep=6pt, xleftmargin=6pt, xrightmargin=6pt,
+    keywordstyle=\color{kw}\bfseries,
+    commentstyle=\color{cmt},
+    stringstyle=\color{str},
+    showstringspaces=false, columns=fullflexible, keepspaces=true,
+    breaklines=true, aboveskip=6pt, belowskip=6pt,
+    extendedchars=true
+}
+\lstdefinelanguage{lua}{
+    morekeywords={function,end,if,then,else,elseif,for,do,while,local,return,and,or,not,nil,true,false,repeat,until,in},
+    morecomment=[l]{--}, morestring=[b]", sensitive=true
+}
+\lstdefinestyle{lua}{style=base, language=lua,
+    emph={ap,Ev,Timer,Sensors,Ledbar,camera,callback,sleep,time}, emphstyle=\color{fn}}
+\lstdefinestyle{py}{style=base, language=Python,
+    morekeywords={True,False,None,pass},
+    emph={pioneer,Pioneer,Camera,time}, emphstyle=\color{fn}}
+
+\newtcolorbox{tip}[1][Совет]{enhanced, colback=tipbg, colframe=tipframe, boxrule=0pt, leftrule=3pt,
+    arc=2pt, fonttitle=\bfseries\small, coltitle=tipframe, colbacktitle=tipbg, title={#1},
+    attach title to upper={\ \ }, fontupper=\small, left=8pt, top=4pt, bottom=4pt}
+\newtcolorbox{warn}[1][Осторожно]{enhanced, colback=warnbg, colframe=accent, boxrule=0pt, leftrule=3pt,
+    arc=2pt, fonttitle=\bfseries\small, coltitle=accent, colbacktitle=warnbg, title={#1},
+    attach title to upper={\ \ }, fontupper=\small, left=8pt, top=4pt, bottom=4pt}
+
+\newcommand{\shot}[2][\linewidth]{\includegraphics[width=#1]{img/#2}}
+% Клавиша — без TikZ: TikZ внутри подписей и списков ломается о русские активные символы.
+\newcommand{\key}[1]{{\setlength{\fboxsep}{1.5pt}\fcolorbox{codeframe}{codebg}{\small\ttfamily #1}}}
+\newcommand{\ui}[1]{«\textbf{#1}»}
+% Номерок-выноска на скриншоте: \callout{x}{y}{n}, x и y — доли ширины и высоты.
+\newcommand{\callout}[3]{\node[circle,fill=accent,text=white,font=\small\bfseries,inner sep=1.6pt,minimum size=15pt,draw=white,line width=1pt] at (#1,#2) {#3};}
+% Номер в списке под скриншотом — того же цвета, что выноски на нём.
+\newcommand{\bubble}[1]{{\setlength{\fboxsep}{1.6pt}\colorbox{accent}{\makebox[0.9em]{\color{white}\scriptsize\bfseries #1}}}}
+
+\begin{document}
+
+% ---------------------------------------------------------------- титул
+\begin{tcolorbox}[enhanced, colback=ink, colframe=ink, arc=4pt, left=14pt, right=14pt, top=12pt, bottom=12pt]
+    {\color{accent}\small\bfseries ПАМЯТКА}\\[2pt]
+    {\color{white}\huge\bfseries\raggedright\hyphenpenalty=10000 Программирование в~симуляторе Пионера\par}\vspace{6pt}
+    {\color{white!80!black}Lua, Python и Blockly на одной странице: как запустить первую программу за пять минут
+    и не наступить на самые частые грабли.\\[4pt]
+    Адрес: \textbf{\color{white}https://simulator.sakoryagin.ru}}
+\end{tcolorbox}
+
+\begin{multicols}{2}
+\small
+\textbf{Что внутри}
+\begin{enumerate}[leftmargin=*,itemsep=0pt]
+    \item Быстрый старт
+    \item Первая программа на Lua
+    \item Координаты: где точка
+    \item Несколько точек подряд
+    \item Таймеры, светодиоды, датчики
+    \item Python в браузере
+    \item Blockly: блоки вместо кода
+    \item Камеры дрона
+    \item Python со своего компьютера
+    \item Частые ошибки
+    \item Шпаргалка: Lua и Python
+\end{enumerate}
+\columnbreak
+
+\textbf{Три главные мысли}
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+    \item Дрон — это автопилот: вы \emph{отдаёте команду} и \emph{ждёте события}, что она выполнена.
+    \item В Lua ждут через \texttt{callback(event)}, в Python — опросом \texttt{while not \dots}.
+    \item Координаты точек — метры в системе сцены, их показывает \key{Ctrl}+ЛКМ.
+\end{itemize}
+\end{multicols}
+
+% ---------------------------------------------------------------- 1
+\section{Быстрый старт}
+
+\begin{center}
+\begin{tikzpicture}
+    \node[anchor=south west,inner sep=0] (img) at (0,0) {\shot{01-scene.png}};
+    \begin{scope}[x={(img.south east)},y={(img.north west)}]
+        \callout{0.075}{0.945}{1}
+        \callout{0.905}{0.83}{2}
+        \callout{0.595}{0.17}{3}
+        \callout{0.12}{0.115}{4}
+        \callout{0.343}{0.115}{5}
+        \callout{0.86}{0.10}{6}
+    \end{scope}
+\end{tikzpicture}
+\end{center}
+
+\begin{multicols}{2}
+\small
+\begin{enumerate}[leftmargin=*,itemsep=1pt,label=\bubble{\arabic*}]
+    \item Панели: код, телеметрия, рой, менеджер сцены, руководство, настройки.
+    \item Компас осей (щелчок по оси — вид с неё) и окна камер дрона.
+    \item \ui{Открыть редактор кода} — сюда пишется программа.
+    \item Камера: над землёй, за дроном, от лица дрона (FPV), свободная.
+    \item Расстановка объектов на сцене: дома, маркеры, машины.
+    \item \ui{Запустить}, \ui{Стоп} и \ui{Сбросить} (дрон возвращается на старт).
+\end{enumerate}
+\end{multicols}
+
+\textbf{Пять шагов до полёта:} открыть сайт $\to$ \ui{Открыть редактор кода} $\to$ выбрать язык в левом верхнем
+списке (Lua, Python или Blockly) $\to$ вставить пример из раздела~2 $\to$ нажать \ui{Запустить}. Пока открыт
+редактор, сцена скрыта: закройте его кнопкой \ui{Код} на панели слева — программа продолжит работать, и
+вы увидите полёт.
+
+\begin{tip}
+Готовые сцены (жилой квартал, Геоскан Арена, гоночная трасса) — в \ui{Менеджере сцены}. Вращать камеру —
+левой кнопкой мыши, сдвигать — правой, приближать — колёсиком.
+\end{tip}
+
+% ---------------------------------------------------------------- 2
+\section{Первая программа на Lua}
+
+Автопилот Пионера работает на событиях. Программа отдаёт команду и заканчивает, а когда дрон её выполнит,
+автопилот сам вызывает вашу функцию \texttt{callback(event)} и сообщает, что произошло. Следующую команду
+отдают \emph{там}, по нужному событию.
+
+\begin{center}\shot[0.72\linewidth]{02-editor-lua.png}\\
+\captionof{figure}{Программа в редакторе. Её текст — ниже, его можно скопировать из PDF.}\end{center}
+
+\begin{lstlisting}[style=lua]
+ap.push(Ev.MCE_PREFLIGHT)             -- запустить моторы
+
+function callback(event)
+    if event == Ev.ENGINES_STARTED then
+        ap.push(Ev.MCE_TAKEOFF)       -- моторы запущены: взлетаем
+    end
+    if event == Ev.TAKEOFF_COMPLETE then
+        ap.goToLocalPoint(2, 1, 1.5)  -- взлетели: летим в точку (x, y, z в метрах)
+    end
+    if event == Ev.POINT_REACHED then
+        ap.push(Ev.MCE_LANDING)       -- долетели: садимся
+    end
+end
+\end{lstlisting}
+
+\begin{center}\shot[0.86\linewidth]{03-flight.png}\\
+\captionof{figure}{Та же программа в полёте, камера \ui{Дрон}. Голубая линия — след полёта.}\end{center}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l X l X@{}}
+\toprule
+\multicolumn{2}{@{}l}{\textbf{Команды автопилоту} — \texttt{ap.push(\dots)}} & \multicolumn{2}{l@{}}{\textbf{События от автопилота} — в \texttt{callback}} \\
+\midrule
+\texttt{Ev.MCE\_PREFLIGHT} & запустить моторы & \texttt{Ev.ENGINES\_STARTED} & моторы запущены \\
+\texttt{Ev.MCE\_TAKEOFF}   & взлететь         & \texttt{Ev.TAKEOFF\_COMPLETE} & взлёт закончен \\
+\texttt{Ev.MCE\_LANDING}   & сесть            & \texttt{Ev.POINT\_REACHED}    & точка достигнута \\
+\texttt{Ev.ENGINES\_DISARM}& выключить моторы & \texttt{Ev.COPTER\_LANDED}    & дрон сел \\
+                           &                  & \texttt{Ev.LOW\_VOLTAGE2}     & батарея садится \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{warn}[Функция callback обязательна]
+Даже если события не нужны, объявите пустую \texttt{function callback(event) end}. Без неё автопилот
+выполнит только первую команду миссии, а остальные проигнорирует.
+\end{warn}
+
+% ---------------------------------------------------------------- 3
+\section{Координаты: где точка}
+
+\begin{center}\shot[0.78\linewidth]{04-coords.png}\\
+\captionof{figure}{\key{Ctrl}+щелчок по земле или по объекту показывает координаты точки.}\end{center}
+
+\begin{itemize}[itemsep=1pt]
+    \item Координаты — в \textbf{метрах}, в системе сцены. Ось \textbf{Z смотрит вверх}, X и Y лежат на земле;
+          их направления показывает компас в правом верхнем углу.
+    \item Эти же числа понимают \texttt{ap.goToLocalPoint(x, y, z)} и \texttt{go\_to\_local\_point} в Python, и их же
+          возвращают \texttt{Sensors.lpsPosition()} и \texttt{get\_local\_position\_lps()}: щёлкнули с \key{Ctrl} — подставили
+          в программу.
+    \item Показанное \textbf{Z — высота поверхности}, по которой щёлкнули. Лететь надо выше: над крышей
+          дома на высоте 13~м задавайте, например, $z = 14$.
+    \item Курс (\texttt{ap.updateYaw}, \texttt{yaw} в Python) — в \textbf{радианах}: $\pi/2 \approx 1.57$ — четверть оборота.
+\end{itemize}
+
+% ---------------------------------------------------------------- 4
+\section{Несколько точек подряд}
+
+Каждая точка заканчивается одним и тем же событием \texttt{POINT\_REACHED}. Чтобы понять, \emph{какая}
+точка достигнута, заведите счётчик шагов — так сделаны официальные примеры Geoscan.
+
+\begin{lstlisting}[style=lua]
+local points = {{0, 0, 1}, {2, 0, 1}, {2, 2, 1.5}, {0, 2, 1}}
+local step = 0
+
+ap.push(Ev.MCE_PREFLIGHT)
+
+local function nextPoint()
+    step = step + 1
+    if step <= #points then
+        ap.goToLocalPoint(points[step][1], points[step][2], points[step][3])
+    else
+        ap.push(Ev.MCE_LANDING)            -- точки кончились — садимся
+    end
+end
+
+function callback(event)
+    if event == Ev.ENGINES_STARTED then ap.push(Ev.MCE_TAKEOFF) end
+    if event == Ev.TAKEOFF_COMPLETE then nextPoint() end
+    if event == Ev.POINT_REACHED then
+        Timer.callLater(1, nextPoint)      -- секунду повисеть и дальше
+    end
+end
+\end{lstlisting}
+
+\begin{warn}[«Дрон не долетел до высоты»]
+Частая ошибка: задать точку и в том же обработчике через \texttt{sleep(3)} отправить посадку. Дрон
+поднимается примерно на 0.5~м/с, за 3~секунды он наберёт только полтора метра, и посадка отменит
+подъём. Садиться нужно по \emph{следующему} \texttt{POINT\_REACHED}, когда точка действительно достигнута.
+\end{warn}
+
+\begin{tip}[Лететь медленнее или быстрее]
+Четвёртый аргумент — время перелёта в секундах: \texttt{ap.goToLocalPoint(2, 1, 1.5, 8)} долетит за 8~секунд.
+Без него дрон летит со скоростью из параметров автопилота.
+\end{tip}
+
+% ---------------------------------------------------------------- 5
+\section{Таймеры, светодиоды, датчики}
+
+\subsection{Таймеры}
+\begin{itemize}[itemsep=1pt]
+    \item \texttt{Timer.callLater(2, function() \dots\ end)} — выполнить один раз через 2~секунды.
+    \item \texttt{Timer.new(0.5, function() \dots\ end):start()} — выполнять каждые 0.5~секунды;
+          сохраните таймер в переменную, чтобы потом вызвать \texttt{:stop()}.
+    \item \texttt{sleep(t)} тоже есть, но он останавливает всю программу — официальная документация
+          советует таймеры.
+\end{itemize}
+
+\subsection{Светодиоды}
+Цвет задаётся тремя числами от 0 до 1 (красный, зелёный, синий). На плате 4 светодиода (номера 0–3),
+с модулем LED — 29.
+
+\begin{lstlisting}[style=lua]
+local leds = Ledbar.new(4)
+local colors = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}   -- красный, зелёный, синий
+local i = 1
+
+function callback(event) end
+
+Timer.new(0.5, function()                          -- каждые полсекунды — следующий цвет
+    for n = 0, 3 do leds:set(n, table.unpack(colors[i])) end
+    i = i % #colors + 1
+end):start()
+\end{lstlisting}
+
+\subsection{Датчики}
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}
+\toprule
+\texttt{local x, y, z = Sensors.lpsPosition()} & положение, м \\
+\texttt{local vx, vy, vz = Sensors.lpsVelocity()} & скорость, м/с \\
+\texttt{local d = Sensors.range()} & дальномер: расстояние до поверхности под дроном, м \\
+\texttt{local h = Sensors.altitude()} & высота по барометру, м \\
+\texttt{local yaw = Sensors.lpsYaw()} & курс, радианы \\
+\texttt{local v = Sensors.battery()} & напряжение батареи, В \\
+\texttt{local ch1, \dots, ch8 = Sensors.rc()} & каналы пульта, от $-1$ до $1$ \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+% ---------------------------------------------------------------- 6
+\section{Python в браузере}
+
+Выберите в списке языка \ui{Python}. Это тот же \texttt{pioneer\_sdk}, что и для настоящего Пионера:
+программа, отлаженная здесь, подходит и дрону. Python ждёт не событий, а опросом — \texttt{while not \dots}.
+
+\begin{center}\shot[0.66\linewidth]{05-editor-python.png}\end{center}
+
+\begin{lstlisting}[style=py]
+from pioneer_sdk import Pioneer
+
+pioneer = Pioneer()
+
+pioneer.arm()                  # запустить моторы
+pioneer.takeoff()              # взлететь
+pioneer.go_to_local_point(x=2, y=1, z=1.5, yaw=0)
+while not pioneer.point_reached():
+    pass                       # ждём, пока долетит
+pioneer.land()                 # сесть
+
+pioneer.close_connection()
+\end{lstlisting}
+
+\begin{itemize}[itemsep=1pt]
+    \item \texttt{yaw} у \texttt{go\_to\_local\_point} обязателен (радианы); \texttt{yaw=0} — курс вдоль оси X.
+    \item Точку можно отправить сразу после \texttt{takeoff()}: автопилот полетит к ней, когда закончит взлёт.
+    \item \texttt{point\_reached()} возвращает \texttt{True} \emph{один раз} на каждую точку.
+    \item Цвет в Python — от 0 до 255: \texttt{pioneer.led\_control(led\_id=255, r=0, g=255, b=0)} (255 — все светодиоды).
+    \item Датчики: \texttt{get\_local\_position\_lps()}, \texttt{get\_dist\_sensor\_data()}, \texttt{get\_battery\_status()};
+          передавайте \texttt{get\_last\_received=True}, чтобы повторное чтение не вернуло \texttt{None}.
+\end{itemize}
+
+% ---------------------------------------------------------------- 7
+\section{Blockly: блоки вместо кода}
+
+Выберите в списке языка \ui{Blockly} и собирайте программу из блоков под \ui{Начало программы}.
+Блоки выполняются сверху вниз: \ui{Взлететь} и \ui{Лететь в точку} ждут, пока дрон закончит, — события и
+счётчики за вас расставит сам Blockly.
+
+\begin{center}\shot[0.78\linewidth]{06-blockly.png}\\
+\captionof{figure}{Взлёт, три точки по оси X с зелёным светом и паузой в секунду, посадка.}\end{center}
+
+\begin{itemize}[itemsep=1pt]
+    \item Одна и та же программа из блоков превращается и в Lua, и в Python: переключите язык — и
+          \ui{Скачать код} отдаст готовый текст, который можно дописать руками.
+    \item Серые блоки недоступны в выбранном языке (например, ручная скорость есть только в Python,
+          события автопилота — только в Lua). Подсказка появится, если навести курсор.
+    \item \ui{Каждые N сек} — повтор по таймеру, \ui{Через N сек выполнить} — отложенное действие,
+          \ui{Ждать, пока} — пауза до выполнения условия.
+\end{itemize}
+
+% ---------------------------------------------------------------- 8
+\section{Камеры дрона}
+
+\begin{center}\shot[0.86\linewidth]{07-cameras.png}\\
+\captionof{figure}{Окна передней и нижней камер. Их кнопки — под компасом.}\end{center}
+
+\begin{itemize}[itemsep=1pt]
+    \item Окна включаются кнопками под компасом, перетаскиваются за заголовок; двойной щелчок
+          по заголовку возвращает окно на место. \ui{На весь экран} в передней камере — вид от лица дрона на весь экран.
+    \item Передняя камера — это кадр, который получает программа. В Lua снимок в загрузки браузера
+          сохраняет \texttt{camera.requestMakeShot()}. В Python — как на настоящем дроне:
+\end{itemize}
+\begin{lstlisting}[style=py]
+from pioneer_sdk import Camera
+import cv2
+
+camera = Camera()
+frame = camera.get_cv_frame()          # кадр для OpenCV, цвета BGR
+\end{lstlisting}
+
+% ---------------------------------------------------------------- 9
+\section{Python со своего компьютера}
+
+Программу можно запускать не в браузере, а у себя, в обычном Python с официальным
+\texttt{pioneer\_sdk} (\texttt{pip install pioneer-sdk}), — а летать будет дрон на сайте.
+
+\begin{enumerate}[itemsep=1pt]
+    \item Откройте симулятор, выберите дрон и включите у него \ui{Разрешить внешние команды}.
+          Вкладку можно свернуть — полёт продолжится.
+    \item В программе укажите адрес сайта вместо адреса дрона:
+\end{enumerate}
+\begin{lstlisting}[style=py]
+from pioneer_sdk import Pioneer, Camera
+
+pioneer = Pioneer(ip='simulator.sakoryagin.ru', mavlink_port=8001)
+
+# Камера через интернет: один пакет от программы открывает домашний роутер для кадров.
+class SimCamera(Camera):
+    def connect(self):
+        ok = super().connect()
+        self.udp.sendto(b'1', (self.ip, self.port))
+        return ok
+
+camera = SimCamera(ip='simulator.sakoryagin.ru', port=18001)
+\end{lstlisting}
+
+% ---------------------------------------------------------------- 10
+\section{Частые ошибки}
+
+\begin{minipage}[t]{0.40\linewidth}
+\vspace{0pt}
+\shot{09-error.png}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.56\linewidth}
+\vspace{0pt}
+Перед запуском симулятор проверяет программу и объясняет, что не так, в уведомлениях
+(\ui{колокольчик} в заголовке редактора) — вместе с исправленным примером. Слева — что он скажет на
+\texttt{ap.push(Ev.MCE\_PREFLIGHT)} и сразу \texttt{ap.push(Ev.MCE\_TAKEOFF)}.
+
+\small
+\begin{itemize}[leftmargin=*,itemsep=2pt]
+    \item \textbf{Команды подряд без ожидания.} Взлёт — только после \texttt{ENGINES\_STARTED}, точка — после
+          \texttt{TAKEOFF\_COMPLETE}, посадка — после \texttt{POINT\_REACHED}.
+    \item \textbf{Посадка раньше точки.} \texttt{sleep} или таймер короче перелёта — дрон сядет, не долетев.
+    \item \textbf{Нет \texttt{callback}.} Выполнится только первая команда миссии.
+    \item \textbf{Все точки на одном событии.} Без счётчика шагов вторая точка затрёт первую
+          (раздел~4).
+    \item \textbf{Точка «на земле».} Z из \key{Ctrl}+ЛКМ — высота поверхности, летите выше неё.
+    \item \textbf{Python: пропущен \texttt{yaw}.} На настоящем \texttt{pioneer\_sdk} это ошибка.
+    \item \textbf{Скорость и логи.} Терминал (значок \texttt{>\_} в заголовке редактора) показывает
+          \texttt{print} и сообщения автопилота.
+\end{itemize}
+\end{minipage}
+
+% ---------------------------------------------------------------- 11
+\section{Шпаргалка: Lua и Python}
+
+\begin{center}
+\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.2\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Действие} & \textbf{Lua} & \textbf{Python} \\
+\midrule
+Моторы          & \texttt{ap.push(Ev.MCE\_PREFLIGHT)} & \texttt{pioneer.arm()} \\
+Взлёт           & \texttt{ap.push(Ev.MCE\_TAKEOFF)} & \texttt{pioneer.takeoff()} \\
+Точка           & \texttt{ap.goToLocalPoint(x, y, z)} & \texttt{pioneer.go\_to\_local\_point(x=, y=, z=, yaw=)} \\
+Ждать точку     & \texttt{if event == Ev.POINT\_REACHED} & \texttt{while not pioneer.point\_reached(): pass} \\
+Курс            & \texttt{ap.updateYaw(рад)} & \texttt{yaw=} в \texttt{go\_to\_local\_point} \\
+Посадка         & \texttt{ap.push(Ev.MCE\_LANDING)} & \texttt{pioneer.land()} \\
+Пауза           & \texttt{Timer.callLater(t, f)} & \texttt{time.sleep(t)} \\
+Светодиоды      & \texttt{leds:set(n, r, g, b)} — 0…1 & \texttt{pioneer.led\_control(led\_id, r, g, b)} — 0…255 \\
+Позиция         & \texttt{Sensors.lpsPosition()} & \texttt{pioneer.get\_local\_position\_lps()} \\
+Дальномер       & \texttt{Sensors.range()} & \texttt{pioneer.get\_dist\_sensor\_data()} \\
+Батарея         & \texttt{Sensors.battery()} & \texttt{pioneer.get\_battery\_status()} \\
+Снимок / кадр   & \texttt{camera.requestMakeShot()} & \texttt{Camera().get\_cv\_frame()} \\
+Вывод           & \texttt{print(\dots)} & \texttt{print(\dots)} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{tip}[Где искать остальное]
+Кнопка со значком книги в заголовке редактора открывает справочник API с описанием и примером каждой
+функции. Раздел \ui{Руководство} на панели слева — уроки с заданиями и автопроверкой.
+\end{tip}
+
+\end{document}
