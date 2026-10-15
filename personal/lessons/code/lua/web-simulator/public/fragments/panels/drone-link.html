@@ -1,0 +1,111 @@
+            <div id="drone-link-panel" class="sidebar-panel">
+                <div class="panel-header">
+                    <div class="panel-header__lead">
+                        <span class="panel-title">Дрон</span>
+                    </div>
+                    <span id="drone-link-chip" class="pk-chip" role="status" aria-live="polite">Не подключён</span>
+                    <button type="button" class="panel-close-btn" onclick="closePanel()" aria-label="Закрыть панель дрона"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg></button>
+                </div>
+                <div class="panel-content drone-link-content">
+                    <section class="pk-section drone-link-connect" aria-labelledby="drone-link-connect-title">
+                        <div class="pk-section__head"><h3 id="drone-link-connect-title" class="pk-section__title">Подключение</h3></div>
+                        <p id="drone-link-hint" class="pk-section__hint">Подключите Пионер к компьютеру по USB. Pioneer Station должна быть закрыта: порт может держать только одна программа.</p>
+                        <dl id="drone-link-identity" class="drone-link-identity" hidden>
+                            <div><dt>Номер борта</dt><dd id="drone-link-board">—</dd></div>
+                            <div><dt>Прошивка</dt><dd id="drone-link-firmware">—</dd></div>
+                            <div><dt>Протокол</dt><dd id="drone-link-protocol">—</dd></div>
+                        </dl>
+                        <p id="drone-link-error" class="drone-link-error" role="alert" hidden></p>
+                        <div class="drone-link-actions">
+                            <button type="button" id="drone-link-connect-btn" class="btn-primary">Подключить дрон</button>
+                            <button type="button" id="drone-link-disconnect-btn" class="btn-secondary" hidden>Отключить</button>
+                        </div>
+                    </section>
+
+                    <div id="drone-link-live" class="drone-link-live" hidden>
+                        <section class="pk-section" aria-labelledby="drone-link-attitude-title">
+                            <div class="pk-section__head"><h3 id="drone-link-attitude-title" class="pk-section__title">Положение</h3></div>
+                            <div class="drone-link-attitude">
+                                <svg class="drone-link-horizon" viewBox="-60 -60 120 120" role="img" aria-label="Авиагоризонт" aria-describedby="drone-link-attitude-text">
+                                    <defs><clipPath id="drone-link-horizon-clip"><circle r="56"/></clipPath></defs>
+                                    <g clip-path="url(#drone-link-horizon-clip)">
+                                        <g id="drone-link-horizon-world">
+                                            <rect class="drone-link-horizon__sky" x="-120" y="-240" width="240" height="240"/>
+                                            <rect class="drone-link-horizon__ground" x="-120" y="0" width="240" height="240"/>
+                                            <line class="drone-link-horizon__line" x1="-120" y1="0" x2="120" y2="0"/>
+                                        </g>
+                                    </g>
+                                    <circle class="drone-link-horizon__ring" r="56"/>
+                                    <path class="drone-link-horizon__craft" d="M-26 0 H-8 M8 0 H26 M0 -3 V3"/>
+                                </svg>
+                                <div class="pk-metrics">
+                                    <div class="pk-metric"><span class="pk-metric__label">Крен</span><span class="pk-metric__value"><span id="dl-roll">—</span><span class="pk-metric__unit">°</span></span></div>
+                                    <div class="pk-metric"><span class="pk-metric__label">Тангаж</span><span class="pk-metric__value"><span id="dl-pitch">—</span><span class="pk-metric__unit">°</span></span></div>
+                                    <div class="pk-metric"><span class="pk-metric__label">Курс</span><span class="pk-metric__value"><span id="dl-yaw">—</span><span class="pk-metric__unit">°</span></span></div>
+                                    <div class="pk-metric"><span class="pk-metric__label">Высота</span><span class="pk-metric__value"><span id="dl-altitude">—</span><span class="pk-metric__unit">м</span></span></div>
+                                </div>
+                            </div>
+                            <p id="drone-link-attitude-text" class="visually-hidden"></p>
+                        </section>
+
+                        <section class="pk-section" aria-labelledby="drone-link-power-title">
+                            <div class="pk-section__head"><h3 id="drone-link-power-title" class="pk-section__title">Питание и моторы</h3></div>
+                            <div class="pk-metrics">
+                                <div class="pk-metric"><span class="pk-metric__label">Напряжение</span><span class="pk-metric__value"><span id="dl-voltage">—</span><span class="pk-metric__unit">В</span></span></div>
+                                <div class="pk-metric"><span class="pk-metric__label">Ток</span><span class="pk-metric__value"><span id="dl-current">—</span><span class="pk-metric__unit">А</span></span></div>
+                            </div>
+                            <div class="drone-link-motors" role="group" aria-label="Обороты моторов">
+                                <div class="drone-link-motor"><span class="drone-link-motor__name">1</span><div class="pk-meter" role="meter" aria-label="Мотор 1" aria-valuemin="0" aria-valuemax="12000" aria-valuenow="0"><div class="pk-meter__fill" id="dl-rpm0-bar"></div></div><span class="drone-link-motor__value" id="dl-rpm0">0</span></div>
+                                <div class="drone-link-motor"><span class="drone-link-motor__name">2</span><div class="pk-meter" role="meter" aria-label="Мотор 2" aria-valuemin="0" aria-valuemax="12000" aria-valuenow="0"><div class="pk-meter__fill" id="dl-rpm1-bar"></div></div><span class="drone-link-motor__value" id="dl-rpm1">0</span></div>
+                                <div class="drone-link-motor"><span class="drone-link-motor__name">3</span><div class="pk-meter" role="meter" aria-label="Мотор 3" aria-valuemin="0" aria-valuemax="12000" aria-valuenow="0"><div class="pk-meter__fill" id="dl-rpm2-bar"></div></div><span class="drone-link-motor__value" id="dl-rpm2">0</span></div>
+                                <div class="drone-link-motor"><span class="drone-link-motor__name">4</span><div class="pk-meter" role="meter" aria-label="Мотор 4" aria-valuemin="0" aria-valuemax="12000" aria-valuenow="0"><div class="pk-meter__fill" id="dl-rpm3-bar"></div></div><span class="drone-link-motor__value" id="dl-rpm3">0</span></div>
+                            </div>
+                            <p class="pk-section__hint">Обороты моторов, об/мин.</p>
+                        </section>
+
+                        <section class="pk-section" aria-labelledby="drone-link-sensors-title">
+                            <div class="pk-section__head"><h3 id="drone-link-sensors-title" class="pk-section__title">Датчики</h3></div>
+                            <div class="pk-metrics">
+                                <div class="pk-metric"><span class="pk-metric__label">Дальномер</span><span class="pk-metric__value"><span id="dl-range">—</span><span class="pk-metric__unit">мм</span></span></div>
+                                <div class="pk-metric"><span class="pk-metric__label">Давление</span><span class="pk-metric__value"><span id="dl-pressure">—</span><span class="pk-metric__unit">кПа</span></span></div>
+                                <div class="pk-metric"><span class="pk-metric__label">Ускорение по Z</span><span class="pk-metric__value"><span id="dl-accelz">—</span><span class="pk-metric__unit">g</span></span></div>
+                            </div>
+                        </section>
+
+                        <section class="pk-section" aria-labelledby="drone-link-system-title">
+                            <div class="pk-section__head"><h3 id="drone-link-system-title" class="pk-section__title">Память и система</h3></div>
+                            <div class="pk-field">
+                                <span class="pk-field__label">Память автопилота <span class="pk-field__value" id="dl-memory-text">—</span></span>
+                                <div class="pk-meter" role="meter" aria-label="Занятая память автопилота" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="pk-meter__fill" id="dl-memory-bar"></div></div>
+                            </div>
+                            <dl class="drone-link-facts">
+                                <div><dt>Память Lua</dt><dd id="dl-lua-memory">—</dd></div>
+                                <div><dt>Flash</dt><dd id="dl-flash">—</dd></div>
+                                <div><dt>Процессор</dt><dd id="dl-cpu">—</dd></div>
+                                <div><dt>Работает</dt><dd id="dl-uptime">—</dd></div>
+                                <div><dt>Включений</dt><dd id="dl-boots">—</dd></div>
+                            </dl>
+                        </section>
+
+                        <section class="pk-section drone-link-script" aria-labelledby="drone-link-script-title">
+                            <div class="pk-section__head">
+                                <h3 id="drone-link-script-title" class="pk-section__title">Программа на дроне</h3>
+                                <span id="drone-link-script-chip" class="pk-chip pk-chip--plain">Остановлена</span>
+                            </div>
+                            <p id="drone-link-script-hint" class="pk-section__hint">Кнопка «На дрон» в редакторе только записывает программу. Запуск — здесь, когда вы готовы.</p>
+                            <div id="drone-link-start-row" class="drone-link-actions">
+                                <button type="button" id="drone-link-start-btn" class="btn-primary">Запустить программу</button>
+                                <button type="button" id="drone-link-stop-btn" class="btn-secondary" hidden>Остановить</button>
+                            </div>
+                            <div id="drone-link-confirm" class="drone-link-confirm" role="alertdialog" aria-labelledby="drone-link-confirm-title" hidden>
+                                <strong id="drone-link-confirm-title">Дрон может завестись и взлететь</strong>
+                                <p>Убедитесь, что он лежит на земле в безопасном месте, рядом никого нет, а пропеллеры не заденут руки и предметы.</p>
+                                <div class="drone-link-actions">
+                                    <button type="button" id="drone-link-confirm-yes" class="btn-primary">Да, запустить</button>
+                                    <button type="button" id="drone-link-confirm-no" class="btn-secondary">Отмена</button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>

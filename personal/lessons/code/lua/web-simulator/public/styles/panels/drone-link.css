@@ -1,0 +1,47 @@
+/*
+ * "Дрон" panel on the shared panel kit, laid out like the flight panel (telemetry.css): soft sections, big readings in
+ * tabular figures, one primary action per block. The artificial horizon is the only drawn instrument; its sky and
+ * ground use the accent and the device surface so it reads in both themes.
+ */
+/* A flex or grid display on an element must not defeat its hidden attribute. */
+#drone-link-panel [hidden] { display: none !important; }
+#drone-link-panel .drone-link-content { display: flex; flex-direction: column; gap: var(--pk-card-gap); padding: var(--panel-content-pad); }
+#drone-link-panel .drone-link-live { display: flex; flex-direction: column; gap: var(--pk-card-gap); }
+#drone-link-panel .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Connection */
+#drone-link-panel .drone-link-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#drone-link-panel .drone-link-actions > button { flex: 1 1 auto; min-height: 36px; }
+#drone-link-panel .drone-link-identity { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 12px; border-radius: var(--radius-sm); background: var(--panel-bg); }
+#drone-link-panel .drone-link-identity[hidden] { display: none; }
+#drone-link-panel :is(.drone-link-identity, .drone-link-facts) dt { font-size: 12px; font-weight: 500; color: var(--pc-muted); }
+#drone-link-panel :is(.drone-link-identity, .drone-link-facts) dd { margin: 2px 0 0; font: 650 15px/1.3 var(--font-sans); font-variant-numeric: tabular-nums; color: var(--text-strong); }
+#drone-link-panel .drone-link-error { margin: 0; padding: 8px 10px; border-radius: var(--radius-sm); font-size: 13px; line-height: 1.45; color: var(--pc-danger); background: color-mix(in srgb, var(--pc-danger) 10%, transparent); }
+#drone-link-panel .drone-link-error[hidden] { display: none; }
+
+/* Artificial horizon */
+#drone-link-panel .drone-link-attitude { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 16px; }
+#drone-link-panel .drone-link-horizon { display: block; width: 112px; height: 112px; }
+#drone-link-panel .drone-link-horizon__sky { fill: color-mix(in srgb, var(--pc-accent) 30%, var(--pc-device-bg, #111)); }
+#drone-link-panel .drone-link-horizon__ground { fill: color-mix(in srgb, var(--text-strong) 28%, var(--pc-device-bg, #111)); }
+#drone-link-panel .drone-link-horizon__line { stroke: var(--text-strong); stroke-width: 1.5; }
+#drone-link-panel .drone-link-horizon__ring { fill: none; stroke: var(--pk-line-strong); stroke-width: 2; }
+#drone-link-panel .drone-link-horizon__craft { fill: none; stroke: var(--pc-accent); stroke-width: 3; stroke-linecap: round; }
+@container (max-width: 300px) { #drone-link-panel .drone-link-attitude { grid-template-columns: 1fr; justify-items: center; } }
+
+/* Motors: a bar and a number per motor */
+#drone-link-panel .drone-link-motors { display: grid; gap: 8px; margin-top: 4px; }
+#drone-link-panel .drone-link-motor { display: grid; grid-template-columns: 16px minmax(0, 1fr) 52px; align-items: center; gap: 10px; }
+#drone-link-panel .drone-link-motor__name { font-size: 12px; font-weight: 600; color: var(--pc-muted); text-align: center; }
+#drone-link-panel .drone-link-motor__value { font: 600 13px/1 var(--font-sans); font-variant-numeric: tabular-nums; text-align: right; color: var(--text-strong); }
+#drone-link-panel .drone-link-motor .pk-meter__fill { width: 0; background: var(--pc-accent); }
+
+/* Memory and system facts */
+#drone-link-panel #dl-memory-bar { width: 0; background: var(--pc-accent); }
+#drone-link-panel .drone-link-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 12px; margin: 12px 0 0; }
+
+/* Starting the program is deliberate: it asks first, and says why. */
+#drone-link-panel .drone-link-confirm { display: grid; gap: 8px; padding: 12px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--pc-warning) 14%, transparent); border: 1px solid color-mix(in srgb, var(--pc-warning) 55%, transparent); }
+#drone-link-panel .drone-link-confirm[hidden] { display: none; }
+#drone-link-panel .drone-link-confirm p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-strong); }
+#drone-link-panel .drone-link-confirm strong { font-size: 14px; color: var(--text-strong); }
