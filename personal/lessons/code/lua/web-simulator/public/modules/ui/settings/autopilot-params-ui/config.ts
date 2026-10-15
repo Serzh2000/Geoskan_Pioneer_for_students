@@ -41,7 +41,3 @@ export const GROUP_DESCRIPTIONS: Record<string, string> = {
     Telemetry: 'Настройки телеметрического потока и частот обновления.'
 };
 
-export function resolveSectionKey(group: string): SectionKey {
-    const found = SECTION_ORDER.find((sectionKey) => SECTION_META[sectionKey].groups.includes(group));
-    return found || 'system';
-}

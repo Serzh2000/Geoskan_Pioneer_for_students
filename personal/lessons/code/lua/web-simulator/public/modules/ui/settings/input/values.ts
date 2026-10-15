@@ -57,18 +57,6 @@ export function readRefRcValue(
     return clampRc(1500 + normalizedValue * 500);
 }
 
-export function rcToCenteredNormalized(value: number): number {
-    return clamp((value - 1500) / 500, -1, 1);
-}
-
-export function rcToThrottleNormalized(value: number): number {
-    return clamp((value - 1000) / 1000, 0, 1);
-}
-
-export function getPrimaryStickSlot(_ref: GamepadInputRef | null): PrimaryStickSlot | null {
-    return null; // Legacy: physical axis no longer dictates visual slot
-}
-
-export function getPrimaryChannelStickSlot(channel: PrimaryChannelKey, _ref: GamepadInputRef | null = null): PrimaryStickSlot {
+export function getPrimaryChannelStickSlot(channel: PrimaryChannelKey): PrimaryStickSlot {
     return MODE_PRIMARY_STICK_SLOTS[simSettings.gamepadStickMode][channel];
 }

@@ -10,24 +10,6 @@ export function createWizardDraftInversion(): boolean[] {
     return INVERTIBLE_CHANNELS.map((_, index) => !!simSettings.gamepadInversion[index]);
 }
 
-export function getStoredMappingRef(channel: ChannelKey): GamepadInputRef | null {
-    switch (channel) {
-        case 'roll':
-            return simSettings.gamepadMapping.roll;
-        case 'pitch':
-            return simSettings.gamepadMapping.pitch;
-        case 'throttle':
-            return simSettings.gamepadMapping.throttle;
-        case 'yaw':
-            return simSettings.gamepadMapping.yaw;
-        case 'mode':
-            return simSettings.gamepadMapping.modeSwitch;
-        case 'arm':
-            return simSettings.gamepadMapping.armSwitch;
-        case 'magnet':
-            return simSettings.gamepadMapping.magnetBtn;
-    }
-}
 
 export function persistWizardResults(params: {
     detectedMapping: Partial<Record<ChannelKey, GamepadInputRef>>;

@@ -35,9 +35,6 @@ export const MAX_PRESET_POSITIONS = 5;
 export const RC_CHANNEL_COUNT = 12;
 export const RC_VISIBLE_CHANNELS_DEFAULT = 8;
 export const VIRTUAL_DEVICE_ID = 'virtual-radiomaster';
-export const DEFAULT_PWM_MIN = 1000;
-export const DEFAULT_PWM_CENTER = 1500;
-export const DEFAULT_PWM_MAX = 2000;
 
 export const BINDING_ACTIONS: BindingAction[] = [
     'Arm',

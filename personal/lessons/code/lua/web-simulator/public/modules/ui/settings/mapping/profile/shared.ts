@@ -1,4 +1,4 @@
-import type { ChannelRole, InputControlType, InputSource, StickMode } from '../../types.js';
+import type { ChannelRole, InputControlType, StickMode } from '../../types.js';
 
 const RADIO_KEYWORDS = [
     'radiomaster',
@@ -48,45 +48,6 @@ export function getRoleLabel(role: ChannelRole): string {
     return labels[role];
 }
 
-export function getDefaultRoleForChannel(channel: number): ChannelRole {
-    const roles: ChannelRole[] = [
-        'roll',
-        'pitch',
-        'throttle',
-        'yaw',
-        'flightMode',
-        'arm',
-        'magnet',
-        'camera',
-        'gear',
-        'returnHome',
-        'pitMode',
-        'aux'
-    ];
-    return roles[channel - 1] ?? 'aux';
-}
-
-export function getSignalTypeFromSourceId(sourceId: string): InputSource['signalType'] {
-    return sourceId.startsWith('b') || sourceId.startsWith('vb') ? 'button' : 'axis';
-}
-
-export function getInputLabel(sourceId: string): string {
-    if (/^va\d+$/.test(sourceId)) return `Virtual Axis ${sourceId.slice(2)}`;
-    if (/^vb\d+$/.test(sourceId)) return `Virtual Button ${sourceId.slice(2)}`;
-    if (/^a\d+$/.test(sourceId)) return `Axis ${sourceId.slice(1)}`;
-    if (/^b\d+$/.test(sourceId)) return `Button ${sourceId.slice(1)}`;
-    return sourceId;
-}
-
-export function getInputGroup(sourceId: string): string {
-    if (/^v[ab]\d+$/.test(sourceId)) return 'AUX';
-    return sourceId.startsWith('b') ? 'Buttons' : 'Axes';
-}
-
-export function getDefaultControlTypeForSourceId(sourceId: string): InputControlType {
-    return sourceId.startsWith('b') || sourceId.startsWith('vb') ? 'button' : 'stick';
-}
-
 export function getDefaultControlTypeForRole(role: ChannelRole, sourceId: string | null): InputControlType {
     if (role === 'throttle') return 'throttle';
     if (role === 'flightMode') return 'switch-3pos';
@@ -94,8 +55,4 @@ export function getDefaultControlTypeForRole(role: ChannelRole, sourceId: string
     if (role === 'magnet') return 'button';
     if (sourceId?.startsWith('b') || sourceId?.startsWith('vb')) return 'button';
     return 'stick';
-}
-
-export function buildPrimaryAutoAssignments(mode: StickMode): Record<'roll' | 'pitch' | 'throttle' | 'yaw', string> {
-    return { ...STICK_MODE_AXIS_PATTERNS[mode] };
 }

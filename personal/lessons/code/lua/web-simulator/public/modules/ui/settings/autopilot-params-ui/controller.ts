@@ -74,7 +74,7 @@ export function initAutopilotParamsUI() {
                 ? { kind: 'success', text: `Исходный файл ${payload.fileName} перечитан, доступно параметров: ${getAutopilotParameterDefinitions().length}.` }
                 : null;
             log(`[AUTOPILOT] Загружен исходный файл параметров: ${payload.fileName}`, 'success');
-        } catch (error) {
+        } catch {
             flash = { kind: 'error', text: 'Не удалось прочитать исходный файл параметров автопилота через API.' };
             log('[AUTOPILOT] Не удалось загрузить исходный файл параметров.', 'error');
         } finally {
@@ -96,7 +96,7 @@ export function initAutopilotParamsUI() {
             isSourceDirty = false;
             flash = { kind: 'success', text: `Изменения сохранены в исходный файл ${payload.fileName}.` };
             log(`[AUTOPILOT] Изменения сохранены в исходный файл: ${payload.fileName}`, 'success');
-        } catch (error) {
+        } catch {
             flash = { kind: 'error', text: 'Не удалось сохранить изменения в исходный файл параметров.' };
             log('[AUTOPILOT] Ошибка сохранения исходного файла параметров.', 'error');
         } finally {

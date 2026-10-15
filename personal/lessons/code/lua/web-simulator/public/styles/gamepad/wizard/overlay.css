@@ -13,6 +13,9 @@
     z-index: 2000;
 }
 
+/* The setup wizard opens above the full-page controller dialog. */
+#gp-wizard-overlay { z-index: 2300; }
+
 .modal-content {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 249, 250, 0.98));
     border: 1px solid rgba(15, 23, 42, 0.08);
@@ -56,3 +59,8 @@
     background: rgba(255, 107, 0, 0.08);
     border-color: rgba(255, 107, 0, 0.14);
 }
+
+/* The wizard window is themed in layout.css; the generic modal look must not fight it. */
+.modal-content.gp-wizard-modal { background: var(--panel-bg); border-color: var(--border-color); box-shadow: none; }
+.gp-wizard-modal .modal-header { background: transparent; border-bottom-color: var(--border-color); }
+.gp-wizard-modal .modal-title { color: var(--text-strong); }

@@ -1,0 +1,4 @@
+/* The 3D scene of the setup wizard (modules/ui/settings/wizard/radio-view.ts): the transmitter and the drone fill the whole window. */
+.gp-radio { position: absolute; inset: 0; z-index: 0; }
+.gp-radio__canvas { display: block; width: 100%; height: 100%; }
+.gp-radio[data-connected='false'] .gp-radio__canvas { opacity: .8; }

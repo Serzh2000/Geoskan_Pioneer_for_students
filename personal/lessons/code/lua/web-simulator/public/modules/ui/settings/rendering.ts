@@ -1,6 +1,5 @@
 import { simSettings, type AuxChannelRange, type GamepadInputRef } from '../../core/state.js';
 import { ALL_CHANNELS, CALIBRATION_DURATION_MS, PRIMARY_CHANNELS, clamp } from './constants.js';
-import { getObservedPositions } from './input/observed.js';
 import type { SettingsDomRefs } from './dom.js';
 import type { SettingsRuntimeState, AutoStatusMode } from './runtime-state.js';
 import type { ActionAuxChannelKey, ChannelKey, ObservedInputPosition, ObservedInputStats, PrimaryChannelKey } from './types.js';
@@ -69,25 +68,6 @@ export function setAutoStatus(
     state.autoStatusText = text;
     renderAutoStatus(dom, state);
     renderAutoButtons(dom, state, simSettings.gamepadConnected && state.activeGamepadHasChannelData);
-}
-
-export function getChannelLabel(key: ChannelKey): string {
-    switch (key) {
-        case 'roll':
-            return 'Roll';
-        case 'pitch':
-            return 'Pitch';
-        case 'throttle':
-            return 'Throttle';
-        case 'yaw':
-            return 'Yaw';
-        case 'mode':
-            return 'Mode';
-        case 'arm':
-            return 'Arm';
-        case 'magnet':
-            return 'Magnet';
-    }
 }
 
 export function syncSelectWithMapping(
@@ -218,9 +198,9 @@ export function renderCalibrationState(dom: SettingsDomRefs, state: SettingsRunt
             ? Math.max(1, Math.ceil((CALIBRATION_DURATION_MS - (Date.now() - state.calibrationStartedAt)) / 1000))
             : 0;
         setTextIfChanged(dom.gpBtnCalibrate, state.isCalibrating
-            ? `\u041a\u0410\u041b. ${remainingSeconds}\u0441`
+            ? `\u041a\u0430\u043b\u0438\u0431\u0440\u043e\u0432\u043a\u0430 \u00b7 ${remainingSeconds} \u0441`
             : 'Начать калибровку');
-        setStyleIfChanged(dom.gpBtnCalibrate, 'color', state.isCalibrating ? '#f87171' : '');
+        setStyleIfChanged(dom.gpBtnCalibrate, 'color', state.isCalibrating ? 'var(--pc-danger)' : '');
         setDisabledIfChanged(dom.gpBtnCalibrate, !simSettings.gamepadConnected);
     }
     if (dom.gpBtnResetCal) {

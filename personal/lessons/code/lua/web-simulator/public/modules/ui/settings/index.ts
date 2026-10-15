@@ -13,6 +13,7 @@ import { setMappingRef } from './mapping.js';
 import { initAutopilotParamsUI } from './autopilot-params-ui.js';
 import { createSettingsRuntimeState } from './runtime-state.js';
 import { initWizard } from './wizard.js';
+import { bindGraphicsQualityControl } from './graphics-quality.js';
 
 const GAMEPAD_UI_POLL_INTERVAL_MS = 50;
 
@@ -26,6 +27,7 @@ export function initSettingsUI() {
 
     initAutopilotParamsUI();
     initWizard();
+    bindGraphicsQualityControl();
     bindGeneralSettingsControls(dom);
     bindGamepadSettingsControls({
         dom,

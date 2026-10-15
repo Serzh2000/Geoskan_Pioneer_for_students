@@ -1,5 +1,5 @@
 import { simSettings, saveGamepadSettings } from '../../../core/state.js';
-import { ACTION_AUX_CHANNELS, ALL_CHANNELS, INVERTIBLE_CHANNELS, PRIMARY_CHANNELS, getChannelInversionIndex } from '../constants.js';
+import { ACTION_AUX_CHANNELS, ALL_CHANNELS, PRIMARY_CHANNELS, getChannelInversionIndex } from '../constants.js';
 import type { SettingsDomRefs } from '../dom.js';
 import { setMappingRef } from '../mapping.js';
 import type { SettingsRuntimeState } from '../runtime-state.js';
@@ -12,6 +12,28 @@ function setRangeProgress(element: HTMLInputElement | null): void {
     const value = Number(element.value || '0');
     const progress = max > min ? ((value - min) / (max - min)) * 100 : 0;
     element.style.setProperty('--range-progress', `${Math.max(0, Math.min(100, progress))}%`);
+}
+
+/** "1×", "0.5×", "2.25×": the same notation as the quick-pick buttons. */
+function formatSpeed(value: number): string {
+    return `${Number(value.toFixed(2))}×`;
+}
+
+const TRACER_SAMPLE_POINTS: Array<[number, number]> = [[8, 30], [40, 22], [72, 26], [104, 12], [136, 18], [168, 8], [200, 14], [232, 6]];
+
+/** The line a flight will leave, drawn with the chosen colour, thickness and shape. */
+function renderTracerSample(color: string, width: number, shape: string): void {
+    const line = document.getElementById('settings-tracer-line');
+    const dots = document.getElementById('settings-tracer-dots');
+    if (!line || !dots) return;
+    const showLine = shape !== 'points';
+    const showDots = shape !== 'line';
+    line.setAttribute('stroke', color);
+    line.setAttribute('stroke-width', String(Math.max(1, width)));
+    line.setAttribute('visibility', showLine ? 'visible' : 'hidden');
+    dots.innerHTML = showDots
+        ? TRACER_SAMPLE_POINTS.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="${Math.max(2, width * 0.9)}" fill="${color}"/>`).join('')
+        : '';
 }
 
 export function syncInversionCheckboxes(dom: SettingsDomRefs): void {
@@ -38,6 +60,7 @@ export function bindGeneralSettingsControls(dom: SettingsDomRefs): void {
         }
         dom.tracerColorEl.addEventListener('input', () => {
             simSettings.tracerColor = dom.tracerColorEl?.value ?? simSettings.tracerColor;
+            renderTracerSample(simSettings.tracerColor, simSettings.tracerWidth, simSettings.tracerShape);
             if (dom.tracerColorVal) {
                 dom.tracerColorVal.textContent = simSettings.tracerColor.toUpperCase();
             }
@@ -53,6 +76,7 @@ export function bindGeneralSettingsControls(dom: SettingsDomRefs): void {
         dom.tracerWidthEl.addEventListener('input', () => {
             simSettings.tracerWidth = parseFloat(dom.tracerWidthEl?.value ?? String(simSettings.tracerWidth));
             setRangeProgress(dom.tracerWidthEl);
+            renderTracerSample(simSettings.tracerColor, simSettings.tracerWidth, simSettings.tracerShape);
             if (dom.tracerWidthVal) {
                 dom.tracerWidthVal.textContent = `${simSettings.tracerWidth.toFixed(0)} px`;
             }
@@ -63,8 +87,10 @@ export function bindGeneralSettingsControls(dom: SettingsDomRefs): void {
         dom.tracerShapeEl.value = simSettings.tracerShape;
         dom.tracerShapeEl.addEventListener('change', () => {
             simSettings.tracerShape = dom.tracerShapeEl?.value ?? simSettings.tracerShape;
+            renderTracerSample(simSettings.tracerColor, simSettings.tracerWidth, simSettings.tracerShape);
         });
     }
+    renderTracerSample(simSettings.tracerColor, simSettings.tracerWidth, simSettings.tracerShape);
 
     if (dom.showGizmoEl) {
         dom.showGizmoEl.checked = simSettings.showGizmo;
@@ -75,15 +101,28 @@ export function bindGeneralSettingsControls(dom: SettingsDomRefs): void {
 
     if (dom.simSpeedEl && dom.simSpeedVal) {
         dom.simSpeedEl.value = simSettings.simSpeed.toString();
-        dom.simSpeedVal.textContent = `${simSettings.simSpeed.toFixed(1)}x`;
+        dom.simSpeedVal.textContent = formatSpeed(simSettings.simSpeed);
         setRangeProgress(dom.simSpeedEl);
+        const presets = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-speed-preset]'));
+        const markPreset = () => presets.forEach(button => {
+            const active = Number(button.dataset.speedPreset) === simSettings.simSpeed;
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', String(active));
+        });
         dom.simSpeedEl.addEventListener('input', () => {
             simSettings.simSpeed = parseFloat(dom.simSpeedEl?.value ?? String(simSettings.simSpeed));
             setRangeProgress(dom.simSpeedEl);
             if (dom.simSpeedVal) {
-                dom.simSpeedVal.textContent = `${simSettings.simSpeed.toFixed(1)}x`;
+                dom.simSpeedVal.textContent = formatSpeed(simSettings.simSpeed);
             }
+            markPreset();
         });
+        presets.forEach(button => button.addEventListener('click', () => {
+            if (!dom.simSpeedEl) return;
+            dom.simSpeedEl.value = button.dataset.speedPreset ?? '1';
+            dom.simSpeedEl.dispatchEvent(new Event('input', { bubbles: true }));
+        }));
+        markPreset();
     }
 }
 

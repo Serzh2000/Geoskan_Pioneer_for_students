@@ -2,7 +2,7 @@ import { currentDroneId, drones, matchesAuxRange, saveGamepadSettings, simSettin
 import { ALL_CHANNELS, PRIMARY_CHANNELS } from '../constants.js';
 import type { SettingsDomRefs } from '../dom.js';
 import type { SettingsRuntimeState } from '../runtime-state.js';
-import type { ActionAuxChannelKey, ChannelKey, PrimaryChannelKey } from '../types.js';
+import type { ChannelKey, PrimaryChannelKey } from '../types.js';
 import { applyModeRangesFromObserved, getAuxRange, getModeObservedPositions, getObservedStats } from '../input/ranges.js';
 import { readRefRcValue } from '../input/values.js';
 import {
@@ -30,8 +30,6 @@ import {
     updateBar
 } from '../rendering.js';
 import { createGamepadCalibrationController } from './calibration.js';
-
-export type GamepadSettingsController = ReturnType<typeof createGamepadSettingsController>;
 
 export function createGamepadSettingsController(dom: SettingsDomRefs, state: SettingsRuntimeState) {
     const hasChannelData = (): boolean => simSettings.gamepadConnected && state.activeGamepadHasChannelData;
@@ -163,12 +161,13 @@ export function createGamepadSettingsController(dom: SettingsDomRefs, state: Set
                 const axisChannels = gamepad.axes.length > 0 ? `CH1-CH${gamepad.axes.length}` : 'нет axis';
                 const buttons = gamepad.buttons.length > 0 ? `BTN1-BTN${gamepad.buttons.length}` : 'без кнопок';
                 const gamepadName = escapeHtml(getGamepadName(gamepad));
-                dom.gamepadStatusEl.innerHTML =
-                    `<span class="gamepad-status-pill__name">${gamepadName}</span><span class="gamepad-status-pill__meta">· ${axisChannels} · ${buttons} · Mode ${simSettings.gamepadStickMode}</span>`;
+                dom.gamepadStatusEl.innerHTML = `<span class="pk-chip__text">${gamepadName}</span>`;
+                dom.gamepadStatusEl.title = `${getGamepadName(gamepad)} · ${axisChannels} · ${buttons} · Mode ${simSettings.gamepadStickMode}`;
                 dom.gamepadStatusEl.classList.add('is-connected');
                 dom.gamepadStatusEl.classList.remove('is-disconnected');
             } else {
-                dom.gamepadStatusEl.textContent = 'Пульт не подключен';
+                dom.gamepadStatusEl.textContent = 'Не подключён';
+                dom.gamepadStatusEl.removeAttribute('title');
                 dom.gamepadStatusEl.classList.add('is-disconnected');
                 dom.gamepadStatusEl.classList.remove('is-connected');
             }

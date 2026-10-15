@@ -49,12 +49,8 @@ export type InputControlType =
 export type InputSignalType = 'axis' | 'button';
 export type BindingAction = 'Arm' | 'Flight Mode' | 'Camera' | 'Magnet' | 'Gear' | 'Return Home' | 'Pit Mode';
 export type WizardStepId = 'device' | 'sticks' | 'switches' | 'calibration' | 'bindings' | 'review';
-export type WorkspaceView = 'wizard' | 'monitor' | 'advanced';
 export type DeviceKind = 'rc-transmitter' | 'gamepad' | 'virtual';
 export type DeviceTransport = 'gamepad-api' | 'virtual';
-export type RcWizardAuxRole = 'flightMode' | 'arm' | 'magnet';
-export type RcWizardPrimaryRole = 'throttle' | 'yaw' | 'pitch' | 'roll';
-export type RcWizardModalStepId = 'mode' | 'throttle' | 'yaw' | 'pitch' | 'roll' | 'aux' | 'review';
 
 export type CalibrationData = {
     min: number;
@@ -130,21 +126,5 @@ export type DeviceProfile = {
     visibleChannelCount: number;
     createdAt: string;
     updatedAt: string;
-};
-
-export type InputSample = {
-    source: InputSource;
-    rawValue: number;
-    normalizedValue: number;
-    pwmValue: number;
-    active: boolean;
-    discreteLevel?: number;
-};
-
-export type RcWizardState = {
-    currentStepId: WizardStepId;
-    skippedSteps: WizardStepId[];
-    autoDetectChannel: number | null;
-    calibrationActive: boolean;
 };
 

@@ -112,17 +112,6 @@ export function sanitizeCalibration(calibration: Partial<CalibrationData> | null
     };
 }
 
-export function captureCalibrationCenter(calibration: CalibrationData, rawValue: number): CalibrationData {
-    const next = sanitizeCalibration(calibration);
-    const clamped = clamp(rawValue, -1, 1);
-    return {
-        ...next,
-        center: clamped,
-        min: Math.min(next.min, clamped),
-        max: Math.max(next.max, clamped)
-    };
-}
-
 export function normalizeCenteredInput(rawValue: number, calibration: CalibrationData): number {
     const safe = sanitizeCalibration(calibration);
     const min = safe.min;

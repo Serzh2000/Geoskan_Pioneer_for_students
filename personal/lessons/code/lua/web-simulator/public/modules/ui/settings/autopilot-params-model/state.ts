@@ -15,8 +15,7 @@ import { buildDefinitions, parseTemplate } from './template.js';
 import type {
     AutopilotImportResult,
     AutopilotParameterDefinition,
-    AutopilotParameterUpdateResult,
-    AutopilotSettingsState
+    AutopilotParameterUpdateResult
 } from './types.js';
 
 const STORAGE_KEY = 'geoskan_autopilot_parameters_v1';

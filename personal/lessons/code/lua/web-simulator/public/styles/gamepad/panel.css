@@ -1,28 +1,5 @@
-﻿/*
- * Агрегатор стилей панели геймпада.
- * Сохраняет прежнюю точку подключения `public/styles/gamepad/panel.css`.
- */
-@import url('./panel/buttons.css');
-@import url('./panel/layout.css');
+/* Controller panel: shell, channel rows, aux ranges, signal monitor. Surfaces and fields come from panels/panel-kit.css. */
+@import url('./panel/shell.css');
 @import url('./panel/channels.css');
 @import url('./panel/ranges.css');
-@import url('./panel/tabs.css');
 @import url('./panel/channel-monitor.css');
-
-/* Shared panel surfaces for the controller workspace. */
-.sidebar-panel#gamepad-panel .settings-panel-content {
-    background: #f7f7f5;
-}
-
-.gamepad-hero,
-.gamepad-section,
-.gamepad-panel-tabs {
-    border-color: #e0e5ea;
-    background: #ffffff;
-    box-shadow: none;
-}
-
-.gamepad-hero { border-radius: 12px; }
-.gamepad-section { border-radius: 12px; }
-.gamepad-panel-tab.is-active { background: #fff4ea; box-shadow: none; }
-

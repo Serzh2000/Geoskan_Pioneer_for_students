@@ -1,0 +1,22 @@
+/* Header chip, pane switching and connection state of the controller panel. */
+#gamepad-panel .panel-header__lead { flex: 1; }
+#gamepad-status { margin-left: auto; min-width: 0; max-width: 200px; }
+#gamepad-status.is-connected { background: var(--pk-success-soft); color: var(--pc-success, var(--success)); }
+#gamepad-status.is-connected::before { background: currentColor; }
+#gamepad-status .pk-chip__text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.gamepad-panel-panes { min-width: 0; min-height: 0; }
+.gamepad-panel-pane { display: none; min-width: 0; min-height: 0; }
+.gamepad-panel-pane.is-active { display: block; }
+
+/* The stage is a grid of kit sections; script sets display:grid inline. */
+.gamepad-stage { display: grid; gap: 20px; min-width: 0; }
+.gamepad-stage:not(.is-disconnected) > .gp-connect { display: none; }
+.gamepad-stage:not(.is-disconnected) > .gp-connect + .pk-section { padding-top: 0; border-top: 0; }
+.gamepad-stage.is-disconnected .gp-calibration-hint--online,
+.gamepad-stage:not(.is-disconnected) .gp-calibration-hint--offline { display: none; }
+
+#gp-btn-wizard { flex: 0 0 auto; white-space: nowrap; }
+.gp-status { font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+.gp-status.is-ready, .gp-status.is-success { color: var(--pc-success, var(--success)); }
+.gp-status.is-listening { color: var(--pc-accent, var(--accent-color)); }
