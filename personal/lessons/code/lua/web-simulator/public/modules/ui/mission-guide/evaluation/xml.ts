@@ -23,7 +23,13 @@ export function getStatementBlock(element: Element | null, name: string): Elemen
 export function getFieldValue(element: Element | null, fieldName: string): string | null {
     if (!element) return null;
     const field = Array.from(element.children).find((child) => child.localName === 'field' && child.getAttribute('name') === fieldName);
-    return field?.textContent ?? null;
+    if (field) return field.textContent;
+    const value = Array.from(element.children).find(child => child.localName === 'value' && child.getAttribute('name') === fieldName);
+    if (!value) return null;
+    const literal = Array.from(value.children).find(child => child.localName === 'block')
+        || Array.from(value.children).find(child => child.localName === 'shadow');
+    if (literal?.getAttribute('type') !== 'math_number') return null;
+    return Array.from(literal.children).find(child => child.localName === 'field' && child.getAttribute('name') === 'NUM')?.textContent ?? null;
 }
 
 export function hasBlockType(element: Element | null, blockType: string): boolean {

@@ -18,8 +18,8 @@ export function getLuaLessonState(): GuideLessonState {
         'lua-takeoff',
         'lua-route',
         'lua-point-confirm',
-        'lua-mission',
-        'lua-landing'
+        'lua-landing',
+        'lua-mission'
     ]
         .map((lessonId) => lessonMap.get(lessonId))
         .filter((lesson): lesson is NonNullable<typeof lesson> => Boolean(lesson))

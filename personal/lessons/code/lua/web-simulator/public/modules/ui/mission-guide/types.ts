@@ -49,13 +49,9 @@ export type GuideTabId = 'tutorial' | 'trainer';
 
 export type GuideLessonStepId = 'theory' | 'build' | 'check';
 
-export type GuideThemeId = 'dark' | 'light';
-
 export type GuidePortalPageId = 'intro' | 'lesson';
 
 export type GuidePracticeTrack = 'blockly' | 'lua' | 'python';
-
-export type GuideLessonProgressState = 'locked' | 'available' | 'in_progress' | 'completed';
 
 export type GuideTheorySpoiler = {
     label: string;
@@ -135,6 +131,19 @@ export type GuideLessonState = {
 };
 
 export type GuideTextLesson = {
+    academy?: {
+        number: number;
+        mode: 'code' | 'inspect';
+        waitMs?: number;
+        doneMessage?: string;
+        hints: string[];
+        experiment: string;
+        teaching: {
+            deviceTitle: string; device: string; question: string;
+            choices: Array<{ text: string; feedback: string }>;
+            correct: number; takeaway: string;
+        };
+    };
     id: string;
     topicId: string;
     chapterId: string;
@@ -162,20 +171,16 @@ export type GuideTextLessonState = {
 };
 
 export type GuideEvaluation = {
+    academyTrial?: string;
     solved: boolean;
     complete: boolean;
     diagnostics: GuideDiagnostic[];
+    timeline?: import('./evaluation/text/timeline.js').FlightTimeline;
 };
 
 export type RuntimeBanner = {
     kind: 'info' | 'success' | 'warning';
     message: string;
-};
-
-export type DragPayload = {
-    blockId: string;
-    origin: 'library' | 'workspace';
-    index: number;
 };
 
 export type RenderMissionGuidePanel = (language?: ScriptLanguage) => void;

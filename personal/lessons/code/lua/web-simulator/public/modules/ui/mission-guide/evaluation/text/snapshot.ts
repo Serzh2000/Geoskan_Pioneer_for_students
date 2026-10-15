@@ -11,6 +11,8 @@
 import { currentDroneId, drones } from '../../../../core/state.js';
 
 export interface DroneSnapshot {
+    printText?: string;
+    status?: string;
     leds: Array<{ r: number; g: number; b: number; w: number }>;
     pos: { x: number; y: number; z: number };
     fsmState: string;
@@ -30,8 +32,8 @@ export interface DroneSnapshot {
  * Python-сценариев эти массивы почти всегда будут пустыми — грейдеры Python-уроков
  * должны опираться только на `leds`, `pos`, `fsmState`, `flightMode`, `pointReachedFlag`.
  */
-export function captureDroneSnapshot(): DroneSnapshot | null {
-    const drone = drones[currentDroneId];
+export function captureDroneSnapshot(droneId = currentDroneId): DroneSnapshot | null {
+    const drone = drones[droneId];
     if (!drone) return null;
 
     const leds = Array.isArray(drone.leds)
@@ -66,6 +68,8 @@ export function captureDroneSnapshot(): DroneSnapshot | null {
         : [];
 
     return {
+        printText: String(drone.printBubbleText || ''),
+        status: String(drone.status),
         leds,
         pos,
         fsmState: String(drone.fsmState),

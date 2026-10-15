@@ -91,6 +91,10 @@ const NOTES: Record<string, LearningNote> = {
 };
 
 export function getLearningNote(lesson: Lesson): LearningNote | undefined {
+    if ('academy' in lesson && lesson.academy) return {
+        why: lesson.lessonIntro, question: lesson.academy.teaching.question,
+        answer: lesson.academy.teaching.takeaway, experiment: lesson.academy.experiment
+    };
     const topic = getTopic(lesson);
     if (topic === 'led-single' && !lesson.id.startsWith('lua')) {
         return {
@@ -103,15 +107,32 @@ export function getLearningNote(lesson: Lesson): LearningNote | undefined {
     return NOTES[topic];
 }
 
-export function renderLearningNote(lesson: Lesson): string {
-    const note = getLearningNote(lesson);
+export function renderLearningNote(lesson: Lesson, blockly = false): string {
+    let note = getLearningNote(lesson);
     if (!note) return '';
+    const authoredQuiz = 'academy' in lesson ? lesson.academy?.teaching : undefined;
+    const quizChoices = authoredQuiz?.choices.map(choice => choice.text) || QUIZ_CHOICES[getTopic(lesson)] || [];
+    const correctChoice = authoredQuiz?.correct ?? CORRECT_CHOICE[getTopic(lesson)];
+    if (blockly) {
+        const explanations: Record<string, string> = {
+            'led-sequence': 'Без задержек глаз увидит в основном последний цвет. У независимых таймеров время отсчитывается от их запуска; блок ожидания задерживает следующую команду в цепочке.',
+            'led-delayed': 'Таймер запускает вложенные действия позже. Поместите смену цвета и сообщение вместе внутрь отложенного действия, чтобы они произошли в нужный момент.',
+            takeoff: 'Взлёт выполняется после подготовки. Блок события готовности позволяет отправить команду в нужный момент. Простая задержка сама по себе не доказывает готовность дрона.'
+        };
+        note = { ...note, why: explanations[getTopic(lesson)] || note.why };
+        if (getTopic(lesson) === 'led-single') {
+            note = { ...note, answer: 'Оставьте номер светодиода прежним. В поле зелёного задайте 1, а в полях красного и синего — 0.' };
+        }
+    }
+    if (blockly && getTopic(lesson) === 'led-single' && !lesson.id.startsWith('lua')) {
+        note = { ...note, why: 'Поля красного, зелёного и синего цвета в блоке задают яркость каждой составляющей от 0 до 255. Ноль выключает составляющую, 255 задаёт максимальную яркость.', answer: 'В поле зелёного задайте 255, а в полях красного и синего — 0. Если во всех трёх полях поставить 0, подсветка погаснет.' };
+    }
     return `<section class="guide-learning-note">
         <h2>Почему это работает</h2><p>${renderInline(note.why)}</p>
         ${lesson.id.includes('led-single') ? renderColorExperiment(lesson) : ''}
         <fieldset class="guide-knowledge-check" data-guide-quiz data-guide-explanation="${escapeHtml(note.answer)}">
             <legend>Проверьте себя</legend><p>${escapeHtml(note.question)}</p>
-            <div class="guide-knowledge-check__choices">${(QUIZ_CHOICES[getTopic(lesson)] || []).map((choice, index) => `<button type="button" class="guide-lesson__action" data-guide-quiz-answer="${index === CORRECT_CHOICE[getTopic(lesson)] ? 'correct' : 'retry'}" aria-pressed="false">${escapeHtml(choice)}</button>`).join('')}</div>
+            <div class="guide-knowledge-check__choices">${quizChoices.map((choice, index) => `<button type="button" class="btn-secondary" data-guide-quiz-answer="${index === correctChoice ? 'correct' : 'retry'}" aria-pressed="false">${escapeHtml(choice)}</button>`).join('')}</div>
             <p class="guide-knowledge-check__feedback" data-guide-quiz-feedback role="status" hidden></p>
             <small>Этот вопрос помогает разобраться в теме и не влияет на прохождение урока.</small>
         </fieldset>
@@ -121,21 +142,18 @@ export function renderLearningNote(lesson: Lesson): string {
 function renderColorExperiment(lesson: Lesson): string {
     const max = lesson.id.startsWith('lua') ? 1 : 255;
     return `<div class="guide-color-lab" data-guide-color-max="${max}">
-        <div class="guide-color-lab__preview"><span class="guide-color-dot" data-guide-color-dot style="background: rgb(255, 0, 0)" aria-hidden="true"></span>
+        <div class="guide-color-lab__preview"><span class="guide-color-dot" data-guide-color-dot role="img" aria-label="Красный" style="background: rgb(255, 0, 0)"></span>
         <div><strong>Попробуйте смешать цвет</strong><p>Мини-модель RGB: нажмите на цвет и сравните параметры. Сцену дрона этот пример не меняет.</p></div></div>
         <div class="guide-actions" role="group" aria-label="Цвет в учебном примере">
-        ${[['Красный', '1,0,0'], ['Зелёный', '0,1,0'], ['Синий', '0,0,1'], ['Белый', '1,1,1'], ['Выключить', '0,0,0']].map(([name, rgb], i) => `<button type="button" class="guide-lesson__action" data-guide-rgb="${rgb}" aria-pressed="${i === 0}">${name}</button>`).join('')}
+        ${[['Красный', '1,0,0'], ['Зелёный', '0,1,0'], ['Синий', '0,0,1'], ['Белый', '1,1,1'], ['Выключить', '0,0,0']].map(([name, rgb], i) => `<button type="button" class="btn-secondary" data-guide-rgb="${rgb}" aria-pressed="${i === 0}">${name}</button>`).join('')}
         </div><output data-guide-color-output aria-live="polite">Красный: R = ${max}, G = 0, B = 0</output>
     </div>`;
 }
 
-export function renderPracticeBrief(lesson: Lesson): string {
-    return `<div class="guide-practice-brief"><strong>Ваша задача</strong><p>${renderInline(lesson.goal)}</p>
-        <details class="guide-learning-disclosure"><summary>Нужна подсказка</summary><p>${renderInline(lesson.builderHint)}</p></details></div>`;
-}
-
-export function renderObservation(lesson: Lesson, solved: boolean): string {
-    const note = getLearningNote(lesson);
-    return `<aside class="guide-observation"><strong>Что наблюдать в сцене</strong><p>${renderInline(lesson.expectedOutcome)}</p>
-        ${solved && note ? `<details class="guide-learning-disclosure"><summary>Закрепите навык: небольшой эксперимент</summary><p>${renderInline(note.experiment)}</p><p>Это дополнительная практика. Автопроверка по-прежнему оценивает исходное задание.</p></details>` : ''}</aside>`;
+export function renderPracticeBrief(lesson: Lesson, steps: string[] = []): string {
+    const list = steps.length
+        ? `<ol class="guide-practice-steps" aria-label="Порядок сборки">${steps.map(step => `<li>${renderInline(step)}</li>`).join('')}</ol>`
+        : '';
+    return `<div class="guide-practice-brief"><div class="guide-task"><h2>Задача</h2><p>${renderInline(lesson.goal)}</p>${list}</div>
+        <details class="pk-disclosure"><summary>Нужна подсказка</summary><p>${renderInline(lesson.builderHint)}</p></details></div>`;
 }

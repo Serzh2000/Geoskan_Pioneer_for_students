@@ -2,6 +2,10 @@ import { summarizeGuideDiagnostics, logGuideEvent } from '../support/logging.js'
 import { buildGuideEventContext, resetGuideRuntimeView, type GuideInteractionContext } from './context.js';
 import { canLaunchLesson, launchLesson } from './launch.js';
 import { evaluateLesson } from '../evaluation/index.js';
+import { runTextLessonCheck } from '../evaluation/text/index.js';
+import { getWalkthroughContent, getWalkthroughTopic } from '../walkthrough/content.js';
+import { beginWalkthroughCheck, finishWalkthroughCheck, resetWalkthroughResult, walkthroughKey } from '../walkthrough/state.js';
+import { WALKTHROUGH_WAIT_MS } from '../walkthrough/runtime.js';
 import {
     buildTargetWorkspaceXml,
     extractMissionGuideSequence,
@@ -14,7 +18,6 @@ import { mountMissionGuideBlocklyPreview } from '../support/blockly-preview.js';
 import {
     setLessonBanner,
     setLessonChecked,
-    setLessonCompleted,
     setActiveGuideStep
 } from '../state.js';
 
@@ -57,7 +60,10 @@ function executeLessonLaunch(
         return false;
     }
 
-    launchLesson(language, lesson, rerender, evaluation.solved
+    const key = walkthroughKey(language, lesson.id);
+    const token = beginWalkthroughCheck(key, getWalkthroughContent(lesson).correct);
+    setActiveGuideStep(language, lesson.id, 'check');
+    void launchLesson(language, lesson, rerender, evaluation.solved
         ? {
             kind: 'info',
             message: 'Проверка выполнена, сценарий сразу запущен. Сравните сцену с целью урока.'
@@ -65,6 +71,26 @@ function executeLessonLaunch(
         : {
             kind: 'warning',
             message: 'Проверка выполнена, сценарий запущен с замечаниями. Ошибки рантайма покажет стандартный обработчик.'
+        }).then(async () => {
+            const runtime = await runTextLessonCheck(getWalkthroughTopic(lesson), {
+                waitMs: WALKTHROUGH_WAIT_MS[getWalkthroughTopic(lesson)] || 3000, language
+            });
+            const combined = {
+                solved: evaluation.solved && runtime.solved,
+                complete: runtime.complete,
+                diagnostics: [...evaluation.diagnostics, ...runtime.diagnostics]
+            };
+            if (!finishWalkthroughCheck(key, token, snapshot?.workspaceXml || '', combined)) return;
+            setLessonChecked(language, lesson.id, true);
+            setLessonBanner(language, lesson.id, {
+                kind: combined.solved ? 'success' : 'warning',
+                message: combined.solved ? 'Проверка завершена. Сопоставьте результат с наблюдением и перейдите к разбору.' : 'Есть замечания. Посмотрите разбор и исправьте программу.'
+            });
+            rerender(language);
+        }).catch(() => {
+            const failed = { solved: false, complete: false, diagnostics: [{ kind: 'error' as const,
+                title: 'Не удалось завершить проверку', reason: 'Запуск или чтение состояния прервались.', fix: 'Вернитесь к практике и повторите запуск.' }] };
+            if (finishWalkthroughCheck(key, token, snapshot?.workspaceXml || '', failed)) rerender(language);
         });
     return true;
 }
@@ -77,6 +103,7 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
             logGuideEvent('lesson_state_reset', buildGuideEventContext(context), 'warn');
             resetGuideRuntimeView();
             setLessonChecked(language, lesson.id, false);
+            resetWalkthroughResult(walkthroughKey(language, lesson.id));
             setLessonBanner(language, lesson.id, null);
             rerender(language);
         });
@@ -87,6 +114,7 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
             logGuideEvent('solution_fill_requested', buildGuideEventContext(context));
             loadMainBlocklyXml(buildTargetWorkspaceXml(lesson.id, lesson.targetBlockIds)).then(() => {
                 setLessonChecked(language, lesson.id, false);
+                resetWalkthroughResult(walkthroughKey(language, lesson.id));
                 setLessonBanner(language, lesson.id, {
                     kind: 'info',
                     message: 'Эталонная последовательность загружена в редактор Blockly.'
@@ -109,7 +137,8 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
             // support/blockly-preview.ts) — ученик не теряет инструкции урока
             // во время сборки цепочки.
             setBlocklyEditorEnabled(true);
-            mountMissionGuideBlocklyPreview();
+            const lessonIndex = context.state.lessons.findIndex((item) => item.id === lesson.id);
+            mountMissionGuideBlocklyPreview(context.state.lessons.slice(0, lessonIndex + 1).flatMap((item) => item.targetBlockIds));
             rerender(language);
             logGuideEvent('open_main_editor_applied', buildGuideEventContext(context), 'success');
         });
@@ -122,7 +151,7 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
     container.querySelectorAll<HTMLElement>('[data-guide-open-editor-fallback]').forEach((element) => {
         element.addEventListener('click', () => {
             logGuideEvent('open_main_editor_fallback_requested', buildGuideEventContext(context));
-            (window as any).closeMissionGuideModal?.();
+            if ((window as any).closeMissionGuideModal?.() === false) return;
             setBlocklyEditorEnabled(true);
             logGuideEvent('open_main_editor_fallback_applied', buildGuideEventContext(context), 'success');
         });
@@ -162,7 +191,6 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
             setActiveGuideStep(language, lesson.id, 'check');
 
             if (evaluation.solved) {
-                setLessonCompleted(language, lesson.id, true);
                 logGuideEvent('check_passed_autolaunch', buildGuideEventContext(context), 'success');
                 executeLessonLaunch(context, evaluation, true);
                 return;

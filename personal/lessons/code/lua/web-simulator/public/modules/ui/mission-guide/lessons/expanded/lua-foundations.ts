@@ -1,5 +1,5 @@
-import { createEventBlock, createStatementBlock, createTimerBlock } from '../support/builders.js';
-import { compileLuaEvents, compileLuaLinear, compileLuaTimed } from '../support/compilers.js';
+import { createStatementBlock, createTimerBlock } from '../support/builders.js';
+import { compileLuaLinear, compileLuaTimed } from '../support/compilers.js';
 import { GUIDE_CHAPTER_IDS } from '../../curriculum.js';
 import { apiFocus } from '../support/state-helpers.js';
 import type { GuideLesson } from '../../types.js';

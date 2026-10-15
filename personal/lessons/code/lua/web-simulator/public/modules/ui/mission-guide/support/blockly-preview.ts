@@ -1,5 +1,7 @@
 import { Blockly } from '../../../editor/blockly-mode/loader.js';
 import { getMainBlocklyWorkspace } from '../../../editor/index.js';
+import { buildMainEditorToolbox } from '../../../editor/blockly-mode/index.js';
+import { currentScriptLanguage } from '../../../core/state.js';
 
 // Зеркалит support/scene-preview.ts: та же идея переноса живого DOM-узла в
 // хост внутри гайда, но для Blockly-воркспейса вместо 3D-сцены. Воркспейс
@@ -26,6 +28,18 @@ let originalParent: ParentNode | null = null;
 let originalNextSibling: ChildNode | null = null;
 let cachedCanvasHost: HTMLElement | null = null;
 let modalBodyObserver: MutationObserver | null = null;
+let lessonBlockTypes: string[] = [];
+
+function applyLessonToolbox(): void {
+    const workspace = getMainBlocklyWorkspace();
+    if (!workspace || !Blockly || !lessonBlockTypes.length) return;
+    const blocks = [...new Set(lessonBlockTypes)].filter((type) => Blockly.Blocks[type]);
+    workspace.updateToolbox(`<xml><category name="Команды урока" colour="#22c55e">${blocks.map((type) => {
+        if (type === 'lua_ledbar_new') return '<block type="lua_ledbar_new"><value name="COUNT"><shadow type="math_number"><field name="NUM">29</field></shadow></value></block>';
+        if (type === 'lua_led_set') return `<block type="lua_led_set">${['INDEX', 'R', 'G', 'B'].map((name) => `<value name="${name}"><shadow type="math_number"><field name="NUM">0</field></shadow></value>`).join('')}</block>`;
+        return `<block type="${type}"></block>`;
+    }).join('')}</category><category name="Числа" colour="#5b67a5"><block type="math_number"></block></category></xml>`);
+}
 
 function getBlocklyCanvasHost(): HTMLElement | null {
     if (cachedCanvasHost && document.documentElement.contains(cachedCanvasHost)) {
@@ -96,7 +110,7 @@ export function isMissionGuideBlocklyPreviewActive(): boolean {
     return previewActive;
 }
 
-export function mountMissionGuideBlocklyPreview(): void {
+export function mountMissionGuideBlocklyPreview(blockTypes: string[] = []): void {
     const canvasHost = getBlocklyCanvasHost();
     const previewHost = getPreviewHost();
     if (!canvasHost || !previewHost) return;
@@ -112,11 +126,16 @@ export function mountMissionGuideBlocklyPreview(): void {
 
     previewHost.classList.add('is-active');
     previewActive = true;
+    lessonBlockTypes = blockTypes;
+    applyLessonToolbox();
+    // The workspace may still be initializing on the first editor opening.
+    window.setTimeout(() => { if (previewActive) applyLessonToolbox(); }, 500);
     ensureModalBodyObserver();
     resizeBlocklySoon();
 }
 
 export function restoreMissionGuideBlocklyPreview(): void {
+    if (previewActive) getMainBlocklyWorkspace()?.updateToolbox(buildMainEditorToolbox(currentScriptLanguage));
     const canvasHost = cachedCanvasHost || document.getElementById('blockly-editor-canvas-host');
 
     if (canvasHost && originalParent) {
@@ -132,6 +151,7 @@ export function restoreMissionGuideBlocklyPreview(): void {
     originalParent = null;
     originalNextSibling = null;
     previewActive = false;
+    lessonBlockTypes = [];
     cachedCanvasHost = canvasHost;
     resizeBlocklySoon();
 }

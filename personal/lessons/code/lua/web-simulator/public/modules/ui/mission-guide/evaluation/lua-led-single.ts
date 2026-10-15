@@ -7,30 +7,6 @@ import {
     parseWorkspaceXml
 } from './xml.js';
 
-function matchesLedSet(element: Element | null, index: string, r: string, g: string, b: string): boolean {
-    return hasBlockType(element, 'lua_led_set')
-        && hasFieldValue(element, 'INDEX', index)
-        && hasFieldValue(element, 'R', r)
-        && hasFieldValue(element, 'G', g)
-        && hasFieldValue(element, 'B', b);
-}
-
-export function matchesLuaLedSingleWorkspace(workspaceXml: string | null | undefined): boolean {
-    const xmlRoot = parseWorkspaceXml(workspaceXml);
-    if (!xmlRoot) return false;
-
-    const topBlocks = Array.from(xmlRoot.children).filter((child) => child.localName === 'block');
-    if (topBlocks.length !== 1) return false;
-
-    const ledbar = topBlocks[0];
-    const ledSet = getNextBlock(ledbar);
-
-    return hasBlockType(ledbar, 'lua_ledbar_new')
-        && hasNumericFieldValue(ledbar, 'COUNT', 29)
-        && matchesLedSet(ledSet, '0', '1', '0', '0')
-        && !getNextBlock(ledSet);
-}
-
 export function validateLuaLedSingleWorkspace(workspaceXml: string | null | undefined): GuideDiagnostic[] {
     const xmlRoot = parseWorkspaceXml(workspaceXml);
     if (!xmlRoot) return [];

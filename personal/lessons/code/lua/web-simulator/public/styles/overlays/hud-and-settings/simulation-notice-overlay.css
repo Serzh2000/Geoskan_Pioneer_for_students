@@ -1,72 +1,205 @@
 /*
- * Toast stack for script/mission notices (replaces the old single docked
- * banner). window.showSimulationNotice() is still the entry point used by
- * script-execution-notice.ts - only what it renders changed: a small
- * auto-fading popup instead of a big card, plus full history in the
- * notification center (editor-header-actions button, see
- * scene/editor/terminal-and-notifications.css).
+ * Soft notification cards (toasts). window.showSimulationNotice() in
+ * ui/panels/simulation-notice.ts is the only entry point. Hierarchy: level icon
+ * + level word, title, message, optional actions, close button. The level is
+ * carried by the icon and the word as well as by colour. Text colours are the
+ * panel-chrome status colours, which keep >= 4.5:1 on the card in both themes.
  */
+:root {
+    --notice-error: #b3261e;
+    --notice-warn: #8d4b07;
+    --notice-success: #17744a;
+    --notice-info: #1d5fbf;
+    --notice-surface: #ffffff;
+    --notice-line: rgba(9, 9, 11, 0.1);
+}
+
+:root[data-theme='dark'] {
+    --notice-error: #ff9a90;
+    --notice-warn: #f6c260;
+    --notice-success: #6fd69c;
+    --notice-info: #9ec2ff;
+    --notice-surface: #232323;
+    --notice-line: rgba(255, 255, 255, 0.12);
+}
+
+/* Upper right, below the editor's toolbar: errors stay until closed, so the stack must not cover the toolbar's buttons
+   (notifications, reference, terminal, close) at the top, nor the terminal and the run buttons at the bottom. */
 .simulation-toast-stack {
     position: fixed;
-    top: var(--panel-pad-x);
+    top: var(--toast-top, 72px);
     right: var(--panel-pad-x);
     z-index: 400;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    width: min(320px, calc(100vw - 2 * var(--panel-pad-x)));
+    gap: 10px;
+    width: min(380px, calc(100vw - 2 * var(--panel-pad-x)));
     pointer-events: none;
 }
 
 .simulation-toast {
+    --notice-accent: var(--notice-info);
     pointer-events: auto;
     cursor: pointer;
-    padding: 10px 12px;
-    border-radius: var(--panel-radius-inner);
-    background: rgba(255, 255, 255, 0.97);
-    border: 1px solid rgba(9, 9, 11, 0.08);
-    border-left: 3px solid var(--text-muted);
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) 28px;
+    align-items: start;
+    gap: 10px;
+    padding: 12px 10px 12px 12px;
+    border-radius: 14px;
+    background: var(--notice-surface);
+    color: var(--text-color);
+    border: 1px solid color-mix(in srgb, var(--notice-accent) 30%, var(--notice-line));
     box-shadow: var(--shadow-card);
     opacity: 0;
-    transform: translateX(24px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transform: translateY(-6px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
 .simulation-toast.is-visible {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0);
+}
+
+.simulation-toast--error { --notice-accent: var(--notice-error); }
+.simulation-toast--warn { --notice-accent: var(--notice-warn); }
+.simulation-toast--success { --notice-accent: var(--notice-success); }
+.simulation-toast--info { --notice-accent: var(--notice-info); }
+
+.simulation-toast__icon {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    color: var(--notice-accent);
+    background: color-mix(in srgb, var(--notice-accent) 14%, transparent);
+}
+
+.simulation-toast__body {
+    min-width: 0;
+}
+
+.simulation-toast__head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 1px;
+}
+
+.simulation-toast__level {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--notice-accent);
+}
+
+.simulation-toast__count,
+.editor-notifications__count {
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+    color: var(--notice-accent);
+    background: color-mix(in srgb, var(--notice-accent) 14%, transparent);
+}
+
+.simulation-toast__count[hidden] {
+    display: none;
 }
 
 .simulation-toast__title {
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 2px;
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.3;
+    color: var(--text-strong);
 }
 
 .simulation-toast__message {
-    font-size: 12px;
-    line-height: 1.4;
+    margin-top: 2px;
+    font-size: 13px;
+    line-height: 1.45;
     color: var(--text-color);
-    font-weight: 600;
+    overflow-wrap: anywhere;
 }
 
-.simulation-toast--info { border-left-color: #2563eb; }
-.simulation-toast--info .simulation-toast__title { color: #2563eb; }
-.simulation-toast--warn { border-left-color: var(--warning); }
-.simulation-toast--warn .simulation-toast__title { color: var(--warning); }
-.simulation-toast--error { border-left-color: var(--danger); }
-.simulation-toast--error .simulation-toast__title { color: var(--danger); }
-
-:root[data-theme='dark'] .simulation-toast {
-    background: rgba(26, 26, 26, 0.97);
-    border-color: rgba(162, 162, 162, 0.16);
+.simulation-toast__message code,
+.editor-notifications__item-message code {
+    padding: 0 4px;
+    border-radius: 5px;
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: color-mix(in srgb, var(--text-strong) 8%, transparent);
 }
 
-:root[data-theme='dark'] .simulation-toast__message {
-    color: var(--text-color);
+.simulation-toast__actions,
+.editor-notifications__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.simulation-toast__action,
+.editor-notifications__action {
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--accent-color) 40%, transparent);
+    background: var(--accent-soft);
+    color: var(--accent-color-strong);
+    font: 600 12px/1 var(--font-sans, inherit);
+    cursor: pointer;
+}
+
+.simulation-toast__action:hover,
+.editor-notifications__action:hover {
+    background: color-mix(in srgb, var(--accent-color) 20%, transparent);
+}
+
+.simulation-toast__close {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.simulation-toast__close:hover {
+    background: color-mix(in srgb, var(--text-strong) 8%, transparent);
+    color: var(--text-strong);
+}
+
+.simulation-toast__action:focus-visible,
+.simulation-toast__close:focus-visible,
+.editor-notifications__action:focus-visible,
+.editor-notifications__more > summary:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+.simulation-toast:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
+:root[data-theme='dark'] .simulation-toast__action,
+:root[data-theme='dark'] .editor-notifications__action {
+    color: #ffad68;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .simulation-toast {
+        transition: none;
+        transform: none;
+    }
 }
 
 /*
@@ -74,6 +207,33 @@
  * (renderIssuesHtml/renderScriptFailureHtml/etc.) - rendered inside a
  * notification-center item's .editor-notifications__item-details host.
  */
+.simulation-notice__tech {
+    margin-top: 10px;
+}
+
+.simulation-notice__tech > summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.simulation-notice__tech > summary:hover {
+    color: var(--text-strong);
+}
+
+.simulation-notice__tech[open] > summary {
+    margin-bottom: 6px;
+}
+
+.simulation-notice__tech > summary:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
 .simulation-notice__section + .simulation-notice__section {
     margin-top: 10px;
 }

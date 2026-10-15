@@ -1,5 +1,5 @@
-import { createEventBlock, createStatementBlock, createTimerBlock } from '../support/builders.js';
-import { compileLuaEvents, compileLuaLinear, compileLuaTimed } from '../support/compilers.js';
+import { createStatementBlock, createTimerBlock } from '../support/builders.js';
+import { compileLuaLinear, compileLuaTimed } from '../support/compilers.js';
 import {
     LUA_LED_SEQUENCE_EXAMPLE,
     LUA_LED_SINGLE_EXAMPLE

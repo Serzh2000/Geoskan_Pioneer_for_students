@@ -1,4 +1,4 @@
-import { getEditorValue, setBlocklyEditorEnabled, setEditorLanguage, setEditorValue } from '../../../editor/index.js';
+import { getEditorValue, revealEditorStart, setBlocklyEditorEnabled, setEditorLanguage, setEditorValue } from '../../../editor/index.js';
 
 // Зеркалит support/blockly-preview.ts: та же идея переноса живого DOM-узла в
 // хост внутри гайда, но для текстового (Monaco) редактора вместо Blockly-
@@ -40,6 +40,11 @@ let modalBodyObserver: MutationObserver | null = null;
 const lessonDrafts = new Map<string, string>();
 let activeDraftKey: string | null = null;
 let mountVersion = 0;
+
+export function getMissionGuideDraft(language: 'lua' | 'python', lessonId: string, starterCode: string): string {
+    const key = `${language}:${lessonId}`;
+    return previewActive && key === activeDraftKey ? getEditorValue() : lessonDrafts.get(key) ?? starterCode;
+}
 
 export function saveMissionGuideDraft(): void {
     if (previewActive && activeDraftKey) lessonDrafts.set(activeDraftKey, getEditorValue());
@@ -99,15 +104,12 @@ function ensureModalBodyObserver(): void {
     modalBodyObserver.observe(modalBody, { childList: true });
 }
 
-export function isMissionGuideMonacoPreviewActive(): boolean {
-    return previewActive;
-}
-
 export async function mountMissionGuideMonacoPreview(language: 'lua' | 'python', starterCode: string, lessonId: string): Promise<void> {
     const previewHost = getPreviewHost();
     if (!previewHost) return;
     const version = ++mountVersion;
     const draftKey = `${language}:${lessonId}`;
+    const changedTopic = draftKey !== activeDraftKey;
     const loadDraft = !previewActive || draftKey !== activeDraftKey;
     saveMissionGuideDraft();
     // Трек с текстом — не Blockly, редактор должен показывать код, а не блоки.
@@ -142,6 +144,7 @@ export async function mountMissionGuideMonacoPreview(language: 'lua' | 'python',
         await setEditorValue(lessonDrafts.get(draftKey) ?? starterCode);
         if (version !== mountVersion || !previewHost.isConnected) return;
         activeDraftKey = draftKey;
+        if (changedTopic) revealEditorStart();
     }
 
     layoutMonacoSoon();
@@ -165,6 +168,7 @@ export function restoreMissionGuideMonacoPreview(): void {
     originalParent = null;
     originalNextSibling = null;
     previewActive = false;
+    activeDraftKey = null;
     cachedMonacoRoot = monacoRoot;
     layoutMonacoSoon();
 }

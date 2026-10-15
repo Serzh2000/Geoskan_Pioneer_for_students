@@ -8,7 +8,10 @@ export function attachLearningInteractions(container: HTMLElement): void {
             const maximum = Number(lab.dataset.guideColorMax);
             lab.querySelectorAll('[data-guide-rgb]').forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
             const dot = lab.querySelector<HTMLElement>('[data-guide-color-dot]');
-            if (dot) dot.style.background = `rgb(${channels.map((value) => value * 255).join(',')})`;
+            if (dot) {
+                dot.style.background = `rgb(${channels.map((value) => value * 255).join(',')})`;
+                dot.setAttribute('aria-label', button.textContent || '');
+            }
             const output = lab.querySelector('output');
             if (output) output.textContent = `${button.textContent}: R = ${channels[0] * maximum}, G = ${channels[1] * maximum}, B = ${channels[2] * maximum}`;
         });

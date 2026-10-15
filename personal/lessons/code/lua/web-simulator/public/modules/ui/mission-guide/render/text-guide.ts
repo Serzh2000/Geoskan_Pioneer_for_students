@@ -1,218 +1,144 @@
-import { renderLearningNote, renderPracticeBrief, renderObservation } from './learning.js';
+import { renderPracticeBrief } from './learning.js';
+import { renderWalkthrough } from './walkthrough.js';
+import { getWalkthroughResult, isWalkthroughBusy, walkthroughKey } from '../walkthrough/state.js';
+import { getMissionGuideDraft } from '../support/monaco-preview.js';
+import { ACADEMY_MODULES } from '../academy/catalog.js';
+import { getAcademySceneEvidence } from '../academy/scene.js';
 import { isMissionGuideScenePreviewActive } from '../support/scene-preview.js';
 import {
-    getActiveGuideStep,
     getActiveTextLesson,
-    getLastTextEvaluation,
     getNextTextLesson,
     getPreviousTextLesson,
     isLessonChecked,
-    isTextLessonUnlocked,
     isLessonCompleted
 } from '../state.js';
-import type { GuideDiagnostic, GuideTextLessonState } from '../types.js';
+import type { GuideTextLesson, GuideTextLessonState } from '../types.js';
 import {
     escapeHtml,
-    renderApiFocusItem,
     renderDiagnosticCard,
-    renderDocLink,
     renderInline,
-    renderLessonSteps,
     renderRunBanner
 } from './support.js';
-import { renderCheckVerdict, renderScenePlaceholder } from './results.js';
+import { renderLessonHeader } from './shared.js';
+import { renderCheckVerdict, renderFlightRecord } from './results.js';
+import { foldSuccess, renderResultScene, sortDiagnostics } from './check-step.js';
 
-const DIAGNOSTIC_KIND_RANK: Record<GuideDiagnostic['kind'], number> = {
-    error: 0,
-    warning: 1,
-    info: 2,
-    success: 3
-};
-
-function renderTextTheoryStep(lesson: GuideTextLessonState['lessons'][number]): string {
+function renderTextBuildStep(track: 'lua' | 'python', lesson: GuideTextLesson): string {
+    const inspect = lesson.academy?.mode === 'inspect';
+    const scene = getAcademySceneEvidence();
+    const ownScene = scene?.number === lesson.academy?.number ? scene : undefined;
+    const language = track === 'python' ? 'Python' : 'Lua';
+    const printed = lesson.goal.match(/(?:выведите|напечатайте|напечатай|сообщение|сообщайте|выводите|печатайте)[^«]*«([^»]+)»/i)?.[1];
+    // Checks compare printed text exactly, so the exact form is spelled out once for every such task.
+    const messageRule = printed
+        ? ` Текст из «ёлочек» печатайте точно как в задании, с теми же буквами и знаками, но без самих «ёлочек»: print("${printed}").`
+        : '';
+    const note = inspect
+        ? 'Осматривайте дрон в сцене справа, а ответы выбирайте здесь, в списках ниже.'
+        : /___|TODO/.test(lesson.starterCode)
+            ? `Замените каждое «___» и каждую пометку TODO своим кодом: сами слова ___ и TODO в программе остаться не должны. Остальной код не меняйте.${messageRule}`
+            : `Измените программу в редакторе. Она выполнится в сцене и будет оценена.${messageRule}`;
+    const terrain = lesson.academy && lesson.academy.number >= 37 ? `<div class="guide-academy-terrain"><p>Подготовьте учебную сцену перед опытом. Ваши объекты вернутся кнопкой ниже или при закрытии учебника.</p>
+        <label class="pk-field"><span class="pk-field__label">Seed</span><input aria-label="Seed учебной сцены" aria-describedby="guide-scene-status" type="number" min="0" max="4294967295" step="1" value="${ownScene?.seed ?? 20261009}" data-academy-lesson-seed></label>
+        <div class="pk-btn-row"><button type="button" class="btn-secondary btn--sm" data-academy-prepare="${lesson.academy.number}">Подготовить полигон</button><button type="button" class="btn-secondary btn--sm" data-academy-restore>Вернуть мою сцену</button></div>
+        <p id="guide-scene-status" role="status" data-academy-prepare-status>${ownScene?.intact ? `Полигон готов · seed ${ownScene.seed}` : 'Перед запуском подготовьте полигон этого урока.'}</p></div>` : '';
+    const questions = inspect ? `<div class="guide-inspection-questions"><h2>Ваши ответы</h2>
+        <label class="pk-field"><span class="pk-field__label">Какая часть создаёт тягу?</span>
+            <select aria-label="Какая часть создаёт тягу?" data-academy-part="lift"><option value="">Выберите часть</option><option value="camera">Камера</option><option value="rotors">Винты</option><option value="leds">Светодиоды</option></select></label>
+        <label class="pk-field"><span class="pk-field__label">Какая часть получает изображение?</span>
+            <select aria-label="Какая часть получает изображение?" data-academy-part="vision"><option value="">Выберите часть</option><option value="rotors">Винты</option><option value="leds">Светодиоды</option><option value="camera">Камера</option></select></label></div>` : '';
+    const work = inspect
+        ? '<div id="mission-guide-scene-preview-host" class="guide-scene-preview-host pk-device is-active"></div>'
+        : `<div class="pk-device guide-editor"><div class="guide-editor__bar"><b>Ваш код</b><span>${language}</span></div>
+            <div id="mission-guide-monaco-preview-host" class="guide-monaco-preview-host"><div class="guide-monaco-preview__placeholder">Загружаю редактор…</div></div></div>
+            ${lesson.academy ? '<div id="mission-guide-scene-preview-host" class="guide-scene-preview-host pk-device is-active"></div>' : ''}`;
     return `
-        <section class="guide-lesson-section">
-            <div class="guide-lesson-section__header">
-                <h2 class="guide-panel-card__title">Разберёмся перед практикой</h2>
-                <div class="guide-panel-card__text">Короткая база перед практикой.</div>
+        <div class="guide-practice">
+            <div class="guide-practice__brief">
+                ${renderPracticeBrief(lesson)}
+                <p class="guide-practice__note">${escapeHtml(note)}</p>
+                ${questions}
+                ${terrain}
+                ${lesson.links.length ? `<div class="pk-btn-row">${lesson.links.map(link => `<button type="button" class="btn-secondary btn--sm" data-guide-query="${escapeHtml(link.query)}">${escapeHtml(link.label)}</button>`).join('')}</div>` : ''}
+                <div class="guide-actions">
+                    <button type="button" class="btn-primary" data-guide-text-check>${inspect ? 'Проверить наблюдение' : 'Проверить и запустить'}</button>
+                    ${!inspect && lesson.academy ? '<button type="button" class="btn-secondary" data-guide-text-starter>Вернуть заготовку</button>' : ''}
+                    ${!inspect ? '<button type="button" class="btn-secondary" data-guide-text-undo hidden>Отменить замену</button>' : ''}
+                    <button type="button" class="btn-secondary" data-guide-text-reset>Сбросить проверку</button>
+                </div>
+                <div class="guide-draft-status" role="status" data-guide-draft-status>Черновик этого урока сохраняется при переходах между вкладками.</div>
+                ${renderRunBanner(track, lesson.id)}
             </div>
-
-            <div class="guide-lesson-page__meta">
-                <article class="guide-lesson-page__meta-item">
-                    <div class="guide-lesson-page__meta-label">Что изучаем</div>
-                    <div class="guide-lesson-page__goal">${renderInline(lesson.lessonIntro)}</div>
-                </article>
-                <article class="guide-lesson-page__meta-item">
-                    <div class="guide-lesson-page__meta-label">Ожидаемый результат</div>
-                    <div class="guide-lesson-page__goal">${renderInline(lesson.expectedOutcome)}</div>
-                </article>
-                <article class="guide-lesson-page__meta-item guide-lesson-page__meta-item--wide">
-                    <div class="guide-lesson-page__meta-label">Цель</div>
-                    <div class="guide-lesson-page__goal">${renderInline(lesson.goal)}</div>
-                </article>
-                <article class="guide-lesson-page__meta-item guide-lesson-page__meta-item--wide">
-                    <div class="guide-lesson-page__meta-label">Что понадобится</div>
-                    <div class="guide-api-grid">
-                        ${lesson.apiFocus.map(renderApiFocusItem).join('')}
-                    </div>
-                </article>
-                ${lesson.links.length > 0 ? `
-                <article class="guide-lesson-page__meta-item guide-lesson-page__meta-item--wide">
-                    <div class="guide-lesson-page__meta-label">Где почитать в справочнике</div>
-                    <div class="guide-target-route">
-                        ${lesson.links.map(renderDocLink).join('')}
-                    </div>
-                </article>
-                ` : ''}
-            </div>
-        </section>
-        ${renderLearningNote(lesson)}
-        <div class="guide-actions guide-actions--primary">
-            <button type="button" class="guide-primary-action" data-guide-step="build">Дальше: написать код</button>
+            <div class="guide-practice__work">${work}</div>
         </div>
     `;
 }
 
-function renderTextBuildStep(track: 'lua' | 'python', lesson: GuideTextLessonState['lessons'][number]): string {
-    return `
-        <section class="guide-panel-card guide-panel-card--workspace">
-            <div class="guide-panel-card__top">
-                <div>
-                    <div class="guide-panel-card__title">Практика урока</div>
-                    <div class="guide-panel-card__text">Напишите код в редакторе ниже — своими руками, без блоков. Проверка запускает симуляцию и оценивает результат.</div>
-                </div>
-                <div class="guide-panel-card__badge">${track === 'python' ? 'Python' : 'Lua'}</div>
-            </div>
-            ${renderPracticeBrief(lesson)}
-            <div id="mission-guide-monaco-preview-host" class="guide-monaco-preview-host">
-                <div class="guide-monaco-preview__placeholder">Загружаю редактор…</div>
-            </div>
-            <div class="guide-actions guide-actions--primary">
-                <button type="button" class="guide-primary-action" data-guide-text-check>Проверить и запустить</button>
-                <button type="button" class="guide-lesson__action" data-guide-text-reset>Сбросить проверку</button>
-            </div>
-            ${renderRunBanner(track, lesson.id)}
-        </section>
-    `;
-}
-
-function renderTextCheckStep(
-    track: 'lua' | 'python',
-    lesson: GuideTextLessonState['lessons'][number],
-    hasChecked: boolean
-): string {
-    const evaluation = hasChecked ? getLastTextEvaluation(track, lesson.id) : null;
+function renderTextCheckStep(track: 'lua' | 'python', lesson: GuideTextLesson, hasChecked: boolean): string {
+    const evaluation = getWalkthroughResult(walkthroughKey(track, lesson.id), getMissionGuideDraft(track, lesson.id, lesson.starterCode));
     const solved = evaluation?.solved ?? false;
-    const diagnostics = evaluation?.diagnostics ?? [];
-    const sortedDiagnostics = [...diagnostics].sort(
-        (a, b) => DIAGNOSTIC_KIND_RANK[a.kind] - DIAGNOSTIC_KIND_RANK[b.kind]
-    );
+    const folded = foldSuccess(evaluation?.diagnostics ?? [], solved);
+    const diagnostics = folded.rest;
     const previewActive = isMissionGuideScenePreviewActive();
+    const pending = isWalkthroughBusy(walkthroughKey(track, lesson.id));
+    const anotherTrial = hasChecked && !solved && diagnostics.length > 0 && diagnostics.every(item => item.kind === 'info');
+    const expected = `<p class="guide-verdict__expected"><span>Ожидалось:</span> ${renderInline(lesson.expectedOutcome)}</p>`;
+    const verdict = pending
+        ? '<div class="guide-verdict guide-verdict--idle" role="status"><h2 class="guide-verdict__title">Программа выполняется</h2><p>Наблюдайте сцену — результат появится после проверки.</p></div>'
+        : anotherTrial
+            ? `<div class="guide-verdict guide-verdict--success" role="status"><h2 class="guide-verdict__title">Опыт выполнен правильно</h2><p>Для сравнения нужен следующий запуск по условию урока.</p>${expected}</div>`
+            : renderCheckVerdict(hasChecked, solved, diagnostics.length, false, { expected: lesson.expectedOutcome, next: folded.next, hasErrors: diagnostics.some(item => item.kind === 'error') });
 
     return `
-        ${renderObservation(lesson, solved)}
-        <div class="guide-workbench-layout">
-            <div class="guide-workbench-layout__main">
-                <section class="guide-panel-card guide-panel-card--result">
-                    <div class="guide-panel-card__top">
-                        <div>
-                            <div class="guide-panel-card__title">Проверка и разбор</div>
-                            <div class="guide-panel-card__text">Результат запуска и рекомендации по решению.</div>
-                        </div>
-                        <div class="guide-panel-card__badge">Разбор</div>
-                    </div>
-                    ${renderCheckVerdict(hasChecked, solved, diagnostics.length, false)}
-                    <div class="guide-actions guide-actions--primary">
-                        <button type="button" class="guide-primary-action" data-guide-step="build">${hasChecked ? 'Вернуться к коду' : 'Перейти к коду'}</button>
-                    </div>
-                    <div class="guide-diagnostics" id="diagnostics-container">
-                        ${hasChecked ? sortedDiagnostics.map(renderDiagnosticCard).join('') : ''}
-                    </div>
-                </section>
+        <div class="guide-result">
+            <div class="guide-result__main">
+                ${verdict}
+                <div class="guide-actions">
+                    ${pending ? '<button type="button" class="btn-secondary" data-walkthrough-cancel>Остановить проверку</button>' : `<button type="button" class="${hasChecked ? 'btn-secondary' : 'btn-primary'}" data-guide-step="build">${hasChecked ? 'Вернуться к коду' : 'Перейти к коду'}</button>`}
+                    ${hasChecked && lesson.academy?.mode !== 'inspect' ? '<button type="button" class="btn-secondary" data-guide-text-check>Повторить проверку</button>' : ''}
+                </div>
+                ${hasChecked && !pending && evaluation?.timeline ? renderFlightRecord(evaluation.timeline) : ''}
+                <div class="guide-diagnostics" id="diagnostics-container">${hasChecked && !pending ? sortDiagnostics(diagnostics).map(renderDiagnosticCard).join('') : ''}</div>
             </div>
-
-            <div class="guide-workbench-layout__scene">
-                <section class="guide-panel-card guide-panel-card--scene">
-                    <div class="guide-panel-card__top">
-                        <div>
-                            <div class="guide-panel-card__title">Живая сцена</div>
-                            <div class="guide-panel-card__text">Наблюдайте, как дрон выполняет вашу программу.</div>
-                        </div>
-                        <div class="guide-panel-card__badge">3D</div>
-                    </div>
-                    <div id="mission-guide-scene-preview-host" class="guide-scene-preview-host ${previewActive ? 'is-active' : ''}">
-                        ${previewActive ? '' : renderScenePlaceholder()}
-                    </div>
-                </section>
-            </div>
+            ${renderResultScene(previewActive)}
         </div>
     `;
 }
 
 export function renderTextGuide(state: GuideTextLessonState, track: 'lua' | 'python'): string {
     const lesson = getActiveTextLesson(state, track);
-    const activeStep = getActiveGuideStep(track, lesson.id);
     const hasChecked = isLessonChecked(track, lesson.id);
     const isCompleted = isLessonCompleted(track, lesson.id);
-    const evaluation = hasChecked ? getLastTextEvaluation(track, lesson.id) : null;
-    const solved = evaluation?.solved ?? false;
-    const nextLesson = getNextTextLesson(state, lesson.id);
+    const continuesOnPython = track === 'lua' && lesson.academy?.number === 72;
+    const courseEnd = lesson.academy?.number === 108;
+    const nextLesson = continuesOnPython || courseEnd ? undefined : getNextTextLesson(state, lesson.id);
     const previousLesson = getPreviousTextLesson(state, lesson.id);
-    const lessonIndex = state.lessons.findIndex((item) => item.id === lesson.id);
-
-    const stepInner = activeStep === 'theory'
-        ? renderTextTheoryStep(lesson)
-        : activeStep === 'build'
-            ? renderTextBuildStep(track, lesson)
-            : renderTextCheckStep(track, lesson, hasChecked);
-
-    const stepContent = `
-        <div id="guide-panel-${activeStep}" role="tabpanel" aria-labelledby="guide-tab-${activeStep}" tabindex="0">
-            ${stepInner}
-        </div>
-    `;
+    const module = ACADEMY_MODULES.find(item => item.id === lesson.chapterId);
+    const position = module && lesson.academy ? module.lessons.findIndex(item => item.number === lesson.academy!.number) + 1 : 0;
+    const crumb = module
+        ? `${module.title.replace(/^\d+\.\s*/, '')}${position ? ` · урок ${position} из ${module.lessons.length}` : ''}`
+        : `Дополнительная практика · ${lesson.badge}`;
+    const note = continuesOnPython
+        ? 'Урок принят. Продолжайте с нижней камерой и ArUco на Python.'
+        : courseEnd
+            ? 'Все этапы итоговой миссии подтверждены. Курс из 108 уроков завершён.'
+            : nextLesson ? 'Урок принят. Можно переходить к следующему.' : 'Урок принят. Это последнее задание текущего трека.';
+    const next = continuesOnPython
+        ? `<button type="button" class="btn-primary" data-academy-open="academy-073" ${isCompleted ? '' : 'disabled'}>К камере на Python</button>`
+        : courseEnd || !nextLesson ? ''
+            : `<button type="button" class="btn-primary" data-guide-nav="next" ${isCompleted ? '' : 'disabled'}>Следующий урок</button>`;
 
     return `
         <div class="guide-modal-layout" data-guide-language="${track}" data-guide-portal-page="lesson">
-            <section class="guide-lesson-page academy-detail">
-                <div class="guide-lesson-page__header">
-                    <div class="guide-lesson-page__header-copy">
-                        <div class="guide-lesson-page__badge">${escapeHtml(lesson.badge)}</div>
-                        <h1 class="guide-lesson-page__title">${escapeHtml(lesson.title)}</h1>
-                        <div class="guide-lesson-page__summary">${renderInline(lesson.summary)}</div>
-                    </div>
-                    <div class="guide-lesson-page__header-actions">
-                        <div class="guide-lesson-page__header-pill">Урок ${lessonIndex + 1} из ${state.lessons.length}</div>
-                        <div class="guide-actions">
-                            ${previousLesson ? '<button type="button" class="guide-lesson__action" data-guide-nav="prev">← Предыдущий</button>' : ''}
-                            <button type="button" class="guide-lesson__action" data-guide-nav="next" ${nextLesson && isCompleted ? '' : 'disabled'}>Следующий урок →</button>
-                        </div>
-                        ${nextLesson && !isCompleted ? '<span class="guide-lesson-nav-hint">Откроется после успешной проверки</span>' : ''}
-                    </div>
-                </div>
+            <section class="guide-lesson-page">
+                ${renderLessonHeader(crumb, lesson.title, isCompleted, lesson.academy ? '' : renderInline(lesson.summary))}
 
-                <details class="guide-course-map">
-                    <summary>Все уроки ${track === 'python' ? 'Python' : 'Lua'} · Пройдено ${state.lessons.filter((item) => isLessonCompleted(track, item.id)).length} из ${state.lessons.length}</summary>
-                    <p>Следующее задание откроется после успешной проверки предыдущего. К пройденным можно вернуться в любой момент.</p>
-                    <nav aria-label="Уроки курса" class="guide-course-map__list">
-                        ${state.lessons.map((item, index) => {
-                            const unlocked = isTextLessonUnlocked(state, track, item.id);
-                            const done = isLessonCompleted(track, item.id);
-                            return `<button type="button" class="guide-lesson__action" data-guide-text-lesson="${escapeHtml(item.id)}" ${unlocked ? '' : 'disabled'} ${item.id === lesson.id ? 'aria-current="step"' : ''}><span>${index + 1}. ${escapeHtml(item.title)}</span><small>${done ? 'Пройден' : item.id === lesson.id ? 'Текущий урок' : unlocked ? 'Доступен' : `После урока ${index}`}</small></button>`;
-                        }).join('')}
-                    </nav>
-                </details>
-                ${renderLessonSteps(activeStep, hasChecked, solved, 'Написать код')}
+                ${renderWalkthrough(lesson, track, getMissionGuideDraft(track, lesson.id, lesson.starterCode), { build: renderTextBuildStep(track, lesson), check: renderTextCheckStep(track, lesson, hasChecked), completed: isCompleted, hasPrevious: Boolean(previousLesson), lessonNav: {
+                    note,
+                    previous: previousLesson ? '<button type="button" class="btn-secondary" data-guide-nav="prev">Предыдущий урок</button>' : '',
+                    next: next.replace(' disabled', '').replace('>Следующий урок<', nextLesson ? `>Дальше: ${escapeHtml(nextLesson.title)}<` : '>Следующий урок<')
+                } })}
 
-                ${stepContent}
-
-                ${isCompleted ? `<section class="guide-lesson-footer">
-                    <div class="guide-panel-note">
-                        ${nextLesson
-                ? 'Урок принят. Можно перейти к следующему заданию кнопкой «Следующий урок».'
-                : 'Урок принят. Это последнее задание текущего трека.'}
-                    </div>
-                </section>` : ''}
             </section>
         </div>
     `;

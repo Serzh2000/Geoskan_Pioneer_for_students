@@ -26,7 +26,7 @@ export function attachGuideNavigationBindings(context: GuideInteractionContext):
         rerender(language);
     };
 
-    container.querySelectorAll<HTMLElement>('[data-guide-step]').forEach((element) => {
+    container.querySelectorAll<HTMLElement>('[data-guide-step]:not([data-guide-step="build"])').forEach((element) => {
         element.addEventListener('click', () => {
             const step = element.dataset.guideStep;
             if (step !== 'theory' && step !== 'build' && step !== 'check') return;

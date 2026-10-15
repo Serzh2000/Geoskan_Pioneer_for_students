@@ -1,12 +1,13 @@
 import type { GuideTextLessonState } from '../../types.js';
 import { getGuideChapters } from '../../curriculum.js';
 import { getLuaTextLessons } from '../text/lua.js';
+import { getAcademyTextPractices } from '../../academy/practices/index.js';
 
 export function getLuaTextLessonState(): GuideTextLessonState {
     const lessonMap = new Map(
         getLuaTextLessons().map((lesson) => [lesson.id, lesson] as const)
     );
-    const lessons = [
+    const legacyLessons = [
         'lua-led-single-text',
         'lua-led-sequence-text',
         'lua-led-confirm-text',
@@ -25,12 +26,13 @@ export function getLuaTextLessonState(): GuideTextLessonState {
             badge: `Задание ${index + 1}`
         }));
 
+    const lessons = [...getAcademyTextPractices('lua'), ...legacyLessons];
     return {
         activeLessonId: lessons[0].id,
         heroEyebrow: 'Lua-практикум (текстовый код)',
-        heroTitle: 'Те же 10 уроков, но своими руками на Lua',
-        heroText: 'Это тот же учебный план, что и в Blockly-практикуме по Lua, только вместо сборки из блоков вы пишете настоящий текстовый Lua-код самостоятельно, опираясь на разбор методов Pioneer API и пример готового решения.',
-        heroFlow: '10 уроков: от LED-команд к полной миссии автопилота — теперь в виде рукописного кода',
+        heroTitle: 'Учебник Lua: начинаем с устройства и arm',
+        heroText: '72 урока на Lua: устройство аппарата, arm, свет, события, координаты, маршруты, местность и телеметрия. Затем 36 уроков камеры, ArUco и миссий на Python.',
+        heroFlow: '72 последовательных урока Lua · продолжение на Python до урока 108',
         chapters: getGuideChapters('lua'),
         lessons
     };

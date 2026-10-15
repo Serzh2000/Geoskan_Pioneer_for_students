@@ -8,7 +8,6 @@ import {
 } from './lua-led-single.js';
 import {
     getStructureDiagnostics,
-    matchesLuaLedSequenceWorkspace,
     validateLuaLedSequenceWorkspace
 } from './lua-led-sequence.js';
 import type { GuideDiagnostic, GuideEvaluation, GuideLesson } from '../types.js';

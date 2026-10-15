@@ -1,5 +1,6 @@
 import { setCurrentScriptLanguage } from '../../../core/state.js';
 import { getEditorValue, setEditorLanguage } from '../../../editor/index.js';
+import { getTemporaryDocumentToken } from '../../../editor/index/temporary-document.js';
 import { restartAndRunSimulation } from '../../../app/simulation-controls.js';
 import { renderApiDocs } from '../../api-docs/index.js';
 import type { ScriptLanguage } from '../../api-docs/sections.js';
@@ -25,11 +26,13 @@ export async function launchLesson(
     rerender: RenderMissionGuidePanel,
     banner: { kind: 'info' | 'warning'; message: string }
 ): Promise<void> {
+    const documentToken = getTemporaryDocumentToken();
     const languageSelect = document.getElementById('script-language-select') as HTMLSelectElement | null;
 
     setCurrentScriptLanguage(language);
     if (languageSelect) languageSelect.value = language;
     await setEditorLanguage(language);
+    if (getTemporaryDocumentToken() !== documentToken) return;
 
     const code = getEditorValue();
     logGuideEvent('launch_requested', {
@@ -45,7 +48,7 @@ export async function launchLesson(
 
     setMissionGuideScenePreviewActive(true);
     rerender(language);
-    restartAndRunSimulation();
+    await restartAndRunSimulation();
     logGuideEvent('launch_started', {
         language,
         lessonId: lesson.id,

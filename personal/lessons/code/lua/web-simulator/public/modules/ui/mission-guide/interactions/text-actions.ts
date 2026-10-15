@@ -1,13 +1,20 @@
 import { openGuideReference } from './reference.js';
-import { restartAndRunSimulation } from '../../../app/simulation-controls.js';
-import { setCurrentScriptLanguage } from '../../../core/state.js';
-import { getEditorValue, setEditorLanguage } from '../../../editor/index.js';
+import { beginWalkthroughCheck, finishWalkthroughCheck, isWalkthroughCheckCurrent, resetWalkthroughResult, walkthroughKey } from '../walkthrough/state.js';
+import { getWalkthroughContent } from '../walkthrough/content.js';
+import { getAcademySceneEvidence } from '../academy/scene.js';
+import { WALKTHROUGH_WAIT_MS } from '../walkthrough/runtime.js';
+import { resetSimulationState, restartAndRunSimulation } from '../../../app/simulation-controls.js';
+import { currentDroneId, setCurrentScriptLanguage } from '../../../core/state.js';
+import { beginLearningCapture, finishLearningCapture } from '../../../core/learning-journal.js';
+import { getEditorValue, setEditorLanguage, setEditorValue } from '../../../editor/index.js';
+import { getTemporaryDocumentToken } from '../../../editor/index/temporary-document.js';
 import { runTextLessonCheck } from '../evaluation/text/index.js';
 import { getLuaTextLessonState } from '../lessons/catalog/lua-text.js';
 import { getPythonTextLessonState } from '../lessons/catalog/python-text.js';
 import { setMissionGuideScenePreviewActive } from '../support/scene-preview.js';
 import { logGuideEvent } from '../support/logging.js';
 import { resetGuideRuntimeView } from './context.js';
+import { getMissionGuideDraft } from '../support/monaco-preview.js';
 import {
     getActiveTextLesson,
     getNextTextLesson,
@@ -16,31 +23,14 @@ import {
     isTextLessonUnlocked,
     setActiveGuideStep,
     setActiveLessonId,
-    setLastTextEvaluation,
     setLessonBanner,
     setLessonChecked,
-    setLessonCompleted
 } from '../state.js';
-import type { RenderMissionGuidePanel } from '../types.js';
+import type { GuideEvaluation, RenderMissionGuidePanel } from '../types.js';
 
-// Rough per-topic wait budget before snapshotting simulator state (see
-// evaluation/text/index.ts — there is no "script finished" signal in the
-// codebase, so this is a deliberate, per-lesson-shape guess: a single LED
-// call resolves almost instantly, while a full takeoff-route-landing mission
-// needs real simulated flight time). Expect to retune these against the real
-// simulator's flight speed once this is used for real.
-const WAIT_MS_BY_TOPIC: Record<string, number> = {
-    'led-single': 1200,
-    'led-sequence': 4200,
-    'led-confirm': 1200,
-    'led-delayed': 2500,
-    'preflight': 2000,
-    'takeoff': 4500,
-    'route': 6000,
-    'point-confirm': 7000,
-    'mission': 11000,
-    'landing': 9000
-};
+const repeatedExperiments = new Map<string, string>();
+const experimentTrials = new Map<string, Set<string>>();
+const replacedDrafts = new Map<string, string>();
 
 export function attachTextGuideBindings(
     container: HTMLElement,
@@ -49,8 +39,32 @@ export function attachTextGuideBindings(
 ): void {
     const state = track === 'python' ? getPythonTextLessonState() : getLuaTextLessonState();
     const lesson = getActiveTextLesson(state, track);
+    const draftKey = walkthroughKey(track, lesson.id);
+    const undo = container.querySelector<HTMLButtonElement>('[data-guide-text-undo]');
+    if (undo) undo.hidden = !replacedDrafts.has(draftKey);
+    undo?.addEventListener('click', () => {
+        const previous = replacedDrafts.get(draftKey);
+        if (previous === undefined) return;
+        void setEditorValue(previous).then(() => {
+            replacedDrafts.delete(draftKey);
+            resetWalkthroughResult(draftKey);
+            rerender(track);
+        });
+    });
 
-    container.querySelectorAll<HTMLElement>('[data-guide-step]').forEach((element) => {
+    container.querySelectorAll<HTMLButtonElement>('[data-guide-text-starter]').forEach(button => {
+        button.addEventListener('click', () => {
+            replacedDrafts.set(draftKey, getEditorValue());
+            void setEditorValue(lesson.starterCode).then(() => {
+            resetWalkthroughResult(walkthroughKey(track, lesson.id));
+            rerender(track);
+            const status = container.querySelector<HTMLElement>('[data-guide-draft-status]');
+            if (status) status.textContent = 'Заготовка восстановлена. Кнопка «Отменить замену» вернёт ваш код.';
+            });
+        });
+    });
+
+    container.querySelectorAll<HTMLElement>('[data-guide-step]:not([data-guide-step="build"])').forEach((element) => {
         element.addEventListener('click', () => {
             const step = element.dataset.guideStep;
             if (step !== 'theory' && step !== 'build' && step !== 'check') return;
@@ -93,6 +107,10 @@ export function attachTextGuideBindings(
             logGuideEvent('text_lesson_state_reset', { track, lessonId: lesson.id }, 'warn');
             resetGuideRuntimeView();
             setLessonChecked(track, lesson.id, false);
+            const experimentKey = `${currentDroneId}:${track}:${lesson.id}`;
+            repeatedExperiments.delete(experimentKey);
+            experimentTrials.delete(experimentKey);
+            resetWalkthroughResult(walkthroughKey(track, lesson.id));
             setLessonBanner(track, lesson.id, null);
             rerender(track);
         });
@@ -105,14 +123,28 @@ export function attachTextGuideBindings(
     });
 
     async function runTextCheck(button: HTMLButtonElement): Promise<void> {
-        const waitMs = WAIT_MS_BY_TOPIC[lesson.topicId] ?? 3000;
+        const documentToken = getTemporaryDocumentToken();
+        const waitMs = lesson.academy ? lesson.academy.waitMs ?? (lesson.academy.number === 4 ? 1800 : 1200) : WALKTHROUGH_WAIT_MS[lesson.topicId] ?? 3000;
         const originalLabel = button.textContent;
         button.disabled = true;
-        button.textContent = `Проверяю… (~${Math.round(waitMs / 1000)} с)`;
+        button.textContent = lesson.academy?.doneMessage ? 'Проверяю выполнение опыта…' : `Проверяю… (~${Math.round(waitMs / 1000)} с)`;
 
         setCurrentScriptLanguage(track);
+        const draft = getMissionGuideDraft(track, lesson.id, lesson.starterCode);
         await setEditorLanguage(track);
+        if (getTemporaryDocumentToken() !== documentToken) return;
+        await setEditorValue(lesson.academy?.mode === 'inspect' ? lesson.starterCode : draft);
+        if (getTemporaryDocumentToken() !== documentToken) return;
         const code = getEditorValue();
+        const experimentKey = `${currentDroneId}:${track}:${lesson.id}`;
+        if ([54, 107].includes(lesson.academy?.number || 0) && repeatedExperiments.get(experimentKey) !== code) experimentTrials.delete(experimentKey);
+        const activity = {
+            code,
+            lift: container.querySelector<HTMLSelectElement>('[data-academy-part="lift"]')?.value,
+            vision: container.querySelector<HTMLSelectElement>('[data-academy-part="vision"]')?.value,
+            previousRun: repeatedExperiments.get(experimentKey) === code,
+            trials: [...(experimentTrials.get(experimentKey) || [])], scene: getAcademySceneEvidence()
+        };
 
         if (!code || !code.trim()) {
             setLessonChecked(track, lesson.id, false);
@@ -129,9 +161,41 @@ export function attachTextGuideBindings(
         logGuideEvent('text_check_clicked', { track, lessonId: lesson.id, topicId: lesson.topicId, codeLength: code.length });
 
         setMissionGuideScenePreviewActive(true);
-        restartAndRunSimulation();
+        const key = walkthroughKey(track, lesson.id);
+        const token = beginWalkthroughCheck(key, getWalkthroughContent(lesson).correct);
+        setLessonChecked(track, lesson.id, false);
+        setActiveGuideStep(track, lesson.id, 'check');
+        setLessonBanner(track, lesson.id, null);
+        const capture = lesson.academy ? { droneId: currentDroneId, token: beginLearningCapture(currentDroneId) } : undefined;
+        rerender(track);
+        try {
+            await restartAndRunSimulation();
+            if (!isWalkthroughCheckCurrent(key, token)) {
+                if (capture) finishLearningCapture(capture.droneId, capture.token);
+                resetSimulationState();
+                return;
+            }
+        } catch {
+            if (capture) finishLearningCapture(capture.droneId, capture.token);
+            if (finishWalkthroughCheck(key, token, code, { solved: false, complete: false, diagnostics: [{ kind: 'error', title: 'Запуск прервался', reason: 'Интерпретатор не смог начать опыт.', fix: 'Проверьте первую ошибку в журнале и повторите запуск.' }] })) rerender(track);
+            return;
+        }
 
-        const evaluation = await runTextLessonCheck(lesson.topicId, { waitMs });
+        const evaluation: GuideEvaluation = await runTextLessonCheck(lesson.topicId, { waitMs, language: track, capture, activity, doneMessage: lesson.academy?.doneMessage, isCurrent: () => isWalkthroughCheckCurrent(key, token) }).catch(() => ({
+            solved: false, complete: false, diagnostics: [{ kind: 'error' as const,
+                title: 'Не удалось завершить проверку', reason: 'Чтение состояния прервалось.', fix: 'Вернитесь к практике и повторите запуск.' }]
+        }));
+        if (capture) finishLearningCapture(capture.droneId, capture.token);
+        if (!finishWalkthroughCheck(key, token, code, evaluation)) return;
+
+        if ([5, 54, 107].includes(lesson.academy?.number || 0) && !evaluation.diagnostics.some(item => item.kind === 'error')) {
+            repeatedExperiments.set(experimentKey, code);
+        }
+        if (evaluation.academyTrial) {
+            const trials = experimentTrials.get(experimentKey) || new Set<string>();
+            trials.add(evaluation.academyTrial);
+            experimentTrials.set(experimentKey, trials);
+        }
 
         logGuideEvent('text_check_evaluated', {
             track,
@@ -141,16 +205,11 @@ export function attachTextGuideBindings(
             diagnosticsCount: evaluation.diagnostics.length
         }, evaluation.solved ? 'success' : 'info');
 
-        setLastTextEvaluation(track, lesson.id, evaluation);
         setLessonChecked(track, lesson.id, true);
         setActiveGuideStep(track, lesson.id, 'check');
         setLessonBanner(track, lesson.id, evaluation.solved
             ? { kind: 'info', message: 'Проверка выполнена, сценарий запущен. Сравните сцену с целью урока.' }
             : { kind: 'warning', message: 'Проверка выполнена, есть замечания — посмотрите разбор ниже.' });
-        if (evaluation.solved) {
-            setLessonCompleted(track, lesson.id, true);
-        }
-
         rerender(track);
     }
 }

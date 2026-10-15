@@ -1,9 +1,7 @@
 import type { ScriptLanguage } from '../api-docs/sections.js';
 import type {
     GuideChapter,
-    GuideEvaluation,
     GuideLesson,
-    GuideLessonProgressState,
     GuideLessonState,
     GuideLessonStepId,
     GuidePortalPageId,
@@ -11,7 +9,6 @@ import type {
     GuideTabId,
     GuideTextLesson,
     GuideTextLessonState,
-    GuideThemeId,
     RuntimeBanner
 } from './types.js';
 import {
@@ -29,11 +26,9 @@ const activeTabByLanguage: Record<ScriptLanguage, GuideTabId> = loadedSessionSta
 const activePortalPageByLanguage: Record<ScriptLanguage, GuidePortalPageId> = loadedSessionState.activePortalPageByLanguage;
 const activeStepByLessonKey: Record<string, GuideLessonStepId> = loadedSessionState.activeStepByLessonKey;
 let activePracticeTrack: GuidePracticeTrack = loadedSessionState.activePracticeTrack;
-let activeGuideTheme: GuideThemeId = 'dark';
 
 const lessonBanners = new Map<string, RuntimeBanner>();
 const lessonChecks = new Map<string, boolean>();
-const lastTextEvaluationByKey = new Map<string, GuideEvaluation>();
 const completedLessonsByLanguage: Record<ScriptLanguage, Set<string>> = loadGuideProgress();
 
 function persistCurrentGuideSessionState(): void {
@@ -71,10 +66,6 @@ export function setActiveLessonId(language: ScriptLanguage, lessonId: string): v
     persistCurrentGuideSessionState();
 }
 
-export function getActiveGuideStep(language: ScriptLanguage, lessonId: string): GuideLessonStepId {
-    return activeStepByLessonKey[getStateKey(language, lessonId)] || 'theory';
-}
-
 export function setActiveGuideStep(language: ScriptLanguage, lessonId: string, step: GuideLessonStepId): void {
     activeStepByLessonKey[getStateKey(language, lessonId)] = step;
     persistCurrentGuideSessionState();
@@ -94,21 +85,9 @@ export function setActiveTab(language: ScriptLanguage, tab: GuideTabId): void {
     persistCurrentGuideSessionState();
 }
 
-export function getActivePortalPage(language: ScriptLanguage): GuidePortalPageId {
-    return activePortalPageByLanguage[language];
-}
-
 export function setActivePortalPage(language: ScriptLanguage, page: GuidePortalPageId): void {
     activePortalPageByLanguage[language] = page;
     persistCurrentGuideSessionState();
-}
-
-export function getActiveGuideTheme(): GuideThemeId {
-    return activeGuideTheme;
-}
-
-export function setActiveGuideTheme(theme: GuideThemeId): void {
-    activeGuideTheme = theme;
 }
 
 export function getActivePracticeTrack(): GuidePracticeTrack {
@@ -166,32 +145,11 @@ export function setLessonCompleted(language: ScriptLanguage, lessonId: string, c
     persistGuideProgress(completedLessonsByLanguage);
 }
 
-export function getCompletedLessonsCount(state: GuideLessonState, language: ScriptLanguage): number {
-    return state.lessons.filter((lesson) => isLessonCompleted(language, lesson.id)).length;
-}
-
 export function isLessonUnlocked(state: GuideLessonState, language: ScriptLanguage, lessonId: string): boolean {
     const currentIndex = getLessonIndex(state, lessonId);
     if (currentIndex <= 0) return true;
     const previousLesson = state.lessons[currentIndex - 1];
     return previousLesson ? isLessonCompleted(language, previousLesson.id) : true;
-}
-
-export function getLessonProgressState(
-    state: GuideLessonState,
-    language: ScriptLanguage,
-    lessonId: string
-): GuideLessonProgressState {
-    if (isLessonCompleted(language, lessonId)) {
-        return 'completed';
-    }
-    if (!isLessonUnlocked(state, language, lessonId)) {
-        return 'locked';
-    }
-    if (getActiveLesson(state, language).id === lessonId) {
-        return 'in_progress';
-    }
-    return 'available';
 }
 
 export function getFirstUnlockedLesson(state: GuideLessonState, language: ScriptLanguage): GuideLesson {
@@ -214,14 +172,6 @@ export function setLessonChecked(language: ScriptLanguage, lessonId: string, che
 
 export function isLessonChecked(language: ScriptLanguage, lessonId: string): boolean {
     return lessonChecks.get(getStateKey(language, lessonId)) || false;
-}
-
-export function setLastTextEvaluation(track: 'lua' | 'python', lessonId: string, evaluation: GuideEvaluation): void {
-    lastTextEvaluationByKey.set(getStateKey(track, lessonId), evaluation);
-}
-
-export function getLastTextEvaluation(track: 'lua' | 'python', lessonId: string): GuideEvaluation | null {
-    return lastTextEvaluationByKey.get(getStateKey(track, lessonId)) || null;
 }
 
 // Text-track (hand-typed Lua/Python) equivalents of the Blockly-track helpers
@@ -253,5 +203,7 @@ export function getPreviousTextLesson(state: GuideTextLessonState, lessonId: str
 export function isTextLessonUnlocked(state: GuideTextLessonState, track: 'lua' | 'python', lessonId: string): boolean {
     const index = state.lessons.findIndex((lesson) => lesson.id === lessonId);
     if (index < 0) return false;
+    const academy = state.lessons[index].academy;
+    if (academy) return academy.number === 1 || isLessonCompleted(track, lessonId) || ['lua', 'python'].some(language => isLessonCompleted(language as 'lua' | 'python', `${language}-academy-${String(academy.number - 1).padStart(3, '0')}`));
     return index === 0 || isLessonCompleted(track, lessonId) || isLessonCompleted(track, state.lessons[index - 1].id);
 }

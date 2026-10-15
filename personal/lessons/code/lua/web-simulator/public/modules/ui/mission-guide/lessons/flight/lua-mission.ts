@@ -1,18 +1,9 @@
-import { createEventBlock, createStatementBlock, createTimerBlock } from '../support/builders.js';
-import { compileLuaEvents, compileLuaLinear, compileLuaTimed, compilePython } from '../support/compilers.js';
+import { createEventBlock, createStatementBlock } from '../support/builders.js';
+import { compileLuaEvents } from '../support/compilers.js';
 import {
-    LUA_LED_SEQUENCE_EXAMPLE,
-    LUA_LED_SINGLE_EXAMPLE,
-    LUA_MISSION_EXAMPLE,
-    LUA_PREFLIGHT_EXAMPLE,
-    LUA_TAKEOFF_EXAMPLE,
-    PYTHON_ARM_EXAMPLE,
-    PYTHON_LED_SEQUENCE_EXAMPLE,
-    PYTHON_LED_SINGLE_EXAMPLE,
-    PYTHON_MISSION_EXAMPLE,
-    PYTHON_TAKEOFF_EXAMPLE
+    LUA_MISSION_EXAMPLE
 } from '../support/snippets.js';
-import type { GuideLesson, GuideLessonState } from '../../types.js';
+import type { GuideLesson } from '../../types.js';
 import { GUIDE_CHAPTER_IDS } from '../../curriculum.js';
 import { apiFocus } from '../support/state-helpers.js';
 

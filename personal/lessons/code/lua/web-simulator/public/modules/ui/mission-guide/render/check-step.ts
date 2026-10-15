@@ -10,8 +10,20 @@ const DIAGNOSTIC_KIND_RANK: Record<GuideDiagnostic['kind'], number> = {
     success: 3
 };
 
-function sortDiagnostics(diagnostics: GuideDiagnostic[]): GuideDiagnostic[] {
+export function sortDiagnostics(diagnostics: GuideDiagnostic[]): GuideDiagnostic[] {
     return [...diagnostics].sort((a, b) => DIAGNOSTIC_KIND_RANK[a.kind] - DIAGNOSTIC_KIND_RANK[b.kind]);
+}
+
+/** A solved run says "accepted" once: success cards fold into the verdict as its next-step line. */
+export function foldSuccess(diagnostics: GuideDiagnostic[], solved: boolean): { rest: GuideDiagnostic[]; next: string } {
+    if (!solved) return { rest: diagnostics, next: '' };
+    const good = diagnostics.filter(item => item.kind === 'success');
+    return { rest: diagnostics.filter(item => item.kind !== 'success'), next: good[0]?.fix ? `Дальше: ${good[0].fix}` : '' };
+}
+
+/** The scene sits beside the result without a card title: it is a device, not a topic. */
+export function renderResultScene(previewActive: boolean): string {
+    return `<div class="guide-result__scene"><div id="mission-guide-scene-preview-host" class="guide-scene-preview-host pk-device ${previewActive ? 'is-active' : ''}">${previewActive ? '' : renderScenePlaceholder()}</div></div>`;
 }
 
 export function renderCheckStep(params: {
@@ -23,6 +35,8 @@ export function renderCheckStep(params: {
     launchedWithWarnings: boolean;
     previewActive: boolean;
     hasWorkspaceContent: boolean;
+    expectedOutcome?: string;
+    pending?: boolean;
 }): string {
     const {
         lessonId,
@@ -31,54 +45,32 @@ export function renderCheckStep(params: {
         diagnostics,
         launchedWithWarnings,
         previewActive,
-        hasWorkspaceContent
+        hasWorkspaceContent,
+        expectedOutcome,
+        pending = false
     } = params;
 
-    const sortedDiagnostics = sortDiagnostics(diagnostics);
+    const folded = foldSuccess(diagnostics, solved);
+    const sortedDiagnostics = sortDiagnostics(folded.rest);
 
     return `
-        <div class="guide-workbench-layout">
-            <div class="guide-workbench-layout__main">
-                <section class="guide-panel-card guide-panel-card--result">
-                    <div class="guide-panel-card__top">
-                        <div>
-                            <div class="guide-panel-card__title">Проверка и разбор</div>
-                            <div class="guide-panel-card__text">Результат запуска и рекомендации по решению.</div>
-                        </div>
-                        <div class="guide-panel-card__badge">Разбор</div>
-                    </div>
-                    ${renderCheckVerdict(hasChecked, solved, diagnostics.length, launchedWithWarnings)}
-                    <div class="guide-actions"><button type="button" class="guide-primary-action" data-guide-step="build">${hasChecked ? 'Вернуться к сборке' : 'Перейти к практике'}</button></div>
+        <div class="guide-result">
+            <div class="guide-result__main">
+                ${pending
+            ? '<div class="guide-verdict guide-verdict--idle" role="status"><h2 class="guide-verdict__title">Программа выполняется</h2><p>Наблюдайте сцену — результат появится после проверки.</p></div>'
+            : renderCheckVerdict(hasChecked, solved, diagnostics.length, launchedWithWarnings, { expected: expectedOutcome, next: folded.next, hasErrors: diagnostics.some(item => item.kind === 'error') })}
+                <div class="guide-actions">
+                    ${pending
+            ? '<button type="button" class="btn-secondary" data-walkthrough-cancel>Остановить проверку</button>'
+            : `<button type="button" class="${hasChecked ? 'btn-secondary' : 'btn-primary'}" data-guide-step="build">${hasChecked ? 'Вернуться к сборке' : 'Перейти к практике'}</button>`}
                     ${hasChecked
-            ? `
-                    <div class="guide-actions guide-actions--primary">
-                        <button type="button" class="guide-primary-action" data-guide-check="${escapeHtml(lessonId)}">Перепроверить</button>
-                        <button type="button" class="guide-lesson__action" data-guide-launch="${hasChecked ? 'checked' : 'unchecked'}" ${hasWorkspaceContent ? '' : 'disabled'}>Перезапустить сцену</button>
-                    </div>
-                    `
+            ? `<button type="button" class="btn-secondary" data-guide-check="${escapeHtml(lessonId)}">Перепроверить</button>
+                    <button type="button" class="btn-secondary" data-guide-launch="checked" ${hasWorkspaceContent ? '' : 'disabled'}>Перезапустить сцену</button>`
             : ''}
-                    <div class="guide-diagnostics" id="diagnostics-container">
-                        ${hasChecked
-            ? sortedDiagnostics.map(renderDiagnosticCard).join('')
-            : ''}
-                    </div>
-                </section>
+                </div>
+                <div class="guide-diagnostics" id="diagnostics-container">${hasChecked && !pending ? sortedDiagnostics.map(renderDiagnosticCard).join('') : ''}</div>
             </div>
-
-            <div class="guide-workbench-layout__scene">
-                <section class="guide-panel-card guide-panel-card--scene">
-                    <div class="guide-panel-card__top">
-                        <div>
-                            <div class="guide-panel-card__title">Живая сцена</div>
-                            <div class="guide-panel-card__text">Наблюдайте, как дрон выполняет вашу программу.</div>
-                        </div>
-                        <div class="guide-panel-card__badge">3D</div>
-                    </div>
-                    <div id="mission-guide-scene-preview-host" class="guide-scene-preview-host ${previewActive ? 'is-active' : ''}">
-                        ${previewActive ? '' : renderScenePlaceholder()}
-                    </div>
-                </section>
-            </div>
+            ${renderResultScene(previewActive)}
         </div>
     `;
 }
