@@ -1,32 +1,23 @@
 % =============================================================================
-% MODERN BOOK DESIGN FOR GEOSKAN PIONEER
-% =============================================================================
-%
-% This document uses a separate preamble file for cleaner structure.
-%
+% Программирование дронов и создание автономных беспилотных миссий
+% Сборка: build.bat (XeLaTeX + minted + biber); результат — build/main.pdf.
+% Все примеры кода вставляются из code/ и проверяются тестом
+% code/lua/web-simulator/tests/lessons-book-examples.test.ts.
 % =============================================================================
 
-% --- Document Class & Options ---
-% scrartcl: KOMA-Script article class (versatile, supports chapters via sections)
-% fontsize=14pt: GOST standard often implies 14pt
-% DIV=12: Typographic term for type area calculation (good whitespace balance)
-% headings=big: Large, clear section headings
-% numbers=noenddot: Removes trailing dot in section numbers
 \documentclass[
-    fontsize=14pt, 
+    fontsize=14pt,
     DIV=12,
     headings=big,
     numbers=noenddot,
-    toc=listof,      % Include lists of figures/tables in TOC
-    toc=bib,         % Include bibliography in TOC
-    headinclude=true,% Include header in type area calculation
+    toc=listof,
+    toc=bib,
+    headinclude=true,
     footinclude=false
 ]{scrartcl}
 
-% --- Import Preamble ---
 \input{styles/preamble.tex}
 
-% --- Main Document Content ---
 \begin{document}
 
 \makePioneerTitle
@@ -36,100 +27,59 @@
     {асп. СПбГЭТУ «ЛЭТИ», педагог ЦО «Кудрово»}
     {г. Кудрово, \the\year}
 
+\input{chapters/intro/annotation.tex}
+\rmfamily
+
 \tableofcontents
 \clearpage
 
-% --- Content Inputs ---
-% Using standard input commands. 
-% Note: Ensure all included files use standard LaTeX structure.
-
-\input{chapters/intro/intro.tex}
+% ------------------------------------------------------------ Введение и старт
+\input{chapters/intro/00_intro.tex}
 \clearpage
 
-% Getting Started
-\input{chapters/getting_started/getting_started.tex}
-\clearpage
-
-% Remote Control
-\input{chapters/rc_control/rc_control.tex}
+\input{chapters/start/01_where_to_code.tex}
+\input{chapters/start/02_simulator.tex}
+\input{chapters/start/03_first_program.tex}
+\input{chapters/start/04_real_drone.tex}
 \clearpage
 
 % ============================================================
-% PART 1: PROGRAMMING IN LUA
+\part{Программирование на Lua}
 % ============================================================
-\part{Программирование на LUA}
 
-% 1. Lua Language
-\input{chapters/lua/intro.tex}
-\input{chapters/lua/variables.tex}
-\input{chapters/lua/arithmetic.tex}
-\input{chapters/lua/logic.tex}
-\input{chapters/lua/conditions.tex}
-\input{chapters/lua/loops.tex}
-\input{chapters/lua/platform.tex}
+\input{chapters/lua-language/00_section.tex}
+\input{chapters/lua-language/01_variables.tex}
+\input{chapters/lua-language/02_arithmetic.tex}
+\input{chapters/lua-language/03_logic.tex}
+\input{chapters/lua-language/04_conditions.tex}
+\input{chapters/lua-language/05_loops.tex}
+\input{chapters/lua-language/06_functions.tex}
+\input{chapters/lua-language/07_mistakes_quiz.tex}
 \clearpage
 
-% 2. LED Programming
-\input{chapters/leds/00_section.tex}
-\input{chapters/leds/01_goals.tex}
-\input{chapters/leds/02_intro.tex}
-\input{chapters/leds/03_glossary.tex}
-\input{chapters/leds/04_hardware.tex}
-\input{chapters/leds/04a_theory.tex}
-\input{chapters/leds/05_buffer.tex}
-\input{chapters/leds/06_rgb.tex}
-\input{chapters/leds/07_addressing.tex}
-\input{chapters/leds/08_ledbar_api.tex}
-\input{chapters/leds/09_timers.tex}
-\input{chapters/leds/10_events.tex}
-\input{chapters/leds/11_approaches.tex}
-\input{chapters/leds/12_examples.tex}
-\input{chapters/leds/13_random_color_example.tex}
-\input{chapters/leds/14_quiz.tex}
-\input{chapters/leds/15_labs_base.tex}
-\input{chapters/leds/16_labs_algo.tex}
-\input{chapters/leds/17_labs_events.tex}
-\input{chapters/leds/99_summary.tex}
+\input{chapters/lua-leds/00_section.tex}
+\input{chapters/lua-leds/01_hardware_api.tex}
+\input{chapters/lua-leds/02_timers.tex}
+\input{chapters/lua-leds/03_events.tex}
+\input{chapters/lua-leds/04_patterns.tex}
+\input{chapters/lua-leds/05_quiz_labs.tex}
 \clearpage
 
-% 3. Missions Part 1 & 2
-\input{chapters/missions/part1/00_section.tex}
-\input{chapters/missions/part1/01_goals.tex}
-\input{chapters/missions/part1/02_intro.tex}
-\input{chapters/missions/part1/03_glossary.tex}
-\input{chapters/missions/part1/04_interfaces.tex}
-\input{chapters/missions/part1/05_leds_debug.tex}
-\input{chapters/missions/part1/06_flight_api.tex}
-\input{chapters/missions/part1/07_stages_intro.tex}
-\input{chapters/missions/part1/08_example_engines.tex}
-\input{chapters/missions/part1/09_example_takeoff_landing.tex}
-\input{chapters/missions/part1/10_example_straight.tex}
-\input{chapters/missions/part1/11_example_points.tex}
-\input{chapters/missions/part1/12_example_triangle.tex}
-\input{chapters/missions/part1/13_example_square.tex}
-\input{chapters/missions/part1/14_example_circle_yaw.tex}
-\input{chapters/missions/part1/15_geometry_circle.tex}
-\input{chapters/missions/part1/16_architecture.tex}
-\input{chapters/missions/part1/17_lesson12.tex}
-\input{chapters/missions/part1/18_lesson14.tex}
-\input{chapters/missions/part1/19_rc_initiation.tex}
-\input{chapters/missions/part1/20_local_points_leds.tex}
-\input{chapters/missions/part1/21_recommendations.tex}
-\input{chapters/missions/part2/01_quiz.tex}
-\input{chapters/missions/part2/03_labs_basic.tex}
-\input{chapters/missions/part2/04_labs_advanced.tex}
-\input{chapters/missions/part2/02_summary.tex}
+\input{chapters/lua-missions/00_section.tex}
+\input{chapters/lua-missions/01_lifecycle.tex}
+\input{chapters/lua-missions/02_coordinates.tex}
+\input{chapters/lua-missions/03_stages.tex}
+\input{chapters/lua-missions/04_circle.tex}
+\input{chapters/lua-missions/05_architecture.tex}
+\input{chapters/lua-missions/06_mistakes.tex}
+\input{chapters/lua-missions/07_quiz_labs.tex}
 \clearpage
 
-% ============================================================
-% PART 2: PROGRAMMING IN PYTHON
 % ============================================================
 \part{Программирование на Python}
+% ============================================================
 
-% 0. Intro Section
 \input{chapters/python/00_section.tex}
-
-% 1. Python Basics
 \input{chapters/python/01_intro.tex}
 \input{chapters/python/02_variables.tex}
 \input{chapters/python/03_arithmetic.tex}
@@ -139,15 +89,12 @@
 \input{chapters/python/07_functions.tex}
 \clearpage
 
-% 2. Pioneer SDK
-\input{chapters/python/08_drone_intro.tex}
-\input{chapters/python/08a_leds.tex}
-\input{chapters/python/09_drone_flight.tex}
-\input{chapters/python/10_flight_maneuvers_theory.tex}
-\input{chapters/python/10_tasks.tex}
+\input{chapters/python-sdk/00_where_to_run.tex}
+\input{chapters/python-sdk/01_connect_leds.tex}
+\input{chapters/python-sdk/02_flight.tex}
 \clearpage
 
-% 3. Advanced Flight & CV
+\input{chapters/python-sdk/10_vision_section.tex}
 \input{chapters/python/11_aruco_basics_theory.tex}
 \input{chapters/python/12_visual_nav.tex}
 \input{chapters/python/13_camera_advanced.tex}
@@ -158,35 +105,33 @@
 \clearpage
 
 % ============================================================
-% PART 3: PROFESSIONAL NAVIGATION
-% ============================================================
 \part{Профессиональные навигационные системы}
+% ============================================================
 
-% 1. Advanced Theory
 \input{chapters/python/18_advanced_theory.tex}
 \clearpage
-
-% 2. Map Creation
 \input{chapters/python/19_map_creation_theory.tex}
 \clearpage
-
-% 3. Complex Navigation
 \input{chapters/python/20_complex_navigation.tex}
 \clearpage
-
-% 4. Technical Implementation
 \input{chapters/python/21_technical_implementation.tex}
 \clearpage
-
-% 5. Practical Tasks
 \input{chapters/python/22_practical_tasks.tex}
 \clearpage
-
-% 6. Troubleshooting
 \input{chapters/python/23_troubleshooting.tex}
 \clearpage
 
-% 7. Appendices
+% ============================================================
+\part{Приложения}
+\appendix
+% ============================================================
+
+\input{chapters/appendix/lua-api.tex}
+\clearpage
+\input{chapters/appendix/cheatsheet.tex}
+\clearpage
+\input{chapters/rc_control/rc_control.tex}
+\clearpage
 \input{chapters/python/24_appendices.tex}
 \clearpage
 

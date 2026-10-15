@@ -1,0 +1,62 @@
+\subsection{Ступени полёта}
+
+Каждая программа ниже --- на одну ступень сложнее предыдущей. Запускайте каждую, смотрите камерой \ui{Дрон} и читайте терминал.
+
+\subsubsection*{Ступень 1. Только моторы}
+
+\begin{codefile}{lua/examples/06_missions/missions_engines_arm.lua}
+\end{codefile}
+
+Предстарт, через секунду --- команда \verb|ap.push(Ev.ENGINES_ARM)|: запуск моторов без взлёта (она есть в справочнике, приложение~\ref{sec:lua-api}). Так проверяют моторы на настоящем дроне со снятыми пропеллерами. Пустой \verb|callback| обязателен.
+
+\subsubsection*{Ступень 2. Взлёт и посадка}
+
+\begin{codefile}{lua/examples/06_missions/mission_takeoff_landing.lua}
+\end{codefile}
+
+\paragraph{Что происходит.} Предстарт $\to$ через секунду взлёт $\to$ по событию \verb|TAKEOFF_COMPLETE| посадка $\to$ по \verb|COPTER_LANDED| команда \verb|ENGINES_DISARM|. После посадки автопилот и сам выключает моторы, так что эта строка --- страховка; зато она показывает единственное безопасное место для \verb|ENGINES_DISARM| в штатной миссии. Четыре строки в \verb|callback| --- это вся миссия.
+
+\begin{center}
+\simshot[0.85\linewidth]{05-flight.png}
+\captionof{figure}{Камера \ui{Дрон} следует за дроном; голубая линия --- след полёта.}
+\end{center}
+
+\subsubsection*{Ступень 3. Полёт по прямой}
+
+\begin{codefile}{lua/examples/06_missions/missions_straight_flight.lua}
+\end{codefile}
+
+После взлёта --- точка $(1.0, 0.0, 0.8)$: метр вперёд на высоте 0.8~м. Посадка --- по \verb|POINT_REACHED|, то есть когда дрон действительно там.
+
+\begin{warnbox}[Посадка раньше точки]
+Частая ошибка --- отправить точку и в том же обработчике, через таймер на пару секунд, --- посадку. Дрон летит со скоростью около 0.5~м/с: за две секунды он не долетит, и посадка отменит перелёт. Следующая команда --- по следующему событию.
+\end{warnbox}
+
+\subsubsection*{Ступень 4. Несколько точек и счётчик шагов}
+
+Каждая точка заканчивается одним и тем же событием \verb|POINT_REACHED|. Чтобы знать, \emph{какая} точка достигнута, нужен счётчик:
+
+\begin{codefile}{lua/examples/06_missions/missions_points_flight.lua}
+\end{codefile}
+
+\paragraph{Что происходит.} Маршрут --- таблица точек, \verb|curr| --- номер следующей. Функция \verb|nextPoint| отправляет точку с номером \verb|curr| и увеличивает счётчик; когда точки кончились --- садится. Её вызывают два события: \verb|TAKEOFF_COMPLETE| (первая точка) и \verb|POINT_REACHED| (все остальные). Это основной шаблон маршрута в курсе; так же устроены официальные примеры Геоскан.
+
+\subsubsection*{Ступень 5. Фигуры из точек}
+
+Треугольник --- три вершины на окружности радиуса $r$ под углами $0^\circ$, $120^\circ$, $240^\circ$: $x = r\cos a$, $y = r\sin a$.
+
+\begin{codefile}{lua/examples/06_missions/missions_triangle_flight.lua}
+\end{codefile}
+
+Квадрат со стороной $a$ и центром в начале координат --- вершины $(\pm a/2, \pm a/2, z)$:
+
+\begin{codefile}{lua/examples/06_missions/missions_square_flight.lua}
+\end{codefile}
+
+\begin{hintbox}[Время перелёта]
+У \verb|ap.goToLocalPoint| есть четвёртый аргумент --- время перелёта в секундах: \verb|ap.goToLocalPoint(1, 0, 0.8, 6)| долетит за 6~с. Без него скорость берётся из параметров автопилота.
+\end{hintbox}
+
+\begin{taskbox}[Свой маршрут]
+Подставьте в \texttt{missions\_points\_flight.lua} четыре точки, записанные в задании «Разведка площадки», и добавьте пятую --- возврат в точку над стартом $(0, 0, 0.8)$ перед посадкой.
+\end{taskbox}

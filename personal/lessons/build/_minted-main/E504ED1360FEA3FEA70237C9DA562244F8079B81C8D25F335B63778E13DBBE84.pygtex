@@ -1,0 +1,24 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{local} \PYG{n}{unpack} \PYG{o}{=} \PYG{n}{table}\PYG{o}{.}\PYG{n}{unpack}               \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{распаковка} \PYG{n}{таблиц}
+\PYG{n}{local} \PYG{n}{a} \PYG{o}{=} \PYG{l+m+mf}{1.0}                             \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{длина} \PYG{n}{стороны} \PYG{n}{квадрата}
+\PYG{n}{local} \PYG{n}{z} \PYG{o}{=} \PYG{l+m+mf}{0.9}                             \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{высота} \PYG{n}{полёта}
+\PYG{n}{local} \PYG{n}{h} \PYG{o}{=} \PYG{n}{a}\PYG{o}{/}\PYG{l+m+mi}{2}                             \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{половина} \PYG{n}{стороны} \PYG{p}{(}\PYG{n}{координаты} \PYG{err}{±}\PYG{n}{h}\PYG{p}{)}
+\PYG{n}{local} \PYG{n}{points} \PYG{o}{=} \PYG{p}{\PYGZob{}}                          \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{вершины} \PYG{n}{против} \PYG{n}{часовой} \PYG{n}{стрелки} \PYG{p}{(}\PYG{n}{вид} \PYG{n}{сверху}\PYG{p}{)}
+  \PYG{p}{\PYGZob{}}\PYG{o}{\PYGZhy{}}\PYG{n}{h}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{n}{h}\PYG{p}{,} \PYG{n}{z}\PYG{p}{\PYGZcb{},} \PYG{p}{\PYGZob{}}\PYG{n}{h}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{n}{h}\PYG{p}{,} \PYG{n}{z}\PYG{p}{\PYGZcb{},} \PYG{p}{\PYGZob{}}\PYG{n}{h}\PYG{p}{,}  \PYG{n}{h}\PYG{p}{,} \PYG{n}{z}\PYG{p}{\PYGZcb{},} \PYG{p}{\PYGZob{}}\PYG{o}{\PYGZhy{}}\PYG{n}{h}\PYG{p}{,}  \PYG{n}{h}\PYG{p}{,} \PYG{n}{z}\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+\PYG{n}{local} \PYG{n}{curr} \PYG{o}{=} \PYG{l+m+mi}{1}                            \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{индекс} \PYG{n}{текущей} \PYG{n}{вершины}
+\PYG{n}{local} \PYG{n}{function} \PYG{n}{nextPoint}\PYG{p}{()}                \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{переход} \PYG{n}{к} \PYG{n}{следующей} \PYG{n}{вершине}
+  \PYG{k}{if} \PYG{n}{curr} \PYG{o}{\PYGZlt{}=} \PYG{c+c1}{\PYGZsh{}points then                 \PYGZhy{}\PYGZhy{} если есть вершины}
+    \PYG{n}{ap}\PYG{o}{.}\PYG{n}{goToLocalPoint}\PYG{p}{(}\PYG{n}{unpack}\PYG{p}{(}\PYG{n}{points}\PYG{p}{[}\PYG{n}{curr}\PYG{p}{]))} \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{полёт} \PYG{n}{к} \PYG{n}{вершине}
+    \PYG{n}{curr} \PYG{o}{=} \PYG{n}{curr} \PYG{o}{+} \PYG{l+m+mi}{1}                       \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{увеличить} \PYG{n}{индекс}
+  \PYG{k}{else}
+    \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}LANDING}\PYG{p}{)}               \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{завершение} \PYG{err}{—} \PYG{n}{посадка}
+  \PYG{n}{end}
+\PYG{n}{end}
+\PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}PREFLIGHT}\PYG{p}{)}                 \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{предстарт}
+\PYG{n}{Timer}\PYG{o}{.}\PYG{n}{callLater}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{function}\PYG{p}{()} \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}TAKEOFF}\PYG{p}{)} \PYG{n}{end}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{взлёт}
+\PYG{n}{function} \PYG{n}{callback}\PYG{p}{(}\PYG{n}{event}\PYG{p}{)}                   \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{обработчик} \PYG{n}{событий}
+  \PYG{k}{if} \PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{TAKEOFF\PYGZus{}COMPLETE} \PYG{n}{then} \PYG{n}{nextPoint}\PYG{p}{()} \PYG{n}{end}     \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{первый} \PYG{n}{шаг}
+  \PYG{k}{if} \PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{POINT\PYGZus{}REACHED} \PYG{n}{then} \PYG{n}{nextPoint}\PYG{p}{()} \PYG{n}{end}        \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{шаг} \PYG{n}{по} \PYG{n}{достижению}
+\PYG{n}{end}
+\end{Verbatim}

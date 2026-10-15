@@ -17,6 +17,8 @@
 \begin{verbatim}
 if (left_wrist.y < nose.y) and (right_wrist.y < nose.y):
     print("Жест: Взлет!")
+    drone.arm()          # сначала моторы, как в главе про полёт
+    time.sleep(1)
     drone.takeoff()
 \end{verbatim}
 \end{codebox}

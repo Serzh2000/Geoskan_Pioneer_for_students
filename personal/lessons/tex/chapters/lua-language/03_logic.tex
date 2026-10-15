@@ -1,0 +1,24 @@
+\subsection{Логические операции}
+
+Логика: \verb|and| (И), \verb|or| (ИЛИ), \verb|not| (НЕ). Ложными считаются только \verb|false| и \verb|nil| (\hyperlink{term:truthiness}{истинность}): число \verb|0| и пустая строка --- истина. Операторы \verb|and| и \verb|or| вычисляют правую часть только при необходимости («короткое замыкание»).
+
+\begin{codefile}{lua/examples/04_language/lua_logic_ops.lua}
+\end{codefile}
+
+\paragraph{Что происходит.}
+\begin{itemize}
+    \item \verb|gt and 1 or 0| --- идиома «если \verb|gt|, то 1, иначе 0». В Lua нет тернарного оператора, его заменяет эта пара.
+    \item \verb|(a >= 0) and (a <= 100)| --- проверка диапазона. Запись \verb|0 <= a <= 100| в Lua не работает.
+    \item \verb|name ~= nil and name ~= ""| --- сначала убеждаемся, что значение есть, и только потом сравниваем со строкой. Так защищаются от \verb|nil|.
+    \item Строки сравниваются лексикографически: \verb|"a" < "b"| истинно.
+\end{itemize}
+
+\subsubsection*{Задачи для самостоятельного решения}
+\begin{enumerate}
+  \item Для \verb|voltage = 3.4| и \verb|temp = 85| напечатайте «сигнал опасности»: \verb|voltage < 3.5 or temp > 80|.
+  \item Напишите предикат «индекс чётный» для \verb|i = 7|: \verb|i % 2 == 0|.
+  \item Выберите максимум из \verb|a| и \verb|b| одной строкой через \verb|and/or|.
+  \item Инвертируйте булеву переменную \verb|on| и напечатайте её до и после.
+  \item Проверьте закон де Моргана: напечатайте \verb|not (p and q)| и \verb|(not p) or (not q)| для всех четырёх сочетаний \verb|p|, \verb|q|.
+  \item Напишите условие «\verb|t| не \verb|nil| и у \verb|t| есть поле \verb|value|».
+\end{enumerate}

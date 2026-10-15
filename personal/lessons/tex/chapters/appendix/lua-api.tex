@@ -1,0 +1,77 @@
+\section{Справочник Lua API Пионера}
+\label{sec:lua-api}
+
+Краткий справочник функций, которыми пользуется книга. Полное описание с примерами --- в справочнике API симулятора (значок книги в заголовке редактора) и в документации Геоскан.
+
+\subsection{Команды автопилота: \texttt{ap}}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily}l X@{}}
+\toprule
+ap.push(Ev.MCE\_PREFLIGHT) & предстартовая подготовка и запуск моторов; ответ --- \texttt{Ev.ENGINES\_STARTED} \\
+ap.push(Ev.MCE\_TAKEOFF) & взлёт на высоту \texttt{Flight\_com\_takeoffAlt}; ответ --- \texttt{Ev.TAKEOFF\_COMPLETE} \\
+ap.push(Ev.MCE\_LANDING) & посадка; ответ --- \texttt{Ev.COPTER\_LANDED} \\
+ap.push(Ev.ENGINES\_ARM) & запуск моторов без взлёта (проверка) \\
+ap.push(Ev.ENGINES\_DISARM) & немедленное выключение моторов \\
+ap.goToLocalPoint(x, y, z [, t]) & полёт в точку (метры), необязательно --- за \texttt{t} секунд; ответ --- \texttt{Ev.POINT\_REACHED} \\
+ap.updateYaw(rad) & курс в радианах; \texttt{math.rad(deg)} для перевода \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{События: \texttt{Ev} в \texttt{callback(event)}}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily}l X@{}}
+\toprule
+Ev.ENGINES\_STARTED & моторы запущены после предстарта \\
+Ev.TAKEOFF\_COMPLETE & взлёт завершён \\
+Ev.POINT\_REACHED & точка \texttt{goToLocalPoint} достигнута \\
+Ev.POINT\_DECELERATION & дрон начал торможение перед точкой \\
+Ev.COPTER\_LANDED & дрон сел \\
+Ev.LOW\_VOLTAGE1 / LOW\_VOLTAGE2 & батарея разряжена: предупреждение / пора садиться \\
+Ev.SHOCK & удар, столкновение \\
+Ev.CONTROL\_FAIL & потеря управления \\
+Ev.ENGINE\_FAIL & отказ мотора \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Таймеры: \texttt{Timer}}
+\begin{itemize}
+  \item \verb|Timer.callLater(delay, fn)| --- однократный вызов через \verb|delay| секунд.
+  \item \verb|t = Timer.new(period, fn)| --- периодический таймер; \verb|t:start()|, \verb|t:stop()|.
+  \item \verb|time()| --- секунды с запуска программы (для измерений).
+  \item \verb|sleep(t)| --- блокирующая пауза; в полётных программах не используется.
+\end{itemize}
+
+\subsection{Светодиоды: \texttt{Ledbar}}
+\begin{itemize}
+  \item \verb|leds = Ledbar.new(29)| --- линейка: 4 светодиода платы (\verb|0..3|) и 25 модуля матрицы (\verb|4..28|).
+  \item \verb|leds:set(i, r, g, b)| --- цвет светодиода \verb|i|, компоненты \verb|0..1|.
+  \item \verb|Ledbar.fromHSV(h, s, v)| --- перевод оттенка (градусы), насыщенности и яркости (проценты) в \verb|r, g, b|.
+\end{itemize}
+
+\subsection{Датчики: \texttt{Sensors}}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily}l X@{}}
+\toprule
+local x, y, z = Sensors.lpsPosition() & положение в локальной системе, м \\
+local vx, vy, vz = Sensors.lpsVelocity() & скорость, м/с \\
+local yaw = Sensors.lpsYaw() & курс по системе позиционирования, рад \\
+local roll, pitch, yaw = Sensors.orientation() & углы ориентации \\
+local ax, ay, az = Sensors.accel() & ускорения, м/с$^2$ \\
+local gx, gy, gz = Sensors.gyro() & угловые скорости, рад/с \\
+local d = Sensors.range() & дальномер: расстояние до поверхности под дроном, м \\
+local h = Sensors.altitude() & высота по барометру, м \\
+local v = Sensors.battery() & напряжение батареи, В \\
+local c1, ..., c8 = Sensors.rc() & восемь каналов пульта, от $-1$ до $1$; \texttt{table.pack(Sensors.rc())} --- в таблицу \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Идиомы курса}
+\begin{itemize}
+\item Распаковка: \verb|local unpack = table.unpack|; \verb|leds:set(i, unpack(color))|; \verb|ap.goToLocalPoint(unpack(points[i]))|.
+\item «Тернарный»: \verb|local v = cond and A or B|.
+\item Счётчик шагов: \verb|nextPoint()| отправляет \verb|points[curr]| и увеличивает \verb|curr|; вызывается из \verb|TAKEOFF_COMPLETE| и \verb|POINT_REACHED|.
+\item Конечный автомат: переменная \verb|state| в начале файла (глобальная или \verb|local|) и проверка \verb|event == Ev.X and state == "Y"|; таймеры этапа проверяют \verb|state| первой строкой.
+\end{itemize}

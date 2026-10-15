@@ -1,0 +1,13 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} Ветвление: Робот на перекрестке}
+\PYG{n}{direction} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}forward\PYGZdq{}}
+
+\PYG{k}{if} \PYG{n}{direction} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}left\PYGZdq{}}\PYG{p}{:}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Поворачиваю налево\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{elif} \PYG{n}{direction} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}right\PYGZdq{}}\PYG{p}{:}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Поворачиваю направо\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{elif} \PYG{n}{direction} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}forward\PYGZdq{}}\PYG{p}{:}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Еду прямо\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{else}\PYG{p}{:}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Останавливаюсь, путь неясен\PYGZdq{}}\PYG{p}{)}
+\end{Verbatim}

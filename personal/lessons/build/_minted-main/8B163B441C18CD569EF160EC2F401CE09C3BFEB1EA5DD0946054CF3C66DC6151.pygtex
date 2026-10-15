@@ -1,0 +1,14 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{k}{while}\PYG{p}{:} \PYG{n}{увеличиваем} \PYG{n}{x}\PYG{p}{,} \PYG{n}{пока} \PYG{n}{он} \PYG{n}{меньше} \PYG{l+m+mi}{5}
+\PYG{n}{local} \PYG{n}{x} \PYG{o}{=} \PYG{l+m+mi}{0}
+\PYG{k}{while} \PYG{n}{x} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{5} \PYG{n}{do}
+  \PYG{n}{x} \PYG{o}{=} \PYG{n}{x} \PYG{o}{+} \PYG{l+m+mi}{1}
+\PYG{n}{end}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}  \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{l+m+mi}{5}
+
+\PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{repeat} \PYG{o}{...} \PYG{n}{until}\PYG{p}{:} \PYG{n}{тело} \PYG{n}{выполняется} \PYG{n}{минимум} \PYG{n}{один} \PYG{n}{раз}
+\PYG{n}{repeat}
+  \PYG{n}{x} \PYG{o}{=} \PYG{n}{x} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}
+\PYG{n}{until} \PYG{n}{x} \PYG{o}{==} \PYG{l+m+mi}{0}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{x}\PYG{p}{)}  \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{l+m+mi}{0}
+\end{Verbatim}

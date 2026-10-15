@@ -1,0 +1,41 @@
+\subsection{Переменные и типы}
+
+Переменная --- это имя, за которым закреплено значение. Тип значения определяется автоматически: \hyperlink{term:number}{число}, \hyperlink{term:string}{строка}, \hyperlink{term:boolean}{булево}, \hyperlink{term:table}{таблица}, \hyperlink{term:function}{функция} или \hyperlink{term:nil}{nil}. Узнать тип можно функцией \verb|type()|.
+
+\begin{codefile}{lua/examples/04_language/variables_intro.lua}
+\end{codefile}
+
+\paragraph{Что происходит.}
+\begin{itemize}
+    \item \verb|local x = 10| --- \hyperlink{term:scope}{локальная} переменная: живёт в том блоке, где объявлена.
+    \item \verb|name = "Pioneer"| без \verb|local| --- глобальная: её видно из любой функции скрипта. Так в курсе объявляют таймеры (глава~\ref{sec:leds}), которые должны жить до конца программы.
+    \item \verb|x, y = 1, 2| присваивает две переменные сразу, а \verb|x, y = y, x| меняет их местами без третьей переменной.
+    \item \verb|print(type(x), ...)| печатает имена типов через табуляцию.
+\end{itemize}
+
+\subsubsection*{Таблицы}
+
+Таблица --- и массив, и словарь. Позиционные элементы нумеруются \textbf{с единицы}, именованные поля доступны через точку.
+
+\begin{codefile}{lua/examples/04_language/lua_variables_tables.lua}
+\end{codefile}
+
+\begin{itemize}
+    \item \verb|#a| --- длина массива. После \verb|a[4] = 40| она равна 4.
+    \item Присваивание \verb|t.speed = nil| удаляет поле из таблицы.
+    \item Таблицами в курсе задаются цвета \verb|{1, 0, 0}| и точки маршрута \verb|{x, y, z}|.
+\end{itemize}
+
+\begin{rulebox}[local по умолчанию]
+Объявляйте переменные через \verb|local|. Глобальными оставляйте только то, что должно жить всю программу: таймеры и обязательную функцию \verb|callback| (о ней --- в разделе «Функции» этой главы). Переменная, объявленная через \verb|local| в самом начале файла, тоже живёт всю программу и видна всем функциям ниже, --- так в миссиях хранят текущее состояние (глава~\ref{sec:missions}).
+\end{rulebox}
+
+\subsubsection*{Задачи для самостоятельного решения}
+\begin{enumerate}
+  \item Объявите локальную переменную \verb|x| со значением \verb|42| и напечатайте её.
+  \item Создайте таблицу \verb|t| с полем \verb|speed = 3.5| и элементами \verb|1, 2, 3|; напечатайте \verb|t.speed| и \verb|#t|.
+  \item Добавьте в \verb|t| поле \verb|mode = "auto"|, затем удалите поле \verb|speed|.
+  \item Создайте таблицу \verb|color = {r = 1, g = 0, b = 0}| и напечатайте её поля одной командой \verb|print|.
+  \item Объявите \verb|local a, b = 1, 2|, поменяйте значения местами одной строкой и напечатайте результат.
+  \item Напечатайте \verb|type(nil)|, \verb|type("5")| и \verb|type(5)|. Чем отличаются два последних?
+\end{enumerate}

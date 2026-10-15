@@ -1,0 +1,116 @@
+\subsection{Первый полёт: моторы, взлёт, посадка}
+
+\subsubsection*{Моторы}
+
+\begin{codefile}[python]{python/examples/02_pioneer_sdk/09_01_arm_disarm.py}
+\end{codefile}
+
+\verb|arm()| запускает моторы на холостых оборотах, \verb|disarm()| выключает. Блок \verb|try ... finally| гарантирует выключение моторов даже при ошибке.
+
+\subsubsection*{Взлёт и посадка}
+
+\begin{codefile}[python]{python/examples/02_pioneer_sdk/09_02_takeoff_land.py}
+\end{codefile}
+
+\paragraph{Что происходит.}
+\begin{itemize}
+    \item \verb|arm()| $\to$ секунда паузы: автопилот переходит в режим готовности. Без паузы команда взлёта может быть отвергнута.
+    \item \verb|takeoff()| --- подъём на высоту взлёта (около метра). Команда возвращается сразу, взлёт занимает пару секунд; остаток из пяти секунд дрон висит.
+    \item \verb|land()| --- посадка. Она тоже занимает время, и \verb|disarm()| в \verb|finally| выполнится \emph{сразу} после \verb|land()|, если ничего не ждать. Поэтому после посадки --- ещё \verb|time.sleep(5)|: выключать моторы можно только на земле.
+\end{itemize}
+
+\begin{warnbox}[disarm в воздухе]
+\verb|disarm()| выключает моторы немедленно. Вызывайте его только когда дрон сел: после \verb|land()| подождите несколько секунд или проверьте \verb|get_autopilot_state()|.
+\end{warnbox}
+
+\subsection{Полёт по точкам}
+
+\subsubsection*{Система координат}
+
+Та же, что в Lua (раздел~\ref{sec:missions}): X вперёд, Y влево, Z вверх, метры от точки старта. Команда:
+
+\begin{codebox}[go\_to\_local\_point]
+\verb|pioneer.go_to_local_point(x=1.0, y=0.0, z=1.0, yaw=0)| --- лететь в точку; \verb|yaw| --- курс в радианах, обязательный аргумент. Автопилот подтверждает прибытие: \verb|pioneer.point_reached()| вернёт \verb|True| --- один раз на каждую точку.
+\end{codebox}
+
+\subsubsection*{Вперёд и назад}
+
+\begin{codefile}[python]{python/examples/03_flight_control/10_01_forward_back.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Вспомогательная функция \verb|fly_to| отправляет точку и ждёт \verb|point_reached()|, опрашивая автопилот каждые 0.1~с. Это Python-эквивалент события \verb|POINT_REACHED|: следующая точка --- только после подтверждения предыдущей. Первая точка --- над стартом: так программа дожидается конца взлёта.
+
+\begin{rulebox}[Не угадывать время]
+\verb|time.sleep(4)| после \verb|go_to_local_point| --- плохой способ ждать: перелёт может занять и 2, и 6 секунд. Ждите \verb|point_reached()|.
+\end{rulebox}
+
+\subsubsection*{Квадрат}
+
+\begin{codefile}[python]{python/examples/03_flight_control/10_02_square.py}
+\end{codefile}
+
+Точки --- \textbf{список} пар \verb|(x, y)|. Список в Python --- упорядоченный набор значений в квадратных скобках, аналог таблицы-массива Lua, но нумерация с нуля: \verb|square[0]| --- первая вершина. Пара в круглых скобках --- кортеж, неизменяемый набор значений; запись \verb|for x, y in square| на каждом шаге раскладывает очередную пару в две переменные, как \verb|table.unpack| в Lua. Добавить вершину --- одна строка.
+
+\subsubsection*{Окружность}
+
+\begin{codefile}[python]{python/examples/03_flight_control/10_03_circle_math.py}
+\end{codefile}
+
+Двенадцать точек через $30^\circ$: $x = R\cos\alpha$, $y = R\sin\alpha$, угол переводится в радианы функцией \verb|math.radians|. Последняя, тринадцатая точка совпадает с первой --- круг замыкается.
+
+\begin{taskbox}[Восьмёрка]
+Соедините две окружности с центрами $(\pm 0.5, 0)$ в одну траекторию.
+\end{taskbox}
+
+\subsection{Управление скоростью}
+\label{sec:python-manual-speed}
+
+Точка отвечает на вопрос «куда лететь». Иногда нужно другое --- «с какой скоростью лететь прямо сейчас»: держать маркер в центре кадра, плавно снижаться по дальномеру, следовать за человеком. Для этого есть команда скорости:
+
+\begin{codebox}[set\_manual\_speed]
+\verb|pioneer.set_manual_speed(vx=0.5, vy=0, vz=0, yaw_rate=0)| --- скорость в м/с по осям X, Y, Z той же системы координат, что у \verb|go_to_local_point|, и скорость поворота \verb|yaw_rate| в рад/с. Команда действует коротко, поэтому её повторяют в цикле каждые 0.05~с. Перестали присылать --- дрон зависает на месте. Вариант \verb|set_manual_speed_body_fixed| задаёт те же скорости относительно носа дрона.
+\end{codebox}
+
+\begin{codefile}[python]{python/examples/03_flight_control/10_04_manual_speed.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Функция \verb|move| двадцать раз в секунду повторяет одну и ту же скорость, пока не пройдёт заданное время, и затем присылает нулевую скорость. Здесь ждать по времени правильно: длительность движения задаём мы сами, автопилоту «прибывать» некуда. На этой команде построены задания глав про камеру и навигацию: скорость пропорциональна ошибке (P-регулятор) и пересчитывается на каждом кадре.
+\subsection{Контрольные упражнения с проверкой}
+
+Для тренировки точности есть три упражнения с модулем \texttt{grader.py}: он записывает траекторию и сравнивает положение дрона с целью в контрольных точках (допуск 0.5~м по горизонтали, 0.2~м по высоте, $10^\circ$ по курсу).
+
+\begin{codefile}[python]{python/examples/exercises/ex1_forward.py}
+\end{codefile}
+
+\begin{codefile}[python]{python/examples/exercises/ex2_forward_turn_return.py}
+\end{codefile}
+
+Третье упражнение, \texttt{ex3\_forward\_turn\_return.py}, отличается только строгим контролем курса на всех этапах. Файл \texttt{grader.py} должен лежать рядом с программой.
+
+\begin{infobox}[Почему здесь ждут по времени]
+В упражнениях после \verb|go_to_local_point| стоит \verb|time.sleep(5)|, а не ожидание \verb|point_reached()|: \texttt{grader} проверяет, где дрон оказался к заданному моменту, --- это часть задания на точность. В собственных программах действует правило «Не угадывать время» выше. После \verb|land()| упражнения тоже ждут несколько секунд, чтобы \verb|disarm()| в \verb|finally| не выключил моторы в воздухе.
+\end{infobox}
+
+\subsection{Задания к главе}
+
+\subsubsection*{Уровень 1}
+\begin{enumerate}
+    \item \textbf{Калькулятор полёта.} Запросить время полёта (мин) и скорость (м/с), вывести расстояние в метрах и километрах.
+    \item \textbf{Чек-лист.} Список из 5 пунктов предполётной проверки, вывести пронумерованным.
+\end{enumerate}
+
+\subsubsection*{Уровень 2}
+\begin{enumerate}
+    \item \textbf{Умная батарея.} Функция \verb|check_battery(voltage)|: выше 4.0~В --- «Отличный заряд», 3.7--4.0 --- «Средний», ниже 3.7 --- «Посадка немедленно!». Вызвать её в скрипте подключения перед взлётом и не взлетать при низком заряде.
+\end{enumerate}
+
+\subsubsection*{Уровень 3: мини-проект}
+\textbf{Миссия «Квадрат с индикацией».} Квадрат со стороной 1~м на высоте 1.5~м; перед каждой вершиной --- свой цвет подсветки, после посадки --- выключить. Ждать точки через \verb|point_reached()|, а не \verb|time.sleep|.
+
+\subsection*{Итоги}
+\begin{itemize}
+    \item \verb|Pioneer()| один раз; \verb|close_connection()| и \verb|disarm()| --- в \verb|finally|.
+    \item \verb|arm()| $\to$ пауза $\to$ \verb|takeoff()| $\to$ точки через \verb|go_to_local_point| и \verb|point_reached()| $\to$ \verb|land()| $\to$ подождать $\to$ \verb|disarm()|.
+    \item Цвета в Python --- \verb|0..255|, курс --- радианы, координаты --- метры.
+    \item Точка --- \verb|go_to_local_point|; скорость --- \verb|set_manual_speed|, повторяемая в цикле.
+\end{itemize}

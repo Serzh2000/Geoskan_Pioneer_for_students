@@ -18,7 +18,7 @@
     \end{itemize}
 \end{enumerate}
 
-Полученные параметры нужно сохранить в файл (например, \texttt{camera\_params.yaml}) и загружать при запуске навигации.
+Скрипт ниже, как и \texttt{camera\_calibration.py} из раздела про камеру, сохраняет параметры в \texttt{data.yml} (узлы \texttt{mtx} и \texttt{dist}); примеры навигации загружают их оттуда при запуске. Шаблон \texttt{camera\_params.yaml} из приложения показывает тот же набор чисел в формате, который принимают сторонние инструменты.
 
 \begin{codefiletitle}[python]{Скрипт калибровки камеры}{python/examples/advanced_navigation/19_map_creation_example1_calibration.py}
 \end{codefiletitle}

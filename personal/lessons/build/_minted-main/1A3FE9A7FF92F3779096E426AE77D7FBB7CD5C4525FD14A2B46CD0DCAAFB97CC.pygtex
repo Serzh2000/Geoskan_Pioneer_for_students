@@ -1,0 +1,40 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{local} \PYG{n}{r} \PYG{o}{=} \PYG{l+m+mf}{1.0}                             \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{радиус}\PYG{p}{,} \PYG{n}{м}
+\PYG{n}{local} \PYG{n}{height} \PYG{o}{=} \PYG{l+m+mf}{1.0}                        \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{высота}\PYG{p}{,} \PYG{n}{м}
+\PYG{n}{local} \PYG{n}{angle} \PYG{o}{=} \PYG{l+m+mi}{0}                           \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{текущий} \PYG{n}{угол}\PYG{p}{,} \PYG{n}{градусы}
+\PYG{n}{local} \PYG{n}{state} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}CIRCLE\PYGZdq{}}                    \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{CIRCLE} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{RETURN} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{LANDING}
+
+\PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{дрон} \PYG{n}{действительно} \PYG{n}{в} \PYG{n}{точке} \PYG{p}{(}\PYG{n}{x}\PYG{p}{,} \PYG{n}{y}\PYG{p}{,} \PYG{n}{z}\PYG{p}{)}\PYG{err}{?} \PYG{n}{допуск} \PYG{l+m+mf}{0.2} \PYG{n}{м}
+\PYG{n}{local} \PYG{n}{function} \PYG{n}{near}\PYG{p}{(}\PYG{n}{x}\PYG{p}{,} \PYG{n}{y}\PYG{p}{,} \PYG{n}{z}\PYG{p}{)}
+  \PYG{n}{local} \PYG{n}{px}\PYG{p}{,} \PYG{n}{py}\PYG{p}{,} \PYG{n}{pz} \PYG{o}{=} \PYG{n}{Sensors}\PYG{o}{.}\PYG{n}{lpsPosition}\PYG{p}{()}
+  \PYG{k}{return} \PYG{n}{math}\PYG{o}{.}\PYG{n}{sqrt}\PYG{p}{((}\PYG{n}{px} \PYG{o}{\PYGZhy{}} \PYG{n}{x}\PYG{p}{)}\PYG{o}{\PYGZca{}}\PYG{l+m+mi}{2} \PYG{o}{+} \PYG{p}{(}\PYG{n}{py} \PYG{o}{\PYGZhy{}} \PYG{n}{y}\PYG{p}{)}\PYG{o}{\PYGZca{}}\PYG{l+m+mi}{2} \PYG{o}{+} \PYG{p}{(}\PYG{n}{pz} \PYG{o}{\PYGZhy{}} \PYG{n}{z}\PYG{p}{)}\PYG{o}{\PYGZca{}}\PYG{l+m+mi}{2}\PYG{p}{)} \PYG{o}{\PYGZlt{}} \PYG{l+m+mf}{0.2}
+\PYG{n}{end}
+
+\PYG{n}{circleTimer} \PYG{o}{=} \PYG{n}{Timer}\PYG{o}{.}\PYG{n}{new}\PYG{p}{(}\PYG{l+m+mf}{0.1}\PYG{p}{,} \PYG{n}{function}\PYG{p}{()}   \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{тик} \PYG{n}{каждые} \PYG{l+m+mf}{0.1} \PYG{n}{с}
+  \PYG{k}{if} \PYG{n}{state} \PYG{o}{\PYGZti{}=} \PYG{l+s+s2}{\PYGZdq{}CIRCLE\PYGZdq{}} \PYG{n}{then} \PYG{k}{return} \PYG{n}{end}    \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{лишний} \PYG{n}{тик} \PYG{n}{после} \PYG{n}{stop}\PYG{p}{()} \PYG{n}{ничего} \PYG{n}{не} \PYG{n}{делает}
+  \PYG{k}{if} \PYG{n}{angle} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{360} \PYG{n}{then}                    \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{круг} \PYG{n}{пройден}
+    \PYG{n}{circleTimer}\PYG{p}{:}\PYG{n}{stop}\PYG{p}{()}
+    \PYG{n}{state} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}RETURN\PYGZdq{}}
+    \PYG{n}{ap}\PYG{o}{.}\PYG{n}{goToLocalPoint}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{height}\PYG{p}{)}       \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{возвращаемся} \PYG{n}{в} \PYG{n}{центр}
+    \PYG{k}{return}
+  \PYG{n}{end}
+  \PYG{n}{local} \PYG{n}{rad} \PYG{o}{=} \PYG{n}{math}\PYG{o}{.}\PYG{n}{rad}\PYG{p}{(}\PYG{n}{angle}\PYG{p}{)}             \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{градусы} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{радианы}
+  \PYG{n}{ap}\PYG{o}{.}\PYG{n}{goToLocalPoint}\PYG{p}{(}\PYG{n}{r} \PYG{o}{*} \PYG{n}{math}\PYG{o}{.}\PYG{n}{cos}\PYG{p}{(}\PYG{n}{rad}\PYG{p}{),} \PYG{n}{r} \PYG{o}{*} \PYG{n}{math}\PYG{o}{.}\PYG{n}{sin}\PYG{p}{(}\PYG{n}{rad}\PYG{p}{),} \PYG{n}{height}\PYG{p}{)}
+  \PYG{n}{angle} \PYG{o}{=} \PYG{n}{angle} \PYG{o}{+} \PYG{l+m+mi}{5}                       \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{шаг} \PYG{l+m+mi}{5} \PYG{n}{град}\PYG{o}{.}\PYG{p}{:} \PYG{n}{полный} \PYG{n}{круг} \PYG{n}{за} \PYG{l+m+mi}{72} \PYG{n}{тика}
+\PYG{n}{end}\PYG{p}{)}
+
+\PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}PREFLIGHT}\PYG{p}{)}
+\PYG{n}{Timer}\PYG{o}{.}\PYG{n}{callLater}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{function}\PYG{p}{()} \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}TAKEOFF}\PYG{p}{)} \PYG{n}{end}\PYG{p}{)}
+
+\PYG{n}{function} \PYG{n}{callback}\PYG{p}{(}\PYG{n}{event}\PYG{p}{)}
+  \PYG{k}{if} \PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{TAKEOFF\PYGZus{}COMPLETE} \PYG{n}{then}
+    \PYG{n}{circleTimer}\PYG{p}{:}\PYG{n}{start}\PYG{p}{()}
+  \PYG{n}{end}
+  \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{POINT\PYGZus{}REACHED} \PYG{n}{последней} \PYG{n}{точки} \PYG{n}{круга} \PYG{n}{мог} \PYG{n}{прийти} \PYG{n}{уже} \PYG{n}{после} \PYG{n}{перехода} \PYG{n}{в} \PYG{n}{RETURN}\PYG{p}{,}
+  \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{поэтому} \PYG{n}{садимся}\PYG{p}{,} \PYG{n}{только} \PYG{n}{если} \PYG{n}{дрон} \PYG{n}{действительно} \PYG{n}{над} \PYG{n}{центром}
+  \PYG{k}{if} \PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{POINT\PYGZus{}REACHED} \PYG{o+ow}{and} \PYG{n}{state} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}RETURN\PYGZdq{}} \PYG{o+ow}{and} \PYG{n}{near}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{height}\PYG{p}{)} \PYG{n}{then}
+    \PYG{n}{state} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}LANDING\PYGZdq{}}
+    \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}LANDING}\PYG{p}{)}               \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{центр} \PYG{n}{достигнут} \PYG{err}{—} \PYG{n}{садимся}
+  \PYG{n}{end}
+\PYG{n}{end}
+\end{Verbatim}

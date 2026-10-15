@@ -1,0 +1,54 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pioneer\PYGZus{}sdk}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{Pioneer}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{grader}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{FlightGrader}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{time}
+
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{Упражнение 1 – «Полёт вперёд»: модуль должен обеспечить ровный прямолинейный проход заданной дистанции без возврата.}
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{exercise\PYGZus{}01}\PYG{p}{():}
+    \PYG{n}{drone} \PYG{o}{=} \PYG{n}{Pioneer}\PYG{p}{()}
+    \PYG{n}{grader} \PYG{o}{=} \PYG{n}{FlightGrader}\PYG{p}{(}\PYG{n}{drone}\PYG{p}{)}
+    
+    \PYG{k}{try}\PYG{p}{:}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}[System] Упражнение 1: Полет вперед\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Ожидание LPS...\PYGZdq{}}\PYG{p}{)}
+        \PYG{c+c1}{\PYGZsh{} Проверка готовности LPS (упрощенно)}
+        
+        \PYG{n}{grader}\PYG{o}{.}\PYG{n}{start\PYGZus{}mission}\PYG{p}{()}
+        
+        \PYG{c+c1}{\PYGZsh{} 1. Взлет}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Взлет...\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{drone}\PYG{o}{.}\PYG{n}{arm}\PYG{p}{()}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} Даем автопилоту перейти в режим готовности}
+        \PYG{n}{drone}\PYG{o}{.}\PYG{n}{takeoff}\PYG{p}{()}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)}
+        
+        \PYG{c+c1}{\PYGZsh{} 2. Установка цели (x=1.0, y=0, z=1.0)}
+        \PYG{n}{target\PYGZus{}x} \PYG{o}{=} \PYG{l+m+mf}{1.0}
+        \PYG{n}{grader}\PYG{o}{.}\PYG{n}{set\PYGZus{}target}\PYG{p}{(}\PYG{n}{target\PYGZus{}x}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{)}
+        
+        \PYG{c+c1}{\PYGZsh{} 3. Полет вперед}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Полет к точке x=}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{target\PYGZus{}x}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{...\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{drone}\PYG{o}{.}\PYG{n}{go\PYGZus{}to\PYGZus{}local\PYGZus{}point}\PYG{p}{(}\PYG{n}{x}\PYG{o}{=}\PYG{n}{target\PYGZus{}x}\PYG{p}{,} \PYG{n}{y}\PYG{o}{=}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{n}{z}\PYG{o}{=}\PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{n}{yaw}\PYG{o}{=}\PYG{l+m+mf}{0.0}\PYG{p}{)}
+        
+        \PYG{c+c1}{\PYGZsh{} Ожидание прибытия (около 5 с)}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)}
+        
+        \PYG{c+c1}{\PYGZsh{} 4. Проверка позиции}
+        \PYG{n}{grader}\PYG{o}{.}\PYG{n}{check\PYGZus{}checkpoint}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Точка Вперед\PYGZdq{}}\PYG{p}{)}
+        
+        \PYG{c+c1}{\PYGZsh{} 5. Посадка (Конец упражнения, без возврата)}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Посадка...\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{drone}\PYG{o}{.}\PYG{n}{land}\PYG{p}{()}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} ждём, пока дрон сядет: disarm() в finally выключает моторы сразу}
+        
+    \PYG{k}{finally}\PYG{p}{:}
+        \PYG{n}{grader}\PYG{o}{.}\PYG{n}{finish\PYGZus{}mission}\PYG{p}{()}
+        \PYG{n}{drone}\PYG{o}{.}\PYG{n}{disarm}\PYG{p}{()}
+        \PYG{n}{drone}\PYG{o}{.}\PYG{n}{close\PYGZus{}connection}\PYG{p}{()}
+
+\PYG{k}{if} \PYG{n+nv+vm}{\PYGZus{}\PYGZus{}name\PYGZus{}\PYGZus{}} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}\PYGZus{}\PYGZus{}main\PYGZus{}\PYGZus{}\PYGZsq{}}\PYG{p}{:}
+    \PYG{n}{exercise\PYGZus{}01}\PYG{p}{()}
+\end{Verbatim}

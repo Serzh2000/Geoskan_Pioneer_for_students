@@ -1,0 +1,11 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{Marker}\PYG{p}{:}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{marker\PYGZus{}id}\PYG{p}{,} \PYG{n}{size}\PYG{p}{,} \PYG{n}{x}\PYG{p}{,} \PYG{n}{y}\PYG{p}{,} \PYG{n}{z}\PYG{p}{,} \PYG{n}{yaw}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{dictionary}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}DICT\PYGZus{}6X6\PYGZus{}250\PYGZdq{}}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{id} \PYG{o}{=} \PYG{n}{marker\PYGZus{}id}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{size} \PYG{o}{=} \PYG{n}{size}  \PYG{c+c1}{\PYGZsh{} in meters}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{x} \PYG{o}{=} \PYG{n}{x}        \PYG{c+c1}{\PYGZsh{} local x (meters)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{y} \PYG{o}{=} \PYG{n}{y}        \PYG{c+c1}{\PYGZsh{} local y (meters)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{z} \PYG{o}{=} \PYG{n}{z}        \PYG{c+c1}{\PYGZsh{} local z (meters) \PYGZhy{} height}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{yaw} \PYG{o}{=} \PYG{n}{yaw}    \PYG{c+c1}{\PYGZsh{} orientation (degrees)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{dictionary} \PYG{o}{=} \PYG{n}{dictionary}
+\end{Verbatim}

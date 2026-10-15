@@ -1,0 +1,53 @@
+\section{Pioneer SDK: полёт из Python}
+\label{sec:python-sdk}
+
+\begin{infobox}[Цели главы]
+\begin{itemize}
+    \item Запускать Python-программу в симуляторе, на настоящем дроне и с компьютера на симулятор.
+    \item Подключаться к дрону, читать телеметрию и управлять подсветкой через \texttt{led\_control}.
+    \item Выполнять взлёт и посадку безопасно: пауза после \texttt{arm()}, ожидание после \texttt{land()}.
+    \item Летать по точкам и фигурам, дожидаясь каждой точки через \texttt{point\_reached()}.
+\end{itemize}
+\end{infobox}
+
+\subsection{Где запускать Python}
+
+Для управления Пионером из Python есть библиотека \texttt{pioneer\_sdk}: команды взлёта, посадки, полёта в точку, светодиоды, телеметрия, камера. У Python-программы, как и у Lua, два исполнителя.
+
+\subsubsection*{В симуляторе}
+
+Выберите в редакторе язык \ui{Python}. Библиотека уже «установлена»: \verb|from pioneer_sdk import Pioneer| работает, а дрон на сцене выполняет команды. Вывод \verb|print| --- в терминале, как и для Lua.
+
+\begin{center}
+\simshot[0.9\linewidth]{07-editor-python.png}
+\captionof{figure}{Редактор в режиме Python. Переключение языка не теряет Lua-программу: у каждого языка своя вкладка.}
+\end{center}
+
+\subsubsection*{На настоящем дроне}
+
+Python-программа работает на вашем компьютере и общается с дроном по Wi-Fi:
+
+\begin{codebox}[Терминал]
+\texttt{pip install pioneer-sdk}
+\end{codebox}
+
+Дрон создаёт сеть Wi-Fi (имя вида \texttt{Pioneer\_...}); подключитесь к ней --- и \verb|Pioneer()| найдёт дрон по адресу по умолчанию.
+
+\subsubsection*{С компьютера --- на симулятор}
+\label{sec:python-external}
+
+Третий вариант: программа на вашем компьютере, а летает дрон в симуляторе. На сайте у дрона включается \ui{Разрешить внешние команды}, а в программе вместо адреса дрона указывается адрес сайта:
+
+\begin{codebox}[Подключение к симулятору]
+\begin{verbatim}
+from pioneer_sdk import Pioneer
+pioneer = Pioneer(ip='simulator.sakoryagin.ru',
+                  mavlink_port=8001)
+\end{verbatim}
+\end{codebox}
+
+Дальше программа ничем не отличается от программы для настоящего дрона. Так удобно отлаживать то, что в браузере недоступно: сторонние библиотеки, обработку видео с камеры.
+
+\begin{infobox}[Lua ждёт событий, Python --- опрашивает]
+В Lua следующую команду отдают из \verb|callback| по событию. В Python программа сама периодически спрашивает автопилот: \verb|while not pioneer.point_reached(): time.sleep(0.1)|. Смысл тот же --- не отдавать следующую команду, пока предыдущая не выполнена, --- меняется только форма.
+\end{infobox}

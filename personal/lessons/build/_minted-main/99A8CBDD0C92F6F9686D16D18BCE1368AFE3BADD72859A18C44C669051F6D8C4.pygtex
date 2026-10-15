@@ -1,0 +1,5 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{Это} \PYG{n}{комментарий}\PYG{p}{,} \PYG{n}{он} \PYG{n}{не} \PYG{n}{исполняется}
+\PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{Вывод} \PYG{n}{сообщения} \PYG{n}{в} \PYG{n}{консоль} \PYG{n}{Pioneer} \PYG{n}{Station}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Системы в норме. Привет, Пионер!\PYGZdq{}}\PYG{p}{)}
+\end{Verbatim}

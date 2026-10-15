@@ -1,0 +1,118 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{cv2}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{cv2.aruco}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{aruco}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{matplotlib.pyplot}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{plt}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{matplotlib.patches}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{patches}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{numpy}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{np}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{os}
+
+\PYG{c+c1}{\PYGZsh{} Define output directory}
+\PYG{n}{output\PYGZus{}dir} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}../../../images/markers/vector\PYGZdq{}}
+\PYG{k}{if} \PYG{o+ow}{not} \PYG{n}{os}\PYG{o}{.}\PYG{n}{path}\PYG{o}{.}\PYG{n}{exists}\PYG{p}{(}\PYG{n}{output\PYGZus{}dir}\PYG{p}{):}
+    \PYG{n}{os}\PYG{o}{.}\PYG{n}{makedirs}\PYG{p}{(}\PYG{n}{output\PYGZus{}dir}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Helper function to generate raw bits of a marker}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{get\PYGZus{}marker\PYGZus{}bits}\PYG{p}{(}\PYG{n}{dictionary}\PYG{p}{,} \PYG{n}{marker\PYGZus{}id}\PYG{p}{,} \PYG{n}{side\PYGZus{}pixels}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Generates a marker image with the exact pixel size matching its bit grid.}
+\PYG{l+s+sd}{    For ArUco 4x4, the grid is 4x4 + 1 bit border = 6x6.}
+\PYG{l+s+sd}{    For ArUco 6x6, the grid is 6x6 + 1 bit border = 8x8.}
+\PYG{l+s+sd}{    For AprilTag 36h11, the grid is 8x8 + 1 bit border = 10x10.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{c+c1}{\PYGZsh{} Create a small image (e.g. 10x10) to get raw bits}
+    \PYG{c+c1}{\PYGZsh{} generateImageMarker scales up, but if we request small size it should work}
+    \PYG{c+c1}{\PYGZsh{} OpenCV\PYGZsq{}s generateImageMarker takes sidePixels as argument.}
+    \PYG{c+c1}{\PYGZsh{} If sidePixels is small, it returns the raw bits.}
+    \PYG{n}{img} \PYG{o}{=} \PYG{n}{aruco}\PYG{o}{.}\PYG{n}{generateImageMarker}\PYG{p}{(}\PYG{n}{dictionary}\PYG{p}{,} \PYG{n}{marker\PYGZus{}id}\PYG{p}{,} \PYG{n}{side\PYGZus{}pixels}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{img}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{draw\PYGZus{}vector\PYGZus{}marker}\PYG{p}{(}\PYG{n}{ax}\PYG{p}{,} \PYG{n}{img}\PYG{p}{,} \PYG{n}{x\PYGZus{}offset}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{y\PYGZus{}offset}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{size}\PYG{o}{=}\PYG{l+m+mf}{1.0}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Draws a marker on a matplotlib axis using Rectangle patches (Vector format).}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{rows}\PYG{p}{,} \PYG{n}{cols} \PYG{o}{=} \PYG{n}{img}\PYG{o}{.}\PYG{n}{shape}
+    \PYG{n}{pixel\PYGZus{}size} \PYG{o}{=} \PYG{n}{size} \PYG{o}{/} \PYG{n}{rows}
+    
+    \PYG{c+c1}{\PYGZsh{} Draw white background}
+    \PYG{n}{rect} \PYG{o}{=} \PYG{n}{patches}\PYG{o}{.}\PYG{n}{Rectangle}\PYG{p}{((}\PYG{n}{x\PYGZus{}offset}\PYG{p}{,} \PYG{n}{y\PYGZus{}offset}\PYG{p}{),} \PYG{n}{size}\PYG{p}{,} \PYG{n}{size}\PYG{p}{,} \PYG{n}{linewidth}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{facecolor}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}white\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{ax}\PYG{o}{.}\PYG{n}{add\PYGZus{}patch}\PYG{p}{(}\PYG{n}{rect}\PYG{p}{)}
+    
+    \PYG{c+c1}{\PYGZsh{} Draw black pixels}
+    \PYG{k}{for} \PYG{n}{r} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{rows}\PYG{p}{):}
+        \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{cols}\PYG{p}{):}
+            \PYG{k}{if} \PYG{n}{img}\PYG{p}{[}\PYG{n}{r}\PYG{p}{,} \PYG{n}{c}\PYG{p}{]} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:}
+                \PYG{c+c1}{\PYGZsh{} In matplotlib, origin is bottom\PYGZhy{}left usually, but we can invert axis}
+                \PYG{c+c1}{\PYGZsh{} Let\PYGZsq{}s assume standard image coordinates (0,0 is top\PYGZhy{}left) and invert Y later or now}
+                \PYG{c+c1}{\PYGZsh{} Drawing from top\PYGZhy{}left (y = size \PYGZhy{} ...)}
+                \PYG{n}{rect\PYGZus{}x} \PYG{o}{=} \PYG{n}{x\PYGZus{}offset} \PYG{o}{+} \PYG{n}{c} \PYG{o}{*} \PYG{n}{pixel\PYGZus{}size}
+                \PYG{n}{rect\PYGZus{}y} \PYG{o}{=} \PYG{n}{y\PYGZus{}offset} \PYG{o}{+} \PYG{p}{(}\PYG{n}{rows} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{r}\PYG{p}{)} \PYG{o}{*} \PYG{n}{pixel\PYGZus{}size}
+                
+                \PYG{n}{rect} \PYG{o}{=} \PYG{n}{patches}\PYG{o}{.}\PYG{n}{Rectangle}\PYG{p}{((}\PYG{n}{rect\PYGZus{}x}\PYG{p}{,} \PYG{n}{rect\PYGZus{}y}\PYG{p}{),} \PYG{n}{pixel\PYGZus{}size}\PYG{p}{,} \PYG{n}{pixel\PYGZus{}size}\PYG{p}{,} \PYG{n}{linewidth}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{facecolor}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}black\PYGZsq{}}\PYG{p}{)}
+                \PYG{n}{ax}\PYG{o}{.}\PYG{n}{add\PYGZus{}patch}\PYG{p}{(}\PYG{n}{rect}\PYG{p}{)}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{save\PYGZus{}single\PYGZus{}marker}\PYG{p}{(}\PYG{n}{dict\PYGZus{}name}\PYG{p}{,} \PYG{n}{marker\PYGZus{}id}\PYG{p}{,} \PYG{n}{bit\PYGZus{}size}\PYG{p}{,} \PYG{n}{filename}\PYG{p}{):}
+    \PYG{n}{dictionary} \PYG{o}{=} \PYG{n}{aruco}\PYG{o}{.}\PYG{n}{getPredefinedDictionary}\PYG{p}{(}\PYG{n+nb}{getattr}\PYG{p}{(}\PYG{n}{aruco}\PYG{p}{,} \PYG{n}{dict\PYGZus{}name}\PYG{p}{))}
+    \PYG{n}{img} \PYG{o}{=} \PYG{n}{get\PYGZus{}marker\PYGZus{}bits}\PYG{p}{(}\PYG{n}{dictionary}\PYG{p}{,} \PYG{n}{marker\PYGZus{}id}\PYG{p}{,} \PYG{n}{bit\PYGZus{}size}\PYG{p}{)}
+    
+    \PYG{n}{fig}\PYG{p}{,} \PYG{n}{ax} \PYG{o}{=} \PYG{n}{plt}\PYG{o}{.}\PYG{n}{subplots}\PYG{p}{(}\PYG{n}{figsize}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{))}
+    \PYG{n}{draw\PYGZus{}vector\PYGZus{}marker}\PYG{p}{(}\PYG{n}{ax}\PYG{p}{,} \PYG{n}{img}\PYG{p}{,} \PYG{n}{size}\PYG{o}{=}\PYG{l+m+mi}{10}\PYG{p}{)}
+    
+    \PYG{n}{ax}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlim}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{)}
+    \PYG{n}{ax}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylim}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{)}
+    \PYG{n}{ax}\PYG{o}{.}\PYG{n}{axis}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}off\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{ax}\PYG{o}{.}\PYG{n}{set\PYGZus{}aspect}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}equal\PYGZsq{}}\PYG{p}{)}
+    
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{savefig}\PYG{p}{(}\PYG{n}{filename}\PYG{p}{,} \PYG{n+nb}{format}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}pdf\PYGZsq{}}\PYG{p}{,} \PYG{n}{bbox\PYGZus{}inches}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}tight\PYGZsq{}}\PYG{p}{,} \PYG{n}{pad\PYGZus{}inches}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{close}\PYG{p}{()}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Saved vector marker: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{filename}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{save\PYGZus{}grid\PYGZus{}map}\PYG{p}{(}\PYG{n}{dict\PYGZus{}name}\PYG{p}{,} \PYG{n}{rows}\PYG{p}{,} \PYG{n}{cols}\PYG{p}{,} \PYG{n}{bit\PYGZus{}size}\PYG{p}{,} \PYG{n}{filename}\PYG{p}{):}
+    \PYG{n}{dictionary} \PYG{o}{=} \PYG{n}{aruco}\PYG{o}{.}\PYG{n}{getPredefinedDictionary}\PYG{p}{(}\PYG{n+nb}{getattr}\PYG{p}{(}\PYG{n}{aruco}\PYG{p}{,} \PYG{n}{dict\PYGZus{}name}\PYG{p}{))}
+    
+    \PYG{c+c1}{\PYGZsh{} A4 Page size approx (8.27 x 11.69 inches)}
+    \PYG{n}{fig}\PYG{p}{,} \PYG{n}{ax} \PYG{o}{=} \PYG{n}{plt}\PYG{o}{.}\PYG{n}{subplots}\PYG{p}{(}\PYG{n}{figsize}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mf}{8.27}\PYG{p}{,} \PYG{l+m+mf}{11.69}\PYG{p}{))}
+    
+    \PYG{n}{margin\PYGZus{}x} \PYG{o}{=} \PYG{l+m+mi}{1}
+    \PYG{n}{margin\PYGZus{}y} \PYG{o}{=} \PYG{l+m+mi}{1}
+    \PYG{n}{cell\PYGZus{}width} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mf}{8.27} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{margin\PYGZus{}x}\PYG{p}{)} \PYG{o}{/} \PYG{n}{cols}
+    \PYG{n}{cell\PYGZus{}height} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mf}{11.69} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{margin\PYGZus{}y}\PYG{p}{)} \PYG{o}{/} \PYG{n}{rows}
+    \PYG{n}{marker\PYGZus{}size} \PYG{o}{=} \PYG{n+nb}{min}\PYG{p}{(}\PYG{n}{cell\PYGZus{}width}\PYG{p}{,} \PYG{n}{cell\PYGZus{}height}\PYG{p}{)} \PYG{o}{*} \PYG{l+m+mf}{0.8}
+    
+    \PYG{c+c1}{\PYGZsh{} Start drawing from top\PYGZhy{}left}
+    \PYG{n}{start\PYGZus{}x} \PYG{o}{=} \PYG{n}{margin\PYGZus{}x}
+    \PYG{n}{start\PYGZus{}y} \PYG{o}{=} \PYG{l+m+mf}{11.69} \PYG{o}{\PYGZhy{}} \PYG{n}{margin\PYGZus{}y} \PYG{o}{\PYGZhy{}} \PYG{n}{cell\PYGZus{}height}
+    
+    \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{rows}\PYG{p}{):}
+        \PYG{k}{for} \PYG{n}{j} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{cols}\PYG{p}{):}
+            \PYG{n}{marker\PYGZus{}id} \PYG{o}{=} \PYG{n}{i} \PYG{o}{*} \PYG{n}{cols} \PYG{o}{+} \PYG{n}{j}
+            \PYG{n}{img} \PYG{o}{=} \PYG{n}{get\PYGZus{}marker\PYGZus{}bits}\PYG{p}{(}\PYG{n}{dictionary}\PYG{p}{,} \PYG{n}{marker\PYGZus{}id}\PYG{p}{,} \PYG{n}{bit\PYGZus{}size}\PYG{p}{)}
+            
+            \PYG{n}{x} \PYG{o}{=} \PYG{n}{start\PYGZus{}x} \PYG{o}{+} \PYG{n}{j} \PYG{o}{*} \PYG{n}{cell\PYGZus{}width} \PYG{o}{+} \PYG{p}{(}\PYG{n}{cell\PYGZus{}width} \PYG{o}{\PYGZhy{}} \PYG{n}{marker\PYGZus{}size}\PYG{p}{)} \PYG{o}{/} \PYG{l+m+mi}{2}
+            \PYG{n}{y} \PYG{o}{=} \PYG{n}{start\PYGZus{}y} \PYG{o}{\PYGZhy{}} \PYG{n}{i} \PYG{o}{*} \PYG{n}{cell\PYGZus{}height} \PYG{o}{+} \PYG{p}{(}\PYG{n}{cell\PYGZus{}height} \PYG{o}{\PYGZhy{}} \PYG{n}{marker\PYGZus{}size}\PYG{p}{)} \PYG{o}{/} \PYG{l+m+mi}{2}
+            
+            \PYG{n}{draw\PYGZus{}vector\PYGZus{}marker}\PYG{p}{(}\PYG{n}{ax}\PYG{p}{,} \PYG{n}{img}\PYG{p}{,} \PYG{n}{x\PYGZus{}offset}\PYG{o}{=}\PYG{n}{x}\PYG{p}{,} \PYG{n}{y\PYGZus{}offset}\PYG{o}{=}\PYG{n}{y}\PYG{p}{,} \PYG{n}{size}\PYG{o}{=}\PYG{n}{marker\PYGZus{}size}\PYG{p}{)}
+            
+            \PYG{c+c1}{\PYGZsh{} Add label}
+            \PYG{n}{ax}\PYG{o}{.}\PYG{n}{text}\PYG{p}{(}\PYG{n}{x} \PYG{o}{+} \PYG{n}{marker\PYGZus{}size}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{y} \PYG{o}{\PYGZhy{}} \PYG{l+m+mf}{0.2}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}ID: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{marker\PYGZus{}id}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{,} \PYG{n}{ha}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}center\PYGZsq{}}\PYG{p}{,} \PYG{n}{va}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}top\PYGZsq{}}\PYG{p}{,} \PYG{n}{fontsize}\PYG{o}{=}\PYG{l+m+mi}{8}\PYG{p}{)}
+
+    \PYG{n}{ax}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlim}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mf}{8.27}\PYG{p}{)}
+    \PYG{n}{ax}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylim}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mf}{11.69}\PYG{p}{)}
+    \PYG{n}{ax}\PYG{o}{.}\PYG{n}{axis}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}off\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{ax}\PYG{o}{.}\PYG{n}{set\PYGZus{}aspect}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}equal\PYGZsq{}}\PYG{p}{)}
+    
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{savefig}\PYG{p}{(}\PYG{n}{filename}\PYG{p}{,} \PYG{n+nb}{format}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}pdf\PYGZsq{}}\PYG{p}{,} \PYG{n}{bbox\PYGZus{}inches}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}tight\PYGZsq{}}\PYG{p}{)}
+    \PYG{n}{plt}\PYG{o}{.}\PYG{n}{close}\PYG{p}{()}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Saved vector grid: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{filename}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+\PYG{k}{if} \PYG{n+nv+vm}{\PYGZus{}\PYGZus{}name\PYGZus{}\PYGZus{}} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}\PYGZus{}\PYGZus{}main\PYGZus{}\PYGZus{}\PYGZdq{}}\PYG{p}{:}
+    \PYG{c+c1}{\PYGZsh{} 1. Single Markers}
+    \PYG{c+c1}{\PYGZsh{} ArUco 4x4 (Size 6x6 pixels)}
+    \PYG{n}{save\PYGZus{}single\PYGZus{}marker}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}DICT\PYGZus{}4X4\PYGZus{}50\PYGZdq{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{6}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{output\PYGZus{}dir}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{/aruco\PYGZus{}4x4\PYGZus{}id0.pdf\PYGZdq{}}\PYG{p}{)}
+    \PYG{c+c1}{\PYGZsh{} AprilTag 36h11 (Size 10x10 pixels usually? Let\PYGZsq{}s verify)}
+    \PYG{c+c1}{\PYGZsh{} AprilTag 36h11 is 8x8 data + 1 bit border = 10x10 total}
+    \PYG{n}{save\PYGZus{}single\PYGZus{}marker}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}DICT\PYGZus{}APRILTAG\PYGZus{}36h11\PYGZdq{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{output\PYGZus{}dir}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{/apriltag\PYGZus{}id0.pdf\PYGZdq{}}\PYG{p}{)}
+    
+    \PYG{c+c1}{\PYGZsh{} 2. Grid Maps (4x4 = 16 markers)}
+    \PYG{n}{save\PYGZus{}grid\PYGZus{}map}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}DICT\PYGZus{}4X4\PYGZus{}50\PYGZdq{}}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{6}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{output\PYGZus{}dir}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{/aruco\PYGZus{}grid\PYGZus{}4x4.pdf\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{save\PYGZus{}grid\PYGZus{}map}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}DICT\PYGZus{}APRILTAG\PYGZus{}36h11\PYGZdq{}}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{output\PYGZus{}dir}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{/apriltag\PYGZus{}grid\PYGZus{}4x4.pdf\PYGZdq{}}\PYG{p}{)}
+\end{Verbatim}

@@ -1,0 +1,15 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYGZpc{}YAML:1.0
+image\PYGZus{}width:\PYG{+w}{ }\PYG{l+m}{640}
+image\PYGZus{}height:\PYG{+w}{ }\PYG{l+m}{480}
+camera\PYGZus{}matrix:\PYG{+w}{ }!!opencv\PYGZhy{}matrix
+\PYG{+w}{   }rows:\PYG{+w}{ }\PYG{l+m}{3}
+\PYG{+w}{   }cols:\PYG{+w}{ }\PYG{l+m}{3}
+\PYG{+w}{   }dt:\PYG{+w}{ }d
+\PYG{+w}{   }data:\PYG{+w}{ }\PYG{o}{[}\PYG{+w}{ }\PYG{l+m}{600}.0,\PYG{+w}{ }\PYG{l+m}{0}.,\PYG{+w}{ }\PYG{l+m}{320}.0,\PYG{+w}{ }\PYG{l+m}{0}.,\PYG{+w}{ }\PYG{l+m}{600}.0,\PYG{+w}{ }\PYG{l+m}{240}.0,\PYG{+w}{ }\PYG{l+m}{0}.,\PYG{+w}{ }\PYG{l+m}{0}.,\PYG{+w}{ }\PYG{l+m}{1}.\PYG{+w}{ }\PYG{o}{]}
+distortion\PYGZus{}coefficients:\PYG{+w}{ }!!opencv\PYGZhy{}matrix
+\PYG{+w}{   }rows:\PYG{+w}{ }\PYG{l+m}{1}
+\PYG{+w}{   }cols:\PYG{+w}{ }\PYG{l+m}{5}
+\PYG{+w}{   }dt:\PYG{+w}{ }d
+\PYG{+w}{   }data:\PYG{+w}{ }\PYG{o}{[}\PYG{+w}{ }\PYG{l+m}{0}.1,\PYG{+w}{ }\PYGZhy{}0.2,\PYG{+w}{ }\PYG{l+m}{0}.,\PYG{+w}{ }\PYG{l+m}{0}.,\PYG{+w}{ }\PYG{l+m}{0}.\PYG{+w}{ }\PYG{o}{]}
+\end{Verbatim}

@@ -1,0 +1,13 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} См. полный код в examples/advanced\PYGZus{}navigation/kalman\PYGZus{}filter.py}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{update}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{measurement}\PYG{p}{):}
+    \PYG{c+c1}{\PYGZsh{} 1. Prediction}
+    \PYG{n}{x\PYGZus{}pred} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{x}
+    \PYG{n}{P\PYGZus{}pred} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{P} \PYG{o}{+} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{Q}
+
+    \PYG{c+c1}{\PYGZsh{} 2. Update}
+    \PYG{n}{K} \PYG{o}{=} \PYG{n}{P\PYGZus{}pred} \PYG{o}{/} \PYG{p}{(}\PYG{n}{P\PYGZus{}pred} \PYG{o}{+} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{R}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} Kalman Gain}
+    \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{x} \PYG{o}{=} \PYG{n}{x\PYGZus{}pred} \PYG{o}{+} \PYG{n}{K} \PYG{o}{*} \PYG{p}{(}\PYG{n}{measurement} \PYG{o}{\PYGZhy{}} \PYG{n}{x\PYGZus{}pred}\PYG{p}{)}
+    \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{P} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mi}{1} \PYG{o}{\PYGZhy{}} \PYG{n}{K}\PYG{p}{)} \PYG{o}{*} \PYG{n}{P\PYGZus{}pred}
+    \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{x}
+\end{Verbatim}

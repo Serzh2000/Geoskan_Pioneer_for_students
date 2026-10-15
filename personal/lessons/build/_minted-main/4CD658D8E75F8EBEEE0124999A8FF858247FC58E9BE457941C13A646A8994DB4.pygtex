@@ -1,0 +1,20 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{n}{local} \PYG{n}{a} \PYG{o}{=} \PYG{l+m+mi}{42}
+\PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{сравнение} \PYG{n}{возвращает} \PYG{n}{булево} \PYG{n}{значение}
+\PYG{n}{local} \PYG{n}{gt} \PYG{o}{=} \PYG{n}{a} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{10}
+\PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{логическое} \PYG{n}{И} \PYG{n}{и} \PYG{n}{НЕ}
+\PYG{n}{local} \PYG{n}{ok} \PYG{o}{=} \PYG{n}{true} \PYG{o+ow}{and} \PYG{o+ow}{not} \PYG{n}{false}
+\PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{l+s+s2}{\PYGZdq{}тернарный\PYGZdq{}} \PYG{n}{идиом} \PYG{n}{в} \PYG{n}{Lua} \PYG{n}{через} \PYG{o+ow}{and}\PYG{o}{/}\PYG{o+ow}{or}
+\PYG{n}{local} \PYG{n}{sel} \PYG{o}{=} \PYG{n}{gt} \PYG{o+ow}{and} \PYG{l+m+mi}{1} \PYG{o+ow}{or} \PYG{l+m+mi}{0}
+\PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{композиция} \PYG{n}{условий} \PYG{l+s+s2}{\PYGZdq{}в диапазоне\PYGZdq{}}
+\PYG{n}{local} \PYG{n}{within} \PYG{o}{=} \PYG{p}{(}\PYG{n}{a} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{o+ow}{and} \PYG{p}{(}\PYG{n}{a} \PYG{o}{\PYGZlt{}=} \PYG{l+m+mi}{100}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{ok}\PYG{p}{,} \PYG{n}{sel}\PYG{p}{,} \PYG{n}{within}\PYG{p}{)}        \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{true}  \PYG{l+m+mi}{1}  \PYG{n}{true}
+
+\PYG{n}{local} \PYG{n}{name} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}Pioneer\PYGZdq{}}
+\PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{проверка} \PYG{n}{непустой} \PYG{n}{строки}
+\PYG{n}{local} \PYG{n}{nonempty} \PYG{o}{=} \PYG{p}{(}\PYG{n}{name} \PYG{o}{\PYGZti{}=} \PYG{n}{nil}\PYG{p}{)} \PYG{o+ow}{and} \PYG{p}{(}\PYG{n}{name} \PYG{o}{\PYGZti{}=} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}\PYG{p}{)}
+\PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{исключающее} \PYG{n}{ИЛИ} \PYG{n}{для} \PYG{n}{булевых}
+\PYG{n}{local} \PYG{n}{p}\PYG{p}{,} \PYG{n}{q} \PYG{o}{=} \PYG{n}{true}\PYG{p}{,} \PYG{n}{false}
+\PYG{n}{local} \PYG{n}{xor} \PYG{o}{=} \PYG{p}{(}\PYG{n}{p} \PYG{o+ow}{and} \PYG{o+ow}{not} \PYG{n}{q}\PYG{p}{)} \PYG{o+ow}{or} \PYG{p}{(}\PYG{n}{q} \PYG{o+ow}{and} \PYG{o+ow}{not} \PYG{n}{p}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{nonempty}\PYG{p}{,} \PYG{n}{xor}\PYG{p}{)}          \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{true}  \PYG{n}{true}
+\end{Verbatim}

@@ -1,0 +1,52 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{Патруль} \PYG{n}{между} \PYG{n}{двумя} \PYG{n}{точками} \PYG{n}{с} \PYG{n}{аварийными} \PYG{n}{реакциями}
+\PYG{n}{local} \PYG{n}{ledNumber} \PYG{o}{=} \PYG{l+m+mi}{29}
+\PYG{n}{local} \PYG{n}{leds} \PYG{o}{=} \PYG{n}{Ledbar}\PYG{o}{.}\PYG{n}{new}\PYG{p}{(}\PYG{n}{ledNumber}\PYG{p}{)}
+\PYG{n}{local} \PYG{n}{points} \PYG{o}{=} \PYG{p}{\PYGZob{}\PYGZob{}}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{\PYGZcb{},} \PYG{p}{\PYGZob{}}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{\PYGZcb{}\PYGZcb{}}
+\PYG{n}{local} \PYG{n}{curr} \PYG{o}{=} \PYG{l+m+mi}{1}
+\PYG{n}{local} \PYG{n}{state} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}TAKEOFF\PYGZdq{}}                     \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{TAKEOFF} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{PATROL} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n}{LANDING}\PYG{p}{;} \PYG{n}{при} \PYG{n}{ударе} \PYG{n}{EMERGENCY}
+\PYG{n}{local} \PYG{n}{lowBattery} \PYG{o}{=} \PYG{n}{false}                    \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{разряд} \PYG{n}{пришёл}\PYG{p}{,} \PYG{n}{пока} \PYG{n}{дрон} \PYG{n}{взлетал}
+
+\PYG{n}{local} \PYG{n}{function} \PYG{n}{fill}\PYG{p}{(}\PYG{n}{r}\PYG{p}{,} \PYG{n}{g}\PYG{p}{,} \PYG{n}{b}\PYG{p}{)}
+  \PYG{k}{for} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{ledNumber} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1} \PYG{n}{do} \PYG{n}{leds}\PYG{p}{:}\PYG{n+nb}{set}\PYG{p}{(}\PYG{n}{i}\PYG{p}{,} \PYG{n}{r}\PYG{p}{,} \PYG{n}{g}\PYG{p}{,} \PYG{n}{b}\PYG{p}{)} \PYG{n}{end}
+\PYG{n}{end}
+
+\PYG{n}{local} \PYG{n}{function} \PYG{n}{nextPoint}\PYG{p}{()}
+  \PYG{n}{ap}\PYG{o}{.}\PYG{n}{goToLocalPoint}\PYG{p}{(}\PYG{n}{table}\PYG{o}{.}\PYG{n}{unpack}\PYG{p}{(}\PYG{n}{points}\PYG{p}{[}\PYG{n}{curr}\PYG{p}{]))}
+  \PYG{n}{curr} \PYG{o}{=} \PYG{n}{curr} \PYG{o}{\PYGZpc{}} \PYG{c+c1}{\PYGZsh{}points + 1                 \PYGZhy{}\PYGZhy{} 1 \PYGZhy{}\PYGZgt{} 2 \PYGZhy{}\PYGZgt{} 1 \PYGZhy{}\PYGZgt{} ...}
+\PYG{n}{end}
+
+\PYG{n}{local} \PYG{n}{function} \PYG{n}{land}\PYG{p}{()}
+  \PYG{n}{state} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}LANDING\PYGZdq{}}
+  \PYG{n}{fill}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
+  \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}LANDING}\PYG{p}{)}                   \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{садимся} \PYG{n}{там}\PYG{p}{,} \PYG{n}{где} \PYG{n}{летим}
+\PYG{n}{end}
+
+\PYG{n}{function} \PYG{n}{callback}\PYG{p}{(}\PYG{n}{event}\PYG{p}{)}
+  \PYG{k}{if} \PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{SHOCK} \PYG{n}{then}                 \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{удар} \PYG{n}{в} \PYG{n}{любом} \PYG{n}{состоянии}\PYG{p}{:} \PYG{n}{немедленно} \PYG{n}{выключить} \PYG{n}{моторы}
+    \PYG{n}{state} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}EMERGENCY\PYGZdq{}}
+    \PYG{n}{fill}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{ENGINES\PYGZus{}DISARM}\PYG{p}{)}
+  \PYG{n}{elseif} \PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{TAKEOFF\PYGZus{}COMPLETE} \PYG{o+ow}{and} \PYG{n}{state} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}TAKEOFF\PYGZdq{}} \PYG{n}{then}
+    \PYG{k}{if} \PYG{n}{lowBattery} \PYG{n}{then}
+      \PYG{n}{land}\PYG{p}{()}                                \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{батарея} \PYG{n}{села} \PYG{n}{ещё} \PYG{n}{на} \PYG{n}{взлёте}\PYG{p}{:} \PYG{n}{маршрут} \PYG{n}{не} \PYG{n}{начинаем}
+    \PYG{k}{else}
+      \PYG{n}{state} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}PATROL\PYGZdq{}}
+      \PYG{n}{fill}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}                         \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{зелёный}\PYG{p}{:} \PYG{n}{патрулируем}
+      \PYG{n}{nextPoint}\PYG{p}{()}
+    \PYG{n}{end}
+  \PYG{n}{elseif} \PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{POINT\PYGZus{}REACHED} \PYG{o+ow}{and} \PYG{n}{state} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}PATROL\PYGZdq{}} \PYG{n}{then}
+    \PYG{n}{nextPoint}\PYG{p}{()}
+  \PYG{n}{elseif} \PYG{n}{event} \PYG{o}{==} \PYG{n}{Ev}\PYG{o}{.}\PYG{n}{LOW\PYGZus{}VOLTAGE2} \PYG{n}{then}
+    \PYG{k}{if} \PYG{n}{state} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}PATROL\PYGZdq{}} \PYG{n}{then}
+      \PYG{n}{land}\PYG{p}{()}                                \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{батарея} \PYG{n}{садится}\PYG{p}{:} \PYG{n}{прекращаем} \PYG{n}{маршрут}
+    \PYG{n}{elseif} \PYG{n}{state} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}TAKEOFF\PYGZdq{}} \PYG{n}{then}
+      \PYG{n}{lowBattery} \PYG{o}{=} \PYG{n}{true}                     \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{посадку} \PYG{n}{во} \PYG{n}{время} \PYG{n}{взлёта} \PYG{n}{автопилот} \PYG{n}{не} \PYG{n}{примет}\PYG{p}{:} \PYG{n}{сядем} \PYG{n}{после} \PYG{n}{него}
+      \PYG{n}{fill}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{n}{end}                                     \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{в} \PYG{n}{LANDING} \PYG{n}{и} \PYG{n}{EMERGENCY} \PYG{n}{повторное} \PYG{n}{событие} \PYG{n}{ничего} \PYG{n}{не} \PYG{n}{меняет}
+  \PYG{n}{end}
+\PYG{n}{end}
+
+\PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}PREFLIGHT}\PYG{p}{)}
+\PYG{n}{Timer}\PYG{o}{.}\PYG{n}{callLater}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{function}\PYG{p}{()} \PYG{n}{ap}\PYG{o}{.}\PYG{n}{push}\PYG{p}{(}\PYG{n}{Ev}\PYG{o}{.}\PYG{n}{MCE\PYGZus{}TAKEOFF}\PYG{p}{)} \PYG{n}{end}\PYG{p}{)}
+\end{Verbatim}

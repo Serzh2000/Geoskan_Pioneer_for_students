@@ -1,0 +1,29 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{save\PYGZus{}xml}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{filename}\PYG{p}{):}
+    \PYG{n}{xml\PYGZus{}content} \PYG{o}{=} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}\PYGZdq{}\PYGZlt{}?xml version=\PYGZdq{}1.0\PYGZdq{} encoding=\PYGZdq{}UTF\PYGZhy{}8\PYGZdq{}?\PYGZgt{}}
+\PYG{l+s+s2}{\PYGZlt{}map\PYGZgt{}}
+\PYG{l+s+s2}{    \PYGZlt{}name\PYGZgt{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{name}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZlt{}/name\PYGZgt{}}
+\PYG{l+s+s2}{    \PYGZlt{}origin\PYGZgt{}}
+\PYG{l+s+s2}{        \PYGZlt{}lat\PYGZgt{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{origin\PYGZus{}lat}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZlt{}/lat\PYGZgt{}}
+\PYG{l+s+s2}{        \PYGZlt{}lon\PYGZgt{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{origin\PYGZus{}lon}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZlt{}/lon\PYGZgt{}}
+\PYG{l+s+s2}{    \PYGZlt{}/origin\PYGZgt{}}
+\PYG{l+s+s2}{    \PYGZlt{}markers\PYGZgt{}}
+\PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{for} \PYG{n}{m} \PYG{o+ow}{in} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{markers}\PYG{p}{:}
+        \PYG{n}{xml\PYGZus{}content} \PYG{o}{+=} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}\PYGZdq{}        \PYGZlt{}marker id=\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{m}\PYG{o}{.}\PYG{n}{id}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}\PYGZgt{}}
+\PYG{l+s+s2}{            \PYGZlt{}size\PYGZgt{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{m}\PYG{o}{.}\PYG{n}{size}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZlt{}/size\PYGZgt{}}
+\PYG{l+s+s2}{            \PYGZlt{}position\PYGZgt{}}
+\PYG{l+s+s2}{                \PYGZlt{}x\PYGZgt{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{m}\PYG{o}{.}\PYG{n}{x}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZlt{}/x\PYGZgt{}}
+\PYG{l+s+s2}{                \PYGZlt{}y\PYGZgt{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{m}\PYG{o}{.}\PYG{n}{y}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZlt{}/y\PYGZgt{}}
+\PYG{l+s+s2}{                \PYGZlt{}z\PYGZgt{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{m}\PYG{o}{.}\PYG{n}{z}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZlt{}/z\PYGZgt{}}
+\PYG{l+s+s2}{            \PYGZlt{}/position\PYGZgt{}}
+\PYG{l+s+s2}{            \PYGZlt{}orientation\PYGZgt{}}
+\PYG{l+s+s2}{                \PYGZlt{}yaw\PYGZgt{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{m}\PYG{o}{.}\PYG{n}{yaw}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZlt{}/yaw\PYGZgt{}}
+\PYG{l+s+s2}{            \PYGZlt{}/orientation\PYGZgt{}}
+\PYG{l+s+s2}{        \PYGZlt{}/marker\PYGZgt{}}
+\PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{xml\PYGZus{}content} \PYG{o}{+=} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}\PYGZdq{}    \PYGZlt{}/markers\PYGZgt{}}
+\PYG{l+s+s2}{\PYGZlt{}/map\PYGZgt{}\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{with} \PYG{n+nb}{open}\PYG{p}{(}\PYG{n}{filename}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}w\PYGZsq{}}\PYG{p}{)} \PYG{k}{as} \PYG{n}{f}\PYG{p}{:}
+        \PYG{n}{f}\PYG{o}{.}\PYG{n}{write}\PYG{p}{(}\PYG{n}{xml\PYGZus{}content}\PYG{p}{)}
+\end{Verbatim}

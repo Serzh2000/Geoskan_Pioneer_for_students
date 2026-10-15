@@ -1,0 +1,53 @@
+\subsection{Типичные ошибки и их сообщения}
+
+Терминал симулятора и консоль Pioneer Station показывают текст ошибки и номер строки. Самые частые:
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily}l X@{}}
+\toprule
+\normalfont\textbf{Сообщение} & \textbf{Причина и лечение} \\
+\midrule
+attempt to call a nil value (global 'Print') & Регистр букв: \texttt{Print}, \texttt{PRINT} и \texttt{print} --- три разных имени. Все функции языка пишутся строчными; с заглавной --- только модули \texttt{Ledbar}, \texttt{Timer}, \texttt{Sensors}, \texttt{Ev}. \\
+attempt to index a nil value & Обращение к полю переменной, в которой \texttt{nil}: таблица не создана или опечатка в имени. Проверьте объявление и используйте охранное условие. \\
+attempt to compare nil with number & Переменная не получила значения до сравнения --- например, опечатка в имени или \texttt{local} внутри другого блока. \\
+'end' expected & Не хватает \texttt{end}: у каждого \texttt{if}, \texttt{for}, \texttt{while}, \texttt{function} свой \texttt{end}. Выравнивайте код отступами --- так пропуск виден. \\
+unexpected symbol near '**' & Степень в Lua --- \texttt{\^{}}, а не \texttt{**}. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{warnbox}[Индексы: с нуля или с единицы]
+Таблицы Lua нумеруются с \textbf{1}: \texttt{points[1]} --- первая точка. Светодиоды --- аппаратный модуль, они нумеруются с \textbf{0}: \texttt{leds:set(0, ...)} --- первый светодиод. Путаница между ними --- самая частая ошибка следующей главы.
+\end{warnbox}
+
+\subsection{Проверьте себя}
+\begin{enumerate}
+  \item Что напечатает \verb|print(10 / 2)|?
+    \begin{enumerate}[label=(\alph*)] \item \verb|5| \item \verb|5.0| \item \verb|5,0| \end{enumerate}
+    Ответ: (b) --- деление всегда даёт вещественное число.
+  \item Какое из значений ложно в условии \verb|if|?
+    \begin{enumerate}[label=(\alph*)] \item \verb|0| \item \verb|""| \item \verb|nil| \end{enumerate}
+    Ответ: (c) --- ложны только \verb|false| и \verb|nil|.
+  \item Чему равно \verb|#{10, 20, 30}|?
+    \begin{enumerate}[label=(\alph*)] \item \verb|2| \item \verb|3| \item \verb|30| \end{enumerate}
+    Ответ: (b).
+  \item Сколько раз выполнится тело \verb|for i = 0, 28 do|?
+    \begin{enumerate}[label=(\alph*)] \item 28 \item 29 \item 27 \end{enumerate}
+    Ответ: (b) --- обе границы включительно.
+  \item Какой из вызовов передаёт функцию, а не результат её вызова?
+    \begin{enumerate}[label=(\alph*)] \item \verb|Timer.callLater(2, blink())| \item \verb|Timer.callLater(2, blink)| \end{enumerate}
+    Ответ: (b).
+  \item Что делает \verb|x, y = y, x|?
+    \begin{enumerate}[label=(\alph*)] \item Ошибка \item Меняет значения местами \item Присваивает обеим \verb|y| \end{enumerate}
+    Ответ: (b).
+\end{enumerate}
+
+\subsection*{Итоги главы}
+\begin{itemize}
+    \item Переменные объявляются через \verb|local|; глобальные --- только для долгоживущего состояния.
+    \item Таблица --- массив (с 1) и словарь одновременно; цвета и точки маршрута --- таблицы.
+    \item Ложны только \verb|false| и \verb|nil|; \verb|cond and A or B| заменяет тернарный оператор.
+    \item Циклы \verb|for|, \verb|while|, \verb|repeat|; бесконечный цикл на дроне недопустим --- вместо него таймер.
+    \item Функции возвращают несколько значений и передаются как аргументы; \verb|callback(event)| вызывает автопилот.
+\end{itemize}

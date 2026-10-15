@@ -1,0 +1,42 @@
+\subsection{Жизненный цикл миссии}
+
+\begin{infobox}[Этапы любой миссии]
+\begin{enumerate}
+    \item \textbf{Инициализация} --- переменные, таймеры, светодиоды. Дрон на земле.
+    \item \textbf{Предстарт} --- \verb|ap.push(Ev.MCE_PREFLIGHT)|: проверка датчиков, запуск моторов. Ответ --- \verb|Ev.ENGINES_STARTED|.
+    \item \textbf{Взлёт} --- \verb|ap.push(Ev.MCE_TAKEOFF)|: подъём на высоту взлёта (параметр автопилота \verb|Flight_com_takeoffAlt|, около метра). Ответ --- \verb|Ev.TAKEOFF_COMPLETE|.
+    \item \textbf{Маршрут} --- \verb|ap.goToLocalPoint(x, y, z)| столько раз, сколько точек. Ответ на каждую --- \verb|Ev.POINT_REACHED|.
+    \item \textbf{Возврат} --- ещё одна точка над стартом: \verb|ap.goToLocalPoint(0, 0, z)|. Отдельной команды нет.
+    \item \textbf{Посадка} --- \verb|ap.push(Ev.MCE_LANDING)|: снижение и касание. Ответ --- \verb|Ev.COPTER_LANDED|, моторы выключаются сами.
+\end{enumerate}
+\end{infobox}
+
+\subsubsection*{Команды и события парами}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily}l X >{\ttfamily}l@{}}
+\toprule
+\normalfont\textbf{Команда} & \textbf{Что делает автопилот} & \normalfont\textbf{Событие по завершении} \\
+\midrule
+ap.push(Ev.MCE\_PREFLIGHT) & проверяет датчики, запускает моторы & Ev.ENGINES\_STARTED \\
+ap.push(Ev.MCE\_TAKEOFF) & взлетает на высоту взлёта & Ev.TAKEOFF\_COMPLETE \\
+ap.goToLocalPoint(x, y, z) & летит в точку, метры & Ev.POINT\_REACHED \\
+ap.updateYaw(rad) & поворачивает нос, радианы & --- \\
+ap.push(Ev.MCE\_LANDING) & снижается и садится & Ev.COPTER\_LANDED \\
+ap.push(Ev.ENGINES\_DISARM) & немедленно выключает моторы & --- \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{warnbox}[ENGINES\_DISARM в воздухе --- это падение]
+Команда выключает моторы мгновенно, где бы дрон ни был. Её место --- после \verb|COPTER_LANDED| или в аварийной реакции на удар, когда дрон уже неуправляем. Для штатного завершения --- только \verb|MCE_LANDING|.
+\end{warnbox}
+
+\subsubsection*{Две формы ожидания}
+
+Между предстартом и взлётом официальные примеры Геоскан выдерживают паузу таймером: \verb|Timer.callLater(1, function() ap.push(Ev.MCE_TAKEOFF) end)|. Можно и строже --- взлетать по событию \verb|ENGINES_STARTED|. Оба варианта правильны; в книге чаще первый, потому что он короче. Но для точек маршрута ожидание по времени не годится: сколько секунд займёт перелёт, заранее неизвестно, поэтому следующая точка --- только по \verb|POINT_REACHED|.
+
+\begin{rulebox}[callback обязателен]
+Даже если программе не нужны события, объявите пустую \verb|function callback(event) end|: так требует автопилот Пионера --- без неё скрипт на борту может остановиться после первой команды миссии. Симулятор такую программу выполнит, но предупредит об отсутствии \verb|callback| в уведомлениях.
+\end{rulebox}

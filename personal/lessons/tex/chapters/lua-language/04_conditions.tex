@@ -1,0 +1,31 @@
+\subsection{Условия}
+
+Ветвление записывается словами \texttt{if} \dots\ \texttt{then} \dots\ \texttt{elseif} \dots\ \texttt{then} \dots\ \texttt{else} \dots\ \texttt{end}. Ветка \verb|elseif| может повторяться, \verb|else| --- не обязательна, \verb|end| --- обязателен всегда.
+
+\begin{codefile}{lua/examples/04_language/lua_conditions_if.lua}
+\end{codefile}
+
+\paragraph{Что происходит.} Функция \verb|classify| проверяет условия по порядку и возвращает первое подходящее слово. Для \verb|0| первая проверка \verb|x > 0| ложна, вторая \verb|x == 0| истинна --- получаем \verb|"zero"|.
+
+\subsubsection*{Охранное условие}
+
+Обращение к полю несуществующей таблицы --- ошибка «attempt to index a nil value». Защищаются от неё проверкой перед обращением:
+
+\begin{codefile}{lua/examples/04_language/lua_conditions_check.lua}
+\end{codefile}
+
+Условие \verb|t and t.value| читается так: «\verb|t| существует, и у неё есть поле \verb|value|». Если \verb|t| равно \verb|nil|, до \verb|t.value| дело не доходит --- спасает короткое замыкание \verb|and|.
+
+\begin{hintbox}[Таблица вместо каскада if]
+Когда вариантов много и каждому соответствует действие, удобнее таблица: \verb|colors[state]| или даже таблица функций \verb|actions[state]()|. Так в главе~\ref{sec:leds} устроен светофор --- самый маленький конечный автомат.
+\end{hintbox}
+
+\subsubsection*{Задачи для самостоятельного решения}
+\begin{enumerate}
+  \item Напишите функцию, которая для напряжения \verb|v| возвращает \verb|"low"| при \verb|v < 3.7| и \verb|"ok"| иначе. Проверьте на 3.5 и 4.1.
+  \item Присвойте \verb|parity| значение \verb|"even"| при чётном \verb|n| и \verb|"odd"| при нечётном.
+  \item Тройное ветвление по температуре: \verb|temp < 0| $\to$ \verb|"cold"|, \verb|0 <= temp < 20| $\to$ \verb|"cool"|, иначе \verb|"warm"|.
+  \item Напишите ветвление, выбирающее цвет: \verb|{1,0,0}| для \verb|state == "RED"|, \verb|{1,1,0}| для \verb|"YELLOW"|, иначе \verb|{0,1,0}|.
+  \item Защитите деление от нуля: если \verb|b ~= 0|, напечатайте \verb|a / b|, иначе --- сообщение об ошибке.
+  \item Если \verb|count == 0|, присвойте \verb|count = 1|, иначе увеличьте на 1.
+\end{enumerate}

@@ -1,0 +1,11 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} Переменные и типы данных}
+\PYG{n}{name} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}Pioneer\PYGZdq{}}  \PYG{c+c1}{\PYGZsh{} Строка (str)}
+\PYG{n}{altitude} \PYG{o}{=} \PYG{l+m+mf}{1.5}    \PYG{c+c1}{\PYGZsh{} Число с плавающей точкой (float)}
+\PYG{n}{battery} \PYG{o}{=} \PYG{l+m+mi}{100}     \PYG{c+c1}{\PYGZsh{} Целое число (int)}
+\PYG{n}{is\PYGZus{}flying} \PYG{o}{=} \PYG{k+kc}{False} \PYG{c+c1}{\PYGZsh{} Логический тип (bool)}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Дрон:\PYGZdq{}}\PYG{p}{,} \PYG{n}{name}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Высота:\PYGZdq{}}\PYG{p}{,} \PYG{n}{altitude}\PYG{p}{)}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Тип переменной altitude:\PYGZdq{}}\PYG{p}{,} \PYG{n+nb}{type}\PYG{p}{(}\PYG{n}{altitude}\PYG{p}{))}
+\end{Verbatim}

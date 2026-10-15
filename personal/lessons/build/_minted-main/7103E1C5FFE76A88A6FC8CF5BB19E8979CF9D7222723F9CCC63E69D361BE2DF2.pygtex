@@ -1,0 +1,62 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pioneer\PYGZus{}sdk}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{Pioneer}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{grader}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{FlightGrader}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{time}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{math}
+
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{Упражнение 2 – «Полёт вперёд и назад»: модуль должен выполнить точный проход вперёд на заданное расстояние, немедленный разворот на 180 град. и возвращение на исходную точку без смещения по бокам.}
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{exercise\PYGZus{}02}\PYG{p}{():}
+    \PYG{n}{drone} \PYG{o}{=} \PYG{n}{Pioneer}\PYG{p}{()}
+    \PYG{n}{grader} \PYG{o}{=} \PYG{n}{FlightGrader}\PYG{p}{(}\PYG{n}{drone}\PYG{p}{)}
+    
+    \PYG{k}{try}\PYG{p}{:}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}[System] Упражнение 2: Вперед и Назад (с разворотом)\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{grader}\PYG{o}{.}\PYG{n}{start\PYGZus{}mission}\PYG{p}{()}
+        
+        \PYG{c+c1}{\PYGZsh{} 1. Взлет}
+        \PYG{n}{drone}\PYG{o}{.}\PYG{n}{arm}\PYG{p}{()}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} Даем автопилоту перейти в режим готовности}
+        \PYG{n}{drone}\PYG{o}{.}\PYG{n}{takeoff}\PYG{p}{()}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)}
+        
+        \PYG{c+c1}{\PYGZsh{} 2. Полет вперед (x=1.0)}
+        \PYG{n}{dist} \PYG{o}{=} \PYG{l+m+mf}{1.0}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Этап 1: Вперед к x=}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{dist}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{...\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{grader}\PYG{o}{.}\PYG{n}{set\PYGZus{}target}\PYG{p}{(}\PYG{n}{dist}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{)}
+        \PYG{n}{drone}\PYG{o}{.}\PYG{n}{go\PYGZus{}to\PYGZus{}local\PYGZus{}point}\PYG{p}{(}\PYG{n}{x}\PYG{o}{=}\PYG{n}{dist}\PYG{p}{,} \PYG{n}{y}\PYG{o}{=}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{n}{z}\PYG{o}{=}\PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{n}{yaw}\PYG{o}{=}\PYG{l+m+mf}{0.0}\PYG{p}{)}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)}
+        \PYG{n}{grader}\PYG{o}{.}\PYG{n}{check\PYGZus{}checkpoint}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Точка Вперед\PYGZdq{}}\PYG{p}{)}
+        
+        \PYG{c+c1}{\PYGZsh{} 3. Разворот на 180 (Немедленный)}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Этап 2: Немедленный разворот на 180...\PYGZdq{}}\PYG{p}{)}
+        \PYG{c+c1}{\PYGZsh{} Примечание: go\PYGZus{}to\PYGZus{}local\PYGZus{}point с новым yaw. Позиция остается прежней.}
+        \PYG{c+c1}{\PYGZsh{} Используем радианы для yaw, так как это стандарт.}
+        \PYG{n}{yaw\PYGZus{}180} \PYG{o}{=} \PYG{n}{math}\PYG{o}{.}\PYG{n}{radians}\PYG{p}{(}\PYG{l+m+mi}{180}\PYG{p}{)}
+        
+        \PYG{n}{grader}\PYG{o}{.}\PYG{n}{set\PYGZus{}target}\PYG{p}{(}\PYG{n}{dist}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{l+m+mf}{180.0}\PYG{p}{)} \PYG{c+c1}{\PYGZsh{} Ожидаем yaw=180 в точке x=1}
+        \PYG{n}{drone}\PYG{o}{.}\PYG{n}{go\PYGZus{}to\PYGZus{}local\PYGZus{}point}\PYG{p}{(}\PYG{n}{x}\PYG{o}{=}\PYG{n}{dist}\PYG{p}{,} \PYG{n}{y}\PYG{o}{=}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{n}{z}\PYG{o}{=}\PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{n}{yaw}\PYG{o}{=}\PYG{n}{yaw\PYGZus{}180}\PYG{p}{)} 
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{)}
+        \PYG{n}{grader}\PYG{o}{.}\PYG{n}{check\PYGZus{}checkpoint}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Разворот 180\PYGZdq{}}\PYG{p}{)}
+        
+        \PYG{c+c1}{\PYGZsh{} 4. Возврат на старт (x=0)}
+        \PYG{c+c1}{\PYGZsh{} Мы сохраняем yaw=180, то есть летим \PYGZdq{}носом\PYGZdq{} к точке старта.}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Этап 3: Возврат на старт...\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{grader}\PYG{o}{.}\PYG{n}{set\PYGZus{}target}\PYG{p}{(}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{l+m+mf}{180.0}\PYG{p}{)}
+        \PYG{n}{drone}\PYG{o}{.}\PYG{n}{go\PYGZus{}to\PYGZus{}local\PYGZus{}point}\PYG{p}{(}\PYG{n}{x}\PYG{o}{=}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{n}{y}\PYG{o}{=}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{n}{z}\PYG{o}{=}\PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{n}{yaw}\PYG{o}{=}\PYG{n}{yaw\PYGZus{}180}\PYG{p}{)}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)}
+        \PYG{n}{grader}\PYG{o}{.}\PYG{n}{check\PYGZus{}checkpoint}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Точка Дома (Задом)\PYGZdq{}}\PYG{p}{)}
+        
+        \PYG{n}{drone}\PYG{o}{.}\PYG{n}{land}\PYG{p}{()}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} ждём, пока дрон сядет: disarm() в finally выключает моторы сразу}
+
+    \PYG{k}{finally}\PYG{p}{:}
+        \PYG{n}{grader}\PYG{o}{.}\PYG{n}{finish\PYGZus{}mission}\PYG{p}{()}
+        \PYG{n}{drone}\PYG{o}{.}\PYG{n}{disarm}\PYG{p}{()}
+        \PYG{n}{drone}\PYG{o}{.}\PYG{n}{close\PYGZus{}connection}\PYG{p}{()}
+
+\PYG{k}{if} \PYG{n+nv+vm}{\PYGZus{}\PYGZus{}name\PYGZus{}\PYGZus{}} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}\PYGZus{}\PYGZus{}main\PYGZus{}\PYGZus{}\PYGZsq{}}\PYG{p}{:}
+    \PYG{n}{exercise\PYGZus{}02}\PYG{p}{()}
+\end{Verbatim}

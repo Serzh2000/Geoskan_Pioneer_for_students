@@ -1,0 +1,94 @@
+\subsection{Проверьте себя}
+\begin{enumerate}
+\item Сколько светодиодов адресует \verb|Ledbar.new(29)| и какие индексы допустимы?
+  \begin{enumerate}[label=(\alph*)] \item 29, индексы 1..29 \item 29, индексы 0..28 \item 28, индексы 0..28 \end{enumerate}
+  Ответ: (b).
+\item Как включить зелёный на всей линейке функцией \verb|changeColor|?
+  \begin{enumerate}[label=(\alph*)] \item \verb|changeColor({0,1,0})| \item \verb|changeColor({0,255,0})| \item \verb|changeColor(0,1,0)| \end{enumerate}
+  Ответ: (a) --- таблица с компонентами 0..1.
+\item Как включить синий через 3 секунды, не останавливая программу?
+  \begin{enumerate}[label=(\alph*)] \item \verb|sleep(3); fill(0,0,1)| \item \verb|Timer.callLater(3, function() fill(0,0,1) end)| \item \verb|Timer.new(3, fill)| \end{enumerate}
+  Ответ: (b).
+\item Какой период задать для мигания раз в полсекунды? \verb|Timer.new(___, fn)|
+  \begin{enumerate}[label=(\alph*)] \item 0.5 \item 500 \item 50 \end{enumerate}
+  Ответ: (a) --- секунды.
+\item Как остановить таймер \verb|t|?
+  \begin{enumerate}[label=(\alph*)] \item \verb|t:stop()| \item \verb|stop(t)| \item \verb|t.cancel()| \end{enumerate}
+  Ответ: (a).
+\item Как называется функция, которую вызывает автопилот при событии?
+  \begin{enumerate}[label=(\alph*)] \item \verb|onEvent(e)| \item \verb|callback(event)| \item \verb|handler(ev)| \end{enumerate}
+  Ответ: (b).
+\item Какое событие соответствует посадке?
+  \begin{enumerate}[label=(\alph*)] \item \verb|Ev.POINT_REACHED| \item \verb|Ev.COPTER_LANDED| \item \verb|Ev.LOW_VOLTAGE2| \end{enumerate}
+  Ответ: (b).
+\item Что хранит переменная \verb|state| в светофоре?
+  \begin{enumerate}[label=(\alph*)] \item Номер светодиода \item Текущее состояние автомата \item Период таймера \end{enumerate}
+  Ответ: (b).
+\end{enumerate}
+
+\subsection{Практика}
+
+Решения всех заданий лежат в \texttt{code/lua/tasks/05\_leds/} --- загляните туда только после своей попытки.
+
+\subsubsection*{Базовые операции (без таймеров)}
+
+\begin{taskbox}[Чередование по чётности]
+Светодиоды с чётными индексами --- красные \verb|{1,0,0}|, с нечётными --- синие \verb|{0,0,1}|. Узор задаётся один раз. Подсказка: \verb|i % 2 == 0|.
+\end{taskbox}
+
+\begin{taskbox}[Полоса загрузки]
+Светодиоды от \verb|0| до \verb|k| включены зелёным, остальные выключены; \verb|k| задаётся в программе.
+\end{taskbox}
+
+\subsubsection*{Таймеры и автоматы}
+
+\begin{taskbox}[Бегущий огонёк]
+В каждый момент горит ровно один зелёный светодиод; каждые 0.1~с он сдвигается на следующий индекс, после 28 --- снова 0.
+\end{taskbox}
+
+\begin{taskbox}[Светофор с четырьмя состояниями]
+Добавьте в светофор состояние \verb|"RED_YELLOW"| между красным и зелёным, как у настоящего светофора. Сколько строк пришлось изменить?
+\end{taskbox}
+
+\begin{taskbox}[Плавная пульсация]
+Яркость красного канала растёт от 0 до 1 шагами по 0.05 каждые 0.05~с, затем убывает, и так по кругу.
+\end{taskbox}
+
+\begin{taskbox}[Стробоскоп]
+Белые вспышки: 0.05~с включено, 0.2~с выключено. Подсказка: два состояния с разной длительностью --- это \verb|callLater| из обработчика, а не один периодический таймер.
+\end{taskbox}
+
+\begin{taskbox}[Полицейская мигалка]
+Чётные светодиоды красные, нечётные синие; каждые 0.3~с цвета меняются местами.
+\end{taskbox}
+
+\begin{taskbox}[Цветовой шум]
+Каждые 0.2~с каждому светодиоду назначаются случайные компоненты \verb|math.random()|.
+\end{taskbox}
+
+\begin{taskbox}[Сигнал SOS]
+Три короткие вспышки (0.2~с), три длинные (0.6~с), три короткие; пауза между вспышками 0.2~с, между буквами 0.6~с. Подсказка: таблица длительностей и автомат с индексом текущей вспышки.
+\end{taskbox}
+
+\begin{taskbox}[Двоичный счётчик секунд]
+Раз в секунду на светодиодах \verb|0..5| отображается число секунд с запуска в двоичном виде.
+\end{taskbox}
+
+\subsubsection*{Реакция на события}
+
+\begin{taskbox}[Посадка гасит линейку]
+Линейка горит зелёным; по \verb|Ev.COPTER_LANDED| выключается. Проверьте в симуляторе, добавив взлёт и посадку из примера \texttt{leds\_mission\_stages.lua}.
+\end{taskbox}
+
+\begin{taskbox}[Авария]
+По \verb|Ev.LOW_VOLTAGE2| все таймеры останавливаются, линейка горит ровным красным; по \verb|Ev.SHOCK| --- мигает красным с периодом 0.2~с.
+\end{taskbox}
+
+\subsection*{Итоги главы}
+\begin{itemize}
+    \item Линейка --- 29 светодиодов с индексами \verb|0..28|; цвет --- три числа \verb|0..1|.
+    \item \verb|Ledbar.new(29)| один раз, \verb|leds:set(i, r, g, b)| сколько угодно; обход --- \verb|for i = 0, 28|.
+    \item Паузы --- только таймерами: \verb|callLater| для одного действия, \verb|Timer.new| для повторяющихся.
+    \item События автопилота приходят в \verb|callback(event)|; сравнивать с \verb|Ev.ИМЯ|.
+    \item Сложное поведение --- конечный автомат: переменная состояния плюс таблица переходов.
+\end{itemize}

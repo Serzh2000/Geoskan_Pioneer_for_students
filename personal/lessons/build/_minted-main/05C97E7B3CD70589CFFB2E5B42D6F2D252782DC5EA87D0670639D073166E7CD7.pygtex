@@ -1,0 +1,35 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pioneer\PYGZus{}sdk}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{Pioneer}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{time}
+
+\PYG{n}{drone} \PYG{o}{=} \PYG{n}{Pioneer}\PYG{p}{()}
+
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{fly\PYGZus{}to}\PYG{p}{(}\PYG{n}{x}\PYG{p}{,} \PYG{n}{y}\PYG{p}{,} \PYG{n}{z}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Летим в точку и ждём события \PYGZsq{}точка достигнута\PYGZsq{}.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{n}{drone}\PYG{o}{.}\PYG{n}{go\PYGZus{}to\PYGZus{}local\PYGZus{}point}\PYG{p}{(}\PYG{n}{x}\PYG{o}{=}\PYG{n}{x}\PYG{p}{,} \PYG{n}{y}\PYG{o}{=}\PYG{n}{y}\PYG{p}{,} \PYG{n}{z}\PYG{o}{=}\PYG{n}{z}\PYG{p}{,} \PYG{n}{yaw}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{k}{while} \PYG{o+ow}{not} \PYG{n}{drone}\PYG{o}{.}\PYG{n}{point\PYGZus{}reached}\PYG{p}{():}
+        \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mf}{0.1}\PYG{p}{)}
+
+
+\PYG{k}{try}\PYG{p}{:}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Взлет...\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{drone}\PYG{o}{.}\PYG{n}{arm}\PYG{p}{()}
+    \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{n}{drone}\PYG{o}{.}\PYG{n}{takeoff}\PYG{p}{()}
+
+    \PYG{n}{h} \PYG{o}{=} \PYG{l+m+mf}{1.0}                                  \PYG{c+c1}{\PYGZsh{} высота полёта}
+    \PYG{n}{fly\PYGZus{}to}\PYG{p}{(}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{n}{h}\PYG{p}{)}                      \PYG{c+c1}{\PYGZsh{} точка над стартом}
+
+    \PYG{c+c1}{\PYGZsh{} квадрат 1 x 1 м: вперёд, влево, назад, домой}
+    \PYG{n}{square} \PYG{o}{=} \PYG{p}{[(}\PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{),} \PYG{p}{(}\PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{l+m+mf}{1.0}\PYG{p}{),} \PYG{p}{(}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{1.0}\PYG{p}{),} \PYG{p}{(}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{)]}
+    \PYG{k}{for} \PYG{n}{x}\PYG{p}{,} \PYG{n}{y} \PYG{o+ow}{in} \PYG{n}{square}\PYG{p}{:}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Летим в (}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{x}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{, }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{y}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)\PYGZdq{}}\PYG{p}{)}
+        \PYG{n}{fly\PYGZus{}to}\PYG{p}{(}\PYG{n}{x}\PYG{p}{,} \PYG{n}{y}\PYG{p}{,} \PYG{n}{h}\PYG{p}{)}
+
+    \PYG{n}{drone}\PYG{o}{.}\PYG{n}{land}\PYG{p}{()}
+    \PYG{n}{time}\PYG{o}{.}\PYG{n}{sleep}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)}
+\PYG{k}{finally}\PYG{p}{:}
+    \PYG{n}{drone}\PYG{o}{.}\PYG{n}{disarm}\PYG{p}{()}
+    \PYG{n}{drone}\PYG{o}{.}\PYG{n}{close\PYGZus{}connection}\PYG{p}{()}
+\end{Verbatim}

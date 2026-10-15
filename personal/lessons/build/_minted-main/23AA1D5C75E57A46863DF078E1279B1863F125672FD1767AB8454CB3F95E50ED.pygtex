@@ -1,0 +1,8 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{n}{суммирование} \PYG{l+m+mf}{1..10} \PYG{n}{числовым} \PYG{n}{циклом} \PYG{k}{for}
+\PYG{n}{local} \PYG{n+nb}{sum} \PYG{o}{=} \PYG{l+m+mi}{0}
+\PYG{k}{for} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{10} \PYG{n}{do}
+  \PYG{n+nb}{sum} \PYG{o}{=} \PYG{n+nb}{sum} \PYG{o}{+} \PYG{n}{i}
+\PYG{n}{end}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{n+nb}{sum}\PYG{p}{)}  \PYG{o}{\PYGZhy{}\PYGZhy{}} \PYG{l+m+mi}{55}
+\end{Verbatim}

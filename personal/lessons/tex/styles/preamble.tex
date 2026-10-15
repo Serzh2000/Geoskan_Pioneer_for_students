@@ -137,7 +137,11 @@
 \usepackage{longtable} % For long tables in appendix
 
 % --- Code Listings (Minted) ---
-\usepackage[outputdir=../build]{minted}
+% minted2 — совместимая версия 2.x: подсветка через pygmentize по \write18,
+% кэш пишется прямо в каталог сборки (outputdir). Версия 3 на этой машине
+% не может записать свои файлы из-под XeLaTeX (ограничения latexrestricted),
+% поэтому все листинги оставались без подсветки.
+\usepackage[outputdir=../build]{minted2}
 \usemintedstyle{friendly}
 \setminted{
     fontsize=\small,
@@ -150,7 +154,7 @@
 % --- Boxes & Environments (tcolorbox) ---
 \usepackage{tcolorbox}
 \usepackage{etoolbox} % For \ifstrempty
-\tcbuselibrary{skins, breakable, minted}
+\tcbuselibrary{skins, breakable} % библиотека minted не нужна: внутри рамок стоит \inputminted
 \usepackage{fontawesome5} % Icons
 \usepackage{textcomp} % For upquote
 \usepackage{accsupp} % Accessibility support
@@ -352,8 +356,9 @@
 }
 
 % 4. Task Box (NO FRAMES - Just numbered text)
-\newcounter{taskcounter}
-\setcounter{taskcounter}{0}
+% Нумерация заданий — внутри главы (\section): «Задание 4.3», а не сквозная по книге.
+\newcounter{taskcounter}[section]
+\renewcommand{\thetaskcounter}{\thesection.\arabic{taskcounter}}
 
 \newenvironment{taskbox}[1][]{%
     \par\bigskip% Vertical space before
@@ -456,7 +461,28 @@
   {\begin{infobox}[Обратите внимание]}
   {\end{infobox}}
 
+% --- Скриншоты симулятора с номерными выносками ---------------------------
+% \simshot[ширина]{файл} — картинка из images/simulator/.
+% \callout{x}{y}{n} — кружок с номером поверх картинки; x и y — доли ширины и
+% высоты (0..1), считая от левого нижнего угла; используется внутри
+% окружения \begin{shotcallouts}{файл} ... \end{shotcallouts}.
+% \bubble{n} — такой же номер в тексте под картинкой.
+\usetikzlibrary{babel}
+\newcommand{\simshot}[2][\linewidth]{\includegraphics[width=#1]{images/simulator/#2}}
+\newcommand{\callout}[3]{\node[circle,fill=GeoskanOrange,text=white,font=\sffamily\small\bfseries,inner sep=1.6pt,minimum size=15pt,draw=white,line width=1pt] at (#1,#2) {#3};}
+\newcommand{\bubble}[1]{{\setlength{\fboxsep}{1.6pt}\colorbox{GeoskanOrange}{\makebox[0.9em]{\color{white}\scriptsize\sffamily\bfseries #1}}}}
+\newcommand{\ui}[1]{«\textbf{#1}»}
+\newcommand{\key}[1]{{\setlength{\fboxsep}{1.5pt}\fcolorbox{gray!50}{gray!10}{\small\ttfamily #1}}}
+\NewDocumentEnvironment{shotcallouts}{O{\linewidth}m}{%
+    \begin{center}\begin{tikzpicture}
+    \node[anchor=south west,inner sep=0] (img) at (0,0) {\simshot[#1]{#2}};
+    \begin{scope}[x={(img.south east)},y={(img.north west)}]
+}{%
+    \end{scope}\end{tikzpicture}\end{center}
+}
+
 % --- Hyperlinks (Clean & Modern) ---
+\usepackage{lastpage} % \pageref{LastPage} для аннотации на обороте титула
 \usepackage{hyperref}
 \hypersetup{
     colorlinks=true,
@@ -490,9 +516,11 @@
 
 % Time formatting
 \makeatletter
+% \numexpr округляет деление, поэтому часы считаем через (\time-30)/60 —
+% иначе в 12:41 получалось «13» и минуты «0-19».
 \newcommand{\currenttime}{%
-  \two@digits{\number\numexpr\time/60\relax}:%
-  \two@digits{\number\numexpr\time-60*(\time/60)\relax}%
+  \two@digits{\number\numexpr(\time-30)/60\relax}:%
+  \two@digits{\number\numexpr\time-60*((\time-30)/60)\relax}%
 }
 \newcommand{\buildtimestamp}{\two@digits{\number\day}.\two@digits{\number\month}.\number\year\ \currenttime}
 \makeatother
@@ -532,61 +560,67 @@
 %     }
 % }
 
-% --- Title Page Command ---
+% --- Титульный лист ----------------------------------------------------------
+% Сетка: строка серии и линейка; заголовок и подзаголовок; обложка — кадр
+% полёта из симулятора (images/simulator/cover.png); чипы «что внутри»;
+% аннотация в одну фразу; автор; нижняя линейка с городом, годом, адресом
+% симулятора и версией сборки. Всё в рубленом шрифте, два цвета плюс акцент.
+\definecolor{GeoskanMuted}{RGB}{95, 102, 112}
+
+% Чип: короткая метка в скруглённой плашке.
+\newcommand{\titlechip}[1]{%
+    \tcbox[on line, enhanced, colback=GeoskanBlue!8, colframe=GeoskanBlue!8, boxrule=0pt, arc=3pt,
+           left=6pt, right=6pt, top=2.5pt, bottom=2.5pt, boxsep=0pt]{\sffamily\small\bfseries\color{GeoskanDarkBlue}#1}%
+}
+
 \newcommand{\makePioneerTitle}[5]{
     \begin{titlepage}
-        \centering
-        \vspace*{0.2cm}
-        
-        % Title & Subtitle (First)
-        {\sffamily\Huge\bfseries\color{GeoskanDarkBlue} #1}\\[0.3cm]
-        {\sffamily\Large\color{GeoskanBlue} #2}\\[0.5cm]
-        
-        % Cover Image (Second)
+        \sffamily
+        \setlength{\parindent}{0pt}
+        \setlength{\parskip}{0pt}
+        \linespread{1.0}\selectfont
+
+        % 1. Строка серии
+        {\footnotesize\color{GeoskanMuted}\addfontfeature{LetterSpace=8}ОБРАЗОВАТЕЛЬНЫЙ КВАДРОКОПТЕР «ГЕОСКАН ПИОНЕР»\hfill УЧЕБНОЕ ПОСОБИЕ\par}
+        \vspace{4pt}
+        {\color{GeoskanBlue}\rule{\linewidth}{1.4pt}}\par
+        \vspace{0.9cm}
+
+        % 2. Заголовок и подзаголовок
+        {\fontsize{28}{33}\selectfont\bfseries\color{GeoskanDarkBlue}\raggedright\hyphenpenalty=10000 #1\par}
+        \vspace{0.4cm}
+        {\Large\color{GeoskanBlue}\raggedright #2\par}
+        \vspace{0.7cm}
+
+        % 3. Обложка: кадр полёта из симулятора (не выше 36% высоты набора,
+        %    чтобы титул гарантированно умещался на одной странице)
         \begin{tcolorbox}[
-            enhanced,
-            colback=white,
-            colframe=GeoskanBlue,
-            boxrule=1.5pt,
-            arc=3mm,
-            width=0.85\textwidth, % Match the resized image width + padding
-            halign=center,
-            valign=center,
-            boxsep=0pt,
-            left=0pt, right=0pt, top=0pt, bottom=0pt,
-            shadow={3mm}{-3mm}{0mm}{black!20}
+            enhanced, colback=white, colframe=GeoskanDarkBlue!30, boxrule=0.8pt, arc=3mm,
+            boxsep=0pt, left=0pt, right=0pt, top=0pt, bottom=0pt, halign=center,
+            shadow={2mm}{-2mm}{0mm}{black!12}
         ]
-            \centering
-            \resizebox{0.8\textwidth}{!}{ % Reduced from 0.9 to 0.8 (approx 10% reduction)
-                \input{images/tikz_drone/drone_cover_code.tex}
-            }
+            \includegraphics[width=\linewidth, height=0.36\textheight, keepaspectratio]{images/simulator/cover.png}
         \end{tcolorbox}
-        
-        \vspace{0.5cm}
-        
-        % Author Box (Third)
-        \begin{tcolorbox}[
-            enhanced,
-            colback=GeoskanLightGray,
-            colframe=GeoskanDarkBlue,
-            width=0.85\textwidth,
-            arc=0mm,
-            boxrule=0pt,
-            leftrule=4pt,
-            shadow={2mm}{-2mm}{0mm}{black!20}
-        ]
-            \centering
-            \sffamily
-            \textbf{Автор:} #3\\
-            \textit{#4}
-        \end{tcolorbox}
-        
-        \vspace{0.5cm}
-        
-        % Footer (Fourth)
-        {\sffamily\large #5}
-        
-        \vspace{0.3cm}
-        {\sffamily\footnotesize \textcolor{gray}{Версия документа: \theversion\ (Дата сборки: \buildtimestamp)}}
+        \vspace{0.45cm}
+
+        % 4. Что внутри
+        \titlechip{Lua}\hspace{4pt}\titlechip{Python}\hspace{4pt}\titlechip{Blockly}\hspace{4pt}\titlechip{Симулятор в браузере}\hspace{4pt}\titlechip{Настоящий дрон}\par
+        \vspace{0.45cm}
+        {\small\color{GeoskanMuted}\raggedright От первой строки кода до автономной миссии: язык, светодиоды и таймеры, события автопилота, полёт по точкам и фигурам, камера и навигация по маркерам. Каждый пример книги запускается в симуляторе и проверяется автоматически.\par}
+
+        \vfill
+
+        % 5. Автор
+        {\large\bfseries\color{GeoskanDarkBlue} #3\par}
+        \vspace{3pt}
+        {\small\color{GeoskanMuted} #4\par}
+        \vspace{0.45cm}
+
+        % 6. Нижняя линейка
+        {\color{GeoskanBlue}\rule{\linewidth}{0.6pt}}\par
+        \vspace{5pt}
+        {\small\color{GeoskanDarkBlue} #5\hfill\texttt{simulator.sakoryagin.ru}\par}
+        \vspace{2pt}
+        {\footnotesize\color{GeoskanMuted} Версия \theversion\ · сборка \buildtimestamp\par}
     \end{titlepage}
 }

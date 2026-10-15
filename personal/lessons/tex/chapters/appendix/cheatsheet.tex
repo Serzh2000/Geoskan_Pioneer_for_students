@@ -1,0 +1,39 @@
+\section{Шпаргалка: Lua и Python}
+\label{sec:cheatsheet}
+
+Одно и то же действие на двух языках. Lua ждёт событий в \texttt{callback}, Python опрашивает автопилот в цикле.
+
+\begin{center}
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.18\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Действие} & \textbf{Lua} & \textbf{Python} \\
+\midrule
+Моторы          & \texttt{ap.push(Ev.MCE\_PREFLIGHT)} & \texttt{pioneer.arm()} \\
+Взлёт           & \texttt{ap.push(Ev.MCE\_TAKEOFF)} & \texttt{pioneer.takeoff()} \\
+Точка           & \texttt{ap.goToLocalPoint(x, y, z)} & \texttt{pioneer.go\_to\_local\_point(x=, y=, z=, yaw=)} \\
+Ждать точку     & \texttt{if event == Ev.POINT\_REACHED} & \texttt{while not pioneer.point\_reached(): time.sleep(0.1)} \\
+Курс            & \texttt{ap.updateYaw(рад)} & \texttt{yaw=} в \texttt{go\_to\_local\_point} \\
+Посадка         & \texttt{ap.push(Ev.MCE\_LANDING)} & \texttt{pioneer.land()} \\
+Выключить моторы & \texttt{ap.push(Ev.ENGINES\_DISARM)} & \texttt{pioneer.disarm()} \\
+Пауза           & \texttt{Timer.callLater(t, f)} & \texttt{time.sleep(t)} \\
+Периодически    & \texttt{Timer.new(p, f):start()} & цикл \texttt{while} с \texttt{time.sleep(p)} \\
+Светодиоды      & \texttt{leds:set(i, r, g, b)}, 0…1 & \texttt{pioneer.led\_control(led\_id, r, g, b)}, 0…255 \\
+Позиция         & \texttt{Sensors.lpsPosition()} & \texttt{pioneer.get\_local\_position\_lps()} \\
+Дальномер       & \texttt{Sensors.range()} & \texttt{pioneer.get\_dist\_sensor\_data()} \\
+Батарея         & \texttt{Sensors.battery()} & \texttt{pioneer.get\_battery\_status()} \\
+Кадр камеры     & \texttt{camera.requestMakeShot()} & \texttt{Camera().get\_cv\_frame()} \\
+Вывод           & \texttt{print(...)} & \texttt{print(...)} \\
+Завершение      & --- & \texttt{pioneer.close\_connection()} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{infobox}[Три главные мысли]
+\begin{itemize}
+    \item Дрон --- автопилот: вы отдаёте команду и ждёте события, что она выполнена.
+    \item В Lua ждут через \texttt{callback(event)}, в Python --- опросом \texttt{while not ...}.
+    \item Координаты --- метры от старта, Z вверх, курс в радианах; их показывает \key{Ctrl}+щелчок в симуляторе.
+\end{itemize}
+\end{infobox}

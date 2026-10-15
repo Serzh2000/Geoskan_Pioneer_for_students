@@ -12,6 +12,8 @@
 \end{codefile}
 
 \begin{itemize}
+    \item \texttt{import time} подключает стандартный модуль \texttt{time}; \texttt{time.sleep(0.5)} --- пауза на полсекунды. В отличие от Lua на борту, Python-программа работает на компьютере и автопилот не блокирует, поэтому \texttt{sleep} здесь допустим (глава~\ref{sec:python-sdk}).
+    \item \texttt{f"Мигание №\{i+1\}"} --- f-строка: выражение в фигурных скобках вычисляется и подставляется в текст. \texttt{battery -= 2} --- то же, что \texttt{battery = battery - 2}.
     \item \texttt{break} — немедленно прерывает цикл.
     \item \texttt{continue} — переходит к следующей итерации.
 \end{itemize}
