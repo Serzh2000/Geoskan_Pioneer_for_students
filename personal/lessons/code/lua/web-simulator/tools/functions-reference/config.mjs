@@ -50,7 +50,6 @@ export const GROUPS = [
         description: 'Интеграции Lua/Python, публикация OpenAPI, клиентские и серверные точки взаимодействия с внешними сценариями и API.',
         matches: [
             'openapi.yaml',
-            'public/tests.lua',
             'public/modules/api-docs.ts',
             'public/modules/lua/',
             'public/modules/python/',

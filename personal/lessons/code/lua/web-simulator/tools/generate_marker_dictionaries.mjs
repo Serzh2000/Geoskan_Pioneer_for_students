@@ -52,14 +52,6 @@ const dictionaryConfig = {
   DICT_APRILTAG_36h11: { sourceName: 'DICT_APRILTAG_36h11', kind: 'apriltag', markerSize: 6, markerCount: 587, label: 'tag36h11' }
 } ;
 
-function chunk(array, size) {
-  const result = [];
-  for (let i = 0; i < array.length; i += size) {
-    result.push(array.slice(i, i + size));
-  }
-  return result;
-}
-
 function parseSourceArrays(sourceText, allowedNames) {
   const arrays = new Map();
   const regex = /static unsigned char\s+([A-Za-z0-9_]+)_BYTES\[\]\[4\]\[(\d+)\]\s*=\s*\{([\s\S]*?)\}\s*;/g;

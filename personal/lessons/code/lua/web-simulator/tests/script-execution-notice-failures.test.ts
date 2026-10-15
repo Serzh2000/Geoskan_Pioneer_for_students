@@ -21,8 +21,8 @@ describe('lua script execution notice failure rendering', () => {
         }));
 
         expect(harness.getShownNotice()).not.toBeNull();
-        expect(String(harness.getShownNotice().title || '')).toContain('Синтаксическая ошибка');
-        expect(String(harness.getShownNotice().message || '')).toContain('лишний или недопустимый символ');
+        expect(String(harness.getShownNotice().title || '')).toContain('Непонятный символ в строке');
+        expect(String(harness.getShownNotice().message || '')).toContain('Lua не понял');
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('Место ошибки: строка 4.');
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('Техническая деталь: unexpected symbol near');
     });
@@ -33,10 +33,10 @@ describe('lua script execution notice failure rendering', () => {
         }));
 
         expect(harness.getShownNotice()).not.toBeNull();
-        expect(String(harness.getShownNotice().message || '')).toContain('передан вызов уже существующей функции');
+        expect(String(harness.getShownNotice().message || '')).toContain('вместо функции передан её вызов');
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('Timer.callLater');
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('blinkGreen');
-        expect(String(harness.getShownNotice().detailsHtml || '')).toContain('лишний `end`');
+        expect(String(harness.getShownNotice().detailsHtml || '')).toContain('лишний <code>end</code>');
     });
 
     test('humanizes lua broken identifier near or', () => {
@@ -45,7 +45,7 @@ describe('lua script execution notice failure rendering', () => {
         }));
 
         expect(harness.getShownNotice()).not.toBeNull();
-        expect(String(harness.getShownNotice().message || '')).toContain('разорвано пробелом');
+        expect(String(harness.getShownNotice().message || '')).toContain('попало внутрь имени');
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('changeCol or');
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('changeColor');
     });
@@ -54,8 +54,8 @@ describe('lua script execution notice failure rendering', () => {
         harness.showScriptFailureNotice('python', harness.createScriptFailureError('runtime', 'division by zero'));
 
         expect(harness.getShownNotice()).not.toBeNull();
-        expect(String(harness.getShownNotice().title || '')).toContain('Ошибка выполнения');
-        expect(String(harness.getShownNotice().message || '')).toContain('деление на ноль');
+        expect(String(harness.getShownNotice().title || '')).toContain('Деление на ноль');
+        expect(String(harness.getShownNotice().message || '')).toContain('делится на ноль');
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('Техническая деталь: division by zero');
     });
 
@@ -66,7 +66,7 @@ describe('lua script execution notice failure rendering', () => {
         }));
 
         expect(harness.getShownNotice()).not.toBeNull();
-        expect(String(harness.getShownNotice().message || '')).toContain('требуется двоеточие');
+        expect(String(harness.getShownNotice().message || '')).toContain('нужно двоеточие');
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('Место ошибки: строка 3, колонка 12.');
     });
 
@@ -77,8 +77,8 @@ describe('lua script execution notice failure rendering', () => {
         ));
 
         expect(harness.getShownNotice()).not.toBeNull();
-        expect(String(harness.getShownNotice().message || '')).toContain('Повторный `Ev.MCE_PREFLIGHT`');
-        expect(String(harness.getShownNotice().detailsHtml || '')).toContain('дождитесь события `Ev.ENGINES_STARTED`');
+        expect(String(harness.getShownNotice().message || '')).toContain('отправлена второй раз');
+        expect(String(harness.getShownNotice().detailsHtml || '')).toContain('дождитесь события ENGINES_STARTED');
         expect(String(harness.getShownNotice().detailsHtml || '')).toContain('Техническая деталь: FSM error: invalid transition from PREFLIGHT by command MCE_PREFLIGHT');
     });
 
@@ -92,7 +92,7 @@ describe('lua script execution notice failure rendering', () => {
         ));
 
         expect(harness.getShownNotice()).not.toBeNull();
-        expect(String(harness.getShownNotice().message || '')).toContain('не существует');
+        expect(String(harness.getShownNotice().message || '')).toContain('вызывается то, чего нет');
         expect(String(harness.getShownNotice().detailsHtml || '')).not.toContain('Техническая деталь: 1');
         expect(String(harness.getShownNotice().detailsHtml || '')).not.toContain('<div>1</div>');
     });
@@ -145,7 +145,7 @@ describe('lua script execution notice failure rendering', () => {
         harness.showScriptFailureNotice('lua', error);
 
         expect(harness.getShownNotice()).not.toBeNull();
-        expect(String(harness.getShownNotice().message || '')).toContain('Предполетная подготовка запущена повторно');
+        expect(String(harness.getShownNotice().message || '')).toContain('отправлен два раза подряд');
         expect(String(harness.getShownNotice().detailsHtml || '')).not.toContain('<div class="is-critical">1</div>');
         expect(String(harness.getShownNotice().detailsHtml || '')).not.toContain('&lt;div');
         expect(String(harness.getShownNotice().detailsHtml || '')).not.toContain('Стек вызовов');
@@ -174,7 +174,7 @@ end)`;
         const firstNotice = harness.getShownNotice();
 
         expect(firstNotice).not.toBeNull();
-        expect(String(firstNotice.message || '')).toContain('Проверьте код перед запуском');
+        expect(String(firstNotice.message || '')).toContain('ставит несколько команд одновременно');
 
         harness.showScriptFailureNotice('lua', harness.createScriptFailureError(
             'runtime',
@@ -182,7 +182,7 @@ end)`;
         ));
 
         expect(harness.getShownNotice()).toBe(firstNotice);
-        expect(String(harness.getShownNotice().title || '')).toContain('Проверьте сценарий перед запуском');
+        expect(String(harness.getShownNotice().title || '')).toContain('Проверьте программу');
     });
 
     test('does not show a missing callback warning for a timer-based mission', () => {

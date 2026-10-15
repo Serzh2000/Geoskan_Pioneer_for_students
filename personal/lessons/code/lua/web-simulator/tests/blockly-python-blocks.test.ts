@@ -425,7 +425,7 @@ describe('Кодогенерация блоков светодиодов', () =>
 describe('Кодогенерация блоков пульта и Lua-скрипта', () => {
     test('send_rc_channels генерирует pioneer.send_rc_channels() с каналами', () => {
         const workspace = makeWorkspace();
-        const block = workspace.newBlock('send_rc_channels');
+        workspace.newBlock('send_rc_channels');
         const code = pythonGenerator.workspaceToCode(workspace);
         expect(code).toContain('pioneer.send_rc_channels');
         expect(code).toContain('channel_1=1500');
@@ -433,7 +433,7 @@ describe('Кодогенерация блоков пульта и Lua-скрип
 
     test('lua_script_control генерирует pioneer.lua_script_control() с командой', () => {
         const workspace = makeWorkspace();
-        const block = workspace.newBlock('lua_script_control');
+        workspace.newBlock('lua_script_control');
         const code = pythonGenerator.workspaceToCode(workspace);
         expect(code).toContain('pioneer.lua_script_control');
         expect(code).toContain('"Start"');

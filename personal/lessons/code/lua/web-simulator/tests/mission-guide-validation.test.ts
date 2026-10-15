@@ -1,8 +1,8 @@
 // @ts-expect-error В проекте нет пакета @types/jsdom, используем jsdom только для DOMParser в Node-тестах.
 import { JSDOM } from 'jsdom';
 import { evaluateLesson } from '../public/modules/ui/mission-guide/evaluation/index.js';
-import { getLuaLessonState } from '../public/modules/ui/mission-guide/lua-lessons.js';
-import { getPythonLessonState } from '../public/modules/ui/mission-guide/python-lessons.js';
+import { getLuaLessonState } from '../public/modules/ui/mission-guide/lessons/catalog/lua.js';
+import { getPythonLessonState } from '../public/modules/ui/mission-guide/lessons/catalog/python.js';
 import { buildTargetWorkspaceXml } from '../public/modules/editor/blockly-mode/workspace-xml.js';
 import type { GuideLesson } from '../public/modules/ui/mission-guide/types.js';
 

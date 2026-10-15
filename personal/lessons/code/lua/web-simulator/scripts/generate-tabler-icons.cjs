@@ -17,8 +17,8 @@ const ICONS = [
     // scene object context menu
     'adjustments',
     // scene object types (tree, catalog, hotbar)
-    'antenna', 'bolt', 'box', 'bulb', 'building-community', 'building-skyscraper',
-    'car', 'charging-pile', 'christmas-tree', 'device-cctv', 'device-desktop', 'drone',
+    'antenna', 'bolt', 'box', 'building-community', 'building-skyscraper',
+    'car', 'charging-pile', 'christmas-tree', 'cube', 'device-cctv', 'device-desktop', 'drone',
     'fence', 'flag', 'frame', 'grid-4x4', 'grid-pattern', 'helicopter-landing',
     'lamp-2', 'map-pin', 'mountain', 'package', 'qrcode', 'road', 'square-letter-h',
     'stack-2', 'traffic-cone', 'train', 'trees', 'track', 'car-suv',

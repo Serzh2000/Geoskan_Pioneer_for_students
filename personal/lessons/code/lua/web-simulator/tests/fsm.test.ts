@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { beginLearningCapture, finishLearningCapture } from '../public/modules/core/learning-journal.js';
 
 describe('drone FSM validation', () => {
     let MCECommands: typeof import('../public/modules/autopilot/mce-events.js').MCECommands;
@@ -21,7 +22,6 @@ describe('drone FSM validation', () => {
     let syncAutopilotRuntimeFromValues: typeof import('../public/modules/autopilot/params-runtime.js').syncAutopilotRuntimeFromValues;
     let drone: ReturnType<typeof import('../public/modules/core/state.js').createDroneState>;
     const logLines: string[] = [];
-    const ERROR_STATUS = '\u041e\u0428\u0418\u0411\u041a\u0410';
 
     function captureLogLine(node: any): string {
         const metaChildren = Array.isArray(node?.children?.[0]?.children) ? node.children[0].children : [];
@@ -113,6 +113,18 @@ describe('drone FSM validation', () => {
         simSettings.gamepadConnected = false;
         syncAutopilotRuntimeFromValues({});
         logLines.length = 0;
+    });
+
+    test('learning journal records actual accepted and rejected preparations across FSM phases', () => {
+        const token = beginLearningCapture(drone.id);
+        expect(enterPreflight(drone)).toBe(true);
+        beginEventCallbackPhase(drone);
+        expect(() => enterPreflight(drone)).toThrow('invalid transition from PREFLIGHT');
+        expect(finishLearningCapture(drone.id, token)).toEqual([
+            { kind: 'arm', time: 0, state: 'IDLE', accepted: true },
+            { kind: 'state', time: 0, from: 'IDLE', state: 'PREFLIGHT', pos: { x: 0, y: 0, z: 0 }, target: { x: 0, y: 0, z: 0 }, yaw: 0 },
+            { kind: 'arm', time: 0, state: 'PREFLIGHT', accepted: false }
+        ]);
     });
 
     test('allows SDK-compatible instantaneous TAKEOFF -> goToLocalPoint sequence', () => {
@@ -235,6 +247,20 @@ describe('drone FSM validation', () => {
         expect(accepted).toBe(true);
         expect(drone.fsmState).toBe('FLYING_MOVING');
         expect(drone.target_pos).toEqual({ x: 1, y: 1, z: 1 });
+    });
+
+    test.each(['land', 'point'])('%s takes over from the last velocity command without losing its target', command => {
+        setDroneFsmState(drone, 'FLYING_HOVER');
+        drone.pos = { x: .6, y: .3, z: 3 };
+        drone.target_pos = { ...drone.pos };
+        drone.manualVelocity = { x: 0, y: 0, z: 0, expiresAt: performance.now() - 1 };
+        const target = { ...drone.pos, z: command === 'land' ? 0 : 1.5 };
+        if (command === 'land') enterLandingProcess(drone);
+        else applyGoToLocalPointRequest(drone, target);
+        for (let i = 0; i < 60; i++) updateActiveFlight(drone, drone.id, 1 / 60, true, () => []);
+        expect(drone.manualVelocity).toBeNull();
+        expect(drone.target_pos).toEqual(target);
+        expect(drone.pos.z).toBeLessThan(2.9);
     });
 
     test('accepts goToLocalPoint from timer during takeoff and starts planar movement early', () => {

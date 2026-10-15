@@ -1,5 +1,5 @@
-import { getLuaLessonState } from '../public/modules/ui/mission-guide/lua-lessons.js';
-import { getPythonLessonState } from '../public/modules/ui/mission-guide/python-lessons.js';
+import { getLuaLessonState } from '../public/modules/ui/mission-guide/lessons/catalog/lua.js';
+import { getPythonLessonState } from '../public/modules/ui/mission-guide/lessons/catalog/python.js';
 import {
     getActiveChapter,
     getActiveTab,

@@ -8,7 +8,6 @@ import * as Blockly from 'blockly';
 import { luaGenerator } from 'blockly/lua';
 import { pythonGenerator } from 'blockly/python';
 
-import type { ApiDoc } from '../public/modules/docs/api-docs.js';
 import { evConstants } from '../public/modules/docs/api-docs-events.js';
 import { luaApiDocsEvents } from '../public/modules/docs/lua-api-docs-events.js';
 import {
@@ -288,7 +287,7 @@ describe('Кодогенерация Lua', () => {
 
     test('lua_point_reached и lua_not_point_reached генерируют ap.point_reached()', () => {
         const ws = makeWorkspace();
-        const reached = ws.newBlock('lua_point_reached');
+        ws.newBlock('lua_point_reached');
         // Blockly оборачивает "голый" (не подключённый никуда) value-блок на верхнем
         // уровне через scrubNakedValue: 'local _ = <expr>\n' — это поведение самой
         // библиотеки, не блока.
@@ -399,7 +398,7 @@ describe('Кодогенерация Lua', () => {
 
     test('lua_variables_get возвращает имя переменной', () => {
         const workspace = makeWorkspace();
-        const get = workspace.newBlock('lua_variables_get');
+        workspace.newBlock('lua_variables_get');
         // "Голый" value-блок на верхнем уровне Blockly оборачивает как 'local _ = <expr>'.
         expect(luaGenerator.workspaceToCode(workspace)).toBe('local _ = my_variable\n');
     });

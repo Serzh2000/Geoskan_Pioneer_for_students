@@ -23,6 +23,7 @@ export interface StartServerOptions {
     port?: number;
     host?: string;
     packaged?: boolean;
+    serveStaticUi?: boolean;
     vitePort?: number;
 }
 
@@ -171,7 +172,7 @@ function createApp(options: StartServerOptions): express.Express {
     const luaExamplesRoots = resolveExamplesRoots();
     const pythonExamplesRoots = resolvePythonExamplesRoots();
     const autopilotParametersPath = resolveAutopilotParametersPath();
-    const shouldServeStaticUi = isDistBuild || packagedRuntime;
+    const shouldServeStaticUi = options.serveStaticUi ?? (isDistBuild || packagedRuntime);
 
     app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS ?? 0));
     app.use(cors(resolveCorsOptions()));
@@ -284,7 +285,7 @@ function createApp(options: StartServerOptions): express.Express {
         });
     } else {
         app.get('/', (_req: express.Request, res: express.Response) => {
-            res.redirect(302, `http://localhost:${vitePort}/`);
+            res.redirect(302, `http://${options.host ?? 'localhost'}:${vitePort}/`);
         });
     }
 
@@ -317,13 +318,11 @@ export async function startServer(options: StartServerOptions = {}): Promise<Sta
     const host = options.host;
     const app = createApp(options);
 
-    const server = await new Promise<Server>((resolve) => {
-        if (host) {
-            const listeningServer = app.listen(port, host, () => resolve(listeningServer));
-            return;
-        }
-
-        const listeningServer = app.listen(port, () => resolve(listeningServer));
+    const server = await new Promise<Server>((resolve, reject) => {
+        const listeningServer = host
+            ? app.listen(port, host, () => resolve(listeningServer))
+            : app.listen(port, () => resolve(listeningServer));
+        listeningServer.once('error', reject);
     });
 
     const addressInfo = server.address();

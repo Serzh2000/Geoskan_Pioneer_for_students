@@ -27,12 +27,13 @@ describe('lua api constants', () => {
     test('humanizes missing Ev prefix runtime errors', () => {
         const result = humanizeLuaRuntimeMessage('Константа `TAKEOFF_COMPLETE` должна использоваться с префиксом `Ev.`: `Ev.TAKEOFF_COMPLETE`.');
         expect(result?.summary).toContain('Ev.TAKEOFF_COMPLETE');
-        expect(result?.details).toContain('Замените `TAKEOFF_COMPLETE`');
+        expect(result?.title).toBe('Нужно писать Ev.TAKEOFF_COMPLETE');
+        expect(result?.example).toContain('Ev.TAKEOFF_COMPLETE');
     });
 
     test('humanizes unknown api constant runtime errors', () => {
         const result = humanizeLuaRuntimeMessage('Событие или команда `TAKEOFF_FINISHED` отсутствует в справочнике Lua API. Проверьте название и используйте константы вида `Ev.NAME`.');
         expect(result?.summary).toContain('TAKEOFF_FINISHED');
-        expect(result?.details).toContain('Ev.NAME');
+        expect(result?.summary).toContain('Ev.ИМЯ');
     });
 });

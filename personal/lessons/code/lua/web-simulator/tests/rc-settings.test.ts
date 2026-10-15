@@ -1,4 +1,4 @@
-import { normalizeCenteredInput, normalizeInputValue, quantizeDiscreteLevel } from '../public/modules/ui/settings/calibration.js';
+import { normalizeCenteredInput, normalizeInputValue, quantizeDiscreteLevel } from '../public/modules/ui/settings/input/calibration.js';
 import { createDefaultCalibration, createDefaultProfile } from '../public/modules/ui/settings/constants.js';
 import { createInputSourcesFromGamepad, createProfileForDevice, detectMappingConflicts, detectStickMode } from '../public/modules/ui/settings/mapping.js';
 

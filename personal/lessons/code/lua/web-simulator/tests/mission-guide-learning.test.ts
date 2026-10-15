@@ -1,5 +1,5 @@
-import { getLuaLessonState } from '../public/modules/ui/mission-guide/lua-lessons.js';
-import { getPythonLessonState } from '../public/modules/ui/mission-guide/python-lessons.js';
+import { getLuaLessonState } from '../public/modules/ui/mission-guide/lessons/catalog/lua.js';
+import { getPythonLessonState } from '../public/modules/ui/mission-guide/lessons/catalog/python.js';
 import { getLuaTextLessonState } from '../public/modules/ui/mission-guide/lessons/catalog/lua-text.js';
 import { getPythonTextLessonState } from '../public/modules/ui/mission-guide/lessons/catalog/python-text.js';
 import { getLearningNote, renderLearningNote } from '../public/modules/ui/mission-guide/render/learning.js';
@@ -35,7 +35,13 @@ describe('Learning support across the curriculum', () => {
 
     test('color experiments use the scale of the chosen language', () => {
         expect(renderLearningNote(getLuaLessonState().lessons[0])).toContain('data-guide-color-max="1"');
-        expect(renderLearningNote(getPythonTextLessonState().lessons[0])).toContain('data-guide-color-max="255"');
+        expect(renderLearningNote(getPythonTextLessonState().lessons.find(lesson => lesson.topicId === 'led-single')!)).toContain('data-guide-color-max="255"');
+    });
+
+    test('the demonstration colour dot is named for assistive technology', () => {
+        const html = renderLearningNote(getLuaLessonState().lessons[0]);
+        expect(html).toMatch(/data-guide-color-dot role="img" aria-label="Красный"/);
+        expect(html).not.toMatch(/data-guide-color-dot[^>]*aria-hidden/);
     });
 
     test('a matching but unchecked workspace is not presented as a passed check', () => {

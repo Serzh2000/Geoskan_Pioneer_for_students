@@ -1,9 +1,8 @@
 import {
     applyEditorLayoutState,
-    computeExpandedSidebarWidth,
     computeBlocklyViewportDimensions,
     resizeBlocklyCanvas
-} from '../public/modules/editor/blockly-ui.js';
+} from '../public/modules/editor/blockly-mode/ui.js';
 
 function createMockClassList() {
     const classes = new Set<string>();
@@ -54,12 +53,6 @@ describe('Editor Blockly UI', () => {
         expect(computeBlocklyViewportDimensions(1280.7, 720.3)).toEqual({ width: 1280, height: 720 });
         expect(computeBlocklyViewportDimensions(375, 667)).toEqual({ width: 375, height: 667 });
         expect(computeBlocklyViewportDimensions(-10, 0)).toEqual({ width: 0, height: 0 });
-    });
-
-    test('вычисляет ширину распахивания панели Blockly в разумных пределах', () => {
-        expect(computeExpandedSidebarWidth(1600, 450)).toBe(928);
-        expect(computeExpandedSidebarWidth(1100, 700)).toBe(700);
-        expect(computeExpandedSidebarWidth(800, 300)).toBe(560);
     });
 
     test('подгоняет canvas Blockly под размеры родительского контейнера', () => {
