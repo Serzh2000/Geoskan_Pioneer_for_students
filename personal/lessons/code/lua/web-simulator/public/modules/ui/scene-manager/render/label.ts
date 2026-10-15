@@ -27,8 +27,10 @@ export function isPresetEntry(entry: SceneManagerEntry): boolean {
     return !!entry.presetName || String(entry.sceneType || '').startsWith('Пресет');
 }
 
+/** The drone, the ground and the field's own fixed pieces (the fence): not the student's to delete. */
 export function isProtectedEntry(entry: SceneManagerEntry): boolean {
-    return !!entry.isDrone || isGroundEntry(entry);
+    const fixedPiece = entry.draggable === false && Number(entry.depth || 0) === 0 && !isPresetEntry(entry);
+    return !!entry.isDrone || isGroundEntry(entry) || fixedPiece;
 }
 
 /** Short chip shown on the right of a row. Empty for ordinary props, whose type is already the title. */

@@ -33,4 +33,5 @@ export function setupLights(scene: THREE.Scene) {
     const hemiLight = new THREE.HemisphereLight(0xd8ebff, 0x59616b, 1.0);
     hemiLight.position.set(0, 0, 20);
     scene.add(hemiLight);
+    return mainLight;
 }

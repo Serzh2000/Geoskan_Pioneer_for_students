@@ -21,6 +21,7 @@ export const OBJECT_TYPE = {
     GROUND: 'ground',
     GROUP: 'group',
     GATE: 'Ворота',
+    FPV_CUBE: 'FPV-куб',
     BUILDING: 'Многоэтажка',
     ROAD: 'Дорога',
     RAILWAY: 'Железнодорожные пути',
@@ -34,4 +35,3 @@ export const OBJECT_TYPE = {
     TRAIN: 'Поезд'
 } as const;
 
-export type ObjectTypeTag = typeof OBJECT_TYPE[keyof typeof OBJECT_TYPE];

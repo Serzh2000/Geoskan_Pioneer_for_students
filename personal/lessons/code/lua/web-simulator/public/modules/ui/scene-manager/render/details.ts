@@ -1,4 +1,3 @@
-import type { UICallbacks } from '../../index.js';
 import type { SceneManagerDomRefs, SceneManagerEntry, TransformMode } from '../types.js';
 import { renderEmptyStateMarkup, renderSelectedDetailsMarkup } from './details/markup.js';
 import { resetSelectedControls, syncSelectedInputs, updateSelectedControls } from './details/controls.js';

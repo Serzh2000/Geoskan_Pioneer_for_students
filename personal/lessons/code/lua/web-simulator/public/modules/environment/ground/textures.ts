@@ -63,8 +63,8 @@ export function createLandingPadTexture(theme: GroundTheme): THREE.CanvasTexture
         ctx.fillStyle = '#edf3f2';
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.font = '600 300px Arial'; ctx.fillText('H', 512, 500);
-        ctx.font = '500 32px Arial'; ctx.fillText('P I O N E E R', 512, 735);
-        ctx.font = '24px Arial'; ctx.fillText('01 / LANDING ZONE', 512, 310);
+        ctx.font = '500 32px Arial'; ctx.fillText('П И О Н Е Р', 512, 735);
+        ctx.font = '24px Arial'; ctx.fillText('01 / ПОСАДОЧНАЯ ЗОНА', 512, 310);
         for (let i = 0; i < 4; i++) {
             ctx.save(); ctx.translate(512, 512); ctx.rotate(i * Math.PI / 2);
             ctx.fillStyle = '#f3aa59'; ctx.fillRect(-5, -474, 10, 55);

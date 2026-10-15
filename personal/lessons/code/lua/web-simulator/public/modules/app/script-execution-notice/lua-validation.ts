@@ -87,16 +87,6 @@ function collectLuaDelayedMissionCommands(code: string): Map<string, string[]> {
     return grouped;
 }
 
-function hasLuaAutopilotMissionApiUsage(code: string) {
-    const normalized = (code || '').toLowerCase();
-    return (
-        /ap\.push\s*\(/.test(normalized)
-        || /ap\.gotopoint\s*\(/.test(normalized)
-        || /ap\.gotolocalpoint\s*\(/.test(normalized)
-        || /ap\.updateyaw\s*\(/.test(normalized)
-    );
-}
-
 // Разделители шагов миссии: `sleep(` — старый учебный Lua, `action[` —
 // начало нового состояния FSM генератора pioneer_* (targets/lua-fsm.ts,
 // targets/compile.ts; см. docs/blockly-unification-plan.md §4.3, §7 фаза 7
@@ -154,39 +144,39 @@ export function collectLuaIssues(code: string): string[] {
     const hasLedSet = /:set\s*\(/.test(normalized);
 
     if (hasLedbar && !hasLedSet) {
-        issues.push('Лента светодиодов создана, но `leds:set(...)` ни разу не вызывается.');
+        issues.push('Лента светодиодов создана, но цвета не заданы, поэтому она не засветится. Добавьте вызов `leds:set(...)`.');
     }
     // callback(event) is required for event-driven continuation, but it is
     // not required when the script sequences commands with Timer.callLater()
     // (a valid pattern used by Pioneer Station examples). Do not report its
     // absence as a generic launch problem here.
     if (hasTakeoff && !hasPreflight) {
-        issues.push('Команда взлета используется без `Ev.MCE_PREFLIGHT`. Начните со стадии предполета.');
+        issues.push('Взлёт запрошен без подготовки. Сначала отправьте `Ev.MCE_PREFLIGHT`, потом `Ev.MCE_TAKEOFF`.');
     }
     if (hasGoTo && !hasTakeoff) {
-        issues.push('Маршрут запускается до взлета. Сначала выполните `PREFLIGHT` и `TAKEOFF`.');
+        issues.push('Маршрут запускается до взлёта. Сначала выполните подготовку (`Ev.MCE_PREFLIGHT`) и взлёт (`Ev.MCE_TAKEOFF`).');
     }
     if (hasLanding && !hasTakeoff) {
-        issues.push('Посадка запускается до взлета. Проверьте порядок команд миссии.');
+        issues.push('Посадка запускается до взлёта. Проверьте порядок: подготовка, взлёт, маршрут, посадка.');
     }
     if ((hasTakeoff || hasGoTo || hasLanding) && !hasTimer && !hasCallback && !hasSleep) {
-        issues.push('Команды миссии запускаются подряд без пауз. Добавьте между этапами `sleep(...)`, `Timer.callLater(...)` или `callback(event)`.');
+        issues.push('Команды миссии идут подряд без пауз, дрон не успеет выполнить этапы. Добавьте между ними `sleep(...)`, `Timer.callLater(...)` или `callback(event)`.');
     }
     if (/timer\.calllater\s*\(\s*[^,]+,\s*(?!function\b)[a-z_][\w.:]*\s*\(/i.test(code || '')) {
-        issues.push('В `Timer.callLater(...)` передан результат вызова функции, поэтому она выполняется сразу. Передайте сам callback, например `blinkGreen` или `function() ... end`.');
+        issues.push('В `Timer.callLater(...)` вместо функции стоит её вызов, поэтому она выполняется сразу, а не позже. Уберите скобки (`blinkGreen`) или оберните вызов в `function() ... end`.');
     }
 
     const immediateControlCode = stripLuaManagedBlocks(normalized);
     for (const commands of collectLuaMissionCommandGroups(immediateControlCode)) {
         if (commands.length >= 2) {
-            issues.push(`В одном шаге запускаются несколько команд миссии: ${commands.join(', ')}. Разделите их через \`sleep(...)\`, \`Timer.callLater(...)\` или \`callback(event)\`.`);
+            issues.push(`В одном шаге запускаются несколько команд миссии: ${commands.join(', ')}. Дрон не успеет выполнить их все. Разделите их через \`sleep(...)\`, \`Timer.callLater(...)\` или \`callback(event)\`.`);
             break;
         }
     }
 
     for (const [delay, commands] of collectLuaDelayedMissionCommands(normalized).entries()) {
         if (commands.length >= 2) {
-            issues.push(`\`Timer.callLater(${delay})\` ставит несколько команд одновременно: ${commands.join(', ')}. Разнесите их по разным таймерам или продолжайте сценарий из \`callback(event)\`.`);
+            issues.push(`\`Timer.callLater(${delay})\` ставит несколько команд одновременно: ${commands.join(', ')}. Разнесите их по разным таймерам или продолжайте из \`callback(event)\`.`);
         }
     }
 
@@ -200,7 +190,7 @@ export function collectLuaBlockingIssues(code: string): string[] {
     const whileTrueBodies = [...normalized.matchAll(/\bwhile\s+true\s+do\b([\s\S]*?)\bend\b/g)];
     if (whileTrueBodies.some((match) => !/\bsleep\s*\(/.test(match[1] || ''))) {
         issues.push(
-            '\u0412 `while true do` \u043d\u0435\u0442 `sleep(...)`, \u043f\u043e\u044d\u0442\u043e\u043c\u0443 \u0446\u0438\u043a\u043b \u043d\u0435 \u0443\u0441\u0442\u0443\u043f\u0430\u0435\u0442 \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u0441\u0438\u043c\u0443\u043b\u044f\u0442\u043e\u0440\u0443 \u0438 \u043c\u043e\u0436\u0435\u0442 \u043c\u0433\u043d\u043e\u0432\u0435\u043d\u043d\u043e \u0437\u0430\u0432\u0438\u0441\u0438\u0442\u044c \u0437\u0430\u043f\u0443\u0441\u043a.'
+            'Цикл `while true do` без `sleep(...)` не отдаёт управление симулятору, и программа зависнет. Добавьте внутрь цикла `sleep(0.1)`.'
         );
     }
 

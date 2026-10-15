@@ -1,6 +1,7 @@
 import { currentScriptLanguage, type ScriptLanguage } from '../../core/state.js';
 import { getEditorValue } from '../../editor/index.js';
 import type { UICallbacks } from '../index.js';
+import { scriptFileName } from '../../shared/funny-names.js';
 
 // Human-readable labels for the lesson example folders served alongside this
 // project's own `examples/`. An unrecognised top-level folder still gets a
@@ -65,9 +66,14 @@ let pendingListLanguage: ScriptLanguage | null = null;
 export function refreshFileList(language: ScriptLanguage): void {
     const fileSelector = document.getElementById('file-selector') as HTMLSelectElement | null;
     if (!fileSelector) return;
+    const status = document.getElementById('editor-examples-status');
 
     pendingListLanguage = language;
-    fileSelector.title = 'Выберите файл скрипта или используйте локальную загрузку';
+    fileSelector.disabled = true;
+    fileSelector.innerHTML = '<option value="">Загрузка…</option>';
+    if (status) status.textContent = 'Загружаю примеры…';
+    delete fileSelector.dataset.state;
+    fileSelector.title = 'Выберите пример программы или откройте свой файл';
     fetch(`/api/files?lang=${language}`)
         .then((res) => {
             if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -75,8 +81,10 @@ export function refreshFileList(language: ScriptLanguage): void {
         })
         .then((files) => {
             if (pendingListLanguage !== language) return;
-            fileSelector.innerHTML = '<option value="">Выберите файл...</option>';
-            fileSelector.title = 'Выберите файл скрипта';
+            fileSelector.innerHTML = '<option value="">Выберите пример…</option>';
+            fileSelector.disabled = false;
+            fileSelector.title = 'Выберите пример программы';
+            if (status) status.textContent = '';
             if (Array.isArray(files)) {
                 populateFileOptions(fileSelector, files);
             }
@@ -84,8 +92,12 @@ export function refreshFileList(language: ScriptLanguage): void {
         .catch((err) => {
             if (pendingListLanguage !== language) return;
             console.error('Failed to load file list:', err);
-            fileSelector.innerHTML = '<option value="">API недоступно</option>';
-            fileSelector.title = 'Ошибка загрузки списка файлов: API недоступно';
+            // Keep the picker label short; the nearby live status carries the recovery path.
+            fileSelector.innerHTML = '<option value="">Нет связи</option>';
+            fileSelector.disabled = true;
+            fileSelector.dataset.state = 'offline';
+            fileSelector.title = 'Не удалось загрузить примеры. Можно открыть файл с компьютера.';
+            if (status) status.textContent = 'Примеры недоступны — откройте свой файл.';
         });
 }
 
@@ -125,7 +137,7 @@ export function initFileControls(callbacks: UICallbacks, language: ScriptLanguag
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `pioneer-script.${extension}`;
+        link.download = scriptFileName(extension);
         link.click();
         URL.revokeObjectURL(url);
     });

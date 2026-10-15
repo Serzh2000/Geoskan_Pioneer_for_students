@@ -10,7 +10,7 @@ import { registerAddFormBindings } from './bindings/add-form.js';
 import { registerSceneIoBindings } from './bindings/scene-io.js';
 import type { BindingOptions } from './bindings/shared.js';
 
-function registerTabBindings({ callbacks, elements, setActiveTab: setActiveTabUnchecked }: BindingOptions) {
+function registerTabBindings({ elements, setActiveTab: setActiveTabUnchecked }: BindingOptions) {
     // The inspector tab is aria-disabled (not natively disabled) until
     // something is selected, so clicks and arrow keys must be gated here.
     const setActiveTab = (tab: Parameters<typeof setActiveTabUnchecked>[0]) => {

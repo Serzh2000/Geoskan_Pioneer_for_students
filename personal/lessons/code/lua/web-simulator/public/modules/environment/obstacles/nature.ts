@@ -102,7 +102,7 @@ export function createTreeMesh(scale = 1) {
 }
 
 export function createParkPatch(width: number, depth: number) {
-    const group = new THREE.Group();
+    const group = setCommonMeta(new THREE.Group(), 'Парк', { collidableRadius: Math.max(width, depth) / 2 });
     const base = new THREE.Mesh(new THREE.BoxGeometry(width + 0.18, depth + 0.18, 0.06), foliage(0x999e90));
     base.position.z = 0.03; group.add(base);
     const grass = new THREE.Mesh(new THREE.BoxGeometry(width, depth, 0.065), foliage(0x788668));

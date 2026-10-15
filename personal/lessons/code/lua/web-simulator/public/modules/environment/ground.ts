@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { createTrussArena } from './truss-arena.js';
 import { GROUND_PHYSICS_MATERIAL } from '../physics/materials.js';
 import { OBJECT_TYPE } from '../shared/object-types.js';
-import { createAxesLabels } from './ground/axes-labels.js';
 import { createFloorTexture, createLandingPadTexture, replaceMaterialTexture } from './ground/textures.js';
 import { getGroundTheme, type GroundTheme } from './ground/theme.js';
 

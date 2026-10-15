@@ -3,7 +3,7 @@ import type { ScriptLanguage } from '../core/state.js';
 function renderLuaMissionStateGuideHtml(): string {
     return `
         <div class="simulation-notice__section">
-            <div class="simulation-notice__section-title">Порядок состояний дрона</div>
+            <div class="simulation-notice__section-title">В каком порядке летит дрон</div>
             <div class="simulation-notice__list">
                 <div><code>IDLE</code> -> <code>PREFLIGHT</code> -> <code>TAKEOFF_PROCESS</code> -> <code>FLYING_HOVER</code> -> <code>FLYING_MOVING</code> -> <code>LANDING_PROCESS</code> -> <code>IDLE</code></div>
                 <div>Команды сценария должны идти в том же порядке: сначала <code>Ev.MCE_PREFLIGHT</code>, затем <code>Ev.MCE_TAKEOFF</code>, потом маршрут <code>ap.goToLocalPoint(...)</code>, и только после завершения полета <code>Ev.MCE_LANDING</code>.</div>
@@ -45,8 +45,10 @@ end`;
             ${issues.map((issue) => `<div>${issue}</div>`).join('')}
         </div>
         ${language === 'lua' ? renderLuaMissionStateGuideHtml() : ''}
-        <button type="button" class="simulation-notice__action" data-simulation-action="open-mission-guide">Открыть 5 шагов миссии</button>
-        <div class="simulation-notice__code">${example}</div>
+        <div class="simulation-notice__section">
+            <div class="simulation-notice__section-title">Пример, который работает</div>
+            <div class="simulation-notice__code">${example}</div>
+        </div>
     `;
 }
 
@@ -67,13 +69,15 @@ end`;
 
     return `
         <div class="simulation-notice__list">
-            <div class="is-critical">Вызовы за один шаг симуляции: ${commands.join(', ')}.</div>
-            <div>Если команды уже разделены таймерами, проверьте, не создаются ли эти таймеры заново при каждом событии callback(event). Запускайте расписание один раз, например внутри условия Ev.TAKEOFF_COMPLETE с флагом запуска.</div>
-            <div>Команды миссии нужно выполнять по этапам и дожидаться завершения шага.</div>
-            <div>Используйте паузы через Timer.callLater(...) или продолжайте сценарий из callback(event).</div>
+            <div class="is-critical">Сразу вызваны: ${commands.join(', ')}.</div>
+            <div>Дрон выполняет этапы по очереди: подготовка, взлёт, маршрут, посадка. Следующую команду отправляйте, когда закончилась предыдущая.</div>
+            <div>Для этого используйте паузу <code>Timer.callLater(...)</code> или продолжайте из <code>callback(event)</code>.</div>
+            <div>Если паузы уже есть, проверьте: не создаются ли таймеры заново при каждом событии. Запускайте расписание один раз.</div>
         </div>
-        <button type="button" class="simulation-notice__action" data-simulation-action="open-mission-guide">Открыть 5 шагов миссии</button>
-        <div class="simulation-notice__code">${example}</div>
+        <div class="simulation-notice__section">
+            <div class="simulation-notice__section-title">Пример, который работает</div>
+            <div class="simulation-notice__code">${example}</div>
+        </div>
     `;
 }
 
@@ -94,13 +98,14 @@ end`;
 
     return `
         <div class="simulation-notice__list">
-            <div class="is-critical">Маршрут запущен слишком рано: взлет еще не завершен.</div>
-            <div>На этапах PREFLIGHT и TAKEOFF_PROCESS команда goToLocalPoint(...) может нарушить выполнение сценария.</div>
-            <div>Не запускайте маршрут из Timer.callLater(...), если взлет еще продолжается.</div>
-            <div>Безопаснее начинать маршрут из callback(Ev.TAKEOFF_COMPLETE), а продолжение - из callback(Ev.POINT_REACHED).</div>
+            <div class="is-critical">Дрон ещё взлетает, а маршрут уже отправлен.</div>
+            <div>Пока идёт подготовка или взлёт, команда <code>goToLocalPoint(...)</code> может сбить программу.</div>
+            <div>Начинайте маршрут по событию <code>Ev.TAKEOFF_COMPLETE</code>, а следующую точку отправляйте по <code>Ev.POINT_REACHED</code>.</div>
         </div>
-        <button type="button" class="simulation-notice__action" data-simulation-action="open-mission-guide">Открыть 5 шагов миссии</button>
-        <div class="simulation-notice__code">${example}</div>
+        <div class="simulation-notice__section">
+            <div class="simulation-notice__section-title">Пример, который работает</div>
+            <div class="simulation-notice__code">${example}</div>
+        </div>
     `;
 }
 
@@ -166,7 +171,7 @@ function renderFailureSection(title: string, lines: FailureSectionLine[]): strin
             <div class="simulation-notice__list">
                 ${items.map((line) => {
                     const resolved = typeof line === 'string' ? { text: line, critical: false } : line;
-                    return `<div${resolved.critical ? ' class="is-critical"' : ''}>${escapeHtml(resolved.text)}</div>`;
+                    return `<div${resolved.critical ? ' class="is-critical"' : ''}>${escapeHtml(resolved.text).replace(/`([^`]+)`/g, '<code>$1</code>')}</div>`;
                 }).join('')}
             </div>
         </div>
@@ -192,6 +197,7 @@ export function renderScriptFailureHtml(
         line?: number | null;
         column?: number | null;
         note?: string | null;
+        example?: string | null;
         details?: string | null;
         phase?: string | null;
         stack?: string | null;
@@ -199,39 +205,34 @@ export function renderScriptFailureHtml(
         fsmHistory?: string[] | null;
     }
 ): string {
+    void language;
+    void kind;
     const location = buildScriptFailureLocation(options?.line, options?.column);
-
-    const hint = kind === 'syntax'
-        ? (
-            language === 'python'
-                ? 'Скрипт не запускается из-за синтаксической ошибки. Проверьте двоеточия, отступы, скобки и закрытие строк.'
-                : 'Скрипт не запускается из-за синтаксической ошибки. Проверьте `end`, скобки, запятые и закрытие строк.'
-        )
-        : (
-            language === 'python'
-                ? 'Скрипт стартовал, но остановился во время выполнения. Часто причина в неверном имени, пустом значении или неподходящей операции.'
-                : 'Скрипт стартовал, но остановился во время выполнения. Часто причина в `nil`, неверном аргументе или конфликте состояний FSM.'
-        );
-
     const technicalDetails = collectScriptFailureTechnicalDetails(options?.details, [
         message,
         options?.note || '',
         location || ''
     ]);
 
-    const detailLines: FailureSectionLine[] = [
-        hint,
-        location || '',
+    const fixLines: FailureSectionLine[] = [options?.note || ''].filter(Boolean);
+    const example = normalizeNoticeText(options?.example);
+    const technicalLines: FailureSectionLine[] = [
         options?.phase ? `Фаза выполнения: ${options.phase}` : '',
-        { text: message, critical: true },
-        options?.note || '',
         ...technicalDetails.map((line) => `Техническая деталь: ${line}`)
     ].filter(Boolean);
 
-    return `
-        ${renderFailureSection('Сводка', detailLines)}
+    const technical = `
+        ${renderFailureSection('Для отладки', technicalLines)}
         ${renderFailureSection('Контекст выполнения', options?.contextLines || [])}
         ${renderFailureSection('История FSM', options?.fsmHistory || [])}
         ${renderFailureStack(options?.stack)}
+    `;
+    const hasTechnical = technical.replace(/\s+/g, '') !== '';
+
+    return `
+        ${renderFailureSection('Где', location ? [location] : [])}
+        ${renderFailureSection('Как исправить', fixLines)}
+        ${example ? `<div class="simulation-notice__section"><div class="simulation-notice__section-title">Пример, который работает</div><div class="simulation-notice__code">${escapeHtml(example)}</div></div>` : ''}
+        ${hasTechnical ? `<details class="simulation-notice__tech"><summary>Технические подробности</summary>${technical}</details>` : ''}
     `;
 }

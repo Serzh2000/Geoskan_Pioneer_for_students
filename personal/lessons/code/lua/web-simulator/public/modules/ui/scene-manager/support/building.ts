@@ -44,7 +44,7 @@ export function setBuildingControlsVisible(
     floorsEl: HTMLInputElement | null,
     settingsEl: HTMLDivElement | null
 ) {
-    if (floorsWrapEl) floorsWrapEl.style.display = visible ? 'flex' : 'none';
+    if (floorsWrapEl) floorsWrapEl.style.display = visible ? '' : 'none';
     if (floorsEl) floorsEl.disabled = !visible;
     if (settingsEl) settingsEl.classList.toggle('visible', visible);
 }

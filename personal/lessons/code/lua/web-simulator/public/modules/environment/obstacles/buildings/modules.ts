@@ -15,6 +15,8 @@ function applyNamedMaterials(instance: THREE.Object3D, nameToMaterial: Record<st
         object.castShadow = true;
         object.receiveShadow = true;
         object.frustumCulled = false;
+        // Fine railings: ~half of a window module's triangles, invisible from afar (see mergeBuildingShell).
+        object.userData.lodDetail = /Baluster|TopRail/.test(object.name);
         const material = nameToMaterial[object.name.replace(/^V2_/, '').replace(/\.\d+$/, '')];
         if (material) object.material = material;
     });
@@ -85,6 +87,8 @@ export async function populateWindowsAndEntrance(
 
     if (windowSource) {
         for (const slot of windowSlots) {
+            // The entrance module (1.54 m wide) stands in front of the middle ground-floor window of the entrance wall (the +Y face).
+            if (slot.floor === 1 && slot.face === 'front' && slot.window === 2 && entranceSource) continue;
             const instance = windowSource.clone(true);
             applyNamedMaterials(instance, { ...windowMaterials, WindowGlass: resolveWindowGlassMaterial(slot) });
             instance.position.copy(slot.position);

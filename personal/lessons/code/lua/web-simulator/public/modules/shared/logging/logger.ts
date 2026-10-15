@@ -14,6 +14,8 @@ export type LogRecord = {
     message: string;
     tone: LogTone;
     category: Exclude<LogCategoryKey, 'all'>;
+    /** Simulation flight time in seconds when the entry was written (see setLogClock). */
+    flightTime?: number;
 };
 
 type LogCategoryDefinition = {
@@ -31,13 +33,29 @@ const LOG_CATEGORY_DEFINITIONS: LogCategoryDefinition[] = [
 ];
 
 const ALL_LOGS_LABEL = 'Все';
-const DEFAULT_EMPTY_MESSAGE = 'Журнал ожидает первые события симулятора.';
 const MAX_LOG_ENTRIES = 400;
 
 const logEntries: LogRecord[] = [];
 let activeCategory: LogCategoryKey = 'all';
 let renderScheduled = false;
 const logListeners = new Set<() => void>();
+
+let logClock: (() => number) | null = null;
+
+/** Registers the source of the flight time stamped on each entry (the journal prints it as 00:03.2). */
+export function setLogClock(source: (() => number) | null): void {
+    logClock = source;
+}
+
+function readLogClock(): number | undefined {
+    if (!logClock) return undefined;
+    try {
+        const value = logClock();
+        return Number.isFinite(value) && value >= 0 ? value : undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 export function getLogEntries(): readonly LogRecord[] {
     return logEntries;
@@ -110,21 +128,6 @@ export function createLogEntryElement(record: LogRecord): HTMLElement {
     return entry;
 }
 
-function createEmptyStateElement(message: string): HTMLElement {
-    const emptyState = document.createElement('div');
-    emptyState.className = 'logs-console__empty';
-    emptyState.textContent = message;
-    return emptyState;
-}
-
-function getEmptyMessage(category: LogCategoryKey): string {
-    if (category === 'all') return DEFAULT_EMPTY_MESSAGE;
-
-    const categoryDefinition = LOG_CATEGORY_DEFINITIONS.find(({ key }) => key === category);
-    const label = categoryDefinition?.label ?? '[SYSTEM]';
-    return `Во вкладке ${label} пока нет событий.`;
-}
-
 function countEntriesByCategory(): Map<Exclude<LogCategoryKey, 'all'>, number> {
     const counts = new Map<Exclude<LogCategoryKey, 'all'>, number>();
 
@@ -156,22 +159,6 @@ function renderTabs(tabs: HTMLElement, counts: Map<Exclude<LogCategoryKey, 'all'
     createTabButton('all', ALL_LOGS_LABEL, logEntries.length);
     LOG_CATEGORY_DEFINITIONS.forEach(({ key, label }) => createTabButton(key, label, counts.get(key) ?? 0));
     tabs.replaceChildren(fragment);
-}
-
-function renderLogStream(logs: HTMLElement) {
-    const matchingEntries = activeCategory === 'all'
-        ? logEntries
-        : logEntries.filter((entry) => entry.category === activeCategory);
-
-    if (matchingEntries.length === 0) {
-        logs.replaceChildren(createEmptyStateElement(getEmptyMessage(activeCategory)));
-        return;
-    }
-
-    const fragment = document.createDocumentFragment();
-    matchingEntries.forEach((record) => fragment.appendChild(createLogEntryElement(record)));
-    logs.replaceChildren(fragment);
-    logs.scrollTop = logs.scrollHeight;
 }
 
 function renderLogsUI() {
@@ -235,7 +222,8 @@ export function log(msg: string, type: LogLevel = 'info') {
         tag,
         message,
         tone,
-        category
+        category,
+        flightTime: readLogClock()
     });
 
     if (logEntries.length > MAX_LOG_ENTRIES) {

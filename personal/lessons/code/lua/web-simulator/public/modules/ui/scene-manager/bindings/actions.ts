@@ -1,6 +1,7 @@
 import { appendIncidentEntry, clampFloors, clearIncidentEntries } from '../support.js';
 import type { TransformMode } from '../types.js';
 import type { BindingOptions } from './shared.js';
+import { bindGridSnapToggle } from '../../../scene/objects/placement.js';
 
 export function registerIncidentBindings({ elements }: BindingOptions) {
     elements.addBuildingAppendBtn?.addEventListener('click', () => {
@@ -38,7 +39,11 @@ export function registerCreationBindings({ callbacks, elements, tree, render }: 
         elements.presetBtn.addEventListener('click', () => {
             // Loading a preset is a hierarchy action: keep the freshly added group in view.
             tree.suppressInspectorJump = true;
-            callbacks.sceneManager?.add(elements.presetTypeEl?.value || '');
+            const id = callbacks.sceneManager?.add(elements.presetTypeEl?.value || '');
+            if (id) {
+                tree.expandedIds.add(id);
+                callbacks.sceneManager?.focus(id);
+            }
             render();
         });
     }
@@ -140,4 +145,7 @@ export function registerTransformBindings({ callbacks, elements, render, setActi
         callbacks.sceneManager?.resetRotation();
         render();
     });
+
+    // A scene-wide editor preference, not a property of the selection: never disabled by render().
+    bindGridSnapToggle(document.getElementById('scene-grid-snap') as HTMLInputElement | null);
 }

@@ -11,12 +11,12 @@ export const PHYSICS_FIXED_DT = 1 / 120;
 export const DRONE_COLLISION_RADIUS = 0.18;
 export const COLLISION_SAMPLE_STEP = 0.08;
 export const MANUAL_TAKEOFF_THROTTLE = 1200;
-export const MANUAL_TAKEOFF_ALTITUDE = 0.8;
 
 export const NON_COLLIDABLE_TYPES = new Set([
     'Ground',
     OBJECT_TYPE.GROUND,
     OBJECT_TYPE.GATE,
+    OBJECT_TYPE.FPV_CUBE,
     OBJECT_TYPE.ROAD,
     OBJECT_TYPE.RAILWAY,
     'Площадка H',

@@ -1,6 +1,13 @@
 import { log } from '../../../shared/logging/logger.js';
+import { sceneFileName } from '../../../shared/funny-names.js';
+import { sceneEmptyNotice, sceneLoadFailedNotice, sceneLoadedNotice, sceneSavedNotice } from '../../../shared/notice-messages/catalog.js';
+import type { NoticeText } from '../../../shared/notice-messages/types.js';
 import { applySceneImport, buildSceneExport, parseSceneImport } from '../scene-io.js';
 import type { BindingOptions } from './shared.js';
+
+function notify(notice: NoticeText) {
+    (window as unknown as { showSimulationNotice?: (payload: NoticeText) => void }).showSimulationNotice?.(notice);
+}
 
 export function registerSceneIoBindings({ callbacks, render }: BindingOptions) {
     const exportBtn = document.getElementById('scene-export-btn') as HTMLButtonElement | null;
@@ -11,6 +18,7 @@ export function registerSceneIoBindings({ callbacks, render }: BindingOptions) {
         const data = buildSceneExport(callbacks);
         if (data.objects.length === 0) {
             log('На сцене нет объектов для сохранения - добавьте что-нибудь сначала', 'warn');
+            notify(sceneEmptyNotice());
             return;
         }
 
@@ -18,10 +26,11 @@ export function registerSceneIoBindings({ callbacks, render }: BindingOptions) {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'pioneer-scene.json';
+        link.download = sceneFileName();
         link.click();
         URL.revokeObjectURL(url);
         log(`Сцена сохранена: ${data.objects.length} объект(ов)`, 'success');
+        notify(sceneSavedNotice(data.objects.length));
     });
 
     importBtn?.addEventListener('click', () => importInput?.click());
@@ -38,11 +47,14 @@ export function registerSceneIoBindings({ callbacks, render }: BindingOptions) {
                 render();
                 if (added > 0) {
                     log(`Сцена загружена: добавлено ${added} объект(ов)${failed ? `, ${failed} пропущено` : ''}`, 'success');
+                    notify(sceneLoadedNotice(added, failed));
                 } else {
                     log('Не удалось добавить ни одного объекта из файла сцены', 'warn');
+                    notify(sceneLoadFailedNotice());
                 }
             } catch (error) {
                 log(`Не удалось прочитать файл сцены: ${(error as Error).message}`, 'error');
+                notify(sceneLoadFailedNotice((error as Error).message));
             }
         };
         reader.readAsText(file);

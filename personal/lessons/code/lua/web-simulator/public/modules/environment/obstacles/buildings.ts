@@ -19,7 +19,7 @@ import { populateWindowsAndEntrance } from './buildings/modules.js';
 import { createMarkerMeshForMap } from './markers/object.js';
 import { SHEET_SIZE, SHEET_THICKNESS } from './markers/shared.js';
 
-export type { BuildingConfig, BuildingRoofMarker } from './buildings/shared.js';
+export type { BuildingConfig } from './buildings/shared.js';
 export { normalizeBuildingConfig, MIN_BUILDING_FLOORS, MAX_BUILDING_FLOORS, BUILDING_FLOOR_HEIGHT, BUILDING_BASE_HEIGHT } from './buildings/shared.js';
 export { parseWindowIncidents } from './buildings/incidents.js';
 
@@ -38,21 +38,30 @@ function isKeptSeparate(node: THREE.Object3D, root: THREE.Object3D) {
     return false;
 }
 
-/** Bake only static opaque architecture. Incident effects keep their own objects. */
+/**
+ * Bake only static opaque architecture. Incident effects keep their own objects.
+ * Fine railings (userData.lodDetail) go into separate meshes that the quality governor hides from a distance,
+ * and the merged meshes keep frustum culling and the sun shadow of the whole block.
+ */
 function mergeBuildingShell(group: THREE.Group) {
     group.updateWorldMatrix(true, true);
     const inverse = group.matrixWorld.clone().invert();
-    const batches = new Map<THREE.Material, THREE.Mesh[]>();
+    const batches = new Map<string, { material: THREE.Material; detail: boolean; parts: THREE.Mesh[] }>();
+    const materialIds = new Map<THREE.Material, number>();
     group.traverse(node => {
         if (!(node instanceof THREE.Mesh) || Array.isArray(node.material) || node.material.transparent) return;
         // A marker sheet merged into the shell would lose its name, and with it
         // detection (cv2.aruco looks for the sheet itself).
         if (isKeptSeparate(node, group)) return;
-        const batch = batches.get(node.material) ?? [];
-        batch.push(node); batches.set(node.material, batch);
+        const detail = !!node.userData.lodDetail;
+        if (!materialIds.has(node.material)) materialIds.set(node.material, materialIds.size);
+        const key = `${materialIds.get(node.material)}:${detail ? 1 : 0}`;
+        const batch = batches.get(key) ?? { material: node.material, detail, parts: [] as THREE.Mesh[] };
+        batch.parts.push(node); batches.set(key, batch);
     });
-    for (const [material, parts] of batches) {
-        if (parts.length < 2) continue;
+    const detailMeshes: THREE.Mesh[] = [];
+    for (const { material, detail, parts } of batches.values()) {
+        if (parts.length < 2 && !detail) continue;
         const geometries = parts.map(part => part.geometry.clone().applyMatrix4(
             new THREE.Matrix4().multiplyMatrices(inverse, part.matrixWorld)
         ));
@@ -60,8 +69,25 @@ function mergeBuildingShell(group: THREE.Group) {
         geometries.forEach(item => item.dispose());
         if (!geometry) continue;
         for (const part of parts) { part.removeFromParent(); part.geometry.dispose(); }
-        group.add(new THREE.Mesh(geometry, material));
+        geometry.computeBoundingSphere();
+        const merged = new THREE.Mesh(geometry, material);
+        merged.userData.batchedShell = true;
+        if (detail) { merged.userData.lodDetail = true; merged.userData.noShadowLod = true; detailMeshes.push(merged); }
+        group.add(merged);
     }
+    // Rebuilt shell: the governor must re-apply visibility and shadows to the new meshes.
+    group.userData.lodDetail = detailMeshes;
+    group.userData.lodDetailOn = undefined;
+    group.userData.lodShadow = undefined;
+}
+
+/** Merged architecture is safe to frustum-cull (exact bounds) and detail railings never cast shadows. */
+function finishShellMeshes(group: THREE.Group) {
+    group.traverse(node => {
+        if (!(node as THREE.Mesh).isMesh || !node.userData.batchedShell) return;
+        node.frustumCulled = true;
+        if (node.userData.lodDetail) (node as THREE.Mesh).castShadow = false;
+    });
 }
 
 /** Top of the roof under its centre, in the building's local space. */
@@ -150,11 +176,12 @@ function rebuildApartmentBuilding(group: THREE.Group) {
     mergeBuildingShell(group);
     placeRoofMarker(group, proxyRoofTop);
     applyShadows(group);
+    finishShellMeshes(group);
 
     const windowSlots = getWindowSlots(floors, depth, floorHeight);
 
     const normalWindowMat = new THREE.MeshStandardMaterial({
-        color: 0x243b43, roughness: 0.3, metalness: 0.35
+        name: 'Окно', color: 0x243b43, roughness: 0.3, metalness: 0.35
     });
     const fireWindowMat = new THREE.MeshStandardMaterial({
         color: 0x2b1208, emissive: 0xff7a18, emissiveIntensity: 0.55, roughness: 0.3, metalness: 0.35
@@ -229,6 +256,7 @@ function rebuildApartmentBuilding(group: THREE.Group) {
         }
 
         applyShadows(group);
+        finishShellMeshes(group);
     });
 }
 

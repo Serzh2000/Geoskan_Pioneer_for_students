@@ -6,9 +6,11 @@ import { getSceneObjectIcon } from './icons.js';
 import { tablerIcon } from '../../icons/tabler.js';
 import {
     formatObjectCount,
-    getEntryKind,
     getEntryMeta,
     getEntryTitle,
+    isGroundEntry,
+    isGroupEntry,
+    isPresetEntry,
     isProtectedEntry,
     matchesQuery
 } from './label.js';
@@ -64,17 +66,20 @@ function createRow(
     selectedId: string | null,
     callbacks: UICallbacks,
     tree: SceneTreeState,
-    rerender: () => void
+    rerender: () => void,
+    depthOffset = 0
 ): HTMLElement {
     const { entry, hasChildren, expanded } = row;
-    const depth = Number(entry.depth || 0);
+    const depth = Number(entry.depth || 0) + depthOffset;
     // entry.selected also covers Ctrl+click multi-selection (viewport or
     // list); selectedId alone only ever tracks the single "last" one.
     const isSelected = entry.selected || entry.id === selectedId;
-    const kind = getEntryKind(entry);
+    // Inline delete confirmation lives in the row itself; protected objects never get it.
+    const isConfirming = tree.pendingDeleteId === entry.id && !isProtectedEntry(entry);
 
     const item = document.createElement('div');
-    item.className = 'scene-tree-row' + (isSelected ? ' is-selected' : '');
+    item.className = 'pk-row scene-tree-row' + (isSelected ? ' is-selected' : '');
+    item.dataset.kind = entry.isDrone ? 'drone' : isGroundEntry(entry) ? 'ground' : isGroupEntry(entry) || isPresetEntry(entry) ? 'group' : 'prop';
     item.style.setProperty('--tree-depth', String(depth));
     item.setAttribute('role', 'treeitem');
     item.setAttribute('aria-level', String(depth + 1));
@@ -128,14 +133,14 @@ function createRow(
         }
     });
     main.innerHTML = `
-        <span class="scene-manager-item__icon">${getSceneObjectIcon(entry)}</span>
-        <span class="scene-manager-item__content">
-            <span class="scene-manager-item__title">${escapeHtml(getEntryTitle(entry))}</span>
-            <span class="scene-manager-item__meta">${escapeHtml(getEntryMeta(entry))}</span>
+        <span class="pk-row__icon">${getSceneObjectIcon(entry)}</span>
+        <span class="pk-row__text">
+            <span class="pk-row__name">${escapeHtml(getEntryTitle(entry))}</span>
+            <span class="pk-row__meta">${isConfirming ? 'Удалить?' : escapeHtml(getEntryMeta(entry))}</span>
         </span>
-        ${kind ? `<span class="scene-tree-kind">${escapeHtml(kind)}</span>` : ''}
     `;
     main.addEventListener('click', (event) => {
+        tree.pendingDeleteId = null;
         tree.suppressInspectorJump = true;
         if (event.ctrlKey || event.metaKey) {
             callbacks.sceneManager?.toggleMultiSelect(entry.id);
@@ -155,32 +160,85 @@ function createRow(
 
     const focusBtn = document.createElement('button');
     focusBtn.type = 'button';
-    focusBtn.className = 'scene-tree-action';
+    focusBtn.className = 'pk-row__action scene-tree-action';
     focusBtn.innerHTML = FOCUS_ICON;
     focusBtn.title = 'Навести камеру на объект';
     focusBtn.setAttribute('aria-label', `Навести камеру: ${getEntryTitle(entry)}`);
     focusBtn.addEventListener('click', (event) => {
         event.stopPropagation();
+        tree.pendingDeleteId = null;
         tree.suppressInspectorJump = true;
         callbacks.sceneManager?.focus(entry.id);
         rerender();
     });
-    actions.appendChild(focusBtn);
 
-    if (!isProtectedEntry(entry)) {
-        const deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
-        deleteBtn.className = 'scene-tree-action scene-tree-action--danger';
-        deleteBtn.innerHTML = DELETE_ICON;
-        deleteBtn.title = 'Удалить объект';
-        deleteBtn.setAttribute('aria-label', `Удалить: ${getEntryTitle(entry)}`);
-        deleteBtn.addEventListener('click', (event) => {
+    const focusRowMain = () => {
+        const buttons = item.parentElement?.querySelectorAll<HTMLButtonElement>('.scene-tree-main');
+        Array.from(buttons || []).find(button => button.dataset.id === entry.id)?.focus({ preventScroll: true });
+    };
+
+    if (isConfirming) {
+        actions.classList.add('is-confirming');
+        const confirm = document.createElement('button');
+        confirm.type = 'button';
+        confirm.className = 'btn-secondary btn--sm btn--danger scene-tree-confirm';
+        confirm.dataset.action = 'delete-confirm';
+        confirm.textContent = 'Удалить';
+        confirm.setAttribute('aria-label', `Удалить: ${getEntryTitle(entry)}`);
+        confirm.addEventListener('click', (event) => {
             event.stopPropagation();
+            tree.pendingDeleteId = null;
             tree.suppressInspectorJump = true;
             callbacks.sceneManager?.remove(entry.id);
             rerender();
         });
-        actions.appendChild(deleteBtn);
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'btn-secondary btn--sm scene-tree-confirm';
+        cancel.dataset.action = 'delete-cancel';
+        cancel.textContent = 'Отмена';
+        cancel.addEventListener('click', (event) => {
+            event.stopPropagation();
+            tree.pendingDeleteId = null;
+            rerender();
+            focusRowMain();
+        });
+        actions.append(confirm, cancel);
+        item.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            event.preventDefault(); event.stopPropagation();
+            tree.pendingDeleteId = null;
+            rerender();
+            focusRowMain();
+        });
+    } else {
+        actions.appendChild(focusBtn);
+        if (!isProtectedEntry(entry)) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'pk-row__action scene-tree-action scene-tree-action--danger';
+            deleteBtn.innerHTML = DELETE_ICON;
+            deleteBtn.title = 'Удалить объект';
+            deleteBtn.setAttribute('aria-label', `Удалить: ${getEntryTitle(entry)}`);
+            deleteBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                tree.pendingDeleteId = entry.id;
+                tree.suppressInspectorJump = true;
+                rerender();
+                // The question is on screen: put the keyboard on the safe answer.
+                const list = document.getElementById('scene-object-list');
+                const mains = Array.from(list?.querySelectorAll<HTMLElement>('.scene-tree-main') || []);
+                const row = mains.find(button => button.dataset.id === entry.id)?.closest('.scene-tree-row');
+                row?.querySelector<HTMLButtonElement>('[data-action="delete-cancel"]')?.focus({ preventScroll: true });
+            });
+            actions.appendChild(deleteBtn);
+        } else {
+            // Protected rows keep the Delete slot empty so every row's Focus button stays in the same place.
+            const slot = document.createElement('span');
+            slot.className = 'scene-tree-action-slot';
+            slot.setAttribute('aria-hidden', 'true');
+            actions.appendChild(slot);
+        }
     }
 
     item.append(twisty, main, actions);
@@ -198,6 +256,7 @@ export function renderObjectList(
     if (!elements.listEl || !callbacks.sceneManager) return;
 
     const rows = buildVisibleRows(objects, tree);
+    if (tree.pendingDeleteId && !rows.some(row => row.entry.id === tree.pendingDeleteId)) tree.pendingDeleteId = null;
     const selected = objects.filter(entry => entry.selected || entry.id === selectedId);
     const summary = document.getElementById('scene-selection-summary');
     if (summary) {
@@ -206,11 +265,22 @@ export function renderObjectList(
         if (summary.textContent !== label) summary.textContent = label;
         summary.closest('.scene-selection-bar')?.classList.toggle('has-selection', selected.length > 0);
     }
+    const tabCount = document.getElementById('scene-tab-inspector-count');
+    if (tabCount) tabCount.textContent = selected.length ? String(selected.length) : '';
     if (elements.listCountEl) {
         const matchCount = objects.filter(entry => matchesQuery(entry, tree.query.trim().toLowerCase())).length;
         elements.listCountEl.textContent = tree.query.trim()
             ? `${matchCount} из ${objects.length}` : formatObjectCount(objects.length);
     }
+    const hint = document.getElementById('scene-tree-hint');
+    if (hint) {
+        hint.innerHTML = selected.length === 0
+            ? 'Выберите объект в списке или на сцене: откроются его свойства.'
+            : 'Двойной щелчок — перейти к объекту. Несколько объектов — <span class="pk-kbd">Ctrl</span> + щелчок.';
+    }
+
+    const toolbar = document.querySelector<HTMLElement>('.scene-tree-toolbar');
+    if (toolbar) toolbar.hidden = objects.length < 8 && !tree.query.trim();
 
     const focused = document.activeElement as HTMLElement | null;
     const focusedId = focused?.classList.contains('scene-tree-main') ? focused.dataset.id : null;
@@ -227,8 +297,62 @@ export function renderObjectList(
         return;
     }
 
+    // Two groups: the fixed base of the field, and what the student placed. A row's children follow their parent.
+    const base: VisibleRow[] = [];
+    const mine: VisibleRow[] = [];
+    let current = mine;
     for (const row of rows) {
-        elements.listEl.appendChild(createRow(row, selectedId, callbacks, tree, rerender));
+        if (Number(row.entry.depth || 0) === 0) {
+            current = row.entry.isDrone || row.entry.draggable === false ? base : mine;
+        }
+        current.push(row);
+    }
+    const listEl = elements.listEl;
+    const filtering = !!tree.query.trim();
+    const topLevel = (group: VisibleRow[]) => group.filter(row => Number(row.entry.depth || 0) === 0).length;
+
+    // One add action, one weight: it carries the accent colour only while the student has placed nothing.
+    const addButton = document.getElementById('scene-add-object-btn');
+    const needsFirstObject = !mine.length && !filtering;
+    addButton?.classList.toggle('btn-primary', needsFirstObject);
+    addButton?.classList.toggle('btn-secondary', !needsFirstObject);
+
+    // The tree: two folders, their rows one level deeper. A folder holding the selection (or a search hit) opens itself.
+    const appendFolder = (name: string, group: VisibleRow[], isOpen: boolean, toggle: () => void, empty?: string) => {
+        const folder = document.createElement('div');
+        folder.className = 'scene-tree-folder';
+        folder.setAttribute('role', 'treeitem');
+        folder.setAttribute('aria-level', '1');
+        folder.setAttribute('aria-expanded', String(isOpen));
+        const head = document.createElement('button');
+        head.type = 'button';
+        head.className = 'scene-tree-group' + (isOpen ? ' is-open' : '');
+        head.innerHTML = `<span class="scene-tree-group__chevron" aria-hidden="true">${TWISTY_ICON}</span><span>${name}</span><small>${topLevel(group)}</small>`;
+        head.addEventListener('click', toggle);
+        folder.appendChild(head);
+        listEl.appendChild(folder);
+        if (!isOpen) return;
+        if (!group.length && empty) {
+            const note = document.createElement('p');
+            note.className = 'scene-tree-invite';
+            note.innerHTML = empty;
+            listEl.appendChild(note);
+        }
+        for (const row of group) listEl.appendChild(createRow(row, selectedId, callbacks, tree, rerender, 1));
+    };
+    const holdsSelection = (group: VisibleRow[]) => group.some(row => row.entry.selected || row.entry.id === selectedId);
+
+    if (base.length) {
+        appendFolder('Основа полигона', base, filtering || tree.baseOpen || holdsSelection(base), () => {
+            tree.baseOpen = !tree.baseOpen;
+            rerender();
+        });
+    }
+    if (mine.length || !filtering) {
+        appendFolder('Ваши объекты', mine, filtering || tree.mineOpen || holdsSelection(mine), () => {
+            tree.mineOpen = !tree.mineOpen;
+            rerender();
+        }, 'Пока пусто. Нажмите <strong>«Добавить»</strong> и расставьте ворота, пилон или флаг по полигону.');
     }
     const buttons = Array.from(elements.listEl.querySelectorAll<HTMLButtonElement>('.scene-tree-main'));
     if (!buttons.some(button => button.tabIndex === 0) && buttons[0]) buttons[0].tabIndex = 0;

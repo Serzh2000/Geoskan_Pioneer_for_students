@@ -3,6 +3,7 @@ import type { DroneState } from '../core/state.js';
 import { emitGenericNotice } from '../core/mission-notices.js';
 import { triggerLuaCallback } from '../lua/index.js';
 import { log } from '../shared/logging/logger.js';
+import { batteryCriticalNotice, batteryDepletedNotice, batteryLowNotice } from '../shared/notice-messages/catalog.js';
 import { clamp } from '../shared/math.js';
 
 const BATTERY_CAPACITY_MAH = 1800;
@@ -74,8 +75,8 @@ function getLoadedVoltage(chargeRatio: number, currentDrawAmps: number) {
     return clamp(loadedVoltage, BATTERY_EMPTY_VOLTAGE, BATTERY_FULL_VOLTAGE);
 }
 
-function showBatteryNotice(title: string, message: string, level: 'warn' | 'error') {
-    emitGenericNotice(title, message, level);
+function showBatteryNotice(notice: { title: string; message: string; level: string }) {
+    emitGenericNotice(notice.title, notice.message, notice.level === 'error' ? 'error' : 'warn');
 }
 
 function notifyLowVoltage(simState: DroneState, id: string, level: 1 | 2) {
@@ -86,22 +87,14 @@ function notifyLowVoltage(simState: DroneState, id: string, level: 1 | 2) {
         simState.batteryLowVoltage1Notified = true;
         triggerLuaCallback(id, 13);
         log(`[Battery] ${id}: низкий заряд АКБ (${percent}%, ${voltage} V).`, 'warn');
-        showBatteryNotice(
-            'АКБ разряжается',
-            `Заряд дрона снижается: ${percent}% (${voltage} V). Планируйте посадку.`,
-            'warn'
-        );
+        showBatteryNotice(batteryLowNotice(percent, voltage));
         return;
     }
 
     simState.batteryLowVoltage2Notified = true;
     triggerLuaCallback(id, 14);
     log(`[Battery] ${id}: критический заряд АКБ (${percent}%, ${voltage} V).`, 'warn');
-    showBatteryNotice(
-        'Критический разряд АКБ',
-        `У дрона почти пустая батарея: ${percent}% (${voltage} V). Завершите миссию и посадите дрон.`,
-        'error'
-    );
+    showBatteryNotice(batteryCriticalNotice(percent, voltage));
 }
 
 export function updateBatteryState(simState: DroneState, id: string, dt: number) {
@@ -126,10 +119,6 @@ export function updateBatteryState(simState: DroneState, id: string, dt: number)
     if (!simState.batteryDepletedNotified && chargeRatio <= 0) {
         simState.batteryDepletedNotified = true;
         log(`[Battery] ${id}: АКБ полностью разряжена.`, 'warn');
-        showBatteryNotice(
-            'АКБ разряжена',
-            'Батарея дрона полностью разряжена. Сбросьте симуляцию перед следующим вылетом.',
-            'error'
-        );
+        showBatteryNotice(batteryDepletedNotice());
     }
 }

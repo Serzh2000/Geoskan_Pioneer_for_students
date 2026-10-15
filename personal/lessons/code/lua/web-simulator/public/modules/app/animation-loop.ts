@@ -46,7 +46,6 @@ const RAF_STALL_THRESHOLD_MS = 250;
 // секунду) даёт хотя бы половину скорости, а не 10%, как при старом клампе 0.1с.
 const MAX_FALLBACK_DT = 0.5;
 
-let animationFrameId = 0;
 let backgroundTicker: BackgroundTicker | null = null;
 let lastTime = 0;
 /** performance.now() of the last real animation frame: tells whether rAF stalled. */
@@ -86,7 +85,7 @@ function stepPhysics(rawDt: number): void {
 
 export function startAnimationLoop(callbacks: LoopCallbacks): void {
     const animate = (time: number) => {
-        animationFrameId = requestAnimationFrame(animate);
+        requestAnimationFrame(animate);
         if (time) lastRafAt = performance.now();
         updateFpsCounter(time);
 
@@ -154,6 +153,3 @@ export function startAnimationLoop(callbacks: LoopCallbacks): void {
     }, FALLBACK_TICK_MS);
 }
 
-export function getAnimationFrameId(): number {
-    return animationFrameId;
-}

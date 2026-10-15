@@ -2,7 +2,7 @@
 /// <reference path="./global.d.ts" />
 /// <reference path="./shims.d.ts" />
 import { resetState, resetRuntimeStatePreservePose, drones, currentDroneId, currentScriptLanguage } from './modules/core/state.js';
-import { init3D, updateDrone3D, is3DActive, addObject, appendPointToSelectedLinearObject, clearSceneSelection, deleteSelectedObject, finishSelectedLinearObjectEditing, getSelectedSceneObjectId, isSelectedLinearObjectEditingActive, listSceneObjects, focusSceneObjectById, resetDroneToOrigin, resetSelectedSceneObjectTransform, rotateSelectedSceneObjectByDegrees, selectSceneObjectById, toggleMultiSelectObjectById, setSceneObjectTransformMode, setSelectedObjectTransform, startSelectedLinearObjectEditing, updateSelectedSceneObject, deleteSceneObjectById } from './modules/drone/index.js';
+import { init3D, updateDrone3D, is3DActive, addObject, appendPointToSelectedLinearObject, clearSceneSelection, deleteSelectedObject, finishSelectedLinearObjectEditing, getSelectedSceneObjectId, isSelectedLinearObjectEditingActive, listSceneObjects, focusSceneObjectById, resetDroneToOrigin, resetSelectedSceneObjectTransform, rotateSelectedSceneObjectByDegrees, selectSceneObjectById, toggleMultiSelectObjectById, setSceneObjectTransformMode, getSceneObjectTransformMode, setSelectedObjectTransform, startSelectedLinearObjectEditing, updateSelectedSceneObject, deleteSceneObjectById } from './modules/drone/index.js';
 import { runLuaScript, stopLuaScript } from './modules/lua/index.js';
 import { runPythonScript, stopPythonScript } from './modules/python/index.js';
 /**
@@ -10,9 +10,9 @@ import { runPythonScript, stopPythonScript } from './modules/python/index.js';
  * Wires together the 3D scene, editor, UI controls, and script runtimes.
  */
 import { initEditor, getEditorValue, layoutEditor, setEditorValue } from './modules/editor/index.js';
-import { initUI } from './modules/ui/index.js';
+import { initUI, type UICallbacks } from './modules/ui/index.js';
+import { restoreSceneSession, saveSceneSessionNow, startSceneSessionAutosave } from './modules/app/scene-session.js';
 import { log } from './modules/shared/logging/logger.js';
-import type { MarkerMapOptions } from './modules/environment/obstacles.js';
 import { resetScriptExecutionNoticeState, showScenarioValidationNotice, showScriptFailureNotice, validateScenarioBeforeLaunch, wireMissionNotices } from './modules/app/script-execution-notice.js';
 import { configureSimulationControls } from './modules/app/simulation-controls.js';
 import { initScriptLanguageSelector } from './modules/app/language-selector.js';
@@ -22,6 +22,7 @@ import { startAnimationLoop } from './modules/app/animation-loop.js';
 import { isAnyExternalBridgeEnabled } from './modules/python/external-bridge.js';
 import type { AddObjectOptions } from './modules/scene/objects/object-manager.js';
 import { resetVehicles, startVehicleSession, stopVehicleSession } from './modules/vehicles/engine.js';
+import { resetWorld, startWorldSession, stopWorldSession } from './modules/world/runtime.js';
 import { setDroneEsp32Attached } from './modules/drone/index.js';
 
 // Global Loop
@@ -39,7 +40,7 @@ function init() {
     });
 
     // Initialize UI with callbacks
-    initUI({
+    const uiCallbacks: UICallbacks = {
         onRun: startSimulation,
         onStop: stopSimulation,
         onRestart: resetSimulation,
@@ -71,13 +72,15 @@ function init() {
             finishLinearEditing: (commit = true) => finishSelectedLinearObjectEditing(commit),
             isLinearEditingActive: (id?: string) => isSelectedLinearObjectEditingActive(id),
             setMode: (mode: 'translate' | 'rotate' | 'scale', id?: string) => setSceneObjectTransformMode(mode, id),
+            getMode: () => getSceneObjectTransformMode(),
             rotateByDegrees: (axis: 'x' | 'y' | 'z', angle: number) => rotateSelectedSceneObjectByDegrees(axis, angle),
             resetRotation: () => resetSelectedSceneObjectTransform(),
             resetDroneOrigin: () => resetDroneToOrigin(),
             clearSelection: () => clearSceneSelection(),
             getSelectedId: () => getSelectedSceneObjectId()
         }
-    });
+    };
+    initUI(uiCallbacks);
 
     // Initialize Editor
     initEditor();
@@ -85,7 +88,12 @@ function init() {
 
     // Initialize 3D Scene
     const container = document.getElementById('canvas-container');
-    if (container) init3D(container);
+    if (container) {
+        init3D(container);
+        // The scene and the drone's place survive a reload; only the restart button starts them over.
+        restoreSceneSession(uiCallbacks);
+        startSceneSessionAutosave(uiCallbacks);
+    }
 
     // Start Loop
     startAnimationLoop({
@@ -94,6 +102,12 @@ function init() {
         // A running script counts time on the sim clock: Timer.callLater and
         // the goto time would stretch while the tab sits behind other windows.
         keepPhysicsInBackground: () => isAnyExternalBridgeEnabled() || Object.values(drones).some((drone) => drone.running)
+    });
+
+    // The loading screen goes once fonts are in and the first frames have been drawn.
+    const fontsReady = document.fonts?.ready ?? Promise.resolve();
+    void fontsReady.catch(() => undefined).then(() => {
+        window.requestAnimationFrame(() => window.requestAnimationFrame(() => window.hideAppSplash?.()));
     });
 }
 
@@ -141,7 +155,7 @@ async function startSimulation() {
             await runPythonScript(id, code);
             // On the real Pioneer, Python runs on the ESP32 module - plug it in.
             setDroneEsp32Attached(id, true);
-            startVehicleSession();
+            startVehicleSession(); startWorldSession();
             log(`Python-скрипт запущен для ${drone.name}`, 'success');
         } catch (e: any) {
             drone.running = false;
@@ -197,11 +211,11 @@ async function startSimulation() {
         log('Нет сценариев для запуска', 'warn');
     }
     // Cars and trains set to start with the program move from here on.
-    if (Object.values(drones).some((drone) => drone.running)) startVehicleSession();
+    if (Object.values(drones).some((drone) => drone.running)) { startVehicleSession(); startWorldSession(); }
 }
 
 function stopSimulation() {
-    stopVehicleSession();
+    stopVehicleSession(); stopWorldSession();
     setDroneEsp32Attached(null, false);
     for (const id in drones) {
         const drone = drones[id];
@@ -230,9 +244,12 @@ function resetSimulation() {
     }
 
     resetVehicles();
+    resetWorld();
 
     // Force one frame update so the UI immediately reflects the reset state.
     if (is3DActive) updateDrone3D(0);
+    // A reload right after the restart must find the reset pose, not the one from before it.
+    saveSceneSessionNow();
     log('Симуляция сброшена', 'info');
 }
 
@@ -242,7 +259,7 @@ async function loadFileContent(path: string) {
         const data = await res.json();
         setEditorValue(data.content);
         log(`Файл загружен: ${path}`, 'success');
-    } catch (e) {
+    } catch {
         log('Ошибка загрузки файла', 'error');
     }
 }
@@ -251,6 +268,7 @@ async function loadFileContent(path: string) {
 declare global {
     interface Window {
         init: () => void;
+        hideAppSplash?: () => void;
     }
 }
 window.init = init;

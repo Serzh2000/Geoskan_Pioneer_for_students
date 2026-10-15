@@ -6,6 +6,9 @@ import * as THREE from 'three';
 import { setupLights } from './lights.js';
 import { createGround } from './ground.js';
 import { OBJECT_TYPE } from '../shared/object-types.js';
+import { createTrainingTerrain } from './training/mesh.js';
+import { TRAINING_PROFILES, type TrainingProfile } from './training/layout.js';
+import { landscapeFogDensity } from '../world/atmosphere-model.js';
 import {
     createArenaControlStationMesh,
     createArenaHeliportMesh,
@@ -21,6 +24,7 @@ import {
     createFirTreeMesh,
     createForestPatchMesh,
     createFlagMesh,
+    createFpvCubeMesh,
     createGateMesh,
     createGeoskanArenaPreset,
     createHillMesh,
@@ -50,7 +54,11 @@ export let envGroup: THREE.Group;
 
 export function createSceneObjectByType(type: string, options: SceneObjectOptions = {}) {
     let obj: THREE.Object3D | undefined;
-    if (type === 'gate') obj = createGateMesh();
+    if (type.startsWith('training-') && TRAINING_PROFILES.includes(type.slice(9) as TrainingProfile)) {
+        obj = createTrainingTerrain(type.slice(9) as TrainingProfile, options.trainingSeed);
+    }
+    else if (type === 'gate') obj = createGateMesh();
+    else if (type === 'fpv-cube') obj = createFpvCubeMesh(options.fpvCubeHeight);
     else if (type === 'pylon') obj = createPylonMesh();
     else if (type === 'flag') obj = createFlagMesh();
     else if (type === 'building') obj = createApartmentBuildingMesh(options);
@@ -86,7 +94,7 @@ export function createSceneObjectByType(type: string, options: SceneObjectOption
 }
 
 export function setupEnvironment(scene: THREE.Scene) {
-    setupLights(scene);
+    const sunlight = setupLights(scene);
 
     envGroup = new THREE.Group();
     scene.add(envGroup);
@@ -96,6 +104,16 @@ export function setupEnvironment(scene: THREE.Scene) {
     // Presets supply their own layout; the empty-scene dressing must not cut through it.
     const syncDefaultDressing = () => {
         const hasPreset = envGroup.children.some(child => Boolean(child.userData.presetName));
+        // Arena haze must scale with the landscape, or a full-map overview becomes opaque.
+        const landscapeSize = Math.max(30, ...envGroup.children.filter(child => child.visible)
+            .map(child => Number(child.userData.trainingLayout?.size) || 0));
+        if (scene.fog instanceof THREE.FogExp2) scene.fog.density = landscapeFogDensity(landscapeSize);
+        const lightScale = landscapeSize / 30;
+        sunlight.position.set(-6 * lightScale, -4 * lightScale, 12 * lightScale);
+        const shadowExtent = landscapeSize > 30 ? landscapeSize * .75 : 14;
+        Object.assign(sunlight.shadow.camera, { left: -shadowExtent, right: shadowExtent,
+            top: shadowExtent, bottom: -shadowExtent, far: Math.max(100, landscapeSize * 3) });
+        sunlight.shadow.camera.updateProjectionMatrix();
         for (const child of envGroup.children) {
             if (child.userData.defaultArenaFrame) child.visible = !hasPreset;
             if (child.userData.type === OBJECT_TYPE.GROUND) {
@@ -112,6 +130,15 @@ export function addObjectToScene(type: string, camera?: THREE.Camera | null, opt
     const obj = createSceneObjectByType(type, options);
     
     if (obj) {
+        if (obj.userData.presetName) {
+            const stampSlots = (parent: THREE.Object3D) => {
+                parent.children.forEach((child, index) => {
+                    child.userData.presetSlot = index;
+                    stampSlots(child);
+                });
+            };
+            stampSlots(obj);
+        }
         let pos = new THREE.Vector3(0, 0, 0);
         if (camera && !obj.userData.presetName) {
             const dir = new THREE.Vector3();

@@ -14,22 +14,22 @@ export function collectPythonIssues(code: string): string[] {
     const ledCalls = (normalized.match(/led_control\s*\(/g) || []).length;
 
     if (ledCalls > 1 && !hasSleep) {
-        issues.push('Несколько вызовов `led_control(...)` идут без `time.sleep(...)`. Цвет может меняться слишком быстро.');
+        issues.push('Цвета светодиодов меняются подряд без пауз, поэтому вы увидите только последний. Добавьте `time.sleep(...)` между вызовами `led_control(...)`.');
     }
     if (hasTakeoff && !hasArm) {
-        issues.push('`takeoff()` вызывается без `arm()`. Сначала взведите дрон.');
+        issues.push('Взлёт запрошен без подготовки. Перед `takeoff()` вызовите `arm()`, чтобы запустить двигатели.');
     }
     if (hasGoTo && !hasTakeoff) {
-        issues.push('`go_to_local_point(...)` вызывается до `takeoff()`. Сначала выполните взлет.');
+        issues.push('Полёт к точке запрошен до взлёта. Сначала вызовите `takeoff()`, потом `go_to_local_point(...)`.');
     }
     if (hasLand && !hasTakeoff) {
-        issues.push('`land()` вызывается до взлета. Проверьте порядок команд.');
+        issues.push('Посадка запрошена до взлёта. Проверьте порядок: взлёт, полёт, посадка.');
     }
     if ((hasTakeoff || hasGoTo || hasLand) && !hasSleep && !hasPointReached) {
-        issues.push('Команды миссии выполняются без ожидания. Добавьте `time.sleep(...)` и/или проверки `point_reached()`.');
+        issues.push('Команды идут подряд без ожидания, дрон не успеет выполнить этапы. Добавьте `time.sleep(...)` или проверку `point_reached()`.');
     }
     if (hasGoTo && !hasPointReached && !hasSleep) {
-        issues.push('После `go_to_local_point(...)` нет ожидания. Добавьте цикл с `point_reached()` или паузу.');
+        issues.push('После `go_to_local_point(...)` программа не ждёт, пока дрон долетит. Добавьте цикл с `point_reached()` или паузу.');
     }
 
     return issues;

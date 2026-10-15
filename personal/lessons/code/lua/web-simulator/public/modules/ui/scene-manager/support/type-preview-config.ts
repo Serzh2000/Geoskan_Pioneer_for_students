@@ -22,6 +22,12 @@ const TYPE_PREVIEW_CONFIG: Record<string, SceneTypePreviewConfig> = {
         accent: 'structure',
         icon: tablerIcon('frame')
     },
+    'fpv-cube': {
+        title: 'FPV-куб',
+        description: 'Складной куб из четырёх рам на стойке, как для FPV-гонок: пролёт сквозь любую рамку. Рамка к дрону — как в жизни: 80 см на 29 см.',
+        accent: 'structure',
+        icon: tablerIcon('cube')
+    },
     pylon: {
         title: 'Пилон',
         description: 'Вертикальный ориентир для слалома, облёта и трасс.',

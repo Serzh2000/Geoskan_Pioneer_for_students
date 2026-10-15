@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 
 export type ScenePathPoint = { x: number; y: number; z: number };
 
@@ -22,6 +21,9 @@ export interface MarkerMapOptions {
 }
 
 export interface SceneObjectOptions {
+    trainingSeed?: number;
+    /** FPV cube: total height in metres (the product adjusts from 1.05 to 1.45). */
+    fpvCubeHeight?: number;
     value?: string;
     markerDictionary?: string;
     points?: ScenePathPoint[];

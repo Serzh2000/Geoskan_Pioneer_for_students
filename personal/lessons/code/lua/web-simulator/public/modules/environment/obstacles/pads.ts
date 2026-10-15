@@ -22,7 +22,7 @@ export function createStyledLandingPad(text: string, bgColor = '#2563eb', textCo
             ctx.font = '600 180px Arial'; ctx.fillText(text, 256, 247);
         }
         ctx.font = '20px Arial';
-        ctx.fillText(text === 'H' ? 'LANDING' : text === '⚡' ? 'CHARGING' : 'START / ' + text, 256, 425);
+        ctx.fillText(text === 'H' ? 'ПОСАДКА' : text === '⚡' ? 'ЗАРЯДКА' : 'СТАРТ / ' + text, 256, 425);
         for (const x of [56, 456]) for (const y of [56, 456]) {
             ctx.fillStyle = '#91a0a4'; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
         }
@@ -32,7 +32,11 @@ export function createStyledLandingPad(text: string, bgColor = '#2563eb', textCo
     tex.anisotropy = 8;
     const mesh = new THREE.Mesh(
         new THREE.PlaneGeometry(2, 2),
-        new THREE.MeshStandardMaterial({ map: tex, roughness: 0.92 })
+        // polygonOffset: площадка — плоскость в 2.5 см над землёй; под острым углом
+        // этого мало для буфера глубины, и без смещения земля «просвечивает».
+        new THREE.MeshStandardMaterial({
+            map: tex, roughness: 0.92, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4
+        })
     );
     setCommonMeta(mesh, `Площадка ${text}`, { collidableRadius: 1 });
     mesh.position.z = 0.025;

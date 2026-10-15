@@ -75,6 +75,8 @@ export function initSceneManager(callbacks: UICallbacks) {
     let panelIsIntersecting = true;
 
     const getRenderState = () => {
+        // The panel shows the mode the viewport gizmo is really in (keys, context menu, a fresh selection), never its own copy.
+        viewState.activeTransformMode = callbacks.sceneManager?.getMode?.() ?? 'translate';
         const objects = callbacks.sceneManager?.list() || [];
         const selectedId = callbacks.sceneManager?.getSelectedId() || null;
         const isLinearEditingActive = selectedId ? !!callbacks.sceneManager?.isLinearEditingActive(selectedId) : false;
@@ -102,6 +104,14 @@ export function initSceneManager(callbacks: UICallbacks) {
 
         lastRenderSignature = renderState.signature;
         const previousSelectedId = viewState.lastSelectedId;
+        // Keep a component picked in the viewport visible inside its preset.
+        if (renderState.selectedId && renderState.selectedId !== previousSelectedId) {
+            let entry = renderState.objects.find(item => item.id === renderState.selectedId);
+            while (entry?.parentId) {
+                viewState.tree.expandedIds.add(entry.parentId);
+                entry = renderState.objects.find(item => item.id === entry?.parentId);
+            }
+        }
         const pickedInTree = viewState.tree.suppressInspectorJump;
         viewState.tree.suppressInspectorJump = false;
         viewState.lastSelectedId = renderSceneManager(

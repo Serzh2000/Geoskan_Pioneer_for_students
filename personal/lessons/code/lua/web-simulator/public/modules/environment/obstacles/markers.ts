@@ -1,11 +1,6 @@
 export {
-    getMarkerDictionaryOptions,
-    normalizeMarkerDictionaryId
-} from './markers/shared.js';
-export {
     createArucoMarkerMesh,
     createAprilTagMarkerMesh,
-    isMarkerObject,
     updateMarkerValue
 } from './markers/object.js';
 export {

@@ -3,6 +3,7 @@
  * Экспортирует функции для инициализации и обновления сцены.
  */
 import * as THREE from 'three';
+import { recordLearningEvent } from '../core/learning-journal.js';
 import { renderCameraViews } from './camera-views.js';
 import { drones, currentDroneId, simSettings } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
@@ -11,12 +12,25 @@ import { createDroneModel, updateLEDs, animateRotors } from '../drone-model/inde
 import { setEsp32Attached, updateEsp32Module } from '../drone-model/esp32-module.js';
 import { updateCamera } from '../scene/core/camera.js';
 import { getCameraMode } from '../scene/core/camera-mode-state.js';
+import { startRenderSample, finishRenderSample } from '../scene/core/render-metrics.js';
+import { updateQuality } from '../scene/core/quality.js';
 import {
-    initScene, scene, camera, renderer, controls, freeFlyControls, transformControl,
-    transformHelper, selectionHelper,
-    droneMeshes, is3DActive, selectedObject, canvasContainer,
-    setSelectedObject, setIsHittingGizmo,
-    onWindowResize, syncViewportDependentSceneVisuals
+    initScene,
+    scene,
+    camera,
+    renderer,
+    controls,
+    freeFlyControls,
+    transformControl,
+    transformHelper,
+    selectionHelper,
+    droneMeshes,
+    is3DActive,
+    selectedObject,
+    canvasContainer,
+    setIsHittingGizmo,
+    onWindowResize,
+    syncViewportDependentSceneVisuals
 } from '../scene/core/scene-init.js';
 import { setupTransformControlListeners } from '../scene/interaction/transform.js';
 import { explodeDrone, resetDroneVisuals, updateDebrisVisuals } from './crash-visuals.js';
@@ -25,44 +39,14 @@ import { initTrailForDrone, disposeTrailForDrone, updateTrailForDrone } from './
 
 export { is3DActive, selectedObject, droneMeshes, envGroup, scene };
 export { 
-    addObject, deleteSelectedObject, duplicateObject, resetDroneToOrigin,
+    addObject, deleteSelectedObject, resetDroneToOrigin,
     listSceneObjects, selectSceneObjectById, toggleMultiSelectObjectById, focusSceneObjectById, deleteSceneObjectById,
     appendPointToSelectedLinearObject, updateSelectedSceneObject,
-    setSceneObjectTransformMode, getSelectedSceneObjectId,
+    setSceneObjectTransformMode, getSceneObjectTransformMode, getSelectedSceneObjectId,
     clearSceneSelection, rotateSelectedSceneObjectByDegrees, resetSelectedSceneObjectTransform, setSelectedObjectTransform,
     startSelectedLinearObjectEditing, finishSelectedLinearObjectEditing,
-    isSelectedLinearObjectEditingActive, getSelectedLinearObjectEditingTargetId
+    isSelectedLinearObjectEditingActive
 } from '../scene/objects/object-manager.js';
-export type { TransformMode } from '../scene/objects/object-manager.js';
-
-export interface SceneObjectInfo {
-    id: string;
-    name: string;
-    sceneType: string;
-    objectType: string;
-    draggable: boolean;
-    isDrone: boolean;
-    selected: boolean;
-    position: { x: number; y: number; z: number };
-    rotation: { x: number; y: number; z: number };
-    scale: { x: number; y: number; z: number };
-    supportsValue?: boolean;
-    supportsPoints?: boolean;
-    value?: string;
-    pointsText?: string;
-    metaLines?: string[];
-}
-
-export interface RcPreviewOverride {
-    active: boolean;
-    droneId: string;
-    rotation: {
-        x: number;
-        y: number;
-        z: number;
-    };
-    rotorSpeed: number;
-}
 
 const PRINT_BUBBLE_LIFETIME_MS = 4200;
 const PRINT_BUBBLE_MAX_LENGTH = 180;
@@ -70,15 +54,6 @@ const bubbleWorldPosition = new THREE.Vector3();
 const bubbleScreenPosition = new THREE.Vector3();
 let printBubbleOverlay: HTMLDivElement | null = null;
 const printBubbleElements: Record<string, HTMLDivElement> = {};
-let rcPreviewOverride: RcPreviewOverride | null = null;
-
-export function setRcPreviewOverride(override: RcPreviewOverride): void {
-    rcPreviewOverride = override.active ? { ...override } : null;
-}
-
-export function clearRcPreviewOverride(): void {
-    rcPreviewOverride = null;
-}
 
 function ensurePrintBubbleOverlay(): HTMLDivElement | null {
     if (printBubbleOverlay?.isConnected) return printBubbleOverlay;
@@ -149,6 +124,7 @@ function syncDronePrintBubbles() {
 }
 
 export function showDronePrintBubble(id: string, text: string) {
+    recordLearningEvent(id, { kind: 'print', text, time: drones[id]?.current_time || 0 });
     const drone = drones[id];
     if (!drone) return;
 
@@ -186,7 +162,7 @@ export function init3D(container: HTMLElement) {
 
         log('3D-сцена загружена.', 'success');
         log('[3D-CLICK] Обработчики pointerdown/pointerup подключены через document capture', 'info');
-        updateCamera(camera, droneMeshes[currentDroneId] || null, controls, getCameraMode(), freeFlyControls);
+        updateCamera(camera, droneMeshes[currentDroneId] || null, controls, getCameraMode(), freeFlyControls, 0, envGroup);
         
     } catch (e: any) {
         console.error('[3D] Critical error during init3D:', e);
@@ -278,29 +254,10 @@ export function updateDrone3D(dt: number, render = true) {
         } else {
             resetDroneVisuals(id, mesh);
             updateLEDs(mesh, drone);
-            const previewOverride = rcPreviewOverride?.active && rcPreviewOverride.droneId === id ? rcPreviewOverride : null;
-            if (!previewOverride) {
-                animateRotors(mesh, dt, drone);
-            }
+            animateRotors(mesh, dt, drone);
             
             mesh.position.set(drone.pos.x, drone.pos.y, drone.pos.z);
             mesh.rotation.set(drone.orientation.pitch, drone.orientation.roll, drone.orientation.yaw, 'ZYX');
-
-            if (previewOverride) {
-                mesh.rotation.set(
-                    previewOverride.rotation.x,
-                    previewOverride.rotation.y,
-                    previewOverride.rotation.z,
-                    'XYZ'
-                );
-
-                for (let rotorIndex = 0; rotorIndex < 4; rotorIndex += 1) {
-                    const rotor = mesh.getObjectByName(`rotor_${rotorIndex}`);
-                    if (!rotor) continue;
-                    const direction = rotorIndex === 0 || rotorIndex === 1 ? 1 : -1;
-                    rotor.rotation.z += previewOverride.rotorSpeed * direction * dt;
-                }
-            }
         }
 
         updateTrailForDrone(id);
@@ -315,7 +272,7 @@ export function updateDrone3D(dt: number, render = true) {
     }
 
     if (droneMeshes[currentDroneId]) {
-        updateCamera(camera, droneMeshes[currentDroneId], controls, cameraMode, freeFlyControls, dt);
+        updateCamera(camera, droneMeshes[currentDroneId], controls, cameraMode, freeFlyControls, dt, envGroup);
     }
 
     if (!render) {
@@ -327,7 +284,10 @@ export function updateDrone3D(dt: number, render = true) {
     syncViewportDependentSceneVisuals();
 
     try {
+        updateQuality({ renderer, scene, camera, anchors: () => Object.values(droneMeshes), envRoot: () => envGroup });
+        const renderStartedAt = startRenderSample();
         renderer.render(scene, camera);
+        finishRenderSample(renderer, renderStartedAt);
         renderCameraViews(renderer, scene, droneMeshes[currentDroneId]);
     } catch (e) {
         console.error('[3D] Render error:', e);

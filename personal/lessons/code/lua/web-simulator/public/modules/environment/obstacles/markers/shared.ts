@@ -3,7 +3,6 @@ import {
     DEFAULT_APRILTAG_DICTIONARY,
     DEFAULT_ARUCO_DICTIONARY,
     MARKER_DICTIONARIES,
-    MARKER_DICTIONARY_OPTIONS,
     MarkerDictionaryId
 } from '../marker-dictionaries.js';
 import {
@@ -69,10 +68,6 @@ function getMarkerKindKey(kind: MarkerKind) {
 
 function getDefaultDictionary(kind: MarkerKind): MarkerDictionaryId {
     return (kind === 'AprilTag' ? DEFAULT_APRILTAG_DICTIONARY : DEFAULT_ARUCO_DICTIONARY) as MarkerDictionaryId;
-}
-
-export function getMarkerDictionaryOptions(kind: 'aruco' | 'apriltag') {
-    return [...MARKER_DICTIONARY_OPTIONS[kind]];
 }
 
 export function normalizeMarkerDictionaryId(kind: MarkerKind, dictionaryId?: string): MarkerDictionaryId {

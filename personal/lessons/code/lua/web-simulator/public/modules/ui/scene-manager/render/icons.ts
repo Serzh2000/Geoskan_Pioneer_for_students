@@ -20,6 +20,7 @@ const KEYWORD_ICONS: Array<[string[], TablerIconName]> = [
     [['heliport', 'pad', 'хелипорт', 'площадк'], 'helicopter-landing'],
     [['charge', 'заряд'], 'charging-pile'],
     [['start-position', 'старт'], 'map-pin'],
+    [['fpv-cube', 'fpv'], 'cube'],
     [['gate', 'ворота'], 'frame'],
     [['pylon', 'пилон'], 'traffic-cone'],
     [['flag', 'флаг'], 'flag'],

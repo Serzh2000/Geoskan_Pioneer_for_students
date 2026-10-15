@@ -12,7 +12,6 @@ import { DRONE_MODEL_OFFSET } from './layout.js';
 import { createBlenderModel } from './blender-model.js';
 import { createLEDMatrix } from './leds.js';
 import { findLedGlowSprite, updateLedGlowSprite } from './led-glow.js';
-export { whenDroneModelReady } from './blender-model.js';
 
 // Lit LEDs need to read clearly as individual points even with no bloom pass
 // in the renderer (see led-glow.ts): the material itself goes close to fully

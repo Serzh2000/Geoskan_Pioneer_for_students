@@ -24,6 +24,7 @@ import {
 } from './state-transitions.js';
 import { updateTracePath } from './tracing.js';
 import { updateVehicles } from '../vehicles/engine.js';
+import { updateWorld } from '../world/runtime.js';
 
 export function updatePhysics(dt: number) {
     // The user is manually repositioning an object with the scene-editor gizmo -
@@ -34,6 +35,7 @@ export function updatePhysics(dt: number) {
     updateTimers();
     // Before the drones, so collisions and sensors see this frame's vehicle positions.
     updateVehicles(dt);
+    updateWorld(dt);
     updateDetachedCargoPhysics(dt, getObstacles);
 
     for (const id in drones) {

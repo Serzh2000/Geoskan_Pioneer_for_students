@@ -1,4 +1,3 @@
-import type * as THREE from 'three';
 import { getAutopilotRuntimeConfig } from '../autopilot/params-runtime.js';
 import type { DroneState } from '../core/state.js';
 import { emitMissionGamepadOverride } from '../core/mission-notices.js';
@@ -11,7 +10,6 @@ import {
     beginDisarmedFall
 } from './events.js';
 import {
-    MANUAL_TAKEOFF_ALTITUDE,
     MANUAL_TAKEOFF_THROTTLE
 } from './constants.js';
 import { bodyPlanarToWorld, worldPlanarToBody } from './frames.js';

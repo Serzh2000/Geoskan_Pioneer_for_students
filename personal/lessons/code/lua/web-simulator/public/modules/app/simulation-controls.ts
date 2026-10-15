@@ -1,5 +1,5 @@
 type SimulationControlHandlers = {
-    start: () => void;
+    start: () => void | Promise<void>;
     stop: () => void;
     reset: () => void;
 };
@@ -10,14 +10,14 @@ export function configureSimulationControls(handlers: SimulationControlHandlers)
     registeredHandlers = handlers;
 }
 
-export function restartAndRunSimulation(): void {
+export async function restartAndRunSimulation(): Promise<void> {
     if (!registeredHandlers) {
         console.warn('[SimulationControls] Handlers are not configured yet.');
         return;
     }
 
     registeredHandlers.reset();
-    registeredHandlers.start();
+    await registeredHandlers.start();
 }
 
 export function resetSimulationState(): void {

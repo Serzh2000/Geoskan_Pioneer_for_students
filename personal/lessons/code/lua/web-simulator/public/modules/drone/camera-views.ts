@@ -161,7 +161,12 @@ function setOpen(id: ViewId, value: boolean) {
 }
 
 function ensureUi(host: HTMLElement) {
-    if (root?.isConnected) return;
+    // The textbook moves the live scene between hosts. A detached host still
+    // owns its UI; recreating it every frame leaks windows and observers.
+    if (root) {
+        if (root.parentElement !== host) host.appendChild(root);
+        return;
+    }
     loadState();
     root = document.createElement('div');
     root.className = 'scene-camera-views';
@@ -205,7 +210,7 @@ function ensureUi(host: HTMLElement) {
 }
 
 /** A camera under the drone looking straight down, image top = drone's nose. */
-function bottomCameraOf(mesh: THREE.Object3D) {
+export function bottomCameraOf(mesh: THREE.Object3D) {
     let camera = mesh.getObjectByName(BOTTOM_CAMERA_NAME) as THREE.PerspectiveCamera | undefined;
     if (!camera) {
         camera = new THREE.PerspectiveCamera(72, 16 / 9, 0.01, 200);
@@ -230,7 +235,7 @@ function cameraFor(id: ViewId, mesh: THREE.Object3D) {
  */
 export function renderCameraViews(renderer: THREE.WebGLRenderer, scene: THREE.Scene, droneMesh: THREE.Object3D | null | undefined) {
     const host = renderer.domElement.parentElement;
-    if (!host) return;
+    if (!host?.isConnected) return;
     ensureUi(host);
     if (!droneMesh || (!open.front && !open.bottom) || document.hidden) return;
 

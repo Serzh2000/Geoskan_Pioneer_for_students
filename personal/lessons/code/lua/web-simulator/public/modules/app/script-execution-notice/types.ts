@@ -16,7 +16,13 @@ export type ScriptFailureError = Error & {
 };
 
 export type HumanizedScriptFailure = {
+    /** Short heading (up to ~6 words). */
+    title?: string;
     summary: string;
+    /** Working snippet shown in the details card. */
+    example?: string | null;
+    /** Line parsed from the message, when it carries one. */
+    line?: number | null;
     details?: string | null;
     rawDetails?: string | null;
     suppressTechnicalDetails?: boolean;

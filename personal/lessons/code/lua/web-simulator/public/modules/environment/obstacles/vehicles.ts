@@ -189,6 +189,3 @@ export function createVehicleMesh(kind: VehicleKind, raw: Partial<VehicleConfig>
     return group;
 }
 
-export function isVehicleObject(object: THREE.Object3D | null | undefined): boolean {
-    return !!object?.userData?.isVehicle;
-}

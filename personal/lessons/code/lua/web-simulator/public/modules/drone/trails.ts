@@ -17,7 +17,12 @@ type TrailRingState = {
     visibleCount: number;
     lastColorHex: number;
     lastPointSize: number;
+    /** The dotted trail: a dot only every few decimetres of flown path, kept apart from the dense line samples. */
+    dots: Array<{ x: number; y: number; z: number }>;
+    dotSpacing: number;
 };
+
+const MAX_DOTS = 1500;
 
 const ringStates: Record<string, TrailRingState> = {};
 
@@ -30,8 +35,35 @@ function getTracerWidthPx() {
     return Math.max(1, Number(simSettings.tracerWidth) || 1);
 }
 
+/** Dot diameter in metres. */
 function getTracerPointSize() {
-    return Math.max(0.08, getTracerWidthPx() * 0.08);
+    return Math.max(0.05, getTracerWidthPx() * 0.04);
+}
+
+/**
+ * Distance between dots. The path is sampled every 0.05 s of simulated flight, i.e. a few centimetres apart, which
+ * closes any dot into a solid line; a dotted trail needs a gap of several dot widths.
+ */
+function getTracerDotSpacing() {
+    return Math.max(0.2, getTracerPointSize() * 4);
+}
+
+let dotTexture: THREE.CanvasTexture | null = null;
+/** A soft-edged white disc: points are squares unless they carry a round sprite. */
+function getDotTexture() {
+    if (dotTexture) return dotTexture;
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+        ctx.beginPath();
+        ctx.arc(32, 32, 28, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+    }
+    dotTexture = new THREE.CanvasTexture(canvas);
+    return dotTexture;
 }
 
 function shouldShowTracerLine() {
@@ -81,8 +113,10 @@ export function initTrailForDrone(id: string) {
         color: colorHex,
         size: getTracerPointSize(),
         sizeAttenuation: true,
+        map: getDotTexture(),
+        alphaTest: 0.5,
         transparent: true,
-        opacity: 0.9,
+        opacity: 0.95,
         depthWrite: false,
         toneMapped: false
     });
@@ -125,7 +159,7 @@ function writePositions(target: Float32Array, pts: typeof pathPoints[string], sr
 function getRingState(id: string): TrailRingState {
     let state = ringStates[id];
     if (!state) {
-        state = { sourceRef: null, lastVersion: 0, writeIndex: 0, visibleCount: 0, lastColorHex: -1, lastPointSize: -1 };
+        state = { sourceRef: null, lastVersion: 0, writeIndex: 0, visibleCount: 0, lastColorHex: -1, lastPointSize: -1, dots: [], dotSpacing: 0 };
         ringStates[id] = state;
     }
     return state;
@@ -149,17 +183,18 @@ export function updateTrailForDrone(id: string) {
     const version = pathPointsVersion[id] || 0;
     const linePos = trail.lineGeometry.getAttribute('position') as THREE.BufferAttribute;
     const pointPos = trail.pointsGeometry.getAttribute('position') as THREE.BufferAttribute;
+    // Points scheduled for the dotted trail by this update: everything on a rebuild, only the new samples otherwise.
+    let dotCandidates: typeof pts = [];
 
     if (state.sourceRef !== pts || version < state.lastVersion) {
         // Первый кадр для этого дрона или сброс pathPoints[id] (новый массив) —
         // окно ещё не строилось, дешёво перестраиваем целиком.
         const count = Math.min(pts.length, RING_CAPACITY);
         writePositions(linePos.array as Float32Array, pts, pts.length - count, 0, count);
-        writePositions(pointPos.array as Float32Array, pts, pts.length - count, 0, count);
         linePos.addUpdateRange(0, count * 3);
-        pointPos.addUpdateRange(0, count * 3);
         linePos.needsUpdate = true;
-        pointPos.needsUpdate = true;
+        state.dots = [];
+        dotCandidates = pts;
 
         state.sourceRef = pts;
         state.writeIndex = count;
@@ -172,20 +207,15 @@ export function updateTrailForDrone(id: string) {
                 const keep = state.visibleCount;
                 const srcStart = (state.writeIndex - keep) * 3;
                 (linePos.array as Float32Array).copyWithin(0, srcStart, state.writeIndex * 3);
-                (pointPos.array as Float32Array).copyWithin(0, srcStart, state.writeIndex * 3);
                 state.writeIndex = keep;
                 linePos.addUpdateRange(0, keep * 3);
-                pointPos.addUpdateRange(0, keep * 3);
                 linePos.needsUpdate = true;
-                pointPos.needsUpdate = true;
             }
 
             writePositions(linePos.array as Float32Array, pts, pts.length - newCount, state.writeIndex, newCount);
-            writePositions(pointPos.array as Float32Array, pts, pts.length - newCount, state.writeIndex, newCount);
             linePos.addUpdateRange(state.writeIndex * 3, newCount * 3);
-            pointPos.addUpdateRange(state.writeIndex * 3, newCount * 3);
             linePos.needsUpdate = true;
-            pointPos.needsUpdate = true;
+            dotCandidates = pts.slice(pts.length - newCount);
 
             state.writeIndex += newCount;
             state.visibleCount = Math.min(state.visibleCount + newCount, MAX_PATH_POINTS);
@@ -195,7 +225,35 @@ export function updateTrailForDrone(id: string) {
 
     const drawStart = state.writeIndex - state.visibleCount;
     trail.lineGeometry.setDrawRange(drawStart, state.visibleCount);
-    trail.pointsGeometry.setDrawRange(drawStart, state.visibleCount);
+
+    // Dots: a new one only after the drone has flown `spacing` metres from the last; a changed size rebuilds them all.
+    const spacing = getTracerDotSpacing();
+    if (spacing !== state.dotSpacing) {
+        state.dotSpacing = spacing;
+        state.dots = [];
+        dotCandidates = pts;
+    }
+    if (dotCandidates.length) {
+        let added = false;
+        for (const point of dotCandidates) {
+            const last = state.dots[state.dots.length - 1];
+            if (last && Math.hypot(point.x - last.x, point.y - last.y, point.z - last.z) < spacing) continue;
+            state.dots.push({ x: point.x, y: point.y, z: point.z });
+            added = true;
+        }
+        if (state.dots.length > MAX_DOTS) state.dots.splice(0, state.dots.length - MAX_DOTS);
+        if (added || state.dots.length !== trail.pointsGeometry.drawRange.count) {
+            const array = pointPos.array as Float32Array;
+            for (let i = 0; i < state.dots.length; i += 1) {
+                array[i * 3] = state.dots[i].x;
+                array[i * 3 + 1] = state.dots[i].y;
+                array[i * 3 + 2] = state.dots[i].z;
+            }
+            pointPos.addUpdateRange(0, state.dots.length * 3);
+            pointPos.needsUpdate = true;
+            trail.pointsGeometry.setDrawRange(0, state.dots.length);
+        }
+    }
 
     // Цвет/размер материала трогаем, только когда настройки трейсера реально
     // поменялись — .color.setHex() уже обновляет юниформ сам по себе,

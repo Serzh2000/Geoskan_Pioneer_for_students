@@ -11,6 +11,15 @@ import {
     renderScriptFailureHtml,
     renderSimultaneousCommandsHtml
 } from './script-execution-notice-templates.js';
+import {
+    earlyRouteNotice,
+    gamepadOverrideNotice,
+    missingCallbackNotice,
+    scenarioBlockedNotice,
+    scenarioWarningNotice,
+    simultaneousCommandsNotice
+} from '../shared/notice-messages/catalog.js';
+import type { NoticeAction } from '../shared/notice-messages/types.js';
 import { createScriptFailureError, normalizeScriptFailureError } from './script-execution-notice/error.js';
 import { humanizeScriptFailure } from './script-execution-notice/humanize.js';
 import { collectLuaBlockingIssues, collectLuaIssues, detectLuaEarlyRouteIssue } from './script-execution-notice/lua-validation.js';
@@ -24,9 +33,9 @@ import {
     shouldSuppressMissingCallbackNotice,
     shouldSuppressSimultaneousNotice
 } from './script-execution-notice/state.js';
-import type { ScenarioValidationResult, ScriptFailureError, ScriptFailureKind } from './script-execution-notice/types.js';
+import type { ScenarioValidationResult, ScriptFailureKind } from './script-execution-notice/types.js';
 
-export type { ScenarioValidationResult, ScriptFailureError, ScriptFailureKind } from './script-execution-notice/types.js';
+export type { ScriptFailureError } from './script-execution-notice/types.js';
 export { createScriptFailureError, resetScriptExecutionNoticeState };
 
 function isSimultaneousCommandsFailureNotice(
@@ -45,6 +54,10 @@ function isSimultaneousCommandsFailureNotice(
     );
 }
 
+function stripInlineCode(text: string): string {
+    return text.replace(/`/g, '');
+}
+
 export function showScriptFailureNotice(
     language: ScriptLanguage,
     error: unknown,
@@ -52,27 +65,23 @@ export function showScriptFailureNotice(
 ) {
     const resolved = normalizeScriptFailureError(error, fallbackKind);
     const kind = resolved.scriptFailureKind || fallbackKind;
-    const humanized = humanizeScriptFailure(language, kind, resolved.message);
-    const title = kind === 'syntax'
-        ? 'Синтаксическая ошибка'
-        : 'Ошибка выполнения';
+    const line = typeof resolved.scriptFailureLine === 'number' ? resolved.scriptFailureLine : null;
+    const humanized = humanizeScriptFailure(language, kind, resolved.message, line);
+    const knownLine = line ?? humanized.line ?? null;
+    const title = humanized.title || (kind === 'syntax' ? 'В коде опечатка' : 'Программа остановилась');
     const message = humanized.summary;
     const technicalDetails = humanized.suppressTechnicalDetails
         ? null
         : (resolved.scriptFailureDetails || humanized.rawDetails || null);
 
-    log(
-        kind === 'syntax'
-            ? `Синтаксическая ошибка ${language.toUpperCase()}: ${resolved.message}`
-            : `Ошибка выполнения ${language.toUpperCase()}: ${resolved.message}`,
-        'error'
-    );
+    // The journal gets the plain-language version; the raw interpreter text stays in the details card.
+    log(`${title}${knownLine ? ` (строка ${knownLine})` : ''}: ${stripInlineCode(message)}`, 'error');
 
-    if (typeof resolved.scriptFailureLine === 'number') {
+    if (typeof knownLine === 'number') {
         (window as any).highlightEditorProblem?.({
-            line: resolved.scriptFailureLine,
+            line: knownLine,
             column: resolved.scriptFailureColumn,
-            message: humanized.summary
+            message: stripInlineCode(humanized.summary)
         });
     }
 
@@ -85,29 +94,27 @@ export function showScriptFailureNotice(
 
     if (!(window as any).showSimulationNotice) return;
 
+    const actions: NoticeAction[] = typeof knownLine === 'number'
+        ? [{ kind: 'show-line', label: 'Показать строку', line: knownLine, column: resolved.scriptFailureColumn, message: stripInlineCode(humanized.summary) }]
+        : [];
+
     (window as any).showSimulationNotice({
         title,
         message,
         detailsHtml: renderScriptFailureHtml(language, kind, humanized.summary, {
-            line: resolved.scriptFailureLine,
+            line: knownLine,
             column: resolved.scriptFailureColumn,
             note: humanized.details,
+            example: humanized.example,
             details: technicalDetails,
             phase: resolved.scriptFailurePhase,
             stack: resolved.scriptFailureStack,
             contextLines: resolved.scriptFailureContextLines,
             fsmHistory: resolved.scriptFailureFsmHistory
         }),
-        level: 'error'
+        level: 'error',
+        actions
     });
-}
-
-export function scriptHasVisibleDelay(language: ScriptLanguage, code: string) {
-    const normalized = (code || '').toLowerCase();
-    if (language === 'python') {
-        return /\b(time|asyncio)\.sleep\s*\(/.test(normalized) || /\bawait\s+asyncio\.sleep\s*\(/.test(normalized);
-    }
-    return /\bsleep\s*\(/.test(normalized) || /\btimer\.(calllater|new)\s*\(/.test(normalized);
 }
 
 function hasLuaEarlyRouteIssue(code: string) {
@@ -156,66 +163,30 @@ export function showScenarioValidationNotice(language: ScriptLanguage, code: str
         }
     }
 
-    const summary = result.shouldBlock
-        ? (
-            result.blockingIssues.length === 1
-                ? 'Найден опасный сценарий. Исправьте его перед запуском.'
-                : `Найдено ${result.blockingIssues.length} опасных сценария. Исправьте их перед запуском.`
-        )
-        : (
-            issues.length === 1
-                ? 'Найдена проблема в сценарии. Проверьте код перед запуском.'
-                : `Найдено ${issues.length} проблем в сценарии. Проверьте код перед запуском.`
-        );
+    const text = result.shouldBlock
+        ? scenarioBlockedNotice(result.blockingIssues)
+        : scenarioWarningNotice(issues);
 
-    log(summary, result.shouldBlock ? 'error' : 'warn');
+    log(`${text.title}: ${stripInlineCode(text.message)}`, result.shouldBlock ? 'error' : 'warn');
 
     if (!(window as any).showSimulationNotice) return result;
 
     (window as any).showSimulationNotice({
-        title: result.shouldBlock ? '\u0417\u0430\u043f\u0443\u0441\u043a \u0437\u0430\u0431\u043b\u043e\u043a\u0438\u0440\u043e\u0432\u0430\u043d' : 'Проверьте сценарий перед запуском',
-        message: summary,
-        detailsHtml: renderIssuesHtml(language, issues),
-        level: result.shouldBlock ? 'error' : 'warn'
+        ...text,
+        detailsHtml: renderIssuesHtml(language, issues)
     });
 
     return result;
-}
-
-export function warnAboutInstantExecution(language: ScriptLanguage) {
-    const message = language === 'python'
-        ? 'Скрипт выполняет команды слишком быстро. В Python обычно нужны паузы между `arm()`, `takeoff()`, `go_to_local_point()` и `land()`.'
-        : 'Скрипт выполняет команды слишком быстро. В Lua FSM добавьте паузы через `sleep(...)`, `Timer.callLater(...)` или `callback(event)`.';
-
-    log(message, 'warn');
-
-    if (!(window as any).showSimulationNotice) return;
-
-    (window as any).showSimulationNotice({
-        title: 'Предупреждение о сценарии',
-        message,
-        detailsHtml: renderIssuesHtml(language, [message]),
-        level: 'warn'
-    });
 }
 
 export function showSimultaneousCommandsNotice(commands: string[]) {
     if (shouldSuppressSimultaneousNotice()) return;
     markSimultaneousNoticeAsShown();
 
-    const uniqueCommands = Array.from(new Set(commands));
-    const message = uniqueCommands.length > 1
-        ? `Команды выполняются одновременно: ${uniqueCommands.join(', ')}.`
-        : commands.length > 1
-        ? `Команда ${uniqueCommands[0]} вызвана несколько раз за один шаг симуляции (${commands.length}).`
-        : `Команда ${uniqueCommands[0] || 'миссии'} выполняется одновременно с другой операцией.`;
-
     if (!(window as any).showSimulationNotice) return;
     (window as any).showSimulationNotice({
-        title: 'Команды пересекаются',
-        message,
-        detailsHtml: renderSimultaneousCommandsHtml(commands),
-        level: 'warn'
+        ...simultaneousCommandsNotice(commands),
+        detailsHtml: renderSimultaneousCommandsHtml(commands)
     });
 }
 
@@ -223,16 +194,13 @@ export function showEarlyRouteNotice() {
     if (shouldSuppressEarlyRouteNotice()) return;
     markEarlyRouteNoticeAsShown();
 
-    const message = '`goToLocalPoint(...)` отправлен до завершения взлета. Дождитесь `TAKEOFF_COMPLETE`.';
-
-    log(message, 'warn');
+    const text = earlyRouteNotice();
+    log(`${text.title}: ${stripInlineCode(text.message)}`, 'warn');
 
     if (!(window as any).showSimulationNotice) return;
     (window as any).showSimulationNotice({
-        title: 'Маршрут запущен слишком рано',
-        message,
-        detailsHtml: renderEarlyRouteHtml(),
-        level: 'warn'
+        ...text,
+        detailsHtml: renderEarlyRouteHtml()
     });
 }
 
@@ -240,24 +208,19 @@ export function showMissingCallbackMissionNotice(apiName?: string) {
     if (shouldSuppressMissingCallbackNotice()) return;
     markMissingCallbackNoticeAsShown();
 
-    const message = 'В сценарии нет `function callback(event) ... end`, поэтому симулятор выполнит только первую команду миссии.';
-    const ignoredCall = apiName
-        ? `Текущий вызов \`${apiName}\` пропущен.`
-        : 'Следующая команда автопилота пропущена.';
-
-    log(message, 'warn');
+    const text = missingCallbackNotice(apiName);
+    log(`${text.title}: ${stripInlineCode(text.message)}`, 'warn');
 
     if (!(window as any).showSimulationNotice) return;
     (window as any).showSimulationNotice({
-        title: 'Отсутствует callback(event)',
-        message,
+        ...text,
         detailsHtml: renderIssuesHtml('lua', [
-            'События `Ev.ENGINES_STARTED`, `Ev.TAKEOFF_COMPLETE` и `Ev.POINT_REACHED` должны обрабатываться внутри `callback(event)`.',
-            'Если `callback(event)` отсутствует, автопилот не может передать подтверждение следующему этапу Lua-сценария.',
-            'Поэтому без `callback(event)` симулятор принимает только первую команду миссии, а остальные команды автопилота игнорирует.',
-            ignoredCall
-        ]),
-        level: 'warn'
+            'События `Ev.ENGINES_STARTED`, `Ev.TAKEOFF_COMPLETE` и `Ev.POINT_REACHED` приходят в функцию `callback(event)`.',
+            'Без неё автопилоту некому сообщить, что этап закончился, поэтому дальше он не идёт.',
+            apiName
+                ? `Вызов \`${apiName}\` пропущен.`
+                : 'Следующая команда автопилота пропущена.'
+        ])
     });
 }
 
@@ -278,19 +241,17 @@ export function wireMissionNotices(): void {
 }
 
 export function showMissionGamepadOverrideNotice() {
-    const message = 'Подключенный пульт переведен в ручной режим, поэтому на время активной миссии RC override отключен.';
+    const text = gamepadOverrideNotice();
 
-    log(message, 'warn');
+    log(`${text.title}: ${stripInlineCode(text.message)}`, 'warn');
 
     if (!(window as any).showSimulationNotice) return;
     (window as any).showSimulationNotice({
-        title: 'Миссия получила приоритет над RC',
-        message,
+        ...text,
         detailsHtml: renderIssuesHtml('lua', [
-            'Пока миссия выполняет взлет, маршрут или посадку, симулятор принудительно ведет дрон в AUTO.',
-            'После завершения миссии ручное управление с пульта снова начнет влиять на полет.',
-            'Если нужен ручной полет прямо сейчас, остановите сценарий или переведите CH5 в подходящее положение.'
-        ]),
-        level: 'warn'
+            'Пока миссия выполняет взлёт, маршрут или посадку, симулятор сам ведёт дрон в режиме AUTO.',
+            'Когда миссия закончится, пульт снова начнёт управлять дроном.',
+            'Если нужно лететь вручную прямо сейчас, остановите программу или переведите CH5 в другое положение.'
+        ])
     });
 }

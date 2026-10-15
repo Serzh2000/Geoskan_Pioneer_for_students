@@ -11,6 +11,11 @@ export type SceneTreeState = {
      * made in the 3D viewport has no such context to protect, so that one does open the inspector.
      */
     suppressInspectorJump: boolean;
+    /** Row whose trash button was pressed once: it shows "Удалить? / Удалить / Отмена" in place. */
+    pendingDeleteId: string | null;
+    /** The two folders of the tree; both start open. */
+    baseOpen: boolean;
+    mineOpen: boolean;
 };
 
 export type SceneManagerViewState = {
@@ -25,7 +30,7 @@ export function createSceneManagerViewState(): SceneManagerViewState {
         lastSelectedId: null,
         activeTab: 'hierarchy',
         activeTransformMode: 'translate',
-        tree: { query: '', expandedIds: new Set<string>(), suppressInspectorJump: false }
+        tree: { query: '', expandedIds: new Set<string>(), suppressInspectorJump: false, pendingDeleteId: null, baseOpen: true, mineOpen: true }
     };
 }
 

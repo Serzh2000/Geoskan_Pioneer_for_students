@@ -119,11 +119,13 @@ export function updateSelectedControls(
     const hasValueField = selected.supportsValue && !isBuildingSelected;
     const hasPointsField = !!selected.supportsPoints;
     const showRotateControls = selected.draggable && mode === 'rotate';
+    const transformCard = document.getElementById('scene-transform-card');
+    if (transformCard) transformCard.dataset.transform = selected.draggable ? 'editable' : selected.isDrone ? 'drone' : 'locked';
     const transformHelp = document.getElementById('scene-transform-help');
     if (transformHelp) transformHelp.textContent = selected.draggable
         ? 'Выберите действие и перетаскивайте оси на сцене. Координаты обновляются автоматически.'
         : selected.isDrone ? 'Положение дрона меняется во время полёта. Чтобы начать заново, верните его в центр.'
-            : 'Этот объект зафиксирован. Его положение нельзя изменить инструментами трансформации.';
+            : 'Объект зафиксирован: положение менять нельзя.';
 
     elements.applyMetaBtn?.toggleAttribute('disabled', false);
     elements.deleteBtn?.toggleAttribute('disabled', isProtectedEntry(selected));
