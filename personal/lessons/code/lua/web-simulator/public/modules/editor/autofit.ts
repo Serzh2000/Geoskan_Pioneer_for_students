@@ -1,8 +1,13 @@
 import type { BlocklyNS } from './blockly-mode/loader.js';
 import { currentScriptLanguage, DEFAULT_LUA_SCRIPT, type ScriptLanguage } from '../core/state.js';
 
-const MIN_SIDEBAR_WIDTH = 320;
+const MIN_SIDEBAR_WIDTH = 360;
 const MAX_SIDEBAR_WIDTH = 1000;
+// The editor shares the screen with the scene: autofit never takes the last
+// SCENE_MIN_WIDTH px of it (keep in sync with --scene-min-width in layout/container.css).
+const SCENE_MIN_WIDTH = 360;
+// Same key as ui/panels/sidebar.ts: every panel keeps its own width under its id.
+const EDITOR_WIDTH_STORAGE_KEY = 'sidebar-width:editor-panel';
 const LUA_EDITOR_FONT = "14px 'Fira Code', monospace";
 const LUA_EDITOR_HORIZONTAL_PADDING = 64;
 const BLOCKLY_CONTENT_PADDING = 96;
@@ -49,8 +54,24 @@ function getSidebarChromeWidth(panels: HTMLElement, contentElement: HTMLElement 
     return Math.max(40, sidebarWidth - contentWidth);
 }
 
-function clampSidebarWidth(width: number): number {
-    return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, Math.ceil(width)));
+/* The widest the editor column can be while the scene beside it stays at its minimum. */
+function getSceneSafeMaxWidth(panels: HTMLElement): number {
+    const track = panels.closest('.mobile-workspace-track') as HTMLElement | null;
+    const sidebar = panels.closest('.workspace-sidebar') as HTMLElement | null;
+    if (!track || !sidebar) return MAX_SIDEBAR_WIDTH;
+    const railWidth = Math.max(0, sidebar.getBoundingClientRect().width - panels.getBoundingClientRect().width);
+    const gap = Number.parseFloat(window.getComputedStyle(track).columnGap) || 0;
+    const room = Math.floor(track.clientWidth - railWidth - gap - SCENE_MIN_WIDTH);
+    return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, room));
+}
+
+function clampSidebarWidth(width: number, panels?: HTMLElement | null): number {
+    const max = panels ? getSceneSafeMaxWidth(panels) : MAX_SIDEBAR_WIDTH;
+    return Math.min(max, Math.max(MIN_SIDEBAR_WIDTH, Math.ceil(width)));
+}
+
+function storeEditorWidth(width: string): void {
+    try { localStorage.setItem(EDITOR_WIDTH_STORAGE_KEY, width); } catch { /* The width then lasts for this session only. */ }
 }
 
 /* В мобильном режиме (is-mobile) ширина панелей всегда 100% (CSS !important):
@@ -67,11 +88,11 @@ function applySidebarAutofitWidth(requiredWidth: number): void {
     if (isMobileSidebarLayout(panels)) return;
 
     const currentWidth = getSidebarCurrentWidth(panels);
-    const nextWidth = clampSidebarWidth(requiredWidth);
+    const nextWidth = clampSidebarWidth(requiredWidth, panels);
     if (nextWidth <= currentWidth) return;
 
     panels.style.width = `${nextWidth}px`;
-    localStorage.setItem('sidebar-width', `${nextWidth}px`);
+    storeEditorWidth(`${nextWidth}px`);
     window.dispatchEvent(new Event('resize'));
 }
 
@@ -203,7 +224,7 @@ export function restoreEditorPanelWidthAfterBlockly(previousSidebarWidthBeforeBl
         : currentWidth;
 
     panels.style.width = `${nextWidth}px`;
-    localStorage.setItem('sidebar-width', `${nextWidth}px`);
+    storeEditorWidth(`${nextWidth}px`);
     window.dispatchEvent(new Event('resize'));
     return null;
 }

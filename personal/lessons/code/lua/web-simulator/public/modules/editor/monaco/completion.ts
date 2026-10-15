@@ -1,6 +1,6 @@
 ﻿import { getLineTextBeforeCursor, getTextBeforeCursor } from './completion/context.js';
-import { getLuaCompletionEntries, getPythonCompletionEntries } from './completion/entries.js';
-import { dedupeSuggestions, type CompletionDocEntry } from './completion/types.js';
+import { getLuaArgumentTriggerEntries, getLuaCompletionEntries, getPythonCompletionEntries } from './completion/entries.js';
+import { dedupeSuggestions, formatEntryDocumentation, type CompletionDocEntry } from './completion/types.js';
 
 let completionProvidersRegistered = false;
 
@@ -13,13 +13,18 @@ function ensureLanguageRegistered(monaco: any, id: string): void {
 
 export { getLuaCompletionEntries, getPythonCompletionEntries } from './completion/entries.js';
 
-function toMonacoSuggestions(monaco: any, entries: CompletionDocEntry[], range: any): any[] {
+function toMonacoSuggestions(monaco: any, entries: CompletionDocEntry[], range: any, codeFence: string): any[] {
     return entries.map((entry) => ({
         label: entry.label,
         kind: (monaco.languages.CompletionItemKind as any)[entry.kind] || monaco.languages.CompletionItemKind.Method,
         insertText: entry.insertText,
         insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-        documentation: { value: entry.documentation },
+        // The call form beside the name, and a documentation card: what it does, parameters, result, an example.
+        detail: entry.detail,
+        documentation: { value: formatEntryDocumentation(entry, codeFence) },
+        // What the typed letters are matched against (the name and the Russian words for it) and where it sits in the list.
+        filterText: entry.filterText,
+        sortText: entry.sortText,
         range
     }));
 }
@@ -42,10 +47,13 @@ export function setupCompletionProvider(monaco: any) {
 
             const documentText = getTextBeforeCursor(model, position);
             const textBeforeCursor = getLineTextBeforeCursor(model, position);
-            const suggestions = toMonacoSuggestions(monaco, getLuaCompletionEntries(documentText, textBeforeCursor), range);
+            // Typing "(" opens a list only where something fits the argument; the parameter hint opens either way.
+            const afterBracket = textBeforeCursor.trimEnd().endsWith('(') && word.word === '';
+            const entries = afterBracket ? getLuaArgumentTriggerEntries(documentText) : getLuaCompletionEntries(documentText, textBeforeCursor);
+            const suggestions = toMonacoSuggestions(monaco, entries, range, 'lua');
             return { suggestions: dedupeSuggestions(suggestions) };
         },
-        triggerCharacters: ['.', ':']
+        triggerCharacters: ['.', ':', '(']
     });
 
     monaco.languages.registerCompletionItemProvider('python', {
@@ -60,7 +68,7 @@ export function setupCompletionProvider(monaco: any) {
 
             const documentText = getTextBeforeCursor(model, position);
             const textBeforeCursor = getLineTextBeforeCursor(model, position);
-            const suggestions = toMonacoSuggestions(monaco, getPythonCompletionEntries(documentText, textBeforeCursor), range);
+            const suggestions = toMonacoSuggestions(monaco, getPythonCompletionEntries(documentText, textBeforeCursor), range, 'python');
             return { suggestions: dedupeSuggestions(suggestions) };
         },
         triggerCharacters: ['.']

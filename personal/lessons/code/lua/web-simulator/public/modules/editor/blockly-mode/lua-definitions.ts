@@ -1,6 +1,5 @@
 import * as Blockly from 'blockly';
 import { luaGenerator } from 'blockly/lua';
-import type { ScriptLanguage } from '../../core/state.js';
 
 // ============================================================================
 // ЦВЕТА БЛОКОВ (идентичны Python-блокам из python-definitions.ts)
@@ -9,7 +8,6 @@ const COLOR_FLIGHT = 290;     // Полётные блоки (ap.push, goToLocal
 const COLOR_LED = 160;        // Светодиоды (Ledbar, led_control)
 const COLOR_CONTROL = 230;    // Управление (Timer, sleep, waiting_for_point)
 const COLOR_LOGIC = 210;      // Логика (callback, event_callback)
-const COLOR_VAR = 330;        // Переменные
 const COLOR_SENSORS = 290;    // Сенсоры и данные
 
 // ============================================================================

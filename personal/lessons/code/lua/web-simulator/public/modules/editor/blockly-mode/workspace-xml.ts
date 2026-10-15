@@ -89,7 +89,7 @@ function collectWorkspaceSequence(block: Blockly.Block | null, sequence: string[
         sequence.push(current.type);
         current.inputList.forEach((input) => {
             const child = input.connection?.targetBlock() || null;
-            if (child) {
+            if (child && !child.outputConnection) {
                 collectWorkspaceSequence(child, sequence);
             }
         });

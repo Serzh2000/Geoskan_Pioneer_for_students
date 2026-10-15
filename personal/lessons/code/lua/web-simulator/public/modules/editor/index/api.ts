@@ -1,4 +1,4 @@
-import { currentDroneId, currentScriptLanguage, type ScriptLanguage } from '../../core/state.js';
+import { currentDroneId, currentScriptLanguage, setCurrentScriptLanguage, type ScriptLanguage } from '../../core/state.js';
 import { Blockly, type BlocklyNS } from '../blockly-mode/loader.js';
 import {
     buildMainEditorToolbox,
@@ -49,6 +49,27 @@ import {
     syncEditorModeVisibility
 } from './shell.js';
 import { editorIndexState, getEditorIndexCollections, getEditorIndexShellState } from './state.js';
+import { beginTemporaryDocument, restoreTemporaryDocument } from './temporary-document.js';
+
+export function beginTemporaryEditorDocument(): void {
+    if (editorIndexState.blocklyEnabled) saveBlocklyWorkspaceState();
+    beginTemporaryDocument(editorIndexState, { value: getTextEditorValue(), language: currentScriptLanguage });
+}
+
+export function restoreTemporaryEditorDocument(): void {
+    restoreTemporaryDocument(editorIndexState, document => {
+        setCurrentScriptLanguage(document.language);
+        setEditorTextLanguage(document.language);
+        if (document.blocklyEnabled && editorIndexState.blocklyWorkspace) {
+            editorIndexState.blocklyWorkspace.updateToolbox(buildMainEditorToolbox(document.language));
+            loadBlocklyWorkspace(document.language);
+        }
+        setTextEditorValue(document.value);
+        syncEditorModeVisibility();
+        syncScriptLanguageSelect();
+        layoutEditor();
+    });
+}
 
 function getEditorControllers() {
     return createEditorIndexControllers(editorIndexState, getEditorIndexCollections(), {
@@ -176,6 +197,11 @@ export async function setEditorValue(value: string): Promise<void> {
     setTextEditorValue(value);
 }
 
+export function revealEditorStart(): void {
+    editorIndexState.editorInstance?.setPosition({ lineNumber: 1, column: 1 });
+    editorIndexState.editorInstance?.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
+}
+
 export async function setEditorLanguage(language: ScriptLanguage): Promise<void> {
     setEditorTextLanguage(language);
 
@@ -230,6 +256,7 @@ export async function loadMainBlocklyXml(xml: string): Promise<void> {
 
     try {
         const dom = Blockly.utils.xml.textToDom(xml);
+        migrateLessonLedValues(dom);
         Blockly.Xml.domToWorkspace(dom, workspace);
     } catch (error) {
         console.error('[Editor] Failed to load Blockly workspace', error);
@@ -261,3 +288,4 @@ export function layoutEditor(): void {
 export function setEditorTheme(theme: 'light' | 'dark'): void {
     setEditorThemeShell(theme);
 }
+import { migrateLessonLedValues } from '../blockly/legacy-values.js';

@@ -1,5 +1,6 @@
 import type { BlocklyNS } from '../blockly-mode/loader.js';
 import type { ScriptLanguage } from '../../core/state.js';
+import { isTemporaryDocumentActive } from './temporary-document.js';
 import type { EditorAutofitContext } from '../autofit.js';
 import type { BlocklyWorkspaceController } from '../blockly/workspace-controller.js';
 import { createBlocklyToggleController, createBlocklyWorkspaceController, type EditorControllerHost } from './controllers.js';
@@ -70,6 +71,7 @@ export function persistEditorIndexSession(
     state: Pick<EditorIndexShellState, 'blocklyEnabled'>,
     collections: EditorIndexCollections
 ): void {
+    if (isTemporaryDocumentActive()) return;
     persistEditorSessionToStorage({
         textDraftByKey: collections.textDraftByKey,
         blocklyWorkspaceXmlByKey: collections.blocklyWorkspaceXmlByKey,

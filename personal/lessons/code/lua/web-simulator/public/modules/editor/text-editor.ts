@@ -9,6 +9,7 @@ import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import type { ScriptLanguage } from '../core/state.js';
 import { setupCompletionProvider } from './monaco/completion.js';
 import { setupHoverProvider } from './monaco/hover.js';
+import { setupSignatureHelpProvider } from './monaco/signature-help.js';
 import { setupSyntaxHighlighting } from './monaco/syntax.js';
 import type { AppTheme } from '../app/theme-toggle.js';
 
@@ -162,6 +163,7 @@ export function createTextEditorInstance(options: TextEditorCreateOptions): mona
     setupSyntaxHighlighting(monaco);
     setupHoverProvider(monaco);
     setupCompletionProvider(monaco);
+    setupSignatureHelpProvider(monaco);
 
     const editorInstance = monaco.editor.create(options.root, {
         value: options.initialValue,
@@ -175,9 +177,16 @@ export function createTextEditorInstance(options: TextEditorCreateOptions): mona
             strings: false
         },
         suggestOnTriggerCharacters: true,
+        // The call form with the current argument in bold: opens after "(" and follows the commas.
         parameterHints: {
-            enabled: true
+            enabled: true,
+            cycle: true
         },
+        // Enter and Tab take the highlighted suggestion; the first one is picked, so a short word plus Tab is enough.
+        acceptSuggestionOnEnter: 'smart',
+        tabCompletion: 'on',
+        suggestSelection: 'first',
+        snippetSuggestions: 'inline',
         hover: {
             enabled: true,
             delay: 200,
@@ -191,7 +200,13 @@ export function createTextEditorInstance(options: TextEditorCreateOptions): mona
         overflowWidgetsDomNode: ensureOverflowWidgetsContainer(),
         suggest: {
             snippetsPreventQuickSuggestions: false,
-            showWords: false
+            showWords: false,
+            showSnippets: true,
+            showIcons: true,
+            // The documentation card opens beside the list at once instead of after a keypress.
+            showStatusBar: true,
+            preview: true,
+            localityBonus: true
         }
     });
 

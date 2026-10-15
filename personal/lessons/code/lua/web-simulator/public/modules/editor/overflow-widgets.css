@@ -21,3 +21,23 @@
 #monaco-overflow-widgets > * {
     pointer-events: auto;
 }
+
+
+/* The app's top bar is styled by the class name `.header` (layout/header/shell.css). Monaco names the caption row of its
+   suggestion details the same, so the bar's fixed position, width and blur leaked onto it and the caption of the
+   highlighted suggestion (its call form) was drawn across the top of the page. This puts the row back in the widget. */
+.monaco-editor .suggest-details .header {
+    position: static;
+    inset: auto;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    gap: 0;
+    background: transparent;
+    backdrop-filter: none;
+    border-bottom: 0;
+    box-shadow: none;
+    z-index: auto;
+    overflow: visible;
+}

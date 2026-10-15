@@ -87,12 +87,3 @@ export function buildCatalog(language: ScriptLanguage): ApiCatalogEntry[] {
     });
 }
 
-export function groupCatalogByCategory(entries: ApiCatalogEntry[]): Map<string, ApiCatalogEntry[]> {
-    const grouped = new Map<string, ApiCatalogEntry[]>();
-    entries.forEach((entry) => {
-        const items = grouped.get(entry.category) || [];
-        items.push(entry);
-        grouped.set(entry.category, items);
-    });
-    return grouped;
-}

@@ -98,7 +98,3 @@ export function createStarterWorkspaceXml(language: ScriptLanguage): string {
     `;
 }
 
-export const RAW_CODE_BLOCK_TYPES = {
-    lua: LUA_RAW_CODE_BLOCK,
-    python: PY_RAW_CODE_BLOCK
-} as const;

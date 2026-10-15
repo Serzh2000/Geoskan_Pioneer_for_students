@@ -6,6 +6,7 @@ import type { ApiCatalogEntry } from './types.js';
 import { buildPioneerToolbox } from './pioneer/toolbox.js';
 import { compilePioneerWorkspace as compilePioneerWorkspaceCode } from './pioneer/targets/compile.js';
 import { registerPioneerBlocks } from './pioneer/blocks/index.js';
+import { compileMainEditorWorkspace as compileLegacyWorkspace } from './workspace.js';
 
 // Реэкспорт для тестов и для buildMainEditorToolbox/compileMainEditorWorkspace
 // ниже: с фазы 7 это и есть система главного тулбокса/компилятора редактора,
@@ -76,10 +77,6 @@ function defineLuaEventConstantBlock(): void {
             return [`Ev.${block.getFieldValue('EVENT')}`, 0] as [string, number];
         };
     }
-}
-
-function getCatalog(language: ScriptLanguage): ApiCatalogEntry[] {
-    return language === 'lua' ? luaCatalog : pythonCatalog;
 }
 
 // Полный список Lua-блоков (учебные + блоки из lua-definitions.ts),
@@ -172,7 +169,6 @@ function getCourseBlockTypes(language: ScriptLanguage): string[] {
 // Добавляет в каталог записи для учебных блоков, чтобы они попадали
 // в категорию «Учебные блоки» вместе с api-блоками, сгруппированными каталогом.
 function extendCatalogWithCourseBlocks(language: ScriptLanguage, catalog: ApiCatalogEntry[]): ApiCatalogEntry[] {
-    const courseTypes = new Set(getCourseBlockTypes(language));
     const existing = new Map<string, ApiCatalogEntry>();
     catalog.forEach((entry) => existing.set(entry.type, entry));
 
@@ -461,7 +457,8 @@ export function ensureEditorBlocklyDefinitions(): Promise<void> {
             // (§7 плана, фаза 2, шаг 3): старые lua_*/py_*/pioneer-sdk2-*
             // остаются зарегистрированными (нужны сохранённым сессиям и
             // урокам до миграции в фазе 8-9), но с фазы 7 главный тулбокс и
-            // компилятор редактора (ниже) используют только pioneer_*.
+// основной тулбокс использует pioneer_*. Для учебных workspace ниже
+// сохранён совместимый путь компиляции.
             registerPioneerBlocks();
         });
     }
@@ -472,12 +469,17 @@ export function ensureEditorBlocklyDefinitions(): Promise<void> {
 // набор pioneer_*. Старые renderStandardCategories()/renderPioneerSdkCategories()
 // и compileWorkspaceCode() (workspace.ts) больше не используются здесь — старые
 // блоки остаются зарегистрированными (см. комментарий выше) для сохранённых
-// сессий/уроков, но недоступны через главный тулбокс, пока не пройдёт
-// миграция (фаза 8) и очистка (фаза 9).
+// сессий/уроков. Учебник предоставляет их отдельным тулбоксом и компилирует
+// совместимым генератором, пока не пройдёт миграция.
 export function buildMainEditorToolbox(language: ScriptLanguage): string {
     return buildPioneerToolbox(language);
 }
 
 export function compileMainEditorWorkspace(language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg): string {
+    // Existing guided lessons and saved workspaces still contain teaching blocks.
+    // Passing them to the pioneer-only compiler silently produced an empty program.
+    if (workspace.getAllBlocks(false).some((block) => /^(lua_|py_)/.test(block.type))) {
+        return compileLegacyWorkspace(language, workspace);
+    }
     return compilePioneerWorkspaceCode(workspace, language);
 }

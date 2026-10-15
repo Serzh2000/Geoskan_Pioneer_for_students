@@ -99,10 +99,6 @@ function getAutopilotEventOptions(eventNames: string[]): [string, string][] {
     return eventNames.map((eventName) => [luaApiEventLabels[eventName] || eventName, `Ev.${eventName}`]);
 }
 
-function describeEvent(eventName: string): string {
-    return luaApiDocsEvents[`Ev.${eventName}`]?.desc || 'Событие автопилота.';
-}
-
 export function registerLuaBlocklyDefinitions(): void {
     // ==========================================================================
     // 1. LED-лента: инициализация и установка цвета

@@ -1,4 +1,5 @@
-import { apiDocs, pythonApiDocs } from '../../docs/api-docs.js';
+import { luaStdlibDocs } from '../../docs/lua-stdlib-docs.js';
+import { LUA_DOC_TABLE, PYTHON_DOC_TABLE } from './completion/catalog.js';
 
 let hoverProvidersRegistered = false;
 
@@ -32,7 +33,7 @@ function getMarkdownContents(languageLabel: string, fullWord: string, doc: any, 
 }
 
 function findLuaDoc(fullWord: string): { lookupKey: string; doc: any } | null {
-    const exactDoc = (apiDocs as Record<string, any>)[fullWord];
+    const exactDoc = (LUA_DOC_TABLE as Record<string, any>)[fullWord];
     if (exactDoc) {
         return { lookupKey: fullWord, doc: exactDoc };
     }
@@ -42,7 +43,7 @@ function findLuaDoc(fullWord: string): { lookupKey: string; doc: any } | null {
 
     const [, separator, member] = memberMatch;
     const suffix = `${separator}${member}`;
-    const candidates = Object.entries(apiDocs as Record<string, any>)
+    const candidates = Object.entries(LUA_DOC_TABLE as Record<string, any>)
         .filter(([key]) => key.endsWith(suffix));
 
     if (candidates.length === 1) {
@@ -70,7 +71,7 @@ export function setupHoverProvider(monaco: any) {
             if (match) {
                 return {
                     range: new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn),
-                    contents: getMarkdownContents('Pioneer API', match.lookupKey, match.doc, 'lua')
+                    contents: getMarkdownContents(match.lookupKey in luaStdlibDocs ? 'Lua' : 'Pioneer Lua', match.lookupKey, match.doc, 'lua')
                 };
             }
         }
@@ -92,10 +93,10 @@ export function setupHoverProvider(monaco: any) {
 
             // Resolve documentation on demand to keep provider stateless.
             let found: any = undefined;
-            for (const [key, doc] of Object.entries(pythonApiDocs as any)) {
-                if (!key.includes('.')) continue;
+            for (const [key, doc] of Object.entries(PYTHON_DOC_TABLE as any)) {
+                // Bare names (print, len, range) match the word itself; members match by their last part.
                 const method = key.split('.').slice(-1)[0];
-                if (method === last) {
+                if (method === last && (key.includes('.') || parts.length === 1)) {
                     found = doc;
                     break;
                 }
@@ -105,7 +106,7 @@ export function setupHoverProvider(monaco: any) {
 
             return {
                 range: new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn),
-                contents: getMarkdownContents('Python SDK', fullWord, found, 'python')
+                contents: getMarkdownContents('Python', fullWord, found, 'python')
             };
         }
     });

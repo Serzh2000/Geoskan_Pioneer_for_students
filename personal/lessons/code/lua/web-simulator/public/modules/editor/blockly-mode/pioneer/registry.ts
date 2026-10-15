@@ -44,10 +44,6 @@ export function getPioneerBlockTypes(): string[] {
     return Array.from(registry.keys());
 }
 
-export function getPioneerBlockSpec(type: string): PioneerBlockSpec | undefined {
-    return registry.get(type);
-}
-
 export function getPioneerBlockTypesByCategory(category: PioneerBlockSpec['category']): string[] {
     return Array.from(registry.values())
         .filter((spec) => spec.category === category)

@@ -2,14 +2,6 @@ import * as Blockly from 'blockly';
 import { pythonGenerator } from 'blockly/python';
 import { registerPioneerSdk2Definitions } from './pioneer-sdk2-definitions.js';
 
-// Helper for Color tuple conversion [R, G, B] -> pioneer.led_control(..., *[c / 255 for c in COLOR][::-1])
-function hexToRgbTuple(hex: string): [number, number, number] {
-    const clean = hex.replace('#', '');
-    const num = parseInt(clean, 16);
-    if (isNaN(num)) return [0, 0, 0];
-    return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
-}
-
 export function registerPythonBlocklyDefinitions(): void {
     const COLOR_FLIGHT = 290;
     const COLOR_LED = 160;
