@@ -3,27 +3,32 @@ import time
 
 drone = Pioneer()
 
+
+def fly_to(x, y, z):
+    """Летим в точку и ждём, пока автопилот сообщит, что она достигнута."""
+    drone.go_to_local_point(x=x, y=y, z=z, yaw=0)
+    while not drone.point_reached():
+        time.sleep(0.1)
+
+
 try:
     print("Арминг и взлет...")
     drone.arm()
-    time.sleep(1) # Даем автопилоту перейти в режим готовности
+    time.sleep(1)            # даём автопилоту перейти в режим готовности
     drone.takeoff()
-    
-    # Высота полета
-    h = 1.0
-    
-    # 1. Летим вперед на 1 метр
+
+    h = 1.0                  # высота полёта
+    fly_to(0.0, 0.0, h)      # сначала занимаем точку над стартом
+
     print("Вперед!")
-    drone.go_to_local_point(x=1.0, y=0.0, z=h, yaw=0)
-    time.sleep(4) # Ждем, пока долетит
-    
-    # 2. Возвращаемся в точку старта (0, 0)
+    fly_to(1.0, 0.0, h)      # 1 метр вперёд по оси X
+
     print("Домой!")
-    drone.go_to_local_point(x=0.0, y=0.0, z=h, yaw=0)
-    time.sleep(4)
-    
+    fly_to(0.0, 0.0, h)      # обратно в точку старта
+
     print("Посадка...")
     drone.land()
-    
+    time.sleep(5)            # ждём, пока дрон сядет
 finally:
     drone.disarm()
+    drone.close_connection()

@@ -1,46 +1,15 @@
--- создание порта управления светодиодом
-local ledbar = Ledbar.new(29)
+local ledNumber = 29
+local leds = Ledbar.new(ledNumber)
 
--- переменная текущего состояния
-local curr_state = "START"
-
--- таблица функций, вызываемых в зависимости от состояния
-action = {
-	["START"] = function(x)
-
-		ledbar:set(0, 1, 0.0, 0.0)
-
-		sleep(1000 / 1000.0)
-		ledbar:set(1, 0.0, 1, 0.0)
-
-		sleep(1000 / 1000.0)
-		ledbar:set(2, 0.0, 0.0, 1)
-
-		sleep(1000 / 1000.0)
-		ledbar:set(3, 1, 1, 0.0)
-
-		-- выключение двигателей и конец программы
-		ap.push(Ev.ENGINES_DISARM)
-		curr_state = "NONE"
-
-	end,
-}
-
--- функция обработки событий, автоматически вызывается автопилотом
-function callback(event)
-	if (event == Ev.TAKEOFF_COMPLETE) then
-		action[curr_state]()
-	end
-
-	if (event == Ev.POINT_REACHED) then
-		action[curr_state]()
-	end
-
-	if (event == Ev.COPTER_LANDED) then
-		sleep(2)
-		action[curr_state]()
-	end
+local function fill(r, g, b)
+  for i = 0, ledNumber - 1 do leds:set(i, r, g, b) end
 end
 
--- вызов функции из таблицы состояний, соответствующей первому состоянию
-action[curr_state]()
+fill(1, 0, 0)     -- красный
+sleep(1)          -- вся программа стоит одну секунду: ни событий, ни таймеров
+fill(0, 1, 0)     -- зелёный
+sleep(1)
+fill(0, 0, 0)     -- выключить
+
+function callback(event)
+end

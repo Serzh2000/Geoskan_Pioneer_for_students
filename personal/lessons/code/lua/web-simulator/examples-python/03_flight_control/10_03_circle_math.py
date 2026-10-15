@@ -4,39 +4,35 @@ import math
 
 drone = Pioneer()
 
+
+def fly_to(x, y, z):
+    """Летим в точку и ждём события 'точка достигнута'."""
+    drone.go_to_local_point(x=x, y=y, z=z, yaw=0)
+    while not drone.point_reached():
+        time.sleep(0.1)
+
+
 try:
     print("Взлет...")
     drone.arm()
-    time.sleep(1) # Даем автопилоту перейти в режим готовности
+    time.sleep(1)
     drone.takeoff()
-    
-    h = 1.0          # Высота
-    radius = 0.5     # Радиус круга (0.5 метра)
-    points_count = 12 # Количество точек (чем больше, тем плавнее круг)
-    
-    # Цикл по точкам
+
+    h = 1.0             # высота полёта
+    radius = 0.5        # радиус окружности, м
+    points_count = 12   # чем больше точек, тем ровнее круг
+
+    # окружность с центром в точке старта: угол от 0 град. до 360 град. с шагом 30 град.
     for i in range(points_count + 1):
-        # Вычисляем угол в градусах (от 0 до 360)
-        angle_deg = (360 / points_count) * i
-        
-        # Переводим в радианы (для sin/cos)
-        angle_rad = math.radians(angle_deg)
-        
-        # Считаем координаты X и Y
-        # x = R * cos(a)
-        # y = R * sin(a)
+        angle_deg = 360 / points_count * i
+        angle_rad = math.radians(angle_deg)   # sin и cos принимают радианы
         x = radius * math.cos(angle_rad)
         y = radius * math.sin(angle_rad)
-        
-        # В начале координат (0,0) дрон стоит в центре круга?
-        # Нет, если мы хотим летать ВОКРУГ точки старта, то координаты правильные.
-        # Если хотим летать так, чтобы старт был НА окружности, нужно смещение.
-        # Для простоты летим вокруг точки старта (радиус 0.5м от старта).
-        
         print(f"Точка {i}: x={x:.2f}, y={y:.2f}")
-        drone.go_to_local_point(x, y, h, 0)
-        time.sleep(2) # Пауза между точками
-        
+        fly_to(x, y, h)
+
     drone.land()
+    time.sleep(5)
 finally:
     drone.disarm()
+    drone.close_connection()

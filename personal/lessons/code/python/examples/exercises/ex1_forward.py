@@ -41,6 +41,7 @@ def exercise_01():
         # 5. Посадка (Конец упражнения, без возврата)
         print("Посадка...")
         drone.land()
+        time.sleep(5)  # ждём, пока дрон сядет: disarm() в finally выключает моторы сразу
         
     finally:
         grader.finish_mission()

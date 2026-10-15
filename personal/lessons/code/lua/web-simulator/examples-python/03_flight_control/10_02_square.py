@@ -3,30 +3,31 @@ import time
 
 drone = Pioneer()
 
+
+def fly_to(x, y, z):
+    """Летим в точку и ждём события 'точка достигнута'."""
+    drone.go_to_local_point(x=x, y=y, z=z, yaw=0)
+    while not drone.point_reached():
+        time.sleep(0.1)
+
+
 try:
     print("Взлет...")
     drone.arm()
-    time.sleep(1) # Даем автопилоту перейти в режим готовности
+    time.sleep(1)
     drone.takeoff()
-    h = 1.0 # Высота
-    
-    # Квадрат 1x1 метр
-    # Точка 1: (1, 0)
-    drone.go_to_local_point(1.0, 0.0, h, 0)
-    time.sleep(4)
-    
-    # Точка 2: (1, 1)
-    drone.go_to_local_point(1.0, 1.0, h, 0)
-    time.sleep(4)
-    
-    # Точка 3: (0, 1)
-    drone.go_to_local_point(0.0, 1.0, h, 0)
-    time.sleep(4)
-    
-    # Точка 4: (0, 0) - Домой
-    drone.go_to_local_point(0.0, 0.0, h, 0)
-    time.sleep(4)
-    
+
+    h = 1.0                                  # высота полёта
+    fly_to(0.0, 0.0, h)                      # точка над стартом
+
+    # квадрат 1 x 1 м: вперёд, влево, назад, домой
+    square = [(1.0, 0.0), (1.0, 1.0), (0.0, 1.0), (0.0, 0.0)]
+    for x, y in square:
+        print(f"Летим в ({x}, {y})")
+        fly_to(x, y, h)
+
     drone.land()
+    time.sleep(5)
 finally:
     drone.disarm()
+    drone.close_connection()
