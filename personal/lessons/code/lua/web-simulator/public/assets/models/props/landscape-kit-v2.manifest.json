@@ -1,0 +1,183 @@
+{
+  "source": "Original local Blender geometry, no external assets",
+  "license": "Project /personal terms: educational use with attribution; see README.md#авторство-и-права",
+  "attribution": "Корягин С. А. — https://sakoryagin.ru",
+  "sourceScript": "tools/build_landscape_assets_v2.py",
+  "coordinates": "metres; Z up; origin at footprint centre, ground level",
+  "request": "Расширение процедурных полигонов: ферма, энергетика, логистика, уличная мебель",
+  "specification": "Ground-centred Z-up metre geometry; at most 5000 triangles and 6 materials per model; embedded GLB, no textures",
+  "validation": "GLB header/length, embedded buffers, indices, finite normals/positions, ground anchor, bounds, budgets, roof slopes",
+  "assets": {
+    "Barn": {
+      "triangles": 488,
+      "drawCalls": 4,
+      "min": [
+        -6.46,
+        -4.65,
+        0
+      ],
+      "max": [
+        6.53,
+        4.45,
+        7.15
+      ]
+    },
+    "Silo": {
+      "triangles": 788,
+      "drawCalls": 4,
+      "min": [
+        -2.6,
+        -2.6,
+        0
+      ],
+      "max": [
+        2.6,
+        2.6,
+        12.25
+      ]
+    },
+    "WindTurbine": {
+      "triangles": 540,
+      "drawCalls": 4,
+      "min": [
+        -8.33,
+        -3.1,
+        0
+      ],
+      "max": [
+        8.33,
+        2.55,
+        28.95
+      ]
+    },
+    "RadioMast": {
+      "triangles": 816,
+      "drawCalls": 4,
+      "min": [
+        -2,
+        -2,
+        0
+      ],
+      "max": [
+        2,
+        2,
+        26.15
+      ]
+    },
+    "ContainerStack": {
+      "triangles": 1800,
+      "drawCalls": 4,
+      "min": [
+        -3.2,
+        -2.65,
+        0
+      ],
+      "max": [
+        3.2,
+        2.65,
+        5.18
+      ]
+    },
+    "SolarArray": {
+      "triangles": 1656,
+      "drawCalls": 3,
+      "min": [
+        -5.15,
+        -3.29,
+        0
+      ],
+      "max": [
+        5.15,
+        3.29,
+        1.7
+      ]
+    },
+    "Greenhouse": {
+      "triangles": 692,
+      "drawCalls": 3,
+      "min": [
+        -6.38,
+        -2.69,
+        0
+      ],
+      "max": [
+        6.1,
+        2.69,
+        3.58
+      ]
+    },
+    "StreetLamp": {
+      "triangles": 320,
+      "drawCalls": 3,
+      "min": [
+        -0.23,
+        -1.55,
+        0
+      ],
+      "max": [
+        0.23,
+        0.2,
+        6.34
+      ]
+    },
+    "BusStop": {
+      "triangles": 568,
+      "drawCalls": 6,
+      "min": [
+        -1.95,
+        -1.02,
+        0
+      ],
+      "max": [
+        2.6,
+        1.03,
+        3.45
+      ]
+    },
+    "HayBales": {
+      "triangles": 2352,
+      "drawCalls": 2,
+      "min": [
+        -2.98,
+        -0.66,
+        -0.01
+      ],
+      "max": [
+        2.98,
+        2.15,
+        2.67
+      ]
+    },
+    "Rocks": {
+      "triangles": 540,
+      "drawCalls": 2,
+      "min": [
+        -2.99,
+        -2.72,
+        0
+      ],
+      "max": [
+        3.88,
+        2.49,
+        2.22
+      ]
+    }
+  },
+  "files": [
+    {
+      "name": "landscape-kit-v2.blend",
+      "bytes": 172084,
+      "sha256": "d86d895599c5f569d2120768211d794f28fff59add22da5fde6bf84a9ca10ac9"
+    },
+    {
+      "name": "landscape-kit-v2.glb",
+      "bytes": 743536,
+      "sha256": "ab863ef2c7388e4059b773908143e3208cae13cfdc0ac701c2212a77b1791790"
+    },
+    {
+      "name": "landscape-kit-v2.mesh.json",
+      "bytes": 1274912,
+      "sha256": "35b2bc3a806b6e1c57391341e5000d60d1f3fcb753ae3d8dcb73321471da3661"
+    }
+  ]
+}

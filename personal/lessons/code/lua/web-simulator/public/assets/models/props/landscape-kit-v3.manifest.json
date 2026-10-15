@@ -1,0 +1,113 @@
+{
+  "source": "Original local Blender geometry, no external assets",
+  "license": "Project /personal terms: educational use with attribution; see README.md#авторство-и-права",
+  "attribution": "Корягин С. А. — https://sakoryagin.ru",
+  "sourceScript": "tools/build_landscape_assets_v3.py",
+  "coordinates": "metres; Z up; origin at footprint centre, ground level",
+  "request": "Расширение процедурных полигонов: ЛЭП, аэродром, церковь, АЗС, портальный кран",
+  "specification": "Ground-centred Z-up metre geometry; at most 5000 triangles and 6 materials per model; embedded GLB, no textures",
+  "validation": "GLB header/length, embedded buffers, indices, finite normals/positions, ground anchor, bounds, budgets, roof slopes",
+  "assets": {
+    "PowerPylon": {
+      "triangles": 2240,
+      "drawCalls": 3,
+      "min": [
+        -1.6,
+        -5.57,
+        0
+      ],
+      "max": [
+        1.6,
+        5.57,
+        15.2
+      ]
+    },
+    "Hangar": {
+      "triangles": 1880,
+      "drawCalls": 6,
+      "min": [
+        -11,
+        -8.2,
+        0
+      ],
+      "max": [
+        11,
+        8.2,
+        8.9
+      ]
+    },
+    "Windsock": {
+      "triangles": 480,
+      "drawCalls": 5,
+      "min": [
+        -0.5,
+        -2.59,
+        0
+      ],
+      "max": [
+        0.5,
+        0.5,
+        6.52
+      ]
+    },
+    "Church": {
+      "triangles": 1224,
+      "drawCalls": 6,
+      "min": [
+        -3.74,
+        -7.4,
+        0
+      ],
+      "max": [
+        3.74,
+        6.3,
+        18.5
+      ]
+    },
+    "GasStation": {
+      "triangles": 1356,
+      "drawCalls": 6,
+      "min": [
+        -8,
+        -6,
+        0
+      ],
+      "max": [
+        8.3,
+        7.05,
+        7.3
+      ]
+    },
+    "GantryCrane": {
+      "triangles": 1688,
+      "drawCalls": 5,
+      "min": [
+        -8.75,
+        -7,
+        0
+      ],
+      "max": [
+        8.75,
+        7,
+        13.1
+      ]
+    }
+  },
+  "files": [
+    {
+      "name": "landscape-kit-v3.blend",
+      "bytes": 154188,
+      "sha256": "0b3c5340310a792cfa0f7e7bc742b99c74159945c58b063e0e71f2e88cb0dc57"
+    },
+    {
+      "name": "landscape-kit-v3.glb",
+      "bytes": 603528,
+      "sha256": "80afeccd343e4615db66a2c8356d32228fa62a0a3bbbfba09414d3ac79bafb65"
+    },
+    {
+      "name": "landscape-kit-v3.mesh.json",
+      "bytes": 1028198,
+      "sha256": "27407bd6558e0c5d959f44ff5df2ca1d52bf5fd39e51bf13ede49dd47175f977"
+    }
+  ]
+}

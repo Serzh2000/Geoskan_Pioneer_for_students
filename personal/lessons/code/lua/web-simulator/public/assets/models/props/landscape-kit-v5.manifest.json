@@ -1,0 +1,141 @@
+{
+  "source": "Original local Blender geometry, no external assets",
+  "license": "Project /personal terms: educational use with attribution; see README.md#авторство-и-права",
+  "attribution": "Корягин С. А. — https://sakoryagin.ru",
+  "sourceScript": "tools/build_landscape_assets_v5.py",
+  "coordinates": "metres; Z up; origin at footprint centre, ground level",
+  "request": "Город: школа, больница, ресторан, торговый центр, офис, скамейка и столик кафе",
+  "specification": "Ground-centred Z-up metre geometry; at most 5000 triangles and 6 materials per model; embedded GLB, no textures",
+  "validation": "GLB header/length, embedded buffers, indices, finite normals/positions, ground anchor, bounds, budgets, roof slopes",
+  "assets": {
+    "School": {
+      "triangles": 3116,
+      "drawCalls": 6,
+      "min": [
+        -16,
+        -9.3,
+        0
+      ],
+      "max": [
+        16.3,
+        8,
+        11.35
+      ]
+    },
+    "Hospital": {
+      "triangles": 3608,
+      "drawCalls": 6,
+      "min": [
+        -18,
+        -12,
+        0
+      ],
+      "max": [
+        18,
+        12,
+        20.4
+      ]
+    },
+    "Restaurant": {
+      "triangles": 1496,
+      "drawCalls": 5,
+      "min": [
+        -8,
+        -7,
+        0
+      ],
+      "max": [
+        8,
+        7,
+        6.3
+      ]
+    },
+    "Mall": {
+      "triangles": 1508,
+      "drawCalls": 5,
+      "min": [
+        -25,
+        -19.8,
+        0
+      ],
+      "max": [
+        25,
+        17,
+        13.9
+      ]
+    },
+    "Office": {
+      "triangles": 1516,
+      "drawCalls": 5,
+      "min": [
+        -9.15,
+        -9.6,
+        0
+      ],
+      "max": [
+        9.15,
+        9.15,
+        50.5
+      ]
+    },
+    "PoliceStation": {
+      "triangles": 1536,
+      "drawCalls": 6,
+      "min": [
+        -12,
+        -8,
+        0
+      ],
+      "max": [
+        12,
+        7,
+        10.4
+      ]
+    },
+    "Bench": {
+      "triangles": 252,
+      "drawCalls": 2,
+      "min": [
+        -0.9,
+        -0.38,
+        0
+      ],
+      "max": [
+        0.9,
+        0.38,
+        0.98
+      ]
+    },
+    "CafeTable": {
+      "triangles": 736,
+      "drawCalls": 4,
+      "min": [
+        -1.7,
+        -1.7,
+        0
+      ],
+      "max": [
+        1.7,
+        1.7,
+        2.83
+      ]
+    }
+  },
+  "files": [
+    {
+      "name": "landscape-kit-v5.blend",
+      "bytes": 167629,
+      "sha256": "95a384959acf237d25fe3949c10bb33991dbc822a3d78a27a01cc497a3c536aa"
+    },
+    {
+      "name": "landscape-kit-v5.glb",
+      "bytes": 976984,
+      "sha256": "5a285c6698b77e9c11a0879afb12d12371f48a6e8e592914f50f5d8ae4b226ff"
+    },
+    {
+      "name": "landscape-kit-v5.mesh.json",
+      "bytes": 1411328,
+      "sha256": "52ee4db56f222d26cdda4e1f087a1f479428295fef1d3b33686578dd891715dc"
+    }
+  ]
+}

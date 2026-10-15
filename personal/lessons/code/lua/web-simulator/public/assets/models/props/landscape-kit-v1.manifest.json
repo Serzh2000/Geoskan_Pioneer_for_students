@@ -1,0 +1,85 @@
+{
+  "source": "Original local Blender MCP geometry, no external assets",
+  "license": "Project /personal terms: educational use with attribution; see README.md#авторство-и-права",
+  "attribution": "Корягин С. А. — https://sakoryagin.ru",
+  "sourceScript": "tools/build_landscape_assets.py",
+  "coordinates": "metres; Z up; origin at footprint centre, ground level",
+  "request": "Связная местность со станцией, поселками и микрорайонами; Blender MCP для недостающих объектов",
+  "specification": "Ground-centred Z-up metre geometry; at most 5000 triangles and 6 materials per model; embedded GLB, no textures",
+  "validation": "GLB header/length, embedded buffers, scene nodes, indices, finite normals/positions, anchors, bounds and budgets",
+  "assets": {
+    "Cottage": {
+      "triangles": 524,
+      "drawCalls": 5,
+      "min": [
+        -3,
+        -3.7,
+        0
+      ],
+      "max": [
+        3,
+        2.45,
+        4.45
+      ]
+    },
+    "Station": {
+      "triangles": 972,
+      "drawCalls": 5,
+      "min": [
+        -6.4,
+        -4.2,
+        0
+      ],
+      "max": [
+        6.4,
+        3.15,
+        8.35
+      ]
+    },
+    "Warehouse": {
+      "triangles": 1136,
+      "drawCalls": 4,
+      "min": [
+        -7.4,
+        -4.4,
+        0
+      ],
+      "max": [
+        7.55,
+        4.35,
+        6.07
+      ]
+    },
+    "WaterTower": {
+      "triangles": 1524,
+      "drawCalls": 3,
+      "min": [
+        -2.25,
+        -2.33,
+        0
+      ],
+      "max": [
+        2.25,
+        2.25,
+        10.34
+      ]
+    }
+  },
+  "files": [
+    {
+      "name": "landscape-kit-v1.blend",
+      "bytes": 102549,
+      "sha256": "0cb7b3bbc150a55f42019a099703a862e194b3113fd226b9e2991eb9dc074f47"
+    },
+    {
+      "name": "landscape-kit-v1.glb",
+      "bytes": 295512,
+      "sha256": "8a4c654596a28af00286464203cc1d3e8b70417e20c1722e019c579c9572c179"
+    },
+    {
+      "name": "landscape-kit-v1.mesh.json",
+      "bytes": 448634,
+      "sha256": "56260c10591086ae8886ad692160c2bd701e167bd0df68bf630b17983e865251"
+    }
+  ]
+}
