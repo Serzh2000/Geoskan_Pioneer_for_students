@@ -4,6 +4,7 @@
 
 ## Состав группы
 
+- [`public/modules/physics/battery.ts`](#public-modules-physics-battery-ts)
 - [`public/modules/physics/cargo-contact.ts`](#public-modules-physics-cargo-contact-ts)
 - [`public/modules/physics/collisions.ts`](#public-modules-physics-collisions-ts)
 - [`public/modules/physics/commands.ts`](#public-modules-physics-commands-ts)
@@ -17,9 +18,16 @@
 - [`public/modules/physics/materials.ts`](#public-modules-physics-materials-ts)
 - [`public/modules/physics/state-transitions.ts`](#public-modules-physics-state-transitions-ts)
 - [`public/modules/physics/tracing.ts`](#public-modules-physics-tracing-ts)
-- [`public/modules/tests.ts`](#public-modules-tests-ts)
 
 ## Файлы
+
+<a id="public-modules-physics-battery-ts"></a>
+### `public/modules/physics/battery.ts`
+
+- Исходник: [открыть файл](../../public/modules/physics/battery.ts)
+- Кратко: Низкоуровневая физика, столкновения и контактные расчеты.
+- Обнаружено функций/методов: 8
+- Ключевые символы: `getChargeRatio`, `getCurrentDrawAmps`, `getLoadedVoltage`, `getRestingVoltage`, `lerp`, `notifyLowVoltage`, `showBatteryNotice`, `updateBatteryState`
 
 <a id="public-modules-physics-cargo-contact-ts"></a>
 ### `public/modules/physics/cargo-contact.ts`
@@ -34,8 +42,8 @@
 
 - Исходник: [открыть файл](../../public/modules/physics/collisions.ts)
 - Кратко: Низкоуровневая физика, столкновения и контактные расчеты.
-- Обнаружено функций/методов: 8
-- Ключевые символы: `capsuleDistanceToPoint`, `findGateAncestor`, `gateHasCollision`, `intersectsExpandedBox`, `isGateObject`, `obstacleHasCollision`, `sampleSegmentPoints`, `shouldSkipCollisionForObject`
+- Обнаружено функций/методов: 9
+- Ключевые символы: `capsuleDistanceToPoint`, `gateHasCollision`, `intersectsExpandedBox`, `isGateObject`, `meshBlocks`, `meshesHit`, `obstacleHasCollision`, `sampleSegmentPoints`, `shouldSkipCollisionForObject`
 
 <a id="public-modules-physics-commands-ts"></a>
 ### `public/modules/physics/commands.ts`
@@ -65,8 +73,8 @@
 
 - Исходник: [открыть файл](../../public/modules/physics/flight-update.ts)
 - Кратко: Низкоуровневая физика, столкновения и контактные расчеты.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `updateActiveFlight`, `updateAutoFlight`, `updateFlightModeFromRc`, `updateManualFlight`
+- Обнаружено функций/методов: 6
+- Ключевые символы: `isAutonomousMissionControlling`, `resolveTimedGoTo`, `updateActiveFlight`, `updateAutoFlight`, `updateFlightModeFromRc`, `updateManualFlight`
 
 <a id="public-modules-physics-frames-ts"></a>
 ### `public/modules/physics/frames.ts`
@@ -123,12 +131,4 @@
 - Кратко: Низкоуровневая физика, столкновения и контактные расчеты.
 - Обнаружено функций/методов: 2
 - Ключевые символы: `shouldKeepTracing`, `updateTracePath`
-
-<a id="public-modules-tests-ts"></a>
-### `public/modules/tests.ts`
-
-- Исходник: [открыть файл](../../public/modules/tests.ts)
-- Кратко: Исходный модуль симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `runIntegrationTests`
 

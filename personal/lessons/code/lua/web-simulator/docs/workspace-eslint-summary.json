@@ -1,0 +1,6 @@
+{
+  "exitCode": 1,
+  "errors": 15308,
+  "warnings": 1610,
+  "note": "Repository-wide lint includes dist-mission-review generated vendor bundles. Changed source files: 0 errors, 10 existing any warnings."
+}

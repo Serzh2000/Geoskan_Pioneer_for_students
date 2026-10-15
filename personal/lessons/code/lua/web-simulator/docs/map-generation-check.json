@@ -1,0 +1,2146 @@
+{
+  "generatedAt": "2026-10-12T21:02:43.729Z",
+  "samples": [
+    {
+      "profile": "forest",
+      "seed": 1,
+      "size": 600,
+      "density": 1,
+      "generationMs": 354,
+      "objects": 2808,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "church": 3,
+        "wind-turbine": 2,
+        "radio-mast": 1,
+        "barn": 2,
+        "silo": 2,
+        "hay": 5,
+        "solar": 2,
+        "greenhouse": 2,
+        "hangar": 1,
+        "windsock": 1,
+        "house": 57,
+        "bus-stop": 1,
+        "tree": 2686,
+        "rocks": 18,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "church",
+          "district": "district-village1",
+          "homesWithin75m": 11,
+          "x": 113.2,
+          "y": -7.1
+        },
+        {
+          "type": "church",
+          "district": "district-village2",
+          "homesWithin75m": 9,
+          "x": -78.9,
+          "y": 11.9
+        },
+        {
+          "type": "church",
+          "district": "district-village3",
+          "homesWithin75m": 14,
+          "x": 143.5,
+          "y": -212.5
+        }
+      ],
+      "structure": {
+        "roads": 28,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 4,
+          "street": 16,
+          "lane": 2,
+          "link": 5
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 57,
+        "homesFarFromRoad": 0,
+        "bridges": 2,
+        "overpass": false,
+        "districts": 7,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 18.1,
+          "x": 146.4,
+          "y": 13
+        },
+        "policeStation": {
+          "roadMetres": 19,
+          "x": 144.3,
+          "y": -28
+        }
+      }
+    },
+    {
+      "profile": "forest",
+      "seed": 2,
+      "size": 600,
+      "density": 1,
+      "generationMs": 415,
+      "objects": 2890,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "church": 3,
+        "restaurant": 1,
+        "cafe-table": 4,
+        "gas-station": 1,
+        "barn": 1,
+        "silo": 1,
+        "hay": 3,
+        "greenhouse": 2,
+        "solar": 1,
+        "hangar": 1,
+        "windsock": 1,
+        "house": 132,
+        "building": 6,
+        "bus-stop": 4,
+        "bench": 3,
+        "tree": 2686,
+        "rocks": 15,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "church",
+          "district": "district-town1",
+          "homesWithin75m": 27,
+          "x": -175.6,
+          "y": 16.7
+        },
+        {
+          "type": "church",
+          "district": "district-village3",
+          "homesWithin75m": 25,
+          "x": 134.5,
+          "y": -55.9
+        },
+        {
+          "type": "church",
+          "district": "district-hamlet6",
+          "homesWithin75m": 19,
+          "x": 104.2,
+          "y": 51.4
+        }
+      ],
+      "structure": {
+        "roads": 41,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 9,
+          "street": 24,
+          "lane": 1,
+          "link": 6
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 138,
+        "homesFarFromRoad": 0,
+        "bridges": 3,
+        "overpass": false,
+        "districts": 10,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 17.9,
+          "x": -82.1,
+          "y": 58.8
+        },
+        "policeStation": {
+          "roadMetres": 18.4,
+          "x": -199,
+          "y": 39.7
+        }
+      }
+    },
+    {
+      "profile": "forest",
+      "seed": 7,
+      "size": 600,
+      "density": 1,
+      "generationMs": 315,
+      "objects": 2867,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "church": 3,
+        "wind-turbine": 2,
+        "radio-mast": 1,
+        "barn": 2,
+        "silo": 2,
+        "hay": 6,
+        "greenhouse": 2,
+        "solar": 2,
+        "house": 115,
+        "bus-stop": 3,
+        "tree": 2686,
+        "rocks": 18,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "church",
+          "district": "district-village4",
+          "homesWithin75m": 42,
+          "x": -94.4,
+          "y": -65.9
+        },
+        {
+          "type": "church",
+          "district": "district-hamlet5",
+          "homesWithin75m": 16,
+          "x": 66.9,
+          "y": 24.9
+        },
+        {
+          "type": "church",
+          "district": "district-hamlet7",
+          "homesWithin75m": 14,
+          "x": -74.6,
+          "y": 123.1
+        }
+      ],
+      "structure": {
+        "roads": 38,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 3,
+          "street": 25,
+          "lane": 4,
+          "link": 5
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 115,
+        "homesFarFromRoad": 0,
+        "bridges": 3,
+        "overpass": false,
+        "districts": 8,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 16.9,
+          "x": 172.6,
+          "y": 39.5
+        },
+        "policeStation": {
+          "roadMetres": 19,
+          "x": 194.5,
+          "y": 4.9
+        }
+      }
+    },
+    {
+      "profile": "forest",
+      "seed": 341,
+      "size": 600,
+      "density": 1,
+      "generationMs": 208,
+      "objects": 2900,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "fire-station": 1,
+        "police-station": 1,
+        "church": 2,
+        "restaurant": 1,
+        "cafe-table": 2,
+        "gas-station": 1,
+        "wind-turbine": 2,
+        "radio-mast": 1,
+        "barn": 1,
+        "silo": 1,
+        "hay": 3,
+        "greenhouse": 1,
+        "solar": 1,
+        "hangar": 1,
+        "windsock": 1,
+        "house": 159,
+        "building": 8,
+        "bus-stop": 2,
+        "tree": 2686,
+        "rocks": 18,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "church",
+          "district": "district-town1-core",
+          "homesWithin75m": 23,
+          "x": -180.6,
+          "y": -32.3
+        },
+        {
+          "type": "church",
+          "district": "district-village3",
+          "homesWithin75m": 35,
+          "x": -163.6,
+          "y": 78.3
+        }
+      ],
+      "structure": {
+        "roads": 30,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 2,
+          "street": 19,
+          "lane": 3,
+          "link": 5
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 167,
+        "homesFarFromRoad": 0,
+        "bridges": 3,
+        "overpass": false,
+        "districts": 7,
+        "powerPylons": 0,
+        "fireStation": {
+          "roadMetres": 21.2,
+          "x": -183.5,
+          "y": -81.3
+        },
+        "policeStation": {
+          "roadMetres": 21.4,
+          "x": -170.6,
+          "y": -11.5
+        }
+      }
+    },
+    {
+      "profile": "hills",
+      "seed": 1,
+      "size": 600,
+      "density": 1,
+      "generationMs": 197,
+      "objects": 1326,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "church": 2,
+        "restaurant": 3,
+        "cafe-table": 6,
+        "gas-station": 1,
+        "gantry-crane": 1,
+        "warehouse": 5,
+        "containers": 5,
+        "wind-turbine": 4,
+        "radio-mast": 1,
+        "barn": 2,
+        "silo": 2,
+        "hay": 6,
+        "greenhouse": 3,
+        "solar": 2,
+        "house": 94,
+        "building": 6,
+        "bus-stop": 3,
+        "tree": 1131,
+        "rocks": 24,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "church",
+          "district": "district-town1",
+          "homesWithin75m": 37,
+          "x": 110,
+          "y": -35.9
+        },
+        {
+          "type": "church",
+          "district": "district-village2",
+          "homesWithin75m": 15,
+          "x": -93.7,
+          "y": 45.4
+        }
+      ],
+      "structure": {
+        "roads": 30,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 5,
+          "street": 13,
+          "lane": 5,
+          "link": 6
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 100,
+        "homesFarFromRoad": 0,
+        "bridges": 2,
+        "overpass": false,
+        "districts": 7,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 21.2,
+          "x": 154,
+          "y": -12.5
+        },
+        "policeStation": {
+          "roadMetres": 17,
+          "x": 154.1,
+          "y": -73.8
+        }
+      }
+    },
+    {
+      "profile": "hills",
+      "seed": 2,
+      "size": 600,
+      "density": 1,
+      "generationMs": 101,
+      "objects": 1310,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "church": 1,
+        "wind-turbine": 3,
+        "radio-mast": 1,
+        "barn": 2,
+        "silo": 2,
+        "hay": 6,
+        "greenhouse": 2,
+        "solar": 2,
+        "hangar": 1,
+        "windsock": 1,
+        "house": 108,
+        "bus-stop": 1,
+        "tree": 1131,
+        "rocks": 24,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "church",
+          "district": "district-hamlet3",
+          "homesWithin75m": 16,
+          "x": -226.1,
+          "y": -202.4
+        }
+      ],
+      "structure": {
+        "roads": 27,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 1,
+          "street": 17,
+          "lane": 4,
+          "link": 4
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 108,
+        "homesFarFromRoad": 0,
+        "bridges": 2,
+        "overpass": false,
+        "districts": 7,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 18.8,
+          "x": -226.9,
+          "y": -78
+        },
+        "policeStation": {
+          "roadMetres": 19,
+          "x": -188.7,
+          "y": -64.3
+        }
+      }
+    },
+    {
+      "profile": "hills",
+      "seed": 7,
+      "size": 600,
+      "density": 1,
+      "generationMs": 111,
+      "objects": 1335,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "church": 2,
+        "wind-turbine": 4,
+        "radio-mast": 1,
+        "hay": 5,
+        "greenhouse": 3,
+        "solar": 2,
+        "barn": 1,
+        "silo": 1,
+        "hangar": 1,
+        "windsock": 1,
+        "house": 133,
+        "bus-stop": 1,
+        "tree": 1131,
+        "rocks": 24,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "church",
+          "district": "district-village1",
+          "homesWithin75m": 43,
+          "x": -85.6,
+          "y": 145.1
+        },
+        {
+          "type": "church",
+          "district": "district-hamlet3",
+          "homesWithin75m": 13,
+          "x": 130.1,
+          "y": 51.4
+        }
+      ],
+      "structure": {
+        "roads": 24,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 1,
+          "street": 16,
+          "lane": 4,
+          "link": 2
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 133,
+        "homesFarFromRoad": 0,
+        "bridges": 2,
+        "overpass": false,
+        "districts": 9,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 18.8,
+          "x": 143.3,
+          "y": -100.6
+        },
+        "policeStation": {
+          "roadMetres": 19,
+          "x": 178.9,
+          "y": -84.6
+        }
+      }
+    },
+    {
+      "profile": "hills",
+      "seed": 341,
+      "size": 600,
+      "density": 1,
+      "generationMs": 165,
+      "objects": 1267,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "church": 3,
+        "wind-turbine": 4,
+        "radio-mast": 1,
+        "silo": 1,
+        "hay": 3,
+        "greenhouse": 1,
+        "solar": 1,
+        "hangar": 1,
+        "windsock": 1,
+        "house": 70,
+        "bus-stop": 1,
+        "tree": 1131,
+        "rocks": 24,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "church",
+          "district": "district-village1",
+          "homesWithin75m": 14,
+          "x": -113.3,
+          "y": 28.3
+        },
+        {
+          "type": "church",
+          "district": "district-village2",
+          "homesWithin75m": 11,
+          "x": 86.3,
+          "y": -31.3
+        },
+        {
+          "type": "church",
+          "district": "district-hamlet4",
+          "homesWithin75m": 14,
+          "x": -206.5,
+          "y": 88.7
+        }
+      ],
+      "structure": {
+        "roads": 32,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 4,
+          "street": 21,
+          "lane": 1,
+          "link": 5
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 70,
+        "homesFarFromRoad": 0,
+        "bridges": 2,
+        "overpass": false,
+        "districts": 7,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 18.8,
+          "x": -104.8,
+          "y": 62.1
+        },
+        "policeStation": {
+          "roadMetres": 19,
+          "x": -79,
+          "y": 27.6
+        }
+      }
+    },
+    {
+      "profile": "urban",
+      "seed": 1,
+      "size": 600,
+      "density": 1,
+      "generationMs": 224,
+      "objects": 1448,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "school": 2,
+        "hospital": 1,
+        "church": 2,
+        "restaurant": 4,
+        "cafe-table": 11,
+        "gas-station": 2,
+        "office": 1,
+        "gantry-crane": 1,
+        "warehouse": 35,
+        "containers": 9,
+        "silo": 5,
+        "solar": 4,
+        "wind-turbine": 1,
+        "radio-mast": 1,
+        "hangar": 1,
+        "windsock": 1,
+        "building": 13,
+        "house": 114,
+        "bench": 9,
+        "tree": 1201,
+        "rocks": 5,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "school",
+          "district": "district-town1",
+          "homesWithin75m": 8,
+          "x": -45.3,
+          "y": -2.2
+        },
+        {
+          "type": "hospital",
+          "homesWithin75m": 26,
+          "x": -102.8,
+          "y": -175
+        },
+        {
+          "type": "church",
+          "district": "district-town1-core",
+          "homesWithin75m": 24,
+          "x": -115.5,
+          "y": -92.8
+        },
+        {
+          "type": "school",
+          "district": "district-town2",
+          "homesWithin75m": 18,
+          "x": 158.6,
+          "y": 43.6
+        },
+        {
+          "type": "church",
+          "district": "district-town2",
+          "homesWithin75m": 24,
+          "x": 108.4,
+          "y": 30.7
+        }
+      ],
+      "structure": {
+        "roads": 42,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 12,
+          "street": 20,
+          "lane": 0,
+          "link": 9
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 127,
+        "homesFarFromRoad": 0,
+        "bridges": 2,
+        "overpass": false,
+        "districts": 12,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 18.1,
+          "x": -96.3,
+          "y": -115.6
+        },
+        "policeStation": {
+          "roadMetres": 17,
+          "x": -75.7,
+          "y": -83.6
+        }
+      }
+    },
+    {
+      "profile": "urban",
+      "seed": 2,
+      "size": 600,
+      "density": 1,
+      "generationMs": 204,
+      "objects": 1402,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "school": 2,
+        "hospital": 1,
+        "church": 3,
+        "restaurant": 5,
+        "cafe-table": 10,
+        "office": 4,
+        "gas-station": 2,
+        "house": 127,
+        "building": 9,
+        "bench": 3,
+        "tree": 1201,
+        "rocks": 10,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "school",
+          "district": "district-town1",
+          "homesWithin75m": 19,
+          "x": 199.3,
+          "y": 36.6
+        },
+        {
+          "type": "hospital",
+          "homesWithin75m": 16,
+          "x": 127.6,
+          "y": 121.6
+        },
+        {
+          "type": "church",
+          "district": "district-town1",
+          "homesWithin75m": 20,
+          "x": 171.8,
+          "y": 26
+        },
+        {
+          "type": "school",
+          "district": "district-town2",
+          "homesWithin75m": 15,
+          "x": -83.4,
+          "y": 75.4
+        },
+        {
+          "type": "church",
+          "district": "district-town2-core",
+          "homesWithin75m": 23,
+          "x": -134.6,
+          "y": 13.7
+        },
+        {
+          "type": "church",
+          "district": "district-village3",
+          "homesWithin75m": 24,
+          "x": -111.1,
+          "y": -241.8
+        }
+      ],
+      "structure": {
+        "roads": 32,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 5,
+          "street": 18,
+          "lane": 3,
+          "link": 5
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 136,
+        "homesFarFromRoad": 0,
+        "bridges": 2,
+        "overpass": false,
+        "districts": 10,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 21.2,
+          "x": 167.2,
+          "y": 51.7
+        },
+        "policeStation": {
+          "roadMetres": 21.4,
+          "x": 126.8,
+          "y": -12.9
+        }
+      }
+    },
+    {
+      "profile": "urban",
+      "seed": 7,
+      "size": 600,
+      "density": 1,
+      "generationMs": 229,
+      "objects": 1407,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "school": 2,
+        "hospital": 1,
+        "church": 2,
+        "restaurant": 3,
+        "cafe-table": 9,
+        "office": 4,
+        "gas-station": 2,
+        "barn": 1,
+        "silo": 1,
+        "hay": 3,
+        "greenhouse": 1,
+        "solar": 1,
+        "house": 124,
+        "building": 8,
+        "bus-stop": 2,
+        "bench": 7,
+        "tree": 1201,
+        "rocks": 10,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "school",
+          "district": "district-town1",
+          "homesWithin75m": 19,
+          "x": 86.5,
+          "y": 25.9
+        },
+        {
+          "type": "hospital",
+          "district": "district-town1",
+          "homesWithin75m": 22,
+          "x": 191.7,
+          "y": -25.8
+        },
+        {
+          "type": "church",
+          "district": "district-town1",
+          "homesWithin75m": 14,
+          "x": 146.4,
+          "y": -10.3
+        },
+        {
+          "type": "school",
+          "district": "district-town2",
+          "homesWithin75m": 17,
+          "x": -161,
+          "y": -6.3
+        },
+        {
+          "type": "church",
+          "district": "district-court-town2-0",
+          "homesWithin75m": 17,
+          "x": -87,
+          "y": -17.1
+        }
+      ],
+      "structure": {
+        "roads": 31,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 3,
+          "street": 21,
+          "lane": 1,
+          "link": 5
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 132,
+        "homesFarFromRoad": 0,
+        "bridges": 2,
+        "overpass": false,
+        "districts": 10,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 20.2,
+          "x": 133.3,
+          "y": 74.4
+        },
+        "policeStation": {
+          "roadMetres": 21.4,
+          "x": 183.9,
+          "y": 74.5
+        }
+      }
+    },
+    {
+      "profile": "urban",
+      "seed": 341,
+      "size": 600,
+      "density": 1,
+      "generationMs": 165,
+      "objects": 1468,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "fire-station": 1,
+        "police-station": 1,
+        "school": 1,
+        "hospital": 1,
+        "church": 2,
+        "restaurant": 2,
+        "cafe-table": 4,
+        "office": 2,
+        "gas-station": 1,
+        "gantry-crane": 2,
+        "warehouse": 33,
+        "containers": 12,
+        "solar": 7,
+        "wind-turbine": 1,
+        "radio-mast": 1,
+        "hangar": 1,
+        "windsock": 1,
+        "house": 165,
+        "building": 10,
+        "silo": 2,
+        "tree": 1201,
+        "rocks": 10,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "school",
+          "district": "district-town1",
+          "homesWithin75m": 33,
+          "x": 88.3,
+          "y": -16.4
+        },
+        {
+          "type": "hospital",
+          "district": "district-town1",
+          "homesWithin75m": 22,
+          "x": 29.8,
+          "y": -79.4
+        },
+        {
+          "type": "church",
+          "district": "district-town1",
+          "homesWithin75m": 39,
+          "x": 147.9,
+          "y": -99
+        },
+        {
+          "type": "church",
+          "district": "district-village4",
+          "homesWithin75m": 23,
+          "x": -76.1,
+          "y": 163.8
+        }
+      ],
+      "structure": {
+        "roads": 38,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 4,
+          "street": 21,
+          "lane": 4,
+          "link": 8
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 175,
+        "homesFarFromRoad": 0,
+        "bridges": 2,
+        "overpass": false,
+        "districts": 10,
+        "powerPylons": 0,
+        "fireStation": {
+          "roadMetres": 21.2,
+          "x": 105.2,
+          "y": -66
+        },
+        "policeStation": {
+          "roadMetres": 21.4,
+          "x": 169.5,
+          "y": -0.7
+        }
+      }
+    },
+    {
+      "profile": "industrial",
+      "seed": 1,
+      "size": 600,
+      "density": 1,
+      "generationMs": 131,
+      "objects": 1395,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "church": 2,
+        "restaurant": 1,
+        "cafe-table": 2,
+        "gantry-crane": 2,
+        "containers": 23,
+        "warehouse": 49,
+        "solar": 5,
+        "barn": 1,
+        "silo": 6,
+        "hay": 3,
+        "greenhouse": 1,
+        "building": 6,
+        "house": 58,
+        "tree": 1201,
+        "rocks": 10,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "church",
+          "district": "district-town2",
+          "homesWithin75m": 20,
+          "x": -87.4,
+          "y": -205.3
+        },
+        {
+          "type": "church",
+          "district": "district-village3",
+          "homesWithin75m": 36,
+          "x": 124.1,
+          "y": 40.6
+        }
+      ],
+      "structure": {
+        "roads": 26,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 3,
+          "street": 15,
+          "lane": 1,
+          "link": 6
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 64,
+        "homesFarFromRoad": 0,
+        "bridges": 2,
+        "overpass": false,
+        "districts": 8,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 17.5,
+          "x": -114.5,
+          "y": -148.8
+        },
+        "policeStation": {
+          "roadMetres": 18.5,
+          "x": -113.7,
+          "y": -217.8
+        }
+      }
+    },
+    {
+      "profile": "industrial",
+      "seed": 2,
+      "size": 600,
+      "density": 1,
+      "generationMs": 125,
+      "objects": 1403,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "church": 2,
+        "restaurant": 1,
+        "cafe-table": 2,
+        "gas-station": 1,
+        "gantry-crane": 2,
+        "warehouse": 63,
+        "silo": 6,
+        "containers": 10,
+        "solar": 6,
+        "house": 72,
+        "building": 1,
+        "bus-stop": 1,
+        "tree": 1201,
+        "rocks": 10,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "church",
+          "district": "district-town2-core",
+          "homesWithin75m": 33,
+          "x": 120,
+          "y": 3
+        },
+        {
+          "type": "church",
+          "district": "district-village3",
+          "homesWithin75m": 25,
+          "x": -129.6,
+          "y": 75.7
+        }
+      ],
+      "structure": {
+        "roads": 25,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 4,
+          "street": 14,
+          "lane": 0,
+          "link": 6
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 73,
+        "homesFarFromRoad": 0,
+        "bridges": 2,
+        "overpass": false,
+        "districts": 6,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 21.2,
+          "x": 82.4,
+          "y": -32.5
+        },
+        "policeStation": {
+          "roadMetres": 21.4,
+          "x": 124.6,
+          "y": -38.3
+        }
+      }
+    },
+    {
+      "profile": "industrial",
+      "seed": 7,
+      "size": 600,
+      "density": 1,
+      "generationMs": 196,
+      "objects": 1410,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "church": 2,
+        "restaurant": 1,
+        "cafe-table": 2,
+        "gas-station": 1,
+        "gantry-crane": 2,
+        "warehouse": 52,
+        "containers": 21,
+        "solar": 5,
+        "barn": 1,
+        "silo": 8,
+        "hay": 3,
+        "greenhouse": 1,
+        "house": 75,
+        "tree": 1201,
+        "rocks": 10,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "church",
+          "district": "district-town2-core",
+          "homesWithin75m": 36,
+          "x": -120.3,
+          "y": -175.2
+        },
+        {
+          "type": "church",
+          "district": "district-hamlet4",
+          "homesWithin75m": 18,
+          "x": 99.5,
+          "y": 10.1
+        }
+      ],
+      "structure": {
+        "roads": 31,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 5,
+          "street": 17,
+          "lane": 2,
+          "link": 6
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 75,
+        "homesFarFromRoad": 0,
+        "bridges": 2,
+        "overpass": false,
+        "districts": 7,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 21.2,
+          "x": -156.9,
+          "y": -173.5
+        },
+        "policeStation": {
+          "roadMetres": 19.5,
+          "x": -113,
+          "y": -206.7
+        }
+      }
+    },
+    {
+      "profile": "industrial",
+      "seed": 341,
+      "size": 600,
+      "density": 1,
+      "generationMs": 252,
+      "objects": 1371,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "church": 1,
+        "restaurant": 1,
+        "cafe-table": 2,
+        "gas-station": 1,
+        "gantry-crane": 2,
+        "warehouse": 41,
+        "containers": 15,
+        "silo": 7,
+        "barn": 1,
+        "hay": 3,
+        "greenhouse": 1,
+        "solar": 6,
+        "hangar": 1,
+        "windsock": 1,
+        "house": 44,
+        "building": 7,
+        "bus-stop": 1,
+        "tree": 1201,
+        "rocks": 10,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "church",
+          "district": "district-town2",
+          "homesWithin75m": 17,
+          "x": -53.7,
+          "y": -250.6
+        }
+      ],
+      "structure": {
+        "roads": 28,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 4,
+          "street": 14,
+          "lane": 2,
+          "link": 7
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 51,
+        "homesFarFromRoad": 0,
+        "bridges": 3,
+        "overpass": false,
+        "districts": 7,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 21.2,
+          "x": -65,
+          "y": -229.9
+        },
+        "policeStation": {
+          "roadMetres": 18.5,
+          "x": -132.1,
+          "y": -227.2
+        }
+      }
+    },
+    {
+      "profile": "mixed",
+      "seed": 1,
+      "size": 600,
+      "density": 1,
+      "generationMs": 224,
+      "objects": 1393,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "school": 1,
+        "hospital": 1,
+        "church": 2,
+        "gantry-crane": 1,
+        "warehouse": 5,
+        "silo": 3,
+        "containers": 2,
+        "solar": 2,
+        "wind-turbine": 2,
+        "radio-mast": 1,
+        "barn": 1,
+        "hay": 3,
+        "greenhouse": 1,
+        "hangar": 1,
+        "windsock": 1,
+        "house": 125,
+        "building": 3,
+        "bus-stop": 2,
+        "tree": 1201,
+        "rocks": 10,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "school",
+          "district": "district-town1",
+          "homesWithin75m": 26,
+          "x": 145.7,
+          "y": -25.4
+        },
+        {
+          "type": "hospital",
+          "district": "district-town1",
+          "homesWithin75m": 22,
+          "x": 65.2,
+          "y": -38.1
+        },
+        {
+          "type": "church",
+          "district": "district-town1",
+          "homesWithin75m": 26,
+          "x": 110.6,
+          "y": -34.8
+        },
+        {
+          "type": "church",
+          "district": "district-village2",
+          "homesWithin75m": 40,
+          "x": -123,
+          "y": -44.8
+        }
+      ],
+      "structure": {
+        "roads": 27,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 4,
+          "street": 11,
+          "lane": 4,
+          "link": 7
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 128,
+        "homesFarFromRoad": 0,
+        "bridges": 3,
+        "overpass": false,
+        "districts": 7,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 21.2,
+          "x": 116.3,
+          "y": 13.2
+        },
+        "policeStation": {
+          "roadMetres": 21.4,
+          "x": 73.7,
+          "y": 18.3
+        }
+      }
+    },
+    {
+      "profile": "mixed",
+      "seed": 2,
+      "size": 600,
+      "density": 1,
+      "generationMs": 208,
+      "objects": 1398,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "school": 1,
+        "hospital": 1,
+        "church": 3,
+        "restaurant": 1,
+        "cafe-table": 2,
+        "gas-station": 1,
+        "gantry-crane": 1,
+        "warehouse": 32,
+        "containers": 11,
+        "solar": 6,
+        "wind-turbine": 2,
+        "radio-mast": 1,
+        "barn": 1,
+        "silo": 3,
+        "hay": 3,
+        "greenhouse": 1,
+        "house": 88,
+        "building": 4,
+        "tree": 1201,
+        "rocks": 10,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "school",
+          "district": "district-town1",
+          "homesWithin75m": 13,
+          "x": -95.9,
+          "y": 90.6
+        },
+        {
+          "type": "hospital",
+          "district": "district-town1",
+          "homesWithin75m": 9,
+          "x": -148.3,
+          "y": 91.7
+        },
+        {
+          "type": "church",
+          "district": "district-town1",
+          "homesWithin75m": 22,
+          "x": -121,
+          "y": 21.2
+        },
+        {
+          "type": "church",
+          "district": "district-village4",
+          "homesWithin75m": 14,
+          "x": -122.1,
+          "y": -126.7
+        },
+        {
+          "type": "church",
+          "district": "district-village5",
+          "homesWithin75m": 23,
+          "x": 99.9,
+          "y": -252
+        }
+      ],
+      "structure": {
+        "roads": 35,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 4,
+          "street": 21,
+          "lane": 1,
+          "link": 8
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 92,
+        "homesFarFromRoad": 0,
+        "bridges": 2,
+        "overpass": false,
+        "districts": 9,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 20.3,
+          "x": -96.4,
+          "y": 39.8
+        },
+        "policeStation": {
+          "roadMetres": 21.4,
+          "x": -191.7,
+          "y": 57.3
+        }
+      }
+    },
+    {
+      "profile": "mixed",
+      "seed": 7,
+      "size": 600,
+      "density": 1,
+      "generationMs": 250,
+      "objects": 1362,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "school": 1,
+        "hospital": 1,
+        "church": 3,
+        "restaurant": 1,
+        "cafe-table": 2,
+        "gantry-crane": 1,
+        "warehouse": 5,
+        "silo": 3,
+        "containers": 2,
+        "solar": 2,
+        "wind-turbine": 2,
+        "radio-mast": 1,
+        "barn": 1,
+        "hay": 3,
+        "greenhouse": 2,
+        "house": 94,
+        "building": 2,
+        "tree": 1201,
+        "rocks": 10,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "school",
+          "district": "district-town1",
+          "homesWithin75m": 13,
+          "x": 92.7,
+          "y": 44.5
+        },
+        {
+          "type": "hospital",
+          "district": "district-town1",
+          "homesWithin75m": 8,
+          "x": 40.6,
+          "y": -1.4
+        },
+        {
+          "type": "church",
+          "district": "district-town1",
+          "homesWithin75m": 13,
+          "x": 80.2,
+          "y": -4.9
+        },
+        {
+          "type": "church",
+          "district": "district-village2",
+          "homesWithin75m": 28,
+          "x": -119.1,
+          "y": 29.3
+        },
+        {
+          "type": "church",
+          "district": "district-village4",
+          "homesWithin75m": 11,
+          "x": 77.8,
+          "y": -201.8
+        }
+      ],
+      "structure": {
+        "roads": 41,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 5,
+          "street": 26,
+          "lane": 2,
+          "link": 7
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 96,
+        "homesFarFromRoad": 0,
+        "bridges": 2,
+        "overpass": false,
+        "districts": 8,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 20.3,
+          "x": 139.7,
+          "y": 20.5
+        },
+        "policeStation": {
+          "roadMetres": 19.9,
+          "x": 132.3,
+          "y": -21.8
+        }
+      }
+    },
+    {
+      "profile": "mixed",
+      "seed": 341,
+      "size": 600,
+      "density": 1,
+      "generationMs": 255,
+      "objects": 1443,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "school": 1,
+        "hospital": 1,
+        "church": 2,
+        "restaurant": 1,
+        "cafe-table": 2,
+        "gantry-crane": 1,
+        "warehouse": 36,
+        "silo": 8,
+        "containers": 12,
+        "wind-turbine": 2,
+        "radio-mast": 1,
+        "barn": 1,
+        "hay": 3,
+        "greenhouse": 1,
+        "solar": 5,
+        "house": 110,
+        "building": 5,
+        "bus-stop": 4,
+        "bench": 11,
+        "tree": 1201,
+        "rocks": 10,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "school",
+          "district": "district-town1",
+          "homesWithin75m": 25,
+          "x": -178.1,
+          "y": -0.8
+        },
+        {
+          "type": "hospital",
+          "homesWithin75m": 13,
+          "x": -135.1,
+          "y": 62.3
+        },
+        {
+          "type": "church",
+          "district": "district-town1",
+          "homesWithin75m": 35,
+          "x": -89,
+          "y": -37
+        },
+        {
+          "type": "church",
+          "district": "district-village4",
+          "homesWithin75m": 19,
+          "x": 160.1,
+          "y": 72.9
+        }
+      ],
+      "structure": {
+        "roads": 29,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 5,
+          "street": 13,
+          "lane": 4,
+          "link": 6
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 115,
+        "homesFarFromRoad": 0,
+        "bridges": 3,
+        "overpass": false,
+        "districts": 7,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 20.5,
+          "x": -173.6,
+          "y": -39.8
+        },
+        "policeStation": {
+          "roadMetres": 21.4,
+          "x": -128.8,
+          "y": -82.6
+        }
+      }
+    },
+    {
+      "profile": "city",
+      "seed": 1,
+      "size": 600,
+      "density": 1,
+      "generationMs": 426,
+      "objects": 1681,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "hospital": 1,
+        "school": 3,
+        "mall": 1,
+        "church": 2,
+        "office": 1,
+        "restaurant": 8,
+        "cafe-table": 19,
+        "gas-station": 3,
+        "gantry-crane": 1,
+        "warehouse": 4,
+        "containers": 4,
+        "silo": 3,
+        "house": 157,
+        "building": 81,
+        "bus-stop": 7,
+        "bench": 10,
+        "tree": 1343,
+        "rocks": 8,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "hospital",
+          "district": "district-city",
+          "homesWithin75m": 31,
+          "x": -218.4,
+          "y": -135.2
+        },
+        {
+          "type": "school",
+          "district": "district-city",
+          "homesWithin75m": 26,
+          "x": -212.1,
+          "y": 50.7
+        },
+        {
+          "type": "school",
+          "district": "district-city-core",
+          "homesWithin75m": 34,
+          "x": -188.1,
+          "y": -33.9
+        },
+        {
+          "type": "school",
+          "district": "district-city-core",
+          "homesWithin75m": 30,
+          "x": -107.8,
+          "y": -29.8
+        },
+        {
+          "type": "church",
+          "district": "district-city",
+          "homesWithin75m": 26,
+          "x": -176.8,
+          "y": 136.4
+        },
+        {
+          "type": "church",
+          "district": "district-town1",
+          "homesWithin75m": 35,
+          "x": 89.9,
+          "y": 37.6
+        }
+      ],
+      "structure": {
+        "roads": 45,
+        "roadHierarchy": {
+          "arterial": 3,
+          "collector": 7,
+          "street": 21,
+          "lane": 9,
+          "link": 5
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 238,
+        "homesFarFromRoad": 0,
+        "bridges": 3,
+        "overpass": true,
+        "districts": 10,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 21.2,
+          "x": -155.6,
+          "y": 54.5
+        },
+        "policeStation": {
+          "roadMetres": 18.1,
+          "x": -154.1,
+          "y": -36.7
+        }
+      }
+    },
+    {
+      "profile": "city",
+      "seed": 2,
+      "size": 600,
+      "density": 1,
+      "generationMs": 328,
+      "objects": 1685,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "hospital": 1,
+        "school": 2,
+        "mall": 1,
+        "church": 2,
+        "office": 4,
+        "restaurant": 4,
+        "cafe-table": 11,
+        "gas-station": 2,
+        "gantry-crane": 1,
+        "warehouse": 7,
+        "containers": 2,
+        "solar": 2,
+        "wind-turbine": 1,
+        "radio-mast": 1,
+        "barn": 1,
+        "silo": 1,
+        "hay": 3,
+        "greenhouse": 1,
+        "hangar": 1,
+        "windsock": 1,
+        "house": 169,
+        "building": 82,
+        "bus-stop": 4,
+        "bench": 5,
+        "tree": 1343,
+        "rocks": 8,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "hospital",
+          "district": "district-city-core",
+          "homesWithin75m": 35,
+          "x": -156.3,
+          "y": -55.8
+        },
+        {
+          "type": "school",
+          "district": "district-city",
+          "homesWithin75m": 44,
+          "x": -229.7,
+          "y": -107.3
+        },
+        {
+          "type": "school",
+          "district": "district-city",
+          "homesWithin75m": 35,
+          "x": -98.9,
+          "y": -172.3
+        },
+        {
+          "type": "church",
+          "district": "district-city",
+          "homesWithin75m": 28,
+          "x": -110.9,
+          "y": -92.7
+        },
+        {
+          "type": "church",
+          "district": "district-village1",
+          "homesWithin75m": 18,
+          "x": 92,
+          "y": -25.1
+        }
+      ],
+      "structure": {
+        "roads": 41,
+        "roadHierarchy": {
+          "arterial": 3,
+          "collector": 5,
+          "street": 19,
+          "lane": 8,
+          "link": 6
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 251,
+        "homesFarFromRoad": 0,
+        "bridges": 3,
+        "overpass": true,
+        "districts": 12,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 20.3,
+          "x": -94.9,
+          "y": 96.5
+        },
+        "policeStation": {
+          "roadMetres": 21.4,
+          "x": -99.8,
+          "y": 47.2
+        }
+      }
+    },
+    {
+      "profile": "city",
+      "seed": 7,
+      "size": 600,
+      "density": 1,
+      "generationMs": 309,
+      "objects": 1544,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "hospital": 1,
+        "school": 2,
+        "mall": 1,
+        "church": 3,
+        "gas-station": 3,
+        "restaurant": 1,
+        "cafe-table": 5,
+        "gantry-crane": 1,
+        "warehouse": 4,
+        "silo": 3,
+        "containers": 4,
+        "wind-turbine": 1,
+        "radio-mast": 1,
+        "building": 22,
+        "house": 108,
+        "bus-stop": 4,
+        "bench": 3,
+        "tree": 1343,
+        "rocks": 8,
+        "water-tower": 1,
+        "greenhouse": 1
+      },
+      "civic": [
+        {
+          "type": "hospital",
+          "homesWithin75m": 25,
+          "x": -201.2,
+          "y": -113.2
+        },
+        {
+          "type": "school",
+          "homesWithin75m": 13,
+          "x": -48.5,
+          "y": 11.6
+        },
+        {
+          "type": "school",
+          "homesWithin75m": 18,
+          "x": -108.4,
+          "y": 80.5
+        },
+        {
+          "type": "church",
+          "district": "district-city-core",
+          "homesWithin75m": 28,
+          "x": -121.7,
+          "y": 14.7
+        },
+        {
+          "type": "church",
+          "district": "district-town1",
+          "homesWithin75m": 42,
+          "x": -164.1,
+          "y": -178.6
+        },
+        {
+          "type": "church",
+          "district": "district-village2",
+          "homesWithin75m": 13,
+          "x": 92,
+          "y": -93.6
+        }
+      ],
+      "structure": {
+        "roads": 35,
+        "roadHierarchy": {
+          "arterial": 1,
+          "collector": 10,
+          "street": 17,
+          "lane": 1,
+          "link": 6
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 130,
+        "homesFarFromRoad": 0,
+        "bridges": 3,
+        "overpass": true,
+        "districts": 8,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 21.2,
+          "x": -71.7,
+          "y": 44.1
+        },
+        "policeStation": {
+          "roadMetres": 21.4,
+          "x": -93.1,
+          "y": -99
+        }
+      }
+    },
+    {
+      "profile": "city",
+      "seed": 341,
+      "size": 600,
+      "density": 1,
+      "generationMs": 415,
+      "objects": 1786,
+      "counts": {
+        "pad": 1,
+        "aruco": 4,
+        "station": 1,
+        "power-pylon": 16,
+        "fire-station": 1,
+        "police-station": 1,
+        "hospital": 1,
+        "school": 2,
+        "mall": 1,
+        "church": 2,
+        "office": 6,
+        "restaurant": 12,
+        "cafe-table": 27,
+        "gas-station": 3,
+        "gantry-crane": 1,
+        "warehouse": 8,
+        "silo": 1,
+        "containers": 1,
+        "wind-turbine": 2,
+        "radio-mast": 1,
+        "house": 259,
+        "building": 65,
+        "bus-stop": 10,
+        "bench": 10,
+        "tree": 1343,
+        "rocks": 6,
+        "water-tower": 1
+      },
+      "civic": [
+        {
+          "type": "hospital",
+          "district": "district-city-core",
+          "homesWithin75m": 17,
+          "x": -60,
+          "y": 43.8
+        },
+        {
+          "type": "school",
+          "district": "district-city",
+          "homesWithin75m": 35,
+          "x": 66.1,
+          "y": -109.4
+        },
+        {
+          "type": "school",
+          "district": "district-city",
+          "homesWithin75m": 20,
+          "x": 55.4,
+          "y": 43.3
+        },
+        {
+          "type": "church",
+          "district": "district-city",
+          "homesWithin75m": 42,
+          "x": -139.9,
+          "y": -81.7
+        },
+        {
+          "type": "church",
+          "district": "district-town1",
+          "homesWithin75m": 39,
+          "x": -86.2,
+          "y": -210.3
+        }
+      ],
+      "structure": {
+        "roads": 46,
+        "roadHierarchy": {
+          "arterial": 3,
+          "collector": 9,
+          "street": 18,
+          "lane": 12,
+          "link": 4
+        },
+        "disconnectedRoads": [],
+        "deadEnds": 0,
+        "homes": 324,
+        "homesFarFromRoad": 0,
+        "bridges": 3,
+        "overpass": true,
+        "districts": 12,
+        "powerPylons": 16,
+        "fireStation": {
+          "roadMetres": 18.8,
+          "x": -111.6,
+          "y": 36
+        },
+        "policeStation": {
+          "roadMetres": 18.9,
+          "x": 74.2,
+          "y": 97.8
+        }
+      }
+    }
+  ]
+}

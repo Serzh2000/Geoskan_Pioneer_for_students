@@ -1,0 +1,345 @@
+{
+  "reachableStylesheets": 81,
+  "canonicalOwners": [
+    "editor/layout.css",
+    "editor/toolbar.css",
+    "editor/drawers.css",
+    "editor/reference.css",
+    "editor/blockly-shell.css",
+    "manager-panel/controls.css",
+    "manager-panel/panel.css",
+    "manager-panel/catalog.css"
+  ],
+  "forbiddenLayers": [
+    "styles/core/theme/dark-foundation/scene-manager.css",
+    "styles/panels/journal-academy.css",
+    "styles/panels/guide-panel/course-shell.css",
+    "styles/panels/guide-panel/flight-workbook.css",
+    "styles/panels/guide-panel/lesson-polish.css",
+    "styles/core/theme/dark-panels.css"
+  ],
+  "unusedLegacyFiles": [],
+  "runtimeReferencesToLegacy": [],
+  "imports": [
+    {
+      "source": "style.css",
+      "target": "styles\\core\\base.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\layout\\header.css"
+    },
+    {
+      "source": "styles\\layout\\header.css",
+      "target": "styles\\layout\\header\\shell.css"
+    },
+    {
+      "source": "styles\\layout\\header.css",
+      "target": "styles\\layout\\header\\actions.css"
+    },
+    {
+      "source": "styles\\layout\\header.css",
+      "target": "styles\\layout\\header\\theme-toggle.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\layout\\container.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\layout\\sidebar-tabs.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\layout\\sidebar-panels.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\panels\\panel-chrome.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\layout\\panel-shell.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\panels\\panel-kit.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\gamepad\\panel.css"
+    },
+    {
+      "source": "styles\\gamepad\\panel.css",
+      "target": "styles\\gamepad\\panel\\shell.css"
+    },
+    {
+      "source": "styles\\gamepad\\panel.css",
+      "target": "styles\\gamepad\\panel\\channels.css"
+    },
+    {
+      "source": "styles\\gamepad\\panel.css",
+      "target": "styles\\gamepad\\panel\\ranges.css"
+    },
+    {
+      "source": "styles\\gamepad\\panel.css",
+      "target": "styles\\gamepad\\panel\\channel-monitor.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\gamepad\\wizard.css"
+    },
+    {
+      "source": "styles\\gamepad\\wizard.css",
+      "target": "styles\\gamepad\\wizard\\layout.css"
+    },
+    {
+      "source": "styles\\gamepad\\wizard.css",
+      "target": "styles\\gamepad\\wizard\\sticks.css"
+    },
+    {
+      "source": "styles\\gamepad\\wizard.css",
+      "target": "styles\\gamepad\\wizard\\summary.css"
+    },
+    {
+      "source": "styles\\gamepad\\wizard.css",
+      "target": "styles\\gamepad\\wizard\\overlay.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\layout\\resizer.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\layout\\scene-host.css"
+    },
+    {
+      "source": "styles\\layout\\scene-host.css",
+      "target": "styles\\layout\\scene-host\\stage.css"
+    },
+    {
+      "source": "styles\\layout\\scene-host.css",
+      "target": "styles\\layout\\scene-host\\fpv.css"
+    },
+    {
+      "source": "styles\\layout\\scene-host.css",
+      "target": "styles\\layout\\scene-host\\orientation-widget.css"
+    },
+    {
+      "source": "styles\\layout\\scene-host.css",
+      "target": "styles\\layout\\scene-host\\camera-views.css"
+    },
+    {
+      "source": "styles\\layout\\scene-host.css",
+      "target": "styles\\layout\\scene-host\\print-bubbles.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\panels\\api-docs.css"
+    },
+    {
+      "source": "styles\\panels\\api-docs.css",
+      "target": "styles\\panels\\api-docs-preview.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\panels\\guide-panel.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\panels\\settings.css"
+    },
+    {
+      "source": "styles\\panels\\settings.css",
+      "target": "styles\\panels\\settings\\controls.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\overlays\\hud-and-settings.css"
+    },
+    {
+      "source": "styles\\overlays\\hud-and-settings.css",
+      "target": "styles\\overlays\\hud-and-settings\\simulation-notice-overlay.css"
+    },
+    {
+      "source": "styles\\overlays\\hud-and-settings.css",
+      "target": "styles\\overlays\\hud-and-settings\\settings-groups.css"
+    },
+    {
+      "source": "styles\\overlays\\hud-and-settings.css",
+      "target": "styles\\overlays\\hud-and-settings\\info-modal.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\overlays\\hud-and-settings\\autopilot-params-modal.css"
+    },
+    {
+      "source": "styles\\overlays\\hud-and-settings\\autopilot-params-modal.css",
+      "target": "styles\\overlays\\hud-and-settings\\autopilot-params-modal\\shell.css"
+    },
+    {
+      "source": "styles\\overlays\\hud-and-settings\\autopilot-params-modal.css",
+      "target": "styles\\overlays\\hud-and-settings\\autopilot-params-modal\\toolbar.css"
+    },
+    {
+      "source": "styles\\overlays\\hud-and-settings\\autopilot-params-modal.css",
+      "target": "styles\\overlays\\hud-and-settings\\autopilot-params-modal\\params.css"
+    },
+    {
+      "source": "styles\\overlays\\hud-and-settings\\autopilot-params-modal.css",
+      "target": "styles\\overlays\\hud-and-settings\\autopilot-params-modal\\dark.css"
+    },
+    {
+      "source": "styles\\overlays\\hud-and-settings\\autopilot-params-modal.css",
+      "target": "styles\\overlays\\hud-and-settings\\autopilot-params-modal\\responsive.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\scene\\camera-controls.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\scene\\viewport-corner-controls.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\scene\\scene-hotbar.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\scene\\route-drawing.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\core\\forms.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\panels\\telemetry.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\scene\\environment-control.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\scene\\editor.css"
+    },
+    {
+      "source": "styles\\scene\\editor.css",
+      "target": "styles\\scene\\editor\\layout.css"
+    },
+    {
+      "source": "styles\\scene\\editor.css",
+      "target": "styles\\scene\\editor\\toolbar.css"
+    },
+    {
+      "source": "styles\\scene\\editor.css",
+      "target": "styles\\scene\\editor\\drawers.css"
+    },
+    {
+      "source": "styles\\scene\\editor.css",
+      "target": "styles\\scene\\editor\\reference.css"
+    },
+    {
+      "source": "styles\\scene\\editor.css",
+      "target": "styles\\scene\\editor\\blockly-shell.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\scene\\manager-panel.css"
+    },
+    {
+      "source": "styles\\scene\\manager-panel.css",
+      "target": "styles\\scene\\manager-panel\\controls.css"
+    },
+    {
+      "source": "styles\\scene\\manager-panel.css",
+      "target": "styles\\scene\\manager-panel\\panel.css"
+    },
+    {
+      "source": "styles\\scene\\manager-panel.css",
+      "target": "styles\\scene\\manager-panel\\catalog.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\scene\\swarm-and-led.css"
+    },
+    {
+      "source": "styles\\scene\\swarm-and-led.css",
+      "target": "styles\\scene\\swarm-and-led\\manager.css"
+    },
+    {
+      "source": "styles\\scene\\swarm-and-led\\manager.css",
+      "target": "styles\\scene\\swarm-and-led\\manager\\list.css"
+    },
+    {
+      "source": "styles\\scene\\swarm-and-led\\manager.css",
+      "target": "styles\\scene\\swarm-and-led\\manager\\bridge.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\panels\\logs.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\responsive\\index.css"
+    },
+    {
+      "source": "styles\\responsive\\index.css",
+      "target": "styles\\responsive\\workspace.css"
+    },
+    {
+      "source": "styles\\responsive\\workspace.css",
+      "target": "styles\\responsive\\workspace\\desktop-tight.css"
+    },
+    {
+      "source": "styles\\responsive\\workspace.css",
+      "target": "styles\\responsive\\workspace\\header-compact.css"
+    },
+    {
+      "source": "styles\\responsive\\workspace.css",
+      "target": "styles\\responsive\\workspace\\tablet-layout.css"
+    },
+    {
+      "source": "styles\\responsive\\workspace.css",
+      "target": "styles\\responsive\\workspace\\mobile-layout.css"
+    },
+    {
+      "source": "styles\\responsive\\index.css",
+      "target": "styles\\responsive\\logs.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\core\\theme.css"
+    },
+    {
+      "source": "styles\\core\\theme.css",
+      "target": "styles\\core\\theme\\dark-foundation.css"
+    },
+    {
+      "source": "styles\\core\\theme\\dark-foundation.css",
+      "target": "styles\\core\\theme\\dark-foundation\\type-modal.css"
+    },
+    {
+      "source": "styles\\core\\theme.css",
+      "target": "styles\\core\\theme\\dark-docs-scene.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\overlays\\onboarding-tour.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\overlays\\marker-settings.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\overlays\\building-settings.css"
+    },
+    {
+      "source": "style.css",
+      "target": "styles\\gamepad\\workspace.css"
+    }
+  ]
+}

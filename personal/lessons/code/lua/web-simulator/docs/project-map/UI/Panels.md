@@ -7,7 +7,7 @@ tags: [ui]
 Боковые панели рабочего пространства:
 
 - `channel-monitor.ts` — монитор каналов (RC/MAVLink?), см.
-  `public/fragments/panels/channel-monitor.html`.
+  `public/fragments/panels/gamepad/monitor-pane.html`.
 - `led-matrix.ts` — визуализация LED-матрицы дрона (связана с [[Lua]] →
   `leds.ts`/`hardware/`).
 - `rail-visibility.ts` — видимость боковых рельс/панелей (сворачивание UI).

@@ -12,7 +12,7 @@ tags: [ui, скриптинг, контент]
 ## Структура
 
 - `curriculum.ts`, `curriculum/` — учебный план (последовательность уроков).
-- `lessons.ts`, `lua-lessons.ts`, `python-lessons.ts`, `lessons/` (+
+- `lessons.ts`, `lessons/` (+
   `lessons/expanded/`, `lessons/flight/`, `lessons/led/`) — сам контент уроков,
   раздельно для Lua и Python, по темам: `flight` (полёт), `led` (LED-матрица),
   `expanded` (расширенные версии — foundations/mission по языкам).

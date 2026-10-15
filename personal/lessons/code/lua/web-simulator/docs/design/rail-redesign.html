@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Панели рельсы — редизайн</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ---------- tokens: mirror of core/base.css + panel-chrome.css ---------- */
+:root {
+  --bg: #121212; --panel: #1a1a1a; --raised: #202020; --inset: #272727; --hover: #333333;
+  --text: #e3e3e3; --strong: #f2f2f2; --muted: #a2a2a2;
+  --line: rgba(162,162,162,.2); --line-strong: rgba(162,162,162,.34);
+  --accent: #ff6b00; --accent-strong: #e85f00; --accent-soft: rgba(255,107,0,.14); --accent-text: #ffad68;
+  --success: #6fd69c; --success-soft: rgba(111,214,156,.14);
+  --warning: #f6c260; --warning-soft: rgba(246,194,96,.14);
+  --danger: #ff9a90; --danger-soft: rgba(255,154,144,.14);
+  --on-accent: #151515;
+  --scene: #2f3a44;
+  --sans: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --r-control: 8px; --r-panel: 12px; --r-dialog: 16px;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --panel: #f7f7f8; --raised: #ffffff; --inset: #eeeff1; --hover: #e6e7ea;
+  --text: #151515; --strong: #090909; --muted: #566274;
+  --line: rgba(9,9,11,.12); --line-strong: rgba(9,9,11,.22);
+  --accent-soft: rgba(255,107,0,.12); --accent-text: #a84a00;
+  --success: #17744a; --success-soft: rgba(23,116,74,.12);
+  --warning: #8d4b07; --warning-soft: rgba(141,75,7,.12);
+  --danger: #b3261e; --danger-soft: rgba(179,38,30,.12);
+  --scene: #c9d3dc;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.5 var(--sans); }
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+h1, h2, h3, p { margin: 0; }
+
+/* ---------- design sheet chrome ---------- */
+.sheet { max-width: 1480px; margin: 0 auto; padding: 32px 28px 80px; }
+.sheet__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 36px; }
+.sheet__head h1 { font-size: 24px; font-weight: 700; letter-spacing: -.02em; color: var(--strong); }
+.sheet__head p { margin-top: 8px; max-width: 70ch; color: var(--muted); font-size: 15px; line-height: 1.6; }
+.sheet h2 { font-size: 17px; font-weight: 650; color: var(--strong); margin: 48px 0 6px; }
+.sheet h2 + p { color: var(--muted); max-width: 80ch; margin-bottom: 18px; }
+.spec { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 28px; margin: 14px 0 0; padding: 0; list-style: none; font-size: 13px; }
+.spec li { padding: 10px 0; border-top: 1px solid var(--line); }
+.spec b { color: var(--strong); font-weight: 600; }
+.frame { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+
+/* ---------- KIT: shared panel recipe (-> public/styles/panels/panel-kit.css) ---------- */
+.rail { width: 56px; padding: 8px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; background: var(--panel); border-radius: var(--r-panel); min-height: 640px; }
+.rail__btn { width: 40px; height: 40px; display: grid; place-items: center; border: 0; border-radius: var(--r-control); background: transparent; color: var(--muted); }
+.rail__btn:hover { background: var(--hover); color: var(--strong); }
+.rail__btn.is-active { background: var(--accent-soft); color: var(--accent-text); }
+.rail__btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.rail__spacer { flex: 1; }
+.rail__sep { width: 24px; height: 1px; background: var(--line); margin: 6px 0; }
+
+.panel { width: 360px; background: var(--panel); border-radius: var(--r-panel); display: flex; flex-direction: column; overflow: hidden; }
+.panel--wide { width: 440px; }
+.panel__header { height: 52px; flex: 0 0 52px; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--line); }
+.panel__title { font-size: 15px; font-weight: 650; color: var(--strong); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.panel__body { padding: 16px; display: flex; flex-direction: column; gap: 20px; }
+.icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: var(--r-control); background: transparent; color: var(--muted); flex: 0 0 36px; }
+.icon-btn:hover { background: var(--hover); color: var(--strong); }
+.icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+/* section: flat, title row + content; sections separated by gap, not by cards */
+.section { display: flex; flex-direction: column; gap: 10px; }
+.section__head { display: flex; align-items: center; gap: 8px; min-height: 24px; }
+.section__title { font-size: 13px; font-weight: 650; color: var(--strong); flex: 1; }
+.section__meta { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.section__hint { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.section + .section { padding-top: 20px; border-top: 1px solid var(--line); }
+
+/* status chip: tone by fill */
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: var(--r-control); font-size: 12px; font-weight: 600; background: var(--inset); color: var(--text); white-space: nowrap; }
+.chip::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.chip--success { background: var(--success-soft); color: var(--success); } .chip--success::before { background: var(--success); }
+.chip--warning { background: var(--warning-soft); color: var(--warning); } .chip--warning::before { background: var(--warning); }
+.chip--danger { background: var(--danger-soft); color: var(--danger); } .chip--danger::before { background: var(--danger); }
+.chip--accent { background: var(--accent-soft); color: var(--accent-text); } .chip--accent::before { background: var(--accent); }
+.chip--plain::before { display: none; }
+
+/* segmented switch: state by fill */
+.seg { display: flex; gap: 2px; padding: 3px; background: var(--inset); border-radius: var(--r-control); }
+.seg__btn { flex: 1; min-height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+.seg__btn:hover { color: var(--strong); }
+.seg__btn.is-active { background: var(--raised); color: var(--strong); box-shadow: 0 0 0 1px var(--line); }
+.seg__btn small { font: 500 11px/1 var(--mono); color: var(--muted); }
+.seg__btn.is-active small { color: var(--accent-text); }
+
+/* row: list item 44px */
+.row { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 8px; border-radius: var(--r-control); background: transparent; border: 0; width: 100%; text-align: left; color: var(--text); }
+.row:hover { background: var(--hover); }
+.row.is-selected { background: var(--accent-soft); }
+.row__icon { width: 28px; height: 28px; flex: 0 0 28px; display: grid; place-items: center; border-radius: 6px; background: var(--inset); color: var(--muted); }
+.row.is-selected .row__icon { color: var(--accent-text); }
+.row__icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.row__text { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.row__name { font-size: 13px; font-weight: 600; color: var(--strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row__meta { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row__end { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 6px; }
+.row__action { width: 28px; height: 28px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); display: grid; place-items: center; opacity: 0; }
+.row:hover .row__action, .row:focus-within .row__action { opacity: 1; }
+.row__action:hover { background: var(--inset); color: var(--danger); }
+.row__action svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.list { display: flex; flex-direction: column; gap: 2px; }
+
+/* field: label above control, 36px control, hint optional */
+.field { display: grid; gap: 6px; }
+.field__label { font-size: 12px; font-weight: 600; color: var(--text); display: flex; justify-content: space-between; }
+.field__value { color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 500; }
+.field__hint { font-size: 12px; color: var(--muted); }
+.control, select.control, input.control { width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: var(--r-control); background: var(--raised); color: var(--text); font-size: 13px; }
+select.control { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 16px) 15px, calc(100% - 11px) 15px; background-size: 5px 5px; background-repeat: no-repeat; }
+.control:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.search { position: relative; }
+.search svg { position: absolute; left: 10px; top: 10px; width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 1.75; }
+.search .control { padding-left: 32px; }
+.range { -webkit-appearance: none; width: 100%; height: 36px; background: transparent; }
+.range::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: var(--inset); }
+.range::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -7px; border-radius: 50%; background: var(--accent); border: 0; }
+.swatch { width: 36px; height: 36px; border-radius: var(--r-control); border: 1px solid var(--line-strong); background: #38bdf8; flex: 0 0 36px; }
+.inline { display: flex; gap: 8px; align-items: center; }
+.inline .control { flex: 1; }
+.mono { font-family: var(--mono); }
+
+/* toggle row: switch, state by fill */
+.toggle { display: flex; align-items: center; gap: 12px; min-height: 36px; cursor: pointer; }
+.toggle__text { flex: 1; display: grid; gap: 1px; }
+.toggle__title { font-size: 13px; font-weight: 600; color: var(--strong); }
+.toggle__hint { font-size: 12px; color: var(--muted); }
+.switch { width: 36px; height: 20px; border-radius: 10px; background: var(--inset); position: relative; flex: 0 0 36px; border: 0; }
+.switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--muted); transition: transform .15s; }
+.switch.is-on { background: var(--accent); } .switch.is-on::after { background: var(--on-accent); transform: translateX(16px); }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: var(--r-control); border: 1px solid var(--line-strong); background: var(--raised); color: var(--strong); font-weight: 600; font-size: 12px; white-space: nowrap; }
+.btn:hover { background: var(--hover); }
+.btn--primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn--primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+.btn--danger { color: var(--danger); }
+.btn:disabled { background: var(--inset); color: var(--muted); border-color: transparent; cursor: default; }
+.btn--sm { height: 28px; padding: 0 10px; font-size: 12px; }
+.btn--full { width: 100%; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* device surfaces (the only "cards"): LED board, scene preview, code */
+.device { border-radius: var(--r-panel); background: var(--raised); border: 1px solid var(--line); }
+.kbd { display: inline-block; padding: 0 5px; border-radius: 4px; background: var(--inset); font: 500 11px/18px var(--mono); color: var(--text); }
+
+/* ---------- telemetry ---------- */
+.tm-readout { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+.tm-readout .metric { display: grid; gap: 2px; }
+.metric__label { font-size: 12px; color: var(--muted); }
+.metric__value { font-size: 17px; font-weight: 650; color: var(--strong); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.metric__value small { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 3px; }
+.metric--alt { grid-column: 1 / -1; } .metric--alt .metric__value { font-size: 34px; line-height: 1.1; letter-spacing: -.03em; }
+.meter { height: 6px; border-radius: 3px; background: var(--inset); overflow: hidden; }
+.meter__fill { height: 100%; width: 99%; background: var(--success); border-radius: 3px; }
+.led-base { display: flex; gap: 14px; justify-content: center; padding: 14px; background: #141414; border-radius: var(--r-panel); }
+.led-base span { width: 26px; height: 26px; border-radius: 50%; background: #222; box-shadow: inset 0 0 0 1px #2d2d2d; display: grid; place-items: center; font: 500 10px var(--mono); color: #666; }
+.led-base span.is-lit { background: #ff6b00; color: #151515; box-shadow: 0 0 10px rgba(255,107,0,.5); }
+.led-matrix { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 12px; background: #141414; border-radius: var(--r-panel); }
+.led-matrix span { aspect-ratio: 1; border-radius: 4px; background: #222; box-shadow: inset 0 0 0 1px #2d2d2d; }
+.led-matrix span.r { background: #e23a2e; } .led-matrix span.g { background: #2fbf62; }
+
+/* ---------- scene manager ---------- */
+.hint-line { font-size: 12px; color: var(--muted); line-height: 1.7; }
+
+/* ---------- gamepad ---------- */
+.ch { display: grid; grid-template-columns: 34px 1fr 150px; align-items: center; gap: 10px; min-height: 40px; }
+.ch__id { font: 500 11px var(--mono); color: var(--muted); }
+.ch__name { display: grid; gap: 0; } .ch__name b { font-weight: 600; color: var(--strong); font-size: 13px; } .ch__name small { font-size: 11px; color: var(--muted); }
+.ch__meter { height: 4px; background: var(--inset); border-radius: 2px; position: relative; grid-column: 2 / -1; margin-top: -4px; }
+.ch__meter i { position: absolute; left: 50%; top: -3px; width: 2px; height: 10px; background: var(--muted); }
+.ch select.control { height: 32px; font-size: 12px; }
+
+/* ---------- code (editor toolbar variant) ---------- */
+.code-lines { padding: 12px 14px; font: 12px/1.7 var(--mono); color: var(--text); min-height: 160px; }
+.code-lines i { color: var(--muted); font-style: normal; margin-right: 10px; }
+.code-lines .k { color: #c792ea; } .code-lines .f { color: #ffad68; } .code-lines .c { color: #7a8a7a; }
+
+/* ---------- guide ---------- */
+.guide { width: 100%; max-width: 1420px; height: 760px; background: var(--panel); border-radius: var(--r-dialog); border: 1px solid var(--line); display: grid; grid-template-rows: 56px 1fr; overflow: hidden; }
+.guide__header { display: flex; align-items: center; gap: 16px; padding: 0 8px 0 20px; border-bottom: 1px solid var(--line); }
+.guide__title { font-size: 15px; font-weight: 650; color: var(--strong); flex: 1; }
+.guide__header .seg { width: 340px; }
+.guide__work { display: grid; grid-template-columns: 264px 1fr; min-height: 0; }
+.outline { border-right: 1px solid var(--line); padding: 20px 12px; overflow: auto; display: flex; flex-direction: column; gap: 4px; }
+.outline__course { padding: 0 8px 16px; display: grid; gap: 6px; }
+.outline__course h2 { margin: 0; font-size: 15px; font-weight: 650; color: var(--strong); }
+.outline__course p { font-size: 12px; color: var(--muted); }
+.outline__progress { display: grid; gap: 6px; margin-top: 6px; }
+.outline__progress .meter__fill { width: 1%; background: var(--accent); }
+.outline__module { display: flex; align-items: center; gap: 8px; padding: 10px 8px; margin-top: 8px; border-top: 1px solid var(--line); font-size: 12px; font-weight: 650; color: var(--strong); }
+.outline__module .section__meta { margin-left: auto; }
+.outline__module svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; }
+.lesson-link { display: flex; gap: 10px; align-items: baseline; padding: 8px 8px; min-height: 36px; border-radius: var(--r-control); border: 0; background: transparent; color: var(--text); text-align: left; width: 100%; font-size: 12px; line-height: 1.45; }
+.lesson-link:hover { background: var(--hover); }
+.lesson-link.is-current { background: var(--accent-soft); color: var(--strong); font-weight: 600; }
+.lesson-link.is-locked { color: var(--muted); }
+.lesson-link__n { flex: 0 0 20px; font: 500 11px/1.6 var(--mono); color: var(--muted); }
+.lesson-link.is-current .lesson-link__n { color: var(--accent-text); }
+.lesson-link.is-done .lesson-link__n { color: var(--success); }
+.lesson { overflow: auto; padding: 24px 32px 32px; }
+.lesson__inner { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+.lesson__crumb { font-size: 12px; color: var(--muted); }
+.lesson__title { font-size: 26px; font-weight: 700; letter-spacing: -.03em; color: var(--strong); line-height: 1.2; margin-top: 4px; }
+/* the signature: five-stop flight route, state by fill */
+.route { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; padding: 12px 0; border-block: 1px solid var(--line); }
+.stop { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 10px; border: 0; border-radius: var(--r-control); background: transparent; color: var(--muted); text-align: left; position: relative; }
+.stop + .stop::before { content: ''; position: absolute; left: -8px; top: 50%; width: 8px; height: 1px; background: var(--line-strong); }
+.stop__n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 500 11px var(--mono); background: var(--inset); color: var(--muted); flex: 0 0 26px; }
+.stop__text { display: grid; line-height: 1.25; } .stop__text b { font-weight: 600; font-size: 13px; color: inherit; } .stop__text small { font-size: 11px; color: var(--muted); }
+.stop.is-done .stop__n { background: var(--success-soft); color: var(--success); }
+.stop.is-done { color: var(--text); }
+.stop.is-active { background: var(--accent-soft); color: var(--strong); }
+.stop.is-active .stop__n { background: var(--accent); color: var(--on-accent); }
+.stop:disabled { cursor: default; }
+.stop:not(:disabled):hover { background: var(--hover); color: var(--strong); }
+/* reading column */
+.reading { max-width: 720px; display: grid; gap: 22px; }
+.lead { font-size: 17px; line-height: 1.75; color: var(--strong); }
+.reading h3 { font-size: 15px; font-weight: 650; color: var(--strong); margin-bottom: 8px; }
+.reading p { font-size: 15px; line-height: 1.8; }
+.task { padding: 16px 18px; border-radius: var(--r-panel); background: var(--accent-soft); display: grid; gap: 6px; }
+.task h3 { font-size: 13px; color: var(--accent-text); margin: 0; }
+.task p { font-size: 15px; line-height: 1.7; color: var(--strong); }
+.api-row { display: grid; grid-template-columns: 220px 1fr; gap: 16px; padding: 12px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.api-row:last-child { border-bottom: 1px solid var(--line); }
+.api-row code { font: 12px var(--mono); color: var(--accent-text); }
+/* practice: working width */
+.practice { display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
+.practice__brief { display: grid; gap: 16px; }
+.practice__brief p { font-size: 15px; line-height: 1.7; color: var(--strong); }
+.disclosure { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px; border-radius: var(--r-control); background: var(--inset); font-size: 12px; font-weight: 600; color: var(--text); }
+.disclosure svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; }
+.practice__work { display: grid; gap: 12px; }
+.editor { height: 250px; overflow: hidden; }
+.editor__bar { height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.editor__bar b { color: var(--strong); font-weight: 600; }
+.scene { height: 240px; background: var(--scene); position: relative; overflow: hidden; }
+.scene::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px); background-size: 40px 40px; transform: perspective(500px) rotateX(55deg) translateY(-60px) scale(1.6); }
+.scene__pad { position: absolute; left: 50%; top: 56%; width: 150px; height: 60px; border-radius: 50%; border: 2px solid var(--accent); transform: translate(-50%,-50%); }
+.scene__pad::after { content: ''; position: absolute; left: 50%; top: 50%; width: 36px; height: 20px; border-radius: 5px; background: #ddd; transform: translate(-50%,-50%); }
+.scene__cams { position: absolute; left: 12px; bottom: 12px; display: flex; gap: 4px; padding: 3px; background: rgba(20,20,20,.75); border-radius: var(--r-control); }
+.scene__cams span { height: 28px; padding: 0 10px; display: grid; place-items: center; font-size: 11px; font-weight: 600; color: #ddd; border-radius: 6px; }
+.scene__cams span.is-active { background: var(--accent); color: #151515; }
+.practice__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.practice__status { font-size: 12px; color: var(--muted); }
+.gate { display: flex; align-items: center; gap: 16px; padding-top: 20px; border-top: 1px solid var(--line); }
+.gate__hint { flex: 1; font-size: 12px; color: var(--muted); text-align: right; }
+/* result */
+.result { display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start; }
+.result__main { display: grid; gap: 18px; max-width: 640px; }
+.verdict { display: grid; gap: 4px; padding: 16px 18px; border-radius: var(--r-panel); background: var(--success-soft); }
+.verdict b { font-size: 15px; font-weight: 650; color: var(--success); }
+.verdict p { font-size: 13px; line-height: 1.6; }
+.record { display: grid; gap: 0; }
+.record__head { display: flex; justify-content: space-between; font-size: 13px; font-weight: 650; color: var(--strong); padding-bottom: 8px; }
+.record__head small { color: var(--muted); font: 500 12px var(--mono); }
+.lane { display: grid; grid-template-columns: 110px 1fr; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); font-size: 12px; }
+.lane__name { color: var(--muted); }
+.lane__bar { height: 22px; border-radius: 6px; background: var(--inset); position: relative; overflow: hidden; }
+.lane__bar i { position: absolute; top: 0; bottom: 0; border-radius: 6px; font: 500 11px/22px var(--mono); padding: 0 8px; color: var(--strong); background: var(--hover); font-style: normal; white-space: nowrap; }
+.lane__bar i.a { background: var(--accent-soft); color: var(--accent-text); }
+.lane__bar i.s { background: var(--success-soft); color: var(--success); }
+
+/* sheet theme toggle */
+.theme-toggle { height: 36px; padding: 0 14px; border-radius: var(--r-control); border: 1px solid var(--line-strong); background: var(--raised); color: var(--strong); font-weight: 600; font-size: 12px; }
+/* problem list */
+.problems { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px 24px; padding: 0; margin: 0; list-style: none; }
+.problems li { padding: 10px 0; border-top: 1px solid var(--line); font-size: 13px; line-height: 1.55; }
+.problems b { color: var(--strong); font-weight: 600; }
+.ok { color: var(--success); }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header class="sheet__head">
+    <div>
+      <h1>Левая рельса: один язык для всех панелей</h1>
+      <p>Шесть панелей и учебник собраны из одного набора: заголовок 52 px со слотом состояния, плоские секции вместо вложенных карточек, строки 44 px, поля с подписью сверху, сегментный переключатель, чип состояния. Состояние всегда передаётся заливкой, не обводкой и не подчёркиванием. Скругления 8/12/16, контролы 36 px, кегли 12/13/15/17.</p>
+    </div>
+    <button class="theme-toggle" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'">Сменить тему</button>
+  </header>
+
+  <h2>Рельса и панели инструментов</h2>
+  <p>Рельса делится на две группы: рабочие панели сверху, служебные снизу, между ними разделитель. Активная вкладка — заливка акцентом, подсказка появляется у каждой кнопки одинаково. Пульт больше не перекрывает сцену: он такая же панель, 440 px, дрон остаётся виден при проверке стиков.</p>
+
+  <div class="frame">
+    <!-- rail -->
+    <nav class="rail" aria-label="Панели">
+      <button class="rail__btn" title="Код"><svg viewBox="0 0 24 24"><path d="M7 8l-4 4 4 4M17 8l4 4-4 4M14 4l-4 16"/></svg></button>
+      <button class="rail__btn is-active" title="Телеметрия"><svg viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></button>
+      <button class="rail__btn" title="Рой"><svg viewBox="0 0 24 24"><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="18" r="2.2"/></svg></button>
+      <button class="rail__btn" title="Сцена"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3zM12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg></button>
+      <button class="rail__btn" title="Учебник"><svg viewBox="0 0 24 24"><path d="M22 9L12 4 2 9l10 5 10-5zM6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/></svg></button>
+      <span class="rail__spacer"></span>
+      <span class="rail__sep"></span>
+      <button class="rail__btn" title="Тема"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg></button>
+      <button class="rail__btn" title="Пульт"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="4"/><path d="M6 12h4M8 10v4M15 11h.01M18 13h.01"/></svg></button>
+      <button class="rail__btn" title="Настройки"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    </nav>
+
+    <!-- telemetry -->
+    <section class="panel">
+      <div class="panel__header"><span class="panel__title">Телеметрия</span><span class="chip">Ожидание</span><button class="icon-btn" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+      <div class="panel__body">
+        <div class="section">
+          <div class="tm-readout">
+            <div class="metric metric--alt"><span class="metric__label">Высота</span><span class="metric__value">0.00<small>м</small></span></div>
+            <div class="metric"><span class="metric__label">Скорость</span><span class="metric__value">0.0<small>м/с</small></span></div>
+            <div class="metric"><span class="metric__label">Время полёта</span><span class="metric__value">0.0<small>с</small></span></div>
+          </div>
+          <div class="field"><span class="field__label">Батарея <span class="field__value">99 %</span></span><div class="meter"><div class="meter__fill"></div></div></div>
+        </div>
+        <div class="section">
+          <div class="section__head"><span class="section__title">Бортовые индикаторы</span><span class="section__meta">0–3</span></div>
+          <div class="led-base"><span>0</span><span class="is-lit">1</span><span>2</span><span>3</span></div>
+        </div>
+        <div class="section">
+          <div class="section__head"><span class="section__title">LED-матрица</span><span class="section__meta">5 × 5</span></div>
+          <div class="led-matrix"><span></span><span class="r"></span><span></span><span class="r"></span><span></span><span></span><span></span><span class="g"></span><span></span><span></span><span class="r"></span><span></span><span></span><span></span><span class="r"></span><span></span><span class="r"></span><span class="r"></span><span class="r"></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <span class="section__hint">Цвета выбранного дрона в реальном времени.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- swarm -->
+    <section class="panel">
+      <div class="panel__header"><span class="panel__title">Рой</span><button class="icon-btn" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+      <div class="panel__body">
+        <div class="section">
+          <div class="section__head"><span class="section__title">Дроны</span><span class="section__meta">2</span><button class="btn btn--sm"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Добавить</button></div>
+          <div class="list">
+            <button class="row is-selected"><span class="row__icon"><svg viewBox="0 0 24 24"><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="18" r="2.2"/></svg></span><span class="row__text"><span class="row__name">Пионер Базовый 1</span><span class="row__meta">MAVLink 192.168.4.1 · порт 8001</span></span><span class="row__end mono">8001</span></button>
+            <button class="row"><span class="row__icon"><svg viewBox="0 0 24 24"><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="18" r="2.2"/></svg></span><span class="row__text"><span class="row__name">Пионер Базовый 2</span><span class="row__meta">MAVLink 192.168.4.1 · порт 8002</span></span><span class="row__end mono">8002</span><span class="row__action" title="Удалить"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12h12l1-12M9 7V4h6v3"/></svg></span></button>
+          </div>
+          <span class="section__hint">Выбранный дрон получает команды из редактора. Удаление — в строке при наведении.</span>
+        </div>
+        <div class="section">
+          <div class="section__head"><span class="section__title">Внешние команды</span><span class="chip">Запрещены</span></div>
+          <span class="section__hint">Скрипт из Python IDLE управляет выбранным дроном через backend (<span class="mono">npm start</span>). Вкладку симулятора не закрывайте.</span>
+          <div class="field"><span class="field__label">Подключение</span><span class="section__hint mono">192.168.4.1:8001 · камера 18001</span></div>
+          <button class="btn btn--primary btn--full">Разрешить внешние команды</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- scene manager -->
+    <section class="panel">
+      <div class="panel__header"><span class="panel__title">Сцена</span><button class="icon-btn" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+      <div class="panel__body">
+        <div class="seg"><button class="seg__btn is-active">Объекты</button><button class="seg__btn">Свойства</button></div>
+        <div class="section">
+          <div class="section__head"><span class="section__title">Объекты сцены</span><span class="section__meta">3</span><button class="btn btn--sm btn--primary"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Добавить</button></div>
+          <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input class="control" placeholder="Найти объект"></div>
+          <div class="list">
+            <button class="row"><span class="row__icon"><svg viewBox="0 0 24 24"><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="18" r="2.2"/></svg></span><span class="row__text"><span class="row__name">Дрон</span><span class="row__meta">Управляемый аппарат</span></span></button>
+            <button class="row"><span class="row__icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16"/></svg></span><span class="row__text"><span class="row__name">Земля</span><span class="row__meta">Плоскость полигона</span></span></button>
+            <button class="row is-selected"><span class="row__icon"><svg viewBox="0 0 24 24"><path d="M12 4l8 4-8 4-8-4 8-4zM4 12l8 4 8-4M4 16l8 4 8-4"/></svg></span><span class="row__text"><span class="row__name">Ограждение полигона</span><span class="row__meta">X 0.0 · Y 0.0 · Z 0.0</span></span><span class="row__action" title="Удалить"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12h12l1-12M9 7V4h6v3"/></svg></span></button>
+          </div>
+          <span class="hint-line">Двойной щелчок — к объекту. <span class="kbd">Ctrl</span> + щелчок — выбрать несколько.</span>
+        </div>
+        <div class="section">
+          <button class="row"><span class="row__icon"><svg viewBox="0 0 24 24"><path d="M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3V7zM9 4v13M15 7v13"/></svg></span><span class="row__text"><span class="row__name">Готовые полигоны</span><span class="row__meta">Гоночная трасса</span></span><span class="row__end">11 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span></button>
+          <button class="row"><span class="row__icon"><svg viewBox="0 0 24 24"><path d="M14 3v4h4M6 3h8l4 4v14H6V3z"/></svg></span><span class="row__text"><span class="row__name">Файл сцены</span><span class="row__meta">Сохранить или открыть JSON</span></span><span class="row__end"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span></button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="frame" style="margin-top:20px">
+    <!-- gamepad -->
+    <section class="panel panel--wide">
+      <div class="panel__header"><span class="panel__title">Пульт</span><span class="chip">Не подключён</span><button class="icon-btn" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+      <div class="panel__body">
+        <div class="seg"><button class="seg__btn is-active">Каналы</button><button class="seg__btn">Монитор сигнала</button></div>
+        <div class="section">
+          <span class="section__hint">Подключите пульт по USB и нажмите любую кнопку или подвигайте стик — он определится автоматически.</span>
+        </div>
+        <div class="section">
+          <div class="section__head"><span class="section__title">Раскладка</span></div>
+          <div class="inline"><select class="control"><option>Mode 2 — газ слева</option></select><button class="btn btn--primary">Мастер настройки</button></div>
+          <span class="section__hint">Мастер назначит стики и тумблеры по очереди. Или задайте входы вручную ниже.</span>
+        </div>
+        <div class="section">
+          <div class="section__head"><span class="section__title">Основные каналы</span><span class="section__meta">4</span></div>
+          <div class="ch"><span class="ch__id">CH1</span><span class="ch__name"><b>Крен</b><small>Roll</small></span><select class="control"><option>Нет подключения</option></select><div class="ch__meter"><i></i></div></div>
+          <div class="ch"><span class="ch__id">CH2</span><span class="ch__name"><b>Тангаж</b><small>Pitch</small></span><select class="control"><option>Нет подключения</option></select><div class="ch__meter"><i></i></div></div>
+          <div class="ch"><span class="ch__id">CH3</span><span class="ch__name"><b>Газ</b><small>Throttle</small></span><select class="control"><option>Нет подключения</option></select><div class="ch__meter"><i></i></div></div>
+          <div class="ch"><span class="ch__id">CH4</span><span class="ch__name"><b>Рыскание</b><small>Yaw</small></span><select class="control"><option>Нет подключения</option></select><div class="ch__meter"><i></i></div></div>
+        </div>
+        <div class="section">
+          <div class="section__head"><span class="section__title">Тумблеры</span><span class="section__meta">режим · взвод · магнит</span></div>
+          <div class="ch"><span class="ch__id">CH5</span><span class="ch__name"><b>Режим полёта</b><small>3 положения</small></span><select class="control"><option>Нет подключения</option></select></div>
+          <div class="ch"><span class="ch__id">CH6</span><span class="ch__name"><b>Взвод</b><small>Arm</small></span><select class="control"><option>Нет подключения</option></select></div>
+        </div>
+        <div class="section">
+          <div class="section__head"><span class="section__title">Калибровка</span></div>
+          <div class="btn-row"><button class="btn" disabled>Начать калибровку</button><button class="btn" disabled>Сбросить</button></div>
+          <span class="section__hint">Доступна после подключения пульта.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- settings -->
+    <section class="panel">
+      <div class="panel__header"><span class="panel__title">Настройки</span><button class="icon-btn" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+      <div class="panel__body">
+        <div class="section">
+          <div class="section__head"><span class="section__title">Трассер полёта</span></div>
+          <label class="toggle"><span class="toggle__text"><span class="toggle__title">Показывать траекторию</span><span class="toggle__hint">Шлейф полёта в 3D-сцене</span></span><button class="switch is-on" role="switch" aria-checked="true"></button></label>
+          <div class="field"><span class="field__label">Цвет линии</span><div class="inline"><span class="swatch"></span><input class="control mono" value="#38BDF8"></div></div>
+          <div class="field"><span class="field__label">Толщина <span class="field__value">2 px</span></span><input type="range" class="range" min="1" max="12" value="2"></div>
+          <div class="field"><span class="field__label">Вид</span><select class="control"><option>Линия</option><option>Точки</option><option>Линия и точки</option></select></div>
+        </div>
+        <div class="section">
+          <div class="section__head"><span class="section__title">Симуляция</span></div>
+          <div class="field"><span class="field__label">Скорость <span class="field__value">1.0×</span></span><input type="range" class="range" min="0.25" max="3" step="0.25" value="1"></div>
+          <div class="field"><span class="field__label">Качество графики</span><select class="control"><option>Авто</option><option>Высокое</option><option>Среднее</option><option>Низкое</option></select><span class="field__hint">Авто снижает качество, когда кадров мало.</span></div>
+        </div>
+        <div class="section">
+          <div class="section__head"><span class="section__title">Автопилот</span></div>
+          <button class="btn btn--full">Параметры автопилота</button>
+          <span class="section__hint">Полный список из профиля .properties с описаниями и журналом изменений.</span>
+        </div>
+        <div class="section">
+          <div class="section__head"><span class="section__title">Знакомство</span></div>
+          <button class="btn btn--full">Пройти тур ещё раз</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- code -->
+    <section class="panel">
+      <div class="panel__header" style="padding-left:8px; gap:6px">
+        <select class="control" style="width:84px;height:36px"><option>Lua</option></select>
+        <select class="control" style="flex:1;height:36px"><option>Примеры</option></select>
+        <button class="icon-btn" title="Открыть файл"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg></button>
+        <button class="icon-btn" title="Справочник"><svg viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zm0 0a2 2 0 0 0 2 2h13"/></svg></button>
+        <button class="icon-btn" title="Терминал"><svg viewBox="0 0 24 24"><path d="M5 7l5 5-5 5M12 19h7"/></svg></button>
+        <button class="icon-btn" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="code-lines"><div><i>1</i><span class="c">-- Pioneer Lua Script</span></div><div><i>2</i></div><div><i>3</i><span class="f">ap.push</span>(Ev.MCE_PREFLIGHT)</div><div><i>4</i><span class="f">Timer.callLater</span>(0.5, <span class="k">function</span>()</div><div><i>5</i>&nbsp;&nbsp;&nbsp;&nbsp;<span class="f">ap.push</span>(Ev.MCE_TAKEOFF)</div><div><i>6</i><span class="k">end</span>)</div></div>
+      <div class="panel__body" style="padding-top:0"><span class="section__hint">Редактор оставляет свой заголовок-тулбар — это единственный допустимый вариант заголовка. Кнопки тулбара те же 36 px, что и у закрытия.</span></div>
+    </section>
+  </div>
+
+  <ul class="spec">
+    <li><b>Заголовок</b> — 52 px, название 15/650, слот состояния (чип), закрытие 36 px. Без подзаголовков, без hero.</li>
+    <li><b>Секция</b> — заголовок 13/650 + счётчик или действие справа; между секциями 20 px и одна линия. Никаких карточек в карточках.</li>
+    <li><b>Строка</b> — 44 px, иконка 28, имя 13/600, подпись 12 muted; выбор — заливка акцентом; действия появляются в строке, место под них зарезервировано.</li>
+    <li><b>Поле</b> — подпись сверху 12/600, значение справа серым, контрол 36 px, подсказка 12 только если без неё непонятно.</li>
+    <li><b>Сегмент</b> — вместо вкладок с подчёркиванием; активный — приподнятая заливка.</li>
+    <li><b>Чип</b> — тон заливкой: серый, успех, предупреждение, ошибка, акцент. Одна точка, текст, без иконок.</li>
+    <li><b>Кнопки</b> — primary оранжевая, secondary поверхность с линией, 36 px, 8 px. Текст — глагол: «Добавить», «Разрешить внешние команды».</li>
+    <li><b>Устройства</b> — единственные «карточки»: LED-плата, сцена, код. Они тёмные в обеих темах, потому что это физика, а не UI.</li>
+  </ul>
+
+  <h2>Учебник пилота</h2>
+  <p>Один файл стилей вместо двадцати шести. Оглавление слева, маршрут из пяти остановок, одна колонка 720 px для чтения, вся ширина для работы. Сцена живёт внутри своей секции и никогда не вылезает под маршрут. Нет дублирующей строки «Шаг 1 из 5 · Идея» — об этом говорит сам маршрут.</p>
+
+  <!-- guide: idea -->
+  <section class="guide" aria-label="Учебник — шаг Идея">
+    <div class="guide__header">
+      <span class="guide__title">Учебник пилота</span>
+      <div class="seg"><button class="seg__btn">Python <small>108</small></button><button class="seg__btn is-active">Lua <small>72</small></button><button class="seg__btn">Blockly <small>10</small></button></div>
+      <button class="icon-btn" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="guide__work">
+      <aside class="outline">
+        <div class="outline__course"><h2>От arm до ArUco</h2><p>12 разделов · 108 уроков</p><div class="outline__progress"><div class="meter"><div class="meter__fill"></div></div><p>1 из 108 пройден</p></div></div>
+        <div class="outline__module"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Дрон и первая команда<span class="section__meta">1/9</span></div>
+        <button class="lesson-link is-done"><span class="lesson-link__n">✓</span>Аппарат в сцене</button>
+        <button class="lesson-link is-current"><span class="lesson-link__n">02</span>Где живёт программа</button>
+        <button class="lesson-link"><span class="lesson-link__n">03</span>Команда автопилоту</button>
+        <button class="lesson-link"><span class="lesson-link__n">04</span>Повторный arm</button>
+        <button class="lesson-link is-locked"><span class="lesson-link__n">05</span>Остановить и начать заново</button>
+        <button class="lesson-link is-locked"><span class="lesson-link__n">06</span>Журнал первого запуска</button>
+        <button class="lesson-link is-locked"><span class="lesson-link__n">07</span>Что такое API</button>
+        <button class="lesson-link is-locked"><span class="lesson-link__n">08</span>Одна ошибка за раз</button>
+        <button class="lesson-link is-locked"><span class="lesson-link__n">09</span>Самостоятельная миссия</button>
+        <div class="outline__module"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>Взлёт и посадка<span class="section__meta">0/9</span></div>
+        <div class="outline__module"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>Полёт по точкам<span class="section__meta">0/9</span></div>
+      </aside>
+      <div class="lesson"><div class="lesson__inner">
+        <div><div class="lesson__crumb">Дрон и первая команда · урок 2 из 9</div><h1 class="lesson__title">Где живёт программа</h1></div>
+        <nav class="route" aria-label="Шаги урока">
+          <button class="stop is-active"><span class="stop__n">1</span><span class="stop__text"><b>Идея</b><small>Разберитесь</small></span></button>
+          <button class="stop"><span class="stop__n">2</span><span class="stop__text"><b>Прогноз</b><small>Предскажите</small></span></button>
+          <button class="stop" disabled><span class="stop__n">3</span><span class="stop__text"><b>Практика</b><small>Попробуйте</small></span></button>
+          <button class="stop" disabled><span class="stop__n">4</span><span class="stop__text"><b>Результат</b><small>Наблюдайте</small></span></button>
+          <button class="stop" disabled><span class="stop__n">5</span><span class="stop__text"><b>Разбор</b><small>Объясните</small></span></button>
+        </nav>
+        <div class="reading">
+          <p class="lead">Редактор хранит команды. Запуск передаёт их интерпретатору, а сцена показывает результат. Изменение текста само по себе не запускает дрон.</p>
+          <div><h3>Перед началом</h3><p>Комментарий Lua начинается с <span class="mono">--</span>, Python — с <span class="mono">#</span>. Комментарий объясняет код человеку и не выполняет действие.</p></div>
+          <div class="api-row"><code>ap.push(Ev.MCE_PREFLIGHT)</code><span>Переводит автопилот в предполётную проверку. Без неё команда взлёта игнорируется.</span></div>
+          <div class="task"><h3>Сегодня попробуем</h3><p>Замените комментарий TODO словами «Мой первый опыт» и запустите программу. Не добавляйте команд двигателям.</p></div>
+        </div>
+        <div class="gate"><button class="btn">Назад</button><span class="gate__hint"></span><button class="btn btn--primary">К прогнозу</button></div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- guide: practice -->
+  <section class="guide" style="margin-top:20px" aria-label="Учебник — шаг Практика">
+    <div class="guide__header">
+      <span class="guide__title">Учебник пилота</span>
+      <div class="seg"><button class="seg__btn">Python <small>108</small></button><button class="seg__btn is-active">Lua <small>72</small></button><button class="seg__btn">Blockly <small>10</small></button></div>
+      <button class="icon-btn" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="guide__work">
+      <aside class="outline">
+        <div class="outline__course"><h2>От arm до ArUco</h2><p>12 разделов · 108 уроков</p><div class="outline__progress"><div class="meter"><div class="meter__fill"></div></div><p>1 из 108 пройден</p></div></div>
+        <div class="outline__module"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Дрон и первая команда<span class="section__meta">1/9</span></div>
+        <button class="lesson-link is-done"><span class="lesson-link__n">✓</span>Аппарат в сцене</button>
+        <button class="lesson-link is-current"><span class="lesson-link__n">02</span>Где живёт программа</button>
+        <button class="lesson-link"><span class="lesson-link__n">03</span>Команда автопилоту</button>
+        <button class="lesson-link"><span class="lesson-link__n">04</span>Повторный arm</button>
+        <button class="lesson-link is-locked"><span class="lesson-link__n">05</span>Остановить и начать заново</button>
+        <button class="lesson-link is-locked"><span class="lesson-link__n">06</span>Журнал первого запуска</button>
+      </aside>
+      <div class="lesson"><div class="lesson__inner">
+        <div><div class="lesson__crumb">Дрон и первая команда · урок 2 из 9</div><h1 class="lesson__title">Где живёт программа</h1></div>
+        <nav class="route" aria-label="Шаги урока">
+          <button class="stop is-done"><span class="stop__n">✓</span><span class="stop__text"><b>Идея</b><small>Разберитесь</small></span></button>
+          <button class="stop is-done"><span class="stop__n">✓</span><span class="stop__text"><b>Прогноз</b><small>Предскажите</small></span></button>
+          <button class="stop is-active"><span class="stop__n">3</span><span class="stop__text"><b>Практика</b><small>Попробуйте</small></span></button>
+          <button class="stop" disabled><span class="stop__n">4</span><span class="stop__text"><b>Результат</b><small>Наблюдайте</small></span></button>
+          <button class="stop" disabled><span class="stop__n">5</span><span class="stop__text"><b>Разбор</b><small>Объясните</small></span></button>
+        </nav>
+        <div class="practice">
+          <div class="practice__brief">
+            <div class="task"><h3>Задача</h3><p>Замените комментарий TODO словами «Мой первый опыт» и запустите программу. Не добавляйте команд двигателям.</p></div>
+            <p style="font-size:13px;color:var(--muted)">В заготовке «___» — пропуск для значения, «TODO» — для команды. Остальной код не меняйте.</p>
+            <div class="disclosure"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>Нужна подсказка</div>
+            <div class="practice__actions"><button class="btn btn--primary">Проверить и запустить</button><button class="btn">Вернуть заготовку</button></div>
+            <span class="practice__status">Черновик сохраняется при переходах между вкладками.</span>
+          </div>
+          <div class="practice__work">
+            <div class="device editor"><div class="editor__bar"><b>Ваш код</b><span class="mono" style="margin-left:auto">Lua</span></div>
+              <div class="code-lines"><div><i>1</i><span class="c">-- TODO: замените этот комментарий</span></div><div><i>2</i></div><div><i>3</i><span class="k">function</span> <span class="f">callback</span>(event)</div><div><i>4</i><span class="k">end</span></div></div></div>
+            <div class="device scene"><div class="scene__pad"></div><div class="scene__cams"><span>Земля</span><span>Дрон</span><span>FPV</span><span class="is-active">Свободно</span><span>Орбита</span></div></div>
+          </div>
+        </div>
+        <div class="gate"><button class="btn">Назад</button><span class="gate__hint">Запустите проверку — следующий шаг покажет результат опыта.</span><button class="btn btn--primary" disabled>К результату</button></div>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- guide: result -->
+  <section class="guide" style="margin-top:20px; height: 640px" aria-label="Учебник — шаг Результат">
+    <div class="guide__header">
+      <span class="guide__title">Учебник пилота</span>
+      <div class="seg"><button class="seg__btn">Python <small>108</small></button><button class="seg__btn is-active">Lua <small>72</small></button><button class="seg__btn">Blockly <small>10</small></button></div>
+      <button class="icon-btn" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="guide__work">
+      <aside class="outline">
+        <div class="outline__course"><h2>От arm до ArUco</h2><p>12 разделов · 108 уроков</p><div class="outline__progress"><div class="meter"><div class="meter__fill"></div></div><p>1 из 108 пройден</p></div></div>
+        <div class="outline__module"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>Дрон и первая команда<span class="section__meta">1/9</span></div>
+        <button class="lesson-link is-done"><span class="lesson-link__n">✓</span>Аппарат в сцене</button>
+        <button class="lesson-link is-current"><span class="lesson-link__n">02</span>Где живёт программа</button>
+        <button class="lesson-link"><span class="lesson-link__n">03</span>Команда автопилоту</button>
+      </aside>
+      <div class="lesson"><div class="lesson__inner">
+        <div><div class="lesson__crumb">Дрон и первая команда · урок 2 из 9</div><h1 class="lesson__title">Где живёт программа</h1></div>
+        <nav class="route" aria-label="Шаги урока">
+          <button class="stop is-done"><span class="stop__n">✓</span><span class="stop__text"><b>Идея</b><small>Разберитесь</small></span></button>
+          <button class="stop is-done"><span class="stop__n">✓</span><span class="stop__text"><b>Прогноз</b><small>Предскажите</small></span></button>
+          <button class="stop is-done"><span class="stop__n">✓</span><span class="stop__text"><b>Практика</b><small>Попробуйте</small></span></button>
+          <button class="stop is-active"><span class="stop__n">4</span><span class="stop__text"><b>Результат</b><small>Наблюдайте</small></span></button>
+          <button class="stop" disabled><span class="stop__n">5</span><span class="stop__text"><b>Разбор</b><small>Объясните</small></span></button>
+        </nav>
+        <div class="result">
+          <div class="result__main">
+            <div class="verdict"><b>Опыт подтверждён</b><p>Дрон остался на земле, в журнале есть «Мой первый опыт». Сравните с прогнозом и переходите к разбору.</p></div>
+            <div class="record">
+              <div class="record__head">Запись полёта <small>1,2 с</small></div>
+              <div class="lane"><span class="lane__name">Команды</span><div class="lane__bar"><i class="a" style="left:0;width:38%">print</i></div></div>
+              <div class="lane"><span class="lane__name">Автопилот</span><div class="lane__bar"><i style="left:0;width:100%">на земле</i></div></div>
+              <div class="lane"><span class="lane__name">Сообщения</span><div class="lane__bar"><i class="s" style="left:6%;width:60%">Мой первый опыт</i></div></div>
+              <div class="lane"><span class="lane__name">Высота</span><div class="lane__bar"><i style="left:0;width:100%">0,00 м</i></div></div>
+            </div>
+            <div class="disclosure"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>События по порядку</div>
+          </div>
+          <div class="device scene" style="height:300px"><div class="scene__pad"></div><div class="scene__cams"><span>Земля</span><span>Дрон</span><span class="is-active">Свободно</span></div></div>
+        </div>
+        <div class="gate"><button class="btn">Вернуться к коду</button><span class="gate__hint"></span><button class="btn btn--primary">Объяснить результат</button></div>
+      </div></div>
+    </div>
+  </section>
+
+  <h2>Что исправляет редизайн</h2>
+  <p>Выписано из живого симулятора на 13 октября 2026, светлая и тёмная тема, 1100–1400 px.</p>
+  <ul class="problems">
+    <li><b>Учебник: 26 CSS-файлов, 4609 строк, 6 слоёв переопределений</b> (modal → page → page-workbench → lesson-polish → course-shell → flight-workbook) плюс отдельные dark/light файлы. 29 % классов не используются, 412 цветов захардкожены, палитра slate (#0f172a, #94a3b8) из другого проекта. Замена: один guide.css на токенах.</li>
+    <li><b>Учебник: липкий маршрут перекрывает кнопки камеры сцены</b> на шаге Практика; сцена захватывает колесо, страница не прокручивается над ней.</li>
+    <li><b>Учебник: селекты в практике синие</b> (hardcoded blue), в нарушение DESIGN.md.</li>
+    <li><b>Учебник: дубли</b> — «Шаг 1 из 5 · Идея» под маршрутом; на шаге Результат три карточки («Что наблюдать», «Результат опыта», «Живая сцена») говорят одно и то же; у Blockly-трека подпись «10 заданий · Lua».</li>
+    <li><b>Учебник: закрытие по потере фокуса</b> — модал закрылся при клике вне окна/переключении, прогресс шага сбрасывать нельзя.</li>
+    <li><b>Пульт занимает весь экран</b>, скрывая сцену и дрон; кнопки запуска сцены наплывают на строки каналов. Hero с eyebrow «УПРАВЛЕНИЕ ДРОНОМ», h1 и пилюля; вкладки с подчёркиванием; «ШАГ 01 / ШАГ 02» в боковой колонке.</li>
+    <li><b>Рой: маркетинговая вводка</b> «управляйте составом без перегруженного интерфейса», eyebrow с иконкой, три вложенные карточки, «Удалить» как вторая главная кнопка внизу, моноширинные блоки с адресами.</li>
+    <li><b>Настройки: аккордеон из пяти карточек</b> с точкой-акцентом и подзаголовком у каждого контрола («Оптимальная ширина для обзора маршрута»); чекбокс вместо переключателя; окно автопилота спрятано за «alert».</li>
+    <li><b>Телеметрия: три карточки в карточке</b>, бейджи «0–3» и «5 × 5» как пилюли; описание матрицы занимает две строки.</li>
+    <li><b>Рельса: переключатель темы оформлен как вкладка</b> и стоит между панелями; подсказки сделаны двумя способами (title и data-tooltip); нет разделения рабочих и служебных кнопок.</li>
+    <li><b>Ширины панелей разные</b> по умолчанию (320/360/420/100 %), заголовки где-то с подзаголовком, где-то без; у Настроек нет кнопки закрытия.</li>
+    <li class="ok"><b>Оставляем:</b> тулбар редактора, менеджер сцены (ближе всех к кит-у), 52 px заголовок, 36 px контролы, токены base.css и panel-chrome.css.</li>
+  </ul>
+</div>
+</body>
+</html>

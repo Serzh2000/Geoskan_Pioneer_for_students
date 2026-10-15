@@ -51,8 +51,8 @@
 
 - Исходник: [открыть файл](../../public/modules/ui/index.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `initUI`, `updateObjectList`, `updateSceneObjectDetails`
+- Обнаружено функций/методов: 1
+- Ключевые символы: `initUI`
 
 <a id="public-shims-d-ts"></a>
 ### `public/shims.d.ts`
@@ -66,8 +66,8 @@
 
 - Исходник: [открыть файл](../../server.ts)
 - Кратко: HTTP entry point и настройка Express/Vite-сервера.
-- Обнаружено функций/методов: 5
-- Ключевые символы: `createApp`, `resolveExamplesPath`, `resolveFirstExistingPath`, `resolvePublicPath`, `startServer`
+- Обнаружено функций/методов: 12
+- Ключевые символы: `createApp`, `createExternalBridgeLimiter`, `createSensitiveRouteLimiter`, `dedupeExistingPaths`, `examplesRootsFor`, `resolveAutopilotParametersPath`, `resolveCorsOptions`, `resolveExamplesRoots`, `resolveFirstExistingPath`, `resolvePublicPath`, `resolvePythonExamplesRoots`, `startServer`
 
 <a id="tsconfig-json"></a>
 ### `tsconfig.json`

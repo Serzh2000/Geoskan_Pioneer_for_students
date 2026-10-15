@@ -4,47 +4,44 @@
 
 ## Состав группы
 
+- [`public/modules/ui/settings/autopilot-params-model.test.ts`](#public-modules-ui-settings-autopilot-params-model-test-ts)
+- [`public/modules/ui/settings/autopilot-params-model.ts`](#public-modules-ui-settings-autopilot-params-model-ts)
+- [`public/modules/ui/settings/autopilot-params-model/audit.ts`](#public-modules-ui-settings-autopilot-params-model-audit-ts)
+- [`public/modules/ui/settings/autopilot-params-model/default-template.ts`](#public-modules-ui-settings-autopilot-params-model-default-template-ts)
+- [`public/modules/ui/settings/autopilot-params-model/metadata.ts`](#public-modules-ui-settings-autopilot-params-model-metadata-ts)
+- [`public/modules/ui/settings/autopilot-params-model/state.ts`](#public-modules-ui-settings-autopilot-params-model-state-ts)
+- [`public/modules/ui/settings/autopilot-params-model/storage.ts`](#public-modules-ui-settings-autopilot-params-model-storage-ts)
+- [`public/modules/ui/settings/autopilot-params-model/template.ts`](#public-modules-ui-settings-autopilot-params-model-template-ts)
+- [`public/modules/ui/settings/autopilot-params-model/types.ts`](#public-modules-ui-settings-autopilot-params-model-types-ts)
+- [`public/modules/ui/settings/autopilot-params-ui.ts`](#public-modules-ui-settings-autopilot-params-ui-ts)
+- [`public/modules/ui/settings/autopilot-params-ui/config.ts`](#public-modules-ui-settings-autopilot-params-ui-config-ts)
+- [`public/modules/ui/settings/autopilot-params-ui/controller.ts`](#public-modules-ui-settings-autopilot-params-ui-controller-ts)
+- [`public/modules/ui/settings/autopilot-params-ui/events.ts`](#public-modules-ui-settings-autopilot-params-ui-events-ts)
+- [`public/modules/ui/settings/autopilot-params-ui/helpers.ts`](#public-modules-ui-settings-autopilot-params-ui-helpers-ts)
+- [`public/modules/ui/settings/autopilot-params-ui/markup.ts`](#public-modules-ui-settings-autopilot-params-ui-markup-ts)
+- [`public/modules/ui/settings/autopilot-params-ui/source-api.ts`](#public-modules-ui-settings-autopilot-params-ui-source-api-ts)
+- [`public/modules/ui/settings/autopilot-params-ui/types.ts`](#public-modules-ui-settings-autopilot-params-ui-types-ts)
 - [`public/modules/ui/settings/constants.ts`](#public-modules-ui-settings-constants-ts)
 - [`public/modules/ui/settings/dom.ts`](#public-modules-ui-settings-dom-ts)
 - [`public/modules/ui/settings/gamepad/auto-detect.ts`](#public-modules-ui-settings-gamepad-auto-detect-ts)
 - [`public/modules/ui/settings/gamepad/bindings.ts`](#public-modules-ui-settings-gamepad-bindings-ts)
 - [`public/modules/ui/settings/gamepad/calibration.ts`](#public-modules-ui-settings-gamepad-calibration-ts)
 - [`public/modules/ui/settings/gamepad/controller.ts`](#public-modules-ui-settings-gamepad-controller-ts)
+- [`public/modules/ui/settings/graphics-quality.ts`](#public-modules-ui-settings-graphics-quality-ts)
 - [`public/modules/ui/settings/index.ts`](#public-modules-ui-settings-index-ts)
 - [`public/modules/ui/settings/input/calibration.ts`](#public-modules-ui-settings-input-calibration-ts)
 - [`public/modules/ui/settings/input/observed.ts`](#public-modules-ui-settings-input-observed-ts)
 - [`public/modules/ui/settings/input/ranges.ts`](#public-modules-ui-settings-input-ranges-ts)
 - [`public/modules/ui/settings/input/values.ts`](#public-modules-ui-settings-input-values-ts)
 - [`public/modules/ui/settings/mapping.ts`](#public-modules-ui-settings-mapping-ts)
+- [`public/modules/ui/settings/mapping/legacy.ts`](#public-modules-ui-settings-mapping-legacy-ts)
+- [`public/modules/ui/settings/mapping/profile.ts`](#public-modules-ui-settings-mapping-profile-ts)
+- [`public/modules/ui/settings/mapping/profile/device.ts`](#public-modules-ui-settings-mapping-profile-device-ts)
+- [`public/modules/ui/settings/mapping/profile/runtime.ts`](#public-modules-ui-settings-mapping-profile-runtime-ts)
+- [`public/modules/ui/settings/mapping/profile/shared.ts`](#public-modules-ui-settings-mapping-profile-shared-ts)
 - [`public/modules/ui/settings/rendering.ts`](#public-modules-ui-settings-rendering-ts)
 - [`public/modules/ui/settings/rendering/aux-ranges.ts`](#public-modules-ui-settings-rendering-aux-ranges-ts)
-- [`public/modules/ui/settings/rendering/drone-viewport.ts`](#public-modules-ui-settings-rendering-drone-viewport-ts)
-- [`public/modules/ui/settings/rendering/events.ts`](#public-modules-ui-settings-rendering-events-ts)
-- [`public/modules/ui/settings/rendering/extra-sections.ts`](#public-modules-ui-settings-rendering-extra-sections-ts)
-- [`public/modules/ui/settings/rendering/helpers.ts`](#public-modules-ui-settings-rendering-helpers-ts)
-- [`public/modules/ui/settings/rendering/live-monitor.ts`](#public-modules-ui-settings-rendering-live-monitor-ts)
-- [`public/modules/ui/settings/rendering/live.ts`](#public-modules-ui-settings-rendering-live-ts)
-- [`public/modules/ui/settings/rendering/panel-core.ts`](#public-modules-ui-settings-rendering-panel-core-ts)
-- [`public/modules/ui/settings/rendering/sections.ts`](#public-modules-ui-settings-rendering-sections-ts)
-- [`public/modules/ui/settings/rendering/viewport-bridge.ts`](#public-modules-ui-settings-rendering-viewport-bridge-ts)
-- [`public/modules/ui/settings/rendering/wizard-display.ts`](#public-modules-ui-settings-rendering-wizard-display-ts)
-- [`public/modules/ui/settings/rendering/wizard-guided-sticks.ts`](#public-modules-ui-settings-rendering-wizard-guided-sticks-ts)
-- [`public/modules/ui/settings/rendering/wizard-modal.ts`](#public-modules-ui-settings-rendering-wizard-modal-ts)
-- [`public/modules/ui/settings/rendering/wizard-step-sections.ts`](#public-modules-ui-settings-rendering-wizard-step-sections-ts)
-- [`public/modules/ui/settings/rendering/workspaces.ts`](#public-modules-ui-settings-rendering-workspaces-ts)
 - [`public/modules/ui/settings/runtime-state.ts`](#public-modules-ui-settings-runtime-state-ts)
-- [`public/modules/ui/settings/runtime.ts`](#public-modules-ui-settings-runtime-ts)
-- [`public/modules/ui/settings/runtime/actions.ts`](#public-modules-ui-settings-runtime-actions-ts)
-- [`public/modules/ui/settings/runtime/actions/calibration-input-actions.ts`](#public-modules-ui-settings-runtime-actions-calibration-input-actions-ts)
-- [`public/modules/ui/settings/runtime/actions/profile-actions.ts`](#public-modules-ui-settings-runtime-actions-profile-actions-ts)
-- [`public/modules/ui/settings/runtime/actions/shared.ts`](#public-modules-ui-settings-runtime-actions-shared-ts)
-- [`public/modules/ui/settings/runtime/actions/wizard-modal-actions.ts`](#public-modules-ui-settings-runtime-actions-wizard-modal-actions-ts)
-- [`public/modules/ui/settings/runtime/core.ts`](#public-modules-ui-settings-runtime-core-ts)
-- [`public/modules/ui/settings/runtime/devices.ts`](#public-modules-ui-settings-runtime-devices-ts)
-- [`public/modules/ui/settings/runtime/profile.ts`](#public-modules-ui-settings-runtime-profile-ts)
-- [`public/modules/ui/settings/runtime/store.ts`](#public-modules-ui-settings-runtime-store-ts)
-- [`public/modules/ui/settings/runtime/sync.ts`](#public-modules-ui-settings-runtime-sync-ts)
-- [`public/modules/ui/settings/storage.ts`](#public-modules-ui-settings-storage-ts)
 - [`public/modules/ui/settings/types.ts`](#public-modules-ui-settings-types-ts)
 - [`public/modules/ui/settings/wizard.ts`](#public-modules-ui-settings-wizard-ts)
 - [`public/modules/ui/settings/wizard/config.ts`](#public-modules-ui-settings-wizard-config-ts)
@@ -59,13 +56,142 @@
 
 ## Файлы
 
+<a id="public-modules-ui-settings-autopilot-params-model-test-ts"></a>
+### `public/modules/ui/settings/autopilot-params-model.test.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-model.test.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 1
+- Ключевые символы: `importFreshModel`
+
+<a id="public-modules-ui-settings-autopilot-params-model-ts"></a>
+### `public/modules/ui/settings/autopilot-params-model.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-model.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-ui-settings-autopilot-params-model-audit-ts"></a>
+### `public/modules/ui/settings/autopilot-params-model/audit.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-model/audit.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 3
+- Ключевые символы: `appendAutopilotAuditEntry`, `createAutopilotAuditEntry`, `safeAutopilotAuthor`
+
+<a id="public-modules-ui-settings-autopilot-params-model-default-template-ts"></a>
+### `public/modules/ui/settings/autopilot-params-model/default-template.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-model/default-template.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-ui-settings-autopilot-params-model-metadata-ts"></a>
+### `public/modules/ui/settings/autopilot-params-model/metadata.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-model/metadata.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-ui-settings-autopilot-params-model-state-ts"></a>
+### `public/modules/ui/settings/autopilot-params-model/state.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-model/state.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 14
+- Ключевые символы: `clearAutopilotAuditLog`, `exportAutopilotPropertiesText`, `getAutopilotParameterDefinitions`, `getAutopilotSettingsState`, `getAutopilotValidationSummary`, `importAutopilotProperties`, `listAutopilotGroups`, `loadAutopilotTemplateFromText`, `refreshTemplate`, `resetAutopilotParameters`, `saveState`, `updateAutopilotAuthor`, `updateAutopilotParameter`, `validateParameterValue`
+
+<a id="public-modules-ui-settings-autopilot-params-model-storage-ts"></a>
+### `public/modules/ui/settings/autopilot-params-model/storage.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-model/storage.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 4
+- Ключевые символы: `cloneAutopilotState`, `createInitialAutopilotState`, `loadAutopilotState`, `persistAutopilotState`
+
+<a id="public-modules-ui-settings-autopilot-params-model-template-ts"></a>
+### `public/modules/ui/settings/autopilot-params-model/template.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-model/template.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 4
+- Ключевые символы: `buildDefinitions`, `describeFallback`, `parseTemplate`, `titleizeSegment`
+
+<a id="public-modules-ui-settings-autopilot-params-model-types-ts"></a>
+### `public/modules/ui/settings/autopilot-params-model/types.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-model/types.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-ui-settings-autopilot-params-ui-ts"></a>
+### `public/modules/ui/settings/autopilot-params-ui.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-ui.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-ui-settings-autopilot-params-ui-config-ts"></a>
+### `public/modules/ui/settings/autopilot-params-ui/config.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-ui/config.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-ui-settings-autopilot-params-ui-controller-ts"></a>
+### `public/modules/ui/settings/autopilot-params-ui/controller.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-ui/controller.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 7
+- Ключевые символы: `hide`, `initAutopilotParamsUI`, `loadSourceIntoModel`, `persistSourceFile`, `render`, `setAllExpanded`, `show`
+
+<a id="public-modules-ui-settings-autopilot-params-ui-events-ts"></a>
+### `public/modules/ui/settings/autopilot-params-ui/events.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-ui/events.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 1
+- Ключевые символы: `attachAutopilotParamsEvents`
+
+<a id="public-modules-ui-settings-autopilot-params-ui-helpers-ts"></a>
+### `public/modules/ui/settings/autopilot-params-ui/helpers.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-ui/helpers.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 6
+- Ключевые символы: `downloadTextFile`, `escapeHtml`, `formatDateTime`, `formatNumber`, `getStatusLabel`, `isParameterChanged`
+
+<a id="public-modules-ui-settings-autopilot-params-ui-markup-ts"></a>
+### `public/modules/ui/settings/autopilot-params-ui/markup.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-ui/markup.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `buildGroupedMarkup`, `renderAutopilotParamsBody`
+
+<a id="public-modules-ui-settings-autopilot-params-ui-source-api-ts"></a>
+### `public/modules/ui/settings/autopilot-params-ui/source-api.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-ui/source-api.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `fetchAutopilotSourceFile`, `saveAutopilotSourceFile`
+
+<a id="public-modules-ui-settings-autopilot-params-ui-types-ts"></a>
+### `public/modules/ui/settings/autopilot-params-ui/types.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/autopilot-params-ui/types.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 0
+
 <a id="public-modules-ui-settings-constants-ts"></a>
 ### `public/modules/ui/settings/constants.ts`
 
 - Исходник: [открыть файл](../../public/modules/ui/settings/constants.ts)
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getChannelInversionIndex`
+- Обнаружено функций/методов: 8
+- Ключевые символы: `createDefaultBindings`, `createDefaultCalibration`, `createDefaultChannelMappings`, `createDefaultProfile`, `createDefaultWizardSteps`, `getChannelInversionIndex`, `getDefaultChannelRoles`, `getRoleLabel`
 
 <a id="public-modules-ui-settings-dom-ts"></a>
 ### `public/modules/ui/settings/dom.ts`
@@ -107,6 +233,14 @@
 - Обнаружено функций/методов: 3
 - Ключевые символы: `createGamepadSettingsController`, `getModePositions`, `getObservedStatsForRef`
 
+<a id="public-modules-ui-settings-graphics-quality-ts"></a>
+### `public/modules/ui/settings/graphics-quality.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/graphics-quality.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `bindGraphicsQualityControl`, `refresh`
+
 <a id="public-modules-ui-settings-index-ts"></a>
 ### `public/modules/ui/settings/index.ts`
 
@@ -120,8 +254,8 @@
 
 - Исходник: [открыть файл](../../public/modules/ui/settings/input/calibration.ts)
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 6
-- Ключевые символы: `beginCalibration`, `finishCalibration`, `normalizeCenteredAxis`, `normalizeThrottleAxis`, `resetCalibration`, `sampleCalibration`
+- Обнаружено функций/методов: 11
+- Ключевые символы: `beginCalibration`, `finishCalibration`, `normalizeCenteredAxis`, `normalizeCenteredInput`, `normalizeInputValue`, `normalizeThrottleAxis`, `quantizeDiscreteLevel`, `resetCalibration`, `sampleCalibration`, `sanitizeCalibration`, `toAxisUnit`
 
 <a id="public-modules-ui-settings-input-observed-ts"></a>
 ### `public/modules/ui/settings/input/observed.ts`
@@ -144,142 +278,70 @@
 
 - Исходник: [открыть файл](../../public/modules/ui/settings/input/values.ts)
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 7
-- Ключевые символы: `getPrimaryChannelStickSlot`, `getPrimaryStickSlot`, `isChannelInverted`, `rcToCenteredNormalized`, `rcToThrottleNormalized`, `readRefNormalizedValue`, `readRefRcValue`
+- Обнаружено функций/методов: 4
+- Ключевые символы: `getPrimaryChannelStickSlot`, `isChannelInverted`, `readRefNormalizedValue`, `readRefRcValue`
 
 <a id="public-modules-ui-settings-mapping-ts"></a>
 ### `public/modules/ui/settings/mapping.ts`
 
 - Исходник: [открыть файл](../../public/modules/ui/settings/mapping.ts)
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-ui-settings-mapping-legacy-ts"></a>
+### `public/modules/ui/settings/mapping/legacy.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/mapping/legacy.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
 - Обнаружено функций/методов: 20
 - Ключевые символы: `applyPrimaryAxisMappingForCurrentMode`, `createAuxOptions`, `createAxisOptions`, `ensureMappingsForGamepad`, `findActiveGamepad`, `getConnectedGamepads`, `getDefaultChannelValue`, `getFallbackMapping`, `getGamepadName`, `getMappingRef`, `getModePrimaryAxisIndexes`, `getPreferredAuxRefs`, `getRcPrimaryAxisMapping`, `hasInputRef`, `hasLegacyPrimaryMapping`, `isAllowedForChannel`, `isLikelyRcTransmitter`, `pushIfUnused`, `readInputRcValue`, `setMappingRef`
+
+<a id="public-modules-ui-settings-mapping-profile-ts"></a>
+### `public/modules/ui/settings/mapping/profile.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/mapping/profile.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-ui-settings-mapping-profile-device-ts"></a>
+### `public/modules/ui/settings/mapping/profile/device.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/mapping/profile/device.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 7
+- Ключевые символы: `createInputSourcesFromGamepad`, `createProfileForDevice`, `createVirtualInputSources`, `detectStickMode`, `getChannelTitle`, `inferDeviceKind`, `isLikelyRadioSummary`
+
+<a id="public-modules-ui-settings-mapping-profile-runtime-ts"></a>
+### `public/modules/ui/settings/mapping/profile/runtime.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/mapping/profile/runtime.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `detectMappingConflicts`, `getDuplicateSourceConflicts`
+
+<a id="public-modules-ui-settings-mapping-profile-shared-ts"></a>
+### `public/modules/ui/settings/mapping/profile/shared.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/settings/mapping/profile/shared.ts)
+- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
+- Обнаружено функций/методов: 4
+- Ключевые символы: `getDefaultControlTypeForRole`, `getRadioKeywords`, `getRoleLabel`, `getStickModeAxisPatterns`
 
 <a id="public-modules-ui-settings-rendering-ts"></a>
 ### `public/modules/ui/settings/rendering.ts`
 
 - Исходник: [открыть файл](../../public/modules/ui/settings/rendering.ts)
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 12
-- Ключевые символы: `getChannelLabel`, `renderAutoButtons`, `renderAutoStatus`, `renderCalibrationState`, `renderChannelDataState`, `renderChannelDefaults`, `renderChannelValue`, `renderMappingControlsState`, `renderModeMeta`, `setAutoStatus`, `syncSelectWithMapping`, `updateBar`
+- Обнаружено функций/методов: 15
+- Ключевые символы: `renderAutoButtons`, `renderAutoStatus`, `renderCalibrationState`, `renderChannelDataState`, `renderChannelDefaults`, `renderChannelValue`, `renderMappingControlsState`, `renderModeMeta`, `setAutoStatus`, `setClassPresence`, `setDisabledIfChanged`, `setStyleIfChanged`, `setTextIfChanged`, `syncSelectWithMapping`, `updateBar`
 
 <a id="public-modules-ui-settings-rendering-aux-ranges-ts"></a>
 ### `public/modules/ui/settings/rendering/aux-ranges.ts`
 
 - Исходник: [открыть файл](../../public/modules/ui/settings/rendering/aux-ranges.ts)
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 5
-- Ключевые символы: `renderAuxRangeEditor`, `renderAuxRangeEditors`, `renderAuxRangePresetOptions`, `toRangePercent`, `toRangeVisualPercent`
-
-<a id="public-modules-ui-settings-rendering-drone-viewport-ts"></a>
-### `public/modules/ui/settings/rendering/drone-viewport.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/rendering/drone-viewport.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `renderDroneViewport`
-
-<a id="public-modules-ui-settings-rendering-events-ts"></a>
-### `public/modules/ui/settings/rendering/events.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/rendering/events.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `bindRcSetupPanelEvents`, `closePanel`
-
-<a id="public-modules-ui-settings-rendering-extra-sections-ts"></a>
-### `public/modules/ui/settings/rendering/extra-sections.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/rendering/extra-sections.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 0
-
-<a id="public-modules-ui-settings-rendering-helpers-ts"></a>
-### `public/modules/ui/settings/rendering/helpers.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/rendering/helpers.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 7
-- Ключевые символы: `escapeHtml`, `getLocalizedRoleLabel`, `getSwitchLabel`, `localizeSourceGroup`, `localizeSourceLabel`, `renderOptions`, `renderWarnings`
-
-<a id="public-modules-ui-settings-rendering-live-monitor-ts"></a>
-### `public/modules/ui/settings/rendering/live-monitor.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/rendering/live-monitor.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 9
-- Ключевые символы: `getRoleMapping`, `getRoleSample`, `getStickDescriptors`, `renderBindings`, `renderLiveMonitor`, `renderRawInputPanel`, `renderStickMonitorWithFocus`, `toAxisPwm`, `toSignedAxis`
-
-<a id="public-modules-ui-settings-rendering-live-ts"></a>
-### `public/modules/ui/settings/rendering/live.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/rendering/live.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 9
-- Ключевые символы: `buildRenderKey`, `getRoleNormalizedValue`, `setElementWidth`, `setStatusKind`, `setStyleProperty`, `setTextContent`, `toAxisPwm`, `toggleClass`, `updateLiveValues`
-
-<a id="public-modules-ui-settings-rendering-panel-core-ts"></a>
-### `public/modules/ui/settings/rendering/panel-core.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/rendering/panel-core.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 9
-- Ключевые символы: `getCurrentStep`, `getRemainingPrimaryAssignments`, `getSourceOptions`, `getWizardStepDescription`, `getWizardStepTitle`, `isStepComplete`, `renderConflictResolution`, `renderNavigationHint`, `renderWorkspaceTabs`
-
-<a id="public-modules-ui-settings-rendering-sections-ts"></a>
-### `public/modules/ui/settings/rendering/sections.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/rendering/sections.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 0
-
-<a id="public-modules-ui-settings-rendering-viewport-bridge-ts"></a>
-### `public/modules/ui/settings/rendering/viewport-bridge.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/rendering/viewport-bridge.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 14
-- Ключевые символы: `clampSigned`, `clampUnsigned`, `getBlockedPrimarySourceIds`, `getRcPreviewValues`, `getRcSignalStatus`, `getRoleMapping`, `getRoleSample`, `getWizardModalPreviewSourceId`, `hasMappedPreviewChannels`, `isRcSettingsPanelActive`, `restoreRcSettingsViewport`, `shouldUseRcViewport`, `syncRcSettingsViewport`, `updateRawActivity`
-
-<a id="public-modules-ui-settings-rendering-wizard-display-ts"></a>
-### `public/modules/ui/settings/rendering/wizard-display.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/rendering/wizard-display.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 8
-- Ключевые символы: `getResolvedStickMode`, `getSourceSummary`, `isCenterCaptured`, `renderChannelPulse`, `renderSourceSelect`, `renderStepInstruction`, `renderStepper`, `renderStickModeToggle`
-
-<a id="public-modules-ui-settings-rendering-wizard-guided-sticks-ts"></a>
-### `public/modules/ui/settings/rendering/wizard-guided-sticks.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/rendering/wizard-guided-sticks.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 8
-- Ключевые символы: `getCurrentGuidedStickTask`, `getGuidedStickTask`, `getGuidedStickTasks`, `getListenPrompt`, `getMonitorFocus`, `renderGuidedStickProgress`, `renderGuidedStickStep`, `renderStickModeChoiceCards`
-
-<a id="public-modules-ui-settings-rendering-wizard-modal-ts"></a>
-### `public/modules/ui/settings/rendering/wizard-modal.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/rendering/wizard-modal.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 13
-- Ключевые символы: `describeAxis`, `getModeDescription`, `getWizardModalCaptureSourceLabel`, `getWizardModalFocus`, `getWizardModalInstruction`, `getWizardModalRoleLabel`, `getWizardModalSourceLabel`, `getWizardModalStepLabel`, `getWizardModalStepTitle`, `getWizardStickTarget`, `renderWizardModal`, `renderWizardModalBody`, `renderWizardModalProgress`
-
-<a id="public-modules-ui-settings-rendering-wizard-step-sections-ts"></a>
-### `public/modules/ui/settings/rendering/wizard-step-sections.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/rendering/wizard-step-sections.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 5
-- Ключевые символы: `renderCalibrationStep`, `renderDeviceSection`, `renderFocusChannels`, `renderReviewSection`, `renderStepContent`
-
-<a id="public-modules-ui-settings-rendering-workspaces-ts"></a>
-### `public/modules/ui/settings/rendering/workspaces.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/rendering/workspaces.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `renderAdvancedWorkspace`, `renderMonitorWorkspace`, `renderRcSetupPanel`, `renderWizardWorkspace`
+- Обнаружено функций/методов: 11
+- Ключевые символы: `renderAuxRangeEditor`, `renderAuxRangeEditors`, `renderAuxRangePresetOptions`, `setClassPresence`, `setDisabledIfChanged`, `setHtmlIfChanged`, `setStyleIfChanged`, `setTextIfChanged`, `setValueIfChanged`, `toRangePercent`, `toRangeVisualPercent`
 
 <a id="public-modules-ui-settings-runtime-state-ts"></a>
 ### `public/modules/ui/settings/runtime-state.ts`
@@ -288,100 +350,6 @@
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
 - Обнаружено функций/методов: 1
 - Ключевые символы: `createSettingsRuntimeState`
-
-<a id="public-modules-ui-settings-runtime-ts"></a>
-### `public/modules/ui/settings/runtime.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/runtime.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 0
-
-<a id="public-modules-ui-settings-runtime-actions-ts"></a>
-### `public/modules/ui/settings/runtime/actions.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/runtime/actions.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 0
-
-<a id="public-modules-ui-settings-runtime-actions-calibration-input-actions-ts"></a>
-### `public/modules/ui/settings/runtime/actions/calibration-input-actions.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/runtime/actions/calibration-input-actions.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 6
-- Ключевые символы: `resetCalibration`, `setCalibrationField`, `setVirtualAxis`, `setVirtualButton`, `startCalibration`, `stopCalibration`
-
-<a id="public-modules-ui-settings-runtime-actions-profile-actions-ts"></a>
-### `public/modules/ui/settings/runtime/actions/profile-actions.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/runtime/actions/profile-actions.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 22
-- Ключевые символы: `autoAssignPrimaryChannels`, `createProfileFromCurrentDevice`, `deleteActiveProfile`, `duplicateActiveProfile`, `getBindingActions`, `getChannelOptions`, `getExpandedVisibilityLabel`, `renameActiveProfile`, `resetWizardSession`, `setActiveProfile`, `setBinding`, `setChannelControlType`, `setChannelInvert`, `setChannelRole`, `setChannelSource`, `setExpandedChannels`, `setPreferredDevice`, `setStickMode`, `setWizardStep`, `setWorkspaceView`, `skipWizardStep`, `startAutoDetect`
-
-<a id="public-modules-ui-settings-runtime-actions-shared-ts"></a>
-### `public/modules/ui/settings/runtime/actions/shared.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/runtime/actions/shared.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `commitProfile`, `mutateActiveProfile`
-
-<a id="public-modules-ui-settings-runtime-actions-wizard-modal-actions-ts"></a>
-### `public/modules/ui/settings/runtime/actions/wizard-modal-actions.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/runtime/actions/wizard-modal-actions.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 8
-- Ключевые символы: `applyWizardModalConfig`, `assignRole`, `closeWizardModal`, `openWizardModal`, `resolveDuplicateSourceConflicts`, `setBindingToChannel`, `setWizardModalMode`, `skipWizardModalAuxRole`
-
-<a id="public-modules-ui-settings-runtime-core-ts"></a>
-### `public/modules/ui/settings/runtime/core.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/runtime/core.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 12
-- Ключевые символы: `captureWizardInput`, `computeWizardSourceScore`, `emitSnapshot`, `ensureRcRuntimePolling`, `formatConnectionStatus`, `getNextAuxRole`, `getRcRuntimeSnapshot`, `getWizardStepRole`, `initRcSetupRuntime`, `subscribeRcRuntime`, `tick`, `updateRcInputRuntime`
-
-<a id="public-modules-ui-settings-runtime-devices-ts"></a>
-### `public/modules/ui/settings/runtime/devices.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/runtime/devices.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 5
-- Ключевые символы: `buildDeviceId`, `buildDeviceSummaries`, `computeActivity`, `getGamepads`, `getRawInputMap`
-
-<a id="public-modules-ui-settings-runtime-profile-ts"></a>
-### `public/modules/ui/settings/runtime/profile.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/runtime/profile.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 13
-- Ключевые символы: `autoDetectInput`, `cloneProfile`, `computeChannelValues`, `createSamples`, `ensureProfilesHaveSources`, `getActiveDeviceSummary`, `getActiveProfile`, `getCalibration`, `getNextGuidedChannel`, `refreshWizardSteps`, `replaceActiveProfile`, `sampleCalibrationStep`, `syncActiveProfileToDevice`
-
-<a id="public-modules-ui-settings-runtime-store-ts"></a>
-### `public/modules/ui/settings/runtime/store.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/runtime/store.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 9
-- Ключевые символы: `getLatestSnapshot`, `getPersistSignature`, `getPollFrameId`, `isRuntimeInitialized`, `markRuntimeInitialized`, `persistIfNeeded`, `setLatestSnapshot`, `setPollFrameId`, `setWizardModalState`
-
-<a id="public-modules-ui-settings-runtime-sync-ts"></a>
-### `public/modules/ui/settings/runtime/sync.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/runtime/sync.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `assignLegacy`, `syncLegacyState`
-
-<a id="public-modules-ui-settings-storage-ts"></a>
-### `public/modules/ui/settings/storage.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/storage.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 5
-- Ключевые символы: `createInitialState`, `isStorageAvailable`, `loadRcSetupState`, `normalizeWorkspaceView`, `saveRcSetupState`
 
 <a id="public-modules-ui-settings-types-ts"></a>
 ### `public/modules/ui/settings/types.ts`
@@ -395,8 +363,8 @@
 
 - Исходник: [открыть файл](../../public/modules/ui/settings/wizard.ts)
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 17
-- Ключевые символы: `detectAuxInput`, `detectPrimaryInput`, `finishWizard`, `getChannelInversion`, `getCurrentChannelState`, `getCurrentStep`, `getDetectedRef`, `getPreviewRef`, `getResolvedPrimaryRef`, `initWizard`, `isCurrentStepResolved`, `prepareCurrentStep`, `renderWizardState`, `sampleCurrentStep`, `startWizard`, `stopWizard`, `wizardLoop`
+- Обнаружено функций/методов: 18
+- Ключевые символы: `detectAuxInput`, `detectPrimaryInput`, `ensureWizardLoop`, `finishWizard`, `getChannelInversion`, `getCurrentChannelState`, `getCurrentStep`, `getDetectedRef`, `getPreviewRef`, `initWizard`, `isCurrentStepResolved`, `isWizardVisible`, `prepareCurrentStep`, `renderWizardState`, `sampleCurrentStep`, `startWizard`, `stopWizard`, `wizardLoop`
 
 <a id="public-modules-ui-settings-wizard-config-ts"></a>
 ### `public/modules/ui/settings/wizard/config.ts`
@@ -418,16 +386,16 @@
 
 - Исходник: [открыть файл](../../public/modules/ui/settings/wizard/lifecycle.ts)
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `finishWizardSession`, `getFirstConnectedGamepad`, `getResolvedPrimaryRef`
+- Обнаружено функций/методов: 2
+- Ключевые символы: `finishWizardSession`, `getFirstConnectedGamepad`
 
 <a id="public-modules-ui-settings-wizard-persistence-ts"></a>
 ### `public/modules/ui/settings/wizard/persistence.ts`
 
 - Исходник: [открыть файл](../../public/modules/ui/settings/wizard/persistence.ts)
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 6
-- Ключевые символы: `applyAuxResults`, `applyChannelInversion`, `createWizardDraftInversion`, `getStoredMappingRef`, `persistWizardResults`, `setMappingRefForChannel`
+- Обнаружено функций/методов: 5
+- Ключевые символы: `applyAuxResults`, `applyChannelInversion`, `createWizardDraftInversion`, `persistWizardResults`, `setMappingRefForChannel`
 
 <a id="public-modules-ui-settings-wizard-preview-ref-ts"></a>
 ### `public/modules/ui/settings/wizard/preview-ref.ts`
@@ -465,6 +433,6 @@
 
 - Исходник: [открыть файл](../../public/modules/ui/settings/wizard/ui.ts)
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 6
-- Ключевые символы: `getCurrentStepTargetAxis`, `getCurrentStepTargetStick`, `getStepStatusText`, `getStickLegend`, `getStickStatus`, `renderWizardState`
+- Обнаружено функций/методов: 15
+- Ключевые символы: `getCurrentStepTargetAxis`, `getCurrentStepTargetStick`, `getStepStatusText`, `getStickLegend`, `getStickStatus`, `getWizardDomRefs`, `renderWizardState`, `setCheckedIfChanged`, `setClassPresence`, `setDatasetIfChanged`, `setDisabledIfChanged`, `setDisplayIfChanged`, `setHiddenIfChanged`, `setHtmlIfChanged`, `setTextIfChanged`
 
