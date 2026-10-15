@@ -1,7 +1,7 @@
 # Pioneer Basic in the simulator
 
 `pioneer-basic.glb` is exported from the user-provided
-`Geoscan_Pioneer/Geoscan_Pioneer_with_LED_module.blend`, scene
+`Geoscan_Pioneer_LED_stack_corrected.blend` (Oct 14 2026 revision), scene
 `Pioneer • LED + ESP32`: frame, optical-flow board (05C) with its mounting,
 the optional LED module, and the ESP32 camera module (05D) seated in the
 flow board's white 1×8 headers.
@@ -17,7 +17,9 @@ are combined by material; tiny component bevels are omitted for browser use.
 - `rotor_0` / `rotor_1`: opposite CW propellers, including bells and shafts.
 - `rotor_2` / `rotor_3`: opposite CCW propellers, including bells and shafts.
 - `base_led_0` / `base_led_1`: upper right / upper left luminous surfaces.
-- `base_led_2` / `base_led_3`: underside left / underside right luminous surfaces.
+- `base_led_2` / `base_led_3`: underside left / underside right luminous surfaces. The revised autopilot model has
+  only the two top LEDs (`AP • LED1/LED2`), so the exporter mirrors them through the PCB mid-plane (z = 87.8 mm in the
+  source) to make the underside pair; if the `.blend` gains real `AP • underside LEDn` parts, drop that mirroring.
 - `led_module`: the optional 05B accessory board (plugs onto the autopilot's
   X8/X9 headers), present only when the source `.blend` has that collection.
 - `esp32_module`: the ESP32 camera module, its node at the module's centre.

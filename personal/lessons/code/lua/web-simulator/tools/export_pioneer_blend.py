@@ -40,7 +40,24 @@ for obj in objects:
         obj.data.bevel_resolution = min(obj.data.bevel_resolution, 2)
 bpy.context.view_layer.update()
 depsgraph = bpy.context.evaluated_depsgraph_get()
-bottom = min((o.matrix_world @ Vector(c)).z for o in objects for c in o.bound_box)
+# The feet are measured on the real vertices of the evaluated geometry (modifiers applied): object bounds can
+# be a little off for beveled or curve-based parts.
+import numpy as np
+
+def lowest_z(obj):
+    mesh = bpy.data.meshes.new_from_object(obj.evaluated_get(depsgraph), depsgraph=depsgraph)
+    try:
+        if not mesh.vertices:
+            return None
+        co = np.empty(len(mesh.vertices) * 3, dtype=np.float64)
+        mesh.vertices.foreach_get('co', co)
+        co = co.reshape(-1, 3)
+        row = np.array(obj.matrix_world[2])
+        return float((co @ row[:3]).min() + row[3])
+    finally:
+        bpy.data.meshes.remove(mesh)
+
+bottom = min(z for z in (lowest_z(o) for o in objects) if z is not None)
 transform = Matrix.Diagonal((2.0, 2.0, 2.0, 1.0))
 transform.translation.z = -bottom * 2
 centers = [transform @ bpy.data.objects[f'Rotor {i} • rotate local Z'].matrix_world.translation
@@ -108,6 +125,11 @@ for original in objects:
         # Everything else on the module (PCB, connectors, mounting, silkscreen)
         # stays static, merged with the rest of the module's own group.
         bucket = 'led_module'
+    elif re.match(r'AP • (underside )?LED\d (RGB emitter \d|clear recessed encapsulant)', name):
+        # Revised autopilot (Oct 2026): each LED is a reflector with three emitters under a clear encapsulant.
+        center = sum((original.matrix_world @ Vector(c) for c in original.bound_box), Vector()) / 8
+        index = (2 if center.x < 0 else 3) if 'underside' in name else (1 if center.x < 0 else 0)
+        bucket = f'base_led_{index}'
     elif 'WS2812B' in name and ('transparent window' in name or 'RGB die' in name):
         center = sum((original.matrix_world @ Vector(c) for c in original.bound_box), Vector()) / 8
         # Upper right, upper left, underside left, underside right.
@@ -126,6 +148,30 @@ for original in objects:
     buckets.setdefault(bucket, []).append(copy)
     source_counts[bucket] = source_counts.get(bucket, 0) + 1
 
+# The revised autopilot model carries only the two top LEDs. The real board has two more on the underside, mirrored
+# through the PCB mid-plane (top surface 88.6 mm, underside 87.0 mm in the source), so they are rebuilt from the top ones:
+# emitters go to channels 2 (left) and 3 (right), the reflectors stay with the frame.
+PCB_MID_Z = 0.0878
+MIRROR_Z = Matrix.Translation((0, 0, 2 * PCB_MID_Z)) @ Matrix.Diagonal((1.0, 1.0, -1.0, 1.0))
+for original in objects:
+    top_led = re.match(r'AP • LED\d (.+)', original.name)
+    if not top_led:
+        continue
+    emissive = bool(re.match(r'(RGB emitter \d|clear recessed encapsulant)', top_led[1]))
+    center = sum((original.matrix_world @ Vector(c) for c in original.bound_box), Vector()) / 8
+    bucket = (f'base_led_{2 if center.x < 0 else 3}') if emissive else 'frame'
+    evaluated = original.evaluated_get(depsgraph)
+    mesh = bpy.data.meshes.new_from_object(evaluated, depsgraph=depsgraph)
+    local = groups[bucket].matrix_basis.inverted() @ transform @ MIRROR_Z @ original.matrix_world
+    mesh.transform(local)
+    if local.determinant() < 0:
+        mesh.flip_normals()
+    copy = bpy.data.objects.new(original.name.replace('AP • LED', 'AP • underside LED'), mesh)
+    export_scene.collection.objects.link(copy)
+    copy.parent = groups[bucket]
+    buckets.setdefault(bucket, []).append(copy)
+    source_counts[bucket] = source_counts.get(bucket, 0) + 1
+
 bpy.context.window.scene = export_scene
 # Batch static electronics by material instead of shipping ~1400 draw-call objects.
 for bucket, parts in buckets.items():
@@ -135,6 +181,19 @@ for bucket, parts in buckets.items():
     bpy.context.view_layer.objects.active = parts[0]
     bpy.ops.object.join()
     parts[0].name = bucket + '_mesh'
+
+# Final guard: measure the lowest point of what is actually exported and put the feet exactly on z=0.
+bpy.context.view_layer.update()
+floor_z = min(
+    float((np.array([(o.matrix_world @ v.co) for v in o.data.vertices])[:, 2]).min())
+    for o in export_scene.objects if o.type == 'MESH' and len(o.data.vertices)
+)
+if abs(floor_z) > 1e-7:
+    for obj in export_scene.objects:
+        if obj.parent is None:
+            obj.location.z -= floor_z
+    centers = [c - Vector((0, 0, floor_z)) for c in centers]
+    bpy.context.view_layer.update()
 
 output.parent.mkdir(parents=True, exist_ok=True)
 bpy.ops.export_scene.gltf(filepath=str(output), export_format='GLB',
