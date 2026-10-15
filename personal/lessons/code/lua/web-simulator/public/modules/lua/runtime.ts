@@ -1,16 +1,15 @@
 import * as fengari from 'fengari-web';
 import { drones } from '../core/state.js';
+import { markLearningRunStarted } from '../core/learning-journal.js';
 import { log } from '../shared/logging/logger.js';
 import { beginEventCallbackPhase, withCommandSource } from '../autopilot/fsm.js';
 import { luaToStr } from './utils.js';
 import {
-    createLuaRuntimeFailureError,
     rememberLuaErrorStack,
     setLuaExecutionPhase
 } from './diagnostics.js';
 import { runCoroutine } from './runner.js';
 import { createScriptFailureError } from '../app/script-execution-notice.js';
-import { failScriptRun } from '../core/script-failure.js';
 import { extractLuaSyntaxLine, setupLuaBridgeForDrone } from './bridge.js';
 import { resetLuaMissionGuard } from './mission-guard.js';
 
@@ -69,6 +68,7 @@ export function runLuaScript(id: string, scriptContent: string) {
     fengari.lua.lua_xmove(L, T, 1);
 
     try {
+        markLearningRunStarted(id, drone.current_time);
         runCoroutine(L, T, 0, id, 'main chunk');
     } catch (e) {
         console.error('Error in runCoroutine:', e);

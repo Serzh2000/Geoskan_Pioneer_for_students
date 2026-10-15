@@ -20,15 +20,53 @@
             document.documentElement.dataset.theme = theme;
         })();
     </script>
+    <style>
+        /* Full-window loading screen: shown until the simulator has built its panels and the 3D scene. */
+        #app-splash { position: fixed; inset: 0; z-index: 100000; display: grid; place-items: center; background: #151515; color: #f2f2f2; font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif; transition: opacity .35s ease, visibility .35s; }
+        :root[data-theme='light'] #app-splash { background: #f4f4f5; color: #1b1b1d; }
+        #app-splash.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        #app-splash .splash__card { display: grid; justify-items: center; gap: 22px; padding: 24px; text-align: center; }
+        #app-splash .splash__mark { position: relative; width: 64px; height: 64px; }
+        #app-splash .splash__mark::before, #app-splash .splash__mark::after { content: ''; position: absolute; inset: 0; border-radius: 50%; }
+        #app-splash .splash__mark::before { border: 3px solid rgba(255, 107, 0, .18); }
+        #app-splash .splash__mark::after { border: 3px solid transparent; border-top-color: #ff6b00; animation: splash-spin 0.9s linear infinite; }
+        #app-splash .splash__title { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
+        #app-splash .splash__hint { margin: 6px 0 0; font-size: 14px; opacity: .6; }
+        #app-splash .splash__bar { width: 220px; height: 3px; overflow: hidden; border-radius: 2px; background: rgba(127, 127, 127, .25); }
+        #app-splash .splash__bar::after { content: ''; display: block; width: 40%; height: 100%; border-radius: 2px; background: #ff6b00; animation: splash-slide 1.3s ease-in-out infinite; }
+        @keyframes splash-spin { to { transform: rotate(360deg); } }
+        @keyframes splash-slide { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
+        @media (prefers-reduced-motion: reduce) { #app-splash .splash__mark::after, #app-splash .splash__bar::after { animation-duration: 3s; } }
+    </style>
     <link rel="stylesheet" href="style.css">
     <!-- Three.js and modules loaded via Vite -->
     <!-- Fengari for Lua in browser -->
     <script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.js"></script>
 </head>
 <body>
+    <div id="app-splash" role="status" aria-live="polite">
+        <div class="splash__card">
+            <div class="splash__mark" aria-hidden="true"></div>
+            <div>
+                <h1 class="splash__title">Pioneer Simulator</h1>
+                <p class="splash__hint">Загружаем симулятор…</p>
+            </div>
+            <div class="splash__bar" aria-hidden="true"></div>
+        </div>
+    </div>
+    <script>
+        /* Called by main.ts when the app is ready; the timer is a safety net so a failed start never hides behind the screen. */
+        window.hideAppSplash = function () {
+            var el = document.getElementById('app-splash');
+            if (!el || el.classList.contains('is-hidden')) return;
+            el.classList.add('is-hidden');
+            setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 500);
+        };
+        setTimeout(window.hideAppSplash, 25000);
+    </script>
     <main class="container" data-mobile-workspace-page="code">
         <div class="mobile-workspace-track">
-            <aside class="workspace-sidebar" data-mobile-workspace-panel="code">
+            <aside id="workspace-tools" class="workspace-sidebar" data-mobile-workspace-panel="code">
                 <!-- @include ./fragments/layout/sidebar-tabs.html -->
                 <div class="sidebar-panels">
                     <!-- @include ./fragments/layout/sidebar-panels.html -->
@@ -39,11 +77,11 @@
     </main>
 
     <!--
-        These two live as direct children of <body> - not inside .container -
-        so .container's own `overflow: hidden` can never clip them and no
-        transformed/positioned ancestor can hijack their fixed positioning.
-        They must stay reachable from every workspace page and every panel
-        state, which is exactly what being outside .container guarantees.
+        The rail disclosure lives as a direct child of <body> - not inside .container -
+        so .container's own `overflow: hidden` can never clip it and no
+        transformed/positioned ancestor can hijack its fixed positioning. It must
+        stay reachable from every workspace page and every panel state.
+        Run/stop/reset share a separate fixed dock at the bottom-right edge.
     -->
     <button
         id="rail-toggle-btn"
@@ -51,6 +89,8 @@
         class="viewport-corner-btn viewport-corner-btn--rail"
         title="Показать панели инструментов"
         aria-label="Показать панели инструментов"
+        aria-controls="workspace-tools"
+        aria-expanded="false"
         aria-pressed="false">
         <span class="header-icon-btn__glyph" aria-hidden="true">
             <svg
@@ -82,27 +122,27 @@
         </span>
     </button>
 
-    <div class="viewport-run-controls">
-        <button id="run-btn" type="button" class="btn-primary viewport-run-controls__btn" title="Запустить" aria-label="Запустить">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-player-play" aria-hidden="true">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M7 4v16l13 -8z"></path>
-            </svg>
-        </button>
-        <button id="stop-btn" type="button" class="btn-secondary header-danger-btn viewport-run-controls__btn" title="Стоп" aria-label="Стоп">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-player-stop" aria-hidden="true">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M5 5m0 1a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1z"></path>
-            </svg>
-        </button>
-        <button id="restart-btn" type="button" class="btn-secondary viewport-run-controls__btn" title="Сбросить" aria-label="Сбросить">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-refresh" aria-hidden="true">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"></path>
-                <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"></path>
-            </svg>
-        </button>
-    </div>
+                <div class="viewport-run-controls" role="toolbar" aria-label="Запуск программы">
+                    <button id="run-btn" type="button" class="btn-primary viewport-run-controls__btn viewport-run-controls__btn--run" title="Запустить программу (Ctrl+Enter)" data-tooltip="Запустить программу (Ctrl+Enter)" aria-label="Запустить программу" aria-keyshortcuts="Control+Enter Meta+Enter">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-player-play" aria-hidden="true">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M7 4v16l13 -8z"></path>
+                        </svg>
+                    </button>
+                    <button id="stop-btn" type="button" class="btn-secondary viewport-run-controls__btn viewport-run-controls__btn--stop" title="Остановить программу" aria-label="Остановить программу">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-player-stop" aria-hidden="true">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M5 5m0 1a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v12a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1z"></path>
+                        </svg>
+                    </button>
+                    <button id="restart-btn" type="button" class="btn-secondary viewport-run-controls__btn" title="Вернуть дрон на старт и сбросить программу" aria-label="Сбросить программу и вернуть дрон на старт">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-refresh" aria-hidden="true">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                            <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"></path>
+                            <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"></path>
+                        </svg>
+                    </button>
+                </div>
 
     <!-- @include ./fragments/modals/gamepad-wizard.html -->
     <script type="module" src="main.ts"></script>

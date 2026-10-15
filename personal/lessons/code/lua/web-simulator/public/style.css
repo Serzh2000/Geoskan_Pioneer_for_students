@@ -8,7 +8,9 @@
 @import url('./styles/layout/container.css');
 @import url('./styles/layout/sidebar-tabs.css');
 @import url('./styles/layout/sidebar-panels.css');
+@import url('./styles/panels/panel-chrome.css');
 @import url('./styles/layout/panel-shell.css');
+@import url('./styles/panels/panel-kit.css');
 @import url('./styles/gamepad/panel.css');
 @import url('./styles/gamepad/wizard.css');
 @import url('./styles/layout/resizer.css');
@@ -24,22 +26,17 @@
 @import url('./styles/scene/route-drawing.css');
 @import url('./styles/core/forms.css');
 @import url('./styles/panels/telemetry.css');
+@import url('./styles/panels/drone-link.css');
+@import url('./styles/scene/environment-control.css');
 @import url('./styles/scene/editor.css');
 @import url('./styles/scene/manager-panel.css');
 @import url('./styles/scene/swarm-and-led.css');
-@import url('./styles/panels/sidebar-card-overrides.css');
 @import url('./styles/panels/logs.css');
 @import url('./styles/responsive/index.css');
 @import url('./styles/core/theme.css');
 
-@import url('./styles/scene/manager-panel/workspace.css');
-@import url('./styles/scene/manager-panel/scene-manager.css');
-@import url('./styles/scene/manager-panel/workbench.css');
 @import url('./styles/overlays/onboarding-tour.css');
 @import url('./styles/overlays/marker-settings.css');
 @import url('./styles/overlays/building-settings.css');
 
-@import './styles/panels/journal-academy.css';
-
 @import url('./styles/gamepad/workspace.css');
-@import url('./styles/panels/guide-panel/lesson-polish.css');

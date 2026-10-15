@@ -1,93 +1,11 @@
-/*
- * Менеджер роя и LED-матрица.
- * Базовая обвязка карточек импортирует детальные стили из соседних файлов.
- */
+/* Swarm panel: flat sections from panels/panel-kit.css; only local geometry lives here. */
 @import url('./manager/list.css');
 @import url('./manager/bridge.css');
-@import url('./manager/connection.css');
+#drones-panel { container-type: inline-size; }
+/* Base .panel-content has no padding; the feature wrapper owns the 16 px gutter like every other panel. */
+.swarm-manager { display: flex; flex-direction: column; gap: var(--pk-card-gap); min-width: 0; padding: var(--panel-content-pad); }
 
-.panel-content--drones {
-    padding: var(--panel-pad-x);
-    background: #f8fafc;
-}
-
-.swarm-manager {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.swarm-manager__intro {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 14px 16px;
-    border-radius: 14px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    box-shadow: none;
-}
-
-.swarm-manager__eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: #172033;
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.swarm-manager__eyebrow-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 8px;
-    background: rgba(148, 163, 184, 0.08);
-    border: 1px solid rgba(148, 163, 184, 0.14);
-    color: var(--accent-color);
-}
-
-.swarm-manager__eyebrow-icon svg {
-    width: 16px;
-    height: 16px;
-}
-
-.swarm-manager__subtitle {
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.55;
-    color: var(--text-muted);
-}
-
-/* One surface system for the swarm workflow: the active drone is the only
-   highlighted item, and an empty list no longer consumes the whole panel. */
-.panel-content--drones .swarm-list-card,
-.panel-content--drones .swarm-bridge-card,
-.panel-content--drones .swarm-connection-card {
-    border-color: #e2e8f0;
-    background: #ffffff;
-    box-shadow: none;
-}
-
-.panel-content--drones .swarm-list {
-    min-height: 0;
-    max-height: 270px;
-    padding: 6px;
-    background: #f8fafc;
-    border-color: #e5eaf0;
-}
-
-.panel-content--drones .swarm-list__item.is-active {
-    background: #fff7ed;
-    border-color: #fed7aa;
-}
-
-.panel-content--drones .swarm-bridge-card__detail {
-    background: #f8fafc;
-    border-color: #e2e8f0;
-}
-
+/* Key-value line: label left, value right. */
+.swarm-kv { display: grid; gap: 4px; font-size: 12px; line-height: 1.5; }
+.swarm-kv__key { color: var(--text-muted); }
+.swarm-kv__value { color: var(--text-color); overflow-wrap: anywhere; }

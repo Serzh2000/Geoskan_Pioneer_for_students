@@ -4,7 +4,6 @@ import type { PioneerConnectionMethod, PythonExecutionTarget } from '../../../co
 import { clearExternalBridgeQueue, isExternalBridgeEnabled, setExternalBridgeEnabled } from '../../../python/external-bridge.js';
 import { stopPythonScript } from '../../../python/index.js';
 import type { DroneManagerDom } from './dom.js';
-import { getDroneTransportSummary } from './helpers.js';
 
 type ConnectionPanelOptions = {
     dom: DroneManagerDom;
@@ -13,6 +12,35 @@ type ConnectionPanelOptions = {
     onSceneUpdate?: () => void;
     refreshUi: () => void;
 };
+
+const BRIDGE_SUMMARY_TEXT = 'Запускайте программы из IDLE или PyCharm, а не из редактора здесь. Они будут управлять выбранным дроном в симуляторе.';
+
+/** The published simulator; an external script reaches it by this name, wherever the student's computer is. */
+const SIMULATOR_HOST = 'simulator.sakoryagin.ru';
+
+function buildBridgeSnippet(droneId: string): string {
+    const connection = ensureDronePythonConnectionSettings(droneId);
+    return `from pioneer_sdk import Pioneer\n\npioneer = Pioneer(\n    ip="${SIMULATOR_HOST}",\n    mavlink_port=${connection.mavlinkPort},\n)`;
+}
+
+/**
+ * The drone's camera sends JPEG frames over UDP and the client never sends UDP itself, so a home or school router
+ * drops them. One datagram from the camera socket ("UDP punch") opens the router; the bridge then answers there.
+ */
+function buildCameraSnippet(droneId: string): string {
+    const connection = ensureDronePythonConnectionSettings(droneId);
+    return [
+        'from pioneer_sdk import Camera',
+        '',
+        'class SimCamera(Camera):',
+        '    def connect(self):',
+        '        ok = super().connect()',
+        "        self.udp.sendto(b'1', (self.ip, self.port))  # прогрев UDP",
+        '        return ok',
+        '',
+        `camera = SimCamera(ip="${SIMULATOR_HOST}", port=${connection.cameraPort})`
+    ].join('\n');
+}
 
 export function createConnectionPanel(options: ConnectionPanelOptions) {
     const { dom, getActiveDroneId, emitConnectionSettingsChanged, onSceneUpdate, refreshUi } = options;
@@ -114,43 +142,57 @@ export function createConnectionPanel(options: ConnectionPanelOptions) {
         }
         if (dom.bridgeEnableBtn && dom.bridgeDisableBtn) {
             const bridgeEnabled = activeDroneId ? isExternalBridgeEnabled(activeDroneId) : false;
+            // One toggle button is visible at a time: enable while denied, disable while allowed.
+            dom.bridgeEnableBtn.hidden = bridgeEnabled;
+            dom.bridgeDisableBtn.hidden = !bridgeEnabled;
             dom.bridgeEnableBtn.disabled = !activeDroneId || bridgeEnabled;
             dom.bridgeDisableBtn.disabled = !activeDroneId || !bridgeEnabled;
+            if (dom.bridgeToggle) {
+                dom.bridgeToggle.checked = bridgeEnabled;
+                dom.bridgeToggle.disabled = !activeDroneId;
+            }
+            dom.bridgeCodeStep?.classList.toggle('is-off', !bridgeEnabled);
+            document.querySelectorAll<HTMLButtonElement>('#swarm-bridge-code-step [data-copy-target]').forEach((button) => { button.disabled = !bridgeEnabled; });
         }
+    };
+
+    const setBridgeStatus = (label: string, tone: 'plain' | 'success' | 'warning') => {
+        if (!dom.bridgeStatus) return;
+        dom.bridgeStatus.textContent = label;
+        dom.bridgeStatus.dataset.tone = tone;
     };
 
     const renderBridgeCard = () => {
         const activeDroneId = getActiveDroneId();
-        if (!dom.bridgeDroneName || !dom.bridgeStatus || !dom.bridgeSummary || !dom.bridgeTransport || !dom.bridgeTarget) {
+        if (!dom.bridgeStatus || !dom.bridgeSummary || !dom.bridgeTransport) {
             updateActionsState();
             return;
         }
 
+        dom.bridgeSummary.textContent = BRIDGE_SUMMARY_TEXT;
         if (!activeDroneId || !drones[activeDroneId]) {
-            dom.bridgeDroneName.textContent = 'Активный дрон не выбран';
-            dom.bridgeStatus.textContent = 'Выключен';
-            dom.bridgeStatus.classList.remove('is-enabled');
-            dom.bridgeSummary.textContent = 'Подключение выключено: выберите дрон, чтобы IDLE/Python мог подключаться через установленный IDLE bridge.';
-            dom.bridgeTransport.textContent = 'Подключение: -';
-            dom.bridgeTarget.textContent = 'Источник: внешние команды запрещены';
+            setBridgeStatus('Запрещено', 'plain');
+            dom.bridgeTransport.textContent = '';
+            if (dom.bridgeSnippet) dom.bridgeSnippet.textContent = 'pioneer = Pioneer()';
+            if (dom.bridgeCameraSnippet) dom.bridgeCameraSnippet.textContent = 'camera = Camera()';
             updateActionsState();
             return;
         }
 
-        const drone = drones[activeDroneId];
         const bridgeEnabled = isExternalBridgeEnabled(activeDroneId);
-        dom.bridgeDroneName.textContent = drone.name;
-        dom.bridgeStatus.textContent = bridgeEnabled ? 'Разрешён' : 'Запрещён';
-        dom.bridgeStatus.classList.toggle('is-enabled', bridgeEnabled);
-        dom.bridgeSummary.textContent = bridgeEnabled
-            ? 'Bridge включён и ждёт команды от внешнего Python/IDLE. Режим выполнения не нужно переключать на local: local нужен только для кнопки Run в редакторе. Backend должен быть запущен через npm start.'
-            : 'Внешние команды запрещены: внешний Python/IDLE не подключится, пока вы не нажмёте «Разрешить внешние команды». Для работы bridge запустите backend через npm start.';
-        dom.bridgeTransport.textContent = `Подключение: ${getDroneTransportSummary(activeDroneId)}`;
-        dom.bridgeTarget.textContent = `Источник: ${bridgeEnabled ? 'ожидается внешний Python/IDLE' : 'внешние команды запрещены'}`;
+        setBridgeStatus(bridgeEnabled ? 'Разрешено' : 'Запрещено', bridgeEnabled ? 'success' : 'plain');
+        const connection = ensureDronePythonConnectionSettings(activeDroneId);
+        dom.bridgeTransport.textContent = `Порты: MAVLink ${connection.mavlinkPort}, камера ${connection.cameraPort}`;
+        if (dom.bridgeCameraSnippet) dom.bridgeCameraSnippet.textContent = buildCameraSnippet(activeDroneId);
+        if (dom.bridgeSnippet) dom.bridgeSnippet.textContent = buildBridgeSnippet(activeDroneId);
         updateActionsState();
     };
 
-    const applyToCurrentDroneConnection = (updater: (droneId: string) => void) => {
+    const focusBridgeToggle = () => {
+        if (dom.bridgeToggle && !dom.bridgeToggle.disabled) dom.bridgeToggle.focus();
+    };
+
+    const applyToCurrentDroneConnection =(updater: (droneId: string) => void) => {
         const activeDroneId = getActiveDroneId();
         if (!activeDroneId || !drones[activeDroneId]) {
             return;
@@ -177,19 +219,38 @@ export function createConnectionPanel(options: ConnectionPanelOptions) {
     };
 
     const bind = () => {
+        dom.bridgeToggle?.addEventListener('change', () => {
+            (dom.bridgeToggle?.checked ? dom.bridgeEnableBtn : dom.bridgeDisableBtn)?.click();
+        });
+
+        document.querySelectorAll<HTMLButtonElement>('#swarm-bridge-code-step [data-copy-target]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const text = document.getElementById(button.dataset.copyTarget ?? '')?.textContent ?? '';
+                if (!text) return;
+                const label = button.textContent;
+                navigator.clipboard?.writeText(text).then(() => {
+                    button.textContent = 'Скопировано';
+                }, () => {
+                    button.textContent = 'Не удалось скопировать';
+                }).finally(() => window.setTimeout(() => { button.textContent = label; }, 1500));
+            });
+        });
+
         dom.bridgeEnableBtn?.addEventListener('click', () => {
             const activeDroneId = getActiveDroneId();
             if (!activeDroneId) return;
+            setBridgeStatus('Ожидание', 'warning');
             void setExternalBridgeEnabled(activeDroneId, true)
                 .then(() => {
-                    log(`Внешние команды разрешены для ${drones[activeDroneId]?.name || activeDroneId}`, 'success');
+                    log(`Управление из Python разрешено для ${drones[activeDroneId]?.name || activeDroneId}`, 'success');
                 })
                 .catch((error: unknown) => {
-                    log(error instanceof Error ? error.message : 'Не удалось разрешить внешние команды.', 'error');
+                    log(error instanceof Error ? error.message : 'Не удалось разрешить управление из Python.', 'error');
                 })
                 .finally(() => {
                     renderConnectionForm();
                     renderBridgeCard();
+                    focusBridgeToggle();
                 });
         });
 
@@ -198,8 +259,9 @@ export function createConnectionPanel(options: ConnectionPanelOptions) {
             if (!activeDroneId) return;
             void setExternalBridgeEnabled(activeDroneId, false).then(async () => {
                 await clearExternalBridgeQueue();
-                log(`Внешние команды запрещены и очередь очищена для ${drones[activeDroneId]?.name || activeDroneId}`, 'info');
+                log(`Управление из Python запрещено, очередь очищена для ${drones[activeDroneId]?.name || activeDroneId}`, 'info');
                 renderBridgeCard();
+                focusBridgeToggle();
             });
         });
 

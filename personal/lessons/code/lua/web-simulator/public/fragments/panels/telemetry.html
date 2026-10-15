@@ -1,66 +1,78 @@
             <div id="telemetry-panel" class="sidebar-panel">
                 <div class="panel-header">
                     <div class="panel-header__lead">
-                        <span class="panel-title">Телеметрия</span>
+                        <span class="panel-title">Полёт</span>
                     </div>
-                    <button class="panel-close-btn" onclick="closePanel()">✕</button>
+                    <span id="state-status" class="pk-chip" role="status">На земле</span>
+                    <button type="button" class="panel-close-btn" onclick="closePanel()" aria-label="Закрыть панель полёта"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg></button>
                 </div>
                 <div class="panel-content telemetry-panel-content">
-                    <div class="telemetry-status">
-                        <span class="telemetry-status__dot" aria-hidden="true"></span>
-                        <span class="telemetry-status__label">Состояние</span>
-                        <span class="telemetry-status__value" id="state-status">ОЖИДАНИЕ</span>
-                    </div>
+                    <section class="pk-section" aria-labelledby="flight-readouts-title">
+                        <div class="pk-section__head"><h3 id="flight-readouts-title" class="pk-section__title">Показания полёта</h3></div>
+                        <div class="pk-metrics">
+                            <div class="pk-metric pk-metric--hero pk-metric--wide">
+                                <span class="pk-metric__label">Высота</span>
+                                <span class="pk-metric__value"><span id="state-alt">0.00</span><span class="pk-metric__unit">м</span></span>
+                            </div>
+                            <div class="pk-metric">
+                                <span class="pk-metric__label">Скорость</span>
+                                <span class="pk-metric__value"><span id="state-spd">0.0</span><span class="pk-metric__unit">м/с</span></span>
+                            </div>
+                            <div class="pk-metric">
+                                <span class="pk-metric__label">Время полёта</span>
+                                <span class="pk-metric__value"><span id="state-time">0.0</span><span class="pk-metric__unit">с</span></span>
+                            </div>
+                            <div class="pk-metric pk-metric--text pk-metric--wide" id="hud-stat-mode">
+                                <span class="pk-metric__label">Автопилот</span>
+                                <span class="pk-metric__value"><span id="state-mode">На земле</span></span>
+                            </div>
+                        </div>
 
-                    <div class="telemetry-metrics">
-                        <div class="metric">
-                            <span class="metric__label">Высота</span>
-                            <span class="metric__value"><span id="state-alt">0.00</span><span class="metric__unit">м</span></span>
-                        </div>
-                        <div class="metric">
-                            <span class="metric__label">Скорость</span>
-                            <span class="metric__value"><span id="state-spd">0.0</span><span class="metric__unit">м/с</span></span>
-                        </div>
-                        <div class="metric">
-                            <span class="metric__label">Время полета</span>
-                            <span class="metric__value"><span id="state-time">0.0</span><span class="metric__unit">с</span></span>
-                        </div>
-                        <div class="metric" id="hud-stat-mode" style="display: none;">
-                            <span class="metric__label">Режим</span>
-                            <span class="metric__value"><span id="state-mode">АВТО</span></span>
-                        </div>
-                    </div>
+                        <figure class="flight-chart" aria-label="Высота и скорость за последние 30 секунд">
+                            <svg class="flight-chart__plot" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+                                <polygon id="flight-chart-alt-area" class="flight-chart__area" points="0,40 100,40"></polygon>
+                                <polyline id="flight-chart-alt-line" class="flight-chart__line flight-chart__line--alt" points=""></polyline>
+                                <polyline id="flight-chart-spd-line" class="flight-chart__line flight-chart__line--spd" points=""></polyline>
+                            </svg>
+                            <figcaption class="flight-chart__legend">
+                                <span class="flight-chart__key flight-chart__key--alt">Высота</span>
+                                <span class="flight-chart__key flight-chart__key--spd">Скорость</span>
+                                <span class="flight-chart__span">последние 30 с</span>
+                            </figcaption>
+                        </figure>
 
-                    <div class="telemetry-battery">
-                        <div class="telemetry-battery__head">
-                            <span class="metric__label">Батарея</span>
-                            <span class="metric__value metric__value--inline"><span id="state-bat">100</span><span class="metric__unit">%</span></span>
-                        </div>
-                        <div class="telemetry-battery__track">
-                            <div class="telemetry-battery__fill" id="state-bat-bar"></div>
-                        </div>
-                    </div>
-
-                    <section class="telemetry-section">
-                        <h3 class="telemetry-section__title">Бортовые индикаторы</h3>
-                        <div class="led-board led-board--base">
-                            <div class="led-base-grid">
-                                <div id="led-base-0" class="led-pixel-base" title="Базовый светодиод 0"></div>
-                                <div id="led-base-1" class="led-pixel-base" title="Базовый светодиод 1"></div>
-                                <div id="led-base-2" class="led-pixel-base" title="Базовый светодиод 2"></div>
-                                <div id="led-base-3" class="led-pixel-base" title="Базовый светодиод 3"></div>
+                        <div class="pk-field">
+                            <span class="pk-field__label">Батарея <span class="pk-field__value"><span id="state-bat">100</span> %</span></span>
+                            <div class="pk-meter" role="meter" aria-label="Заряд батареи" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-valuetext="100 %">
+                                <div class="pk-meter__fill pk-meter__fill--success" id="state-bat-bar"></div>
                             </div>
                         </div>
                     </section>
 
-                    <section class="telemetry-section">
-                        <h3 class="telemetry-section__title">
-                            LED-матрица
-                            <span class="telemetry-section__badge">5 x 5</span>
-                        </h3>
-                        <div class="led-board">
+                    <section class="pk-section">
+                        <div class="pk-section__head">
+                            <h3 class="pk-section__title">Бортовые индикаторы</h3>
+                            <span class="pk-section__meta">0–3</span>
+                        </div>
+                        <div class="led-board led-board--base">
+                            <div class="led-base-grid">
+                                <div id="led-base-0" class="led-pixel-base" data-index="0" title="Базовый светодиод 0"></div>
+                                <div id="led-base-1" class="led-pixel-base" data-index="1" title="Базовый светодиод 1"></div>
+                                <div id="led-base-2" class="led-pixel-base" data-index="2" title="Базовый светодиод 2"></div>
+                                <div id="led-base-3" class="led-pixel-base" data-index="3" title="Базовый светодиод 3"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="pk-section">
+                        <div class="pk-section__head">
+                            <h3 class="pk-section__title">LED-матрица</h3>
+                            <span class="pk-section__meta">5 × 5</span>
+                        </div>
+                        <div class="led-board led-board--matrix">
                             <div class="led-matrix-grid" id="led-matrix-grid"></div>
                         </div>
+                        <p class="pk-section__hint">Цвета выбранного дрона в реальном времени.</p>
                     </section>
                 </div>
             </div>

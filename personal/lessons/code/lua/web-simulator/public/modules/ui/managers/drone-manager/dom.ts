@@ -3,11 +3,13 @@ export type DroneManagerDom = {
     listCount: HTMLElement | null;
     addBtn: HTMLButtonElement | null;
     delBtn: HTMLButtonElement | null;
-    bridgeDroneName: HTMLElement | null;
     bridgeStatus: HTMLElement | null;
     bridgeSummary: HTMLElement | null;
     bridgeTransport: HTMLElement | null;
-    bridgeTarget: HTMLElement | null;
+    bridgeSnippet: HTMLElement | null;
+    bridgeCameraSnippet: HTMLElement | null;
+    bridgeToggle: HTMLInputElement | null;
+    bridgeCodeStep: HTMLElement | null;
     bridgeEnableBtn: HTMLButtonElement | null;
     bridgeDisableBtn: HTMLButtonElement | null;
     stopPythonBtn: HTMLButtonElement | null;
@@ -33,11 +35,13 @@ export function collectDroneManagerDom(): DroneManagerDom {
         listCount: document.getElementById('drone-list-count'),
         addBtn: document.getElementById('add-drone-btn') as HTMLButtonElement | null,
         delBtn: document.getElementById('del-drone-btn') as HTMLButtonElement | null,
-        bridgeDroneName: document.getElementById('swarm-bridge-drone-name'),
         bridgeStatus: document.getElementById('swarm-bridge-status'),
         bridgeSummary: document.getElementById('swarm-bridge-summary'),
         bridgeTransport: document.getElementById('swarm-bridge-transport'),
-        bridgeTarget: document.getElementById('swarm-bridge-target'),
+        bridgeSnippet: document.getElementById('swarm-bridge-snippet'),
+        bridgeCameraSnippet: document.getElementById('swarm-bridge-camera-snippet'),
+        bridgeToggle: document.getElementById('swarm-bridge-toggle') as HTMLInputElement | null,
+        bridgeCodeStep: document.getElementById('swarm-bridge-code-step'),
         bridgeEnableBtn: document.getElementById('enable-external-bridge-btn') as HTMLButtonElement | null,
         bridgeDisableBtn: document.getElementById('disable-external-bridge-btn') as HTMLButtonElement | null,
         stopPythonBtn: document.getElementById('swarm-stop-python-btn') as HTMLButtonElement | null,

@@ -1,7 +1,4 @@
 /*
- * General settings panel stylesheet entrypoint.
+ * General settings panel: range, colour swatch and button states on top of panel-kit.
  */
-@import url('./settings/header-and-cards.css');
 @import url('./settings/controls.css');
-@import url('./settings/inputs.css');
-@import url('./settings/alerts-and-responsive.css');

@@ -42,11 +42,18 @@ export function getNextAvailableCameraPort(preferredPort: number): number {
     return getNextAvailablePort(preferredPort, (droneId) => drones[droneId]?.pythonConnection?.cameraPort);
 }
 
+export function getDroneAddress(droneId: string): string {
+    const connection = ensureDronePythonConnectionSettings(droneId);
+    return connection.connectionMethod === 'serial'
+        ? `Кабель ${connection.device}`
+        : `Адрес ${connection.ip}`;
+}
+
 export function getDroneTransportSummary(droneId: string): string {
     const connection = ensureDronePythonConnectionSettings(droneId);
     if (connection.connectionMethod === 'serial') {
-        return `MAVLink порт: ${connection.device} · порт камеры: ${connection.cameraPort}`;
+        return `${connection.device} · камера ${connection.cameraPort}`;
     }
 
-    return `MAVLink порт: ${connection.ip}:${connection.mavlinkPort} · порт камеры: ${connection.cameraPort}`;
+    return `${connection.ip}:${connection.mavlinkPort} · камера ${connection.cameraPort}`;
 }

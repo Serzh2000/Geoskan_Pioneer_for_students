@@ -1,0 +1,154 @@
+/*
+ * Scene manager layout: one scroller, flat sections (pk-section), tabs as pk-seg, rows as pk-row.
+ * State is communicated by fill only. The kit (styles/panels/panel-kit.css) owns the recipes.
+ */
+#manager-panel .scene-manager {
+    --sm-pad: 16px;
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 760px;
+    min-height: 100%;
+    margin-inline: auto;
+    padding: 0 var(--sm-pad) var(--sm-pad);
+    gap: 20px;
+    background: var(--sm-bg);
+}
+#manager-panel .scene-manager-head { position: sticky; top: 0; z-index: 3; margin: 0 calc(var(--sm-pad) * -1) -8px; padding: var(--sm-pad) var(--sm-pad) 8px; background: var(--sm-bg); }
+#manager-panel .scene-panel-view { display: none; flex-direction: column; gap: 20px; min-width: 0; }
+#manager-panel .scene-panel-view.is-active { display: flex; }
+#manager-panel .scene-panel-view.is-empty > :not(:first-child) { display: none; }
+
+/* Tabs: pk-seg owns the look; the selection counter is a small plain chip. */
+#manager-panel .scene-manager-tab[aria-disabled='true'] { opacity: .55; cursor: default; }
+#manager-panel .scene-manager-tab__dot { display: none; height: 20px; min-width: 20px; padding: 0 6px; justify-content: center; font-size: 11px; font-variant-numeric: tabular-nums; }
+#manager-panel .scene-manager-tab__dot:empty { display: none; }
+#manager-panel .scene-manager-tab.has-selection:not(.is-active) .scene-manager-tab__dot:not(:empty) { display: inline-flex; }
+
+#manager-panel .scene-operation-status { margin: 0; padding: 10px 12px; border-radius: var(--sm-r); background: var(--pk-success-soft); color: var(--sm-text); font-size: 12px; line-height: 1.5; }
+
+/* Search + collapse toolbar */
+#manager-panel .scene-tree-toolbar { display: flex; align-items: center; gap: 8px; }
+#manager-panel .scene-tree-search { position: relative; display: flex; align-items: center; flex: 1 1 auto; min-width: 0; }
+#manager-panel .scene-tree-search__icon { position: absolute; left: 10px; width: 16px; height: 16px; color: var(--sm-muted); pointer-events: none; }
+#manager-panel .scene-tree-search input { padding: 0 32px; font-size: 13px; }
+#manager-panel .scene-tree-search input::-webkit-search-cancel-button { display: none; }
+/* Browser default placeholder grey is ~4:1; the muted token keeps 4.5:1 on the field in both themes. */
+#manager-panel .scene-tree-search input::placeholder { color: var(--sm-muted); opacity: 1; }
+#manager-panel .scene-tree-search__clear { position: absolute; right: 4px; display: none; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--sm-muted); cursor: pointer; }
+#manager-panel .scene-tree-search__clear.is-visible { display: grid; }
+#manager-panel .scene-tree-search__clear:hover { background: var(--sm-hover); color: var(--sm-strong); }
+#manager-panel .scene-click-coords { padding: 6px 10px; border-radius: var(--sm-r); background: var(--sm-inset); color: var(--sm-muted); font: 12px/1.4 var(--font-mono); }
+
+/*
+ * Object tree. Every row owns two fixed 28 px action slots (Focus, Delete): hovering never
+ * moves Delete under the pointer in place of Focus, and rows without Delete keep the slot empty.
+ */
+#manager-panel .scene-manager-list { min-height: 0; max-height: min(38vh, 420px); overflow-y: auto; overscroll-behavior: contain; }
+#manager-panel .scene-tree-row { flex-shrink: 0; gap: 4px; padding-left: calc(8px + var(--tree-depth, 0) * 18px); cursor: default; }
+#manager-panel .scene-tree-twisty { display: grid; place-items: center; flex: 0 0 24px; width: 24px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--sm-muted); cursor: pointer; }
+#manager-panel .scene-tree-twisty svg { width: 14px; height: 14px; transition: transform .12s; }
+#manager-panel .scene-tree-twisty.is-expanded svg { transform: rotate(90deg); }
+#manager-panel .scene-tree-twisty:hover:not(.is-empty) { background: var(--pk-inset); }
+#manager-panel .scene-tree-twisty.is-empty { visibility: hidden; cursor: default; }
+#manager-panel .scene-manager-list:not(:has(.scene-tree-twisty:not(.is-empty))) .scene-tree-twisty { display: none; }
+#manager-panel .scene-tree-main { display: flex; flex: 1; align-items: center; gap: 10px; min-width: 0; min-height: 32px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--sm-text); font: inherit; text-align: left; cursor: pointer; }
+#manager-panel .scene-tree-main:focus-visible { outline-offset: 0; }
+#manager-panel .scene-tree-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 2px; }
+#manager-panel .scene-tree-action-slot { flex: 0 0 28px; width: 28px; height: 28px; }
+#manager-panel .scene-tree-row.is-selected .pk-row__action { opacity: 1; }
+/* Accents by what an object is: the student's own props carry the accent colour, the field is green, the drone and groups graphite. */
+#manager-panel .scene-tree-row[data-kind='prop'] .pk-row__icon { background: var(--accent-soft); color: var(--pc-accent, var(--accent-color)); }
+#manager-panel .scene-tree-row[data-kind='ground'] .pk-row__icon { background: var(--pk-success-soft); color: var(--pc-success); }
+#manager-panel .scene-tree-row[data-kind='drone'] .pk-row__icon, #manager-panel .scene-tree-row[data-kind='group'] .pk-row__icon { background: var(--panel-bg); color: var(--text-strong); }
+
+/* The tree sits on its own soft surface; folders are quiet rows with a chevron and a count, their rows one level deeper. */
+#manager-panel .scene-manager-list { padding: 6px; border-radius: var(--sm-r); background: var(--pk-inset); }
+#manager-panel .scene-manager-list .scene-tree-row:hover { background: var(--panel-bg); }
+#manager-panel .scene-manager-list .scene-tree-row.is-selected { background: var(--panel-bg); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pc-accent, var(--accent-color)) 38%, transparent); }
+#manager-panel .scene-tree-folder { display: block; }
+#manager-panel .scene-tree-group { display: flex; align-items: center; gap: 6px; width: 100%; margin: 0; padding: 8px 8px 6px; border: 0; border-radius: var(--sm-r); background: transparent; color: var(--sm-strong); font: 650 12px/1.4 var(--font-sans); text-align: left; cursor: pointer; }
+#manager-panel .scene-tree-folder:not(:first-child) .scene-tree-group { margin-top: 6px; }
+#manager-panel .scene-tree-group:hover { background: color-mix(in srgb, var(--text-strong) 5%, transparent); }
+#manager-panel .scene-tree-group > span:nth-child(2) { flex: 1; }
+#manager-panel .scene-tree-group small { min-width: 20px; padding: 2px 6px; border-radius: 999px; background: color-mix(in srgb, var(--text-strong) 8%, transparent); font: 600 11px/1.2 var(--font-sans); font-variant-numeric: tabular-nums; text-align: center; color: var(--sm-muted); }
+#manager-panel .scene-tree-group__chevron { display: grid; place-items: center; width: 14px; color: var(--sm-muted); transition: transform .15s; }
+#manager-panel .scene-tree-group__chevron svg { width: 14px; height: 14px; }
+#manager-panel .scene-tree-group.is-open .scene-tree-group__chevron { transform: rotate(90deg); }
+#manager-panel .scene-tree-invite { margin: 2px 8px 6px 34px; font-size: 12px; line-height: 1.6; color: var(--sm-muted); }
+#manager-panel .scene-tree-invite strong { color: var(--sm-strong); font-weight: 600; }
+
+/* A ready-made field is a way to start: its tile is accented too. */
+#manager-panel .scene-preset-library > summary .pk-row__icon { background: var(--accent-soft); color: var(--pc-accent, var(--accent-color)); }
+
+/* Inline delete question: the row text asks, the two answers take the action slots' place. */
+#manager-panel .scene-tree-actions.is-confirming { gap: 4px; }
+#manager-panel .scene-tree-confirm { flex: 0 0 auto; }
+#manager-panel .scene-tree-row:has(.scene-tree-actions.is-confirming) .pk-row__meta { color: var(--pc-danger, var(--danger)); }
+#manager-panel .scene-tree-action:not(.scene-tree-action--danger):hover { color: var(--sm-strong); }
+#manager-panel .scene-tree-empty { margin: 0; padding: 24px 12px; color: var(--sm-muted); text-align: center; font-size: 13px; line-height: 1.55; }
+
+/* The selection is shown by the row and the tab badge; the summary line stays only as a live region. */
+#manager-panel .scene-selection-live { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Selected object: a hero row (tile, name, role) with status chips; the details below sit on soft cards like the tree. */
+#manager-panel .scene-manager-details { color: var(--sm-text); font-family: var(--font-sans); }
+#manager-panel .scene-details-card, #manager-panel .scene-details-empty { display: flex; flex-direction: column; gap: 12px; }
+#manager-panel .scene-details-hero { display: flex; align-items: center; gap: 12px; min-width: 0; }
+#manager-panel .scene-details-hero__tile { display: grid; place-items: center; flex: 0 0 44px; width: 44px; height: 44px; border-radius: 12px; background: var(--pk-inset); color: var(--text-strong); }
+#manager-panel .scene-details-hero__tile svg { width: 22px; height: 22px; }
+#manager-panel .scene-details-card[data-kind='prop'] .scene-details-hero__tile { background: var(--accent-soft); color: var(--pc-accent, var(--accent-color)); }
+#manager-panel .scene-details-card[data-kind='ground'] .scene-details-hero__tile { background: var(--pk-success-soft); color: var(--pc-success); }
+#manager-panel .scene-details-hero__text { display: grid; gap: 2px; min-width: 0; }
+#manager-panel .scene-details-heading__title { color: var(--sm-strong); font: 700 19px/1.2 var(--font-sans); letter-spacing: -.01em; overflow-wrap: anywhere; }
+#manager-panel .scene-details-kind { color: var(--sm-muted); font-size: 13px; }
+#manager-panel .scene-details-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+#manager-panel .scene-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: var(--pk-inset); color: var(--sm-text); font-size: 12px; font-weight: 500; }
+#manager-panel .scene-chip b { color: var(--sm-strong); font-weight: 650; font-variant-numeric: tabular-nums; }
+#manager-panel .scene-chip--movable { background: var(--pk-success-soft); color: var(--pc-success); font-weight: 600; }
+#manager-panel .scene-chip--locked { color: var(--sm-strong); font-weight: 600; }
+#manager-panel .scene-chip--locked::before { content: ''; width: 12px; height: 12px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='9' rx='2'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='9' rx='2'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center / contain no-repeat; }
+#manager-panel .scene-details-meta { display: grid; gap: 6px; padding-top: 12px; border-top: 1px solid var(--pk-line); }
+#manager-panel .scene-details-meta__item, #manager-panel .scene-details-empty__text { color: var(--sm-muted); font-size: 12px; line-height: 1.55; }
+#manager-panel .scene-details-empty__title { color: var(--sm-strong); font-size: 13px; font-weight: 650; }
+
+/* The other blocks of the inspector are cards like in every panel (panel-kit.css); the selected-object summary heads the stack. */
+#manager-panel #scene-panel-inspector { display: grid; gap: var(--pk-card-gap); align-content: start; }
+#manager-panel #scene-panel-inspector > .pk-section:first-child { padding: 4px 2px 2px; background: transparent; }
+#manager-panel #scene-panel-inspector > .pk-section:first-child > .pk-section__head .pk-section__title { color: var(--sm-muted); font-size: 12px; font-weight: 600; }
+#manager-panel #scene-panel-inspector .pk-section__title { font-size: 13px; }
+#manager-panel #scene-panel-inspector .pk-seg { background: color-mix(in srgb, var(--text-strong) 7%, transparent); }
+#manager-panel #scene-panel-inspector .scene-inspector-actions { display: flex; }
+#manager-panel #scene-panel-inspector #scene-delete-btn { flex: 0 0 auto; margin-left: auto; }
+#manager-panel #scene-panel-inspector #scene-delete-btn:disabled { display: none; }
+
+/* Placement: transform mode switch, read-only coordinates, rotation presets. */
+#manager-panel .scene-rotate-controls { display: flex; flex-direction: column; gap: 10px; }
+#manager-panel .scene-rotate-controls__title { flex: 1; min-width: 0; color: var(--sm-strong); font-size: 13px; font-weight: 650; }
+#manager-panel .scene-rotate-presets { display: flex; flex-direction: column; gap: 4px; }
+#manager-panel .scene-rotate-row { display: flex; align-items: center; gap: 8px; }
+#manager-panel .scene-axis-chip { flex: 0 0 18px; color: var(--sm-muted); font: 700 12px/1 var(--font-mono); text-align: center; }
+#manager-panel .scene-rotate-row__buttons { display: grid; flex: 1; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+#manager-panel .scene-rotate-preset-btn { min-height: 32px; min-width: 0; padding: 0 2px; font: 12px/1.4 var(--font-mono); }
+#manager-panel .scene-inspector-actions { padding-top: 0; }
+/* Only actions that can run are offered; deleting sits apart from the neutral ones. */
+#manager-panel .scene-inspector-actions > #scene-ungroup-btn:disabled { display: none; }
+#manager-panel .scene-inspector-actions > #scene-delete-btn { margin-left: auto; }
+
+/* Selected object header: the way out of the selection is a small action, not a main button. */
+#manager-panel #scene-panel-inspector > .pk-section:first-child > .pk-section__head > .scene-clear-selection-btn { flex: 0 0 auto; }
+
+/* Placement card by what the object allows. Locked: one lock notice instead of controls that do nothing.
+   Drone: coordinates only, no mode switch or snapping. */
+#manager-panel #scene-transform-card[data-transform='locked'] > .pk-section__head,
+#manager-panel #scene-transform-card[data-transform='locked'] :is(.scene-transform-modes, .pk-toggle, .scene-transform-grid, .scene-rotate-controls),
+#manager-panel #scene-transform-card[data-transform='drone'] :is(.scene-transform-modes, .pk-toggle, .scene-rotate-controls),
+#manager-panel #scene-transform-card .pk-btn-row:not(:has(> :not([hidden]))) { display: none; }
+#manager-panel #scene-transform-card[data-transform='locked'] #scene-transform-help { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--sm-r); background: var(--pk-inset); color: var(--sm-strong); font-size: 13px; }
+#manager-panel #scene-transform-card[data-transform='locked'] #scene-transform-help::before { content: ''; flex: 0 0 16px; width: 16px; height: 16px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='9' rx='2'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='9' rx='2'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E") center / contain no-repeat; }
+
+@media (hover: none) { #manager-panel .pk-row__action { opacity: 1; } }
+
+/* Last in the cascade: the hidden attribute wins over every display above. */
+#manager-panel .scene-manager [hidden], #scene-type-modal [hidden] { display: none; }

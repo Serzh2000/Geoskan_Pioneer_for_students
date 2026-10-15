@@ -4,7 +4,7 @@
  * и подключает раскрывающиеся 3D-визуализации для методов автопилота.
  */
 import { apiDocs, pythonApiDocs } from '../../docs/api-docs.js';
-import { ApiMethodPreview, type ApiPreviewScenario } from './preview/index.js';
+import { ApiMethodPreview } from './preview/index.js';
 import {
     buildSections,
     getPreviewScenario,
@@ -83,6 +83,8 @@ function renderToolbar(language: ScriptLanguage, sections: ApiSection[], totalCo
 
     return `
         <div class="api-toolbar">
+            <div class="api-toolbar__intro"><strong>Каталог ${label}</strong><span>Методы, события и примеры</span></div>
+            <div class="api-searchbar">
             <div class="api-search">
                 <svg class="api-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -99,9 +101,17 @@ function renderToolbar(language: ScriptLanguage, sections: ApiSection[], totalCo
                     spellcheck="false"
                     aria-label="Поиск по API"
                 />
-                <span class="api-search__badge">${label}</span>
             </div>
-            <div class="api-filters">
+            <button type="button" class="api-search-clear" data-clear-search aria-label="Очистить поиск" title="Очистить поиск" ${uiState.query ? '' : 'disabled'}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+            </div>
+            <label class="api-category-select">Раздел
+                <select id="api-category-select" aria-label="Раздел справочника API">
+                    ${chips.map(chip => `<option value="${chip.id}" ${uiState.category === chip.id ? 'selected' : ''}>${escapeHtml(chip.title)} · ${chip.count}</option>`).join('')}
+                </select>
+            </label>
+            <div class="api-filters" role="group" aria-label="Категории API">
                 ${chips
                     .map(
                         (chip) => `
@@ -133,32 +143,32 @@ function renderFact(label: string, value: string): string {
 function renderEntryBody(entry: ApiEntryView): string {
     const isInteractive = !!entry.previewScenario;
     const isPreviewOpen = uiState.openPreviewKey === entry.name && isInteractive;
-    // Direction is shown as a badge in the entry head (renderDirectionBadge).
+    // Direction is shown as a plain tag in the entry head (renderDirectionTag).
     const facts = [
         entry.doc.params ? renderFact('Аргументы', highlightApiCode(entry.doc.params)) : '',
         entry.doc.returns ? renderFact('Возвращает', highlightApiCode(entry.doc.returns)) : ''
     ].join('');
 
     return `
-        <div class="api-entry__body">
+        <div class="api-entry__body" id="api-detail-${encodeURIComponent(entry.name)}">
             ${entry.doc.syntax
-                ? `<div class="api-code">
+                ? `<div class="api-code pk-device">
                        <div class="api-code__label">Синтаксис</div>
                        <code class="api-code__text">${highlightApiCode(entry.doc.syntax)}</code>
                    </div>`
                 : ''}
             ${facts ? `<dl class="api-facts">${facts}</dl>` : ''}
             ${entry.doc.example
-                ? `<div class="api-code api-code--example">
+                ? `<div class="api-code api-code--example pk-device">
                        <div class="api-code__label">
                            Пример
-                           <button type="button" class="api-copy" data-copy="${escapeHtml(entry.doc.example)}">Копировать</button>
+                           <button type="button" class="api-copy btn-secondary btn--sm" data-copy="${escapeHtml(entry.doc.example)}">Копировать</button>
                        </div>
                        <code class="api-code__text">${highlightApiCode(entry.doc.example)}</code>
                    </div>`
                 : ''}
             ${isInteractive
-                ? `<button type="button" class="api-preview-toggle ${isPreviewOpen ? 'is-open' : ''}"
+                ? `<button type="button" class="api-preview-toggle btn-secondary btn--sm ${isPreviewOpen ? 'is-open' : ''}"
                        data-preview-toggle="${escapeHtml(entry.name)}" aria-expanded="${isPreviewOpen}">
                        ${isPreviewOpen ? 'Скрыть 3D-анимацию' : 'Показать 3D-анимацию'}
                    </button>`
@@ -171,16 +181,12 @@ function renderEntryBody(entry: ApiEntryView): string {
 // Visible without expanding the entry: is this something the script sends
 // to the autopilot (a command), or something the autopilot sends back into
 // callback(event)? The two look alike (both are Ev.*) and are easy to mix up.
-function renderDirectionBadge(direction: ApiEntryView['doc']['direction']): string {
+function renderDirectionTag(direction: ApiEntryView['doc']['direction']): string {
     if (direction === 'to-autopilot') {
-        return `<span class="api-badge-direction api-badge-direction--to" title="Команда: скрипт отправляет её автопилоту">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6l-6 6"/></svg>
-            в автопилот</span>`;
+        return '<span class="api-tag api-tag--to" title="Команда: скрипт отправляет её автопилоту">→ автопилот</span>';
     }
     if (direction === 'from-autopilot') {
-        return `<span class="api-badge-direction api-badge-direction--from" title="Событие: автопилот присылает его в callback(event)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6l6 6"/></svg>
-            от автопилота</span>`;
+        return '<span class="api-tag api-tag--from" title="Событие: автопилот присылает его в callback(event)">← от автопилота</span>';
     }
     return '';
 }
@@ -195,11 +201,11 @@ function renderEntry(entry: ApiEntryView): string {
                 type="button"
                 class="api-entry__head"
                 data-entry-toggle="${escapeHtml(entry.name)}"
-                aria-expanded="${isExpanded}">
-                <span class="api-entry__title">
-                    <span class="api-name">${escapeHtml(entry.name)}</span>
-                    ${renderDirectionBadge(entry.doc.direction)}
-                    ${isInteractive ? '<span class="api-badge-3d">3D</span>' : ''}
+                aria-expanded="${isExpanded}" aria-controls="api-detail-${encodeURIComponent(entry.name)}">
+                <span class="api-name">${escapeHtml(entry.name)}</span>
+                <span class="api-entry__tags">
+                    ${renderDirectionTag(entry.doc.direction)}
+                    ${isInteractive ? '<span class="api-tag api-tag--3d" title="Есть 3D-анимация метода">3D</span>' : ''}
                 </span>
                 <span class="api-entry__desc">${entry.doc.desc || 'Описание пока не добавлено.'}</span>
                 <svg class="api-entry__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -207,14 +213,14 @@ function renderEntry(entry: ApiEntryView): string {
                     <path d="M6 9l6 6l6 -6" />
                 </svg>
             </button>
-            ${isExpanded ? renderEntryBody(entry) : ''}
+            ${isExpanded ? renderEntryBody(entry) : `<div id="api-detail-${encodeURIComponent(entry.name)}" hidden></div>`}
         </article>
     `;
 }
 
 function renderPreviewShell(entry: ApiEntryView): string {
     return `
-        <div class="api-preview" data-api-preview-root="${escapeHtml(entry.name)}">
+        <div class="api-preview pk-device" data-api-preview-root="${escapeHtml(entry.name)}">
             <div class="api-preview__stage" data-api-preview-stage>
                 <div class="api-preview__legend">
                     <span class="api-preview__legend-item"><span class="api-preview__swatch api-preview__swatch--start"></span>Старт</span>
@@ -237,7 +243,8 @@ function renderSections(sections: ApiSection[]): string {
         return `
             <div class="api-empty-state">
                 <div class="api-empty-state__title">Ничего не найдено</div>
-                <div class="api-empty-state__text">Попробуйте изменить запрос или выбрать категорию «Все».</div>
+                <div class="api-empty-state__text">Проверьте название метода или попробуйте более короткий запрос.</div>
+                <button type="button" class="btn-secondary" data-reset-search>Показать весь каталог</button>
             </div>
         `;
     }
@@ -246,10 +253,10 @@ function renderSections(sections: ApiSection[]): string {
         <div class="api-results">
             ${sections
                 .map((section) => `
-                    <section class="api-category">
+                    <section class="api-category pk-section">
                         <div class="api-category-head">
-                            <h3 class="api-category-title">${section.title}</h3>
-                            <p class="api-category-description">${section.description}</p>
+                            <div class="api-category-heading"><h3 class="api-category-title pk-section__title">${section.title}</h3><span class="api-category-count">${section.entries.length}</span></div>
+                            <p class="api-category-description pk-section__hint">${section.description}</p>
                         </div>
                         <div class="api-category-list">
                             ${section.entries.map(renderEntry).join('')}
@@ -285,6 +292,21 @@ function attachInteractions(container: HTMLElement): void {
             });
         });
     }
+
+    const resetSearch = () => {
+        uiState.query = '';
+        uiState.category = 'all';
+        renderApiDocs(uiState.language, { searchSelection: { start: 0, end: 0 } });
+    };
+    container.querySelector('[data-clear-search]')?.addEventListener('click', resetSearch);
+    container.querySelector('[data-reset-search]')?.addEventListener('click', resetSearch);
+    container.querySelector<HTMLSelectElement>('#api-category-select')?.addEventListener('change', event => {
+        uiState.category = (event.target as HTMLSelectElement).value as ApiCategoryId | 'all';
+        renderApiDocs(uiState.language);
+        container.querySelector<HTMLSelectElement>('#api-category-select')?.focus({ preventScroll: true });
+        const scroller = container.closest<HTMLElement>('.editor-docs__body');
+        if (scroller) scroller.scrollTop = 0;
+    });
 
     container.querySelectorAll<HTMLElement>('[data-category]').forEach((chip) => {
         chip.addEventListener('click', () => {
@@ -373,14 +395,28 @@ export function renderApiDocs(
         ? sections
         : sections.filter((section) => section.id === uiState.category);
 
+    const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const searchSelection = options.searchSelection ?? (focused?.id === 'api-docs-search'
+        ? { start: uiState.query.length, end: uiState.query.length }
+        : null);
+    const focusAttribute = ['data-category', 'data-entry-toggle', 'data-preview-toggle'].find(name => focused?.hasAttribute(name));
+    const focusValue = focusAttribute ? focused?.getAttribute(focusAttribute) : null;
+    const scroller = container.closest<HTMLElement>('.editor-docs__body');
+    const scrollTop = scroller?.scrollTop ?? 0;
     destroyPreviews();
     container.innerHTML = `
         ${renderToolbar(language, sections, totalEntries)}
+        <div class="api-result-summary" role="status" aria-live="polite">${uiState.query ? 'Найдено' : 'Записей'}: ${visibleSections.reduce((count, section) => count + section.entries.length, 0)}</div>
         ${renderSections(visibleSections)}
     `;
 
     attachInteractions(container);
-    restoreSearchSelection(container, options.searchSelection ?? null);
+    if (focusAttribute && focusValue !== null) {
+        [...container.querySelectorAll<HTMLElement>(`[${focusAttribute}]`)]
+            .find(element => element.getAttribute(focusAttribute) === focusValue)?.focus({ preventScroll: true });
+    }
+    if (scroller) scroller.scrollTop = options.searchSelection || focusAttribute === 'data-category' ? 0 : scrollTop;
+    restoreSearchSelection(container, searchSelection);
     mountOpenPreview(container);
 }
 

@@ -1,0 +1,32 @@
+<aside id="editor-terminal" class="editor-terminal" hidden aria-label="Нижняя панель редактора">
+    <div id="editor-terminal-resizer" class="editor-terminal__resizer" role="separator" tabindex="0" aria-orientation="horizontal" aria-label="Высота нижней панели" aria-controls="editor-terminal" aria-valuemin="140" aria-valuemax="500" aria-valuenow="260"></div>
+    <div class="editor-terminal__header">
+        <div class="terminal-panel-tabs" role="tablist" aria-label="Нижняя панель">
+            <button id="terminal-tab-console" type="button" role="tab" aria-selected="true" aria-controls="terminal-console-pane" data-terminal-view="console">Терминал</button>
+            <button id="terminal-tab-output" type="button" role="tab" aria-selected="false" aria-controls="terminal-output-pane" data-terminal-view="output" tabindex="-1">Вывод</button>
+            <button id="terminal-tab-problems" type="button" role="tab" aria-selected="false" aria-controls="terminal-problems" data-terminal-view="problems" tabindex="-1">Проблемы <span id="terminal-problem-count" hidden>0</span></button>
+        </div>
+        <div class="terminal-panel-actions" role="toolbar" aria-label="Действия терминала">
+            <select id="terminal-session-select" data-console-action aria-label="Активный сеанс"></select>
+            <button id="terminal-new-btn" data-console-action type="button" class="terminal-icon-btn" title="Новый сеанс" aria-label="Новый сеанс"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+            <button id="terminal-kill-btn" data-console-action type="button" class="terminal-icon-btn" title="Завершить сеанс" aria-label="Завершить сеанс"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3"/></svg></button>
+            <button id="terminal-clear-btn" type="button" class="terminal-icon-btn" title="Очистить сеанс" aria-label="Очистить сеанс"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 20h16M14 4l6 6M3 13l9-9 8 8-8 8H7zM9 7l8 8"/></svg></button>
+            <button id="terminal-maximize-btn" type="button" class="terminal-icon-btn" title="Развернуть панель" aria-label="Развернуть панель" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+            <button type="button" id="editor-terminal-close-btn" class="terminal-icon-btn" title="Скрыть панель" aria-label="Скрыть панель"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+        </div>
+    </div>
+    <section id="terminal-console-pane" class="terminal-console-pane" role="tabpanel" aria-labelledby="terminal-tab-console" data-terminal-pane="console">
+        <div class="terminal-console-main">
+            <div id="terminal-console-stream" class="terminal-console-stream" role="log" aria-label="Вывод активного сеанса" aria-live="polite" aria-relevant="additions"></div>
+            <form id="terminal-command-form" class="terminal-command-form" autocomplete="off">
+                <label for="terminal-command-input" class="terminal-prompt">pioneer ›</label>
+                <input id="terminal-command-input" type="text" aria-label="Команда симулятора" placeholder="help" spellcheck="false" autocapitalize="off" autocomplete="off">
+            </form>
+        </div>
+        <div id="terminal-session-list" class="terminal-session-list" role="tablist" aria-label="Сеансы терминала" aria-orientation="vertical" hidden></div>
+    </section>
+    <section id="terminal-output-pane" class="terminal-output-pane" role="tabpanel" aria-labelledby="terminal-tab-output" data-terminal-pane="output" hidden>
+        <div id="editor-terminal-stream" class="editor-terminal__stream" role="log" aria-live="polite"></div>
+    </section>
+    <section id="terminal-problems" class="terminal-problems" role="tabpanel" aria-labelledby="terminal-tab-problems" data-terminal-pane="problems" hidden></section>
+</aside>

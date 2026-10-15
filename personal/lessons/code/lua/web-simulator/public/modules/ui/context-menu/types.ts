@@ -9,14 +9,3 @@ export type MenuCallbacks = {
     objectActionsTitle?: string;
     objectActions?: { label: string; icon: string; action: () => void; active?: boolean; danger?: boolean }[];
 };
-
-export type ObjectToolPanelCallbacks = {
-    title: string;
-    activeMode?: string | null;
-    onTransform: (mode: string) => void;
-    rotationStepDeg: number;
-    onSetRotationStep: (step: number) => void;
-    onRotateStep: (axis: 'x' | 'y' | 'z', direction: 1 | -1) => void;
-    onResetTransform: () => void;
-    onExit: () => void;
-};

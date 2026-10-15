@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { PointerDragSession } from './pointer-drag.js';
 
 /*
  * Unrestricted fly-through camera for the "free" view's "Полёт" sub-mode -
@@ -24,12 +25,16 @@ const MOVE_KEYS = new Set(['w', 'a', 's', 'd', ' ', 'c', 'shift']);
 export class FreeFlyControls {
     camera: THREE.PerspectiveCamera;
     domElement: HTMLElement;
-    enabled = false;
+    private active = false;
+    get enabled(): boolean { return this.active; }
+    set enabled(value: boolean) {
+        if (!value) this.cancelInteraction();
+        this.active = value;
+    }
 
     private yaw = 0;
     private pitch = 0;
-    private isDragging = false;
-    private previousMouse = { x: 0, y: 0 };
+    private drag: PointerDragSession;
     private pressedKeys = new Set<string>();
 
     private readonly onPointerDown: (event: PointerEvent) => void;
@@ -42,25 +47,24 @@ export class FreeFlyControls {
     constructor(camera: THREE.PerspectiveCamera, domElement: HTMLElement) {
         this.camera = camera;
         this.domElement = domElement;
+        this.drag = new PointerDragSession(domElement);
 
         this.onPointerDown = (event) => {
             if (!this.enabled || event.button !== 0) return;
-            this.isDragging = true;
-            this.previousMouse = { x: event.clientX, y: event.clientY };
-            this.domElement.setPointerCapture(event.pointerId);
+            this.drag.start(event);
         };
         this.onPointerMove = (event) => {
-            if (!this.enabled || !this.isDragging) return;
-            const deltaX = event.clientX - this.previousMouse.x;
-            const deltaY = event.clientY - this.previousMouse.y;
-            this.previousMouse = { x: event.clientX, y: event.clientY };
+            if (!this.enabled) return;
+            const delta = this.drag.move(event);
+            if (!delta) return;
+            const deltaX = delta.x;
+            const deltaY = delta.y;
             this.yaw -= deltaX * LOOK_SENSITIVITY;
             this.pitch = THREE.MathUtils.clamp(this.pitch - deltaY * LOOK_SENSITIVITY, MIN_PITCH, MAX_PITCH);
         };
         this.onPointerUp = (event) => {
-            this.isDragging = false;
             if (this.domElement.hasPointerCapture?.(event.pointerId)) {
-                this.domElement.releasePointerCapture(event.pointerId);
+                this.cancelInteraction();
             }
         };
         this.onKeyDown = (event) => {
@@ -73,7 +77,7 @@ export class FreeFlyControls {
         this.onKeyUp = (event) => {
             this.pressedKeys.delete(event.key.toLowerCase());
         };
-        this.onBlur = () => this.pressedKeys.clear();
+        this.onBlur = () => this.cancelInteraction();
 
         this.domElement.addEventListener('pointerdown', this.onPointerDown);
         this.domElement.addEventListener('pointermove', this.onPointerMove);
@@ -130,11 +134,18 @@ export class FreeFlyControls {
     }
 
     dispose(): void {
+        this.drag.dispose();
+        this.cancelInteraction();
         this.domElement.removeEventListener('pointerdown', this.onPointerDown);
         this.domElement.removeEventListener('pointermove', this.onPointerMove);
         this.domElement.removeEventListener('pointerup', this.onPointerUp);
         window.removeEventListener('keydown', this.onKeyDown);
         window.removeEventListener('keyup', this.onKeyUp);
         window.removeEventListener('blur', this.onBlur);
+    }
+
+    cancelInteraction(): void {
+        this.drag?.cancel();
+        this.pressedKeys.clear();
     }
 }

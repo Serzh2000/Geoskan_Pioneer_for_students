@@ -22,6 +22,7 @@ export type ResolvedCameraFeed = {
 };
 
 export const cameraConnectionsByDrone: Record<string, CameraConnection> = {};
+export const cameraViewsByDrone: Record<string, 'front' | 'bottom'> = {};
 
 export function reportCameraBridgeDebug(hypothesisId: string, message: string, data: Record<string, unknown>) {
     const debugUrl = (window as typeof window & { DEBUG_SERVER_URL?: string }).DEBUG_SERVER_URL;

@@ -4,51 +4,14 @@
         --panel-header-height: 44px;
     }
 
-    .header-brand {
-        gap: 0;
-    }
-
-    .header-actions {
-        gap: 8px;
-    }
-
-    .header-controls-group {
-        gap: 8px;
-    }
-
-    .header-select,
-    .header-lang-select,
-    .header-theme-toggle,
-    .header-actions button {
-        width: 100%;
-        flex: 1 1 100%;
-    }
-
-    .header-controls-group--actions .btn-primary,
-    .header-controls-group--actions .btn-secondary {
-        min-width: 0;
+    .header-theme-toggle {
+        width: auto;
+        flex: 0 0 auto;
     }
 
     .container {
         gap: 8px;
         padding: 6px;
-    }
-
-    .header-controls-group--actions .btn-primary,
-    .header-controls-group--actions .btn-secondary {
-        width: auto;
-        flex: 1 1 calc(33.333% - 6px);
-    }
-
-    .workspace-switch {
-        flex: 1 1 100%;
-        margin-left: 0;
-    }
-
-    .header-actions .workspace-switch__btn {
-        flex: 1 1 0;
-        min-width: 0;
-        padding: 0 10px;
     }
 
     .workspace-sidebar {
@@ -74,15 +37,19 @@
     }
 
     .camera-controls {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         justify-content: center;
-        gap: var(--panel-gap-sm);
-        inset: auto var(--panel-pad-x) var(--panel-pad-x) var(--panel-pad-x);
+        gap: 2px;
+        inset: auto;
     }
 
     .camera-controls button {
-        flex: 1 1 calc(50% - 8px);
-        min-width: 110px;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .camera-controls .pk-seg__btn {
+        padding-inline: 8px;
     }
 
 }

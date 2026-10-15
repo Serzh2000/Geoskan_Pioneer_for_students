@@ -6,6 +6,7 @@ import type {
 import { simSettings } from '../core/state.js';
 import { emitEarlyRoute } from '../core/mission-notices.js';
 import { log } from '../shared/logging/logger.js';
+import { recordLearningEvent } from '../core/learning-journal.js';
 import {
     getAutopilotRuntimeConfig,
     rememberAutopilotHomePosition
@@ -18,7 +19,6 @@ import {
 import {
     getCommandSource,
     getCurrentTickMs,
-    isDroneMovingState,
     recordTickCommand,
     rejectCommandByFsm,
     setDroneFsmState,
@@ -87,6 +87,9 @@ export function applyGoToLocalPointRequest(
         );
     }
 
+    // A point command takes over from velocity control. Otherwise its watchdog
+    // can replace this new target with the current position on the next tick.
+    drone.manualVelocity = null;
     drone.target_pos = target;
     if (typeof options?.yaw === 'number') {
         drone.target_yaw = options.yaw;
@@ -101,6 +104,8 @@ export function applyGoToLocalPointRequest(
 }
 
 export function enterPreflight(drone: DroneState) {
+    recordLearningEvent(drone.id, { kind: 'arm', time: drone.current_time, state: drone.fsmState,
+        accepted: drone.fsmState === 'IDLE' && !(getAutopilotRuntimeConfig().failsafe.flyWithoutRc === 1 && !simSettings.gamepadConnected) });
     if (drone.fsmState !== 'IDLE') {
         if (getCommandSource(drone) === 'timer') {
             log('WARNING: Delayed command was rejected because FSM state has already changed.', 'warn');
@@ -196,6 +201,8 @@ export function enterLandingProcess(drone: DroneState) {
         log('WARNING: LANDING overrides the active goToLocalPoint movement.', 'warn');
     }
 
+    drone.manualVelocity = null;
+    drone.timedGoTo = null;
     drone.target_pos = { x: drone.pos.x, y: drone.pos.y, z: 0 };
     drone.target_alt = 0;
     drone.pendingLocalPoint = false;

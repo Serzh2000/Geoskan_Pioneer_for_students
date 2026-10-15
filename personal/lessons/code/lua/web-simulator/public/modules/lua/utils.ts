@@ -56,7 +56,7 @@ export function luaToStr(luaVal: any, L: any): string {
     try {
         const str = fengari.to_jsstring(luaVal);
         return str || "Empty Lua Error message";
-    } catch (e) {
+    } catch {
         const decoded = decodeLuaByteLikeValue(luaVal);
         if (decoded) {
             return decoded;

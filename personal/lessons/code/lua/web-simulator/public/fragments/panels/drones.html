@@ -1,78 +1,67 @@
             <div id="drones-panel" class="sidebar-panel">
                 <div class="panel-header">
                     <div class="panel-header__lead">
-                        <span class="panel-title">Управление роем</span>
+                        <span class="panel-title">Рой</span>
                     </div>
-                    <button class="panel-close-btn" onclick="closePanel()">✕</button>
+                    <span id="drone-list-count" class="pk-chip pk-chip--plain" role="status">0 дронов</span>
+                    <button type="button" class="panel-close-btn" onclick="closePanel()" aria-label="Закрыть рой"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg></button>
                 </div>
                 <div class="panel-content panel-content--drones">
                     <div class="swarm-manager">
-                        <div class="swarm-manager__intro">
-                            <div class="swarm-manager__eyebrow">
-                                <span class="swarm-manager__eyebrow-icon" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="7" cy="7" r="2.1"></circle>
-                                        <circle cx="17" cy="7" r="2.1"></circle>
-                                        <circle cx="7" cy="17" r="2.1"></circle>
-                                        <circle cx="17" cy="17" r="2.1"></circle>
-                                        <rect x="9.5" y="9.5" width="5" height="5" rx="1.5"></rect>
-                                        <path d="M8.6 8.6 10 10"></path>
-                                        <path d="M15.4 8.6 14 10"></path>
-                                        <path d="M8.6 15.4 10 14"></path>
-                                        <path d="M15.4 15.4 14 14"></path>
-                                    </svg>
-                                </span>
-                                <span>Координация роя</span>
+                        <section class="pk-section" aria-labelledby="drone-list-title">
+                            <div class="pk-section__head">
+                                <h3 id="drone-list-title" class="pk-section__title">Дроны</h3>
+                                <button id="add-drone-btn" class="btn-secondary btn--sm" type="button">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                                    <span>Добавить</span>
+                                </button>
                             </div>
-                            <p class="swarm-manager__subtitle">Выберите активный дрон роя и управляйте составом группы без перегруженного интерфейса.</p>
-                        </div>
-                        <section class="swarm-list-card" aria-labelledby="drone-list-title">
-                            <div class="swarm-list-card__header">
-                                <span id="drone-list-title" class="swarm-list-card__title">Список дронов</span>
-                                <span class="swarm-list-card__meta" id="drone-list-count">0 дронов</span>
-                            </div>
-                            <div id="drone-list" class="swarm-list" role="listbox" aria-label="Список дронов"></div>
+                            <div id="drone-list" class="pk-list swarm-list" role="listbox" aria-label="Список дронов"></div>
+                            <button id="del-drone-btn" type="button" hidden>Удалить</button>
                         </section>
-                        <section class="swarm-bridge-card" aria-labelledby="swarm-bridge-title">
-                            <div class="swarm-bridge-card__header">
-                                <div>
-                                    <div id="swarm-bridge-title" class="swarm-bridge-card__title">Подключение из Python IDLE</div>
-                                    <div class="swarm-bridge-card__subtitle" id="swarm-bridge-drone-name">Активный дрон не выбран</div>
-                                </div>
-                                <span class="swarm-bridge-card__status" id="swarm-bridge-status">Выключен</span>
-                            </div>
-                            <div class="swarm-bridge-card__description" id="swarm-bridge-summary">
-                                Выберите дрон, нажмите Разрешить внешние команды и запустите скрипт в IDLE. Вкладку симулятора не закрывайте. Backend запускается только <code>npm start</code>.
-                            </div>
-                            <div class="swarm-bridge-card__details">
-                                <div class="swarm-bridge-card__detail" id="swarm-bridge-transport">Подключение: -</div>
-                                <div class="swarm-bridge-card__detail" id="swarm-bridge-target">Источник: bridge запрещён</div>
-                            </div>
-                            <div class="swarm-bridge-card__actions">
-                                <button id="enable-external-bridge-btn" class="swarm-action-btn swarm-action-btn--bridge-on" type="button">Разрешить внешние команды</button>
-                                <button id="disable-external-bridge-btn" class="swarm-action-btn swarm-action-btn--bridge-off" type="button">Запретить внешние команды</button>
+                        <section class="pk-section" aria-labelledby="swarm-bridge-title">
+                            <div class="pk-section__head"><h3 id="swarm-bridge-title" class="pk-section__title">Внешний Python</h3></div>
+                            <p class="pk-section__hint" id="swarm-bridge-summary"></p>
+                            <ol class="swarm-steps">
+                                <li class="swarm-step">
+                                    <span class="swarm-step__text">Запустите <code class="swarm-step__code">start.cmd</code></span>
+                                </li>
+                                <li class="swarm-step">
+                                    <label class="pk-toggle swarm-step__switch">
+                                        <span class="pk-toggle__text"><span class="pk-toggle__title">Разрешить управление</span></span>
+                                        <span id="swarm-bridge-status" class="swarm-step__state" role="status">Запрещено</span>
+                                        <input type="checkbox" id="swarm-bridge-toggle" role="switch">
+                                        <span class="pk-switch" aria-hidden="true"></span>
+                                    </label>
+                                </li>
+                                <li class="swarm-step swarm-step--code" id="swarm-bridge-code-step">
+                                    <span class="swarm-step__text">Вставьте в начало программы</span>
+                                    <div class="swarm-snippet">
+                                        <div class="swarm-snippet__bar">
+                                            <span>Python</span>
+                                            <button class="btn-secondary btn--sm swarm-snippet__copy" type="button" data-copy-target="swarm-bridge-snippet">Копировать</button>
+                                        </div>
+                                        <pre class="swarm-snippet__code"><code id="swarm-bridge-snippet">pioneer = Pioneer()</code></pre>
+                                    </div>
+                                    <span class="swarm-step__note swarm-mono" id="swarm-bridge-transport"></span>
+                                    <details class="pk-disclosure swarm-camera">
+                                        <summary>Нужна камера? Прогрев UDP</summary>
+                                        <p class="pk-section__hint">Камера шлёт кадры по UDP, а роутер пускает их внутрь, только если компьютер сам отправил пакет с того же порта. Этот класс отправляет такой пакет сразу после подключения.</p>
+                                        <div class="swarm-snippet">
+                                            <div class="swarm-snippet__bar">
+                                                <span>Python</span>
+                                                <button class="btn-secondary btn--sm swarm-snippet__copy" type="button" data-copy-target="swarm-bridge-camera-snippet">Копировать</button>
+                                            </div>
+                                            <pre class="swarm-snippet__code"><code id="swarm-bridge-camera-snippet">camera = Camera()</code></pre>
+                                        </div>
+                                    </details>
+                                </li>
+                            </ol>
+                            <div class="pk-btn-row" hidden>
+                                <button id="enable-external-bridge-btn" type="button">Разрешить управление из Python</button>
+                                <button id="disable-external-bridge-btn" type="button" hidden>Запретить управление из Python</button>
                             </div>
                         </section>
-                        <div class="swarm-actions">
-                            <button id="add-drone-btn" class="swarm-action-btn swarm-action-btn--add" type="button">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="8"></circle>
-                                    <path d="M12 8v8"></path>
-                                    <path d="M8 12h8"></path>
-                                </svg>
-                                <span>Добавить</span>
-                            </button>
-                            <button id="del-drone-btn" class="swarm-action-btn swarm-action-btn--delete" type="button">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M9 10v6"></path>
-                                    <path d="M15 10v6"></path>
-                                    <path d="M5 7h14"></path>
-                                    <path d="M8 7V5.8A1.8 1.8 0 0 1 9.8 4h4.4A1.8 1.8 0 0 1 16 5.8V7"></path>
-                                    <path d="M6.2 7 7 18a2 2 0 0 0 2 1.8h6a2 2 0 0 0 2-1.8L17.8 7"></path>
-                                </svg>
-                                <span>Удалить</span>
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>

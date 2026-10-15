@@ -8,13 +8,6 @@ import type {
     PioneerConnectionSettings
 } from './state-types.js';
 
-const DISARMED_STATUSES = new Set([
-    'IDLE',
-    'ОШИБКА',
-    'CRASHED',
-    'DISARMED_FALL'
-]);
-
 const BATTERY_CAPACITY_MAH = 1800;
 const BATTERY_FULL_VOLTAGE = 8.4;
 
@@ -152,8 +145,4 @@ export function resetDroneRuntimeState(drone: DroneState) {
     drone.printBubbleText = '';
     drone.printBubbleUntil = 0;
     drone.luaDiagnostics = createEmptyLuaDiagnosticsState();
-}
-
-export function isDroneArmed(drone: DroneState): boolean {
-    return !DISARMED_STATUSES.has(drone.status);
 }

@@ -1,7 +1,4 @@
-@import url('./manager-panel/light-shell.css');
-@import url('./manager-panel/light-forms.css');
-@import url('./manager-panel/light-details.css');
-@import url('./manager-panel/transform.css');
-@import url('./manager-panel/tree-and-split.css');
-@import url('./manager-panel/responsive.css');
-
+/* Scene workbench: controls, panel layout and catalog each own their complete recipe. */
+@import url('./manager-panel/controls.css');
+@import url('./manager-panel/panel.css');
+@import url('./manager-panel/catalog.css');

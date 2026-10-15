@@ -19,8 +19,6 @@ declare module 'three/examples/jsm/controls/TransformControls.js' {
 
 declare global {
     interface Window {
-        OrbitControls: any;
-        TransformControls: any;
         scene: THREE.Scene;
         droneMesh: THREE.Group;
         
@@ -61,11 +59,7 @@ declare global {
         js_sleep: (L: any) => number;
 
         // UI & Camera
-        fpvCamera: THREE.PerspectiveCamera;
         setCameraMode: (mode: string) => void;
-        switchTab: (tabId: string) => void;
-        getEditorValueFallback: () => string;
-        setEditorValueFallback: (val: string) => void;
         showContextMenu: (
             x: number,
             y: number,

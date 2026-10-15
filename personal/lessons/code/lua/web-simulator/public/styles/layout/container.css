@@ -34,9 +34,9 @@
     min-height: 0;
     height: 100%;
     align-self: stretch;
-    border: 1px solid rgba(9, 9, 11, 0.08);
+    border: 1px solid var(--border-color);
     border-radius: 18px;
-    background: rgba(255, 255, 255, 0.92);
+    background: var(--panel-bg);
     box-shadow: var(--shadow-card);
     overflow: hidden;
     transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
@@ -61,27 +61,56 @@
     min-height: 0;
 }
 
-/* The Code tab is a primary workspace mode on desktop. It keeps the tool rail
-   available, while Blockly/Monaco receives the full area previously used by 3D. */
+/*
+ * Desktop tool panels keep their saved width beside the scene. The editor
+ * always fills the workspace; data-editor-expanded is a fixed geometry flag.
+ */
 @media (min-width: 981px) {
-    .container[data-workspace-page='code'] .mobile-scene-page {
-        display: none;
+    .container {
+        --scene-min-width: 360px;
+        --editor-min-width: 360px;
     }
 
-    .container[data-workspace-page='code'] .mobile-workspace-track {
+    .workspace-sidebar {
+        flex: 0 1 auto;
+    }
+
+    .mobile-scene-page {
+        min-width: var(--scene-min-width);
+    }
+
+    .container[data-active-panel='editor-panel'] .workspace-sidebar {
+        /* rail + editor minimum + the 1px borders of the sidebar frame */
+        min-width: calc(var(--rail-width) + var(--editor-min-width) + 2px);
+    }
+
+    .container[data-active-panel='editor-panel'] .sidebar-panels {
+        min-width: var(--editor-min-width);
+    }
+
+    .container[data-workspace-page='code'][data-editor-expanded='true'] .mobile-workspace-track {
         gap: 0;
     }
 
-    .container[data-workspace-page='code'] .workspace-sidebar {
-        width: 100%;
-        min-width: 0;
-        border-radius: 18px;
+    .container[data-workspace-page='code'][data-editor-expanded='true'] .mobile-scene-page {
+        display: none;
     }
 
-    .container[data-workspace-page='code'] .sidebar-panels {
-        width: auto !important;
+    .container[data-workspace-page='code'][data-editor-expanded='true'] .workspace-sidebar {
+        flex: 1 1 100%;
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* The editor fills the free width: it grows from its stored width (flex-grow),
+       so the inline width needs no override. */
+    .container[data-workspace-page='code'][data-editor-expanded='true'] .sidebar-panels {
         flex: 1 1 auto;
         min-width: 0;
     }
-}
 
+    /* The expanded editor has no scene beside it to resize against. */
+    .container[data-workspace-page='code'][data-editor-expanded='true'] .sidebar-panels .resizer {
+        display: none;
+    }
+}

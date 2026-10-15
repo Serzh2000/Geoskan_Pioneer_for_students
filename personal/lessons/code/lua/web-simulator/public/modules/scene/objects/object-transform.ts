@@ -4,38 +4,19 @@ import { drones, currentDroneId, simSettings } from '../../core/state.js';
 import { updateTransformModeDecorations } from '../interaction/transform.js';
 import { isTransformableObject } from './object-catalog.js';
 import { getCameraMode } from '../core/camera-mode-state.js';
+import { shouldSnapToGrid } from './placement.js';
+import { ROTATION_SNAP_DEGREES } from './placement-geometry.js';
+import { MODE_SIZES } from '../core/transform-controls-style-helpers.js';
 
 export type TransformMode = 'translate' | 'rotate' | 'scale';
 export type RotationAxis = 'x' | 'y' | 'z';
 
-const ROTATION_STEP_OPTIONS = [5, 15, 45] as const;
-let rotationStepDegrees = 15;
 let initialTransformTarget: THREE.Object3D | null = null;
 let initialTransformSnapshot: {
     position: THREE.Vector3;
     quaternion: THREE.Quaternion;
     scale: THREE.Vector3;
 } | null = null;
-
-export function getRotationStepOptions() {
-    return [...ROTATION_STEP_OPTIONS];
-}
-
-export function getRotationStepDegrees() {
-    return rotationStepDegrees;
-}
-
-export function setRotationStepDegrees(step: number) {
-    const normalized = ROTATION_STEP_OPTIONS.includes(step as typeof ROTATION_STEP_OPTIONS[number]) ? step : 15;
-    rotationStepDegrees = normalized;
-    if (transformControl?.getMode() === 'rotate') {
-        transformControl.setRotationSnap(THREE.MathUtils.degToRad(rotationStepDegrees));
-    }
-    if ((window as any).setTransformToolbarRotationStep) {
-        (window as any).setTransformToolbarRotationStep(rotationStepDegrees);
-    }
-    return rotationStepDegrees;
-}
 
 export function rememberSelectedObjectInitialTransform(target: THREE.Object3D) {
     initialTransformTarget = target;
@@ -52,10 +33,18 @@ export function clearSelectedObjectInitialTransform(target?: THREE.Object3D | nu
     initialTransformSnapshot = null;
 }
 
+/** The mode the viewport gizmo is really in, or null when no gizmo is attached to the selection. */
+export function getActiveTransformMode(): TransformMode | null {
+    return transformControl?.object ? (transformControl.getMode() as TransformMode) : null;
+}
+
 export function rotateSelectedObjectByDegrees(axis: RotationAxis, deltaDegrees: number) {
     if (!selectedObject || !transformControl || !isTransformableObject(selectedObject) || drones[currentDroneId].running) return false;
-    const radians = THREE.MathUtils.degToRad(deltaDegrees);
-    selectedObject.rotation[axis] += radians;
+    // About the world axis, like the gizmo ring of the same name: adding to an Euler angle turns about a different axis once the object is tilted.
+    const worldAxis = new THREE.Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, axis === 'z' ? 1 : 0);
+    const parentInverse = (selectedObject.parent?.getWorldQuaternion(new THREE.Quaternion()) ?? new THREE.Quaternion()).invert();
+    const turn = new THREE.Quaternion().setFromAxisAngle(worldAxis.applyQuaternion(parentInverse), THREE.MathUtils.degToRad(deltaDegrees));
+    selectedObject.quaternion.premultiply(turn).normalize();
     selectedObject.updateMatrixWorld(true);
     transformControl.dispatchEvent({ type: 'change' });
     updateTransformModeDecorations(transformControl.getMode(), selectedObject);
@@ -101,22 +90,19 @@ export function activateTransformMode(mode: TransformMode, target: THREE.Object3
     transformControl.attach(target);
     transformControl.setMode(mode);
     transformControl.enabled = true;
-    transformControl.size = mode === 'rotate' ? 1.3 : 1.15;
+    transformControl.size = MODE_SIZES[mode];
     transformControl.showX = true;
     transformControl.showY = true;
     transformControl.showZ = true;
     transformControl.setSpace(mode === 'scale' ? 'local' : 'world');
     transformControl.setTranslationSnap(null);
     transformControl.setScaleSnap(null);
-    transformControl.setRotationSnap(mode === 'rotate' ? THREE.MathUtils.degToRad(rotationStepDegrees) : null);
+    // 15° steps while "Привязка к сетке" is on and Shift is not held (placement.ts keeps it in sync).
+    transformControl.setRotationSnap(mode === 'rotate' && shouldSnapToGrid() ? THREE.MathUtils.degToRad(ROTATION_SNAP_DEGREES) : null);
     transformControl.visible = simSettings.showGizmo;
     if (transformHelper) {
         transformHelper.visible = simSettings.showGizmo;
         transformHelper.updateMatrixWorld(true);
-    }
-    if ((window as any).setGizmoToolbarMode) (window as any).setGizmoToolbarMode(mode);
-    if ((window as any).setTransformToolbarRotationStep) {
-        (window as any).setTransformToolbarRotationStep(rotationStepDegrees);
     }
     updateTransformModeDecorations(mode, target);
     if (controls) controls.enabled = getCameraMode() === 'free' && !(window as any).isTransforming;

@@ -1,3 +1,4 @@
+import { initGamepadDialog } from './gamepad-dialog.js';
 import { log } from '../../shared/logging/logger.js';
 import type { UICallbacks } from '../index.js';
 import { createSidebarDiagnosticsLogger } from './sidebar-debug.js';
@@ -10,11 +11,24 @@ export function initSidebar(callbacks: UICallbacks) {
 
     const ACTIVE_PANEL_STORAGE_KEY = 'geoskan_sidebar_active_panel_v1';
     const CLOSED_PANEL_SENTINEL = '__closed__';
-    const DEFAULT_SIDEBAR_WIDTH = 320;
+    const DEFAULT_SIDEBAR_WIDTH = 360;
     const MIN_SIDEBAR_WIDTH = 320;
     const MAX_SIDEBAR_WIDTH = 1000;
+    // Keep in sync with --scene-min-width in styles/layout/container.css: on desktop
+    // the scene beside an open panel never gets narrower than this.
+    const SCENE_MIN_WIDTH = 360;
     const MOBILE_SIDEBAR_QUERY = '(max-width: 980px)';
-    const fullscreenPanels = new Set(['gamepad-panel']);
+    // Column width a panel opens with until the user drags it to another one.
+    const PANEL_DEFAULT_WIDTHS: Record<string, number> = {
+        'editor-panel': 520,
+        'telemetry-panel': 320,
+        'drone-link-panel': 360,
+        'manager-panel': 420,
+        'gamepad-panel': 440
+    };
+    const PANEL_MIN_WIDTHS: Record<string, number> = {
+        'editor-panel': 360
+    };
     const mobileSidebarQuery = window.matchMedia(MOBILE_SIDEBAR_QUERY);
     const shouldLogPanelDebug = localStorage.getItem('sidebar-debug') === '1';
     const loggablePanelNames: Record<string, string> = {
@@ -22,23 +36,49 @@ export function initSidebar(callbacks: UICallbacks) {
     };
     const debugPanelIds = new Set(['settings-panel']);
     const logPanelOpenDiagnostics = createSidebarDiagnosticsLogger(panels, shouldLogPanelDebug, debugPanelIds);
+    const gamepadDialog = initGamepadDialog();
     let isResizing = false;
     let viewportRefreshFrame = 0;
     let closeAnimationTimer = 0;
 
-    const normalizeSidebarWidth = (value: string | null): string => {
+    const minWidthFor = (panelId: string | null): number =>
+        (panelId && PANEL_MIN_WIDTHS[panelId]) || MIN_SIDEBAR_WIDTH;
+
+    const normalizeSidebarWidth = (value: string | null, panelId: string | null = null): string => {
         const parsed = Number.parseInt(value || '', 10);
-        if (!Number.isFinite(parsed)) return `${DEFAULT_SIDEBAR_WIDTH}px`;
-        return `${Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, parsed))}px`;
+        if (!Number.isFinite(parsed)) return `${(panelId && PANEL_DEFAULT_WIDTHS[panelId]) || DEFAULT_SIDEBAR_WIDTH}px`;
+        return `${Math.min(MAX_SIDEBAR_WIDTH, Math.max(minWidthFor(panelId), parsed))}px`;
     };
 
     const isMobileSidebar = () => mobileSidebarQuery.matches;
 
+    /*
+     * The widest the column can be while the scene beside it keeps its minimum.
+     * The CSS (flex-shrink on the sidebar) enforces the same limit when the window
+     * is narrower than a saved width; this keeps a drag from storing more than fits.
+     */
+    const getMaxPanelWidth = (panelId: string | null): number => {
+        const track = panels.closest('.mobile-workspace-track') as HTMLElement | null;
+        if (!track || !workspaceSidebar || isMobileSidebar() || panels.classList.contains('is-fullscreen')) return MAX_SIDEBAR_WIDTH;
+        const railWidth = Math.max(0, workspaceSidebar.getBoundingClientRect().width - panels.getBoundingClientRect().width);
+        const gap = Number.parseFloat(window.getComputedStyle(track).columnGap) || 0;
+        const room = Math.floor(track.clientWidth - railWidth - gap - SCENE_MIN_WIDTH);
+        return Math.min(MAX_SIDEBAR_WIDTH, Math.max(minWidthFor(panelId), room));
+    };
+
+    // Every panel persists its own width under its id (an in-memory fallback covers denied storage).
+    const widthKey = (panelId: string) => `sidebar-width:${panelId}`;
+    const readWidth = (panelId: string): string | null => {
+        try { return localStorage.getItem(widthKey(panelId)); } catch { return null; }
+    };
+    const saveWidth = (panelId: string, width: string) => {
+        try { localStorage.setItem(widthKey(panelId), width); } catch { /* The width then lasts for this session only. */ }
+    };
+
     const getOpenSidebarWidth = (panelId: string | null): string => {
         if (!panelId) return '0px';
         if (isMobileSidebar()) return '100%';
-        if (fullscreenPanels.has(panelId)) return '100%';
-        return normalizeSidebarWidth(localStorage.getItem('sidebar-width'));
+        return normalizeSidebarWidth(readWidth(panelId), panelId);
     };
 
     const persistActivePanel = (panelId: string | null) => {
@@ -46,9 +86,10 @@ export function initSidebar(callbacks: UICallbacks) {
     };
 
     const setActiveTabButton = (panelId: string | null) => {
-        const buttons = document.querySelectorAll('.sidebar-tab-btn');
+        // Actions that share the rail's look (the theme switch) are not panel tabs.
+        const buttons = document.querySelectorAll('.sidebar-tab-btn:not(.sidebar-tab-btn--action):not(.sidebar-tab-btn--docs)');
         buttons.forEach((btn) => {
-            const isTarget = !!panelId && btn.getAttribute('onclick')?.includes(`'${panelId}'`);
+            const isTarget = !!panelId && !!btn.getAttribute('onclick')?.includes(`'${panelId}'`);
             btn.classList.toggle('active', isTarget);
         });
     };
@@ -73,16 +114,15 @@ export function initSidebar(callbacks: UICallbacks) {
         const isMobile = isMobileSidebar();
         panels.classList.toggle('is-mobile', isMobile);
         workspaceSidebar?.classList.toggle('is-mobile', isMobile);
-        if (!isMobile) return;
+        if (!isMobile) {
+            // Leaving the narrow layout: the stacked 100% column becomes the panel's own width again.
+            if (activePanelId && panels.style.width === '100%') panels.style.width = getOpenSidebarWidth(activePanelId);
+            return;
+        }
         if (activePanelId && panels.style.width !== '0px') {
             panels.style.width = '100%';
         }
         syncSidebarCollapsedState();
-        syncSidebarMode(activePanelId);
-    };
-
-    const syncSidebarMode = (panelId: string | null) => {
-        panels.classList.toggle('is-fullscreen', !!panelId && fullscreenPanels.has(panelId) && panels.style.width !== '0px');
     };
 
     const resetClosingState = () => {
@@ -101,7 +141,6 @@ export function initSidebar(callbacks: UICallbacks) {
             panel.classList.remove('is-closing');
         });
         syncSidebarCollapsedState();
-        syncSidebarMode(null);
         panels.classList.remove('is-closing');
         setActiveTabButton(null);
         persistActivePanel(null);
@@ -126,6 +165,7 @@ export function initSidebar(callbacks: UICallbacks) {
     };
 
     const openPanel = function(panelId: string) {
+        if (panelId === 'gamepad-panel') { gamepadDialog?.open(); return; }
         const panel = document.getElementById(panelId);
         if (!panel) {
             console.warn('[Sidebar][Debug] openPanel target not found', { panelId });
@@ -150,13 +190,11 @@ export function initSidebar(callbacks: UICallbacks) {
             return;
         }
 
+        // Only a width the user dragged to is stored (see the resizer below), so a
+        // changed default reaches everyone who never resized that panel.
         panels.style.width = getOpenSidebarWidth(panelId);
-        if (!isMobileSidebar() && !fullscreenPanels.has(panelId)) {
-            localStorage.setItem('sidebar-width', panels.style.width);
-        }
         syncSidebarCollapsedState();
         syncResponsiveSidebarState();
-        syncSidebarMode(panelId);
         panel.classList.add('active');
         setActiveTabButton(panelId);
         persistActivePanel(panelId);
@@ -188,10 +226,9 @@ export function initSidebar(callbacks: UICallbacks) {
     // Public aliases are deliberately narrow: the header control needs the same
     // closing path as a panel's own close button, including the animation.
     (window as any).closeSidebarPanel = closePanelWithAnimation;
-    (window as any).openSidebarPanel = openPanel;
 
     resizer.addEventListener('mousedown', () => {
-        if (isMobileSidebar()) return;
+        if (isMobileSidebar() || panels.classList.contains('is-fullscreen')) return;
         isResizing = true;
         resizer.classList.add('dragging');
         document.body.style.cursor = 'col-resize';
@@ -199,25 +236,29 @@ export function initSidebar(callbacks: UICallbacks) {
 
     window.addEventListener('mousemove', (e) => {
         if (!isResizing) return;
-        const newWidth = Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, e.clientX - 50));
+        // The column starts where the rail ends: measure from its own left edge.
+        const activePanelId = document.querySelector('.sidebar-panel.active')?.id ?? null;
+        const newWidth = Math.min(getMaxPanelWidth(activePanelId), Math.max(minWidthFor(activePanelId), Math.round(e.clientX - panels.getBoundingClientRect().left)));
         panels.style.width = `${newWidth}px`;
-        localStorage.setItem('sidebar-width', `${newWidth}px`);
+        if (activePanelId) saveWidth(activePanelId, `${newWidth}px`);
         syncSidebarCollapsedState();
-        syncSidebarMode(document.querySelector('.sidebar-panel.active')?.id ?? null);
         if (callbacks.onEditorResize) callbacks.onEditorResize();
         refreshViewportLayout();
     });
 
-    window.addEventListener('mouseup', () => {
+    const endResize = () => {
         if (!isResizing) return;
         isResizing = false;
         resizer.classList.remove('dragging');
         document.body.style.cursor = '';
-    });
+    };
+    window.addEventListener('mouseup', endResize);
+    window.addEventListener('blur', endResize);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) endResize(); });
 
-    (window as any).switchTab = openPanel;
-    panels.style.width = normalizeSidebarWidth(localStorage.getItem('sidebar-width'));
-    localStorage.setItem('sidebar-width', panels.style.width);
+    // Storage is written only when the user drags (or the editor autofit widens) a column,
+    // so a changed default reaches everyone who never resized that panel.
+    panels.style.width = getOpenSidebarWidth('editor-panel');
 
     const restoreSidebarState = () => {
         const savedPanelId = localStorage.getItem(ACTIVE_PANEL_STORAGE_KEY);
@@ -234,11 +275,16 @@ export function initSidebar(callbacks: UICallbacks) {
         if (savedPanelId === null || savedPanelId === CLOSED_PANEL_SENTINEL) {
             panels.style.width = '0px';
             syncSidebarCollapsedState();
-            syncSidebarMode(null);
             refreshViewportLayout();
             return;
         }
 
+        if (savedPanelId === 'gamepad-panel') {
+            panels.style.width = '0px';
+            syncSidebarCollapsedState();
+            persistActivePanel(null);
+            return;
+        }
         const panel = document.getElementById(savedPanelId);
         if (!panel) {
             persistActivePanel('editor-panel');
@@ -247,14 +293,10 @@ export function initSidebar(callbacks: UICallbacks) {
         }
 
         panels.style.width = getOpenSidebarWidth(savedPanelId);
-        if (!isMobileSidebar() && !fullscreenPanels.has(savedPanelId)) {
-            localStorage.setItem('sidebar-width', panels.style.width);
-        }
         panel.classList.add('active');
         setActiveTabButton(savedPanelId);
         syncSidebarCollapsedState();
         syncResponsiveSidebarState();
-        syncSidebarMode(savedPanelId);
         if (savedPanelId === 'editor-panel' && callbacks.onEditorResize) {
             setTimeout(callbacks.onEditorResize, 350);
         }

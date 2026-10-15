@@ -4,34 +4,17 @@ export type {
     CommandSource,
     DroneFsmState,
     DroneState,
-    FlightMode,
     GamepadInputRef,
-    GamepadModeRanges,
-    LedColor,
-    LuaApiCallRecord,
     LuaDiagnosticLevel,
     LuaDiagnosticsState,
-    LuaFsmTransitionRecord,
-    LuaRuntimeLogEntry,
-    Orientation,
     PioneerConnectionMethod,
-    PioneerConnectionSettings,
     PythonExecutionTarget,
-    QueuedMceCommand,
     ScriptLanguage,
     TickFlightCommand,
     TickCommandSignature,
-    TimerTask,
     Vector3
 } from './state-types.js';
-import {
-    DEFAULT_LUA_SCRIPT,
-    DEFAULT_PYTHON_SCRIPT
-} from './state-types.js';
-export {
-    DEFAULT_LUA_SCRIPT,
-    DEFAULT_PYTHON_SCRIPT
-} from './state-types.js';
+export { DEFAULT_LUA_SCRIPT } from './state-types.js';
 import type {
     AuxChannelRange,
     DroneState,
@@ -42,8 +25,6 @@ import type {
 import {
     createDroneRecord,
     createDefaultPioneerConnectionSettings,
-    createEmptyLuaDiagnosticsState,
-    isDroneArmed,
     resetDroneRuntimeState
 } from './state-drone.js';
 

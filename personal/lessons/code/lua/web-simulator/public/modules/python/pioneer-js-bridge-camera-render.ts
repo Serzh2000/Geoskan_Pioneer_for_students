@@ -2,7 +2,9 @@ import * as THREE from 'three';
 import type { PerspectiveCamera, WebGLRenderer } from 'three';
 import { droneMeshes, scene } from '../scene/core/scene-init.js';
 import { reportCameraBridgeDebug, resolveConnectedCameraFeed } from './pioneer-js-bridge-camera-shared.js';
-import { detectVisibleMarkers } from './marker-detection.js';
+import { detectVisibleMarkers, lastMarkerFrame, sealMarkerFrame } from './marker-detection.js';
+import { cameraViewsByDrone } from './pioneer-js-bridge-camera-shared.js';
+import { bottomCameraOf } from '../drone/camera-views.js';
 import { renderWithoutEditorOverlays } from '../scene/core/editor-overlays.js';
 
 // У железной камеры разрешение своё и постоянное, оно не зависит от того, какого размера
@@ -18,6 +20,7 @@ const CAPTURE_HEIGHT = 360;
 const FRAME_CACHE_INTERVAL_MS = 33;
 
 export type CameraFramePixels = {
+    frameId?: number;
     width: number;
     height: number;
     // Порядок каналов BGR и три байта на пиксель — ровно то, что настоящий cv2.imdecode
@@ -58,6 +61,7 @@ function ensureCaptureRenderer() {
 function getDroneFpvCamera(droneId: string): PerspectiveCamera | null {
     const mesh = droneMeshes[droneId];
     if (!mesh) return null;
+    if (cameraViewsByDrone[droneId] === 'bottom') return bottomCameraOf(mesh);
     return mesh.getObjectByName('fpv_camera') as PerspectiveCamera | null;
 }
 
@@ -83,6 +87,7 @@ function renderDroneFpvFrame(droneId: string): HTMLCanvasElement | null {
         renderWithoutEditorOverlays(scene, () => renderer.render(scene, fpvCamera));
         // What cv2.aruco.detectMarkers will report for this frame.
         detectVisibleMarkers(droneId, fpvCamera, canvas.width, canvas.height);
+        sealMarkerFrame(droneId);
     } finally {
         droneMesh.visible = previousVisibility;
     }
@@ -191,7 +196,15 @@ export function captureDroneCameraFramePixels(id: string): CameraFramePixels | n
 
     const pixels = readCanvasBgrPixels(canvas);
     if (!pixels) return null;
+    pixels.frameId = lastMarkerFrame(id);
 
     frameCacheByDrone.set(id, { capturedAt: Date.now(), dataUrl: null, pixels });
     return pixels;
+}
+
+export function setDroneCameraView(id: string, view: string): boolean {
+    if (view !== 'front' && view !== 'bottom') return false;
+    cameraViewsByDrone[id] = view;
+    frameCacheByDrone.delete(id);
+    return true;
 }

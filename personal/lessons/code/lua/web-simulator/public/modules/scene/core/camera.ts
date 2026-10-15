@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { FreeFlyControls } from './FreeFlyControls.js';
 import { getFreeCameraSubMode } from './camera-mode-state.js';
+import { groundOverview } from './ground-overview.js';
 
 let lastCameraMode: string | null = null;
 let lastFreeSubMode: string | null = null;
@@ -11,13 +12,18 @@ export function updateCamera(
     controls: any,
     mode: string,
     freeFlyControls?: FreeFlyControls,
-    dt = 0
+    dt = 0,
+    environment?: THREE.Object3D
 ) {
     if (!camera) return;
 
     const desiredFov = mode === 'fpv' ? 75 : 50;
-    if (camera.fov !== desiredFov) {
+    // Centimetre road/yard layers need more depth precision when viewing a whole district.
+    // Close drone cameras keep their short near plane so the airframe remains visible.
+    const desiredNear = mode === 'fpv' || mode === 'drone' ? .025 : Math.max(.025, camera.position.z * .01);
+    if (camera.fov !== desiredFov || camera.near !== desiredNear) {
         camera.fov = desiredFov;
+        camera.near = desiredNear;
         camera.updateProjectionMatrix();
     }
 
@@ -48,10 +54,11 @@ export function updateCamera(
     if (!droneMesh) {
         // Fallback to ground view if no drone selected
         if (mode !== 'free') {
-            const groundPos = new THREE.Vector3(0, 0, Math.max(24, 24 / camera.aspect));
-            camera.position.lerp(groundPos, 0.05);
+            const overview = groundOverview(camera, environment);
+            if (camera.far < overview.far) { camera.far = overview.far; camera.updateProjectionMatrix(); }
+            camera.position.lerp(overview.position, 0.05);
             const m = new THREE.Matrix4();
-            m.lookAt(camera.position, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0));
+            m.lookAt(camera.position, overview.target, new THREE.Vector3(0, 1, 0));
             camera.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(m), 0.1);
         } else if (isFlying && freeFlyControls) {
             freeFlyControls.update(dt);
@@ -86,18 +93,19 @@ export function updateCamera(
         }
     } else if (mode === 'ground') {
         // Режим "Земля" - плавный переход к виду сверху
-        const groundPos = new THREE.Vector3(0, 0, Math.max(24, 24 / camera.aspect));
-        camera.position.lerp(groundPos, 0.05);
+        const overview = groundOverview(camera, environment);
+        if (camera.far < overview.far) { camera.far = overview.far; camera.updateProjectionMatrix(); }
+        camera.position.lerp(overview.position, 0.05);
         
         // Направляем камеру строго вниз на центр сцены
         const m = new THREE.Matrix4();
-        m.lookAt(camera.position, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0));
+        m.lookAt(camera.position, overview.target, new THREE.Vector3(0, 1, 0));
         camera.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(m), 0.1);
         
     } else if (mode === 'free') {
         const enteringFree = lastCameraMode !== 'free';
 
-        if (enteringFree) {
+        if (enteringFree && !camera.userData.preserveOrbitOnEntry) {
             // Start in a three-quarter view centred on the selected aircraft,
             // regardless of which free sub-mode is about to take over.
             const targetPos = droneMesh.position.clone();
@@ -109,13 +117,14 @@ export function updateCamera(
                 controls.update();
             }
             if (freeFlyControls) freeFlyControls.syncFromCamera();
-        } else if (isOrbit && freeSubMode !== lastFreeSubMode && controls) {
+        } else if (!enteringFree && isOrbit && freeSubMode !== lastFreeSubMode && controls && !camera.userData.preserveOrbitOnEntry) {
             // Coming back from "Полёт": re-centre the orbit target in front
             // of wherever the free-fly camera ended up, instead of jumping
             // back to whatever the target was before flying took over.
             const forward = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
             controls.setTarget(camera.position.clone().addScaledVector(forward, 6), true, false);
         }
+        camera.userData.preserveOrbitOnEntry = false;
 
         if (isOrbit && controls) {
             controls.update();

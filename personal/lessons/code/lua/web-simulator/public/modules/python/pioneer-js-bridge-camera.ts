@@ -14,6 +14,9 @@ import {
     resolveConnectedCameraFeed
 } from './pioneer-js-bridge-camera-shared.js';
 import { OBJECT_TYPE } from '../shared/object-types.js';
+import { recordLearningEvent } from '../core/learning-journal.js';
+import { cameraViewsByDrone } from './pioneer-js-bridge-camera-shared.js';
+import { markersInFrame } from './marker-detection.js';
 
 const VIDEO_TOWER_TYPE = OBJECT_TYPE.VIDEO_TOWER;
 
@@ -122,6 +125,8 @@ export function getDroneCameraCvFrame(id: string): CameraFramePixels | null {
         height: pixels.height,
         byteLength: pixels.data.length
     });
+    const drone = getDroneOrDefault(id);
+    recordLearningEvent(id, { kind: 'camera', time: drone.current_time, frameId: pixels.frameId, width: pixels.width, height: pixels.height, view: cameraViewsByDrone[id] || 'front', pos: { ...drone.pos }, yaw: drone.orientation.yaw, markers: markersInFrame(pixels.frameId || 0, 'DICT_6X6_250', id) });
     return pixels;
 }
 

@@ -5,6 +5,7 @@ import { markEditorOnly } from '../../scene/core/editor-overlays.js';
 import { collectPointerTargets } from '../../scene/interaction/input-helpers.js';
 import { addObject } from '../../scene/objects/object-manager.js';
 import { setSelectedObjectTransform } from '../../scene/objects/object-transform.js';
+import { groundSurfaceZAt, isGridSnapEnabled, placeNewObject, snapPointToGrid } from '../../scene/objects/placement.js';
 import { matchesCatalogFilter, type CatalogCategory } from '../scene-manager/catalog.js';
 import { getSceneTypePreviewConfig } from '../scene-manager/support/type-preview-config.js';
 import { isConfigurableMarker, openMarkerSettings } from '../marker-settings.js';
@@ -79,7 +80,8 @@ function setMarkerVisible(visible: boolean): void {
 // frame, a pylon's shaft) - but using its Z directly put the new object's
 // origin at whatever height was clicked, visibly floating since most
 // models assume their own origin sits at their own base. Every placement
-// is projected straight down onto the ground plane (Z=0) instead.
+// is projected straight down onto the ground plane (Z=0) instead; objects
+// then get their real height from placementPointAt()/placeNewObject().
 function raycastPlaceableSurface(clientX: number, clientY: number): THREE.Vector3 | null {
     if (!camera || !raycaster || !renderer) return null;
     const rect = renderer.domElement.getBoundingClientRect();
@@ -96,12 +98,26 @@ function raycastPlaceableSurface(clientX: number, clientY: number): THREE.Vector
     }
 }
 
+// Where a dropped object will stand: the cursor's X/Y, pulled onto a grid line only when close to it
+// (unless "Привязка к сетке" is off or Shift is held), at the height of the
+// ground or the training relief there - not the z = 0 plane, which lies
+// under the relief of a training map.
+function placementPointAt(event: PointerEvent): THREE.Vector3 | null {
+    const hit = raycastPlaceableSurface(event.clientX, event.clientY);
+    if (!hit) return null;
+    const { x, y } = snapPointToGrid(hit, event.shiftKey);
+    return new THREE.Vector3(x, y, groundSurfaceZAt(x, y));
+}
+
 function onPlacementPointerMove(event: PointerEvent): void {
     if (!armedType || !isSceneCanvasEvent(event)) {
         setMarkerVisible(false);
         return;
     }
-    const point = raycastPlaceableSurface(event.clientX, event.clientY);
+    const isRoute = armedType === 'road' || armedType === 'rail';
+    const point = isRoute || VEHICLE_ROUTE[armedType]
+        ? raycastPlaceableSurface(event.clientX, event.clientY)
+        : placementPointAt(event);
     const marker = ensurePlacementMarker();
     if (!marker || !point) {
         setMarkerVisible(false);
@@ -184,7 +200,7 @@ function placeArmedObjectAt(event: PointerEvent): void {
         placeVehicleAt(event, armedType);
         return;
     }
-    const point = raycastPlaceableSurface(event.clientX, event.clientY);
+    const point = placementPointAt(event);
     if (!point) return; // no valid surface under the cursor - nothing to place on
 
     const id = addObject(armedType, {});
@@ -192,7 +208,19 @@ function placeArmedObjectAt(event: PointerEvent): void {
         log(`Не удалось добавить объект типа "${armedType}"`, 'warn');
         return;
     }
-    setSelectedObjectTransform({ x: point.x, y: point.y, z: point.z }, { x: 0, y: 0, z: 0 }, { x: 1, y: 1, z: 1 });
+    // Bottom of the bounding box on the surface, not the pivot at z = 0:
+    // that used to sink centred models (a marker sheet half into the
+    // ground) and lay pads flush with it, flickering or hidden from low
+    // angles. The marker's surface orientation is kept as well.
+    if (selectedObject) {
+        placeNewObject(selectedObject, point, event.shiftKey);
+        const { position, rotation, scale } = selectedObject;
+        setSelectedObjectTransform(
+            { x: position.x, y: position.y, z: position.z },
+            { x: rotation.x, y: rotation.y, z: rotation.z },
+            { x: scale.x, y: scale.y, z: scale.z }
+        );
+    }
     (window as any).updateSceneManager?.();
     setArmed(null); // one placement per pick, like most level editors
     // Markers and maps need an ID / grid to be useful - ask right away, at
@@ -247,8 +275,10 @@ function renderHint(label: string | null): void {
     const isRoute = armedType === 'road' || armedType === 'rail';
     hint.innerHTML = label && isRoute
         ? `Кликните, где начнётся <strong>${escapeHtml(label)}</strong>, дальше — точка за точкой. <kbd>ПКМ</kbd> или <kbd>Esc</kbd> — отмена.`
+        : label && VEHICLE_ROUTE[armedType ?? '']
+        ? `Кликните ${escapeHtml(VEHICLE_ROUTE[armedType ?? ''].where)}, чтобы поставить <strong>${escapeHtml(label)}</strong>. <kbd>ПКМ</kbd> или <kbd>Esc</kbd> — отмена.`
         : label
-        ? `Кликните ${escapeHtml(VEHICLE_ROUTE[armedType ?? '']?.where ?? 'в сцене')}, чтобы поставить <strong>${escapeHtml(label)}</strong>. <kbd>ПКМ</kbd> или <kbd>Esc</kbd> — отмена.`
+        ? `Кликните в сцене, чтобы поставить <strong>${escapeHtml(label)}</strong>${isGridSnapEnabled() ? '. Рядом с линией сетки объект притянется, <kbd>Shift</kbd> — без притяжения' : ''}. <kbd>ПКМ</kbd> или <kbd>Esc</kbd> — отмена.`
         : 'Выберите предмет, затем кликните в сцене. <kbd>Esc</kbd> — выйти.';
 }
 

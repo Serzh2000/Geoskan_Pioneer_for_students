@@ -28,6 +28,23 @@ const CORNER_NOISE_PX = 0.35;
 
 const detectionsByDrone = new Map<string, DetectedMarker[]>();
 let lastCapturedDroneId: string | null = null;
+let frameSerial = 0;
+const markerFrames = new Map<number, { droneId: string; markers: DetectedMarker[] }>();
+const lastFrameByDrone = new Map<string, number>();
+
+export function sealMarkerFrame(droneId: string): number {
+    const token = ++frameSerial;
+    markerFrames.set(token, { droneId, markers: ((detectionsByDrone.get(droneId)) || []).map(marker => ({ ...marker, corners: marker.corners.map(point => [...point] as [number, number]) })) });
+    lastFrameByDrone.set(droneId, token);
+    if (markerFrames.size > 64) markerFrames.delete(markerFrames.keys().next().value!);
+    return token;
+}
+export function lastMarkerFrame(droneId: string): number { return lastFrameByDrone.get(droneId) || 0; }
+export function markersInFrame(token: number, dictionary: string, droneId: string): DetectedMarker[] {
+    const frame = markerFrames.get(token);
+    if (!frame || frame.droneId !== droneId) return [];
+    return frame.markers.filter(marker => marker.dictionary === dictionary).map(marker => ({ ...marker, corners: marker.corners.map(point => [...point] as [number, number]) }));
+}
 
 function gaussian() {
     let u = 0;

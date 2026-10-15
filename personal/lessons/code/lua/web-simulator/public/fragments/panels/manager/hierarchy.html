@@ -1,44 +1,32 @@
                         <section id="scene-panel-hierarchy" class="scene-panel-view is-active" role="tabpanel" aria-labelledby="scene-tab-hierarchy">
-                            <div class="scene-workspace-intro">
-                                <span class="scene-workspace-intro__eyebrow">Рабочее пространство</span>
-                                <h2>Соберите свой полигон</h2>
-                                <p>Добавляйте объекты, выбирайте их на сцене и настраивайте детали.</p>
-                            </div>
-                            <div class="scene-panel-card scene-panel-card--tree">
-                                <div class="scene-panel-card__header">
-                                    <div class="scene-panel-card__heading">
-                                        <div class="scene-panel-card__title">Объекты сцены</div>
-                                        <span id="scene-object-count" class="scene-panel-card__badge">0 объектов</span>
-                                    </div>
+                            <div class="pk-section scene-objects">
+                                <div class="pk-section__head">
+                                    <h2 class="pk-section__title">Объекты сцены</h2>
                                     <!-- Opens the viewport's placement hotbar (ui/scene-hotbar) - the
                                          one place objects get added, surfaced here too so the
                                          panel that lists objects also says how to add one. -->
-                                    <button id="scene-add-object-btn" type="button" class="scene-btn scene-btn--primary scene-btn--sm" title="Открыть панель расстановки объектов в сцене">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-plus" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
-                                        <span>Добавить объект</span>
+                                    <button id="scene-add-object-btn" type="button" class="btn-secondary btn--sm" title="Открыть панель расстановки объектов в сцене">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></svg>
+                                        <span>Добавить</span>
                                     </button>
                                 </div>
                                 <div class="scene-tree-toolbar">
                                     <div class="scene-tree-search">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="scene-tree-search__icon icon icon-tabler icons-tabler-outline icon-tabler-search" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg>
-                                        <input id="scene-tree-filter" type="search" autocomplete="off" placeholder="Найти объект…" aria-label="Поиск объектов сцены" aria-controls="scene-object-list">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="scene-tree-search__icon" aria-hidden="true"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/><path d="M21 21l-6 -6"/></svg>
+                                        <input id="scene-tree-filter" type="search" autocomplete="off" placeholder="Найти объект" aria-label="Поиск объектов сцены" aria-controls="scene-object-list">
                                         <button id="scene-tree-filter-clear" type="button" class="scene-tree-search__clear" aria-label="Очистить поиск">×</button>
                                     </div>
-                                    <button id="scene-tree-collapse" type="button" class="scene-tree-toolbar__btn" title="Свернуть все группы" aria-label="Свернуть все группы"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-fold" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3v6l3 -3m-6 0l3 3"/><path d="M12 21v-6l3 3m-6 0l3 -3"/><path d="M4 12l1 0"/><path d="M9 12l1 0"/><path d="M14 12l1 0"/><path d="M19 12l1 0"/></svg></button>
+                                    <button id="scene-tree-collapse" type="button" class="scene-tree-toolbar__btn btn-secondary" title="Свернуть все группы" aria-label="Свернуть все группы"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v6l3 -3m-6 0l3 3"/><path d="M12 21v-6l3 3m-6 0l3 -3"/><path d="M4 12l1 0"/><path d="M9 12l1 0"/><path d="M14 12l1 0"/><path d="M19 12l1 0"/></svg></button>
                                 </div>
                                 <div id="scene-click-coords" class="scene-click-coords" style="display: none;"></div>
-                                <div id="scene-object-list" class="scene-manager-list" role="tree" aria-label="Дерево объектов сцены"></div>
-                                <div class="scene-selection-bar">
-                                    <span class="scene-selection-bar__content"><span class="scene-selection-bar__label">Выбор объекта</span><strong id="scene-selection-summary" aria-live="polite">Выберите объект в списке или на сцене</strong></span>
-                                    <button id="scene-open-properties" type="button" disabled>Свойства →</button>
-                                </div>
-                                <div class="scene-tree-footer">
-                                    <span class="scene-tree-footer__hint">Двойной щелчок — к объекту · <kbd>Ctrl</kbd> / <kbd>⌘</kbd> + щелчок — выбрать несколько (в сцене — <kbd>Shift</kbd> + щелчок)</span>
-                                </div>
+                                <div id="scene-object-list" class="scene-manager-list pk-list" role="tree" aria-label="Дерево объектов сцены"></div>
+                                <!-- The selected row and the "Свойства" tab already show the selection; this line is only the live-region announcement. -->
+                                <span id="scene-selection-summary" class="scene-selection-live" aria-live="polite">Выберите объект в списке или на сцене</span>
+                                <p id="scene-tree-hint" class="scene-tree-footer pk-section__hint">Двойной щелчок — перейти к объекту. Несколько объектов — <span class="pk-kbd">Ctrl</span> + щелчок.</p>
                             </div>
 
-                            <div class="scene-panel-card scene-panel-card--composer">
-<!--
+                            <div class="pk-section scene-composer">
+                                <!--
                                     Adding individual scene objects moved to the viewport hotbar
                                     (ui/scene-hotbar) - the hidden data/trigger pair right after this
                                     comment is all that's kept: #scene-add-type is still the hotbar's
@@ -51,6 +39,7 @@
                                     <button id="scene-add-type-open-btn" type="button" tabindex="-1">Открыть каталог</button>
                                         <select id="scene-add-type" class="scene-type-select__native" tabindex="-1">
                                             <option value="gate">Ворота</option>
+                                            <option value="fpv-cube">FPV-куб</option>
                                             <option value="pylon">Пилон</option>
                                             <option value="flag">Флаг</option>
                                             <option value="building">Многоэтажка</option>
@@ -81,36 +70,54 @@
                                             <option value="pad-charge">Площадка ⚡</option>
                                         </select>
                                     </div>
-                                <div class="scene-subsection">
-                                    <div class="scene-library-heading"><div><div class="scene-subsection__title">Начните с готовой сцены</div><p class="scene-panel-card__description">Выберите основу для своей миссии</p></div><span class="scene-panel-card__badge">3 шаблона</span></div>
-                                    <!-- The select stays the source of truth for scene-io/actions
-                                         bindings; the radio cards below it (rendered by
-                                         experience.ts) just drive its value. -->
-                                    <select id="scene-preset-type" hidden aria-hidden="true" tabindex="-1">
-                                        <option value="preset-race-track">Гоночная трасса</option>
-                                        <option value="preset-residential">Спальный район</option>
-                                        <option value="preset-geoskan-arena">Геоскан Арена</option>
-                                    </select>
-                                    <div id="scene-preset-options" class="scene-preset-options" role="radiogroup" aria-label="Готовая сцена"></div>
-                                    <button id="scene-preset-btn" class="scene-btn scene-btn--neutral">Добавить «Гоночная трасса»</button>
-                                    <p class="scene-preset-note">Шаблон добавится отдельной группой. Ваши объекты сохранятся.</p>
-                                </div>
+                                <details class="scene-subsection scene-preset-library">
+                                    <summary class="pk-row">
+                                        <span class="pk-row__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18.5l-3 -1.5l-6 3v-13l6 -3l6 3l6 -3v7.5"/><path d="M9 4v13"/><path d="M15 7v5.5"/><path d="M21.121 20.121a3 3 0 1 0 -4.242 0c.418 .419 1.125 1.045 2.121 1.879c1.051 -.89 1.759 -1.516 2.121 -1.879z"/><path d="M19 18v.01"/></svg></span>
+                                        <span class="pk-row__text"><span class="pk-row__name">Готовые полигоны</span><span id="scene-preset-current" class="pk-row__meta">Гоночная трасса</span></span>
+                                        <span class="pk-row__end">11<svg class="scene-disclosure-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6l-6 6"/></svg></span>
+                                    </summary>
+                                    <div class="scene-preset-library__body">
+                                        <p class="pk-section__hint">Выберите местность для своей миссии.</p>
+                                        <!-- The select stays the source of truth for scene-io/actions
+                                             bindings; the radio rows below it (rendered by
+                                             experience.ts) just drive its value. -->
+                                        <select id="scene-preset-type" hidden aria-hidden="true" tabindex="-1">
+                                            <option value="preset-race-track">Гоночная трасса</option>
+                                            <option value="preset-residential">Спальный район</option>
+                                            <option value="preset-geoskan-arena">Геоскан Арена</option>
+                                            <option value="training-city">Большой город 600 × 600 м</option>
+                                            <option value="training-field">Учебный: открытое поле</option>
+                                            <option value="training-forest">Учебный: лес</option>
+                                            <option value="training-hills">Учебный: холмы</option>
+                                            <option value="training-urban">Учебный: город</option>
+                                            <option value="training-industrial">Учебный: промышленная зона</option>
+                                            <option value="training-markers">Учебный: лаборатория ArUco</option>
+                                            <option value="training-mixed">Учебный: экспедиция</option>
+                                        </select>
+                                        <div id="scene-preset-options" class="scene-preset-options pk-list" role="radiogroup" aria-label="Готовая сцена"></div>
+                                        <button id="scene-preset-btn" type="button" class="btn-secondary btn--full">Добавить «Гоночная трасса»</button>
+                                        <p class="pk-section__hint">Шаблон добавится отдельной группой. Ваши объекты сохранятся.</p>
+                                    </div>
+                                </details>
 
                                 <details class="scene-subsection scene-file-section">
-                                    <summary><span class="scene-file-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-file-code"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2"/><path d="M10 13l-1 2l1 2"/><path d="M14 13l1 2l-1 2"/></svg></span><span><strong>Сохранить или открыть сцену</strong><small>Перенос расстановки между компьютерами · JSON</small></span><span class="scene-disclosure-chevron" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 6l6 6l-6 6"/></svg></span></summary>
+                                    <summary class="pk-row">
+                                        <span class="pk-row__icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2"/><path d="M10 13l-1 2l1 2"/><path d="M14 13l1 2l-1 2"/></svg></span>
+                                        <span class="pk-row__text"><span class="pk-row__name">Файл сцены</span><span class="pk-row__meta">Сохранить или открыть JSON</span></span>
+                                        <span class="pk-row__end"><svg class="scene-disclosure-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6l-6 6"/></svg></span>
+                                    </summary>
                                     <div class="scene-file-section__body">
-                                    <p class="scene-preset-note">Сохраните расстановку в файл, чтобы открыть её на другом компьютере.</p>
-                                    <div class="scene-action-stack">
-                                        <button id="scene-export-btn" type="button" class="scene-btn scene-btn--neutral">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path><path d="M7 11l5 5l5 -5"></path><path d="M12 4l0 12"></path></svg>
-                                            <span>Скачать сцену</span>
-                                        </button>
-                                        <button id="scene-import-btn" type="button" class="scene-btn scene-btn--neutral">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path><path d="M7 9l5 -5l5 5"></path><path d="M12 4l0 12"></path></svg>
-                                            <span>Открыть файл</span>
-                                        </button>
-                                    </div>
-                                    <input type="file" id="scene-import-input" style="display:none" accept=".json">
+                                        <div class="pk-btn-row">
+                                            <button id="scene-export-btn" type="button" class="btn-secondary">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path><path d="M7 11l5 5l5 -5"></path><path d="M12 4l0 12"></path></svg>
+                                                <span>Скачать сцену</span>
+                                            </button>
+                                            <button id="scene-import-btn" type="button" class="btn-secondary">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path><path d="M7 9l5 -5l5 5"></path><path d="M12 4l0 12"></path></svg>
+                                                <span>Открыть файл</span>
+                                            </button>
+                                        </div>
+                                        <input type="file" id="scene-import-input" style="display:none" accept=".json">
                                     </div>
                                 </details>
                             </div>
@@ -149,9 +156,9 @@
                                             </select>
                                         </div>
                                         <div class="scene-type-modal__toolbar">
-                                            <button id="scene-type-modal-prev-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral">← Назад</button>
+                                            <button id="scene-type-modal-prev-btn" type="button" class="btn-secondary">← Назад</button>
                                             <div id="scene-type-modal-page-indicator" class="scene-type-modal__page-indicator">1 / 1</div>
-                                            <button id="scene-type-modal-next-btn" type="button" class="btn-secondary scene-btn scene-btn--neutral">Вперёд →</button>
+                                            <button id="scene-type-modal-next-btn" type="button" class="btn-secondary">Вперёд →</button>
                                         </div>
                                         <div id="scene-type-modal-grid" class="scene-type-modal__grid"></div>
                                         <div class="scene-type-modal__selection">
@@ -163,7 +170,7 @@
                                                     <span id="scene-type-modal-selection-text" class="scene-type-modal__selection-text">Ориентир и пролётная рамка для трасс и учебных миссий.</span>
                                                 </span>
                                             </div>
-                                            <button id="scene-type-modal-apply-btn" type="button" class="btn-primary scene-btn scene-btn--primary">Выбрать объект</button>
+                                            <button id="scene-type-modal-apply-btn" type="button" class="btn-primary">Выбрать объект</button>
                                         </div>
                                     </div>
                                 </div>

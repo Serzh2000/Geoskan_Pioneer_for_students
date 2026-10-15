@@ -1,0 +1,164 @@
+/*
+ * Panel kit: the one component recipe shared by every rail panel and the textbook.
+ * Design contract: docs/design/rail-redesign.html. Tokens come from core/base.css and
+ * panels/panel-chrome.css; this file adds only composition classes (prefix `pk-`).
+ * State is always communicated by fill: no underlines, edge stripes, gradients or glows.
+ */
+
+.sidebar-panel, #mission-guide-overlay, .scene-container {
+    --pk-raised: var(--control-bg);
+    --pk-inset: var(--panel-bg-strong);
+    --pk-hover: var(--control-bg-hover);
+    --pk-line: var(--border-color);
+    --pk-line-strong: var(--border-strong);
+    --pk-success-soft: color-mix(in srgb, var(--pc-success, var(--success)) 14%, transparent);
+    --pk-warning-soft: color-mix(in srgb, var(--pc-warning, var(--warning)) 14%, transparent);
+    --pk-danger-soft: color-mix(in srgb, var(--pc-danger, var(--danger)) 14%, transparent);
+    --pk-on-accent: #151515;
+}
+
+/* ---- section: flat block, title row + content; sections separated by one rule ---- */
+/* Distance between two cards in a panel. */
+:root { --pk-card-gap: 10px; }
+.pk-section { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pk-section + .pk-section { padding-top: 20px; border-top: 1px solid var(--pk-line); }
+.pk-section__head { display: flex; align-items: center; gap: 8px; min-height: 24px; }
+.pk-section__title { flex: 1; min-width: 0; margin: 0; font: 650 13px/1.4 var(--font-sans); color: var(--text-strong); }
+.pk-section__meta { font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pk-section__hint { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted); text-wrap: pretty; }
+
+/*
+ * The card: every panel's sections are soft cards on the panel surface, one recipe for all of them. Cards sit
+ * `--pk-card-gap` apart (the panels' content containers set that gap); controls inside a card step back to the panel
+ * surface so they stay readable on it. Instruments (LED boards, the horizon) are their own darker surfaces inside.
+ */
+:is(#telemetry-panel, #drones-panel, #manager-panel, #settings-panel, #drone-link-panel, #gamepad-panel) .pk-section {
+    gap: 12px;
+    padding: 14px;
+    border-radius: var(--panel-radius-inner);
+    background: var(--pk-inset);
+}
+:is(#telemetry-panel, #drones-panel, #manager-panel, #settings-panel, #drone-link-panel, #gamepad-panel) .pk-section + .pk-section {
+    margin-top: 0;
+    padding-top: 14px;
+    border-top: 0;
+}
+:is(#telemetry-panel, #drones-panel, #manager-panel, #settings-panel, #drone-link-panel, #gamepad-panel) .pk-section__head {
+    min-height: 24px;
+    margin-bottom: 0;
+}
+:is(#telemetry-panel, #drones-panel, #manager-panel, #settings-panel, #drone-link-panel, #gamepad-panel) .pk-section__title {
+    font-size: 14px;
+    font-weight: 700;
+}
+:is(#telemetry-panel, #drones-panel, #manager-panel, #settings-panel, #drone-link-panel, #gamepad-panel) .pk-section :is(select, .btn-secondary, input[type='text'], input[type='number'], input[type='search']) {
+    background: var(--panel-bg);
+}
+
+/* ---- status chip: tone by fill, one dot, text, no icons ---- */
+.pk-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: var(--radius-sm); background: var(--pk-inset); color: var(--text-color); font: 600 12px/1 var(--font-sans); white-space: nowrap; }
+.pk-chip::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); flex: 0 0 7px; }
+.pk-chip--success { background: var(--pk-success-soft); color: var(--pc-success, var(--success)); }
+.pk-chip--success::before { background: currentColor; }
+.pk-chip--warning { background: var(--pk-warning-soft); color: var(--pc-warning, var(--warning)); }
+.pk-chip--warning::before { background: currentColor; }
+.pk-chip--danger { background: var(--pk-danger-soft); color: var(--pc-danger, var(--danger)); }
+.pk-chip--danger::before { background: currentColor; }
+.pk-chip--accent { background: var(--accent-soft); color: var(--pc-accent, var(--accent-color)); }
+.pk-chip--accent::before { background: var(--accent-color); }
+.pk-chip--plain::before { display: none; }
+
+/* ---- segmented switch: replaces underlined tabs ---- */
+.pk-seg { display: flex; gap: 2px; padding: 3px; margin: 0; border: 0; border-radius: var(--radius-sm); background: var(--pk-inset); }
+.pk-seg__btn { flex: 1; min-width: 0; min-height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--text-muted); font: 600 12px/1.3 var(--font-sans); display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; cursor: pointer; transition: background-color .15s, color .15s; }
+.pk-seg__btn:hover { color: var(--text-strong); }
+.pk-seg__btn.is-active, .pk-seg__btn[aria-selected='true'] { background: var(--pk-raised); color: var(--text-strong); box-shadow: 0 0 0 1px var(--pk-line); }
+.pk-seg__btn small { font: 500 11px/1 var(--font-mono); color: var(--text-muted); }
+.pk-seg__btn.is-active small, .pk-seg__btn[aria-selected='true'] small { color: var(--pc-accent, var(--accent-color)); }
+.pk-seg__btn:disabled { opacity: .5; cursor: default; }
+
+/* ---- row: 44 px list item; selection by fill; actions revealed in place ---- */
+/* Rows bleed 8 px into the gutter so their text lines up with section titles;
+   the fill only shows on hover/selection, so the bleed reads as alignment. */
+.pk-list { display: flex; flex-direction: column; gap: 2px; margin-inline: -8px; }
+.pk-section > .pk-row, .pk-section > details > summary.pk-row { margin-inline: -8px; width: calc(100% + 16px); }
+.pk-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 6px 8px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-color); text-align: left; font: inherit; cursor: pointer; transition: background-color .15s; }
+.pk-row:hover { background: var(--pk-inset); }
+/* Selection is a neutral lifted surface plus accent name and icon: orange tint over
+   graphite reads as mud, so the colour goes on the text, not on the slab. */
+.pk-row.is-selected, .pk-row[aria-selected='true'] { background: var(--pk-hover); }
+.pk-row__icon { width: 28px; height: 28px; flex: 0 0 28px; display: grid; place-items: center; border-radius: 6px; background: var(--pk-inset); color: var(--text-muted); }
+.pk-row.is-selected .pk-row__icon, .pk-row[aria-selected='true'] .pk-row__icon { background: var(--accent-soft); color: var(--pc-accent, var(--accent-color)); }
+.pk-row.is-selected .pk-row__name, .pk-row[aria-selected='true'] .pk-row__name { color: var(--pc-accent, var(--accent-color)); }
+.pk-row__icon svg { width: 16px; height: 16px; }
+.pk-row__text { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.pk-row__name { font-size: 13px; font-weight: 600; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pk-row__meta { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pk-row__end { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Row actions stay visible but quiet, so nothing has to be discovered by hovering. */
+.pk-row__action { width: 28px; height: 28px; flex: 0 0 28px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--text-muted); opacity: .45; cursor: pointer; transition: opacity .15s, background-color .15s; }
+.pk-row:hover .pk-row__action, .pk-row:focus-within .pk-row__action, .pk-row__action:focus-visible { opacity: 1; }
+.pk-row__action:hover { background: var(--pk-inset); color: var(--pc-danger, var(--danger)); }
+.pk-row__action svg { width: 15px; height: 15px; }
+
+/* ---- field: label above the 36 px control, value on the right, optional hint ---- */
+.pk-field { display: grid; gap: 6px; min-width: 0; }
+.pk-field__label { display: flex; justify-content: space-between; gap: 8px; font: 600 12px/1.4 var(--font-sans); color: var(--text-color); }
+.pk-field__value { color: var(--text-muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+.pk-field__hint { font-size: 12px; line-height: 1.5; color: var(--text-muted); }
+.pk-inline { display: flex; align-items: center; gap: 8px; }
+.pk-inline > :is(input, select) { flex: 1; min-width: 0; }
+
+/* ---- toggle row with a switch; state by fill ---- */
+.pk-toggle { display: flex; align-items: center; gap: 12px; min-height: 36px; cursor: pointer; }
+.pk-toggle__text { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.pk-toggle__title { font-size: 13px; font-weight: 600; color: var(--text-strong); }
+.pk-toggle input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.pk-switch { position: relative; width: 36px; height: 20px; flex: 0 0 36px; border-radius: 10px; background: var(--pk-inset); transition: background-color .15s; }
+.pk-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--text-muted); transition: transform .15s, background-color .15s; }
+.pk-toggle input:checked + .pk-switch { background: var(--accent-color); }
+.pk-toggle input:checked + .pk-switch::after { background: var(--pk-on-accent); transform: translateX(16px); }
+.pk-toggle input:focus-visible + .pk-switch { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+
+/* ---- button modifiers on top of core/forms.css .btn-primary / .btn-secondary ---- */
+/* Doubled selectors beat forms.css (imported later) without touching import order. */
+.btn-primary.btn--sm, .btn-secondary.btn--sm, .btn--sm.btn--sm { min-height: 28px; padding: 0 10px; }
+.btn-primary.btn--full, .btn-secondary.btn--full, .btn--full.btn--full { width: 100%; }
+.btn-primary.btn--danger, .btn-secondary.btn--danger, .btn--danger.btn--danger { color: var(--pc-danger, var(--danger)); }
+.btn-primary svg, .btn-secondary svg { width: 16px; height: 16px; }
+.pk-btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* `hidden` must win over display rules on buttons, rows and chips. */
+.sidebar-panel [hidden], #mission-guide-overlay [hidden], .btn-primary[hidden], .btn-secondary[hidden] { display: none; }
+
+/* ---- meter: battery, progress ---- */
+.pk-meter { height: 6px; border-radius: 3px; background: var(--pk-inset); overflow: hidden; }
+.pk-meter__fill { height: 100%; border-radius: 3px; background: var(--accent-color); transition: width .2s; }
+.pk-meter__fill--success { background: var(--pc-success, var(--success)); }
+
+/* ---- device: the only "card" — physical surfaces (LED board, scene, code) ---- */
+.pk-device { border-radius: var(--panel-radius-inner); background: var(--pk-raised); border: 1px solid var(--pk-line); overflow: hidden; }
+.pk-kbd { display: inline-block; padding: 0 5px; border-radius: 4px; background: var(--pk-inset); color: var(--text-color); font: 500 11px/18px var(--font-mono); }
+
+/* ---- disclosure summary styled as a quiet 36 px control ---- */
+.pk-disclosure > summary { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 10px; border-radius: var(--radius-sm); background: var(--pk-inset); font: 600 12px/1.4 var(--font-sans); color: var(--text-color); cursor: pointer; list-style: none; }
+.pk-disclosure > summary::-webkit-details-marker { display: none; }
+.pk-disclosure > summary::before { content: '›'; width: 14px; text-align: center; color: var(--text-muted); font-size: 16px; line-height: 1; transition: transform .15s; }
+.pk-disclosure[open] > summary::before { transform: rotate(90deg); }
+.pk-disclosure > :not(summary) { padding: 10px 2px 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+    .pk-seg__btn, .pk-row, .pk-switch, .pk-switch::after, .pk-meter__fill, .pk-disclosure > summary::before { transition: none; }
+}
+
+/* Readings: one component for every number the panels show (flight, drone, ...). A muted caption, a value in tabular
+   figures, a quiet unit. `--hero` is the one reading a panel is about; `--wide` spans both columns. */
+.pk-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+.pk-metric { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pk-metric--wide { grid-column: 1 / -1; }
+.pk-metric__label { font-size: 12px; font-weight: 500; color: var(--pc-muted, var(--text-muted)); }
+.pk-metric__value { display: flex; align-items: baseline; gap: 3px; font: 650 17px/1.3 var(--font-sans); font-variant-numeric: tabular-nums; letter-spacing: -.01em; color: var(--text-strong); }
+.pk-metric__unit { font: 500 12px/1 var(--font-sans); letter-spacing: 0; color: var(--pc-muted, var(--text-muted)); }
+.pk-metric--hero .pk-metric__value { font-size: 34px; line-height: 1.1; letter-spacing: -.03em; }
+.pk-metric--text .pk-metric__value { font-size: 15px; }
+.pk-metric.metric--empty { display: none; }

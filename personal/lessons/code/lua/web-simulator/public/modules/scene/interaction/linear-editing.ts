@@ -764,10 +764,6 @@ export function isLinearFeatureEditingActive(objectId?: string) {
     return !objectId || session.target?.uuid === objectId;
 }
 
-export function getLinearFeatureEditingTargetId() {
-    return session?.target?.uuid || null;
-}
-
 /** Edit an existing road/railway: drag, insert and remove its points. */
 export function startLinearFeatureEditing(target = selectedObject) {
     if (!target?.userData?.supportsPoints) {

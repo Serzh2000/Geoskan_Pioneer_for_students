@@ -4,52 +4,9 @@
  * way to add objects without leaving the viewport.
  */
 
-.scene-hotbar-toggle-btn {
-    display: inline-flex;
-    align-items: center;
-    height: 40px;
-    padding: 0 14px;
-    background: rgba(255, 255, 255, 0.94);
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    border-radius: 14px;
-    color: #334155;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
-}
-
-.scene-hotbar-toggle-btn:hover {
-    color: #1d1d20;
-    border-color: rgba(255, 107, 0, 0.22);
-}
-
-.scene-hotbar-toggle-btn[aria-pressed='true'] {
-    background: rgba(255, 107, 0, 0.12);
-    border-color: rgba(255, 107, 0, 0.22);
-    color: #1d1d20;
-}
-
-:root[data-theme='dark'] .scene-hotbar-toggle-btn {
-    background: rgba(26, 26, 26, 0.92);
-    border-color: rgba(162, 162, 162, 0.18);
-    color: #e7e7e7;
-}
-
-:root[data-theme='dark'] .scene-hotbar-toggle-btn[aria-pressed='true'] {
-    background: rgba(255, 107, 0, 0.2);
-    border-color: rgba(255, 176, 103, 0.28);
-    color: #fff7ed;
-}
-
-/* Placement mode: every other floating viewport control steps aside so the
-   hotbar is the only thing competing for attention at the bottom edge - the
-   hotbar's own close button takes over for its toggle, which would
-   otherwise sit half-hidden under the (wider) hotbar panel. */
+/* The placement tray replaces the camera row; program controls remain reachable
+   in their own lower-right dock, including while a drone is flying. */
 body.is-scene-hotbar-active .viewport-camera-controls-row,
-body.is-scene-hotbar-active .viewport-run-controls,
 body.is-scene-hotbar-active .viewport-corner-btn--rail {
     display: none !important;
 }
@@ -87,10 +44,13 @@ body.is-scene-hotbar-active .viewport-corner-btn--rail {
     display: none;
     position: absolute;
     left: 50%;
-    bottom: var(--panel-pad-x);
+    bottom: 84px;
     transform: translateX(-50%);
     z-index: 15;
     width: min(920px, calc(100% - 2 * var(--panel-pad-x)));
+    max-height: calc(100% - 108px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     flex-direction: column;
     gap: 10px;
     padding: 10px;

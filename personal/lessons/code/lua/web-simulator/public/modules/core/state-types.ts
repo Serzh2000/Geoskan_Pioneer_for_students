@@ -98,12 +98,6 @@ export interface AuxChannelRange {
     center?: number;
 }
 
-export interface GamepadModeRanges {
-    loiter: AuxChannelRange;
-    althold: AuxChannelRange;
-    stabilize: AuxChannelRange;
-}
-
 export type FlightMode = 'AUTO' | 'LOITER' | 'ALTHOLD' | 'STABILIZE';
 
 export interface DroneState {

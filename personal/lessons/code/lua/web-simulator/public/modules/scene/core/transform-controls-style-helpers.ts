@@ -27,11 +27,15 @@ export const ACTIVE_COLOR = new THREE.Color('#ff6b00');
 export const NEUTRAL_COLOR = new THREE.Color('#a3afbf');
 export const CENTER_COLOR = new THREE.Color('#fff4e8');
 
+/** The only place gizmo sizes live: object-transform.ts reads it on activation, the style sync on every change. */
 export const MODE_SIZES: Record<TransformMode, number> = {
-    translate: 0.78,
-    rotate: 0.84,
-    scale: 0.78
+    translate: 1.1,
+    rotate: 1.15,
+    scale: 1
 };
+
+/** Visible rotate ring radii; the invisible picker rings use the same numbers so a ring is grabbed where it is drawn. */
+export const ROTATE_AXIS_RADIUS = 0.62;
 
 function getAxisValue(vector: THREE.Vector3, axis: AxisName): number {
     if (axis === 'X') return vector.x;
@@ -103,15 +107,37 @@ export function cloneBaseMaterial(
     return clone;
 }
 
-export function replaceRotateGeometry(handle: THREE.Object3D, radius: number, tube: number, arcFraction: number) {
-    const mesh = handle as THREE.Mesh;
-    if (!mesh.geometry) return;
+/**
+ * One rotate ring around a world axis, built with its final orientation. The library bakes this into
+ * its own geometry and then re-aims the handle at the camera every frame; here the ring is never re-aimed.
+ */
+export function ringGeometry(axis: AxisName, radius: number, tube: number, radialSegments = 12, tubularSegments = 96) {
+    const geometry = new THREE.TorusGeometry(radius, tube, radialSegments, tubularSegments);
+    if (axis === 'X') geometry.rotateY(Math.PI / 2);
+    if (axis === 'Y') geometry.rotateX(-Math.PI / 2);
+    return geometry;
+}
 
-    mesh.geometry.dispose();
-    const geometry = new THREE.TorusGeometry(radius, tube, 12, 96, Math.PI * 2 * arcFraction);
-    geometry.rotateY(Math.PI / 2);
-    geometry.rotateX(Math.PI / 2);
-    mesh.geometry = geometry;
+/**
+ * Copy of a gizmo material whose alpha drops on the half of the ring that faces away from the camera:
+ * the near half reads solid, the far half stays as a ghost, and nothing has to turn with the camera.
+ */
+export function fadeFarSideMaterial<T extends THREE.Material>(source: T): T {
+    const material = source.clone() as T;
+    material.transparent = true;
+    material.onBeforeCompile = (shader) => {
+        shader.vertexShader = shader.vertexShader
+            .replace('#include <common>', '#include <common>\nvarying float vFacing;')
+            .replace('#include <project_vertex>', `#include <project_vertex>
+            vec3 ringWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;
+            vec3 ringCenter = (modelMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+            vFacing = dot(normalize(ringWorld - ringCenter), normalize(cameraPosition - ringWorld));`);
+        shader.fragmentShader = shader.fragmentShader
+            .replace('#include <common>', '#include <common>\nvarying float vFacing;')
+            .replace('#include <dithering_fragment>', '#include <dithering_fragment>\n            gl_FragColor.a *= mix(0.22, 1.0, smoothstep(-0.12, 0.18, vFacing));');
+    };
+    material.customProgramCacheKey = () => 'gizmo-ring-fade-far-side';
+    return material;
 }
 
 export function setMaterialColor(material: THREE.Material | THREE.Material[], color: THREE.Color, opacity?: number) {
@@ -157,10 +183,10 @@ export function tuneMaterialLibrary(internals: GizmoInternals) {
     if (lib.yAxis?.opacity !== undefined) lib.yAxis.opacity = 0.94;
     if (lib.zAxis?.opacity !== undefined) lib.zAxis.opacity = 0.94;
     if (lib.active?.opacity !== undefined) lib.active.opacity = 0.98;
-    if (lib.xAxisTransparent?.opacity !== undefined) lib.xAxisTransparent.opacity = 0.2;
-    if (lib.yAxisTransparent?.opacity !== undefined) lib.yAxisTransparent.opacity = 0.2;
-    if (lib.zAxisTransparent?.opacity !== undefined) lib.zAxisTransparent.opacity = 0.2;
-    if (lib.activeTransparent?.opacity !== undefined) lib.activeTransparent.opacity = 0.32;
+    if (lib.xAxisTransparent?.opacity !== undefined) lib.xAxisTransparent.opacity = 0.34;
+    if (lib.yAxisTransparent?.opacity !== undefined) lib.yAxisTransparent.opacity = 0.34;
+    if (lib.zAxisTransparent?.opacity !== undefined) lib.zAxisTransparent.opacity = 0.34;
+    if (lib.activeTransparent?.opacity !== undefined) lib.activeTransparent.opacity = 0.5;
 }
 
 export function removeByName(group: THREE.Object3D, names: string[]) {

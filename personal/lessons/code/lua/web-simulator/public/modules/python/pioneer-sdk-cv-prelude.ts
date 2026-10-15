@@ -4,6 +4,13 @@
 export const PIONEER_CV_PRELUDE = `
 _np_module = None
 _np_checked = False
+_frame_tokens = {}
+
+def _remember_frame(frame, token):
+    _frame_tokens[id(frame)] = int(token or 0)
+    if len(_frame_tokens)>64:
+        del _frame_tokens[next(iter(_frame_tokens))]
+    return frame
 
 def _numpy_or_none():
     # numpy подгружается лениво на стороне JS, поэтому единственный надёжный признак
@@ -42,7 +49,7 @@ class SimCvFrame:
     def __init__(self, payload=None, data=None, width=0, height=0):
         self.payload = payload or {}
         if data and int(width) > 0 and int(height) > 0:
-            self.data = bytes(data)
+            self.data = bytearray(data)
             self.width = int(width)
             self.height = int(height)
         else:
@@ -55,7 +62,7 @@ class SimCvFrame:
         return SimCvFrame(dict(self.payload), self.data, self.width, self.height)
 
     def tobytes(self):
-        return self.data
+        return bytes(self.data)
 
     def _pixel(self, row, col):
         if not self.data or row < 0 or col < 0 or row >= self.height or col >= self.width:
@@ -84,6 +91,11 @@ class SimCvFrame:
         return self._row(key)
 
     def __setitem__(self, key, value):
+        if isinstance(key, tuple) and len(key)==2 and self.data:
+            row, col = key
+            if 0<=row<self.height and 0<=col<self.width:
+                offset=(row*self.width+col)*3
+                self.data[offset:offset+3]=bytes(value)
         return None
 
 class _CvNode:
@@ -115,12 +127,12 @@ def _aruco_dictionary_name(dictionary):
         return str(dictionary.get('kind', ''))
     return str(dictionary or '')
 
-def _aruco_detect(dictionary):
+def _aruco_detect(dictionary, frame=None):
     # Симулятор знает, где на сцене лежат маркеры: при съёмке кадра он проецирует их
     # в изображение камеры (видно целиком, повёрнут к камере, не закрыт). Результат
     # в том же виде, что у OpenCV: corners - по массиву (1, 4, 2) на маркер,
     # углы по часовой с верхнего левого; ids - массив (N, 1) или None.
-    raw = js.pioneer_cv_detect_markers(_aruco_dictionary_name(dictionary))
+    raw = js.pioneer_cv_detect_markers(_aruco_dictionary_name(dictionary), _frame_tokens.get(id(frame), 0))
     found = raw.to_py() if hasattr(raw, 'to_py') else list(raw or [])
     numpy = _numpy_or_none()
     corners = []
@@ -140,7 +152,7 @@ class _ArucoDetector:
         self.params = params
 
     def detectMarkers(self, frame):
-        return _aruco_detect(self.dictionary)
+        return _aruco_detect(self.dictionary, frame)
 
 class _ArucoNamespace:
     DICT_4X4_50 = 'DICT_4X4_50'
@@ -187,10 +199,14 @@ class _ArucoNamespace:
 
     @staticmethod
     def detectMarkers(image, dictionary, parameters=None, **kwargs):
-        return _aruco_detect(dictionary)
+        return _aruco_detect(dictionary, image)
 
     @staticmethod
     def drawDetectedMarkers(frame, corners, ids=None):
+        for marker in corners:
+            points=marker[0]
+            for i in range(4):
+                _cv2_line(frame, points[i], points[(i+1)%4], (0,255,0), 1)
         return frame
 
 cv2 = types.ModuleType('cv2')
@@ -201,6 +217,10 @@ cv2.aruco = _ArucoNamespace()
 cv2.FileStorage = _CvFileStorage
 
 def _cv2_imshow(name, frame):
+    if frame is None: return None
+    shape=getattr(frame, 'shape', None)
+    if shape is not None and hasattr(frame, 'tobytes'):
+        return js.pioneer_cv_imshow_pixels(name, int(shape[1]), int(shape[0]), list(frame.tobytes()))
     # Окно предпросмотра текстовое, поэтому настоящий кадр (numpy-массив) туда не отдать:
     # вместо сырых пикселей уходит описание кадра, иначе окно получит бесполезный прокси.
     payload = getattr(frame, "payload", None)
@@ -213,12 +233,34 @@ def _cv2_imshow(name, frame):
         }
     return js.pioneer_cv_imshow(name, payload)
 
+def _cv2_line(frame, start, end, color, thickness=1):
+    x0,y0=[int(round(float(v))) for v in start]
+    x1,y1=[int(round(float(v))) for v in end]
+    steps=max(abs(x1-x0),abs(y1-y0),1)
+    for i in range(steps+1):
+        x=int(round(x0+(x1-x0)*i/steps)); y=int(round(y0+(y1-y0)*i/steps))
+        if 0<=y<frame.shape[0] and 0<=x<frame.shape[1]: frame[y,x]=color
+    return frame
+
+def _cv2_circle(frame, center, radius, color, thickness=1):
+    x,y=[int(round(float(v))) for v in center]
+    radius=max(1,int(radius))
+    for dy in range(-radius,radius+1):
+        for dx in range(-radius,radius+1):
+            distance=(dx*dx+dy*dy)**0.5
+            if distance<=radius and (thickness<0 or distance>=radius-thickness):
+                if 0<=y+dy<frame.shape[0] and 0<=x+dx<frame.shape[1]: frame[y+dy,x+dx]=color
+    js.pioneer_cv_annotation(x,y)
+    return frame
+
 def _cv2_destroy_all_windows():
     return js.pioneer_cv_destroy_all_windows()
 
 cv2.imwrite = lambda *args, **kwargs: True
 cv2.imdecode = lambda buffer, flags=1: SimCvFrame({"buffer_size": len(buffer) if buffer is not None else 0, "flags": flags})
 cv2.imshow = _cv2_imshow
+cv2.circle = _cv2_circle
+cv2.line = _cv2_line
 cv2.destroyAllWindows = _cv2_destroy_all_windows
 cv2.waitKey = lambda delay=0: int(js.pioneer_cv_wait_key(delay))
 cv2.solvePnP = lambda *args, **kwargs: (False, None, None)

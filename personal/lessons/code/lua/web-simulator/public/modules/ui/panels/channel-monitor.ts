@@ -1,7 +1,7 @@
 import { simSettings } from '../../core/state.js';
 import { normalizeCenteredAxis } from '../settings/input/calibration.js';
 import { clamp, clampRc } from '../settings/constants.js';
-import { getConnectedGamepads, getGamepadName } from '../settings/mapping.js';
+import { getConnectedGamepads } from '../settings/mapping.js';
 
 const TOTAL_CHANNELS = 16;
 const NEUTRAL_PWM = 1500;
@@ -30,13 +30,6 @@ type MonitorState = {
     lastMotionAt: number[];
     lastRenderSignature: string;
 };
-
-function escapeHtml(value: string): string {
-    return value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-}
 
 function toTrackPercent(value: number): number {
     return clamp((value - 1000) / 10, 0, 100);
@@ -79,23 +72,6 @@ function syncFreezeButton(button: HTMLButtonElement, frozen: boolean): void {
     button.classList.toggle('is-active', frozen);
 }
 
-function updateStatusPill(element: HTMLElement, gamepad: Gamepad | null, frozen: boolean): void {
-    if (!gamepad) {
-        element.textContent = frozen ? 'Монитор заморожен' : 'Пульт не подключен';
-        element.classList.add('is-disconnected');
-        element.classList.remove('is-connected');
-        return;
-    }
-
-    const gamepadName = escapeHtml(getGamepadName(gamepad));
-    const inputsCount = Math.min(TOTAL_CHANNELS, gamepad.axes.length + gamepad.buttons.length);
-    const freezeMeta = frozen ? ' · стоп' : '';
-    element.innerHTML =
-        `<span class="gamepad-status-pill__name">${gamepadName}</span><span class="gamepad-status-pill__meta">· ${inputsCount}/16 входов${freezeMeta}</span>`;
-    element.classList.add('is-connected');
-    element.classList.remove('is-disconnected');
-}
-
 function resetPeaks(state: MonitorState): void {
     state.minValues = state.currentValues.map((value) => value ?? NEUTRAL_PWM);
     state.maxValues = state.currentValues.map((value) => value ?? NEUTRAL_PWM);
@@ -133,14 +109,12 @@ function renderChannelCell(cell: ChannelUi, value: number | null, minValue: numb
 
 function renderBoardStatus(element: HTMLElement, gamepad: Gamepad | null, activeCount: number, frozen: boolean): void {
     if (!gamepad) {
-        element.textContent = frozen
-            ? 'Показания заморожены. Для возобновления подключите пульт или отключите режим стоп.'
-            : 'Нет данных от активного пульта.';
+        element.textContent = frozen ? 'Заморожено' : 'Нет данных от пульта';
         return;
     }
 
     const stateText = frozen ? 'Заморожено' : 'В реальном времени';
-    element.textContent = `${stateText} · активны ${activeCount} из 16 каналов`;
+    element.textContent = `${stateText} · ${activeCount} из ${TOTAL_CHANNELS}`;
 }
 
 function isMonitorVisible(panel: HTMLElement): boolean {
@@ -186,7 +160,6 @@ export function initChannelMonitor(): void {
     const mappingTab = document.getElementById('gp-tab-mapping') as HTMLButtonElement | null;
     const monitorTab = document.getElementById('gp-tab-monitor') as HTMLButtonElement | null;
     const grid = document.getElementById('channel-monitor-grid');
-    const statusEl = document.getElementById('channel-monitor-status');
     const boardStatusEl = document.getElementById('channel-monitor-board-status');
     const freezeBtn = document.getElementById('cm-btn-freeze') as HTMLButtonElement | null;
     const resetBtn = document.getElementById('cm-btn-reset-peaks') as HTMLButtonElement | null;
@@ -221,7 +194,7 @@ export function initChannelMonitor(): void {
         setActivePane('mapping');
     }
 
-    if (!panel || !grid || !statusEl || !boardStatusEl || !freezeBtn || !resetBtn || !peaksToggle) return;
+    if (!panel || !grid || !boardStatusEl || !freezeBtn || !resetBtn || !peaksToggle) return;
 
     const cells = Array.from({ length: TOTAL_CHANNELS }, (_unused, index) => buildChannelCell(index + 1));
     grid.replaceChildren(...cells.map((cell) => cell.root));
@@ -294,7 +267,6 @@ export function initChannelMonitor(): void {
         });
 
         grid.classList.toggle('show-peaks', state.showPeaks);
-        updateStatusPill(statusEl, gamepad, state.frozen);
         renderBoardStatus(boardStatusEl, gamepad, activeCount, state.frozen);
         syncFreezeButton(freezeBtn, state.frozen);
     };

@@ -25,7 +25,7 @@ export function runCoroutine(L: any, T: any, nresults: any, id: string, phase: s
         const errVal = lua.lua_tostring(T, -1);
         const errorMsg = luaToStr(errVal, T);
         rememberLuaErrorStack(drone, errorMsg);
-        log(`Runtime Error (${id}): ${errorMsg}`, 'error');
+        log(`Runtime Error (${id}): ${errorMsg}`, 'info');
         if (drone) {
             failScriptRun(drone, 'lua', createLuaRuntimeFailureError(drone, phase, errorMsg));
         }

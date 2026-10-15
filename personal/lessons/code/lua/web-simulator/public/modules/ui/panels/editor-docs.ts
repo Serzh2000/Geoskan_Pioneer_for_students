@@ -1,4 +1,4 @@
-import { EDITOR_DRAWER_OPEN_EVENT, announceEditorDrawerOpen, pinEditorPanelHorizontalScroll } from './editor-drawers.js';
+import { EDITOR_DRAWER_OPEN_EVENT, announceEditorDrawerOpen, pinEditorPanelHorizontalScroll, setEditorDrawerState } from './editor-drawers.js';
 
 /*
  * API reference drawer inside the code editor, next to the terminal and the
@@ -21,17 +21,17 @@ export function initEditorDocs(): void {
     if (docs && docs.parentElement !== body) body.appendChild(docs);
 
     const close = () => {
-        panel.hidden = true;
-        toggleBtn.setAttribute('aria-pressed', 'false');
+        setEditorDrawerState(panel, toggleBtn, false, 'справочник API');
     };
 
     const open = () => {
         announceEditorDrawerOpen('docs');
-        panel.hidden = false;
-        toggleBtn.setAttribute('aria-pressed', 'true');
+        setEditorDrawerState(panel, toggleBtn, true, 'справочник API');
+        body.querySelector<HTMLInputElement>('#api-docs-search')?.focus({ preventScroll: true });
     };
 
     toggleBtn.addEventListener('click', () => (panel.hidden ? open() : close()));
+    setEditorDrawerState(panel, toggleBtn, false, 'справочник API');
     closeBtn.addEventListener('click', close);
 
     document.addEventListener(EDITOR_DRAWER_OPEN_EVENT, (event) => {
@@ -41,6 +41,12 @@ export function initEditorDocs(): void {
     document.addEventListener(EDITOR_DOCS_OPEN_EVENT, open);
 
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && !panel.hidden) close();
+        if (event.key === 'Escape' && !event.defaultPrevented && !panel.hidden
+            && document.getElementById('editor-panel')?.classList.contains('active')) {
+            // Escape first dismisses a native category selector's popup.
+            if (event.target instanceof HTMLSelectElement) return;
+            event.preventDefault();
+            close();
+        }
     });
 }

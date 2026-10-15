@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { controls, transformControl, transformHelper, selectedObject, setSelectedObject, scene, selectionHelper, multiSelectedObjects } from '../core/scene-init.js';
-import { log } from '../../shared/logging/logger.js';
 import { updateTransformModeDecorations } from './transform.js';
 import { clearSelectedObjectInitialTransform } from '../objects/object-transform.js';
 import { getCameraMode } from '../core/camera-mode-state.js';
@@ -12,7 +11,6 @@ export function exitTransformMode() {
     }
     if (transformHelper) transformHelper.visible = false;
     updateTransformModeDecorations(null);
-    if ((window as any).hideGizmoToolbar) (window as any).hideGizmoToolbar();
     if (controls) controls.enabled = getCameraMode() === 'free' && !(window as any).isTransforming;
 }
 

@@ -11,6 +11,7 @@ import {
 } from './diagnostics.js';
 import { ap_push, ap_goToPoint, ap_goToLocalPoint, ap_updateYaw } from './autopilot.js';
 import { sensors_pos, sensors_vel, sensors_accel, sensors_gyro, sensors_orientation, sensors_range, sensors_battery, sensors_tof, sensors_rc, sensors_opticalFlow, sensors_lpsYaw, sensors_altitude } from './sensors.js';
+import { mailbox_connect, mailbox_hasMessages, mailbox_myHullNumber, mailbox_receive, mailbox_send, mailbox_setHullNumber } from './mailbox.js';
 import { vehicle_setSpeed, vehicle_start, vehicle_state, vehicle_stop } from './vehicles.js';
 import { timer_callLater, timer_new, sys_time, sys_deltaTime, js_sleep } from './timers.js';
 import { camera_requestMakeShot, camera_checkRequestShot, camera_requestRecordStart, camera_requestRecordStop, camera_checkRequestRecord, gpio_new, uart_new, spi_new } from './hardware.js';
@@ -71,6 +72,12 @@ function registerLuaBridgeFunctions(luaState: any) {
     lua.lua_register(luaState, 'js_vehicle_stop', vehicle_stop);
     lua.lua_register(luaState, 'js_vehicle_setSpeed', vehicle_setSpeed);
     lua.lua_register(luaState, 'js_vehicle_state', vehicle_state);
+    lua.lua_register(luaState, 'js_mailbox_connect', mailbox_connect);
+    lua.lua_register(luaState, 'js_mailbox_hasMessages', mailbox_hasMessages);
+    lua.lua_register(luaState, 'js_mailbox_myHullNumber', mailbox_myHullNumber);
+    lua.lua_register(luaState, 'js_mailbox_receive', mailbox_receive);
+    lua.lua_register(luaState, 'js_mailbox_send', mailbox_send);
+    lua.lua_register(luaState, 'js_mailbox_setHullNumber', mailbox_setHullNumber);
     lua.lua_register(luaState, 'js_timer_callLater', timer_callLater);
     lua.lua_register(luaState, 'js_timer_new', timer_new);
     lua.lua_register(luaState, 'js_camera_requestMakeShot', camera_requestMakeShot);

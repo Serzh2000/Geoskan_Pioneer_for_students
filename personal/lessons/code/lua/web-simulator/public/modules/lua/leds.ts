@@ -1,5 +1,6 @@
 import * as fengari from 'fengari-web';
 import { getDroneFromLua } from '../core/state.js';
+import { recordLearningEvent } from '../core/learning-journal.js';
 
 export const ledbar_fromHSV = function(L: any) {
     // Pioneer examples use degrees for hue and percentages for saturation/value.
@@ -47,6 +48,7 @@ export const js_ledbar_set = function(L: any) {
     const simState = getDroneFromLua(L);
     if (simState.leds && index >= 0 && index < simState.leds.length) {
         simState.leds[index] = { r: r * 255, g: g * 255, b: b * 255, w: 0 };
+        recordLearningEvent(simState.id, { kind: 'led', time: simState.current_time, ledId: index, color: simState.leds[index] });
     }
     return 0;
 };

@@ -3,10 +3,10 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { DroneOrbitControls } from './DroneOrbitControls.js';
 import { FreeFlyControls } from './FreeFlyControls.js';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
-import { log } from '../../shared/logging/logger.js';
-import { setupEnvironment, envGroup } from '../../environment/index.js';
+import { setupEnvironment } from '../../environment/index.js';
 import { applyTransformControlsUxTheme } from './transform-controls-style.js';
 import { initOrientationWidget, updateOrientationWidget } from './orientation-widget.js';
+import { setCameraMode, setFreeCameraSubMode } from './camera-mode-state.js';
 
 export let scene: THREE.Scene;
 export let camera: THREE.PerspectiveCamera;
@@ -86,7 +86,6 @@ function ensureSceneThemeListener(): void {
 
 export function setSelectedObject(obj: THREE.Object3D | null) {
     selectedObject = obj;
-    (window as any).selectedObject = obj;
 
     if (obj) {
         if (!multiSelectedObjects.includes(obj)) {
@@ -95,7 +94,6 @@ export function setSelectedObject(obj: THREE.Object3D | null) {
     } else {
         multiSelectedObjects = [];
     }
-    (window as any).multiSelectedObjects = multiSelectedObjects;
 }
 
 export function toggleMultiSelectObject(obj: THREE.Object3D) {
@@ -114,13 +112,6 @@ export function toggleMultiSelectObject(obj: THREE.Object3D) {
         // Если выбрано много, основным считается последний выбранный (для инфопанели)
         selectedObject = multiSelectedObjects[multiSelectedObjects.length - 1];
     }
-    
-    (window as any).selectedObject = selectedObject;
-    (window as any).multiSelectedObjects = multiSelectedObjects;
-}
-
-export function setPointerDownPos(x: number, y: number) {
-    pointerDownPos.set(x, y);
 }
 
 export function setIsHittingGizmo(val: boolean) {
@@ -129,6 +120,14 @@ export function setIsHittingGizmo(val: boolean) {
 
 export function focusOrbitControlsOnObject(obj: THREE.Object3D | null, applyViewChange = true) {
     if (!controls || !obj) return;
+    if (applyViewChange) {
+        setCameraMode('free'); setFreeCameraSubMode('orbit');
+        (window as any).setCameraMode?.('free');
+        (window as any).setCameraFreeSubMode?.('orbit');
+        // The next frame must preserve this explicit focus when leaving a tracking view.
+        camera.userData.preserveOrbitOnEntry = true;
+        camera.fov = 50;
+    }
 
     obj.updateWorldMatrix(true, true);
     orbitTargetBounds.setFromObject(obj);
@@ -145,10 +144,13 @@ export function focusOrbitControlsOnObject(obj: THREE.Object3D | null, applyView
         const verticalFov = THREE.MathUtils.degToRad(camera.fov) / 2;
         const limitingFov = Math.min(verticalFov, Math.atan(Math.tan(verticalFov) * camera.aspect));
         // Frame the complete object even inside a narrow scene viewport.
-        controls.radius = Math.max(1.2, radius * 1.12 / Math.sin(limitingFov));
+        const distance = Math.max(1.2, radius * 1.12 / Math.sin(limitingFov));
+        controls.maxRadius = Math.max(120, distance);
+        controls.radius = distance;
+        camera.far = Math.max(camera.far, distance + radius + 40);
         controls.elevation = Math.PI / 5;
     }
-    if (applyViewChange) controls.update();
+    if (applyViewChange) { camera.updateProjectionMatrix(); controls.update(); }
 }
 
 function configureTransformHelperVisuals(helper: THREE.Object3D) {
@@ -251,7 +253,6 @@ export function initScene(container: HTMLElement) {
     selectionHelper.renderOrder = 9999;
     selectionHelper.userData.editorOnly = true;
     scene.add(selectionHelper);
-    (window as any).selectionHelper = selectionHelper;
 
     setupEnvironment(scene);
 

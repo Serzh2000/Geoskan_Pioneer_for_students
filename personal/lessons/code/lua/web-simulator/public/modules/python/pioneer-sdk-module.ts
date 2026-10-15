@@ -174,12 +174,14 @@ class Pioneer:
         return bool(js.pioneer_lua_script_control(self._id, command))
 
 class Camera:
-    def __init__(self, timeout=0.5, ip='192.168.4.1', port=None, video_buffer_size=65000, log_connection=True):
+    def __init__(self, timeout=0.5, ip='192.168.4.1', port=None, video_buffer_size=65000, log_connection=True, view='front'):
         if port is None:
             port = js.pioneer_get_default_camera_port(js.SIM_DRONE_ID)
         self._id = js.pioneer_resolve_drone_id('camera', ip, port, 'camera')
         self._ip = ip
         self._port = port
+        # Simulator extension: bottom view shares the lower camera shown in the scene.
+        js.pioneer_camera_set_view(self._id, str(view))
         self.connect()
 
     def connected(self):
@@ -206,11 +208,7 @@ class Camera:
             self.connect()
         frame = js.pioneer_camera_get_cv_frame(self._id)
         if frame is None:
-            return SimCvFrame({
-                "connected": False,
-                "message": "camera-not-connected",
-                "drone_id": self._id
-            })
+            return None
         width = int(frame.width)
         height = int(frame.height)
         raw = _js_bytes(frame.data)
@@ -218,8 +216,8 @@ class Camera:
         if numpy is not None and width > 0 and height > 0 and len(raw) == width * height * 3:
             # frombuffer поверх bytes отдаёт read-only view, а cv2.imdecode возвращает
             # изменяемый массив — копия нужна, чтобы рисование по кадру не падало.
-            return numpy.frombuffer(raw, dtype=numpy.uint8).reshape((height, width, 3)).copy()
-        return SimCvFrame({"connected": True, "drone_id": self._id}, raw, width, height)
+            return _remember_frame(numpy.frombuffer(raw, dtype=numpy.uint8).reshape((height, width, 3)).copy(), frame.frameId)
+        return _remember_frame(SimCvFrame({"connected": True, "drone_id": self._id}, raw, width, height), frame.frameId)
 
 class VideoStream:
     def __init__(self, *args, **kwargs):

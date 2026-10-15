@@ -11,20 +11,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
 
 :root {
+    /* Height the floating run buttons cover at the bottom of a panel: scrolling content leaves this much room. */
+    --dock-clearance: 88px;
     /* The top header is gone - the viewport now fills the page. Kept at 0
        (not deleted) since container.css, panel-shell.css and sidebar-tabs.css
        all still reference it for their fixed-position offsets. */
     --header-height: 0px;
     --bg-color: #ffffff;
-    --bg-muted: #f4f5f7;
-    --bg-elevated: #fafafa;
     --card-bg: #ffffff;
     --panel-bg: #f7f7f8;
     --panel-bg-strong: #f1f2f4;
     --accent-color: #ff6b00;
     --accent-color-strong: #e85f00;
     --accent-soft: rgba(255, 107, 0, 0.12);
-    --accent-glow: rgba(255, 107, 0, 0.22);
     --text-color: #151515;
     --text-strong: #090909;
     --text-muted: #6b7280;
@@ -34,9 +33,6 @@
     --danger: #d13b2e;
     --warning: #d97706;
     --radius-sm: 8px;
-    --radius-md: 14px;
-    --radius-lg: 18px;
-    --radius-xl: 24px;
     /*
      * Единая система дизайна панелей и боковых вкладок.
      * Токены не зависят от темы: размеры и отступы общие для светло- и
@@ -45,9 +41,11 @@
      * --panel-*       — заголовки, контент панелей и карточка сцены;
      * --panel-gap-sm  — компактный зазор, --panel-gap — базовый.
      */
-    --rail-width: 56px;
+    --rail-width: 72px;
     --rail-btn-size: 40px;
-    --panel-header-height: 48px;
+    --panel-header-height: 52px;
+    --panel-content-pad: 16px;
+    --panel-content-gap: 16px;
     --panel-pad-x: 12px;
     --panel-gap: 10px;
     --panel-gap-sm: 6px;
@@ -57,20 +55,21 @@
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
     --shadow-card: 0 20px 50px rgba(15, 23, 42, 0.06), 0 6px 18px rgba(15, 23, 42, 0.05);
     --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.05);
-    --glass-border: 1px solid rgba(9, 9, 11, 0.08);
     --body-gradient-start: #ffffff;
     --body-gradient-end: #f5f5f6;
     --header-bg: rgba(255, 255, 255, 0.96);
     --header-border: rgba(9, 9, 11, 0.08);
     --header-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
-    --control-group-bg: #f7f7f8;
     --control-bg: #ffffff;
     --control-bg-hover: #f8fafc;
     --control-text: #1a202c;
     --control-border: #e2e8f0;
-    --control-focus-ring: rgba(255, 107, 0, 0.18);
     --input-bg: #ffffff;
     --input-bg-focus: #ffffff;
+    --scrollbar-thumb: #9ca3af;
+    --scrollbar-track: transparent;
+    --scrollbar-hover: #6b7280;
+    --scrollbar-active: var(--accent-color);
 }
 
 /*
@@ -80,9 +79,8 @@
  * тёмном почти не видны. Текст не белее #f2f2f2 — меньше «ореола» букв.
  */
 :root[data-theme='dark'] {
+    color-scheme: dark;
     --bg-color: #121212;
-    --bg-muted: #1a1a1a;
-    --bg-elevated: #202020;
     --card-bg: #1a1a1a;
     --panel-bg: #1a1a1a;
     --panel-bg-strong: #272727;
@@ -93,21 +91,29 @@
     --border-strong: rgba(162, 162, 162, 0.34);
     --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.4);
     --shadow-soft: 0 14px 32px rgba(0, 0, 0, 0.3);
-    --glass-border: 1px solid rgba(162, 162, 162, 0.14);
     --body-gradient-start: #1a1a1a;
     --body-gradient-end: #121212;
     --header-bg: rgba(26, 26, 26, 0.9);
     --header-border: rgba(162, 162, 162, 0.16);
     --header-shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
-    --control-group-bg: transparent;
     --control-bg: #202020;
     --control-bg-hover: #333333;
     --control-text: #e5e5e5;
     --control-border: rgba(162, 162, 162, 0.24);
-    --control-focus-ring: rgba(255, 107, 0, 0.24);
     --input-bg: #1a1a1a;
     --input-bg-focus: #202020;
+    --scrollbar-thumb: #626262;
+    --scrollbar-hover: #858585;
 }
+
+/* Application-wide baseline; embedded third-party documents keep their own theme. */
+html, body, body * { scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); scrollbar-width: thin; }
+body *::-webkit-scrollbar { width: 8px; height: 8px; }
+body *::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+body *::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+body *::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
+body *::-webkit-scrollbar-thumb:active { background: var(--scrollbar-active); }
+@media (forced-colors: active) { html, body, body * { scrollbar-color: auto; } }
 
 body {
     margin: 0;

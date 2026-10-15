@@ -52,10 +52,6 @@ function normalizeBridgeIp(value: string): string {
     return normalized;
 }
 
-function buildExternalDroneId(event: ExternalPythonBridgeEvent): string {
-    return `external_${sanitizeKeyPart(event.sessionId)}_${sanitizeKeyPart(event.connectionMethod)}_${sanitizeKeyPart(event.droneIp || event.droneName || 'pioneer')}_${String(event.mavlinkPort || 8001)}`;
-}
-
 export function buildBindingKey(event: ExternalPythonBridgeEvent): string {
     return [
         sanitizeKeyPart(event.sessionId),

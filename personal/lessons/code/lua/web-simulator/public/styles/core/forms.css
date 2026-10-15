@@ -3,16 +3,17 @@
  * Файл выделен из `public/style.css` при декомпозиции общего CSS.
  */
 /* FORM ELEMENTS GLOBALLY */
-input[type="text"], input[type="number"], textarea, select {
+input[type="text"], input[type="number"], input[type="search"], textarea, select {
     width: 100%;
     background: var(--input-bg);
     border: 1px solid var(--control-border);
     color: var(--text-color);
-    padding: 10px 12px;
-    border-radius: 12px;
+    min-height: 36px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
     font-family: var(--font-sans);
     font-size: 12px;
-    transition: all 0.2s;
+    transition: border-color .15s, background-color .15s;
     outline: none;
     box-sizing: border-box;
 }
@@ -24,16 +25,33 @@ input:focus, textarea:focus, select:focus {
 }
 
 textarea {
-    resize: vertical;
+    resize: none;
     font-family: var(--font-mono);
 }
 
-/* SCROLLBARS FOR SIDEBAR */
-.panel-content::-webkit-scrollbar { width: 4px; }
-.panel-content::-webkit-scrollbar-thumb { background: rgba(107, 114, 128, 0.22); }
-.panel-content::-webkit-scrollbar-thumb:hover { background: rgba(255, 107, 0, 0.34); }
-
-/* HIDE OLD ELEMENTS */
-.left-panel, .right-panel, .right-sidebar { display: none !important; }
+/* Shared action buttons. Feature styles own layout, never the global recipe. */
+.btn-primary, .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 8px 14px;
+    border: 1px solid var(--control-border);
+    border-radius: var(--radius-sm);
+    font: 600 12px/1.5 var(--font-sans);
+    cursor: pointer;
+    box-shadow: none;
+    transition: background-color .15s, border-color .15s;
+}
+.btn-primary { background: var(--accent-color); border-color: var(--accent-color); color: #151515; }
+.btn-secondary { background: var(--control-bg); color: var(--control-text); }
+.btn-primary:not(:disabled):hover { background: var(--accent-color-strong); border-color: var(--accent-color-strong); }
+.btn-secondary:not(:disabled):hover { background: var(--control-bg-hover); border-color: var(--border-strong); }
+.btn-primary:not(:disabled):active, .btn-secondary:not(:disabled):active { filter: brightness(.94); }
+.btn-primary:focus-visible, .btn-secondary:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+.btn-primary:disabled, .btn-secondary:disabled { background: var(--panel-bg-strong); border-color: var(--control-border); color: var(--text-muted); cursor: default; }
+select.btn-secondary { display: block; padding-right: 28px; }
+select.btn-secondary option { background: var(--control-bg); color: var(--text-color); }
 
 

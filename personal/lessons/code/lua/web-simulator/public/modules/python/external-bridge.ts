@@ -1,11 +1,11 @@
 import { drones, ensureDronePythonConnectionSettings } from '../core/state.js';
 import { backgroundTimeout, clearBackgroundTimeout } from '../shared/background-ticker.js';
 import { log } from '../shared/logging/logger.js';
+import { bridgeCommandRejectedNotice } from '../shared/notice-messages/catalog.js';
 import {
     type ExternalBridgeState,
     type ExternalDroneBinding,
-    type ExternalPythonBridgeEvent,
-    resolveExternalDroneId
+    type ExternalPythonBridgeEvent
 } from './external-bridge-binding.js';
 import {
     applyExternalEvent,
@@ -149,8 +149,12 @@ async function pollExternalBridge(): Promise<void> {
             try {
                 applyExternalEvent(state, event, isBridgeAllowedForDrone);
             } catch (error) {
+                const reason = error instanceof Error ? error.message : String(error);
+                (window as unknown as { showSimulationNotice?: (payload: unknown) => void }).showSimulationNotice?.(
+                    bridgeCommandRejectedNotice(String(event.method), reason)
+                );
                 log(
-                    `Внешний Python bridge: команда ${event.method} отклонена симулятором — ${error instanceof Error ? error.message : String(error)}`,
+                    `Внешний Python bridge: команда ${event.method} отклонена симулятором — ${reason}`,
                     'error'
                 );
             }

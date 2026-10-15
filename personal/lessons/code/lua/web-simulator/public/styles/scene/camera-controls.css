@@ -1,107 +1,56 @@
-/*
- * Кнопки управления камерой.
- * Файл выделен из `public/style.css` при декомпозиции общего CSS.
- */
-/* CAMERA CONTROLS POLISH */
+/* Camera switches use the shared panel-kit segmented control and semantic tones. */
 .viewport-camera-controls-row {
     position: absolute;
     bottom: var(--panel-pad-x);
     left: var(--panel-pad-x);
+    right: var(--panel-pad-x);
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
     z-index: 10;
 }
-
-.camera-controls {
+.camera-controls.pk-seg {
     position: relative;
-    display: flex;
-    gap: 4px;
-    background: rgba(255, 255, 255, 0.94);
-    padding: 4px;
-    border-radius: 14px;
-    border: 1px solid rgba(148, 163, 184, 0.2);
+    max-width: 100%;
+    background: var(--panel-bg);
+    border: 1px solid var(--pk-line);
+    border-radius: var(--panel-radius-inner);
 }
-
-/* The orbit/fly sub-toggle only makes sense once "Свободно" is the active
-   camera mode - hidden the rest of the time. */
-.camera-free-mode-controls[hidden] {
-    display: none;
-}
-
-/*
- * The active-mode highlight is this one absolutely-positioned pill, not a
- * per-button background - switching modes slides it to the new button
- * (JS sets transform/width in camera-mode.ts) instead of an instant swap.
- */
-.camera-controls__indicator {
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    bottom: 4px;
-    width: 0;
-    border-radius: 10px;
-    background: rgba(255, 107, 0, 0.12);
-    border: 1px solid rgba(255, 107, 0, 0.22);
-    transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1), width 0.24s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
-    z-index: 0;
-}
-
-.camera-controls button {
-    position: relative;
-    z-index: 1;
-    background: transparent;
-    border: 1px solid transparent;
-    color: #334155;
+.camera-free-mode-controls[hidden] { display: none; }
+.camera-controls .pk-seg__btn {
+    flex: 0 0 auto; /* a label is never squeezed below its text, so the active fill always wraps it */
+    min-width: max-content;
+    min-height: 36px;
     padding: 8px 12px;
-    min-height: 32px;
-    border-radius: 10px;
-    font-size: 10px;
+    color: var(--text-color);
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
-    transition: color 0.16s ease;
+    letter-spacing: 0.04em;
+    font-weight: 650;
+    transition: background-color .16s ease, color .16s ease, box-shadow .16s ease;
+}
+.camera-controls .pk-seg__btn:hover {
+    background: var(--pk-hover);
+    color: var(--text-strong);
+}
+.camera-controls .pk-seg__btn:is(.is-active, [aria-pressed='true']) {
+    background: var(--accent-color);
+    color: var(--pk-on-accent);
+    box-shadow: inset 0 1px 2px #0002;
+}
+.camera-controls .pk-seg__btn:active { box-shadow: inset 0 2px 3px #0003; }
+.camera-controls .pk-seg__btn:focus-visible {
+    outline: 2px solid var(--pc-accent);
+    outline-offset: 2px;
+}
+@media (pointer: coarse) {
+    .camera-controls .pk-seg__btn { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .camera-controls .pk-seg__btn { transition: none; }
 }
 
-.camera-controls button:hover {
-    color: #1d1d20;
-}
-
-.camera-controls button.is-active,
-.camera-controls button[aria-pressed="true"] {
-    color: #1d1d20;
-}
-
-.camera-controls button:focus-visible {
-    outline: none;
-    border-color: rgba(255, 107, 0, 0.3);
-}
-
-:root[data-theme='dark'] .camera-controls {
-    background: rgba(26, 26, 26, 0.92);
-    border-color: rgba(162, 162, 162, 0.18);
-}
-
-:root[data-theme='dark'] .camera-controls__indicator {
-    background: rgba(255, 107, 0, 0.2);
-    border-color: rgba(255, 176, 103, 0.28);
-}
-
-:root[data-theme='dark'] .camera-controls button {
-    color: #e7e7e7;
-}
-
-:root[data-theme='dark'] .camera-controls button:hover {
-    color: #fff7ed;
-}
-
-:root[data-theme='dark'] .camera-controls button.is-active,
-:root[data-theme='dark'] .camera-controls button[aria-pressed="true"] {
-    color: #fff7ed;
-}
-
-:root[data-theme='dark'] .camera-controls button:focus-visible {
-    border-color: rgba(255, 176, 103, 0.34);
-}
-
+/* Angle read-out that follows the pointer while a rotate ring is dragged. */
+.gizmo-angle-readout { position: fixed; left: 0; top: 0; z-index: 2300; padding: 4px 8px; border-radius: var(--radius-sm); background: var(--panel-bg); border: 1px solid var(--pk-line-strong); color: var(--text-strong); font: 650 13px/1.2 var(--font-sans); font-variant-numeric: tabular-nums; pointer-events: none; }
+.gizmo-angle-readout[hidden] { display: none; }

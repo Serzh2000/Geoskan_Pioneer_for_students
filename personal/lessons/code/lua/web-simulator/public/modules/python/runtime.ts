@@ -8,15 +8,10 @@ import {
     hasActiveBrowserPythonRun,
     runBrowserPythonScript
 } from './browser-runtime.js';
-import { ensurePyodide } from './pyodide-loader.js';
 
 export function disposePythonRunState(droneId: string): void {
     disposeLocalPythonRunState(droneId);
     disposeBrowserPythonRunState(droneId);
-}
-
-export async function initPythonRuntime(): Promise<void> {
-    await ensurePyodide();
 }
 
 export async function runPythonScript(droneId: string, code: string): Promise<void> {

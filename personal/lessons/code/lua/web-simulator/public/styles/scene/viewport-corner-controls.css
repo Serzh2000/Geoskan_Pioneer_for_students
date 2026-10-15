@@ -1,13 +1,10 @@
 /*
- * Header replacement: the run/stop/reset buttons and the sidebar-rail toggle
- * now float over the whole app instead of sitting in a page header (removed -
- * the viewport fills the page). Fixed to the viewport itself, as direct
- * children of <main class="container"> - NOT of .scene-container, which
- * disappears entirely while the code editor is in full-width mode
- * (.container[data-workspace-page='code'] hides .mobile-scene-page), and
- * these need to stay reachable (to get back out of the editor) regardless.
- * z-index sits just above the rail's own peek overlay (310) so the toggle
- * stays clickable over it, matching the old header's precedence.
+ * The sidebar-rail disclosure floats over the whole app instead of sitting in a
+ * page header (removed - the viewport fills the page). It is fixed to the
+ * viewport itself, as a direct child of <body>, so it stays reachable whatever
+ * the workspace page or panel state is. z-index sits just above the rail's own
+ * peek overlay (310) so the toggle stays clickable over it.
+ * Run / stop / reset remain available over both the scene and full-page editor.
  */
 
 .viewport-corner-btn {
@@ -15,77 +12,81 @@
     top: var(--panel-pad-x);
     left: var(--panel-pad-x);
     z-index: 315;
-    width: 38px;
-    min-width: 38px;
-    height: 38px;
+    width: var(--rail-btn-size);
+    height: var(--rail-btn-size);
     padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
-    border: 1px solid rgba(148, 163, 184, 0.24);
-    background: rgba(255, 255, 255, 0.94);
-    color: #6b7280;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
     cursor: pointer;
-    transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease, left 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.16s ease, color 0.16s ease;
 }
 
+.viewport-corner-btn[hidden] { display: none; }
+.viewport-corner-btn svg { width: 20px; height: 20px; }
+
 .viewport-corner-btn:hover {
-    color: #4b5563;
-    border-color: rgba(100, 116, 139, 0.28);
-    background: rgba(255, 255, 255, 0.98);
+    background: var(--control-bg-hover);
+    color: var(--text-strong);
 }
 
 .viewport-corner-btn.is-active,
 .viewport-corner-btn[aria-pressed='true'] {
-    color: var(--accent-color);
-    border-color: rgba(255, 107, 0, 0.24);
-    background: rgba(255, 107, 0, 0.1);
+    background: var(--accent-soft);
+    color: var(--pc-accent, var(--accent-color));
 }
 
-.viewport-corner-btn.is-active:hover {
-    color: var(--accent-color);
-    background: rgba(255, 107, 0, 0.14);
+/* A fixed disclosure at the application edge, above the rail's tool icons. */
+.viewport-corner-btn--rail {
+    top: 22px;
+    left: calc(14px + (var(--rail-width) - var(--rail-btn-size)) / 2);
+    width: var(--rail-btn-size);
+    height: var(--rail-btn-size);
 }
+.viewport-corner-btn--rail .header-rail-toggle__icon--collapse { display: none; }
+.viewport-corner-btn--rail[aria-expanded='true'] .header-rail-toggle__icon--expand { display: none; }
+.viewport-corner-btn--rail[aria-expanded='true'] .header-rail-toggle__icon--collapse { display: block; }
+.viewport-corner-btn--rail:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 3px; }
+.viewport-corner-btn--rail:active { background: var(--accent-soft); }
 
 .viewport-run-controls {
     position: fixed;
-    bottom: var(--panel-pad-x);
-    right: var(--panel-pad-x);
-    z-index: 315;
+    right: calc(28px + env(safe-area-inset-right, 0px));
+    bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+    z-index: 320;
     display: flex;
-    gap: 8px;
+    gap: 6px;
+    padding: 6px;
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    background: var(--panel-bg);
+    box-shadow: 0 6px 20px #0002;
 }
-
-.viewport-run-controls__btn {
-    width: 38px;
-    height: 38px;
+.viewport-run-controls .viewport-run-controls__btn {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    min-height: 42px;
     padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
+    border-radius: 8px;
+}
+.viewport-run-controls svg { width: 20px; height: 20px; }
+.viewport-run-controls__btn--stop:not(:disabled) { color: var(--pc-danger, var(--danger)); }
+.viewport-run-controls button:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+.viewport-run-controls button:disabled { opacity: .45; cursor: default; }
+.container .viewport-camera-controls-row { padding-right: 164px; }
+@media (max-width: 720px) {
+    .viewport-run-controls { right: 22px; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); }
+    .container .viewport-camera-controls-row { bottom: 84px; padding-right: 0; }
+}
+@media (pointer: coarse) {
+    .viewport-run-controls .viewport-run-controls__btn { width: 44px; height: 44px; }
 }
 
-:root[data-theme='dark'] .viewport-corner-btn {
-    background: rgba(39, 39, 39, 0.94);
-    border-color: rgba(162, 162, 162, 0.24);
-    color: #d4d4d4;
-}
-
-:root[data-theme='dark'] .viewport-corner-btn:hover {
-    background: rgba(70, 70, 70, 0.96);
-    color: #f8fafc;
-}
-
-/* A real panel is docked and has its own close button - the floating
-   toggle would just sit on top of the panel header, so it steps aside. */
-body.has-open-panel .viewport-corner-btn--rail {
-    display: none;
-}
-
-/* Base top/left/right/bottom above are only the pre-JS fallback for the
-   first paint - viewport-anchor.ts repositions both controls every frame
-   against the real scene-viewport-card rect (and the docked rail's real
-   right edge), since their inset from the window varies by breakpoint and
-   sidebar state in ways plain CSS can't track. */
+/* The run buttons float over the lower right of the screen; panel content scrolls past them instead of ending beneath them. */
+:is(#settings-panel, #telemetry-panel, #drones-panel, #manager-panel, #drone-link-panel, #gamepad-panel) .panel-content::after { content: ''; display: block; flex: 0 0 var(--dock-clearance); height: var(--dock-clearance); }

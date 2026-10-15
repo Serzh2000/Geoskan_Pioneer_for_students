@@ -1,4 +1,5 @@
 import { drones } from '../core/state.js';
+import { markLearningRunStarted } from '../core/learning-journal.js';
 import { log } from '../shared/logging/logger.js';
 import { createScriptFailureError } from '../app/script-execution-notice.js';
 import { emitScriptFailure } from '../core/mission-notices.js';
@@ -211,6 +212,7 @@ finally:
     builtins.input = builtins.__sim_base_input
 `;
 
+    markLearningRunStarted(droneId, drones[droneId].current_time);
     const promise = pyodide.runPythonAsync(wrapped);
     const token = Symbol(`python-run:${droneId}`);
     activeRuns[droneId] = { token, promise };
@@ -222,7 +224,7 @@ finally:
         clearActivePythonRun(droneId, token);
     }).catch((e: any) => {
         const msg = e instanceof Error ? e.message : String(e);
-        log(`Python run error (${droneId}): ${msg}`, 'error');
+        log(`Python run error (${droneId}): ${msg}`, 'info');
         if (msg.includes('PYTHON_CANCELLED')) {
             clearActivePythonRun(droneId, token);
             return;

@@ -1,6 +1,0 @@
-﻿/* Split into focused partials to keep the entrypoint stable. */
-@import url('./modal-catalog/shell.css');
-@import url('./modal-catalog/preview.css');
-@import url('./modal-catalog/catalog.css');
-@import url('./modal-catalog/selection.css');
-@import url('./modal-catalog/accents.css');

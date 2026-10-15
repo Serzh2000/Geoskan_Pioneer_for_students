@@ -1,4 +1,6 @@
-import { drones, simSettings, ensureDronePythonConnectionSettings } from '../core/state.js';
+import { simSettings, ensureDronePythonConnectionSettings } from '../core/state.js';
+import { recordLearningEvent } from '../core/learning-journal.js';
+import { setDroneCameraView } from './pioneer-js-bridge-camera-render.js';
 import { getAutopilotRuntimeConfig } from '../autopilot/params-runtime.js';
 import { measureSurfaceBelow, readOpticalFlow } from '../sensors/downward.js';
 import { vehicleGetState, vehicleSetSpeed, vehicleStart, vehicleStop } from '../vehicles/api.js';
@@ -197,6 +199,7 @@ export function installJsRuntimeAPI() {
         // position (physics/flight-update.ts). Previously target_pos moved by
         // v*dt, which capped real speed at a fraction of what was asked.
         d.manualVelocity = { x: vxn, y: vyn, z: vzn, expiresAt: now + MANUAL_SPEED_TIMEOUT_MS };
+        recordLearningEvent(id, { kind: 'velocity', time: d.current_time, velocity: { x: vxn, y: vyn, z: vzn }, pos: { ...d.pos }, yaw: d.orientation.yaw });
         d.target_pos = { ...d.pos };
         d.target_yaw = d.target_yaw + yrn * dt;
         d.pointReachedFlag = false;
@@ -216,6 +219,7 @@ export function installJsRuntimeAPI() {
     w.pioneer_get_local_position_lps = (id: string) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
+        recordLearningEvent(id, { kind: 'position', time: d.current_time, pos: { ...d.pos }, yaw: d.orientation.yaw });
         return [d.pos.x, d.pos.y, d.pos.z];
     };
 
@@ -225,6 +229,7 @@ export function installJsRuntimeAPI() {
         const minHeight = getAutopilotRuntimeConfig().sensors.altMinHeight;
         // Distance to whatever is straight below - ground, a roof, a moving train.
         const range = measureSurfaceBelow(d.pos).range;
+        recordLearningEvent(id, { kind: 'range', time: d.current_time, value: range >= minHeight ? range : 0, pos: { ...d.pos } });
         return range >= minHeight ? range : 0;
     };
 
@@ -295,11 +300,13 @@ export function installJsRuntimeAPI() {
         if (ledId === 255) {
             for (let i = 0; i < d.leds.length; i += 1) {
                 d.leds[i] = { r: rn, g: gn, b: bn, w: 0 };
+                recordLearningEvent(d.id, { kind: 'led', time: d.current_time, ledId: i, color: d.leds[i] });
             }
             return true;
         }
         if (Number.isInteger(ledId) && ledId >= 0 && ledId < Math.min(4, d.leds.length)) {
             d.leds[ledId] = { r: rn, g: gn, b: bn, w: 0 };
+            recordLearningEvent(d.id, { kind: 'led', time: d.current_time, ledId, color: d.leds[ledId] });
             return true;
         }
         return false;
@@ -357,6 +364,7 @@ export function installJsRuntimeAPI() {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         return connectDroneCamera(id);
     };
+    w.pioneer_camera_set_view = (id: string, view: string) => setDroneCameraView(id, view);
 
     w.pioneer_camera_disconnect = (id: string) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
@@ -387,4 +395,3 @@ export function installJsRuntimeAPI() {
         return downloadDroneCameraPhoto(id);
     };
 }
-

@@ -1,11 +1,10 @@
 const RAIL_PINNED_STORAGE_KEY = 'geoskan_rail_pinned_v1';
 const MOBILE_RAIL_QUERY = '(max-width: 980px)';
-const PEEK_HIDE_DELAY_MS = 280;
 
 /*
  * Рельс инструментов не участвует в раскладке, пока он не нужен: сцена
- * занимает весь экран. Вызвать его можно наведением на левый край или
- * кнопкой в шапке, которая закрепляет рельс насовсем.
+ * занимает весь экран. Переключатель у левого края показывает инструменты
+ * или закрывает открытую панель вместе с рельсом. Наведение не меняет режим.
  */
 export function initRailVisibility(): void {
     const rail = document.querySelector('.sidebar-tabs') as HTMLElement | null;
@@ -14,28 +13,24 @@ export function initRailVisibility(): void {
     if (!rail || !panelsHost) return;
 
     const mobileQuery = window.matchMedia(MOBILE_RAIL_QUERY);
-    const hotzone = document.createElement('div');
-    hotzone.className = 'rail-hotzone';
-    hotzone.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(hotzone);
+    let pinned = false;
+    try { pinned = localStorage.getItem(RAIL_PINNED_STORAGE_KEY) === '1'; } catch { /* Session state remains usable. */ }
 
-    let pinned = localStorage.getItem(RAIL_PINNED_STORAGE_KEY) === '1';
-    let peeking = false;
-    let hideTimer = 0;
-    let lastPanelId = document.querySelector('.sidebar-panel.active')?.id || 'editor-panel';
+    // Closing panels stop owning the rail immediately, including during animation.
+    const hasOpenPanel = () => !!panelsHost.querySelector('.sidebar-panel.active:not(.is-closing)');
 
-    const hasOpenPanel = () => !!document.querySelector('.sidebar-panel.active');
+    // Narrow windows lay the rail out as a page of its own, so it is always shown there.
+    const isExpanded = () => pinned || hasOpenPanel() || mobileQuery.matches;
 
     const sync = () => {
-        const docked = pinned || hasOpenPanel() || mobileQuery.matches;
+        const docked = isExpanded();
         document.body.classList.toggle('is-rail-docked', docked);
-        document.body.classList.toggle('is-rail-peek', !docked && peeking);
-        // The floating corner toggle would otherwise sit right on top of the
-        // rail/panel it's toggling once either is actually docked - a real
-        // panel already has its own close button, so the corner toggle only
-        // needs to reposition (not disappear) for the bare pinned-rail case.
+        document.body.classList.remove('is-rail-peek');
+        // The disclosure owns a reserved slot above the tool icons.
         document.body.classList.toggle('has-open-panel', hasOpenPanel());
-        const expanded = pinned || hasOpenPanel();
+        const expanded = docked;
+        // There is nothing to fold away in the narrow layout; a button that only flips its own glow is worse than none.
+        if (toggleButton) toggleButton.hidden = mobileQuery.matches;
         toggleButton?.setAttribute('aria-pressed', String(expanded));
         toggleButton?.setAttribute('aria-expanded', String(expanded));
         if (toggleButton) {
@@ -45,56 +40,22 @@ export function initRailVisibility(): void {
         toggleButton?.classList.toggle('is-active', expanded);
     };
 
-    const cancelHide = () => {
-        if (!hideTimer) return;
-        window.clearTimeout(hideTimer);
-        hideTimer = 0;
-    };
-
-    const showPeek = () => {
-        cancelHide();
-        if (peeking) return;
-        peeking = true;
-        sync();
-    };
-
-    const scheduleHidePeek = () => {
-        cancelHide();
-        hideTimer = window.setTimeout(() => {
-            hideTimer = 0;
-            peeking = false;
-            sync();
-        }, PEEK_HIDE_DELAY_MS);
-    };
-
-    hotzone.addEventListener('mouseenter', showPeek);
-    hotzone.addEventListener('mouseleave', scheduleHidePeek);
-    rail.addEventListener('mouseenter', showPeek);
-    rail.addEventListener('mouseleave', scheduleHidePeek);
-
     toggleButton?.addEventListener('click', () => {
-        const active = document.querySelector('.sidebar-panel.active');
-        if (active || pinned) {
-            if (active) lastPanelId = active.id;
+        // One rule for every width: an expanded rail folds away, a hidden one is revealed.
+        if (isExpanded()) {
             pinned = false;
+            toggleButton?.focus({ preventScroll: true });
             (window as any).closeSidebarPanel?.();
         } else {
             // Just reveal the bare icon rail - it shouldn't guess which tab
             // the user wants and open one for them.
             pinned = true;
         }
-        localStorage.setItem(RAIL_PINNED_STORAGE_KEY, pinned ? '1' : '0');
-        peeking = false;
-        cancelHide();
+        try { localStorage.setItem(RAIL_PINNED_STORAGE_KEY, pinned ? '1' : '0'); } catch { /* Use session state. */ }
         sync();
-        window.setTimeout(sync, 260);
     });
 
-    window.addEventListener('sidebar-panel-change', (event) => {
-        const panelId = (event as CustomEvent<{ panelId?: string | null }>).detail?.panelId;
-        if (panelId) lastPanelId = panelId;
-        sync();
-    });
+    window.addEventListener('sidebar-panel-change', sync);
 
     // Панели открываются и закрываются из sidebar.ts в нескольких местах;
     // наблюдение за классом надёжнее, чем событие в каждой из них.

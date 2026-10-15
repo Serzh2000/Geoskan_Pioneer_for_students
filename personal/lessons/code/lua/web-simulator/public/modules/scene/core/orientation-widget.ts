@@ -52,6 +52,10 @@ let caption: HTMLDivElement | null = null;
 const bubbleElements = new Map<ViewId, { bubble: HTMLButtonElement; spoke: HTMLDivElement | null }>();
 let orbitControls: DroneOrbitControls | null = null;
 let snapFrame = 0;
+const cancelSnap = () => {
+    cancelAnimationFrame(snapFrame);
+    snapFrame = 0;
+};
 
 function shortestAngle(from: number, to: number) {
     let delta = to - from;
@@ -70,7 +74,7 @@ function snapOrbitTo(view: { azimuth: number; elevation: number }) {
         (window as any).setCameraFreeSubMode?.('orbit');
         controls.syncSphericalFromCamera();
     }
-    cancelAnimationFrame(snapFrame);
+    cancelSnap();
     const fromAzimuth = controls.azimuth;
     const fromElevation = controls.elevation;
     const deltaAzimuth = shortestAngle(fromAzimuth, view.azimuth);
@@ -123,9 +127,13 @@ function createBubble(config: Bubble) {
 }
 
 export function initOrientationWidget(container: HTMLElement, controls?: DroneOrbitControls | null) {
+    cancelSnap();
+    orbitControls?.removeEventListener('start', cancelSnap);
     widgetRoot?.remove();
     bubbleElements.clear();
     orbitControls = controls ?? null;
+    // A new manual drag owns the camera immediately, even during an axis snap.
+    orbitControls?.addEventListener('start', cancelSnap);
 
     widgetRoot = document.createElement('div');
     widgetRoot.className = 'scene-orientation-widget';

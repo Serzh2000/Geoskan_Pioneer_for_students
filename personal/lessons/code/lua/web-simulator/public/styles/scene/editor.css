@@ -1,9 +1,7 @@
-/*
- * Редактор сцены и карты.
- * Файл выделен из public/style.css при декомпозиции общего CSS.
- */
-@import url('./editor/header-and-toggle.css');
-@import url('./editor/scene-manager.css');
+/* Code workspace: each component has one owner, shared panel chrome comes from layout/panel-shell.css. */
+@import url('./editor/layout.css');
+@import url('./editor/toolbar.css');
+@import url('./editor/drawers.css');
+@import url('./editor/terminal.css');
+@import url('./editor/reference.css');
 @import url('./editor/blockly-shell.css');
-@import url('./editor/light-theme.css');
-@import url('./editor/terminal-and-notifications.css');

@@ -1,14 +1,25 @@
 /*
- * The editor's side drawers (API reference, terminal, notifications) share
- * one docked slot, so only one may be open at a time. Each drawer announces
- * itself when it opens and closes whenever another one announces.
+ * The API reference and notifications share one side slot. The terminal
+ * owns an independent bottom dock and never announces a side-slot change.
  */
-export type EditorDrawerId = 'docs' | 'terminal' | 'notifications';
+export type EditorDrawerId = 'docs' | 'notifications';
 
 export const EDITOR_DRAWER_OPEN_EVENT = 'editor-drawer:open';
 
 export function announceEditorDrawerOpen(id: EditorDrawerId): void {
     document.dispatchEvent(new CustomEvent<EditorDrawerId>(EDITOR_DRAWER_OPEN_EVENT, { detail: id }));
+}
+
+/** Shared disclosure state and focus restoration for editor utility panels. */
+export function setEditorDrawerState(panel: HTMLElement, button: HTMLElement, open: boolean, label: string): void {
+    const restoreFocus = !open && panel.contains(document.activeElement);
+    panel.hidden = !open;
+    button.setAttribute('aria-pressed', String(open));
+    button.setAttribute('aria-expanded', String(open));
+    button.setAttribute('aria-controls', panel.id);
+    button.setAttribute('aria-label', `${open ? 'Закрыть' : 'Открыть'} ${label}`);
+    button.title = `${open ? 'Закрыть' : 'Открыть'} ${label}`;
+    if (restoreFocus) button.focus({ preventScroll: true });
 }
 
 /*

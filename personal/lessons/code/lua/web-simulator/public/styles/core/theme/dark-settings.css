@@ -1,8 +1,0 @@
-﻿/* Split into focused partials to keep the entrypoint stable. */
-@import url('./dark-settings/settings-surfaces.css');
-@import url('./dark-settings/editor-overrides.css');
-@import url('./dark-settings/rc-surfaces.css');
-@import url('./dark-settings/rc-typography.css');
-@import url('./dark-settings/rc-controls.css');
-@import url('./dark-settings/rc-states.css');
-@import url('./dark-settings/rc-viewport.css');

@@ -40,7 +40,6 @@
 }
 
 :root[data-theme='dark'] .autopilot-action-btn,
-:root[data-theme='dark'] .settings-primary-btn,
 :root[data-theme='dark'] .autopilot-toolbar__clear,
 :root[data-theme='dark'] .autopilot-toolbar__action,
 :root[data-theme='dark'] .autopilot-filter-chip {

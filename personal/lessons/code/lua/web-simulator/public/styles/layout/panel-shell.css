@@ -1,52 +1,66 @@
 /*
- * Оболочка боковых панелей: заголовок, контент, полноэкранный режим.
+ * Оболочка боковых панелей: заголовок, слот состояния, контент.
  * Файл выделен из `public/style.css` при декомпозиции общего CSS.
  * Отступы и высоты подчиняются единой системе дизайна (токены --panel-* в core/base.css).
+ *
+ * Заголовок: 52 px, название 15/650, справа слот состояния (`.pk-chip`) и закрытие 36 px:
+ *   [ Название ........ (чип) [x] ]
+ * Панели не добавляют подзаголовков, eyebrow и hero: состояние живёт в чипе.
  */
 /* PANEL HEADER AND CONTENT */
 .panel-header {
     position: sticky;
     top: 0;
     z-index: 2;
+    box-sizing: border-box;
     min-height: var(--panel-header-height);
-    padding: var(--panel-gap-sm) var(--panel-pad-x);
-    border-bottom: 1px solid #e9ecef;
+    padding: 0 8px 0 var(--panel-content-pad);
+    border-bottom: 1px solid var(--pc-line);
     display: flex;
-    justify-content: space-between;
     align-items: center;
     gap: var(--panel-gap);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 249, 250, 0.92) 100%);
-    backdrop-filter: blur(16px);
+    background: var(--panel-bg);
 }
 
 /*
- * Базовый блок-лид заголовка: заголовок + необязательные элементы
- * (подзаголовок, переключатели). Панельные модификаторы
- * (--logs, --settings) складывают его содержимое в колонку.
+ * Блок-лид заголовка: название (+ необязательные элементы). Занимает всё свободное
+ * место, поэтому чип состояния и закрытие стоят вплотную справа.
  */
 .panel-header__lead {
+    flex: 1 1 auto;
     display: flex;
     align-items: center;
     gap: var(--panel-gap);
     min-width: 0;
 }
 
+/* Слот состояния: чип между названием и закрытием, не сжимается и не переносится.
+   Стоит ли он в заголовке или внутри лида, прижат вправо — вплотную к закрытию. */
+.panel-header > .pk-chip {
+    flex: 0 0 auto;
+}
+
+.panel-header__lead > .pk-chip {
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
 .panel-title {
-    font-size: 11px;
+    font-size: 15px;
     line-height: 1.3;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--accent-color);
+    font-weight: 650;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--text-strong);
     min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* Единый подзаголовок заголовка панели (логи, настройки и т.д.). */
+/* Подзаголовок остаётся только у журнала: у остальных панелей его нет. */
 .panel-header__subtitle {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.4;
     color: var(--text-muted);
     min-width: 0;
@@ -57,29 +71,28 @@
 
 .panel-close-btn {
     background: transparent;
-    border: 1px solid transparent;
+    border: 0;
     color: var(--text-muted);
     cursor: pointer;
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
     padding: 0;
-    flex-shrink: 0;
+    flex: 0 0 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-sm);
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .panel-close-btn:hover {
-    color: var(--danger);
-    background: rgba(209, 59, 46, 0.08);
-    border-color: rgba(209, 59, 46, 0.1);
+    color: var(--text-strong);
+    background: var(--pc-hover);
 }
 
 .panel-close-btn:focus-visible {
-    outline: none;
-    border-color: rgba(255, 107, 0, 0.2);
-    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.14);
+    outline: 2px solid var(--accent-color);
+    outline-offset: 2px;
 }
 
 .panel-content {
@@ -89,79 +102,28 @@
     min-height: 0;
 }
 
-.sidebar-panels.is-fullscreen {
-    position: fixed;
-    top: var(--header-height);
-    right: 0;
-    bottom: 0;
-    left: 0;
-    width: 100% !important;
-    z-index: 250;
-    border-right: none;
-    background: #fbfcfd;
-    box-shadow: none;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-.sidebar-panels.is-fullscreen .resizer {
-    display: none;
-}
-
-.sidebar-panels.is-fullscreen .sidebar-panel {
-    height: auto;
-    min-height: 100%;
-    overflow: visible;
-}
-
-.sidebar-panels.is-fullscreen .panel-content {
-    overflow: visible;
-}
-
 .settings-panel-content {
-    padding: var(--panel-pad-x);
-    background: linear-gradient(180deg, #f8f9fa 0%, #f3f5f7 100%);
+    padding: var(--panel-content-pad);
+    background: var(--panel-bg);
 }
 
 .sidebar-panel#docs-panel .panel-content {
-    background: #F5F7F9;
+    background: var(--panel-bg);
 }
 
-.sidebar-panel#gamepad-panel .panel-content {
+/* The controller content scrolls independently inside its full-window dialog. */
+.sidebar-panel:is(#gamepad-panel, #channel-monitor-panel) .panel-content {
     overflow-y: auto;
     overflow-x: hidden;
     min-height: 0;
 }
 
-.sidebar-panels.is-fullscreen .sidebar-panel#gamepad-panel .panel-content {
-    overflow: visible;
-}
-
-.sidebar-panel#gamepad-panel .settings-panel-content {
-    overflow: visible;
-    min-height: fit-content;
-}
-
-.sidebar-panel#gamepad-panel .settings-stack {
-    max-width: none;
-    height: auto;
-    margin: 0 auto;
-    min-height: fit-content;
-}
-
-.sidebar-panel#channel-monitor-panel .panel-content {
-    overflow-y: auto;
-}
-
 .sidebar-panel#channel-monitor-panel .settings-panel-content {
-    background: #fbfcfd;
-    overflow: visible;
-    min-height: 0;
+    background: var(--panel-bg);
 }
 
-.sidebar-panel#channel-monitor-panel .settings-stack {
-    max-width: none;
-    height: 100%;
-    margin: 0 auto;
-    min-height: 0;
+@media (prefers-reduced-motion: reduce) {
+    .panel-close-btn {
+        transition: none;
+    }
 }

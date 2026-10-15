@@ -1,211 +1,53 @@
 /*
- * Панель телеметрии: состояние, метрики, батарея и светодиоды.
- * Плоские блоки без вложенных карточек — значения читаются с одного взгляда.
+ * Telemetry on the shared panel kit (panel-shell.css, panel-chrome.css, panel-kit.css):
+ *   Header       title "Полёт" and the state chip (#state-status, a .pk-chip whose label and tone stats.ts sets from describeAutopilotState).
+ *   Flight       one block, no card: altitude dominates, speed and time share a row, the "Автопилот" row (#hud-stat-mode, hidden by .metric--empty only without a drone) and battery meter follow.
+ *   Indicators   the four base LEDs on a dark board.
+ *   LED matrix   25 LEDs on a dark board and one line of hint.
+ * Numbers are tabular figures in the interface font, not a mono face: they sit in a sentence with their units.
+ * The LED boards are the only surfaces in this panel, and they stay dark in both themes on purpose:
+ * an emitted colour only reads true against black (tokens --pc-device-* in panel-chrome.css).
  */
-.telemetry-panel-content {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding: var(--panel-pad-x);
-}
+#telemetry-panel .telemetry-panel-content { display: flex; flex-direction: column; gap: var(--pk-card-gap); padding: var(--panel-content-pad); }
 
-/* СОСТОЯНИЕ */
-.telemetry-status {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 11px 13px;
-    border-radius: 12px;
-    border: 1px solid rgba(15, 23, 42, 0.09);
-    background: #ffffff;
-}
+/* Flight readout: the shared .pk-metric component (panel-kit.css) */
 
-.telemetry-status__dot {
-    width: 8px;
-    height: 8px;
-    flex: 0 0 auto;
-    border-radius: 50%;
-    background: currentColor;
-    color: #94a3b8;
-    box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.16);
-}
+/* Flight profile: last 30 s, altitude as a filled line, speed as a plain one, scales set by the data. */
+#telemetry-panel .flight-chart { display: grid; gap: 6px; margin: 4px 0 0; }
+#telemetry-panel .flight-chart__plot { display: block; width: 100%; height: 64px; overflow: visible; border-bottom: 1px solid var(--pk-line-strong); }
+#telemetry-panel .flight-chart__line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+#telemetry-panel .flight-chart__line--alt { stroke: var(--pc-accent); }
+#telemetry-panel .flight-chart__line--spd { stroke: var(--text-strong); stroke-width: 1.5; }
+#telemetry-panel .flight-chart__area { fill: color-mix(in srgb, var(--pc-accent) 16%, transparent); stroke: none; }
+#telemetry-panel .flight-chart__legend { display: flex; align-items: center; gap: 14px; font-size: 12px; color: var(--pc-muted); }
+#telemetry-panel .flight-chart__key { display: inline-flex; align-items: center; gap: 6px; }
+#telemetry-panel .flight-chart__key::before { content: ''; width: 14px; height: 3px; border-radius: 2px; background: var(--pc-accent); }
+#telemetry-panel .flight-chart__key--spd::before { background: var(--text-strong); }
+#telemetry-panel .flight-chart__span { margin-left: auto; }
 
-.telemetry-status__label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-}
+/* Battery: the fill takes the tone of the charge (stats.ts toggles is-low / is-critical). */
+#telemetry-panel #state-bat-bar { width: 100%; }
+#telemetry-panel #state-bat-bar.is-low { background: var(--pc-warning); }
+#telemetry-panel #state-bat-bar.is-critical { background: var(--pc-danger); }
 
-.telemetry-status__value {
-    margin-left: auto;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    color: inherit;
-    text-align: right;
-    overflow-wrap: anywhere;
+/* LED boards */
+#telemetry-panel .led-board { box-sizing: border-box; width: 100%; max-width: 320px; margin-inline: auto; padding: 14px; border-radius: var(--panel-radius-inner); background: var(--pc-device-bg); }
+#telemetry-panel .led-board--matrix { padding: 12px; }
+#telemetry-panel .led-base-grid { display: grid; grid-template-columns: repeat(4, 1fr); justify-items: center; gap: 14px; }
+#telemetry-panel .led-matrix-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: none; margin: 0; }
+/* An unlit LED is a dark lens with a faint rim; a lit one gets its colour and glow inline from stats.ts. */
+#telemetry-panel :is(.led-pixel, .led-pixel-base) {
+    background-color: var(--pc-device-lens);
+    border: 0;
+    box-shadow: inset 0 0 0 1px var(--pc-device-rim);
+    transition: background-color .12s, box-shadow .12s;
 }
+#telemetry-panel .led-pixel-base { position: relative; width: 26px; height: 26px; margin-bottom: 18px; border-radius: 50%; }
+#telemetry-panel .led-pixel-base::after { content: attr(data-index); position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); font: 500 11px/1 var(--font-mono); color: var(--pc-device-label); }
+#telemetry-panel .led-matrix-grid > div { width: 100%; height: auto; min-height: 0; aspect-ratio: 1; border-radius: 4px; }
 
-.telemetry-status[data-tone='idle'] {
-    color: var(--text-strong);
-}
+/* Light theme: no black board. The LED is a black outline with a white fill; a lit one keeps the outline and takes its colour. */
+:root:not([data-theme='dark']) #telemetry-panel .led-board { padding: 4px 0; background: transparent; }
+:root:not([data-theme='dark']) #telemetry-panel :is(.led-pixel, .led-pixel-base) { box-sizing: border-box; border: 1.5px solid var(--pc-device-rim); box-shadow: none; }
 
-.telemetry-status[data-tone='flying'] {
-    color: #15803d;
-    border-color: rgba(21, 128, 61, 0.24);
-    background: rgba(22, 163, 74, 0.06);
-}
-
-.telemetry-status[data-tone='preflight'] {
-    color: #b45309;
-    border-color: rgba(180, 83, 9, 0.24);
-    background: rgba(245, 158, 11, 0.08);
-}
-
-.telemetry-status[data-tone='error'] {
-    color: #c2410c;
-    border-color: rgba(194, 65, 12, 0.28);
-    background: rgba(220, 38, 38, 0.07);
-}
-
-.telemetry-status:not([data-tone='idle']) .telemetry-status__dot {
-    color: currentColor;
-    box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.12);
-}
-
-/* МЕТРИКИ */
-.telemetry-metrics {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
-    gap: 8px;
-}
-
-.metric {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 12px 13px;
-    border-radius: 12px;
-    border: 1px solid rgba(15, 23, 42, 0.09);
-    background: #ffffff;
-    min-width: 0;
-}
-
-.metric__label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-}
-
-.metric__value {
-    display: flex;
-    align-items: baseline;
-    gap: 3px;
-    font-family: var(--font-mono);
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--text-strong);
-    font-variant-numeric: tabular-nums;
-}
-
-.metric__value--inline {
-    font-size: 15px;
-}
-
-.metric__unit {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-}
-
-/* БАТАРЕЯ */
-.telemetry-battery {
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-    padding: 12px 13px;
-    border-radius: 12px;
-    border: 1px solid rgba(15, 23, 42, 0.09);
-    background: #ffffff;
-}
-
-.telemetry-battery__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.telemetry-battery__track {
-    height: 7px;
-    border-radius: 999px;
-    background: rgba(148, 163, 184, 0.2);
-    overflow: hidden;
-}
-
-.telemetry-battery__fill {
-    height: 100%;
-    width: 100%;
-    border-radius: inherit;
-    background: #16a34a;
-    transition: width 0.3s ease, background-color 0.3s ease;
-}
-
-.telemetry-battery__fill.is-low {
-    background: #f59e0b;
-}
-
-.telemetry-battery__fill.is-critical {
-    background: var(--danger);
-}
-
-/* СВЕТОДИОДЫ */
-.telemetry-section {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.telemetry-section__title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-}
-
-.telemetry-section__badge {
-    margin-left: auto;
-    padding: 2px 7px;
-    border-radius: 999px;
-    background: rgba(255, 107, 0, 0.1);
-    color: var(--accent-color);
-    font-size: 9px;
-    letter-spacing: 0.06em;
-}
-
-/*
- * Светодиоды читаются на тёмной подложке в обеих темах: погашенный пиксель
- * виден как углубление, а зажжённый даёт настоящее свечение.
- */
-.led-board {
-    padding: 12px;
-    border-radius: 14px;
-    background: linear-gradient(180deg, #1a1a1a, #0a0a0a);
-    border: 1px solid rgba(10, 10, 10, 0.5);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.led-board--base {
-    padding: 14px 12px;
-}
+@media (prefers-reduced-motion: reduce) { #telemetry-panel :is(.led-pixel, .led-pixel-base) { transition: none; } }

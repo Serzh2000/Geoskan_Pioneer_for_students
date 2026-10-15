@@ -1,4 +1,6 @@
-import { latestMarkerDetections } from './marker-detection.js';
+import { latestMarkerDetections, markersInFrame } from './marker-detection.js';
+import { recordLearningEvent } from '../core/learning-journal.js';
+import { getDroneOrDefault } from './runtime-shared.js';
 type CvWindowState = {
     root: HTMLDivElement;
     title: HTMLDivElement;
@@ -170,8 +172,38 @@ function renderCvFrameSummary(frame: unknown) {
 export function installCvRuntimeAPI(w: any) {
     installCvKeyboardBridge();
     // [[id, [[x, y] x4]], ...] for the last captured frame, one dictionary.
-    w.pioneer_cv_detect_markers = (dictionary: string) =>
-        latestMarkerDetections(String(dictionary || '')).map((marker) => [marker.id, marker.corners]);
+    w.pioneer_cv_detect_markers = (dictionary: string, frameId = 0) => {
+        const id = String(w.SIM_DRONE_ID || '');
+        const drone = getDroneOrDefault(id);
+        const markers = frameId ? markersInFrame(Number(frameId), String(dictionary), id) : latestMarkerDetections(String(dictionary || ''));
+        recordLearningEvent(id, { kind: 'detect', time: drone.current_time, dictionary: String(dictionary), frameId: Number(frameId), markers, pos: { ...drone.pos }, yaw: drone.orientation.yaw });
+        return markers.map(marker => [marker.id, marker.corners]);
+    };
+    w.pioneer_cv_annotation = (x: number, y: number) => {
+        const id = String(w.SIM_DRONE_ID || '');
+        recordLearningEvent(id, { kind: 'annotation', time: getDroneOrDefault(id).current_time, point: { x: Number(x), y: Number(y) } });
+    };
+    w.pioneer_cv_imshow_pixels = (windowName: string, width: number, height: number, raw: any) => {
+        const data = typeof raw?.toJs === 'function' ? raw.toJs() : raw;
+        const wFrame = Math.trunc(Number(width)), hFrame = Math.trunc(Number(height));
+        if (!data || wFrame < 1 || hFrame < 1 || wFrame * hFrame > 1920 * 1080 || data.length !== wFrame * hFrame * 3) return null;
+        const cvWindow = ensureCvWindow(String(windowName || 'Камера'));
+        if (!cvWindow) return null;
+        const canvas = document.createElement('canvas');
+        canvas.width = wFrame; canvas.height = hFrame;
+        canvas.style.width = '100%'; canvas.style.height = 'auto';
+        const context = canvas.getContext('2d');
+        if (!context) return null;
+        const pixels = context.createImageData(wFrame, hFrame);
+        for (let src = 0, dest = 0; src < data.length; src += 3, dest += 4) {
+            pixels.data[dest] = Number(data[src + 2]); pixels.data[dest + 1] = Number(data[src + 1]); pixels.data[dest + 2] = Number(data[src]); pixels.data[dest + 3] = 255;
+        }
+        context.putImageData(pixels, 0, 0);
+        cvWindow.body.replaceChildren(canvas);
+        const id = String(w.SIM_DRONE_ID || '');
+        recordLearningEvent(id, { kind: 'display', time: getDroneOrDefault(id).current_time, width: wFrame, height: hFrame });
+        return null;
+    };
     w.pioneer_cv_imshow = (windowName: string, frame: unknown) => {
         const cvWindow = ensureCvWindow(String(windowName || 'OpenCV Preview'));
         if (!cvWindow) return null;

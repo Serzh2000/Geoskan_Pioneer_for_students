@@ -1,31 +1,21 @@
             <div id="gamepad-panel" class="sidebar-panel">
                 <div class="panel-header">
                     <div class="panel-header__lead">
-                        <span class="panel-title">Пульт</span>
+                        <span id="gamepad-dialog-title" class="panel-title">Пульт</span>
+                        <span id="gamepad-status" class="pk-chip is-disconnected" role="status">Не подключён</span>
                     </div>
-                    <button aria-label="Закрыть настройки пульта" class="panel-close-btn" onclick="closePanel()">✕</button>
+                    <button aria-label="Закрыть настройки пульта" id="gamepad-dialog-close" type="button" class="panel-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg></button>
                 </div>
                 <div class="panel-content settings-panel-content">
                     <div class="settings-stack">
-                        <div class="settings-group settings-group--gamepad">
-                            <div class="gamepad-hero">
-                                <div class="gamepad-hero-copy">
-                                    <div class="gamepad-hero-eyebrow">УПРАВЛЕНИЕ ДРОНОМ</div>
-                                    <h1 class="gamepad-hero-title">Настройка пульта</h1>
-                                    <div class="gamepad-hero-subtitle">Подключите пульт, назначьте каналы и проверьте отклик.</div>
-                                </div>
-                                <div id="gamepad-status" class="gamepad-status-pill is-disconnected">Пульт не подключен</div>
-                            </div>
+                        <div class="pk-seg" role="tablist" aria-label="Разделы панели пульта">
+                            <button id="gp-tab-mapping" role="tab" aria-controls="gamepad-pane-mapping" class="pk-seg__btn is-active" type="button" data-gamepad-pane="mapping" aria-selected="true">Каналы</button>
+                            <button id="gp-tab-monitor" role="tab" aria-controls="channel-monitor-panel" class="pk-seg__btn" type="button" data-gamepad-pane="monitor" aria-selected="false">Монитор сигнала</button>
+                        </div>
 
-                            <div class="gamepad-panel-tabs" role="tablist" aria-label="Разделы панели пульта">
-                                <button id="gp-tab-mapping" role="tab" aria-controls="gamepad-pane-mapping" class="gamepad-panel-tab is-active" type="button" data-gamepad-pane="mapping" aria-selected="true">Настройка каналов</button>
-                                <button id="gp-tab-monitor" role="tab" aria-controls="channel-monitor-panel" class="gamepad-panel-tab" type="button" data-gamepad-pane="monitor" aria-selected="false">Монитор сигнала</button>
-                            </div>
-
-                            <div class="gamepad-panel-panes">
-                                <!-- @include ./gamepad/mapping-pane.html -->
-                                <!-- @include ./gamepad/monitor-pane.html -->
-                            </div>
+                        <div class="gamepad-panel-panes">
+                            <!-- @include ./gamepad/mapping-pane.html -->
+                            <!-- @include ./gamepad/monitor-pane.html -->
                         </div>
                     </div>
                 </div>

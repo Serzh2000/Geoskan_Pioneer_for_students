@@ -14,28 +14,3 @@
 :root[data-theme='dark'] .header-theme-toggle__icon--dark {
     display: block;
 }
-
-.header-controls-group--actions {
-    margin-left: auto;
-    background: transparent;
-    border-color: transparent;
-    box-shadow: none;
-    padding-right: 0;
-    gap: 10px;
-    flex: 0 0 auto;
-}
-
-.header-controls-group--actions .btn-primary {
-    min-width: 122px;
-    justify-content: center;
-    margin-right: 0;
-}
-
-.header-controls-group--actions .btn-secondary {
-    min-width: 92px;
-    justify-content: center;
-}
-
-.header-controls-group--actions .header-icon-btn {
-    min-width: 38px;
-}

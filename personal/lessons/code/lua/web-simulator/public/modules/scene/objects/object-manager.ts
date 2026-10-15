@@ -1,16 +1,17 @@
 import * as THREE from 'three';
 import { log } from '../../shared/logging/logger.js';
-import { transformControl, transformHelper, controls, droneMeshes, selectedObject, multiSelectedObjects, setSelectedObject, toggleMultiSelectObject } from '../core/scene-init.js';
-import { drones, currentDroneId, simSettings } from '../../core/state.js';
+import { transformControl, controls, droneMeshes, selectedObject, multiSelectedObjects, toggleMultiSelectObject } from '../core/scene-init.js';
+import { drones, currentDroneId } from '../../core/state.js';
 import { envGroup, addObjectToScene, updateSceneObjectPoints, updateSceneObjectValue } from '../../environment/index.js';
 import { MarkerMapOptions, SceneObjectOptions, ScenePathPoint, updateMarkerMapSettings } from '../../environment/obstacles.js';
-import { handleDeselection, deselectObject } from '../interaction/selection.js';
+import { handleDeselection } from '../interaction/selection.js';
 import { handleSelection, updateObjectSelectionVisuals } from '../interaction/input.js';
-import { findSceneObjectById, getSceneTopLevelObjects, isTransformableObject, listSceneObjects, normalizePoints, parsePointsText } from './object-catalog.js';
+import { findSceneObjectById, isTransformableObject, normalizePoints, parsePointsText } from './object-catalog.js';
 import { OBJECT_TYPE } from '../../shared/object-types.js';
 import type { RotationAxis, TransformMode } from './object-transform.js';
-import { activateTransformMode, clearSelectedObjectInitialTransform, getRotationStepDegrees, getRotationStepOptions, rememberSelectedObjectInitialTransform, resetSelectedObjectToInitialTransform, rotateSelectedObjectByDegrees, setRotationStepDegrees, setSelectedObjectTransform } from './object-transform.js';
-import { finishLinearFeatureEditing, getLinearFeatureEditingTargetId, isLinearFeatureEditingActive, startLinearFeatureEditing } from '../interaction/linear-editing.js';
+import { activateTransformMode, getActiveTransformMode, resetSelectedObjectToInitialTransform, rotateSelectedObjectByDegrees } from './object-transform.js';
+import { finishLinearFeatureEditing, isLinearFeatureEditingActive, startLinearFeatureEditing } from '../interaction/linear-editing.js';
+import { placeNewObject } from './placement.js';
 import {
     detachObjectFromGroupPreservingWorldTransform,
     disposeObjectHierarchyResources,
@@ -71,9 +72,7 @@ export function ungroupObject(targetGroup?: THREE.Object3D) {
 
 (window as any).groupObjects = groupObjects;
 (window as any).ungroupObject = ungroupObject;
-export type { TransformMode, RotationAxis } from './object-transform.js';
 export {
-    getSceneTopLevelObjects,
     findSceneObjectById,
     isTransformableObject,
     listSceneObjects,
@@ -81,11 +80,6 @@ export {
     parsePointsText
 } from './object-catalog.js';
 export {
-    getRotationStepOptions,
-    getRotationStepDegrees,
-    setRotationStepDegrees,
-    rememberSelectedObjectInitialTransform,
-    clearSelectedObjectInitialTransform,
     rotateSelectedObjectByDegrees,
     resetSelectedObjectToInitialTransform,
     setSelectedObjectTransform,
@@ -137,6 +131,10 @@ export function setSceneObjectTransformMode(mode: TransformMode, id?: string) {
         handleSelection(target, window.innerWidth / 2, window.innerHeight / 2, false);
     }
     return activateTransformMode(mode, target);
+}
+
+export function getSceneObjectTransformMode() {
+    return getActiveTransformMode();
 }
 
 export function rotateSelectedSceneObjectByDegrees(axis: RotationAxis, angle: number) {
@@ -214,10 +212,6 @@ export function isSelectedLinearObjectEditingActive(id?: string) {
     return isLinearFeatureEditingActive(id);
 }
 
-export function getSelectedLinearObjectEditingTargetId() {
-    return getLinearFeatureEditingTargetId();
-}
-
 export function duplicateObject() {
     const isDrone = isDroneSceneObject(selectedObject, droneMeshes);
 
@@ -235,6 +229,7 @@ export function duplicateObject() {
 }
 
 export type AddObjectOptions = {
+    trainingSeed?: number;
     value?: string;
     markerDictionary?: string;
     pointsText?: string;
@@ -250,6 +245,7 @@ export type AddObjectOptions = {
 export function addObject(type: string, options: AddObjectOptions = {}): string | null {
     const parsedPoints = options.pointsText ? parsePointsText(options.pointsText) : [];
     const objectOptions: SceneObjectOptions = {
+        trainingSeed: options.trainingSeed,
         value: options.value,
         markerDictionary: options.markerDictionary,
         floors: options.floors,
@@ -261,6 +257,11 @@ export function addObject(type: string, options: AddObjectOptions = {}): string 
     };
     const obj = addObjectToScene(type, controls?.camera || null, objectOptions);
     if (obj) {
+        // addObjectToScene puts the pivot at z = 0, which buries centred
+        // models and lays decals flush with the ground: stand the bottom on
+        // the surface instead. A scene import overwrites this right after
+        // with the saved transform, so saved scenes load as before.
+        placeNewObject(obj, null);
         handleDeselection();
         const viewportCenter = getViewportCenterSelectionPoint();
         handleSelection(obj, viewportCenter.x, viewportCenter.y, false, false);
@@ -351,4 +352,3 @@ export function appendPointToSelectedLinearObject() {
     }
     return ok;
 }
-

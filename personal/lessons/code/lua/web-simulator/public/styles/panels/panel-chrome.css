@@ -1,0 +1,43 @@
+/*
+ * Shared semantic surface tokens and interaction states. Header geometry/title/close
+ * have one owner in layout/panel-shell.css; features own only their inner composition.
+ * The rail (.sidebar-tabs) reads the same tokens, so its active tab matches the panels.
+ */
+.sidebar-panel, .sidebar-tabs, .scene-container {
+    --pc-line: var(--border-color);
+    --pc-muted: #a8a8a8;
+    --pc-raised: color-mix(in srgb, var(--text-strong) 4%, var(--panel-bg));
+    --pc-inset: color-mix(in srgb, var(--text-strong) 7%, var(--panel-bg));
+    --pc-hover: color-mix(in srgb, var(--text-strong) 9%, var(--panel-bg));
+    --pc-accent: #ffad68;
+    --pc-success: #6fd69c;
+    --pc-warning: #f6c260;
+    --pc-danger: #ff9a90;
+}
+/*
+ * Physical device surfaces (LED boards): an emitted colour only reads true on black, so in the dark theme
+ * these stay dark and are deliberately not derived from --panel-bg. The light theme has no board: an unlit LED
+ * is a white cell with a black outline, drawn straight on the panel (see the override below).
+ */
+.sidebar-panel {
+    --pc-device-bg: #141414;
+    --pc-device-lens: #222222;
+    --pc-device-rim: #2d2d2d;
+    --pc-device-label: #8a8a8a;
+}
+:root:not([data-theme='dark']) .sidebar-panel {
+    --pc-device-bg: transparent;
+    --pc-device-lens: #ffffff;
+    --pc-device-rim: #111111;
+    --pc-device-label: #566274;
+}
+:root:not([data-theme='dark']) :is(.sidebar-panel, .sidebar-tabs, .scene-container) {
+    --pc-muted: #566274;
+    --pc-accent: #a84a00;
+    --pc-success: #17744a;
+    --pc-warning: #8d4b07;
+    --pc-danger: #b3261e;
+}
+
+.sidebar-panel :is(button, input, select, textarea, summary):focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .sidebar-panel *, .sidebar-panel *::before { transition: none !important; } }

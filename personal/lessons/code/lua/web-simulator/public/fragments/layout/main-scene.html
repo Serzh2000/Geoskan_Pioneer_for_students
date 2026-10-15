@@ -14,7 +14,8 @@
                             </div>
                         </div>
 
-                        <div class="scene-hud-readout">
+                        <!-- Hidden until "Настройки → Рабочее место → Показывать FPS" (ui/settings/graphics-quality.ts). -->
+                        <div class="scene-hud-readout" hidden>
                             <span class="scene-viewport-fps" id="scene-fps">FPS: --</span>
                         </div>
 
@@ -26,27 +27,27 @@
                         </div>
 
                         <div class="viewport-camera-controls-row">
-                            <div class="camera-controls">
-                                <div class="camera-controls__indicator" aria-hidden="true"></div>
-                                <button onclick="setCameraMode('ground')">Земля</button>
-                                <button onclick="setCameraMode('drone')">Дрон</button>
-                                <button onclick="setCameraMode('fpv')">FPV</button>
-                                <button onclick="setCameraMode('free')">Свободно</button>
+                            <div class="camera-controls pk-seg" role="group" aria-label="Камера">
+                                <button type="button" class="pk-seg__btn" onclick="setCameraMode('ground')">Земля</button>
+                                <button type="button" class="pk-seg__btn" onclick="setCameraMode('drone')">Дрон</button>
+                                <button type="button" class="pk-seg__btn" onclick="setCameraMode('fpv')">FPV</button>
+                                <button type="button" class="pk-seg__btn" onclick="setCameraMode('free')">Свободно</button>
                             </div>
-                            <div class="camera-controls camera-free-mode-controls" id="camera-free-mode-controls" hidden>
-                                <div class="camera-controls__indicator" aria-hidden="true"></div>
-                                <button type="button" onclick="setCameraFreeSubMode('orbit')" title="Вращение вокруг точки">Орбита</button>
-                                <button type="button" onclick="setCameraFreeSubMode('fly')" title="Свободный полёт (WASD)">Полёт</button>
+                            <div class="camera-controls camera-free-mode-controls pk-seg" id="camera-free-mode-controls" role="group" aria-label="Свободная камера" hidden>
+                                <button type="button" class="pk-seg__btn" onclick="setCameraFreeSubMode('orbit')" title="Вращение вокруг точки">Орбита</button>
+                                <button type="button" class="pk-seg__btn" onclick="setCameraFreeSubMode('fly')" title="Свободный полёт (WASD)">Полёт</button>
                             </div>
+                        <div class="camera-controls viewport-scene-actions pk-seg" role="group" aria-label="Инструменты сцены" id="viewport-scene-actions">
                             <button
                                 type="button"
                                 id="scene-hotbar-toggle-btn"
-                                class="scene-hotbar-toggle-btn"
+                                class="pk-seg__btn scene-hotbar-toggle-btn"
                                 title="Расставить объекты"
                                 aria-label="Расставить объекты"
                                 aria-pressed="false">
-                                Объекты
+                                <span>Объекты</span>
                             </button>
+                        </div>
                         </div>
 
                         <div id="scene-hotbar" class="scene-hotbar" role="region" aria-label="Расстановка объектов">

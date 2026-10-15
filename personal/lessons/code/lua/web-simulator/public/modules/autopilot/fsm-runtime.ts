@@ -6,6 +6,7 @@ import type {
 } from '../core/state.js';
 import { rememberLuaFailureHint, recordLuaFsmTransition } from '../lua/diagnostics.js';
 import { log } from '../shared/logging/logger.js';
+import { recordLearningEvent } from '../core/learning-journal.js';
 import {
     type CommandName,
     canRunInSameTick,
@@ -21,6 +22,7 @@ export function setDroneFsmState(drone: DroneState, nextState: DroneFsmState) {
     const previousState = drone.fsmState;
     setFsmStateAndSyncStatus(drone, nextState);
     if (previousState !== nextState) {
+        recordLearningEvent(drone.id, { kind: 'state', time: drone.current_time, from: previousState, state: nextState, pos: { ...drone.pos }, target: { ...drone.target_pos }, yaw: drone.orientation.yaw });
         recordLuaFsmTransition(
             drone,
             previousState,

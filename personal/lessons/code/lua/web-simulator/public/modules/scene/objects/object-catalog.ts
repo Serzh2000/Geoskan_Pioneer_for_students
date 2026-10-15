@@ -134,6 +134,7 @@ function buildSceneEntry(obj: THREE.Object3D, depth: number, parentId: string, c
         presetName: obj.userData?.presetName ? String(obj.userData.presetName) : '',
         depth,
         parentId,
+        presetSlot: Number.isInteger(obj.userData?.presetSlot) ? Number(obj.userData.presetSlot) : undefined,
         childCount,
         pointCount: points.length,
         sceneType: obj.userData?.type || obj.type,

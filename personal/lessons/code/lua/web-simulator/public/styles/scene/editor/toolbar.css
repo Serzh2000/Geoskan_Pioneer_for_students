@@ -1,0 +1,157 @@
+/*
+ * Code editor header: language, examples, files | flight state, utilities | close.
+ * Run / stop / reset use the shared viewport dock in viewport-corner-controls.css.
+ * Controls are 36px tall with an 8px radius and 13px text. Actions that open something are ghost buttons with an icon;
+ * toggles (reference, terminal, notifications) are icon buttons whose pressed state is a fill, never an
+ * underline or a stripe. Surfaces come from color-mix on the theme text colour, so one rule serves both themes.
+ */
+#editor-panel {
+    --ed-text: var(--text-color);
+    --ed-strong: var(--text-strong);
+    --ed-muted: var(--pc-muted);
+    --ed-line: var(--pc-line);
+    --ed-raised: var(--pc-raised);
+    --ed-hover: var(--pc-hover);
+    --ed-accent: var(--accent-color);
+    --ed-accent-soft: var(--accent-soft);
+    --ed-r: 8px;
+    --ed-h: 36px;
+}
+
+/* ---- Row 1: header ---- */
+#editor-panel .panel-header--editor {
+    container: edhead / inline-size;
+    flex-wrap: wrap;
+    min-height: 52px;
+    padding: 8px 12px;
+    gap: 8px 12px;
+    border-bottom: 1px solid var(--ed-line);
+}
+/* The picker row never drops under 260px; below that the action group wraps onto its own line. */
+#editor-panel .editor-toolbar { display: flex; flex: 1 1 260px; flex-wrap: nowrap; align-items: center; gap: 8px; min-width: 0; }
+
+/* Language and example pickers: one field style. The native arrow keeps its own space, so padding stays small. */
+#editor-panel .editor-toolbar__select {
+    min-height: var(--ed-h);
+    height: var(--ed-h);
+    padding: 0 4px 0 10px;
+    border: 1px solid var(--ed-line);
+    border-radius: var(--ed-r);
+    background-color: var(--ed-raised);
+    color: var(--ed-strong);
+    font-size: 13px;
+    font-weight: 600;
+    transition: background-color .12s, border-color .12s;
+}
+#editor-panel .editor-toolbar__select:hover:not(:disabled) { background-color: var(--ed-hover); }
+#editor-panel .editor-toolbar__select--lang { flex: 0 0 84px; width: 84px; min-width: 84px; color: var(--pc-accent, var(--ed-accent)); }
+#editor-panel #file-selector { flex: 1 1 80px; width: auto; max-width: 320px; min-width: 80px; font-weight: 500; color: var(--ed-text); }
+/* Examples come from the API server; when it is not running the field says so and stays quiet. */
+#editor-panel #file-selector[data-state='offline'] { color: var(--ed-muted); font-style: normal; cursor: help; opacity: 1; }
+
+/* A stable caption keeps unavailable examples readable without expanding the picker. */
+#editor-panel .editor-examples-status {
+    flex: 0 0 auto;
+    min-height: 24px;
+    margin: 0;
+    padding: 2px 12px 6px;
+    color: var(--ed-muted);
+    font-size: 12px;
+    line-height: 16px;
+    text-wrap: pretty;
+}
+#editor-panel .editor-examples-status:empty { visibility: hidden; }
+
+/* Open / download: ghost icon buttons; the label appears when the header is wide enough (see the container query). */
+#editor-panel .editor-toolbar__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    gap: 8px;
+    min-width: var(--ed-h);
+    min-height: var(--ed-h);
+    height: var(--ed-h);
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--ed-r);
+    background: transparent;
+    color: var(--ed-text);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background-color .12s, color .12s;
+}
+#editor-panel .editor-toolbar__label { display: none; }
+#editor-panel .editor-toolbar__btn:hover { background: var(--ed-hover); color: var(--ed-strong); }
+#editor-panel .editor-toolbar__icon { flex: 0 0 auto; color: var(--ed-muted); }
+#editor-panel .editor-toolbar__btn:hover .editor-toolbar__icon { color: var(--ed-strong); }
+@container edhead (min-width: 720px) {
+    #editor-panel .editor-toolbar__label { display: inline; }
+    #editor-panel .editor-toolbar__btn { padding: 0 12px; }
+}
+
+/* Right side: icon buttons of one size. Reference, terminal, notifications and expand have their own class; close
+   keeps the shared panel close button and stands after the divider. */
+#editor-panel .editor-header-actions { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; margin-left: auto; }
+#editor-panel .editor-header-actions__btn,
+#editor-panel .editor-header-actions .panel-close-btn {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: 0 0 var(--ed-h);
+    width: var(--ed-h);
+    height: var(--ed-h);
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--ed-r);
+    background: transparent;
+    color: var(--ed-muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color .12s, color .12s;
+}
+#editor-panel .editor-header-actions__btn:hover,
+#editor-panel .editor-header-actions .panel-close-btn:hover { background: var(--ed-hover); color: var(--ed-strong); }
+#editor-panel .editor-header-actions__btn[aria-pressed='true'] { background: var(--ed-accent-soft); color: var(--pc-accent, var(--ed-accent)); }
+#editor-panel .editor-header-actions__divider { width: 1px; height: 20px; margin-inline: 4px; background: var(--ed-line); }
+#editor-panel .editor-header-actions__badge {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    min-width: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--ed-accent);
+    color: var(--pk-on-accent);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+}
+#editor-panel :is(button, select, input):focus-visible { outline: 2px solid var(--pc-accent, var(--ed-accent)); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+    #editor-panel .editor-toolbar__select,
+    #editor-panel .editor-toolbar__btn,
+    #editor-panel .editor-header-actions__btn,
+    #editor-panel .editor-header-actions .panel-close-btn { transition: none; }
+}
+
+/* ---- Narrow screens: the editor fills the page ---- */
+@media (max-width: 980px) {
+    #editor-panel { --ed-h: 40px; }
+}
+
+@media (pointer: coarse) {
+    #editor-panel { --ed-h: 44px; }
+}
+
+/* Upload to a real drone: the button follows the open/download pair; its progress and result sit right beside it. */
+#editor-panel .editor-toolbar__btn[hidden] { display: none; }
+#editor-panel .editor-toolbar__btn:disabled { opacity: .7; cursor: progress; }
+/* Progress and result of the upload: its own line under the toolbar, so a long message never squeezes the buttons. */
+#editor-panel .editor-drone-status { margin: 0; padding: 6px 16px; font-size: 12px; line-height: 16px; color: var(--ed-muted); text-wrap: pretty; }
+#editor-panel .editor-drone-status:empty { display: none; }
+#editor-panel .editor-drone-status[data-tone='ok'] { color: var(--pc-success, var(--ed-strong)); font-weight: 600; }
+#editor-panel .editor-drone-status[data-tone='error'] { color: var(--pc-danger, var(--danger)); font-weight: 600; }

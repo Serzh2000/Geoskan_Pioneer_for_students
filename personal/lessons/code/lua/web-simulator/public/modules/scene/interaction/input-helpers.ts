@@ -15,7 +15,14 @@ export function traceClick(message: string, level: 'info' | 'warn' = 'info') {
 
 export function getRootSceneObject(object: THREE.Object3D) {
     let current: THREE.Object3D | null = object;
+    let presetComponent: THREE.Object3D | null = null;
     while (current?.parent && current.parent !== scene && current.parent !== envGroup) {
+        // Pick the most specific editable entity inside a preset. Decorative
+        // meshes and fixed marker-map cells belong to their parent entity.
+        if (!presetComponent && current.userData?.type && current.userData?.draggable) {
+            presetComponent = current;
+        }
+        if (current.parent.userData?.presetName) return presetComponent || current;
         current = current.parent;
     }
     return current || object;

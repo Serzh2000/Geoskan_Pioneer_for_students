@@ -220,23 +220,6 @@ function placeUnits(vehicle: THREE.Object3D, route: THREE.Object3D, geometry: Ro
     });
 }
 
-function localBoundsOf(unit: THREE.Object3D): THREE.Box3 {
-    let bounds = unit.userData.localBounds as THREE.Box3 | undefined;
-    if (bounds) return bounds;
-    bounds = new THREE.Box3();
-    unit.updateWorldMatrix(true, true);
-    const inverse = new THREE.Matrix4().copy(unit.matrixWorld).invert();
-    unit.traverse((node) => {
-        const mesh = node as THREE.Mesh;
-        if (!mesh.isMesh) return;
-        mesh.geometry.computeBoundingBox();
-        const box = mesh.geometry.boundingBox!.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inverse, mesh.matrixWorld));
-        bounds!.union(box);
-    });
-    unit.userData.localBounds = bounds;
-    return bounds;
-}
-
 // ---------------------------------------------------------------- public
 
 export function updateVehicles(dt: number) {
@@ -305,27 +288,3 @@ export function commandVehicle(vehicle: THREE.Object3D, command: { go?: boolean;
     }
 }
 
-/**
- * The vehicle unit (if any) whose top surface is directly under a point,
- * with that unit's world velocity - what a downward sensor over a moving
- * train or car sees.
- */
-export function vehicleSurfaceBelow(point: THREE.Vector3): { top: number; velocity: THREE.Vector3 } | null {
-    let best: { top: number; velocity: THREE.Vector3 } | null = null;
-    for (const vehicle of listVehicles()) {
-        for (const unit of unitsOf(vehicle)) {
-            // Footprint test in the unit's own frame: on a curve its
-            // world-aligned box would be much wider than the car itself.
-            const bounds = localBoundsOf(unit);
-            unit.updateWorldMatrix(true, false);
-            const local = unit.worldToLocal(point.clone());
-            if (local.x < bounds.min.x || local.x > bounds.max.x || local.y < bounds.min.y || local.y > bounds.max.y) continue;
-            const top = unit.localToWorld(new THREE.Vector3(local.x, local.y, bounds.max.z)).z;
-            if (top > point.z) continue;
-            if (!best || top > best.top) {
-                best = { top, velocity: (unit.userData.velocity as THREE.Vector3 | undefined)?.clone() ?? new THREE.Vector3() };
-            }
-        }
-    }
-    return best;
-}

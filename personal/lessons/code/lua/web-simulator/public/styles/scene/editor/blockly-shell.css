@@ -1,125 +1,20 @@
-.blockly-editor-shell {
-    position: relative;
-    height: 100%;
-    min-height: 0;
-}
-
-.blockly-editor-canvas-host {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    gap: 12px;
-    min-height: 0;
-    overflow: hidden;
-    background: #0a0a0a;
-}
-
-.blockly-editor-canvas {
-    height: 100%;
-    min-height: 0;
-    width: 100%;
-    overflow: hidden;
-    border-radius: 12px;
-    border: 1px solid rgba(148, 163, 184, 0.14);
-    background: #0a0a0a;
-}
-
-.blockly-editor-canvas .blocklySvg {
-    font-family: var(--font-sans);
-}
-
-.blockly-editor-canvas .blocklyMainBackground {
-    stroke: rgba(56, 189, 248, 0.08);
-}
-
-.blockly-editor-canvas .blocklyToolboxDiv {
-    background:
-        linear-gradient(180deg, rgba(10, 10, 10, 0.96), rgba(26, 26, 26, 0.94)) !important;
-    border-right: 1px solid rgba(148, 163, 184, 0.12);
-    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.03);
-    font-family: var(--font-sans);
-}
-
-.blockly-editor-canvas .blocklyTreeRow {
-    margin: 4px 8px;
-    border-radius: 10px;
-    transition: background 0.18s ease, box-shadow 0.18s ease;
-}
-
-.blockly-editor-canvas .blocklyTreeRow:hover {
-    background: rgba(56, 189, 248, 0.08);
-}
-
-.blockly-editor-canvas .blocklyTreeSelected,
-.blockly-editor-canvas .blocklyTreeSelected:hover {
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.18), rgba(56, 189, 248, 0.1)) !important;
-    box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.22);
-}
-
-.blockly-editor-canvas .blocklyTreeLabel,
-.blockly-editor-canvas .blocklyFlyoutLabelText,
-.blockly-editor-canvas .blocklyText {
-    fill: #e2e8f0 !important;
-    color: #e2e8f0 !important;
-    font-family: var(--font-sans) !important;
-    font-weight: 600;
-}
-
-.blockly-editor-canvas .blocklyFlyoutBackground {
-    fill: rgba(10, 10, 10, 0.96) !important;
-    stroke: rgba(148, 163, 184, 0.12);
-    stroke-width: 1px;
-}
-
-.blockly-editor-canvas .blocklyScrollbarHandle {
-    fill: rgba(56, 189, 248, 0.34) !important;
-}
-
-.blockly-editor-canvas .blocklyScrollbarBackground:hover + .blocklyScrollbarHandle,
-.blockly-editor-canvas .blocklyScrollbarHandle:hover {
-    fill: rgba(125, 211, 252, 0.48) !important;
-}
-
-.blockly-editor-canvas .blocklyTrash {
-    opacity: 0.82;
-}
-
-.blockly-editor-canvas .blocklyTrash:hover {
-    opacity: 1;
-}
-
-.blockly-editor-canvas .blocklyHighlightedConnectionPath {
-    stroke: #7dd3fc;
-}
-
-.blocklyDropDownDiv .goog-menu,
-.blocklyWidgetDiv .goog-menu {
-    border: 1px solid rgba(148, 163, 184, 0.28);
-    border-radius: 10px;
-    background: #1a1a1a;
-    color: #e2e8f0;
-    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.36);
-    font-family: var(--font-sans);
-}
-
-.blocklyDropDownDiv .goog-menuitem,
-.blocklyWidgetDiv .goog-menuitem {
-    padding: 8px 12px;
-}
-
-.blocklyHtmlInput {
-    border-radius: 8px;
-    border: 1px solid rgba(56, 189, 248, 0.3);
-    background: #1e293b;
-    color: #e2e8f0;
-    box-shadow: 0 10px 28px rgba(2, 6, 23, 0.3);
-    font-family: var(--font-mono);
-}
-
-@media (max-width: 980px) {
-    .panel-header__lead {
-        flex-wrap: wrap;
-        align-items: flex-start;
-        gap: 10px;
-    }
-}
+/* Blockly canvas chrome follows the same theme; generated block colors remain Blockly-owned. */
+.blockly-editor-shell { position: relative; height: 100%; min-height: 0; }
+.blockly-editor-canvas-host { position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; background: var(--panel-bg); }
+.blockly-editor-canvas { width: 100%; height: 100%; min-height: 0; overflow: hidden; border: 1px solid var(--border-color); border-radius: 12px; background: var(--panel-bg); }
+.blockly-editor-canvas .blocklySvg { font-family: var(--font-sans); }
+.blockly-editor-canvas .blocklyMainBackground { stroke: var(--border-color); }
+.blockly-editor-canvas .blocklyToolboxDiv { background: var(--card-bg) !important; border-right: 1px solid var(--border-color); font-family: var(--font-sans); }
+.blockly-editor-canvas .blocklyTreeRow { margin: 4px 8px; border-radius: 8px; transition: background-color .12s; }
+.blockly-editor-canvas .blocklyTreeRow:hover { background: var(--accent-soft); }
+.blockly-editor-canvas .blocklyTreeSelected, .blockly-editor-canvas .blocklyTreeSelected:hover { background: var(--accent-soft) !important; }
+.blockly-editor-canvas .blocklyTreeLabel, .blockly-editor-canvas .blocklyFlyoutLabelText { fill: var(--text-color) !important; color: var(--text-color) !important; font-family: var(--font-sans); }
+.blockly-editor-canvas .blocklyFlyoutBackground { fill: var(--panel-bg) !important; stroke: var(--border-color); stroke-width: 1px; }
+.blockly-editor-canvas .blocklyScrollbarHandle { fill: var(--scrollbar-thumb) !important; }
+.blockly-editor-canvas .blocklyScrollbarHandle:hover { fill: var(--scrollbar-hover) !important; }
+.blockly-editor-canvas .blocklyTrash { opacity: .82; }
+.blockly-editor-canvas .blocklyTrash:hover { opacity: 1; }
+.blockly-editor-canvas .blocklyHighlightedConnectionPath { stroke: var(--accent-color); }
+.blocklyDropDownDiv .goog-menu, .blocklyWidgetDiv .goog-menu { border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); color: var(--text-color); box-shadow: var(--shadow-soft); font-family: var(--font-sans); }
+.blocklyDropDownDiv .goog-menuitem, .blocklyWidgetDiv .goog-menuitem { padding: 8px 12px; }
+.blocklyHtmlInput { border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-color); font-family: var(--font-mono); }

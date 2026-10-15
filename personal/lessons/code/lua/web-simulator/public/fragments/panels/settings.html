@@ -1,120 +1,98 @@
             <div id="settings-panel" class="sidebar-panel">
-                <div class="panel-header panel-header--settings">
-                    <div class="panel-header__lead panel-header__lead--settings">
+                <div class="panel-header">
+                    <div class="panel-header__lead">
                         <span class="panel-title">Настройки</span>
-                        <span class="panel-header__subtitle">Параметры визуализации, сцены и симуляции</span>
                     </div>
-                    <button class="panel-close-btn" onclick="closePanel()">✕</button>
+                    <button type="button" class="panel-close-btn" onclick="closePanel()" aria-label="Закрыть настройки"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg></button>
                 </div>
-                <div class="panel-content settings-panel-content settings-panel-content--general">
-                    <div class="settings-shell">
-                        <div class="settings-stack settings-stack--general">
-                            <details class="settings-card" open>
-                                <summary class="settings-card__header">
-                                    <div class="settings-card__title-wrap">
-                                        <span class="settings-card__accent" aria-hidden="true"></span>
-                                        <div class="settings-card__heading">
-                                            <div class="settings-card__title">Трассер полета</div>
-                                            <p class="settings-card__description">Настройте отображение маршрута дрона и графику траектории.</p>
-                                        </div>
-                                    </div>
-                                </summary>
-                                <div class="settings-card__body settings-card__body--stack">
-                                    <label class="settings-toggle settings-control settings-control--full">
-                                        <input type="checkbox" id="setting-show-tracer" checked>
-                                        <span class="settings-toggle__box" aria-hidden="true"></span>
-                                        <span class="settings-toggle__content">
-                                            <span class="settings-toggle__title">Показывать траекторию</span>
-                                            <span class="settings-toggle__hint">Включает шлейф полета в 3D-сцене.</span>
-                                        </span>
-                                    </label>
-                                    <label class="settings-field settings-control">
-                                        <span class="settings-field__label">Цвет линии</span>
-                                        <span class="settings-field__hint">Цвет основного шлейфа трассера.</span>
-                                        <span class="settings-color-control">
-                                            <input type="color" id="setting-tracer-color" value="#38bdf8">
-                                            <span class="settings-color-control__value" id="setting-tracer-color-val">#38BDF8</span>
-                                        </span>
-                                    </label>
-                                    <label class="settings-field settings-control">
-                                        <span class="settings-field__row">
-                                            <span class="settings-field__label">Толщина линии</span>
-                                            <strong class="settings-field__value" id="tracer-width-val">2 px</strong>
-                                        </span>
-                                        <span class="settings-field__hint">Оптимальная ширина для обзора маршрута.</span>
-                                        <input type="range" id="setting-tracer-width" min="1" max="12" step="1" value="2">
-                                    </label>
-                                    <label class="settings-field settings-control">
-                                        <span class="settings-field__label">Форма отображения</span>
-                                        <span class="settings-field__hint">Выберите способ визуализации пути.</span>
-                                        <span class="settings-select-wrap">
-                                            <select id="setting-tracer-shape">
-                                                <option value="line">Линия</option>
-                                                <option value="points">Точки</option>
-                                                <option value="both">Линия и точки</option>
-                                            </select>
-                                        </span>
-                                    </label>
+                <div class="panel-content settings-panel-content">
+                    <div class="settings-stack">
+                        <section class="pk-section" aria-labelledby="settings-simulation-title">
+                            <div class="pk-section__head"><h3 id="settings-simulation-title" class="pk-section__title">Симуляция</h3></div>
+                            <div class="pk-field">
+                                <label class="pk-field__label" for="setting-sim-speed"><span>Скорость</span><span class="pk-field__value" id="sim-speed-val">1×</span></label>
+                                <div class="pk-seg settings-speed-presets" role="group" aria-label="Быстрый выбор скорости">
+                                    <button type="button" class="pk-seg__btn" data-speed-preset="0.5">0.5×</button>
+                                    <button type="button" class="pk-seg__btn" data-speed-preset="1">1×</button>
+                                    <button type="button" class="pk-seg__btn" data-speed-preset="2">2×</button>
+                                    <button type="button" class="pk-seg__btn" data-speed-preset="3">3×</button>
                                 </div>
-                            </details>
-                            <details class="settings-card">
-                                <summary class="settings-card__header">
-                                    <div class="settings-card__title-wrap">
-                                        <span class="settings-card__accent" aria-hidden="true"></span>
-                                        <div class="settings-card__heading">
-                                            <div class="settings-card__title">Скорость симуляции</div>
-                                            <p class="settings-card__description">Управляйте темпом выполнения физики и скриптов без перегрузки интерфейса.</p>
-                                        </div>
-                                    </div>
-                                </summary>
-                                <div class="settings-card__body">
-                                    <label class="settings-field settings-control settings-control--compact">
-                                        <span class="settings-field__row">
-                                            <span class="settings-field__label">Множитель времени</span>
-                                            <strong class="settings-field__value" id="sim-speed-val">1.0x</strong>
-                                        </span>
-                                        <span class="settings-field__hint">Рекомендуемый диапазон для ручной отладки и демонстраций.</span>
-                                        <input type="range" id="setting-sim-speed" min="0.25" max="3" step="0.25" value="1">
-                                    </label>
+                                <details class="pk-disclosure settings-speed-fine">
+                                    <summary>Точнее</summary>
+                                    <input type="range" id="setting-sim-speed" min="0.25" max="3" step="0.25" value="1">
+                                </details>
+                            </div>
+                            <div class="pk-field">
+                                <label class="pk-field__label" for="setting-graphics-quality">Качество графики</label>
+                                <select id="setting-graphics-quality">
+                                    <option value="auto">Авто</option>
+                                    <option value="high">Высокое</option>
+                                    <option value="medium">Среднее</option>
+                                    <option value="low">Низкое</option>
+                                </select>
+                                <span class="pk-field__hint" id="graphics-quality-status">Авто снижает качество, когда кадров мало.</span>
+                            </div>
+                            <label class="pk-toggle">
+                                <span class="pk-toggle__text"><span class="pk-toggle__title">Показывать FPS</span></span>
+                                <input type="checkbox" id="setting-show-fps" role="switch">
+                                <span class="pk-switch" aria-hidden="true"></span>
+                            </label>
+                        </section>
+
+                        <section class="pk-section settings-tracer-section" aria-labelledby="settings-tracer-title">
+                            <div class="pk-section__head"><h3 id="settings-tracer-title" class="pk-section__title">След дрона</h3></div>
+                            <label class="pk-toggle">
+                                <span class="pk-toggle__text"><span class="pk-toggle__title">Показывать траекторию</span></span>
+                                <input type="checkbox" id="setting-show-tracer" role="switch" checked>
+                                <span class="pk-switch" aria-hidden="true"></span>
+                            </label>
+                            <div class="settings-tracer-sample" aria-hidden="true">
+                                <svg viewBox="0 0 240 40" preserveAspectRatio="xMidYMid meet">
+                                    <polyline id="settings-tracer-line" points="8,30 40,22 72,26 104,12 136,18 168,8 200,14 232,6" fill="none" stroke-linecap="round" stroke-linejoin="round"></polyline>
+                                    <g id="settings-tracer-dots"></g>
+                                </svg>
+                                <span>Так будет выглядеть след</span>
+                            </div>
+                            <div class="pk-field">
+                                <label class="pk-field__label" for="setting-tracer-color">Цвет</label>
+                                <div class="pk-inline">
+                                    <input type="color" id="setting-tracer-color" value="#38bdf8">
+                                    <span class="settings-color-value" id="setting-tracer-color-val">#38BDF8</span>
                                 </div>
-                            </details>
-                            <details class="settings-card">
-                                <summary class="settings-card__header">
-                                    <div class="settings-card__title-wrap">
-                                        <span class="settings-card__accent" aria-hidden="true"></span>
-                                        <div class="settings-card__heading">
-                                            <div class="settings-card__title">Параметры автопилота</div>
-                                            <p class="settings-card__description">Импортируйте `.properties`, редактируйте параметры автопилота и отслеживайте историю изменений.</p>
-                                        </div>
-                                    </div>
-                                </summary>
-                                <div class="settings-card__body settings-card__body--stack">
-                                    <div class="settings-alert settings-alert--info">
-                                        <span class="settings-alert__icon" aria-hidden="true">AP</span>
-                                        <span class="settings-alert__text">Дополнительное окно содержит полный список параметров из шаблонного профиля, описания из документации и журнал интеграции изменений.</span>
-                                    </div>
-                                    <button type="button" id="open-autopilot-params-btn" class="settings-primary-btn" aria-expanded="false">
-                                        Открыть окно параметров автопилота
-                                    </button>
+                            </div>
+                            <div class="pk-field">
+                                <label class="pk-field__label" for="setting-tracer-width"><span>Толщина</span><span class="pk-field__value" id="tracer-width-val">2 px</span></label>
+                                <input type="range" id="setting-tracer-width" min="1" max="12" step="1" value="2">
+                            </div>
+                            <div class="pk-field">
+                                <label class="pk-field__label" for="setting-tracer-shape">Вид следа</label>
+                                <select id="setting-tracer-shape">
+                                    <option value="line">Линия</option>
+                                    <option value="points">Точки</option>
+                                    <option value="both">Линия и точки</option>
+                                </select>
+                            </div>
+                        </section>
+
+                        <section class="pk-section" aria-labelledby="settings-help-title">
+                            <div class="pk-section__head"><h3 id="settings-help-title" class="pk-section__title">Помощь и параметры</h3></div>
+                            <button type="button" id="restart-onboarding-tour-btn" class="btn-secondary btn--full">Пройти тур ещё раз</button>
+                            <button type="button" id="open-autopilot-params-btn" class="btn-secondary btn--full" aria-expanded="false">Параметры автопилота</button>
+                            <p class="pk-section__hint">Параметры автопилота: полный список с описаниями и журналом изменений.</p>
+                        </section>
+
+                        <section class="pk-section settings-danger" aria-labelledby="settings-workspace-title">
+                            <div class="pk-section__head"><h3 id="settings-workspace-title" class="pk-section__title">Сброс</h3></div>
+                            <p class="pk-section__hint">Вернёт панели, их ширину, рельсу и тему к исходным. Прогресс курса и черновики кода останутся на месте.</p>
+                            <button type="button" id="workspace-reset-btn" class="btn-secondary btn--full btn--danger">Сбросить рабочее место</button>
+                            <div id="workspace-reset-confirm" class="settings-confirm" role="group" aria-labelledby="workspace-reset-question" hidden>
+                                <p id="workspace-reset-question" class="settings-confirm__text">Сбросить панели, их ширину, рельсу и тему? Страница перезагрузится.</p>
+                                <div class="pk-btn-row">
+                                    <button type="button" id="workspace-reset-confirm-btn" class="btn-secondary btn--sm btn--danger">Сбросить</button>
+                                    <button type="button" id="workspace-reset-cancel-btn" class="btn-secondary btn--sm">Отмена</button>
                                 </div>
-                            </details>
-                            <details class="settings-card">
-                                <summary class="settings-card__header">
-                                    <div class="settings-card__title-wrap">
-                                        <span class="settings-card__accent" aria-hidden="true"></span>
-                                        <div class="settings-card__heading">
-                                            <div class="settings-card__title">Знакомство с симулятором</div>
-                                            <p class="settings-card__description">Короткий тур по главным частям интерфейса — тот же, что показывается при первом запуске.</p>
-                                        </div>
-                                    </div>
-                                </summary>
-                                <div class="settings-card__body settings-card__body--stack">
-                                    <button type="button" id="restart-onboarding-tour-btn" class="settings-primary-btn">
-                                        Пройти тур ещё раз
-                                    </button>
-                                </div>
-                            </details>
-                        </div>
+                            </div>
+                        </section>
                     </div>
                 </div>
             </div>

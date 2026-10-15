@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { PointerDragSession } from './pointer-drag.js';
 
 /*
  * Пределы подобраны под дальнюю плоскость камеры (300) и размер арены:
@@ -16,13 +17,20 @@ const MAX_TARGET_Z = 12;
 // the camera itself never should be - clamped separately in update().
 const MIN_CAMERA_Z = 0.15;
 const MAX_TARGET_DISTANCE = 150;
+// A pan whose vertical part is below this share of its length is treated as horizontal.
+const VERTICAL_SHARE_LIMIT = 0.35;
 
 export class DroneOrbitControls {
     camera: THREE.PerspectiveCamera;
     domElement: HTMLElement;
     target: THREE.Vector3 = new THREE.Vector3();
 
-    enabled: boolean = true;
+    private active = true;
+    get enabled(): boolean { return this.active; }
+    set enabled(value: boolean) {
+        if (!value) this.cancelInteraction();
+        this.active = value;
+    }
 
     radius: number = 10;
     minRadius: number = MIN_RADIUS;
@@ -34,9 +42,7 @@ export class DroneOrbitControls {
     zoomSpeed: number = 1.2;
     panSpeed: number = 1.0;
 
-    private isDragging: boolean = false;
-    private previousMouse: {x: number, y: number} = {x: 0, y: 0};
-    private mouseButton: number = -1;
+    private drag: PointerDragSession;
 
     private listeners: Record<string, Array<() => void>> = {};
     private pointerWorld: THREE.Vector3 = new THREE.Vector3();
@@ -72,7 +78,7 @@ export class DroneOrbitControls {
             (window as any).isTransforming ||
             (window as any).isHittingGizmo ||
             transformControl?.dragging ||
-            transformControl?.axis !== null
+            (transformControl?.axis != null)
         );
     }
 
@@ -105,6 +111,7 @@ export class DroneOrbitControls {
     constructor(camera: THREE.PerspectiveCamera, domElement: HTMLElement) {
         this.camera = camera;
         this.domElement = domElement;
+        this.drag = new PointerDragSession(domElement);
 
         this.syncSphericalFromCamera();
 
@@ -129,11 +136,8 @@ export class DroneOrbitControls {
     }
 
     onPointerDown(e: PointerEvent) {
-        if (!this.enabled || this.isTransformInteractionActive()) return;
-        this.isDragging = true;
-        this.mouseButton = e.button;
-        this.previousMouse = { x: e.clientX, y: e.clientY };
-        this.domElement.setPointerCapture(e.pointerId);
+        if (!this.enabled || this.isTransformInteractionActive() || (e.button !== 0 && e.button !== 2)) return;
+        if (this.drag.start(e)) this.dispatchEvent('start');
     }
 
     /**
@@ -150,13 +154,16 @@ export class DroneOrbitControls {
     }
 
     onPointerMove(e: PointerEvent) {
-        if (!this.enabled || !this.isDragging || this.isTransformInteractionActive()) return;
+        if (!this.enabled || this.isTransformInteractionActive()) {
+            this.cancelInteraction();
+            return;
+        }
+        const delta = this.drag.move(e);
+        if (!delta) return;
+        const deltaX = delta.x;
+        const deltaY = delta.y;
 
-        const deltaX = e.clientX - this.previousMouse.x;
-        const deltaY = e.clientY - this.previousMouse.y;
-        this.previousMouse = { x: e.clientX, y: e.clientY };
-
-        if (this.mouseButton === 0) { // ЛКМ: Вращение
+        if (delta.button === 0) { // ЛКМ: Вращение
             this.azimuth -= deltaX * 0.005 * this.rotateSpeed;
             this.elevation += deltaY * 0.005 * this.rotateSpeed;
 
@@ -164,7 +171,7 @@ export class DroneOrbitControls {
             this.clampElevation();
 
             this.update();
-        } else if (this.mouseButton === 2) { // ПКМ: Панорамирование
+        } else if (delta.button === 2) { // ПКМ: Панорамирование
             const forward = new THREE.Vector3().subVectors(this.target, this.camera.position).normalize();
             const up = this.camera.up.clone();
             // `right` лежит в горизонтальной плоскости, поэтому высоты фокуса
@@ -175,7 +182,11 @@ export class DroneOrbitControls {
             const factor = this.radius * 0.005 * this.panSpeed;
             const panX = right.multiplyScalar(-deltaX * factor);
             const panY = actualUp.multiplyScalar(deltaY * factor);
-            panY.multiplyScalar(this.allowedVerticalScale(panY.z));
+            // The focus-height limit only stops a drag that is mostly vertical. Looking straight
+            // down, the screen-up vector is almost horizontal and its tiny vertical part used to
+            // scale the WHOLE pan to zero once the focus sat at its height limit, so one direction
+            // was dead. Mostly-horizontal drags always move; the height is just clamped below.
+            if (Math.abs(panY.z) > panY.length() * VERTICAL_SHARE_LIMIT) panY.multiplyScalar(this.allowedVerticalScale(panY.z));
 
             this.target.add(panX).add(panY);
             this.clampTargetToSceneBounds();
@@ -184,11 +195,17 @@ export class DroneOrbitControls {
     }
 
     onPointerUp(e: PointerEvent) {
-        this.isDragging = false;
-        this.mouseButton = -1;
         if (this.domElement.hasPointerCapture(e.pointerId)) {
-            this.domElement.releasePointerCapture(e.pointerId);
+            this.cancelInteraction();
         }
+    }
+
+    removeEventListener(type: string, listener: () => void) {
+        this.listeners[type] = this.listeners[type]?.filter(cb => cb !== listener) ?? [];
+    }
+
+    cancelInteraction(): void {
+        this.drag?.cancel();
     }
 
     /**

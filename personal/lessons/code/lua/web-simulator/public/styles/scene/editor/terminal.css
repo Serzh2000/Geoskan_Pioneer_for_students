@@ -1,0 +1,57 @@
+/* VS Code panel composition, using the simulator's existing theme and type tokens. */
+#editor-panel .editor-terminal__header { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 12px; min-height: 38px; padding: 0 8px 0 12px; border-bottom: 1px solid var(--pc-line); }
+#editor-panel .terminal-panel-tabs { display: flex; align-self: stretch; min-width: 0; overflow-x: auto; gap: 16px; scrollbar-width: none; }
+#editor-panel .terminal-panel-tabs > button { display: inline-flex; align-items: center; gap: 6px; flex: none; min-height: 38px; padding: 0 0 2px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--pc-muted); font: 600 11px/1.3 var(--font-sans); text-transform: uppercase; letter-spacing: .04em; cursor: pointer; }
+#editor-panel .terminal-panel-tabs > button[aria-selected='true'] { border-bottom-color: var(--accent-color); color: var(--text-strong); }
+#editor-panel .terminal-panel-tabs > button:hover { color: var(--text-strong); }
+#editor-panel #terminal-problem-count { min-width: 18px; padding: 2px 5px; border-radius: 8px; background: var(--pc-inset); font: 11px/1 var(--font-mono); }
+#editor-panel .terminal-panel-actions { display: flex; align-items: center; gap: 2px; flex: none; }
+#editor-panel .terminal-icon-btn { display: grid; place-items: center; flex: none; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--pc-muted); cursor: pointer; }
+#editor-panel .terminal-icon-btn:hover { background: var(--pc-hover); color: var(--text-strong); }
+#editor-panel .terminal-icon-btn:disabled { opacity: .4; cursor: default; }
+#editor-panel .terminal-icon-btn svg { width: 16px; height: 16px; stroke-linecap: round; stroke-linejoin: round; }
+#editor-panel #terminal-maximize-btn[aria-pressed='true'] svg { transform: rotate(180deg); }
+#editor-panel #terminal-session-select { width: 112px; min-width: 0; min-height: 30px; padding: 0 6px; border: 0; background: transparent; font-size: 12px; color: var(--text-color); }
+#editor-panel #terminal-session-select:hover { background-color: var(--pc-hover); }
+#editor-panel :is(.terminal-console-pane, .terminal-output-pane, .terminal-problems) { flex: 1 1 0; min-height: 0; }
+#editor-panel .terminal-console-pane { display: flex; }
+#editor-panel .terminal-console-main { display: block; flex: 1 1 0; min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+#editor-panel .terminal-console-stream { padding: 12px 16px 4px; font: 13px/1.65 var(--font-mono); }
+#editor-panel .terminal-console-line { min-height: 1.65em; white-space: pre-wrap; overflow-wrap: anywhere; }
+#editor-panel .terminal-console-line--command { margin-top: 8px; color: var(--pc-accent); }
+#editor-panel .terminal-console-line--error { color: var(--pc-danger); }
+#editor-panel .terminal-console-line--warning { color: var(--pc-warning); }
+#editor-panel .terminal-command-form { display: flex; flex: 0 0 auto; align-items: center; gap: 8px; min-width: 0; margin: 0; padding: 4px 16px 10px; font: 13px/1.65 var(--font-mono); }
+#editor-panel .terminal-prompt { flex: none; color: var(--pc-accent); }
+#editor-panel #terminal-command-input { flex: 1; min-width: 0; height: 30px; min-height: 30px; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--text-color); caret-color: var(--accent-color); font: inherit; }
+#editor-panel #terminal-command-input:focus-visible { outline: none; }
+#editor-panel .terminal-command-form:focus-within { box-shadow: inset 0 -1px var(--accent-color); }
+#editor-panel .terminal-session-list { display: flex; flex-direction: column; flex: 0 0 140px; gap: 2px; overflow: auto; padding: 8px 4px; border-left: 1px solid var(--pc-line); }
+#editor-panel .terminal-session { min-height: 30px; padding: 4px 10px; border: 0; border-radius: 4px; background: transparent; color: var(--pc-muted); text-align: left; font: 12px/1.4 var(--font-sans); cursor: pointer; }
+#editor-panel .terminal-session[aria-selected='true'] { background: var(--pc-hover); color: var(--text-strong); }
+#editor-panel .terminal-output-pane { display: flex; flex-direction: column; }
+#editor-panel .editor-terminal__stream { padding: 10px 0 16px; }
+#editor-panel .terminal-problems { overflow: auto; padding: 8px 16px; }
+#editor-panel .terminal-problem { display: flex; align-items: baseline; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--pc-line); font: 13px/1.5 var(--font-sans); }
+#editor-panel .terminal-problem strong { flex: 0 0 110px; font-size: 12px; color: var(--pc-danger); }
+#editor-panel .terminal-problem--warn strong { color: var(--pc-warning); }
+#editor-panel .terminal-problem span { min-width: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+#editor-panel .terminal-no-problems { margin: 8px 0; color: var(--pc-muted); font-size: 13px; }
+#editor-panel .panel-content--editor:has(.editor-terminal.is-maximized:not([hidden])) .editor-workspace { display: none; }
+#editor-panel .editor-terminal [hidden] { display: none; }
+@media (max-width: 760px) {
+    #editor-panel .editor-terminal__header { flex-wrap: wrap; gap: 0 8px; }
+    #editor-panel .terminal-panel-actions { margin-left: auto; padding: 3px 0; }
+    #editor-panel .terminal-session-list { display: none; }
+    #editor-panel .terminal-panel-tabs { gap: 14px; }
+    #editor-panel .terminal-problem { flex-direction: column; gap: 3px; }
+    #editor-panel .terminal-problem strong { flex-basis: auto; }
+    #editor-panel .editor-terminal__line { grid-template-columns: 50px minmax(0, 1fr); }
+    #editor-panel .editor-terminal__line .editor-terminal__tag { display: none; }
+}
+@media (pointer: coarse) {
+    #editor-panel .terminal-icon-btn { width: 44px; height: 44px; }
+    #editor-panel .terminal-panel-tabs > button { min-height: 44px; }
+    #editor-panel #terminal-session-select { min-height: 44px; }
+}
+#editor-panel .editor-terminal.is-collapsed .editor-terminal__header { border-bottom: 0; }

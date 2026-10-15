@@ -249,6 +249,22 @@ export const LUA_SETUP_SCRIPT = `
             requestRecordStop = js_camera_requestRecordStop,
             checkRequestRecord = js_camera_checkRequestRecord
         }
+        mailbox = {
+            connect = js_mailbox_connect,
+            hasMessages = js_mailbox_hasMessages,
+            myHullNumber = js_mailbox_myHullNumber,
+            receive = function(blocking)
+                -- the simulator delivers messages instantly, so waiting means polling until one arrives
+                local hull, message = js_mailbox_receive()
+                while blocking and hull == -1 do
+                    js_sleep(0.05)
+                    hull, message = js_mailbox_receive()
+                end
+                return hull, message
+            end,
+            send = js_mailbox_send,
+            setHullNumber = js_mailbox_setHullNumber
+        }
         Gpio = { new = js_gpio_new, A=1, B=2, C=3, D=4, E=5, INPUT=0, OUTPUT=1, ALTFU=2 }
         Uart = { new = js_uart_new, PARITY_NONE=0, PARITY_EVEN=1, PARITY_ODD=2, ONE_STOP=1, TWO_STOP=2 }
         Spi = { new = js_spi_new, MSB=0, LSB=1, MODE0=0, MODE1=1, MODE2=2, MODE3=3 }

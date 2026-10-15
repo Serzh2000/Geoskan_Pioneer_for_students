@@ -1,4 +1,2 @@
 ﻿/* Split into focused partials to keep the entrypoint stable. */
-@import url('./dark-foundation/workspace-shell.css');
-@import url('./dark-foundation/scene-manager.css');
 @import url('./dark-foundation/type-modal.css');

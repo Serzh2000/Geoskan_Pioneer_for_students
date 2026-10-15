@@ -96,16 +96,6 @@
     line-height: 1.6;
 }
 
-.info-modal__link {
-    color: var(--accent-color);
-    font-weight: 700;
-    text-decoration: none;
-}
-
-.info-modal__link:hover {
-    text-decoration: underline;
-}
-
 .info-modal__footnote {
     color: var(--text-muted);
     font-size: 12px;

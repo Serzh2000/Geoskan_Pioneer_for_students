@@ -100,18 +100,16 @@
 
 .bset-faces {
     display: flex;
-    gap: 16px;
-    border-bottom: 1px solid var(--mset-border);
+    gap: 4px;
 }
 
 .bset-face {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-bottom: -1px;
-    padding: 6px 0 7px;
+    padding: 6px 12px;
     border: 0;
-    border-bottom: 2px solid transparent;
+    border-radius: 8px;
     background: none;
     color: var(--mset-muted);
     font: inherit;
@@ -121,7 +119,7 @@
 }
 
 .bset-face[aria-selected='true'] {
-    border-bottom-color: var(--mset-accent);
+    background: var(--mset-tint);
     color: var(--mset-text);
 }
 

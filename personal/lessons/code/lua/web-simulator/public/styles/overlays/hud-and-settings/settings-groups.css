@@ -1,27 +1,31 @@
-﻿.settings-stack {
+/* Vertical stack inside controller and settings panel bodies; sections come from panels/panel-kit.css. */
+.settings-stack {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 20px;
+    min-width: 0;
 }
 
-.settings-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 14px;
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    background: rgba(15, 23, 42, 0.35);
+/* Cards like every other panel (panel-kit.css); a measure so lines of controls stay short in a wide panel. */
+#settings-panel .settings-panel-content { padding: var(--panel-content-pad); container: settings-controls / inline-size; }
+#settings-panel .settings-stack { gap: var(--pk-card-gap); max-width: 640px; }
+#settings-panel .pk-section__hint, #settings-panel .pk-field__hint { font-size: 12px; line-height: 1.5; }
+@container settings-controls (min-width: 300px) {
+    /* Colour and thickness read as two halves of one decision: how the line looks. */
+    #settings-panel .settings-tracer-section { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: start; column-gap: 16px; }
+    #settings-panel .settings-tracer-section > :is(.pk-section__head, .pk-toggle, .settings-tracer-sample, .pk-field:last-child) { grid-column: 1 / -1; }
 }
+#settings-panel .settings-speed-presets { width: 100%; }
+#settings-panel .settings-speed-presets .pk-seg__btn { min-height: 32px; }
+#settings-panel .settings-speed-fine > summary { font-size: 12px; color: var(--pc-muted, var(--text-muted)); }
+#settings-panel .settings-speed-fine > input[type='range'] { margin-top: 6px; }
+#settings-panel .settings-color-value { display: none; }
+#settings-panel .settings-tracer-sample { display: grid; gap: 4px; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--panel-bg); }
+#settings-panel .settings-tracer-sample svg { display: block; width: 100%; height: 40px; }
+#settings-panel .settings-tracer-sample span { font-size: 12px; color: var(--pc-muted, var(--text-muted)); }
+#settings-panel .settings-danger #workspace-reset-btn { border-color: color-mix(in srgb, var(--pc-danger, var(--danger)) 45%, transparent); }
 
-.settings-label {
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--accent-color);
-}
-
+/* Used by the gamepad wizard dialog. */
 .checkbox-container {
     display: flex;
     align-items: center;
@@ -39,4 +43,3 @@
 .checkmark {
     display: none;
 }
-

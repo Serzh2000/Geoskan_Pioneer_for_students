@@ -1,0 +1,5 @@
+/*
+ * API reference drawer: all component styles live in panels/api-docs.css (panel kit).
+ * Only the drawer body reset stays here, because the body is the scroll container of the sticky toolbar.
+ */
+#editor-panel .editor-docs__body { padding: 0; }

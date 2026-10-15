@@ -2,9 +2,11 @@ import * as fengari from 'fengari-web';
 import { getDroneFromLua, simSettings } from '../core/state.js';
 import { getAutopilotRuntimeConfig } from '../autopilot/params-runtime.js';
 import { measureSurfaceBelow, readOpticalFlow } from '../sensors/downward.js';
+import { recordLearningEvent } from '../core/learning-journal.js';
 
 export const sensors_pos = function(L: any) {
     const simState = getDroneFromLua(L);
+    recordLearningEvent(simState.id, { kind: 'position', time: simState.current_time, pos: { ...simState.pos }, yaw: simState.orientation.yaw });
     fengari.lua.lua_pushnumber(L, simState.pos.x);
     fengari.lua.lua_pushnumber(L, simState.pos.y);
     fengari.lua.lua_pushnumber(L, simState.pos.z);
@@ -66,7 +68,10 @@ function rangeBelow(simState: any) {
 }
 
 export const sensors_range = function(L: any) {
-    fengari.lua.lua_pushnumber(L, rangeBelow(getDroneFromLua(L)));
+    const drone = getDroneFromLua(L);
+    const value = rangeBelow(drone);
+    recordLearningEvent(drone.id, { kind: 'range', time: drone.current_time, value, pos: { ...drone.pos } });
+    fengari.lua.lua_pushnumber(L, value);
     return 1;
 };
 

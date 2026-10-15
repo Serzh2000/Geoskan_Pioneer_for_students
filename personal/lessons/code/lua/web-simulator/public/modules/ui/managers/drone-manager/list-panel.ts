@@ -14,6 +14,7 @@ import { disposePythonRunState, stopPythonScript } from '../../../python/index.j
 import { setExternalBridgeEnabled } from '../../../python/external-bridge.js';
 import type { DroneManagerDom } from './dom.js';
 import {
+    getDroneAddress,
     getDroneTransportSummary,
     getNextAvailableCameraPort,
     getNextAvailableMavlinkPort,
@@ -44,6 +45,8 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
     } = options;
 
     const listEl = dom.list;
+    // Inline confirmation: the row whose delete action was pressed once.
+    let pendingDeleteId: string | null = null;
 
     function switchDrone(nextDroneId: string) {
         if (!drones[nextDroneId] || nextDroneId === currentDroneId) return;
@@ -107,46 +110,83 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
             return;
         }
 
+        if (pendingDeleteId && !drones[pendingDeleteId]) {
+            pendingDeleteId = null;
+        }
+        const canDelete = droneIds.length > 1;
+
         droneIds.forEach((id, index) => {
             const connection = ensureDronePythonConnectionSettings(id);
-            const item = document.createElement('button');
-            item.type = 'button';
+            const isSelected = id === currentDroneId;
+            const isConfirming = canDelete && id === pendingDeleteId;
+            const item = document.createElement('div');
             item.id = `drone-list-item-${id}`;
-            item.className = `swarm-list__item${id === currentDroneId ? ' is-active' : ''}`;
+            item.className = `pk-row${isSelected ? ' is-selected' : ''}`;
             item.dataset.droneId = id;
+            item.tabIndex = 0;
             item.setAttribute('role', 'option');
-            item.setAttribute('aria-selected', id === currentDroneId ? 'true' : 'false');
-
-            const main = document.createElement('span');
-            main.className = 'swarm-list__item-main';
+            item.setAttribute('aria-selected', isSelected ? 'true' : 'false');
 
             const icon = document.createElement('span');
-            icon.className = 'swarm-list__item-icon';
+            icon.className = 'pk-row__icon';
             icon.setAttribute('aria-hidden', 'true');
             icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="2.05"></circle><circle cx="17" cy="7" r="2.05"></circle><circle cx="7" cy="17" r="2.05"></circle><circle cx="17" cy="17" r="2.05"></circle><rect x="9.5" y="9.5" width="5" height="5" rx="1.5"></rect><path d="M8.6 8.6 10 10"></path><path d="M15.4 8.6 14 10"></path><path d="M8.6 15.4 10 14"></path><path d="M15.4 15.4 14 14"></path></svg>';
 
+            const text = document.createElement('span');
+            text.className = 'pk-row__text';
+
             const name = document.createElement('span');
-            name.className = 'swarm-list__item-name';
+            name.className = 'pk-row__name';
             name.textContent = drones[id].name;
 
-            const text = document.createElement('span');
-            text.className = 'swarm-list__item-text';
-
             const meta = document.createElement('span');
-            meta.className = 'swarm-list__item-meta';
-            meta.textContent = getDroneTransportSummary(id);
-
-            const badge = document.createElement('span');
-            badge.className = 'swarm-list__item-badge';
-            badge.textContent = String(connection.mavlinkPort || index + 1);
+            meta.className = 'pk-row__meta';
+            meta.textContent = isConfirming ? 'Удалить этого дрона?' : getDroneAddress(id);
 
             text.appendChild(name);
             text.appendChild(meta);
-            main.appendChild(icon);
-            main.appendChild(text);
-            item.appendChild(main);
-            item.appendChild(badge);
+            item.appendChild(icon);
+            item.appendChild(text);
             item.title = `${drones[id].name} · ${getDroneTransportSummary(id)}`;
+
+            if (isConfirming) {
+                const confirm = document.createElement('span');
+                confirm.className = 'swarm-list__confirm';
+                const yes = document.createElement('button');
+                yes.type = 'button';
+                yes.className = 'btn-secondary btn--sm btn--danger';
+                yes.dataset.action = 'delete-confirm';
+                yes.textContent = 'Удалить';
+                const no = document.createElement('button');
+                no.type = 'button';
+                no.className = 'btn-secondary btn--sm';
+                no.dataset.action = 'delete-cancel';
+                no.textContent = 'Отмена';
+                confirm.appendChild(yes);
+                confirm.appendChild(no);
+                item.appendChild(confirm);
+            } else {
+                const port = document.createElement('span');
+                port.className = 'pk-row__end swarm-list__port';
+                port.textContent = `порт ${connection.mavlinkPort || index + 1}`;
+                item.appendChild(port);
+
+                if (canDelete) {
+                    const action = document.createElement('button');
+                    action.type = 'button';
+                    action.className = 'pk-row__action';
+                    action.dataset.action = 'delete';
+                    action.setAttribute('aria-label', `Удалить дрон ${drones[id].name}`);
+                    action.title = 'Удалить';
+                    action.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h14"></path><path d="M8 7V5.8A1.8 1.8 0 0 1 9.8 4h4.4A1.8 1.8 0 0 1 16 5.8V7"></path><path d="M6.2 7 7 18a2 2 0 0 0 2 1.8h6a2 2 0 0 0 2-1.8L17.8 7"></path><path d="M10 11v5"></path><path d="M14 11v5"></path></svg>';
+                    item.appendChild(action);
+                } else {
+                    const spacer = document.createElement('span');
+                    spacer.className = 'pk-row__spacer';
+                    spacer.setAttribute('aria-hidden', 'true');
+                    item.appendChild(spacer);
+                }
+            }
             listEl.appendChild(item);
         });
 
@@ -161,26 +201,79 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
     }
 
     const bind = () => {
-        listEl?.addEventListener('click', (event) => {
+        const itemFromEvent = (event: Event) => {
             const target = event.target as HTMLElement | null;
-            const item = target?.closest('.swarm-list__item') as HTMLButtonElement | null;
-            const nextDroneId = item?.dataset.droneId;
-            if (!nextDroneId) return;
-            switchDrone(nextDroneId);
+            return target?.closest('.pk-row[data-drone-id]') as HTMLElement | null;
+        };
+
+        const focusRow = (droneId: string, selector = '') => {
+            const row = listEl?.querySelector(`[data-drone-id="${droneId}"]`) as HTMLElement | null;
+            const control = selector ? row?.querySelector(selector) as HTMLElement | null : null;
+            (control || row)?.focus();
+        };
+
+        listEl?.addEventListener('click', (event) => {
+            const item = itemFromEvent(event);
+            const droneId = item?.dataset.droneId;
+            if (!droneId) return;
+
+            const actionEl = (event.target as HTMLElement).closest('[data-action]') as HTMLElement | null;
+            const action = actionEl?.dataset.action;
+            if (action === 'delete') {
+                pendingDeleteId = droneId;
+                updateList();
+                focusRow(droneId, '[data-action="delete-cancel"]');
+                return;
+            }
+            if (action === 'delete-cancel') {
+                pendingDeleteId = null;
+                updateList();
+                focusRow(droneId);
+                return;
+            }
+            if (action === 'delete-confirm') {
+                pendingDeleteId = null;
+                deleteDrone(droneId);
+                return;
+            }
+
+            pendingDeleteId = null;
+            switchDrone(droneId);
             updateList();
         });
 
         listEl?.addEventListener('dblclick', (event) => {
-            const target = event.target as HTMLElement | null;
-            const item = target?.closest('.swarm-list__item') as HTMLButtonElement | null;
-            const nextDroneId = item?.dataset.droneId;
-            if (!nextDroneId) return;
-            switchDrone(nextDroneId);
+            if ((event.target as HTMLElement).closest('[data-action]')) return;
+            const droneId = itemFromEvent(event)?.dataset.droneId;
+            if (!droneId) return;
+            switchDrone(droneId);
             updateList();
             focusConnectionCard();
         });
 
         listEl?.addEventListener('keydown', (event) => {
+            const keyTarget = event.target as HTMLElement | null;
+            if (event.key === 'Escape' && pendingDeleteId) {
+                const cancelledId = pendingDeleteId;
+                pendingDeleteId = null;
+                updateList();
+                focusRow(cancelledId);
+                return;
+            }
+
+            // Enter/Space on a focused row selects it: rows are options, not buttons.
+            if ((event.key === 'Enter' || event.key === ' ') && keyTarget?.classList.contains('pk-row')) {
+                const droneId = keyTarget.dataset.droneId;
+                if (!droneId) return;
+                event.preventDefault();
+                pendingDeleteId = null;
+                switchDrone(droneId);
+                updateList();
+                focusRow(droneId);
+                return;
+            }
+
+            if (keyTarget?.closest('[data-action]')) return;
             const droneIds = Object.keys(drones);
             if (droneIds.length === 0) return;
 
@@ -193,12 +286,11 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
             if (nextIndex < 0) return;
 
             event.preventDefault();
+            pendingDeleteId = null;
             const nextDroneId = droneIds[nextIndex];
             switchDrone(nextDroneId);
             updateList();
-
-            const nextItem = listEl?.querySelector(`[data-drone-id="${nextDroneId}"]`) as HTMLButtonElement | null;
-            nextItem?.focus();
+            focusRow(nextDroneId);
         });
 
         dom.addBtn?.addEventListener('click', () => {
@@ -237,50 +329,54 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
         });
 
         dom.delBtn?.addEventListener('click', () => {
-            if (Object.keys(drones).length <= 1) {
-                log('Нельзя удалить последний дрон.', 'error');
-                return;
-            }
-
             const id = getActiveDroneId();
-            if (!id) {
-                return;
-            }
+            if (id) deleteDrone(id);
+        });
+    };
 
-            stopLuaScript(id);
-            const droneBeingDeleted = drones[id];
-            if (droneBeingDeleted) {
-                droneBeingDeleted.running = false;
-                droneBeingDeleted.status = 'ОСТАНОВЛЕН';
-                droneBeingDeleted.pendingLocalPoint = false;
-                droneBeingDeleted.pendingLocalPointSource = null;
-                droneBeingDeleted.pendingLocalPointTarget = null;
-                droneBeingDeleted.pointReachedFlag = false;
-            }
-            stopPythonScript(id);
-            disposePythonRunState(id);
-            void setExternalBridgeEnabled(id, false);
-            removeDroneState(id);
+    function deleteDrone(id: string) {
+        if (Object.keys(drones).length <= 1) {
+            log('Нельзя удалить последний дрон.', 'error');
+            return;
+        }
+        if (!drones[id]) {
+            return;
+        }
 
-            const nextDroneId = Object.keys(drones)[0] || null;
-            if (!nextDroneId) {
-                setEditorValue('');
-                updateList();
-                if (onSceneUpdate) onSceneUpdate();
-                return;
-            }
+        const wasCurrent = id === currentDroneId;
+        stopLuaScript(id);
+        const droneBeingDeleted = drones[id];
+        droneBeingDeleted.running = false;
+        droneBeingDeleted.status = 'ОСТАНОВЛЕН';
+        droneBeingDeleted.pendingLocalPoint = false;
+        droneBeingDeleted.pendingLocalPointSource = null;
+        droneBeingDeleted.pendingLocalPointTarget = null;
+        droneBeingDeleted.pointReachedFlag = false;
+        stopPythonScript(id);
+        disposePythonRunState(id);
+        void setExternalBridgeEnabled(id, false);
+        removeDroneState(id);
 
+        const nextDroneId = Object.keys(drones)[0] || null;
+        if (!nextDroneId) {
+            setEditorValue('');
+            updateList();
+            if (onSceneUpdate) onSceneUpdate();
+            return;
+        }
+
+        if (wasCurrent) {
             setCurrentDrone(nextDroneId);
             emitDroneSelectionChanged(nextDroneId);
             const nextCode = currentScriptLanguage === 'lua'
                 ? drones[nextDroneId].script
                 : drones[nextDroneId].pythonScript;
             setEditorValue(nextCode);
-            updateList();
-            if (onSceneUpdate) onSceneUpdate();
-            log(`Удалён дрон: ${id}`, 'info');
-        });
-    };
+        }
+        updateList();
+        if (onSceneUpdate) onSceneUpdate();
+        log(`Удалён дрон: ${id}`, 'info');
+    }
 
     return {
         bind,

@@ -25,7 +25,8 @@
 /* The toggles and the windows that were not dragged: under the compass. */
 .scene-camera-views__dock {
     position: absolute;
-    top: 114px;
+    /* Below the compass (14 + 92) and the two scene actions (2 × 32 + gaps). */
+    top: 194px;
     right: 14px;
     display: flex;
     flex-direction: column;

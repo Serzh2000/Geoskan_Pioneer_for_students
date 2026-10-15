@@ -1,11 +1,352 @@
 /*
- * Mission guide stylesheet entrypoint.
+ * Pilot's textbook (mission guide). One file, tokens only.
+ * Design contract: docs/design/rail-redesign.html (three .guide sections) and panel-kit.css.
+ * State is always a fill: no underlines, edge stripes, gradients, glows or forced overrides.
+ * Both themes come from the tokens in core/base.css, panels/panel-chrome.css and panel-kit.css.
  */
 
-@import url('/styles/panels/guide-panel/modal.css');
-@import url('/styles/panels/guide-panel/page.css');
-@import url('/styles/panels/guide-panel/page-workbench.css');
-@import url('/styles/panels/guide-panel/puzzle.css');
-@import url('/styles/panels/guide-panel/diagnostics.css');
+/* ---- tokens ------------------------------------------------------------------------------
+   The overlay is not a .sidebar-panel, so it does not receive panel-chrome's --pc-* tones.
+   These five lines repeat them (one declaration per tone, resolved by color-scheme); delete
+   them if panel-chrome.css ever lists #mission-guide-overlay next to .sidebar-panel. */
+#mission-guide-overlay {
+    --pc-muted: light-dark(#566274, #a8a8a8);
+    --pc-accent: light-dark(#a84a00, #ffad68);
+    --pc-success: light-dark(#17744a, #6fd69c);
+    --pc-warning: light-dark(#8d4b07, #f6c260);
+    --pc-danger: light-dark(#b3261e, #ff9a90);
+    --gd-stage: #2f3a44; /* the 3D stage is a physical surface, dark in both themes */
+}
 
-@import url('/styles/panels/guide-panel/learning.css');
+/* ---- dialog -------------------------------------------------------------------------------- */
+.guide-modal-overlay { position: fixed; inset: 0; z-index: 2200; display: flex; align-items: stretch; justify-content: stretch; padding: 0; background: color-mix(in srgb, var(--bg-color) 72%, transparent); }
+.guide-modal { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; border: 0; border-radius: 0; background: var(--panel-bg); color: var(--text-color); font: 13px/1.5 var(--font-sans); }
+#mission-guide-overlay [hidden] { display: none; }
+.guide-modal__header { flex: 0 0 56px; height: 56px; display: flex; align-items: center; gap: 16px; padding: 0 10px 0 20px; border-bottom: 1px solid var(--pk-line); }
+.guide-modal__title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 650 15px/1.3 var(--font-sans); color: var(--text-strong); }
+.guide-track-switch { flex: 0 1 340px; min-width: 0; }
+.guide-modal__close { flex: 0 0 36px; }
+.guide-close-confirm { flex: 0 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 10px 20px; border-bottom: 1px solid var(--pk-line); background: var(--pk-warning-soft); }
+.guide-close-confirm__text { flex: 1 1 280px; margin: 0; font: 600 13px/1.5 var(--font-sans); color: var(--text-strong); }
+.guide-close-confirm__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.guide-modal__context { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; min-height: 36px; padding: 4px 20px; border-bottom: 1px solid var(--pk-line); font-size: 12px; color: var(--pc-muted); }
+.guide-modal__context [data-guide-outline-toggle] { display: none; flex: 0 0 auto; }
+@media (min-width: 901px) {
+    .guide-modal__context:not(:has(#mission-guide-track-status:not(:empty))) { display: none; }
+}
+.guide-modal__workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: 264px minmax(0, 1fr); }
+
+/* ---- outline: 264 px, course title, progress, modules, 36 px lesson rows ---- */
+.guide-outline { min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 4px; padding: 20px 12px; border-right: 1px solid var(--pk-line); }
+.guide-outline__intro { display: grid; gap: 6px; padding: 0 8px 16px; }
+.guide-outline__title { margin: 0; font: 650 15px/1.3 var(--font-sans); color: var(--text-strong); }
+.guide-outline__intro p, .guide-outline__intro small { margin: 0; font-size: 12px; color: var(--pc-muted); }
+.guide-outline__intro .pk-meter { margin-top: 6px; }
+.guide-outline__modules { display: flex; flex-direction: column; gap: 4px; }
+.guide-outline__module { border-top: 1px solid var(--pk-line); }
+.guide-outline__module > summary { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 10px 8px; border-radius: var(--radius-sm); list-style: none; cursor: pointer; font: 650 12px/1.4 var(--font-sans); color: var(--text-strong); }
+.guide-outline__module > summary::-webkit-details-marker { display: none; }
+.guide-outline__module > summary::before { content: '›'; flex: 0 0 14px; width: 14px; text-align: center; font-size: 16px; line-height: 1; color: var(--pc-muted); transition: transform .15s; }
+.guide-outline__module[open] > summary::before { transform: rotate(90deg); }
+.guide-outline__module > summary:hover { background: var(--pk-hover); }
+.guide-outline__module > summary > span { flex: 1; min-width: 0; }
+.guide-outline__module > summary small { font: 500 12px/1 var(--font-sans); font-variant-numeric: tabular-nums; color: var(--pc-muted); }
+.guide-outline__lessons { display: grid; gap: 2px; padding-bottom: 8px; }
+.guide-outline__lessons > button { display: flex; align-items: baseline; gap: 10px; width: 100%; min-height: 36px; padding: 8px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-color); text-align: left; font: 12px/1.45 var(--font-sans); cursor: pointer; transition: background-color .15s; }
+.guide-outline__lessons > button:hover:not(:disabled) { background: var(--pk-hover); }
+.guide-outline__lessons > button[aria-current='page'], .guide-outline__lessons > button[aria-current='page']:hover:not(:disabled) { background: var(--accent-soft); color: var(--text-strong); font-weight: 600; }
+.guide-outline__lessons > button:disabled { color: var(--pc-muted); cursor: default; }
+.guide-outline__number { flex: 0 0 20px; font: 500 11px/1.6 var(--font-mono); color: var(--pc-muted); }
+.guide-outline__lessons > button[aria-current='page'] .guide-outline__number { color: var(--pc-accent); }
+.guide-outline__lessons > .is-done .guide-outline__number { color: var(--pc-success); }
+.guide-outline__lessons small { display: block; font-size: 12px; font-weight: 400; color: var(--pc-muted); }
+.guide-outline__note { margin: 8px 0 0; padding: 12px 8px 0; border-top: 1px solid var(--pk-line); font-size: 12px; line-height: 1.6; color: var(--pc-muted); }
+.guide-academy-roadmap { display: grid; gap: 10px; padding: 4px 8px 12px; }
+.guide-academy-roadmap p { margin: 0; font-size: 12px; line-height: 1.6; color: var(--pc-muted); }
+
+/* ---- lesson area: the only scroll container of the textbook ---- */
+.guide-modal__body { min-width: 0; min-height: 0; overflow: auto; padding: 20px 40px 28px; container: lesson / inline-size; }
+.guide-modal__body:focus-visible { outline: 2px solid var(--accent-color); outline-offset: -2px; }
+.guide-modal-layout { max-width: 1760px; margin: 0 auto; }
+.guide-lesson-page { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.guide-lesson-page__header { display: grid; gap: 4px; }
+.guide-lesson-page__crumb { font-size: 12px; color: var(--pc-muted); }
+.guide-lesson-page__title { margin: 0; font: 700 26px/1.2 var(--font-sans); letter-spacing: -.03em; color: var(--text-strong); overflow-wrap: anywhere; }
+.guide-lesson-done { margin-left: 8px; vertical-align: middle; letter-spacing: 0; }
+.guide-lesson-page__summary { max-width: 72ch; margin: 4px 0 0; font-size: 15px; line-height: 1.7; color: var(--pc-muted); }
+
+/* ---- route: five stops, fill marks the state ---- */
+.guide-walkthrough { position: relative; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.guide-walkthrough__steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; padding: 8px 0; border-block: 1px solid var(--pk-line); }
+.guide-walkthrough__step { position: relative; display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 44px; padding: 0 10px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--pc-muted); text-align: left; font: inherit; cursor: pointer; transition: background-color .15s; }
+.guide-walkthrough__step + .guide-walkthrough__step::before { content: ''; position: absolute; left: -8px; top: 50%; width: 8px; height: 1px; background: var(--pk-line-strong); }
+.guide-walkthrough__step-number { flex: 0 0 26px; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: var(--pk-inset); color: var(--pc-muted); font: 500 11px/1 var(--font-mono); }
+.guide-walkthrough__step-label { display: grid; min-width: 0; line-height: 1.25; }
+.guide-walkthrough__step-label strong { font-size: 13px; font-weight: 600; color: inherit; }
+.guide-walkthrough__step-label small { font-size: 12px; color: var(--pc-muted); }
+.guide-walkthrough__step.is-complete { color: var(--text-color); }
+.guide-walkthrough__step.is-complete .guide-walkthrough__step-number { background: var(--pk-success-soft); color: var(--pc-success); }
+.guide-walkthrough__step.is-active { background: var(--accent-soft); color: var(--text-strong); }
+.guide-walkthrough__step.is-active .guide-walkthrough__step-number { background: var(--accent-color); color: var(--pk-on-accent); }
+.guide-walkthrough__step:disabled { cursor: default; }
+.guide-walkthrough__step:not(:disabled):not(.is-active):hover { background: var(--pk-hover); color: var(--text-strong); }
+/* The route already says "step N of 5"; the sentence remains only as the region's accessible name. */
+.guide-walkthrough__stage-status { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.guide-walkthrough__body { min-width: 0; outline: none; }
+
+/* ---- reading steps (Idea, Prediction, Review): one 720 px column ---- */
+.guide-reading { display: grid; gap: 22px; max-width: 720px; min-width: 0; }
+.guide-reading > p, .guide-reading > div > p, .guide-needs > p { margin: 0; font-size: 15px; line-height: 1.8; }
+.guide-reading > .guide-lead { font-size: 17px; line-height: 1.75; color: var(--text-strong); }
+.guide-reading > .guide-reading__status { font-size: 13px; line-height: 1.6; color: var(--pc-warning); }
+.guide-needs > h2, .guide-reading > div > h2 { margin: 0 0 8px; font: 650 15px/1.4 var(--font-sans); color: var(--text-strong); }
+.guide-needs { display: grid; gap: 12px; }
+.guide-needs > h2 { margin: 0; }
+.guide-inline-code { padding: 0 4px; border-radius: 4px; background: var(--pk-inset); font: 500 .92em var(--font-mono); }
+.guide-task { display: grid; gap: 6px; min-width: 0; padding: 16px 18px; border-radius: var(--panel-radius-inner); background: var(--accent-soft); }
+.guide-task h2 { margin: 0; font: 650 13px/1.4 var(--font-sans); color: var(--pc-accent); }
+.guide-task p { margin: 0; font-size: 15px; line-height: 1.7; color: var(--text-strong); }
+.guide-api-list { display: grid; border-bottom: 1px solid var(--pk-line); }
+.guide-api-row { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 16px; padding: 12px 0; border-top: 1px solid var(--pk-line); }
+.guide-api-row__name { font: 600 13px/1.5 var(--font-sans); color: var(--text-strong); overflow-wrap: anywhere; }
+.guide-api-row__name--code { font: 500 12px/1.6 var(--font-mono); color: var(--pc-accent); }
+.guide-api-row__body { display: grid; gap: 8px; min-width: 0; }
+.guide-api-row__body p { margin: 0; font-size: 13px; line-height: 1.6; }
+.guide-api-row__example { margin: 0; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--pk-inset); font: 12px/1.6 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---- prediction: variants in a column, the chosen one filled, feedback in one line ---- */
+.guide-knowledge-check { min-width: 0; margin: 0; padding: 0; border: 0; }
+.guide-reading.guide-knowledge-check { display: block; }
+.guide-knowledge-check__intro { margin: 0 0 20px; font-size: 14px; line-height: 1.7; color: var(--pc-muted); }
+.guide-knowledge-check > legend { float: left; width: 100%; margin: 0 0 16px; padding: 0; font: 650 19px/1.5 var(--font-sans); color: var(--text-strong); }
+.guide-knowledge-check > legend + * { clear: both; }
+.guide-knowledge-check__choices { display: grid; gap: 10px; }
+.guide-knowledge-check__choices > button { justify-content: flex-start; align-items: center; gap: 14px; height: auto; min-height: 56px; padding: 12px 16px; text-align: left; white-space: normal; font-size: 15px; line-height: 1.5; }
+.guide-knowledge-check__choices > button[aria-pressed='true']:not(:disabled) { border-color: transparent; background: var(--accent-soft); color: var(--text-strong); }
+.guide-knowledge-check__mark { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--pk-line); font: 650 13px/1 var(--font-sans); color: var(--pc-muted); }
+.guide-knowledge-check__choices > button[aria-pressed='true'] .guide-knowledge-check__mark { border-color: var(--pc-accent); background: var(--pc-accent); color: #fff; }
+.guide-knowledge-check__feedback { display: flex; gap: 12px; margin: 16px 0 0; padding: 14px 16px; border-radius: var(--panel-radius-inner); font-size: 14px; line-height: 1.65; }
+.guide-knowledge-check__feedback p { margin: 0; color: var(--text-strong); }
+.guide-knowledge-check__feedback .guide-knowledge-check__next { margin-top: 4px; font-size: 13px; color: var(--pc-muted); }
+.guide-knowledge-check__icon { display: grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%; font: 700 13px/1 var(--font-sans); }
+.guide-knowledge-check__feedback[data-result='correct'] { background: var(--pk-success-soft); }
+.guide-knowledge-check__feedback[data-result='correct'] .guide-knowledge-check__icon { background: var(--pc-success); color: #0b1a10; }
+.guide-knowledge-check__feedback[data-result='retry'] { background: var(--pk-warning-soft, var(--accent-soft)); }
+.guide-knowledge-check__feedback[data-result='retry'] .guide-knowledge-check__icon { background: var(--pc-warning); color: #1c1200; }
+.guide-knowledge-check > small { display: block; margin-top: 12px; font-size: 12px; color: var(--pc-muted); }
+
+/* ---- practice: task column 320 px, working column fills the rest ---- */
+.guide-practice { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+.guide-practice__brief, .guide-practice__work, .guide-practice-brief { display: grid; gap: 16px; min-width: 0; align-content: start; }
+.guide-practice__work { gap: 12px; }
+.guide-practice-brief { gap: 12px; }
+.guide-practice__note { margin: 0; font-size: 13px; line-height: 1.6; color: var(--pc-muted); }
+.guide-practice-steps { display: grid; gap: 6px; margin: 4px 0 0; padding-left: 20px; font-size: 13px; line-height: 1.6; color: var(--text-strong); }
+.guide-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.guide-draft-status { font-size: 12px; color: var(--pc-muted); }
+.guide-modal .pk-disclosure > p { margin: 0; font-size: 13px; line-height: 1.6; }
+.guide-modal .pk-disclosure > p + p, .guide-modal .pk-disclosure > p + button { margin-top: 8px; }
+.guide-build-target { display: grid; gap: 8px; }
+.guide-build-target h2 { margin: 0; font: 650 13px/1.4 var(--font-sans); color: var(--text-strong); }
+.guide-target-route { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.guide-target-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--radius-sm); background: var(--pk-inset); font-size: 12px; }
+.guide-target-chip__number { font: 500 11px/1 var(--font-mono); color: var(--pc-accent); }
+.guide-status-line { margin: 0; font-size: 13px; line-height: 1.5; color: var(--pc-muted); }
+.guide-run-banner { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--pk-inset); font-size: 13px; line-height: 1.6; }
+.guide-run-banner--success { background: var(--pk-success-soft); }
+.guide-run-banner--warning { background: var(--pk-warning-soft); }
+.guide-academy-terrain { display: grid; gap: 10px; padding-top: 16px; border-top: 1px solid var(--pk-line); }
+.guide-academy-terrain__title { margin: 0; font: 650 13px/1.4 var(--font-sans); color: var(--text-strong); }
+.guide-academy-terrain p { margin: 0; font-size: 12px; line-height: 1.6; color: var(--pc-muted); }
+.guide-inspection-questions { display: grid; gap: 12px; padding: 14px 16px; border: 1px solid var(--pc-accent); border-radius: var(--panel-radius-inner); }
+.guide-inspection-questions > h2 { margin: 0; font: 650 13px/1.4 var(--font-sans); color: var(--pc-accent); }
+
+/* ---- devices: code (250 px), scene (240 px / 300 px), Blockly ---- */
+.guide-editor { height: clamp(300px, calc(100vh - 330px), 780px); display: flex; flex-direction: column; }
+.guide-editor__bar { flex: 0 0 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid var(--pk-line); font-size: 12px; color: var(--pc-muted); }
+.guide-editor__bar b { font-weight: 600; color: var(--text-strong); }
+.guide-editor__bar span { font-family: var(--font-mono); }
+.guide-monaco-preview-host { position: relative; flex: 1 1 auto; min-height: 0; }
+.guide-monaco-preview-host > #monaco-editor-root { height: 100%; min-height: 0; }
+.guide-monaco-preview__placeholder { height: 100%; display: grid; place-items: center; color: var(--pc-muted); }
+.guide-scene-preview-host { position: relative; height: clamp(300px, calc(100vh - 330px), 780px); background: var(--pk-inset); }
+.guide-practice__work > .guide-scene-preview-host:first-child { height: clamp(320px, calc(100vh - 300px), 820px); }
+.guide-result__scene .guide-scene-preview-host { height: clamp(320px, calc(100vh - 380px), 760px); }
+#mission-guide-overlay .guide-scene-preview-host > .scene-container { position: absolute; inset: 0; height: auto; min-height: 0; border: 0; border-radius: 0; box-shadow: none; background: var(--gd-stage); }
+#mission-guide-overlay .guide-scene-preview-host > .scene-container::before, #mission-guide-overlay .guide-scene-preview-host > .scene-container::after { content: none; }
+#mission-guide-overlay .guide-scene-preview-host > .scene-container > #canvas-container > canvas { touch-action: none; }
+/* Camera buttons live inside the scene; the lesson's own tools replace the editor overlays. */
+#mission-guide-overlay .guide-scene-preview-host :is(.scene-onboarding, .scene-hud-readout, .scene-hotbar, .scene-hotbar-toggle-btn) { display: none; }
+#mission-guide-overlay .guide-scene-preview-host .viewport-camera-controls-row { inset: auto 12px 12px; max-width: none; flex-wrap: wrap; }
+#mission-guide-overlay .guide-scene-preview-host .viewport-camera-controls-row > * { flex-shrink: 0; }
+.guide-scene-preview__placeholder { height: 100%; display: grid; place-content: center; justify-items: center; gap: 8px; padding: 16px; text-align: center; color: var(--pc-muted); }
+.guide-scene-preview__icon svg { width: 32px; height: 32px; }
+.guide-scene-preview__placeholder strong { font-size: 13px; color: var(--text-strong); }
+.guide-scene-preview__placeholder p { max-width: 34ch; margin: 0; font-size: 12px; line-height: 1.6; }
+.guide-blockly-preview-host { position: relative; height: 440px; }
+.guide-blockly-preview-host > #blockly-editor-canvas-host { height: 100%; min-height: 0; }
+.guide-blockly-preview__placeholder { height: 100%; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 20px; text-align: center; color: var(--pc-muted); }
+.guide-blockly-preview__placeholder p { max-width: 46ch; margin: 0; font-size: 13px; line-height: 1.6; }
+
+/* ---- result: one verdict, the flight record in lanes, the scene beside it ---- */
+.guide-result { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+.guide-result__main { display: grid; gap: 18px; min-width: 0; max-width: 720px; }
+.guide-result__scene { min-width: 0; }
+.guide-verdict { display: flex; gap: 14px; align-items: flex-start; padding: 18px 20px; border-radius: var(--panel-radius-inner); background: var(--pk-inset); }
+.guide-verdict__text { display: grid; gap: 6px; min-width: 0; }
+.guide-verdict__icon { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--pk-hover); color: var(--pc-muted); font: 700 14px/1 var(--font-sans); }
+.guide-verdict__title { margin: 0; font: 650 17px/1.4 var(--font-sans); color: var(--text-strong); }
+.guide-verdict p { margin: 0; font-size: 14px; line-height: 1.65; }
+.guide-verdict__next { color: var(--text-strong); }
+.guide-verdict .guide-verdict__expected { display: grid; gap: 2px; margin-top: 6px; padding-top: 10px; border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent); color: var(--pc-muted); }
+.guide-verdict .guide-verdict__expected span { font-size: 12px; font-weight: 600; color: var(--pc-muted); }
+.guide-verdict--success { background: var(--pk-success-soft); }
+.guide-verdict--success .guide-verdict__icon { background: var(--pc-success); color: #0b1a10; }
+.guide-verdict--warning { background: var(--pk-warning-soft); }
+.guide-verdict--warning .guide-verdict__icon { background: var(--pc-warning); color: #1c1200; }
+.guide-verdict--danger { background: var(--pk-danger-soft); }
+.guide-verdict--danger .guide-verdict__icon { background: var(--pc-danger); color: #240806; }
+/* Flight record: one surface; a time ruler above lanes that share its left edge. */
+.flight-record { display: grid; gap: 10px; padding: 16px 18px; border-radius: var(--panel-radius-inner); background: var(--pk-inset); }
+.flight-record__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.flight-record__title { margin: 0; font: 650 14px/1.4 var(--font-sans); color: var(--text-strong); }
+.flight-record__head small { font: 500 12px/1.4 var(--font-sans); font-variant-numeric: tabular-nums; color: var(--pc-muted); }
+.flight-record__axis { position: relative; height: 20px; margin-left: 122px; border-bottom: 1px solid var(--pk-line-strong); }
+.flight-record__axis span { position: absolute; top: 0; padding-bottom: 6px; transform: translateX(-50%); font: 12px/1 var(--font-sans); font-variant-numeric: tabular-nums; color: var(--pc-muted); }
+.flight-record__axis span:first-child { transform: none; }
+.flight-record__axis span::after { content: ''; position: absolute; left: 50%; bottom: 0; height: 5px; border-left: 1px solid var(--pk-line-strong); }
+.flight-record__axis span:first-child::after { left: 0; }
+.flight-record__lane { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; align-items: center; padding: 6px 0; font-size: 13px; }
+.flight-record__label { color: var(--text-color); }
+.flight-record__track { position: relative; height: 30px; overflow: hidden; border-radius: 6px; background: var(--pk-hover); }
+.flight-record__track--altitude { height: 48px; color: var(--pc-accent); }
+.flight-record__altitude { position: absolute; inset: 0; width: 100%; height: 100%; }
+.flight-record__segment { position: absolute; top: 2px; bottom: 2px; display: flex; align-items: center; padding: 0 10px; overflow: hidden; border-radius: 5px; background: var(--segment, var(--accent-soft)); font: 600 12px/1 var(--font-sans); color: var(--text-strong); white-space: nowrap; text-overflow: ellipsis; }
+.flight-record__tick { position: absolute; top: 4px; bottom: 4px; width: 4px; margin-left: -2px; border-radius: 2px; background: var(--accent-color); }
+.pk-disclosure > .flight-record__events { display: grid; gap: 4px; margin: 0; padding-left: 24px; font-size: 13px; line-height: 1.5; }
+.flight-record__events time { margin-right: 6px; font-variant-numeric: tabular-nums; color: var(--pc-muted); }
+.guide-diagnostics { display: grid; gap: 8px; }
+.guide-diagnostics:empty { display: none; }
+.guide-diagnostic { display: grid; gap: 4px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--pk-inset); font-size: 13px; line-height: 1.6; }
+.guide-diagnostic p { margin: 0; }
+.guide-diagnostic--error { background: var(--pk-danger-soft); }
+.guide-diagnostic--warning { background: var(--pk-warning-soft); }
+.guide-diagnostic--success { background: var(--pk-success-soft); }
+.guide-diagnostic__head { display: flex; align-items: baseline; gap: 8px; }
+.guide-diagnostic__badge { flex: 0 0 auto; font: 600 12px/1.4 var(--font-sans); color: var(--pc-muted); }
+.guide-diagnostic--error .guide-diagnostic__badge { color: var(--pc-danger); }
+.guide-diagnostic--warning .guide-diagnostic__badge { color: var(--pc-warning); }
+.guide-diagnostic--success .guide-diagnostic__badge { color: var(--pc-success); }
+.guide-diagnostic__title { font-weight: 600; color: var(--text-strong); }
+.guide-diagnostic__reason { color: var(--pc-muted); }
+
+/* ---- gate and lesson navigation ---- */
+.guide-walkthrough__navigation { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding-top: 20px; border-top: 1px solid var(--pk-line); }
+.guide-walkthrough__navigation > :first-child { margin-right: auto; }
+.guide-walkthrough__gate { max-width: 46ch; margin: 0; text-align: right; font-size: 12px; line-height: 1.5; color: var(--pc-muted); }
+/* Review: the takeaway reads first, the lesson's way forward sits in one panel beside it. */
+.guide-takeaway { display: grid; gap: 8px; }
+.guide-takeaway > h2, .guide-proof h2 { margin: 0; font: 650 13px/1.4 var(--font-sans); color: var(--pc-muted); }
+.guide-reading--reflect > .guide-takeaway > .guide-lead { margin: 0; font-size: 20px; line-height: 1.65; color: var(--text-strong); }
+.guide-compare { display: grid; border-radius: var(--panel-radius-inner); background: var(--pk-inset); overflow: hidden; }
+.guide-compare__row { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 16px; padding: 14px 18px; }
+.guide-compare__row + .guide-compare__row { border-top: 1px solid var(--pk-line); }
+.guide-compare__who { font-size: 13px; color: var(--pc-muted); }
+.guide-compare p { margin: 0; font-size: 15px; line-height: 1.65; color: var(--text-strong); }
+.guide-compare .guide-compare__verdict { padding: 10px 18px; background: var(--pk-success-soft); font-size: 13px; font-weight: 600; color: var(--pc-success); }
+.guide-try { display: grid; gap: 8px; justify-items: start; }
+.guide-try > h2 { margin: 0; font: 650 15px/1.4 var(--font-sans); color: var(--text-strong); }
+.guide-try > p { margin: 0; font-size: 15px; line-height: 1.7; }
+.guide-try > .guide-try__hint { font-size: 13px; color: var(--pc-muted); }
+.guide-complete { display: grid; gap: 12px; padding: 18px 20px; border: 1px solid var(--pk-line); border-radius: var(--panel-radius-inner); align-content: start; }
+.guide-complete p { margin: 0; }
+.guide-complete__status { margin: 0; font: 650 15px/1.4 var(--font-sans); color: var(--text-strong); }
+.guide-complete__actions { display: grid; gap: 8px; margin-top: 6px; }
+.guide-complete__actions > button { justify-content: center; min-height: 44px; height: auto; padding-block: 10px; text-align: center; white-space: normal; }
+.guide-complete__actions > .btn-ghost { min-height: 36px; padding: 0 12px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--pc-muted); font: 600 13px/1.3 var(--font-sans); cursor: pointer; }
+.guide-complete__actions > .btn-ghost:disabled { opacity: .5; cursor: default; }
+.guide-complete__actions > .btn-ghost:hover:not(:disabled) { background: var(--pk-hover); color: var(--text-strong); }
+
+
+/* ---- learning note (Blockly reading) ---- */
+.guide-learning-note { display: grid; gap: 16px; max-width: 720px; margin-top: 20px; }
+.guide-learning-note h2 { margin: 0; font: 650 17px/1.4 var(--font-sans); color: var(--text-strong); }
+.guide-learning-note p { margin: 0; font-size: 15px; line-height: 1.8; }
+.guide-color-lab { display: grid; gap: 12px; padding-top: 16px; border-top: 1px solid var(--pk-line); }
+.guide-color-lab__preview { display: flex; align-items: center; gap: 16px; }
+.guide-color-lab__preview p { margin: 4px 0 0; font-size: 13px; color: var(--pc-muted); }
+.guide-color-dot { flex: 0 0 44px; width: 44px; height: 44px; border: 1px solid var(--pk-line-strong); border-radius: 50%; }
+.guide-color-lab output { font: 500 13px/1.5 var(--font-mono); }
+.guide-color-lab [aria-pressed='true'] { border-color: transparent; background: var(--accent-soft); }
+
+/* "Back to the reference" button created next to the editor's docs drawer. */
+.guide-reference-return { min-height: 36px; margin: 10px; padding: 0 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--control-bg); color: var(--control-text); text-align: left; font: 600 12px/1.5 var(--font-sans); cursor: pointer; }
+.guide-reference-return:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+
+/* ---- narrower lesson area: the working columns stack, text columns keep their measure ---- */
+@container lesson (min-width: 720px) {
+    .guide-practice:not(.guide-practice--stacked) { grid-template-columns: clamp(320px, 30cqw, 440px) minmax(0, 1fr); }
+}
+@container lesson (min-width: 1080px) {
+    /* Wide windows: code and live scene sit side by side instead of stacking. */
+    .guide-practice__work:has(.guide-editor) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+    .guide-reading--reflect { max-width: 1120px; grid-template-columns: minmax(0, 1fr) 340px; column-gap: 32px; align-items: start; }
+    .guide-reading--reflect > :not(.guide-complete) { grid-column: 1; }
+    .guide-reading--reflect > .guide-complete { grid-column: 2; grid-row: 1 / span 3; position: sticky; top: 0; }
+    .guide-reading--idea { max-width: none; grid-template-columns: minmax(0, 1fr) clamp(300px, 28cqw, 400px); column-gap: 40px; align-items: start; }
+    .guide-reading--idea > .guide-lead, .guide-reading--idea > .guide-needs { grid-column: 1; max-width: 760px; }
+    .guide-reading--idea > .guide-task { grid-column: 2; grid-row: 1 / span 2; position: sticky; top: 0; }
+}
+@container lesson (min-width: 760px) {
+    .guide-result { grid-template-columns: minmax(0, 1fr) minmax(380px, 48%); }
+}
+@container lesson (max-width: 759px) {
+    .guide-walkthrough__step-label small { display: none; }
+}
+@container lesson (max-width: 640px) {
+    .guide-walkthrough__step { gap: 6px; padding: 0 6px; }
+    .guide-api-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+    .guide-walkthrough__gate { flex-basis: 100%; order: -1; text-align: left; }
+}
+/* Five stops in two rows (3 + 2): every label stays whole and visible. */
+@container lesson (max-width: 560px) {
+    .guide-walkthrough__steps { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px 6px; }
+    .guide-walkthrough__step { grid-column: span 2; padding: 6px; }
+    .guide-walkthrough__step:nth-child(n+4) { grid-column: span 3; }
+    .guide-walkthrough__step + .guide-walkthrough__step::before { display: none; }
+    .guide-walkthrough__step-number { flex-basis: 24px; width: 24px; height: 24px; }
+}
+@container lesson (max-width: 480px) {
+    .flight-record__lane { grid-template-columns: 80px minmax(0, 1fr); }
+    .flight-record__axis { margin-left: 92px; }
+}
+
+/* ---- narrow windows: the outline becomes a page of its own, opened by the context row ---- */
+@media (max-width: 900px) {
+    .guide-modal__header { padding-left: 14px; }
+    .guide-modal__context { padding: 4px 14px; }
+    .guide-modal__context [data-guide-outline-toggle] { display: inline-flex; }
+    .guide-modal__workspace { display: block; position: relative; }
+    .guide-outline { display: none; height: 100%; border-right: 0; }
+    .guide-modal__body { height: 100%; padding: 16px; }
+    #mission-guide-overlay.is-outline-open .guide-outline { display: flex; }
+    #mission-guide-overlay.is-outline-open .guide-modal__body { display: none; }
+}
+/* Phones: the title keeps its own row beside the close button; the track switch moves under it. */
+@media (max-width: 560px) {
+    .guide-modal__header { flex: 0 0 auto; height: auto; min-height: 56px; flex-wrap: wrap; gap: 8px 12px; padding: 10px 8px 10px 14px; }
+    .guide-modal__title { flex: 1 1 0; order: 1; }
+    .guide-modal__close { order: 2; }
+    .guide-track-switch { order: 3; flex: 1 0 100%; }
+    .guide-close-confirm { padding: 10px 14px; }
+}
+@media (max-height: 720px) {
+    .guide-modal__body { padding-block: 16px 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .guide-walkthrough__step, .guide-outline__lessons > button, .guide-outline__module > summary::before { transition: none; }
+}
+@media (forced-colors: active) {
+    #mission-guide-overlay :is([aria-current], [aria-selected='true'], .is-active) { outline: 1px solid Highlight; }
+}

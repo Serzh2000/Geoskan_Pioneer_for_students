@@ -3,5 +3,3 @@
  * Файл выделен из `public/style.css` при декомпозиции общего CSS.
  */
 @import url('./swarm-and-led/manager.css');
-@import url('./swarm-and-led/actions.css');
-@import url('./swarm-and-led/led-matrix.css');
