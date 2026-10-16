@@ -146,6 +146,46 @@ function gpuNameOf(renderer: THREE.WebGLRenderer): string {
 
 let startTierChosen = false;
 
+/** Half-width (m) of the sun-shadow window that follows the drone on a big map: 7 cm per texel at 2048. */
+export const SHADOW_FOLLOW_EXTENT = 70;
+
+/** Snaps `value` to a multiple of `step`, so the shadow window moves in whole texels and the edges do not shimmer. */
+export function snapToStep(value: number, step: number): number {
+    return step > 0 ? Math.round(value / step) * step : value;
+}
+
+/** A shadow frame is redrawn this often: every frame at full quality, every second one below it (the drone moves little in 16 ms). */
+export function shadowRedrawEvery(tier: number): number {
+    return tier <= 0 ? 1 : 2;
+}
+
+let shadowFrame = 0;
+const followState = new WeakMap<THREE.DirectionalLight, { applied: THREE.Vector3; offset: THREE.Vector3 }>();
+
+/**
+ * The sun's shadow window stays on the first drone instead of covering the whole map: on a 600 m map that is a window of
+ * 900 m at 44 cm per texel, redrawn with every prop on it, for a drone a few metres across. Shadows follow the drone at
+ * high resolution and the casters outside the window cost nothing. Whoever else places the sun (the sky model, the map
+ * builder) keeps doing so: an outside change of the position is taken as the new direction.
+ */
+export function followDroneWithSun(light: THREE.DirectionalLight, center: THREE.Vector3 | null, mapSize: number): void {
+    const camera = light.shadow.camera;
+    if (camera.right > SHADOW_FOLLOW_EXTENT) {
+        Object.assign(camera, { left: -SHADOW_FOLLOW_EXTENT, right: SHADOW_FOLLOW_EXTENT, top: SHADOW_FOLLOW_EXTENT, bottom: -SHADOW_FOLLOW_EXTENT });
+        camera.updateProjectionMatrix();
+    }
+    let state = followState.get(light);
+    if (!state) { state = { applied: new THREE.Vector3(NaN, NaN, NaN), offset: new THREE.Vector3() }; followState.set(light, state); }
+    if (!state.applied.equals(light.position)) state.offset.copy(light.position);    // the others place the sun relative to the origin
+    const texel = (camera.right - camera.left) / Math.max(1, mapSize);
+    const x = center ? snapToStep(center.x, texel) : light.target.position.x;
+    const y = center ? snapToStep(center.y, texel) : light.target.position.y;
+    light.target.position.set(x, y, 0);
+    light.position.set(x + state.offset.x, y + state.offset.y, state.offset.z);
+    light.target.updateMatrixWorld();
+    state.applied.copy(light.position);
+}
+
 /** Share of the proxy distance below which a far prop goes back to its full model: stops it flickering at the border. */
 export const PROXY_HYSTERESIS = 0.9;
 
@@ -321,6 +361,14 @@ export function updateQuality(ctx: QualityContext, now = performance.now()): voi
     }
     const tierIndex = getQualityTier();
     if (tierIndex !== appliedTier) applyTier(ctx, tierIndex);
+    const light = findSun(ctx.scene);
+    if (light && light.castShadow) {
+        const anchor = ctx.anchors()[0];
+        followDroneWithSun(light, anchor ? anchor.getWorldPosition(probe) : null, light.shadow.mapSize.x);
+        // Redrawn on demand: the renderer would otherwise redraw it every frame, wanted or not.
+        ctx.renderer.shadowMap.autoUpdate = false;
+        if (shadowFrame++ % shadowRedrawEvery(tierIndex) === 0) ctx.renderer.shadowMap.needsUpdate = true;
+    } else ctx.renderer.shadowMap.autoUpdate = true;
     if (now - lastLodAt > 250) {
         lastLodAt = now;
         updateDistanceLod(ctx, QUALITY_TIERS[tierIndex]);

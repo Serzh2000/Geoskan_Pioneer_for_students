@@ -1,5 +1,6 @@
+import * as THREE from 'three';
 /** @jest-environment node */
-import { QUALITY_TIERS, GOVERNOR, MAX_TIER, createGovernorState, decideTier, initialTier, lodFlags, median, parseQualitySetting, tierOfSetting } from '../public/modules/scene/core/quality.js';
+import { QUALITY_TIERS, GOVERNOR, MAX_TIER, createGovernorState, decideTier, followDroneWithSun, initialTier, shadowRedrawEvery, SHADOW_FOLLOW_EXTENT, snapToStep, lodFlags, median, parseQualitySetting, tierOfSetting } from '../public/modules/scene/core/quality.js';
 
 const slow = GOVERNOR.slowMs + 10, good = GOVERNOR.goodMs - 2, enough = GOVERNOR.minSamples;
 
@@ -112,5 +113,36 @@ describe('quality governor', () => {
         // A big building keeps its detail from farther away.
         expect(lodFlags(tier, edge * 1.5, 5, false, 2).far).toBe(false);
         expect(lodFlags(tier, edge * 2.5, 5, false, 2).far).toBe(true);
+    });
+
+    it('keeps the sun shadow window on the drone, in whole texels, with the sun direction intact', () => {
+        const sun = new THREE.DirectionalLight(0xffffff, 1);
+        sun.castShadow = true;
+        sun.position.set(-60, -40, 120);
+        Object.assign(sun.shadow.camera, { left: -450, right: 450, top: 450, bottom: -450 });
+        followDroneWithSun(sun, new THREE.Vector3(200.37, -130.11, 2), 2048);
+        expect(sun.shadow.camera.right).toBe(SHADOW_FOLLOW_EXTENT);
+        const texel = 2 * SHADOW_FOLLOW_EXTENT / 2048;
+        expect(sun.target.position.x / texel).toBeCloseTo(Math.round(sun.target.position.x / texel), 6);
+        expect(Math.abs(sun.target.position.x - 200.37)).toBeLessThanOrEqual(texel);
+        const offset = sun.position.clone().sub(sun.target.position);
+        expect([offset.x, offset.y, offset.z]).toEqual([-60, -40, 120]);
+        // The sky model moves the sun: that becomes the new direction, the window stays on the drone.
+        sun.position.set(30, 50, 100);
+        followDroneWithSun(sun, new THREE.Vector3(200.37, -130.11, 2), 2048);
+        const next = sun.position.clone().sub(sun.target.position);
+        expect(next.x).toBeCloseTo(30 - 0, 5);
+        expect(Math.abs(sun.target.position.x - 200.37)).toBeLessThanOrEqual(texel);
+    });
+
+    it('leaves a small arena window alone and snaps to texels', () => {
+        const sun = new THREE.DirectionalLight(0xffffff, 1);
+        sun.shadow.camera.right = 14; sun.shadow.camera.left = -14;
+        followDroneWithSun(sun, null, 2048);
+        expect(sun.shadow.camera.right).toBe(14);
+        expect(snapToStep(1.23, .5)).toBe(1);
+        expect(snapToStep(5, 0)).toBe(5);
+        expect(shadowRedrawEvery(0)).toBe(1);
+        expect(shadowRedrawEvery(1)).toBe(2);
     });
 });
