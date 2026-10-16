@@ -12,6 +12,7 @@ import { createFireCrew, createPoliceCrew, createRepairCrew, type Crew, type Cre
 import { buildRoadGraph, findRoute, overpassLift } from './roads.js';
 import { createTraffic, type EmergencyVehicle, type Traffic, type TrafficAgent } from './traffic.js';
 import { createCar, createPoliceCar } from './car-model.js';
+import { createSignalLights, type SignalLights } from './signal-lights.js';
 import { createWorldServices, type Responder, type ServiceEvent, type WorldServices } from './services.js';
 
 /*
@@ -24,7 +25,7 @@ import { createWorldServices, type Responder, type ServiceEvent, type WorldServi
 type CarRun = { mesh: THREE.Object3D; agent: TrafficAgent };
 type World = {
     key: string; terrain: THREE.Group; root: THREE.Group; layout: TrainingLayout; services: WorldServices;
-    meshes: Map<Responder, THREE.Object3D>; cars: CarRun[]; traffic: Traffic | null; rotors: THREE.Object3D[];
+    meshes: Map<Responder, THREE.Object3D>; cars: CarRun[]; traffic: Traffic | null; lights: SignalLights | null; rotors: THREE.Object3D[];
     plane: { mesh: THREE.Object3D; track: Point2[]; lengths: number[]; total: number; s: number } | null;
     fire: { flames: THREE.Group; light: THREE.PointLight } | null;
     wire: { intact: THREE.Object3D | null; broken: THREE.Object3D | null; sparks: THREE.Object3D } | null;
@@ -82,6 +83,7 @@ function buildFlames(): { flames: THREE.Group; light: THREE.PointLight } {
 function teardown() {
     if (!world) return;
     world.services.dispose();
+    world.lights?.dispose();
     world.root.parent?.remove(world.root);
     world.root.traverse(node => {
         const mesh = node as THREE.Mesh;
@@ -139,6 +141,10 @@ function build(terrain: THREE.Group): World {
         root.add(mesh);
         return { mesh, agent };
     });
+
+    // Traffic lights at the junctions the cars obey (signals.ts); two instanced meshes for the whole map.
+    const lights = createSignalLights(traffic.signals, (x, y) => trainingHeightAt(layout, x, y));
+    root.add(lights.group);
 
     const rotors: THREE.Object3D[] = [];
     terrain.traverse(node => { if (node.userData?.spin) rotors.push(node); });
@@ -204,7 +210,7 @@ function build(terrain: THREE.Group): World {
         else if (responder.kind === 'repair') crews.push(createRepairCrew(host));
         else { policeCrew = createPoliceCrew(host); crews.push(policeCrew); }
     }
-    const built: World = { key: `${terrain.uuid}:${layout.seed}:${layout.profile}`, terrain, root, layout, services, meshes, cars, traffic, rotors, plane, fire, wire, crews, policeCrew, crewState };
+    const built: World = { key: `${terrain.uuid}:${layout.seed}:${layout.profile}`, terrain, root, layout, services, meshes, cars, traffic, lights, rotors, plane, fire, wire, crews, policeCrew, crewState };
     services.onEvent(event => onServiceEvent(built, event));
     return built;
 }
@@ -253,6 +259,7 @@ function driveTraffic(w: World, dt: number) {
     emergencyOnRoad.length = 0;
     for (const responder of w.services.responders) if (responder.state !== 'idle') emergencyOnRoad.push(responder);
     w.traffic.update(dt, emergencyOnRoad);
+    w.lights?.update();
     for (const { mesh, agent } of w.cars) {
         mesh.scale.setScalar(agent.scale);
         place(mesh, w.layout, agent.x, agent.y, agent.heading, GROUND + overpassLift(w.layout.bridges, agent.roadId, agent.x, agent.y));

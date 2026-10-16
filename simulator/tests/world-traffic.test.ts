@@ -208,3 +208,74 @@ describe('traffic on every generated profile', () => {
         expect(result.travelled.filter(d => d > 40).length).toBeGreaterThanOrEqual(Math.ceil(traffic.agents.length * .7));
     });
 });
+
+describe('traffic lights', () => {
+    it('gives a crossing one signal with a head on each of its four approaches and two alternating phases', () => {
+        const traffic = createTraffic(cross(), { seed: 3 });
+        expect(traffic.signals.signals).toHaveLength(1);
+        expect(traffic.signals.heads).toHaveLength(4);
+        expect(new Set(traffic.signals.heads.map(h => h.group))).toEqual(new Set([0, 1]));
+        const signal = traffic.signals.signals[0];
+        // The two ends of the main road go together and the cross street goes on the other phase.
+        const groups = traffic.signals.heads.map(h => ({ group: h.group, along: Math.abs(Math.cos(h.heading)) > .7 }));
+        expect(new Set(groups.filter(g => g.along).map(g => g.group)).size).toBe(1);
+        expect(new Set(groups.filter(g => !g.along).map(g => g.group)).size).toBe(1);
+        expect(signal.groups).toBe(2);
+    });
+
+    it('never shows green to both phases, passes through yellow and an all-red gap, and repeats', () => {
+        const { signals } = createTraffic(cross(), { seed: 3 });
+        const signal = signals.signals[0];
+        const seen = new Set<string>();
+        let bothGreen = 0, allRed = 0;
+        for (let t = 0; t < 120; t += .25) {
+            signals.update(.25);
+            const a = signals.stateOfGroup(signal, 0), b = signals.stateOfGroup(signal, 1);
+            seen.add(`${a}/${b}`);
+            if (a === 'green' && b === 'green') bothGreen++;
+            if (a === 'red' && b === 'red') allRed++;
+        }
+        expect(bothGreen).toBe(0);
+        expect(allRed).toBeGreaterThan(0);
+        expect(seen).toContain('green/red');
+        expect(seen).toContain('yellow/red');
+        expect(seen).toContain('red/green');
+        expect(seen).toContain('red/yellow');
+    });
+
+    it('has no lights on a plain road or when switched off', () => {
+        expect(createTraffic([road('a', 4, [-120, 0], [120, 0])], { seed: 1 }).signals.signals).toHaveLength(0);
+        expect(createTraffic(cross(), { seed: 3, signals: false }).signals.signals).toHaveLength(0);
+    });
+
+    it('stops cars at the line on red and lets them flow overall: nobody crosses fast against a green cross street, nobody gets stuck', () => {
+        const traffic = createTraffic(cross(), { seed: 7, count: 24 });
+        const net = traffic.network;
+        const junction = net.nodes.findIndex(n => n.controlled);
+        const crossed = new Set<string>();
+        let crossings = 0, violations = 0, stoppedOnRed = 0;
+        for (let step = 0; step < 4800; step++) {                       // 8 minutes at 10 Hz
+            traffic.update(.1);
+            for (const a of traffic.agents) {
+                const seg = a.seg;
+                if (seg.isConn || seg.to !== junction) continue;
+                const line = seg.length - seg.stopBack, front = a.s + a.length / 2, light = traffic.signals.stateOfLane(seg.laneIndex);
+                if (light === 'red' && a.speed < .3 && front > line - 3) stoppedOnRed++;
+                const key = `${a.id}:${seg.id}`;
+                if (front >= line && !crossed.has(key)) {
+                    crossed.add(key);
+                    crossings++;
+                    // Dangerous is only a fast car crossing while the crossing street already has green. (A car that took the very end
+                    // of the yellow may reach the line in the all-red gap, which is what that gap is for.)
+                    const head = traffic.signals.heads.find(h => h.lane === seg.laneIndex)!;
+                    const signal = traffic.signals.signals.find(s => s.node === head.node)!;
+                    if (light === 'red' && a.speed > 1.5 && traffic.signals.stateOfGroup(signal, 1 - head.group) === 'green') violations++;
+                }
+            }
+        }
+        expect(crossings).toBeGreaterThan(20);
+        expect(stoppedOnRed).toBeGreaterThan(0);                         // cars really wait at the line
+        expect(violations).toBe(0);
+        expect(traffic.agents.some(a => a.speed > 1)).toBe(true);
+    });
+});

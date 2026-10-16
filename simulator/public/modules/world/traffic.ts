@@ -1,5 +1,6 @@
 import { seededRandom, type Point2 } from '../environment/training/geography.js';
 import { analyzeRoads, projectOnPolyline, roadAnchors, subPolyline, type RoadLike, type RoadPlan } from './roads.js';
+import { createSignals, type Signals } from './signals.js';
 
 /*
  * Ambient road traffic, pure logic (no THREE). The road plan from roads.ts becomes a lane network: every stretch of
@@ -10,7 +11,8 @@ import { analyzeRoads, projectOnPolyline, roadAnchors, subPolyline, type RoadLik
  * bends and turns, keep a distance to the car ahead, and a junction hands out permits so that two cars never drive
  * through each other: moves that cross or merge wait for each other first come first served; moves that do not (two
  * opposing cars going straight, a right turn beside them) go together. Emergency vehicles are obstacles: cars stop in
- * front of them and move right and slow down when one comes up from behind.
+ * front of them and move right and slow down when one comes up from behind. Controlled junctions also have traffic lights
+ * (signals.ts): on red a car stops at the stop line, on yellow it stops when it can still brake comfortably.
  */
 export const MODEL_LENGTH = 4.2, MODEL_WIDTH = 1.75;
 
@@ -59,6 +61,8 @@ export interface TrafficAgent {
 export type EmergencyVehicle = { x: number; y: number; heading: number };
 export interface Traffic {
     agents: TrafficAgent[]; network: TrafficNetwork;
+    /** The traffic lights of the controlled junctions (none when the traffic was created without them). */
+    signals: Signals;
     update(dt: number, emergency?: ReadonlyArray<EmergencyVehicle>): void;
 }
 
@@ -346,9 +350,10 @@ function conflicts(a: Seg, b: Seg): boolean {
 
 const angleDiff = (a: number, b: number) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
 
-export function createTraffic(paths: RoadLike[], options: { seed?: number; count?: number } = {}): Traffic {
+export function createTraffic(paths: RoadLike[], options: { seed?: number; count?: number; signals?: boolean } = {}): Traffic {
     const plan = analyzeRoads(paths);
     const net = buildTrafficNetwork(plan);
+    const signals = createSignals(options.signals === false ? [] : net.nodes);
     conflictCache.clear();
     const random = seededRandom((options.seed ?? 1) ^ 0x7a3f1c);
     const agents: TrafficAgent[] = [];
@@ -445,6 +450,9 @@ export function createTraffic(paths: RoadLike[], options: { seed?: number; count
             const after = a.route[at + 1];
             const next = after && net.connectors.get(c.toLane!.id * 100003 + after.id);
             if (!next || !net.nodes[next.node].controlled) break;
+            // The lane between the two junctions is too short to wait in: the second light must be green too.
+            const light = signals.stateOfLane(c.toLane!.laneIndex);
+            if (light && light !== 'green') return false;
             chain.push(next); c = next;
         }
         if (!chain.every(c => tryGrant(a, c, force))) return false;
@@ -492,7 +500,14 @@ export function createTraffic(paths: RoadLike[], options: { seed?: number; count
                 const conn = conn0;
                 const toLine = seg.length - seg.stopBack - a.s - a.length / 2;
                 if (conn && a.permits[0] !== conn) {
-                    if (toLine < 8 + a.speed * a.speed / (2 * BRAKE)) {
+                    // The traffic light: red stops the car at the line; yellow stops it when it can still brake comfortably.
+                    const light = signals.stateOfLane(seg.laneIndex);
+                    // Yellow: stop when that takes no more than 1.4 x the comfortable braking; a car already braking keeps to it (no wavering).
+                    const stopForLight = light === 'red' || (light === 'yellow' && a.speed * a.speed / (2 * Math.max(.3, toLine - .5)) <= BRAKE * 1.4);
+                    if (stopForLight) {
+                        // A request left in the queue would hold up the cars of the green phase that cross it.
+                        if (a.requested) { removeFrom(node.queue, a); a.requested = null; }
+                    } else if (toLine < 8 + a.speed * a.speed / (2 * BRAKE)) {
                         if (!a.requested) { a.requested = conn; node.queue.push(a); a.wait = 0; }
                         else a.wait += dt;
                         if (grant(a, conn, a.wait > OVERRIDE_AFTER)) a.requested = null;
@@ -546,10 +561,11 @@ export function createTraffic(paths: RoadLike[], options: { seed?: number; count
     };
 
     return {
-        agents, network: net,
+        agents, network: net, signals,
         update(dt, emergency = []) {
             dt = Math.min(dt, .1);
             if (dt <= 0) return;
+            signals.update(dt);
             for (const a of agents) step(a, dt, emergency);
         }
     };
