@@ -32,14 +32,14 @@ export function createStyledLandingPad(text: string, bgColor = '#2563eb', textCo
     tex.anisotropy = 8;
     const mesh = new THREE.Mesh(
         new THREE.PlaneGeometry(2, 2),
-        // polygonOffset: площадка — плоскость в 2.5 см над землёй; под острым углом
-        // этого мало для буфера глубины, и без смещения земля «просвечивает».
+        // polygonOffset: площадка — плоскость в 1 мм над землёй (дрон стоит на нуле, ножки не должны тонуть);
+        // под острым углом этого мало для буфера глубины, и без смещения земля «просвечивает».
         new THREE.MeshStandardMaterial({
             map: tex, roughness: 0.92, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4
         })
     );
     setCommonMeta(mesh, `Площадка ${text}`, { collidableRadius: 1 });
-    mesh.position.z = 0.025;
+    mesh.position.z = 0.0012;
     mesh.receiveShadow = true;
     return mesh;
 }

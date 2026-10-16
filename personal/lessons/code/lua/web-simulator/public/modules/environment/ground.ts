@@ -88,11 +88,16 @@ export function createGround(_scene: THREE.Scene, envGroup: THREE.Group) {
         transparent: true,
         opacity: 0.3,
         roughness: 0.65,
-        metalness: 0.02
+        metalness: 0.02,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1
     });
     const arenaAccent = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), arenaAccentMaterial);
     arenaAccent.receiveShadow = true;
-    arenaAccent.position.z = 0.01;
+    // Floor layers sit a fraction of a millimetre above the ground (polygonOffset keeps the order): the drone's feet
+    // stand at z = 0 and must not sink into the pad markings.
+    arenaAccent.position.z = 0.0004;
     ground.add(arenaAccent);
 
     ringMaterial = new THREE.MeshStandardMaterial({
@@ -101,10 +106,13 @@ export function createGround(_scene: THREE.Scene, envGroup: THREE.Group) {
         opacity: 0.8,
         roughness: 0.35,
         metalness: 0.08,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2
     });
     const centerRing = new THREE.Mesh(new THREE.RingGeometry(1.22, 1.24, 128), ringMaterial);
-    centerRing.position.z = 0.012;
+    centerRing.position.z = 0.0006;
     ground.add(centerRing);
 
     // Add the H landing pad marker at the origin.
@@ -115,11 +123,14 @@ export function createGround(_scene: THREE.Scene, envGroup: THREE.Group) {
         transparent: true,
         opacity: 1,
         roughness: 0.9,
-        depthWrite: false
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -3,
+        polygonOffsetUnits: -3
     });
     const landingPad = new THREE.Mesh(padGeom, landingPadMaterial);
     landingPad.receiveShadow = true;
-    landingPad.position.set(0, 0, 0.015);
+    landingPad.position.set(0, 0, 0.0008);
     ground.add(landingPad);
 
     const nextBorderMaterial = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.82, metalness: 0.02 });
