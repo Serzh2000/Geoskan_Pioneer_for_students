@@ -149,9 +149,8 @@ export function updateLEDs(droneMesh: THREE.Object3D, droneState: any) {
     // The board's presence reflects whether the program set up more than 4
     // LEDs at all (Ledbar.new(count > 4)), not whether a pixel happens to be
     // lit this frame — otherwise a blink loop that turns everything off
-    // between frames makes the whole physical board flicker in and out. The
-    // default state holds 29 LED slots for the monitor, so the length alone says nothing.
-    if (matrix?.userData.showWhenActive) matrix.visible = droneState.ledModuleRequested;
+    // between frames makes the whole physical board flicker in and out.
+    if (matrix?.userData.showWhenActive) matrix.visible = droneState.leds.length > 4;
     if (matrixGlowLight) {
         if (matrixActiveCount > 0) {
             // Desaturated toward white on purpose: this is a faint ambient

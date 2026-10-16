@@ -95,7 +95,6 @@ export function createDroneRecord(
         tickCommandSignature: null,
         timers: [],
         leds: Array.from({ length: 29 }, () => ({ r: 0, g: 0, b: 0, w: 0 })),
-        ledModuleRequested: false,
         script: DEFAULT_LUA_SCRIPT,
         pythonScript: DEFAULT_PYTHON_SCRIPT,
         pythonConnection: createDefaultPioneerConnectionSettings(),
@@ -133,7 +132,6 @@ export function resetDroneRuntimeState(drone: DroneState) {
     drone.tickCommandSignature = null;
     drone.timers = [];
     drone.leds = Array.from({ length: 29 }, () => ({ r: 0, g: 0, b: 0, w: 0 }));
-    drone.ledModuleRequested = false;
     drone.rcChannels = [1500, 1500, 1000, 1500, 1000, 1000, 1000, 1000];
     drone.previousRcArmActive = null;
     drone.magnetGripper.active = false;

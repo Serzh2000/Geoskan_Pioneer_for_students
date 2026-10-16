@@ -35,7 +35,6 @@ export const js_init_leds = function(L: any) {
     const count = fengari.lua.lua_tointeger(L, 1);
     const simState = getDroneFromLua(L);
     simState.leds = Array.from({ length: count }, () => ({r: 0, g: 0, b: 0, w: 0}));
-    simState.ledModuleRequested = count > 4;
     return 0;
 };
 

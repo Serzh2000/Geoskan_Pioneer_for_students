@@ -160,8 +160,6 @@ export interface DroneState {
     tickCommandSignature: TickCommandSignature | null;
     timers: TimerTask[];
     leds: LedColor[];
-    /** The program asked for an LED strip longer than the 4 onboard LEDs (Ledbar.new(count > 4)): the 5x5 board is shown. */
-    ledModuleRequested: boolean;
     script: string;
     pythonScript: string;
     pythonConnection: PioneerConnectionSettings;
