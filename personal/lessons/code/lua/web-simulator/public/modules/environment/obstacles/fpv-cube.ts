@@ -182,3 +182,22 @@ export function createFpvCubeMesh(requestedHeight?: number) {
     applyShadows(group);
     return group;
 }
+
+/**
+ * Changes the height of a placed cube (the real gate adjusts from 105 to 145 cm): the frames and the stand are rebuilt in
+ * place, so the object keeps its identity, position, rotation and selection. Returns false when nothing changed.
+ */
+export function updateFpvCubeHeight(object: THREE.Object3D, requestedHeight: number): boolean {
+    const height = clampFpvCubeHeight(requestedHeight);
+    if (Math.abs(height - Number(object.userData?.fpvCubeHeight ?? 0)) < 1e-6) return false;
+    const fresh = createFpvCubeMesh(height);
+    for (const child of [...object.children]) {
+        object.remove(child);
+        child.traverse((part) => {
+            if (part instanceof THREE.Mesh) part.geometry.dispose();
+        });
+    }
+    for (const child of [...fresh.children]) object.add(child);
+    object.userData.fpvCubeHeight = height;
+    return true;
+}

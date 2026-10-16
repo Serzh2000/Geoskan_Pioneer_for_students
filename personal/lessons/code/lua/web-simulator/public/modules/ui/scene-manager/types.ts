@@ -82,6 +82,8 @@ export interface SceneManagerDomRefs {
     selectedValueEl: HTMLInputElement | null;
     selectedFloorsWrapEl: HTMLLabelElement | null;
     selectedFloorsEl: HTMLInputElement | null;
+    selectedFpvHeightWrapEl: HTMLLabelElement | null;
+    selectedFpvHeightEl: HTMLInputElement | null;
     selectedBuildingSettingsEl: HTMLDivElement | null;
     selectedBuildingFloorEl: HTMLInputElement | null;
     selectedBuildingFaceEl: HTMLSelectElement | null;

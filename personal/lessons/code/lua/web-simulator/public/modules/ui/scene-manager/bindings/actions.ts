@@ -2,6 +2,7 @@ import { appendIncidentEntry, clampFloors, clearIncidentEntries } from '../suppo
 import type { TransformMode } from '../types.js';
 import type { BindingOptions } from './shared.js';
 import { bindGridSnapToggle } from '../../../scene/objects/placement.js';
+import { DRONE_SIM_SCALE } from '../../../shared/drone-scale.js';
 
 export function registerIncidentBindings({ elements }: BindingOptions) {
     elements.addBuildingAppendBtn?.addEventListener('click', () => {
@@ -58,7 +59,11 @@ export function registerSelectionBindings({ callbacks, elements, render }: Bindi
             markerDictionary: elements.selectedDictionaryEl?.value || undefined,
             value: isBuildingSelected ? elements.selectedBuildingIncidentsEl?.value.trim() : elements.selectedValueEl?.value.trim(),
             pointsText: elements.selectedPointsEl?.value.trim(),
-            floors: isBuildingSelected ? clampFloors(elements.selectedFloorsEl?.value, selectedObject?.floors ?? 9) : undefined
+            floors: isBuildingSelected ? clampFloors(elements.selectedFloorsEl?.value, selectedObject?.floors ?? 9) : undefined,
+            // The field is in real centimetres; the scene draws the drone (and so the gate) DRONE_SIM_SCALE times larger.
+            fpvCubeHeight: selectedObject?.fpvCubeHeight !== undefined && elements.selectedFpvHeightEl?.value
+                ? (Number(elements.selectedFpvHeightEl.value) / 100) * DRONE_SIM_SCALE
+                : undefined
         });
         render();
     });

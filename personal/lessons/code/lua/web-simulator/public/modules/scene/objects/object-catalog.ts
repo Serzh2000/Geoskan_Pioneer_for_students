@@ -149,6 +149,7 @@ function buildSceneEntry(obj: THREE.Object3D, depth: number, parentId: string, c
         supportsMarkerDictionary: !!obj.userData?.supportsMarkerDictionary,
         supportsPoints: !!obj.userData?.supportsPoints,
         floors: obj.userData?.floors !== undefined ? Number(obj.userData.floors) : undefined,
+        fpvCubeHeight: obj.userData?.fpvCubeHeight !== undefined ? Number(obj.userData.fpvCubeHeight) : undefined,
         markerKind: obj.userData?.markerKind ? String(obj.userData.markerKind) : '',
         markerDictionary: obj.userData?.markerDictionary ? String(obj.userData.markerDictionary) : '',
         value: obj.userData?.value !== undefined ? String(obj.userData.value) : '',

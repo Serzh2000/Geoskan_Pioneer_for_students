@@ -273,7 +273,7 @@ export function addObject(type: string, options: AddObjectOptions = {}): string 
     return null;
 }
 
-export function updateSelectedSceneObject(params: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number }) {
+export function updateSelectedSceneObject(params: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number; fpvCubeHeight?: number }) {
     if (!selectedObject || selectedObject.userData?.draggable === false) return false;
 
     let updated = false;
@@ -286,6 +286,10 @@ export function updateSelectedSceneObject(params: { value?: string; markerDictio
     } else if (params.floors !== undefined && selectedObject.userData?.type === OBJECT_TYPE.BUILDING) {
         updated = updateSceneObjectValue(selectedObject, {
             floors: params.floors
+        }) || updated;
+    } else if (params.fpvCubeHeight !== undefined && selectedObject.userData?.type === OBJECT_TYPE.FPV_CUBE) {
+        updated = updateSceneObjectValue(selectedObject, {
+            fpvCubeHeight: params.fpvCubeHeight
         }) || updated;
     }
 

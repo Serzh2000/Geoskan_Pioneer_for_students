@@ -80,6 +80,8 @@ export function getSceneManagerDomRefs(): SceneManagerDomRefs {
         selectedValueEl: document.getElementById('scene-selected-value') as HTMLInputElement | null,
         selectedFloorsWrapEl: document.getElementById('scene-selected-floors-wrap') as HTMLLabelElement | null,
         selectedFloorsEl: document.getElementById('scene-selected-floors') as HTMLInputElement | null,
+        selectedFpvHeightWrapEl: document.getElementById('scene-selected-fpv-height-wrap') as HTMLLabelElement | null,
+        selectedFpvHeightEl: document.getElementById('scene-selected-fpv-height') as HTMLInputElement | null,
         selectedBuildingSettingsEl: document.getElementById('scene-selected-building-settings') as HTMLDivElement | null,
         selectedBuildingFloorEl: document.getElementById('scene-selected-building-floor') as HTMLInputElement | null,
         selectedBuildingFaceEl: document.getElementById('scene-selected-building-face') as HTMLSelectElement | null,

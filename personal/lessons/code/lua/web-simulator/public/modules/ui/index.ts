@@ -64,6 +64,8 @@ export interface UICallbacks {
             supportsMarkerDictionary?: boolean;
             supportsPoints?: boolean;
             floors?: number;
+            /** FPV gate height in scene metres. */
+            fpvCubeHeight?: number;
             markerKind?: string;
             markerDictionary?: string;
             value?: string;
@@ -91,7 +93,7 @@ export interface UICallbacks {
             rotation: { x: number; y: number; z: number },
             scale: { x: number; y: number; z: number }
         ) => boolean;
-        updateSelected: (params: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number }) => boolean;
+        updateSelected: (params: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number; fpvCubeHeight?: number }) => boolean;
         appendPoint: () => boolean;
         startLinearEditing: () => boolean;
         finishLinearEditing: (commit?: boolean) => boolean;

@@ -94,6 +94,10 @@ function runNoticeAction(action: NoticeAction) {
         (window as any).highlightEditorProblem?.({ line: action.line, column: action.column, message: action.message || '' });
         return;
     }
+    if (action.kind === 'clear-scene') {
+        (window as any).clearSceneObjects?.();
+        return;
+    }
     if (action.kind === 'open-guide') {
         const win = window as any;
         if (action.lesson !== undefined && win.openMissionGuideLesson) win.openMissionGuideLesson(action.lesson);

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { createFpvCubeMesh } from '../public/modules/environment/obstacles/fpv-cube.js';
+import { createFpvCubeMesh, updateFpvCubeHeight } from '../public/modules/environment/obstacles/fpv-cube.js';
 import { DRONE_COLLISION_RADIUS } from '../public/modules/physics/constants.js';
 import { obstacleHasCollision } from '../public/modules/physics/collisions.js';
 import { DRONE_REAL_WIDTH, DRONE_SIM_WIDTH } from '../public/modules/shared/drone-scale.js';
@@ -101,5 +101,25 @@ describe('FPV cube', () => {
             expect(hit(object, FPV_CUBE_LEG_INSET, FPV_CUBE_LEG_INSET, legMiddle)).toBe(true);
             expect(hit(object, 0, 0, legMiddle)).toBe(false);
         });
+    });
+});
+
+describe('changing the height of a placed cube', () => {
+    it('rebuilds the cube in place, clamps to the product range and reports no change when the height is the same', () => {
+        const cube = createFpvCubeMesh(FPV_CUBE_MIN_HEIGHT);
+        cube.position.set(2, 3, 0);
+        const identity = cube.uuid;
+        const before = new THREE.Box3().setFromObject(cube).max.z;
+
+        expect(updateFpvCubeHeight(cube, FPV_CUBE_MAX_HEIGHT)).toBe(true);
+        expect(cube.uuid).toBe(identity);
+        expect(cube.position.toArray()).toEqual([2, 3, 0]);
+        expect(cube.userData.fpvCubeHeight).toBeCloseTo(FPV_CUBE_MAX_HEIGHT, 6);
+        expect(new THREE.Box3().setFromObject(cube).max.z).toBeGreaterThan(before);
+
+        expect(updateFpvCubeHeight(cube, FPV_CUBE_MAX_HEIGHT)).toBe(false);
+        expect(updateFpvCubeHeight(cube, 99)).toBe(false); // 99 m is clamped back to the maximum
+        expect(updateFpvCubeHeight(cube, 0.01)).toBe(true);
+        expect(cube.userData.fpvCubeHeight).toBeCloseTo(FPV_CUBE_MIN_HEIGHT, 6);
     });
 });

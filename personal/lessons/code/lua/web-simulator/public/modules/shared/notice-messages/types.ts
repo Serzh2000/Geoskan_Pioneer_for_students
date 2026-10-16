@@ -46,7 +46,9 @@ export type NoticeLevel = 'error' | 'warn' | 'info' | 'success';
 export type NoticeAction =
     | { kind: 'show-line'; label: string; line: number; column?: number | null; message?: string }
     /** Opens the textbook; `lesson` (an academy lesson number) opens it at the page that explains the matter. */
-    | { kind: 'open-guide'; label: string; lesson?: number };
+    | { kind: 'open-guide'; label: string; lesson?: number }
+    /** Removes every object the student placed in the scene (the drone stays). */
+    | { kind: 'clear-scene'; label: string };
 
 export type NoticeText = {
     /** Up to ~6 words. */

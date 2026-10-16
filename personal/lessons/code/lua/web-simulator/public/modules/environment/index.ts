@@ -25,6 +25,7 @@ import {
     createForestPatchMesh,
     createFlagMesh,
     createFpvCubeMesh,
+    updateFpvCubeHeight,
     createGateMesh,
     createGeoskanArenaPreset,
     createHillMesh,
@@ -156,8 +157,11 @@ export function addObjectToScene(type: string, camera?: THREE.Camera | null, opt
 
 export function updateSceneObjectValue(
     object: THREE.Object3D,
-    params: { value?: string; markerDictionary?: string; floors?: number; building?: SceneObjectOptions['building'] }
+    params: { value?: string; markerDictionary?: string; floors?: number; fpvCubeHeight?: number; building?: SceneObjectOptions['building'] }
 ) {
+    if (object.userData?.type === OBJECT_TYPE.FPV_CUBE) {
+        return params.fpvCubeHeight !== undefined && updateFpvCubeHeight(object, params.fpvCubeHeight);
+    }
     if (object.userData?.type === OBJECT_TYPE.BUILDING) {
         return updateApartmentBuildingMetadata(object, {
             value: params.value,

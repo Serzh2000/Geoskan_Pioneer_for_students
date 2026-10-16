@@ -66,7 +66,7 @@ function init() {
                 rotation: { x: number; y: number; z: number },
                 scale: { x: number; y: number; z: number }
             ) => setSelectedObjectTransform(position, rotation, scale),
-            updateSelected: (params: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number }) => updateSelectedSceneObject(params),
+            updateSelected: (params: { value?: string; markerDictionary?: string; pointsText?: string; floors?: number; fpvCubeHeight?: number }) => updateSelectedSceneObject(params),
             appendPoint: () => appendPointToSelectedLinearObject(),
             startLinearEditing: () => startSelectedLinearObjectEditing(),
             finishLinearEditing: (commit = true) => finishSelectedLinearObjectEditing(commit),
@@ -251,6 +251,33 @@ function resetSimulation() {
     // A reload right after the restart must find the reset pose, not the one from before it.
     saveSceneSessionNow();
     log('Симуляция сброшена', 'info');
+    offerToClearScene();
+}
+
+/** Top-level objects the student placed (the drone is not one of them). */
+function placedSceneObjects() {
+    return listSceneObjects().filter((entry) => entry.depth === 0 && !entry.isDrone);
+}
+
+/** The restart brings the drone back and keeps the scene (it survives reloads); clearing it is a separate, explicit step. */
+function offerToClearScene() {
+    const count = placedSceneObjects().length;
+    if (!count || !(window as any).showSimulationNotice) return;
+    (window as any).showSimulationNotice({
+        title: 'Дрон на старте',
+        message: `Объекты сцены (${count}) остались на месте. Нужна чистая сцена?`,
+        level: 'info',
+        actions: [{ kind: 'clear-scene', label: 'Очистить сцену' }]
+    });
+}
+
+function clearSceneObjects() {
+    let removed = 0;
+    for (const entry of placedSceneObjects()) {
+        if (deleteSceneObjectById(entry.id)) removed += 1;
+    }
+    saveSceneSessionNow();
+    log(removed ? `Сцена очищена: удалено объектов ${removed}` : 'В сцене нет объектов для удаления', removed ? 'success' : 'info');
 }
 
 async function loadFileContent(path: string) {
@@ -269,9 +296,11 @@ declare global {
     interface Window {
         init: () => void;
         hideAppSplash?: () => void;
+        clearSceneObjects?: () => void;
     }
 }
 window.init = init;
+window.clearSceneObjects = clearSceneObjects;
 
 // Start everything
 window.addEventListener('DOMContentLoaded', init);

@@ -1,4 +1,5 @@
 import { isProtectedEntry } from '../label.js';
+import { DRONE_SIM_SCALE } from '../../../../shared/drone-scale.js';
 import type { UICallbacks } from '../../../index.js';
 import {
     clampFloors,
@@ -58,6 +59,7 @@ export function resetSelectedControls(elements: SceneManagerDomRefs) {
         elements.selectedBuildingSettingsEl
     );
     setBuildingEditorDisabled(elements, true);
+    setFieldVisibility(elements.selectedFpvHeightWrapEl, false);
     setFieldVisibility(elements.selectedParamsCardEl, false);
 
     if (elements.visualEditBtn) {
@@ -100,6 +102,10 @@ export function syncSelectedInputs(
     if (elements.selectedValueEl) elements.selectedValueEl.value = selected.value || '';
     if (elements.selectedFloorsEl) {
         elements.selectedFloorsEl.value = String(clampFloors(String(selected.floors ?? 9), selected.floors ?? 9));
+    }
+    if (elements.selectedFpvHeightEl && selected.fpvCubeHeight !== undefined) {
+        // The model stores scene metres (the drone is drawn ~2x larger than the real one); the field speaks real centimetres.
+        elements.selectedFpvHeightEl.value = String(Math.round((selected.fpvCubeHeight / DRONE_SIM_SCALE) * 100));
     }
     if (elements.selectedBuildingIncidentsEl) elements.selectedBuildingIncidentsEl.value = selected.value || '';
     if (elements.selectedPointsEl) elements.selectedPointsEl.value = selected.pointsText || '';
@@ -179,7 +185,9 @@ export function updateSelectedControls(
 
     // Groups, presets and plain props expose no editable parameters; without this the card rendered
     // as an empty box with an "Применить" button that had nothing to apply.
-    const hasEditableParams = isMarkerDictionaryEditable || !!hasValueField || hasPointsField || isBuildingSelected;
+    const isFpvCubeSelected = selected.fpvCubeHeight !== undefined;
+    setFieldVisibility(elements.selectedFpvHeightWrapEl, isFpvCubeSelected);
+    const hasEditableParams = isMarkerDictionaryEditable || !!hasValueField || hasPointsField || isBuildingSelected || isFpvCubeSelected;
     setFieldVisibility(elements.selectedParamsCardEl, hasEditableParams);
 
     if (elements.visualEditBtn) {
