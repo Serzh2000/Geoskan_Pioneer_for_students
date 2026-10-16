@@ -5,6 +5,7 @@ import kitV3 from '../../../assets/models/props/landscape-kit-v3.mesh.json';
 import kitV4 from '../../../assets/models/props/landscape-kit-v4.mesh.json';
 import kitV5 from '../../../assets/models/props/landscape-kit-v5.mesh.json';
 import { setCommonMeta } from '../obstacles/utils.js';
+import { attachFarProxy } from '../obstacles/far-proxy.js';
 
 const kits = [kitV1, kitV2, kitV3, kitV4, kitV5] as const;
 type Kit = typeof kitV1 | typeof kitV2 | typeof kitV3 | typeof kitV4 | typeof kitV5;
@@ -31,6 +32,10 @@ function kitOf(name: LandscapeAsset): Kit {
 const geometryCache = new Map<string, THREE.BufferGeometry>();
 
 /** Same Blender geometry as the GLB, available immediately for collision and framing. */
+/** Compact solid buildings: from far away a single box is indistinguishable, and costs one draw call instead of several. */
+const FAR_BOX_ASSETS = new Set<LandscapeAsset>(['Cottage', 'Warehouse', 'Station', 'Barn', 'Hangar', 'School', 'Hospital', 'Mall', 'Office',
+    'FireStation', 'PoliceStation', 'Restaurant', 'GasStation', 'Greenhouse']);
+
 export function createLandscapeAsset(name: LandscapeAsset): THREE.Group {
     const kit = kitOf(name);
     const group = setCommonMeta(new THREE.Group(), labels[name]);
@@ -52,5 +57,6 @@ export function createLandscapeAsset(name: LandscapeAsset): THREE.Group {
         mesh.castShadow = true; mesh.receiveShadow = true;
         group.add(mesh);
     }
+    if (FAR_BOX_ASSETS.has(name)) attachFarProxy(group);
     return group;
 }

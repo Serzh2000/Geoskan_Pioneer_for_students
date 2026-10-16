@@ -61,7 +61,8 @@ test('LED surfaces have private materials across channels and drone instances', 
                 }
             });
             expect(count).toBeGreaterThan(0);
-            expect(led.getObjectByName(`base_led_light_${i}`)).toBeInstanceOf(THREE.PointLight);
+            // A light would be evaluated for every pixel of every material in the scene, lit or not.
+            led.traverse((object) => expect((object as THREE.Light).isLight).toBeFalsy());
         }
     }
 });

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ScenePathPoint, SceneObjectOptions } from './types.js';
 import { setCommonMeta, applyShadows, clearGeneratedChildren } from './utils.js';
+import { batchStaticMeshes } from './batching.js';
 import { OBJECT_TYPE } from '../../shared/object-types.js';
 
 function toPointList(points?: ScenePathPoint[]) {
@@ -157,6 +158,9 @@ export function rebuildLinearFeature(group: THREE.Group) {
     }
 
     applyShadows(group);
+    // One mesh per material instead of a mesh per dash or sleeper: a road that is rebuilt (a saved scene, the editor) must not
+    // fall back to thousands of draw calls.
+    batchStaticMeshes(group);
 }
 
 /** A disc of road where the markings stop (a junction or a level crossing). */

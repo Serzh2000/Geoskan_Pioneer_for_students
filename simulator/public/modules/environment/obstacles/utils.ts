@@ -18,9 +18,15 @@ export function applyShadows(root: THREE.Object3D) {
         if (node.isMesh) {
             node.castShadow = true;
             node.receiveShadow = true;
-            // Thin or procedurally composed scene props sometimes pop out during camera motion
-            // because their bounds are too aggressive for frustum culling.
-            node.frustumCulled = false;
+            // Props used to opt out of frustum culling because stale bounds made them pop out during camera motion.
+            // Fresh bounds fix the cause; without culling every prop is drawn even behind the camera.
+            if (node.geometry && !node.isInstancedMesh && !node.isSkinnedMesh) {
+                node.geometry.computeBoundingSphere();
+                node.geometry.computeBoundingBox();
+                node.frustumCulled = true;
+            } else {
+                node.frustumCulled = false;
+            }
         }
     });
 }

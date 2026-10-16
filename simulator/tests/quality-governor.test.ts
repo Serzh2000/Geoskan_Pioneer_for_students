@@ -70,10 +70,26 @@ describe('quality governor', () => {
             expect(QUALITY_TIERS[i].pixelRatioCap).toBeLessThanOrEqual(QUALITY_TIERS[i - 1].pixelRatioCap);
             expect(QUALITY_TIERS[i].hideDistance).toBeLessThanOrEqual(QUALITY_TIERS[i - 1].hideDistance);
             expect(QUALITY_TIERS[i].treeDensity).toBeLessThanOrEqual(QUALITY_TIERS[i - 1].treeDensity);
+            expect(QUALITY_TIERS[i].proxyDistance).toBeLessThan(QUALITY_TIERS[i - 1].proxyDistance);
         }
-        expect(lodFlags(QUALITY_TIERS[0], 500, 5)).toEqual({ hidden: false, shadow: true, detail: false });
+        expect(lodFlags(QUALITY_TIERS[0], 500, 5)).toEqual({ hidden: false, shadow: true, detail: false, far: true });
         expect(lodFlags(QUALITY_TIERS[3], 250, 5).hidden).toBe(true);
         expect(lodFlags(QUALITY_TIERS[3], 250, 200).hidden).toBe(false); // overview camera keeps the whole map
         expect(lodFlags(QUALITY_TIERS[3], 100, 5).hidden).toBe(false);
+    });
+
+    it('swaps a building for its box far away, with a margin that stops flicker, and later for big buildings', () => {
+        const tier = QUALITY_TIERS[0];
+        const edge = tier.proxyDistance;
+        expect(lodFlags(tier, edge - 1, 5).far).toBe(false);
+        expect(lodFlags(tier, edge + 1, 5).far).toBe(true);
+        // Already a box: it stays one until clearly closer (inside PROXY_HYSTERESIS of the distance).
+        expect(lodFlags(tier, edge * 0.95, 5, true).far).toBe(true);
+        expect(lodFlags(tier, edge * 0.85, 5, true).far).toBe(false);
+        // A prop that is not yet a box does not turn into one on the hysteresis margin.
+        expect(lodFlags(tier, edge * 0.95, 5, false).far).toBe(false);
+        // A big building keeps its detail from farther away.
+        expect(lodFlags(tier, edge * 1.5, 5, false, 2).far).toBe(false);
+        expect(lodFlags(tier, edge * 2.5, 5, false, 2).far).toBe(true);
     });
 });

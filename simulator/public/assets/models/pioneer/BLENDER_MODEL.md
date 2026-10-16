@@ -51,8 +51,18 @@ only if the GLB fails to load. Export tools must await
 To regenerate (replace the source path with the local `.blend` path):
 
 ```powershell
-& 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe' --background 'SOURCE.blend' --python tools/export_pioneer_blend.py -- public/assets/models/pioneer/pioneer-basic.glb 'Pioneer • LED + ESP32'
+& 'C:\Program Files\Blender Foundation\Blender 5.1\blender.exe' --background 'SOURCE.blend' --python tools/export_pioneer_blend.py -- exported.glb 'Pioneer • LED + ESP32'
+node tools/optimize_pioneer_glb.mjs exported.glb public/assets/models/pioneer/pioneer-basic.glb
 ```
+
+The raw export is far too heavy for a browser (513 000 triangles, 16 MB, transmission materials), so the exported file
+goes through `tools/optimize_pioneer_glb.mjs` before it replaces `pioneer-basic.glb`: it welds and simplifies the
+heavy primitives (the motor windings alone are 248 000 triangles) and drops `KHR_materials_transmission`, which makes
+three.js render the whole scene a second time. The result is ~140 000 triangles and 4.7 MB. The header of the script
+says how to run it; keep it in the pipeline, because a plain re-export brings the 16 MB back.
+
+The LED glow is an emissive material plus a sprite, never a `PointLight`: a light, even at zero intensity, is
+evaluated for every pixel of every material in the scene, and each drone would add five.
 
 Regression checks are in `tests/pioneer-blender-model.test.ts`; they load the
 actual GLB to check scale, ground alignment, rotor pivots, material isolation,

@@ -3,6 +3,7 @@ import { updatePhysics } from '../physics/index.js';
 import { PHYSICS_FIXED_DT } from '../physics/constants.js';
 import { updateStats } from '../ui/panels/stats.js';
 import { startBackgroundTicker, type BackgroundTicker } from '../shared/background-ticker.js';
+import { isSceneRenderingHeld } from '../scene/core/render-gate.js';
 
 type LoopCallbacks = {
     /** render = false: move the 3D models to the physics state without drawing. */
@@ -98,7 +99,8 @@ export function startAnimationLoop(callbacks: LoopCallbacks): void {
         stepPhysics(rawDt);
 
         if (callbacks.is3DActive()) {
-            callbacks.updateDrone3D(rawDt * simSettings.simSpeed);
+            // An overlay that covers the whole scene (the controller wizard) holds the draw; the scene still updates.
+            callbacks.updateDrone3D(rawDt * simSettings.simSpeed, !isSceneRenderingHeld());
         }
         updateStats();
     };

@@ -1,9 +1,9 @@
 {
   "source_file": "Geoscan_Pioneer_LED_stack_corrected.blend",
   "source_sha256": "bcb745cd8fa34dd71bda73a6c609fe975a0a7fbc6b8c7d887b33fe382c19a2ce",
-  "output_sha256": "219eee53db2f9ef1ccc739faaabafc7afc447f11a31263dc625b14268ee0bc7e",
+  "output_sha256": "2bc176639d5b75ad343869c3da1e736568fec281f19eadf996c9d27600ca76f5",
   "coordinate_system": "Z-up; 2 scene units per physical metre; feet at z=0",
-  "web_optimization": "Static parts merged; small-component bevels omitted; propeller subdivision level 1",
+  "web_optimization": "Static parts merged; small-component bevels omitted; propeller subdivision level 1; then tools/optimize_pioneer_glb.mjs: heavy primitives simplified (513k -> 140k triangles, 16 MB -> 4.7 MB), KHR_materials_transmission removed",
   "source_objects_by_group": {
     "frame": 2095,
     "rotor_0": 6,

@@ -17,6 +17,7 @@ import {
 import { createWizardDraftInversion } from './wizard/persistence.js';
 import { AUTO_ADVANCE_MS, AUX_SWITCHES, describeTarget, stickOffsets } from './wizard/radio-model.js';
 import { createRadioView, type RadioView } from './wizard/radio-view.js';
+import { holdSceneRendering } from '../../scene/core/render-gate.js';
 import { computePreviewRef } from './wizard/preview-ref.js';
 import { renderWizardState as renderWizardUi } from './wizard/ui.js';
 import {
@@ -57,6 +58,8 @@ let resolvedAt: number | null = null;
 /** The student asked for time (went back, or changed the direction): no automatic move on this step. */
 let advanceCancelled = false;
 let radioView: RadioView | null = null;
+/** The wizard's stage hides the scene, so the scene is not drawn while the wizard is open. */
+let releaseSceneRendering: (() => void) | null = null;
 let channelValues: Partial<Record<ChannelKey, number>> = {};
 
 export function initWizard() {
@@ -121,6 +124,7 @@ export function initWizard() {
 
 function startWizard() {
     isWizardActive = true;
+    releaseSceneRendering ??= holdSceneRendering();
     showingSummary = false;
     currentStepIdx = 0;
     lastWizardUiRenderAt = 0;
@@ -140,6 +144,8 @@ function startWizard() {
 
 function stopWizard() {
     isWizardActive = false;
+    releaseSceneRendering?.();
+    releaseSceneRendering = null;
     showingSummary = false;
     lastWizardUiRenderAt = 0;
     lastWizardLoopAt = 0;

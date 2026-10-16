@@ -2,6 +2,8 @@
  * Модуль генерации объектов окружения (препятствий).
  * Экспортирует функции для настройки сцены и добавления объектов.
  */
+// Every raycast against the environment (rangefinder, markers, editor picks) goes through this: see the file for why.
+import '../scene/core/fast-raycast.js';
 import * as THREE from 'three';
 import { setupLights } from './lights.js';
 import { createGround } from './ground.js';

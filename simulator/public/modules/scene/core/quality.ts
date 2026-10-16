@@ -20,15 +20,17 @@ export interface QualityTier {
     hideDistance: number;
     /** Balconies and railings of apartment blocks are drawn only closer than this. */
     detailDistance: number;
+    /** Buildings farther than this are drawn as a single box (see environment/obstacles/far-proxy.ts). */
+    proxyDistance: number;
     /** Share of the instanced trees that is drawn, 0..1. */
     treeDensity: number;
 }
 
 export const QUALITY_TIERS: readonly QualityTier[] = [
-    { pixelRatioCap: 2, shadows: true, shadowMapSize: 2048, shadowDistance: Infinity, hideDistance: Infinity, detailDistance: 90, treeDensity: 1 },
-    { pixelRatioCap: 1.5, shadows: true, shadowMapSize: 1024, shadowDistance: 140, hideDistance: Infinity, detailDistance: 60, treeDensity: 1 },
-    { pixelRatioCap: 0.75, shadows: false, shadowMapSize: 1024, shadowDistance: 0, hideDistance: 320, detailDistance: 40, treeDensity: 0.75 },
-    { pixelRatioCap: 0.6, shadows: false, shadowMapSize: 1024, shadowDistance: 0, hideDistance: 200, detailDistance: 25, treeDensity: 0.5 }
+    { pixelRatioCap: 2, shadows: true, shadowMapSize: 2048, shadowDistance: Infinity, hideDistance: Infinity, detailDistance: 90, proxyDistance: 220, treeDensity: 1 },
+    { pixelRatioCap: 1.5, shadows: true, shadowMapSize: 1024, shadowDistance: 140, hideDistance: Infinity, detailDistance: 60, proxyDistance: 160, treeDensity: 1 },
+    { pixelRatioCap: 0.75, shadows: false, shadowMapSize: 1024, shadowDistance: 0, hideDistance: 320, detailDistance: 40, proxyDistance: 110, treeDensity: 0.75 },
+    { pixelRatioCap: 0.6, shadows: false, shadowMapSize: 1024, shadowDistance: 0, hideDistance: 200, detailDistance: 25, proxyDistance: 75, treeDensity: 0.5 }
 ];
 export const MAX_TIER = QUALITY_TIERS.length - 1;
 /** Far props are hidden only while the camera is below this height (an overview needs the whole map). */
@@ -56,8 +58,8 @@ export interface GovernorState {
 }
 
 export const GOVERNOR = {
-    /** Median frame time that is too slow (< ~30 fps). */
-    slowMs: 33,
+    /** Median frame time that is too slow (< ~40 fps: a drone sim that stutters is hard to fly, so step down early). */
+    slowMs: 24,
     /** Median frame time that counts as good (about 60 fps held). */
     goodMs: 18.5,
     minSamples: 40,
@@ -118,12 +120,19 @@ export function decideTier(state: GovernorState, medianMs: number, sampleCount: 
     return next;
 }
 
-/** Is a prop at `distance` from the nearest viewer hidden / out of the sun shadow / minus its detail. */
-export function lodFlags(tier: QualityTier, distance: number, cameraHeight: number) {
+/** Share of the proxy distance below which a far prop goes back to its full model: stops it flickering at the border. */
+export const PROXY_HYSTERESIS = 0.9;
+
+/**
+ * Is a prop at `distance` from the nearest viewer hidden / out of the sun shadow / minus its detail / a far box.
+ * `wasFar` is its previous state: a prop that is already a box stays one until it is clearly closer again.
+ */
+export function lodFlags(tier: QualityTier, distance: number, cameraHeight: number, wasFar = false, proxyScale = 1) {
     return {
         hidden: cameraHeight < LOW_CAMERA_HEIGHT && distance > tier.hideDistance,
         shadow: distance <= tier.shadowDistance,
-        detail: distance <= tier.detailDistance
+        detail: distance <= tier.detailDistance,
+        far: distance > tier.proxyDistance * proxyScale * (wasFar ? PROXY_HYSTERESIS : 1)
     };
 }
 
@@ -206,6 +215,25 @@ function setShadowCasting(object: THREE.Object3D, cast: boolean) {
     object.traverse(node => { if ((node as THREE.Mesh).isMesh && !(node as THREE.Mesh).userData.noShadowLod) (node as THREE.Mesh).castShadow = cast; });
 }
 
+/**
+ * Far: the box stands in for the real meshes. Parts that arrive later (window modules load asynchronously) are caught by
+ * the child count; the roof marker and incident effects stay as they are.
+ */
+function applyFarProxy(prop: THREE.Object3D, far: boolean) {
+    const proxy = prop.userData.lodProxy as THREE.Object3D | undefined;
+    if (!proxy || !proxy.parent) return;
+    if (prop.userData.lodFar === far && prop.userData.lodChildCount === prop.children.length) return;
+    prop.userData.lodFar = far;
+    prop.userData.lodChildCount = prop.children.length;
+    for (const child of prop.children) {
+        if (child === proxy || child.userData.keepSeparate || child.userData.isIncidentEffect) continue;
+        child.visible = !far;
+    }
+    proxy.visible = far;
+    // Parts shown again must get their detail flags re-applied by the pass below.
+    if (!far) prop.userData.lodDetailOn = undefined;
+}
+
 /** Distance LOD of the props of training maps and presets. Cheap enough to run a few times a second. */
 function updateDistanceLod(ctx: QualityContext, tier: QualityTier) {
     const root = ctx.envRoot();
@@ -220,7 +248,8 @@ function updateDistanceLod(ctx: QualityContext, tier: QualityTier) {
             prop.getWorldPosition(probe);
             let distance = Infinity;
             for (const v of viewers) distance = Math.min(distance, Math.hypot(v.x - probe.x, v.y - probe.y, (v.z - probe.z) * 0.25));
-            const flags = lodFlags(tier, distance, cameraHeight);
+            const flags = lodFlags(tier, distance, cameraHeight, prop.userData.lodFar === true, Number(prop.userData.lodScale) || 1);
+            applyFarProxy(prop, flags.far);
             if (flags.hidden && prop.visible) { prop.visible = false; prop.userData.lodHidden = true; }
             else if (!flags.hidden && prop.userData.lodHidden) { prop.visible = true; prop.userData.lodHidden = false; }
             if (prop.userData.lodShadow !== flags.shadow) {
@@ -228,7 +257,7 @@ function updateDistanceLod(ctx: QualityContext, tier: QualityTier) {
                 setShadowCasting(prop, flags.shadow);
             }
             const detail = prop.userData.lodDetail as THREE.Object3D[] | undefined;
-            if (detail && prop.userData.lodDetailOn !== flags.detail) {
+            if (detail && !flags.far && prop.userData.lodDetailOn !== flags.detail) {
                 prop.userData.lodDetailOn = flags.detail;
                 for (const part of detail) part.visible = flags.detail;
             }

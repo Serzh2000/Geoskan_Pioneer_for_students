@@ -35,7 +35,9 @@ export interface RadioView {
     update(state: RadioViewState): void;
 }
 
-const FRAME_INTERVAL_MS = 1000 / 40;
+const FRAME_INTERVAL_MS = 1000 / 30;
+/** The stage fills the window: a device pixel ratio of 2 would be four times the pixels for no visible gain on a 3D prop. */
+const MAX_PIXEL_RATIO = 1.5;
 const GIMBAL_TRAVEL_DEG = 25;
 const SWITCH_SWING_DEG = 35;
 /** Three columns across the frame: the card with the channels (HTML), the drone in the middle, the transmitter on the right. */
@@ -193,7 +195,7 @@ function createScreen(mesh: THREE.Mesh): (caption: string, level: number, found:
 export function createRadioView(root: HTMLElement): RadioView {
     root.replaceChildren();
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_PIXEL_RATIO));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;

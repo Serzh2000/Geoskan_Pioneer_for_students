@@ -8,6 +8,8 @@ import { setupEsp32Module } from './esp32-module.js';
 const BASE_LED_GLOW_DIAMETER = 15 * CAD_MM_TO_SCENE_SCALE;
 const MODULE_LED_GLOW_DIAMETER = 5.5 * CAD_MM_TO_SCENE_SCALE;
 const MODULE_LED_GLOW_Z_OFFSET = 0.0015;
+/** Meshes whose bounding sphere is smaller than this (scene units, 2 per metre) do not cast a shadow. */
+const MIN_SHADOW_CASTER_RADIUS = 0.006;
 
 let templatePromise: Promise<THREE.Group> | undefined;
 const pendingModels = new WeakMap<THREE.Object3D, Promise<void>>();
@@ -74,7 +76,9 @@ export function attachBlenderModel(model: THREE.Group, template: THREE.Group): v
         object.material = Array.isArray(object.material)
             ? object.material.map((material) => material.clone())
             : object.material.clone();
-        object.castShadow = true;
+        // Parts smaller than a few millimetres leave no visible shadow, but each one is a draw call in the shadow pass.
+        object.geometry.boundingSphere ?? object.geometry.computeBoundingSphere();
+        object.castShadow = object.geometry.boundingSphere!.radius >= MIN_SHADOW_CASTER_RADIUS;
         object.receiveShadow = true;
     });
     for (let i = 0; i < 4; i++) {
@@ -93,15 +97,12 @@ export function attachBlenderModel(model: THREE.Group, template: THREE.Group): v
     for (let i = 0; i < 4; i++) {
         const led = instance.getObjectByName(`base_led_${i}`);
         if (!led) throw new Error(`Pioneer asset is missing base_led_${i}`);
+        // No PointLight here: even at zero intensity every light is evaluated for every pixel of every material in the
+        // scene (five per drone). The emissive material and the glow sprite carry the look.
         const center = new THREE.Box3().setFromObject(led).getCenter(new THREE.Vector3());
-        const light = new THREE.PointLight(0x000000, 0, 0.12);
-        light.name = `base_led_light_${i}`;
-        light.userData.intensityScale = 0.04;
-        light.position.copy(center);
-        light.position.z += i < 2 ? 0.004 : -0.004;
-        led.add(light);
         const glow = createLedGlowSprite(BASE_LED_GLOW_DIAMETER);
-        glow.position.copy(light.position);
+        glow.position.copy(center);
+        glow.position.z += i < 2 ? 0.004 : -0.004;
         led.add(glow);
         leds.add(led);
     }
@@ -111,12 +112,6 @@ export function attachBlenderModel(model: THREE.Group, template: THREE.Group): v
     const ledModule = instance.getObjectByName('led_module');
     if (ledModule && ledModule.children.length > 0) {
         model.getObjectByName('led_matrix_group')?.removeFromParent();
-        const moduleCenter = new THREE.Box3().setFromObject(ledModule).getCenter(new THREE.Vector3());
-        const glow = new THREE.PointLight(0x000000, 0, 0.26);
-        glow.name = 'led_module_glow_light';
-        glow.position.copy(moduleCenter);
-        glow.position.z += 0.01;
-        ledModule.add(glow);
         for (let i = 0; i < 25; i++) {
             const pixel = ledModule.getObjectByName(`module_led_${i}`);
             if (!pixel) continue;

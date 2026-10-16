@@ -16,6 +16,7 @@ import {
     normalizeBuildingConfig
 } from './buildings/shared.js';
 import { populateWindowsAndEntrance } from './buildings/modules.js';
+import { attachFarProxy } from './far-proxy.js';
 import { createMarkerMeshForMap } from './markers/object.js';
 import { SHEET_SIZE, SHEET_THICKNESS } from './markers/shared.js';
 
@@ -177,6 +178,7 @@ function rebuildApartmentBuilding(group: THREE.Group) {
     placeRoofMarker(group, proxyRoofTop);
     applyShadows(group);
     finishShellMeshes(group);
+    attachFarProxy(group, { color: 0x243b43, amount: .22 });
 
     const windowSlots = getWindowSlots(floors, depth, floorHeight);
 
@@ -257,6 +259,7 @@ function rebuildApartmentBuilding(group: THREE.Group) {
 
         applyShadows(group);
         finishShellMeshes(group);
+        attachFarProxy(group, { color: 0x243b43, amount: .22 });
     });
 }
 
