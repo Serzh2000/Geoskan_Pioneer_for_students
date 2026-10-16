@@ -8,6 +8,22 @@ import type { PlazlinkTransport } from './plazlink/client.js';
 
 export const PIONEER_USB_FILTER = { usbVendorId: 0x0525, usbProductId: 0xa4a7 } as const;
 
+/**
+ * USB-UART bridges that carry the same link when the drone is wired through an adapter instead of its own USB port:
+ * Silicon Labs CP210x, WCH CH340/CH341 and FTDI. Filtering by vendor only keeps every chip of the family in the list.
+ */
+export const USB_UART_ADAPTER_FILTERS = [{ usbVendorId: 0x10c4 }, { usbVendorId: 0x1a86 }, { usbVendorId: 0x0403 }] as const;
+
+export const SERIAL_PORT_FILTERS: ReadonlyArray<{ usbVendorId: number; usbProductId?: number }> = [PIONEER_USB_FILTER, ...USB_UART_ADAPTER_FILTERS];
+
+/** The picker was closed, or it had nothing to pick from. The message says what the list is expected to show. */
+export class PortNotChosenError extends Error {
+    constructor() {
+        super('Порт не выбран. В окне выбора должен быть дрон (USB) или USB-UART адаптер (CP210x, CH340, FTDI). Если нужного устройства нет в списке, проверьте кабель и драйвер и закройте Pioneer Station.');
+        this.name = 'PortNotChosenError';
+    }
+}
+
 /** The parts of the Web Serial API this module uses (the DOM typings do not ship it everywhere). */
 interface SerialPortLike {
     open(options: { baudRate: number }): Promise<void>;
@@ -17,7 +33,7 @@ interface SerialPortLike {
 }
 
 interface SerialLike {
-    requestPort(options: { filters: Array<{ usbVendorId: number; usbProductId: number }> }): Promise<SerialPortLike>;
+    requestPort(options: { filters: Array<{ usbVendorId: number; usbProductId?: number }> }): Promise<SerialPortLike>;
     getPorts(): Promise<SerialPortLike[]>;
 }
 
@@ -43,7 +59,18 @@ export async function openPioneerPort(): Promise<PlazlinkTransport> {
     const serial = getSerial();
     const known = await serial.getPorts();
     // getPorts() lists every port this site may use; with a single allowed Pioneer the choice is obvious.
-    const port = known.length === 1 ? known[0] : await serial.requestPort({ filters: [PIONEER_USB_FILTER] });
+    let port: SerialPortLike;
+    if (known.length === 1) {
+        port = known[0];
+    } else {
+        try {
+            port = await serial.requestPort({ filters: [...SERIAL_PORT_FILTERS] });
+        } catch (error) {
+            // Chrome reports a closed or empty picker as NotFoundError: say what to look for instead of its raw text.
+            if ((error as { name?: string } | null)?.name === 'NotFoundError') throw new PortNotChosenError();
+            throw error;
+        }
+    }
     try {
         await port.open({ baudRate: 115200 });
     } catch (error) {

@@ -165,6 +165,13 @@ export function explainDroneError(error: DroneErrorLike, mode: 'upload' | 'conne
             actions: typeof line === 'number' ? [{ kind: 'show-line', label: 'Показать строку', line }] : undefined
         };
     }
+    if (error?.name === 'PortNotChosenError' || /Порт не выбран/.test(raw)) {
+        return {
+            level: 'info',
+            title: 'Порт не выбран',
+            message: 'В окне выбора должен быть дрон (USB) или USB-UART адаптер (CP210x, CH340, FTDI). Выберите его и нажмите «Подключить». Если списка нет, проверьте кабель и драйвер и закройте Pioneer Station.'
+        };
+    }
     if (error?.name === 'NotFoundError') {
         return { level: 'info', title: 'Дрон не выбран', message: 'Подключите дрон кабелем USB и выберите его в окне браузера. Затем повторите.' };
     }
