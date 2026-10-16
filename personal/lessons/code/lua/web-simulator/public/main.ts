@@ -254,9 +254,12 @@ function resetSimulation() {
     offerToClearScene();
 }
 
-/** Top-level objects the student placed (the drone is not one of them). */
+/**
+ * Top-level objects the student placed. The drone, the floor and the landing pad are the base scene, not placed objects,
+ * so clearing never touches them (only objects that can be moved are the student's).
+ */
 function placedSceneObjects() {
-    return listSceneObjects().filter((entry) => entry.depth === 0 && !entry.isDrone);
+    return listSceneObjects().filter((entry) => entry.depth === 0 && !entry.isDrone && entry.draggable);
 }
 
 /** The restart brings the drone back and keeps the scene (it survives reloads); clearing it is a separate, explicit step. */

@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { createTrussArena } from './truss-arena.js';
 import { GROUND_PHYSICS_MATERIAL } from '../physics/materials.js';
 import { OBJECT_TYPE } from '../shared/object-types.js';
 import { createFloorTexture, createLandingPadTexture, replaceMaterialTexture } from './ground/textures.js';
@@ -165,7 +164,4 @@ export function createGround(_scene: THREE.Scene, envGroup: THREE.Group) {
     applyGroundTheme(groundTheme);
     ensureGroundThemeListener();
     envGroup.add(ground);
-
-    // Add the truss arena structure above the base floor.
-    createTrussArena(envGroup);
 }
