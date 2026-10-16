@@ -65,6 +65,14 @@ describe('quality governor', () => {
         expect(state.upBlockMs).toBe(before * 2);
     });
 
+    it('drops two tiers at once when the machine is far too slow, and never past the last', () => {
+        let state = createGovernorState(0, 0);
+        state = decideTier(state, GOVERNOR.slowMs * 2 + 1, enough, GOVERNOR.downCooldownMs + 1);
+        expect(state.tier).toBe(2);
+        state = decideTier(state, GOVERNOR.slowMs * 2 + 1, enough, 3 * GOVERNOR.downCooldownMs);
+        expect(state.tier).toBe(MAX_TIER);
+    });
+
     it('tiers get cheaper and lodFlags follows them', () => {
         for (let i = 1; i < QUALITY_TIERS.length; i++) {
             expect(QUALITY_TIERS[i].pixelRatioCap).toBeLessThanOrEqual(QUALITY_TIERS[i - 1].pixelRatioCap);
@@ -72,14 +80,16 @@ describe('quality governor', () => {
             expect(QUALITY_TIERS[i].treeDensity).toBeLessThanOrEqual(QUALITY_TIERS[i - 1].treeDensity);
             expect(QUALITY_TIERS[i].proxyDistance).toBeLessThan(QUALITY_TIERS[i - 1].proxyDistance);
         }
-        expect(lodFlags(QUALITY_TIERS[0], 500, 5)).toEqual({ hidden: false, shadow: true, detail: false, far: true });
+        expect(lodFlags(QUALITY_TIERS[0], 500, 5)).toEqual({ hidden: false, shadow: true, detail: false, far: false });
         expect(lodFlags(QUALITY_TIERS[3], 250, 5).hidden).toBe(true);
         expect(lodFlags(QUALITY_TIERS[3], 250, 200).hidden).toBe(false); // overview camera keeps the whole map
         expect(lodFlags(QUALITY_TIERS[3], 100, 5).hidden).toBe(false);
     });
 
     it('swaps a building for its box far away, with a margin that stops flicker, and later for big buildings', () => {
-        const tier = QUALITY_TIERS[0];
+        // A machine that copes (tier 0) never swaps buildings for boxes.
+        expect(lodFlags(QUALITY_TIERS[0], 5000, 5).far).toBe(false);
+        const tier = QUALITY_TIERS[1];
         const edge = tier.proxyDistance;
         expect(lodFlags(tier, edge - 1, 5).far).toBe(false);
         expect(lodFlags(tier, edge + 1, 5).far).toBe(true);

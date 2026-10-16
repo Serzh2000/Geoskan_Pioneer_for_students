@@ -20,17 +20,17 @@ export interface QualityTier {
     hideDistance: number;
     /** Balconies and railings of apartment blocks are drawn only closer than this. */
     detailDistance: number;
-    /** Buildings farther than this are drawn as a single box (see environment/obstacles/far-proxy.ts). */
+    /** Buildings farther than this are drawn as a single box (see environment/obstacles/far-proxy.ts). Infinity: never, the machine copes. */
     proxyDistance: number;
     /** Share of the instanced trees that is drawn, 0..1. */
     treeDensity: number;
 }
 
 export const QUALITY_TIERS: readonly QualityTier[] = [
-    { pixelRatioCap: 2, shadows: true, shadowMapSize: 2048, shadowDistance: Infinity, hideDistance: Infinity, detailDistance: 90, proxyDistance: 220, treeDensity: 1 },
-    { pixelRatioCap: 1.5, shadows: true, shadowMapSize: 1024, shadowDistance: 140, hideDistance: Infinity, detailDistance: 60, proxyDistance: 160, treeDensity: 1 },
-    { pixelRatioCap: 0.75, shadows: false, shadowMapSize: 1024, shadowDistance: 0, hideDistance: 320, detailDistance: 40, proxyDistance: 110, treeDensity: 0.75 },
-    { pixelRatioCap: 0.6, shadows: false, shadowMapSize: 1024, shadowDistance: 0, hideDistance: 200, detailDistance: 25, proxyDistance: 75, treeDensity: 0.5 }
+    { pixelRatioCap: 2, shadows: true, shadowMapSize: 2048, shadowDistance: Infinity, hideDistance: Infinity, detailDistance: 90, proxyDistance: Infinity, treeDensity: 1 },
+    { pixelRatioCap: 1.5, shadows: true, shadowMapSize: 1024, shadowDistance: 140, hideDistance: Infinity, detailDistance: 60, proxyDistance: 220, treeDensity: 1 },
+    { pixelRatioCap: 0.75, shadows: false, shadowMapSize: 1024, shadowDistance: 0, hideDistance: 320, detailDistance: 40, proxyDistance: 150, treeDensity: 0.75 },
+    { pixelRatioCap: 0.6, shadows: false, shadowMapSize: 1024, shadowDistance: 0, hideDistance: 200, detailDistance: 25, proxyDistance: 100, treeDensity: 0.5 }
 ];
 export const MAX_TIER = QUALITY_TIERS.length - 1;
 /** Far props are hidden only while the camera is below this height (an overview needs the whole map). */
@@ -98,7 +98,8 @@ export function decideTier(state: GovernorState, medianMs: number, sampleCount: 
             if (state.lastDirection === 'up' && sinceChange < GOVERNOR.failedUpWindowMs) {
                 next.upBlockMs = Math.min(GOVERNOR.maxUpBlockMs, state.upBlockMs * 2);
             }
-            next.tier = state.tier + 1;
+            // Far too slow (under ~20 fps): one step would take seconds to be noticed again, so take two.
+            next.tier = Math.min(MAX_TIER, state.tier + (medianMs > GOVERNOR.slowMs * 2 ? 2 : 1));
             next.changedAt = now;
             next.lastDirection = 'down';
             next.upBlockedUntil = now + next.upBlockMs;
