@@ -38,6 +38,35 @@ for obj in objects:
     if obj.type in {'CURVE', 'FONT'}:
         obj.data.resolution_u = 4
         obj.data.bevel_resolution = min(obj.data.bevel_resolution, 2)
+# Web budget. The source is a reference-grade model (~950k triangles, 30 MB as glTF); a viewer needs far less:
+#  * printed text on the boards (legends, brand marks, revision stamps) is sub-millimetre and unreadable at simulator scale;
+#  * the heaviest remaining parts (motors, scanned frame, connectors) are decimated to a few thousand triangles each.
+# Only these in-memory copies change; the .blend is never saved.
+TEXT_LIKE = re.compile(r'legend|brand|revision|identification|engraving|silk|label|logo|marking|stamp', re.I)
+DECIMATE_ABOVE = 1200
+
+def triangle_count(obj, graph):
+    mesh = bpy.data.meshes.new_from_object(obj.evaluated_get(graph), depsgraph=graph)
+    try:
+        return sum(len(poly.vertices) - 2 for poly in mesh.polygons)
+    finally:
+        bpy.data.meshes.remove(mesh)
+
+bpy.context.view_layer.update()
+_graph = bpy.context.evaluated_depsgraph_get()
+_kept, _dropped = [], 0
+for obj in objects:
+    tris = triangle_count(obj, _graph) if obj.type in {'MESH', 'CURVE', 'FONT'} else 0
+    if tris > 1500 and TEXT_LIKE.search(obj.name) and not obj.name.startswith(('ESP32 • convex', 'ESP32 • camera')):
+        _dropped += tris
+        continue
+    if obj.type == 'MESH' and tris > DECIMATE_ABOVE:
+        decimate = obj.modifiers.new('web decimate', 'DECIMATE')
+        decimate.decimate_type = 'COLLAPSE'
+        decimate.ratio = max(0.22, DECIMATE_ABOVE / tris)
+        decimate.use_collapse_triangulate = True
+    _kept.append(obj)
+objects = _kept
 bpy.context.view_layer.update()
 depsgraph = bpy.context.evaluated_depsgraph_get()
 # The feet are measured on the real vertices of the evaluated geometry (modifiers applied): object bounds can
@@ -198,7 +227,8 @@ if abs(floor_z) > 1e-7:
 output.parent.mkdir(parents=True, exist_ok=True)
 bpy.ops.export_scene.gltf(filepath=str(output), export_format='GLB',
     use_active_scene=True, export_yup=False, export_animations=False,
-    export_cameras=False, export_lights=False, export_extras=False)
+    export_cameras=False, export_lights=False, export_extras=False,
+    export_texcoords=False)  # the model has no textures: UVs only add 16 bytes per vertex
 report = {
     'source_file': source.name,
     'source_sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
