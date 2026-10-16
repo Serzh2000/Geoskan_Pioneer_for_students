@@ -1,0 +1,626 @@
+% --- Language & Font Management (XeLaTeX) ---
+\usepackage{fontspec}
+\usepackage{polyglossia}
+
+% Set default language to Russian with modern hyphenation
+\setdefaultlanguage{russian}
+\setotherlanguage{english}
+
+% Font Configuration: Using standard Windows fonts for compatibility
+% Ligatures=TeX enables standard TeX ligatures (-- for en-dash, etc.)
+\setmainfont{Times New Roman}[
+    Ligatures=TeX,
+    Scale=1.0
+]
+\setsansfont{Arial}[
+    Ligatures=TeX,
+    Scale=MatchLowercase
+]
+\setmonofont{Consolas}[
+    Scale=MatchLowercase,
+    Contextuals=Alternate % Better coding ligatures if supported
+]
+\newfontfamily\codefont{Consolas}[Scale=MatchLowercase]
+
+% Microtypography: Improves justification and readability significantly
+\usepackage{microtype}
+\emergencystretch=3em % Fixes text overflow by allowing more spacing flexibility
+\sloppy % Relaxes line breaking rules to avoid overflows
+
+% --- Paragraphs & Spacing (GOST) ---
+\usepackage{indentfirst} % Indent first paragraph of sections
+\usepackage{setspace}
+\onehalfspacing % 1.5 line spacing
+\setlength{\parindent}{1.25cm} % Standard GOST indent
+\setlength{\parskip}{0pt} % No extra space between paragraphs
+
+% --- Mathematics ---
+\usepackage{amsmath}
+\usepackage{amssymb}
+% \usepackage{unicode-math} % Uncomment if you want to use OpenType math fonts
+
+% --- Colors & Graphics ---
+\usepackage[table]{xcolor}
+\usepackage{graphicx}
+\graphicspath{{images/}{chapters/python/images/}}
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usetikzlibrary{arrows.meta, quotes, 3d, calc, shapes.geometric, shadows, positioning, decorations.markings, fadings, patterns, shadings, shapes}
+
+% Custom fadings for TikZ
+\tikzfading[name=fade out, inner color=transparent!0, outer color=transparent!100]
+
+% Define Modern Color Palette (Geoskan Brand)
+\definecolor{GeoskanBlue}{RGB}{0, 91, 187}       % Primary Brand Color
+\definecolor{GeoskanDarkBlue}{RGB}{22, 43, 58}    % Dark Text / Headers
+\definecolor{GeoskanOrange}{RGB}{255, 140, 0}     % Accent / Highlight
+\definecolor{GeoskanLightGray}{RGB}{245, 245, 245}% Backgrounds
+\definecolor{CodeGreen}{RGB}{0, 150, 0}           % Comments
+\definecolor{CodePurple}{RGB}{128, 0, 128}        % Keywords
+\definecolor{CodeBack}{RGB}{250, 250, 250}        % Code Background
+
+% Additional Colors for Drone Illustration
+\definecolor{GeoskanBlack}{RGB}{30, 30, 35}
+\definecolor{GeoskanDarkGrey}{RGB}{45, 45, 50}
+\definecolor{GeoskanGrey}{RGB}{100, 100, 105}
+\definecolor{GeoskanLightGrey}{RGB}{180, 180, 185}
+\definecolor{SkyTop}{RGB}{100, 180, 255}
+\definecolor{SkyBottom}{RGB}{200, 230, 255}
+\definecolor{GroundGreen}{RGB}{34, 139, 34}
+
+% --- Bibliography (BibLaTeX) ---
+\usepackage[
+    backend=biber,
+    style=gost-numeric,
+    language=auto,
+    autolang=other,
+    sorting=none
+]{biblatex}
+\addbibresource{styles/references.bib}
+
+% --- Page Layout (GOST 7.32-2017) ---
+\usepackage{geometry}
+\geometry{
+    a4paper,
+    top=20mm,
+    bottom=20mm,
+    left=30mm,
+    right=15mm,
+    headheight=15mm,
+    footskip=15mm
+}
+
+% --- Headers & Footers (scrlayer-scrpage) ---
+\usepackage[automark, headsepline]{scrlayer-scrpage}
+
+% Clear default styles
+\clearpairofpagestyles
+
+% Header: Left = Section Name, Right = Book Title
+\ihead{\headmark}
+\ohead{\textbf{\textcolor{GeoskanBlue}{ГЕОСКАН ПИОНЕР}}}
+
+% Footer: Center = Page Number (GOST usually centers page numbers)
+\cfoot{\pagemark}
+
+% Font styles for headers/footers
+\setkomafont{pageheadfoot}{\sffamily\small\color{GeoskanDarkBlue}}
+\setkomafont{pagenumber}{\sffamily\bfseries\color{GeoskanBlue}}
+
+% --- Typography & Section Styling (KOMA-Script) ---
+% Section (Level 1) - Left aligned, bold, 14pt+
+\setkomafont{section}{\sffamily\Large\bfseries\color{GeoskanBlue}}
+% Subsection (Level 2)
+\setkomafont{subsection}{\sffamily\large\bfseries\color{GeoskanDarkBlue}}
+% Subsubsection (Level 3)
+\setkomafont{subsubsection}{\sffamily\normalsize\bfseries\color{GeoskanOrange}}
+% Paragraph (Level 4)
+\setkomafont{paragraph}{\sffamily\bfseries\color{GeoskanDarkBlue}}
+
+% Customizing Section Numbering format if needed
+% \renewcommand*{\sectionformat}{\color{GeoskanBlue}\thesection\autodot\enskip}
+
+% --- Lists & Tables ---
+\usepackage{enumitem}
+\setlist{nosep} % Compact lists by default
+% GOST lists: dashes or numbers.
+\setlist[itemize]{label=\textcolor{GeoskanBlue}{\textbullet}, leftmargin=*, itemsep=0pt, parsep=0pt}
+\setlist[enumerate]{label=\textcolor{GeoskanBlue}{\arabic*.}, leftmargin=*, font=\bfseries, itemsep=0pt, parsep=0pt}
+\setlist[description]{font=\bfseries\color{GeoskanDarkBlue}, itemsep=0pt, parsep=0pt}
+
+\usepackage{booktabs} % Professional table rules
+\usepackage{tabularx} % Auto-width tables
+\usepackage{multirow}
+\usepackage{caption} 
+\captionsetup{font=small, labelfont={bf,color=GeoskanBlue}} % GOST caption style
+\usepackage{longtable} % For long tables in appendix
+
+% --- Code Listings (Minted) ---
+% minted2 — совместимая версия 2.x: подсветка через pygmentize по \write18,
+% кэш пишется прямо в каталог сборки (outputdir). Версия 3 на этой машине
+% не может записать свои файлы из-под XeLaTeX (ограничения latexrestricted),
+% поэтому все листинги оставались без подсветки.
+\usepackage[outputdir=../build]{minted2}
+\usemintedstyle{friendly}
+\setminted{
+    fontsize=\small,
+    breaklines=true,
+    frame=none,
+    baselinestretch=1.0,
+    linenos=false
+}
+
+% --- Boxes & Environments (tcolorbox) ---
+\usepackage{tcolorbox}
+\usepackage{etoolbox} % For \ifstrempty
+\tcbuselibrary{skins, breakable} % библиотека minted не нужна: внутри рамок стоит \inputminted
+\usepackage{fontawesome5} % Icons
+\usepackage{textcomp} % For upquote
+\usepackage{accsupp} % Accessibility support
+\usepackage{attachfile2} % File attachments
+
+% --- Copy-paste friendly code listings -------------------------------------
+%
+% Problem: the PDF text layer produced by minted/fancyvrb does not reproduce
+% the original source file when the reader copies a listing out of the PDF:
+%   * leading indentation is lost (spaces are TeX glue, not glyphs),
+%   * the hyphen glyph is mapped to U+2010 instead of ASCII U+002D,
+%   * a long line that visually wraps is copied as two lines and the
+%     fvextra continuation symbol ",->" leaks into the copied text.
+% All of that breaks the code as soon as it is pasted into the project's
+% Monaco based web editor (and into any Lua/Python tool chain).
+%
+% Fix: read the real source file, and attach its exact text, line by line,
+% to the typeset lines as a PDF /Span with /ActualText (accsupp).  Text
+% extractors must honour /ActualText, so the copied text becomes the literal
+% file content.  Nothing about the visual output changes.
+%
+% The ActualText deliberately carries NO line terminator: PDF viewers and
+% extractors insert their own newline between two typeset lines, so adding
+% U+000A here would produce doubled blank lines on paste.  Source lines that
+% contain no visible glyph (empty or whitespace-only) get no span at all,
+% because a marked-content span without glyphs confuses extractors.
+%
+% The previous \FV@Space patch (a single space wrapped in ActualText) was a
+% no-op: with breaklines=true fvextra redefines \FV@Space when the listing
+% environment starts, so the patch never reached the output.  It is replaced
+% by the per-line mechanism below, which covers spaces as part of the line.
+
+% accsupp's dvipdfm driver (the one XeTeX selects) emits BDC/EMC through the
+% "pdf:content" special, which dvipdfmx wraps in "q <translate to the current
+% point> cm ... Q".  Text extractors that compute the span's position at EMC
+% time therefore see the span shifted to the right by the width of the line,
+% which makes poppler place the whole listing in a bogus column and silently
+% drop every listing after the first one on a page.  "pdf:code" injects the
+% same operators with no transformation, which is what BDC/EMC need.
+\makeatletter
+\def\ACCSUPP@bdc{\special{pdf:code \ACCSUPP@span BDC}}
+\def\ACCSUPP@emc{\special{pdf:code EMC}}
+\makeatother
+
+\ExplSyntaxOn
+\seq_new:N  \g__codeacc_hex_seq
+\int_new:N  \l__codeacc_index_int
+\int_new:N  \l__codeacc_pending_int
+\ior_new:N  \g__codeacc_ior
+\bool_new:N \g__codeacc_active_bool
+\tl_new:N   \l__codeacc_line_tl
+\str_new:N  \l__codeacc_hex_str
+
+% Store one raw source line as UTF-16BE hex (or an empty entry for a line
+% that will not produce any glyph on the page).
+\cs_new_protected:Npn \__codeacc_store_line:n #1
+  {
+    \tl_set:Nx \l__codeacc_line_tl { \tl_trim_spaces:n {#1} }
+    \tl_if_empty:NTF \l__codeacc_line_tl
+      {
+        \int_incr:N \l__codeacc_pending_int
+        \seq_gput_right:Nn \g__codeacc_hex_seq { }
+      }
+      {
+        \str_set_convert:Nnnn \l__codeacc_hex_str {#1} { } { utf16be/hex }
+        \seq_gput_right:Nx \g__codeacc_hex_seq { \str_use:N \l__codeacc_hex_str }
+        \int_zero:N \l__codeacc_pending_int
+      }
+  }
+
+% Read the whole source file once, before \inputminted typesets it.
+\cs_new_protected:Npn \__codeacc_load:n #1
+  {
+    \seq_gclear:N \g__codeacc_hex_seq
+    \bool_gset_false:N \g__codeacc_active_bool
+    \file_if_exist:nT {#1}
+      {
+        \int_zero:N \l__codeacc_pending_int
+        \ior_open:Nn \g__codeacc_ior {#1}
+        \ior_str_map_inline:Nn \g__codeacc_ior { \__codeacc_store_line:n {##1} }
+        \ior_close:N \g__codeacc_ior
+        \bool_gset_true:N \g__codeacc_active_bool
+      }
+  }
+
+% fvextra calls \FancyVerbFormatLine more than once per line (once inside a
+% measuring \sbox), so the source line is looked up through fancyvrb's own
+% FancyVerbLine counter instead of a counter of our own.
+\cs_new_protected:Npn \__codeacc_wrap_line:n #1
+  {
+    \bool_if:NTF \g__codeacc_active_bool
+      {
+        \int_set:Nn \l__codeacc_index_int { \value{FancyVerbLine} }
+        \str_set:Nx \l__codeacc_hex_str
+          { \seq_item:Nn \g__codeacc_hex_seq { \l__codeacc_index_int } }
+        \str_if_empty:NTF \l__codeacc_hex_str
+          { #1 }
+          {
+            \exp_args:Nx \BeginAccSupp
+              { method=hex,unicode,ActualText= \str_use:N \l__codeacc_hex_str }
+            #1
+            \EndAccSupp { }
+          }
+      }
+      { #1 }
+  }
+
+% \CodeAccInputMinted{<language>}{<path relative to tex/>}
+\NewDocumentCommand \CodeAccInputMinted { m m }
+  {
+    \__codeacc_load:n {#2}
+    \group_begin:
+      \cs_set_eq:NN \FancyVerbFormatLine \__codeacc_wrap_line:n
+      \inputminted [ fontsize = \small ] {#1} {#2}
+    \group_end:
+  }
+\ExplSyntaxOff
+
+% 1. Code File Environment (Modern Flat Design)
+\NewDocumentEnvironment{codefile}{O{python}m}{
+    \begin{tcolorbox}[
+        enhanced,
+        colback=CodeBack,
+        colframe=GeoskanBlue,
+        coltitle=GeoskanDarkBlue,
+        boxrule=0.5pt,
+        leftrule=4pt, % Thicker accent line
+        arc=2mm,
+        outer arc=2mm,
+        left=6mm, right=3mm, top=3mm, bottom=3mm,
+        breakable,
+        title={\sffamily\bfseries\small \faFileCode\ \detokenize{#2}},
+        fonttitle=\sffamily\bfseries\small,
+        attach boxed title to top left={xshift=4mm, yshift=-3mm},
+        boxed title style={colback=white, colframe=white, boxrule=0pt},
+        shadow={2mm}{-2mm}{0mm}{black!10}
+    ]
+    \CodeAccInputMinted{#1}{../../examples/#2}
+    \end{tcolorbox}
+}{}
+
+% 1a. Code File Environment with Custom Title
+\NewDocumentEnvironment{codefiletitle}{O{python}mm}{
+    \begin{tcolorbox}[
+        enhanced,
+        colback=CodeBack,
+        colframe=GeoskanBlue,
+        coltitle=GeoskanDarkBlue,
+        boxrule=0.5pt,
+        leftrule=4pt, % Thicker accent line
+        arc=2mm,
+        outer arc=2mm,
+        left=6mm, right=3mm, top=3mm, bottom=3mm,
+        breakable,
+        title={\sffamily\bfseries\small \faFileCode\ \detokenize{#2}},
+        fonttitle=\sffamily\bfseries\small,
+        attach boxed title to top left={xshift=4mm, yshift=-3mm},
+        boxed title style={colback=white, colframe=white, boxrule=0pt},
+        shadow={2mm}{-2mm}{0mm}{black!10}
+    ]
+    \CodeAccInputMinted{#1}{../../examples/#3}
+    \end{tcolorbox}
+}{}
+
+% 2. Info Box (Blue)
+\newtcolorbox{infobox}[1][Информация]{
+    enhanced,
+    colback=blue!3!white,
+    colframe=GeoskanBlue,
+    coltitle=GeoskanBlue,
+    boxrule=0.5pt,
+    leftrule=4pt,
+    arc=2mm,
+    title={\sffamily\bfseries \faInfoCircle\ #1},
+    fonttitle=\sffamily\bfseries,
+    attach boxed title to top left={xshift=4mm, yshift=-3mm},
+    boxed title style={colback=white, colframe=white, boxrule=0pt},
+    breakable,
+    top=4mm,
+    shadow={2mm}{-2mm}{0mm}{black!10}
+}
+
+% 3. Warning Box (Red)
+\newtcolorbox{warnbox}[1][Внимание]{
+    enhanced,
+    colback=red!3!white,
+    colframe=red!70!black,
+    coltitle=red!70!black,
+    boxrule=0.5pt,
+    leftrule=4pt,
+    arc=2mm,
+    title={\sffamily\bfseries \faExclamationTriangle\ #1},
+    fonttitle=\sffamily\bfseries,
+    attach boxed title to top left={xshift=4mm, yshift=-3mm},
+    boxed title style={colback=white, colframe=white, boxrule=0pt},
+    breakable,
+    top=4mm,
+    shadow={2mm}{-2mm}{0mm}{black!10}
+}
+
+% 4. Task Box (NO FRAMES - Just numbered text)
+% Нумерация заданий — внутри главы (\section): «Задание 4.3», а не сквозная по книге.
+\newcounter{taskcounter}[section]
+\renewcommand{\thetaskcounter}{\thesection.\arabic{taskcounter}}
+
+\newenvironment{taskbox}[1][]{%
+    \par\bigskip% Vertical space before
+    \refstepcounter{taskcounter}% Increment
+    \noindent\textbf{\large\sffamily\color{GeoskanBlue} Задание \thetaskcounter\ifstrempty{#1}{}{: #1}}% Title
+    \par\medskip\noindent\ignorespaces% Space after title and start text
+}{%
+    \par\bigskip% Vertical space after
+}
+
+% 5. Hint Box (Orange)
+\newtcolorbox{hintbox}[1][Подсказка]{
+    enhanced,
+    colback=orange!5!white,
+    colframe=GeoskanOrange,
+    coltitle=GeoskanOrange,
+    boxrule=0.5pt,
+    leftrule=4pt,
+    arc=2mm,
+    title={\sffamily\bfseries \faLightbulb\ #1},
+    fonttitle=\sffamily\bfseries,
+    attach boxed title to top left={xshift=4mm, yshift=-3mm},
+    boxed title style={colback=white, colframe=white, boxrule=0pt},
+    breakable,
+    top=4mm,
+    shadow={2mm}{-2mm}{0mm}{black!10}
+}
+
+% 6. Rule Box (Dark Blue - Rules/Conventions)
+\newtcolorbox{rulebox}[1][Правило]{
+    enhanced,
+    colback=GeoskanDarkBlue!5!white,
+    colframe=GeoskanDarkBlue,
+    coltitle=GeoskanDarkBlue,
+    boxrule=0.5pt,
+    leftrule=4pt,
+    arc=2mm,
+    title={\sffamily\bfseries \faGavel\ #1},
+    fonttitle=\sffamily\bfseries,
+    attach boxed title to top left={xshift=4mm, yshift=-3mm},
+    boxed title style={colback=white, colframe=white, boxrule=0pt},
+    breakable,
+    top=4mm,
+    shadow={2mm}{-2mm}{0mm}{black!10}
+}
+
+% 7. Alert Box (Red/Important)
+\newtcolorbox{alertbox}[1][Важно]{
+    enhanced,
+    colback=red!5!white,
+    colframe=red!80!black,
+    coltitle=red!80!black,
+    boxrule=0.5pt,
+    leftrule=4pt,
+    arc=2mm,
+    title={\sffamily\bfseries \faExclamationCircle\ #1},
+    fonttitle=\sffamily\bfseries,
+    attach boxed title to top left={xshift=4mm, yshift=-3mm},
+    boxed title style={colback=white, colframe=white, boxrule=0pt},
+    breakable,
+    top=4mm,
+    shadow={2mm}{-2mm}{0mm}{black!10}
+}
+
+% 8. Question Box (Green/Questions)
+\newtcolorbox{questionbox}[1][Вопрос]{
+    enhanced,
+    colback=green!5!white,
+    colframe=green!60!black,
+    coltitle=green!60!black,
+    boxrule=0.5pt,
+    leftrule=4pt,
+    arc=2mm,
+    title={\sffamily\bfseries \faQuestionCircle\ #1},
+    fonttitle=\sffamily\bfseries,
+    attach boxed title to top left={xshift=4mm, yshift=-3mm},
+    boxed title style={colback=white, colframe=white, boxrule=0pt},
+    breakable,
+    top=4mm,
+    shadow={2mm}{-2mm}{0mm}{black!10}
+}
+
+% 9. Simple Code Box
+\newtcolorbox{codebox}[1][]{
+    enhanced,
+    colback=CodeBack,
+    colframe=gray!30,
+    boxrule=0.5pt,
+    arc=2mm,
+    title={#1},
+    fonttitle=\sffamily\bfseries\small,
+    coltitle=black,
+    attach boxed title to top left={yshift=-2mm, xshift=2mm},
+    boxed title style={colback=gray!10, boxrule=0pt},
+    breakable
+}
+
+% Redefine quote to use infobox
+\renewenvironment{quote}
+  {\begin{infobox}[Обратите внимание]}
+  {\end{infobox}}
+
+% --- Скриншоты симулятора с номерными выносками ---------------------------
+% \simshot[ширина]{файл} — картинка из images/simulator/.
+% \callout{x}{y}{n} — кружок с номером поверх картинки; x и y — доли ширины и
+% высоты (0..1), считая от левого нижнего угла; используется внутри
+% окружения \begin{shotcallouts}{файл} ... \end{shotcallouts}.
+% \bubble{n} — такой же номер в тексте под картинкой.
+\usetikzlibrary{babel}
+\newcommand{\simshot}[2][\linewidth]{\includegraphics[width=#1]{images/simulator/#2}}
+\newcommand{\callout}[3]{\node[circle,fill=GeoskanOrange,text=white,font=\sffamily\small\bfseries,inner sep=1.6pt,minimum size=15pt,draw=white,line width=1pt] at (#1,#2) {#3};}
+\newcommand{\bubble}[1]{{\setlength{\fboxsep}{1.6pt}\colorbox{GeoskanOrange}{\makebox[0.9em]{\color{white}\scriptsize\sffamily\bfseries #1}}}}
+\newcommand{\ui}[1]{«\textbf{#1}»}
+\newcommand{\key}[1]{{\setlength{\fboxsep}{1.5pt}\fcolorbox{gray!50}{gray!10}{\small\ttfamily #1}}}
+\NewDocumentEnvironment{shotcallouts}{O{\linewidth}m}{%
+    \begin{center}\begin{tikzpicture}
+    \node[anchor=south west,inner sep=0] (img) at (0,0) {\simshot[#1]{#2}};
+    \begin{scope}[x={(img.south east)},y={(img.north west)}]
+}{%
+    \end{scope}\end{tikzpicture}\end{center}
+}
+
+% --- Hyperlinks (Clean & Modern) ---
+\usepackage{lastpage} % \pageref{LastPage} для аннотации на обороте титула
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=GeoskanBlue,
+    filecolor=GeoskanOrange,
+    urlcolor=GeoskanBlue,
+    pdftitle={Geoskan Pioneer Programming},
+    pdfauthor={Сергей Корягин},
+    pdfsubject={Educational Material},
+    pdfpagemode=UseOutlines,
+    bookmarksnumbered=true
+}
+
+% --- Table of Contents Styling ---
+\usepackage{tocloft}
+\renewcommand{\cftsecfont}{\sffamily\bfseries\color{GeoskanBlue}}
+\renewcommand{\cftsecpagefont}{\sffamily\bfseries\color{GeoskanBlue}}
+\setlength{\cftbeforesecskip}{1em}
+
+% Indentation for sections (Level 1) relative to Part (Level 0)
+\setlength{\cftsecindent}{2em}
+\setlength{\cftsubsecindent}{4em}
+
+% --- Versioning Logic (Python Managed) ---
+\newcounter{buildversion}
+\IfFileExists{settings/version.tex}{\input{settings/version.tex}}{\setcounter{buildversion}{0}}
+
+\def\majorversion{1}
+\def\minorversion{1} % Bumped version for refactoring
+\newcommand{\theversion}{\majorversion.\minorversion.\thebuildversion}
+
+% Time formatting
+\makeatletter
+% \numexpr округляет деление, поэтому часы считаем через (\time-30)/60 —
+% иначе в 12:41 получалось «13» и минуты «0-19».
+\newcommand{\currenttime}{%
+  \two@digits{\number\numexpr(\time-30)/60\relax}:%
+  \two@digits{\number\numexpr\time-60*((\time-30)/60)\relax}%
+}
+\newcommand{\buildtimestamp}{\two@digits{\number\day}.\two@digits{\number\month}.\number\year\ \currenttime}
+\makeatother
+
+% --- 3D Plot Logic (Preserved) ---
+\def\centerarc[#1](#2)(#3:#4:#5){%
+    \draw [#1] ($(#2)+({#5*cos(#3)}, {#5*sin(#3)})$) arc (#3:#4:#5)%
+}
+% \newcommand{\tdseteulerzxz}{%
+%     \renewcommand{\tdplotcalctransformrotmain}{%
+%         \tdplotsinandcos{\sinalpha}{\cosalpha}{\tdplotalpha}
+%         \tdplotsinandcos{\sinbeta}{\cosbeta}{\tdplotbeta}
+%         \tdplotsinandcos{\singamma}{\cosgamma}{\tdplotgamma}
+%         \tdplotmult{\sasb}{\sinalpha}{\sinbeta}
+%         \tdplotmult{\sacb}{\sinalpha}{\cosbeta}
+%         \tdplotmult{\sacbsg}{\sacb}{\singamma}
+%         \tdplotmult{\sacbcg}{\sacb}{\cosgamma}
+%         \tdplotmult{\sasg}{\sinalpha}{\singamma}
+%         \tdplotmult{\sacg}{\sinalpha}{\cosgamma}
+%         \tdplotmult{\sbsg}{\sinbeta}{\singamma}
+%         \tdplotmult{\sbcg}{\sinbeta}{\cosgamma}
+%         \tdplotmult{\casb}{\cosalpha}{\sinbeta}
+%         \tdplotmult{\cacb}{\cosalpha}{\cosbeta}
+%         \tdplotmult{\cacbsg}{\cacb}{\singamma}
+%         \tdplotmult{\cacbcg}{\cacb}{\cosgamma}
+%         \tdplotmult{\casg}{\cosalpha}{\singamma}
+%         \tdplotmult{\cacg}{\cosalpha}{\cosgamma}
+%         \pgfmathsetmacro{\raaeul}{+\cacg - \sacbsg}
+%         \pgfmathsetmacro{\rabeul}{-\casg - \sacbcg}
+%         \pgfmathsetmacro{\raceul}{+\sasb}
+%         \pgfmathsetmacro{\rbaeul}{+\sacg + \cacbsg}
+%         \pgfmathsetmacro{\rbbeul}{-\sasg + \cacbcg}
+%         \pgfmathsetmacro{\rbceul}{-\casb}
+%         \pgfmathsetmacro{\rcaeul}{+\sbsg}
+%         \pgfmathsetmacro{\rcbeul}{+\sbcg}
+%         \pgfmathsetmacro{\rcceul}{+\cosbeta}
+%     }
+% }
+
+% --- Титульный лист ----------------------------------------------------------
+% Сетка: строка серии и линейка; заголовок и подзаголовок; обложка — кадр
+% полёта из симулятора (images/simulator/cover.png); чипы «что внутри»;
+% аннотация в одну фразу; автор; нижняя линейка с городом, годом, адресом
+% симулятора и версией сборки. Всё в рубленом шрифте, два цвета плюс акцент.
+\definecolor{GeoskanMuted}{RGB}{95, 102, 112}
+
+% Чип: короткая метка в скруглённой плашке.
+\newcommand{\titlechip}[1]{%
+    \tcbox[on line, enhanced, colback=GeoskanBlue!8, colframe=GeoskanBlue!8, boxrule=0pt, arc=3pt,
+           left=6pt, right=6pt, top=2.5pt, bottom=2.5pt, boxsep=0pt]{\sffamily\small\bfseries\color{GeoskanDarkBlue}#1}%
+}
+
+\newcommand{\makePioneerTitle}[5]{
+    \begin{titlepage}
+        \sffamily
+        \setlength{\parindent}{0pt}
+        \setlength{\parskip}{0pt}
+        \linespread{1.0}\selectfont
+
+        % 1. Строка серии
+        {\footnotesize\color{GeoskanMuted}\addfontfeature{LetterSpace=8}ОБРАЗОВАТЕЛЬНЫЙ КВАДРОКОПТЕР «ГЕОСКАН ПИОНЕР»\hfill УЧЕБНОЕ ПОСОБИЕ\par}
+        \vspace{4pt}
+        {\color{GeoskanBlue}\rule{\linewidth}{1.4pt}}\par
+        \vspace{0.9cm}
+
+        % 2. Заголовок и подзаголовок
+        {\fontsize{28}{33}\selectfont\bfseries\color{GeoskanDarkBlue}\raggedright\hyphenpenalty=10000 #1\par}
+        \vspace{0.4cm}
+        {\Large\color{GeoskanBlue}\raggedright #2\par}
+        \vspace{0.7cm}
+
+        % 3. Обложка: кадр полёта из симулятора (не выше 36% высоты набора,
+        %    чтобы титул гарантированно умещался на одной странице)
+        \begin{tcolorbox}[
+            enhanced, colback=white, colframe=GeoskanDarkBlue!30, boxrule=0.8pt, arc=3mm,
+            boxsep=0pt, left=0pt, right=0pt, top=0pt, bottom=0pt, halign=center,
+            shadow={2mm}{-2mm}{0mm}{black!12}
+        ]
+            \includegraphics[width=\linewidth, height=0.36\textheight, keepaspectratio]{images/simulator/cover.png}
+        \end{tcolorbox}
+        \vspace{0.45cm}
+
+        % 4. Что внутри
+        \titlechip{Lua}\hspace{4pt}\titlechip{Python}\hspace{4pt}\titlechip{Blockly}\hspace{4pt}\titlechip{Симулятор в браузере}\hspace{4pt}\titlechip{Настоящий дрон}\par
+        \vspace{0.45cm}
+        {\small\color{GeoskanMuted}\raggedright От первой строки кода до автономной миссии: язык, светодиоды и таймеры, события автопилота, полёт по точкам и фигурам, камера и навигация по маркерам. Каждый пример книги запускается в симуляторе и проверяется автоматически.\par}
+
+        \vfill
+
+        % 5. Автор
+        {\large\bfseries\color{GeoskanDarkBlue} #3\par}
+        \vspace{3pt}
+        {\small\color{GeoskanMuted} #4\par}
+        \vspace{0.45cm}
+
+        % 6. Нижняя линейка
+        {\color{GeoskanBlue}\rule{\linewidth}{0.6pt}}\par
+        \vspace{5pt}
+        {\small\color{GeoskanDarkBlue} #5\hfill\texttt{simulator.sakoryagin.ru}\par}
+        \vspace{2pt}
+        {\footnotesize\color{GeoskanMuted} Версия \theversion\ · сборка \buildtimestamp\par}
+    \end{titlepage}
+}

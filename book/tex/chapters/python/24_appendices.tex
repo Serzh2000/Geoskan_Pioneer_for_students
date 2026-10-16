@@ -1,0 +1,59 @@
+\section{Методика тестирования и безопасность}
+
+\subsection{Протокол безопасности полетов}
+
+\subsubsection{1. Подготовка зоны (Pre-flight)}
+\begin{itemize}
+    \item Очистить зону $3 \times 3$ метра.
+    \item Закрыть окна (ветер).
+    \item Убрать животных и детей.
+    \item Предупредить окружающих о запуске.
+    \item Надеть защитные очки (для оператора).
+\end{itemize}
+
+\subsubsection{2. Проверка дрона (Checklist)}
+\begin{itemize}
+    \item \textbf{Пропеллеры:} Целые, затянуты, вращаются свободно.
+    \item \textbf{Аккумулятор:} Заряжен > 3.8В на банку, закреплен надежно.
+    \item \textbf{Камера:} Линза чистая, шлейф не болтается.
+    \item \textbf{Wi-Fi:} Сигнал стабильный (RSS > -60 dBm).
+\end{itemize}
+
+\subsubsection{3. Экстренная ситуация}
+Если дрон ведет себя неадекватно:
+\begin{enumerate}
+    \item Громко крикнуть <<ПОСАДКА!>>.
+    \item Нажать кнопку LAND (если есть).
+    \item Если нет реакции — аккуратно поймать снизу (за батарею) и перевернуть.
+    \item Отключить аккумулятор.
+\end{enumerate}
+
+\subsection{Тестирование в разных условиях}
+
+\subsubsection{Погодные условия (Ветер)}
+Дрон Pioneer очень легкий (около 100 г). Он не предназначен для полетов на улице при ветре > 3 м/с.
+Для теста в помещении используйте вентилятор:
+\begin{itemize}
+    \item Включите вентилятор на минимальную скорость с расстояния 2 метра.
+    \item Попробуйте удержать точку (режим Optical Flow).
+    \item Если дрон сносит > 50 см — условия непригодны для точной навигации.
+\end{itemize}
+
+\subsubsection{Освещение (Lux)}
+Камера Pioneer имеет низкий динамический диапазон.
+\begin{itemize}
+    \item \textbf{Яркое солнце:} Пересвет (белое пятно). Маркеры не видны.
+    \item \textbf{Сумерки:} Сильный шум матрицы. Маркеры <<дрожат>>.
+    \item \textbf{Мерцание ламп:} Люминесцентные лампы (50 Гц) могут давать полосы на видео.
+\end{itemize}
+
+\section{Готовые конфигурации (Templates)}
+
+\subsection{Файл конфигурации camera\_params.yaml}
+Те же параметры камеры, что сохраняют скрипты калибровки в \texttt{data.yml}, но в формате для сторонних инструментов: матрица --- \texttt{camera\_matrix}, дисторсия --- \texttt{distortion\_coefficients}. Примеры этой книги читают \texttt{data.yml}.
+\begin{codefiletitle}[bash]{camera_params.yaml}{python/advanced_navigation/camera_params_yaml.yaml}
+\end{codefiletitle}
+
+\subsection{Шаблон скрипта полета (main.py)}
+\begin{codefiletitle}[python]{Базовый шаблон}{python/advanced_navigation/main_template_py.py}
+\end{codefiletitle}

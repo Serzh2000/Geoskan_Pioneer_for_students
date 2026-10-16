@@ -1,0 +1,92 @@
+\subsection{Проверьте себя}
+\begin{enumerate}
+  \item Как начать миссию? \verb|ap.push(___)|
+    \begin{enumerate}[label=(\alph*)] \item \verb|Ev.MCE_PREFLIGHT| \item \verb|Ev.START| \item \verb|Ev.MCE_TAKEOFF| \end{enumerate}
+    Ответ: (a) --- предстарт всегда первый.
+  \item Какое событие сообщает, что взлёт завершён?
+    \begin{enumerate}[label=(\alph*)] \item \verb|Ev.ENGINES_STARTED| \item \verb|Ev.TAKEOFF_COMPLETE| \item \verb|Ev.POINT_REACHED| \end{enumerate}
+    Ответ: (b).
+  \item Как задать курс $90^\circ$?
+    \begin{enumerate}[label=(\alph*)] \item \verb|ap.updateYaw(90)| \item \verb|ap.updateYaw(math.rad(90))| \item \verb|ap.updateYaw(90 / 180)| \end{enumerate}
+    Ответ: (b) --- радианы.
+  \item Когда отправлять вторую точку маршрута?
+    \begin{enumerate}[label=(\alph*)] \item Через 4 с после первой \item По \verb|POINT_REACHED| первой \item Сразу вслед за первой \end{enumerate}
+    Ответ: (b).
+  \item Как безопасно выполнить действие через 2 секунды?
+    \begin{enumerate}[label=(\alph*)] \item \verb|sleep(2); action()| \item \verb|Timer.callLater(2, action)| \item \verb|Timer.new(2, action)| \end{enumerate}
+    Ответ: (b).
+  \item Как организовать непрерывное обновление точки окружности?
+    \begin{enumerate}[label=(\alph*)] \item \verb|while true do ap.goToLocalPoint(...) end| \item \verb|Timer.new(0.1, function() ap.goToLocalPoint(...) end)| \item \verb|repeat ... until false| \end{enumerate}
+    Ответ: (b).
+  \item Что делать по \verb|Ev.SHOCK|?
+    \begin{enumerate}[label=(\alph*)] \item Продолжить маршрут \item \verb|ap.push(Ev.MCE_LANDING)| \item Остановить таймеры и \verb|ap.push(Ev.ENGINES_DISARM)| \end{enumerate}
+    Ответ: (c).
+  \item Где в \verb|rc_chans = table.pack(Sensors.rc())| тумблер SwA?
+    \begin{enumerate}[label=(\alph*)] \item \verb|rc_chans[1]| \item \verb|rc_chans[8]| \item \verb|rc_chans["SwA"]| \end{enumerate}
+    Ответ: (b).
+\end{enumerate}
+
+\subsection{Практика}
+
+Решения --- в \texttt{examples/lua-tasks/07\_advanced\_missions/}. Во всех заданиях: предстарт и взлёт как в примерах, светодиодная индикация этапов, реакции на \verb|SHOCK| и \verb|LOW_VOLTAGE2|.
+
+\subsubsection*{Базовые миссии}
+
+\begin{taskbox}[Многоугольник из $N$ точек]
+Сгенерируйте $N$ вершин окружности радиуса 0.5~м под углами $360^\circ \cdot i / N$, пройдите их счётчиком шагов, сядьте. Проверьте для $N = 3, 6, 12$.
+\end{taskbox}
+
+\begin{taskbox}[Два круга]
+Пролетите квадрат со стороной 1~м дважды подряд и только потом садитесь. Подсказка: счётчик кругов.
+\end{taskbox}
+
+\begin{taskbox}[Спираль]
+На каждом тике таймера радиус растёт на \verb|dr|, высота --- на \verb|dz|. При $z \ge z_{max}$ остановить таймер, вернуться в точку над стартом и сесть.
+\end{taskbox}
+
+\begin{taskbox}[Восьмёрка]
+Две окружности с противоположным направлением обхода и общим центром между ними; завершение --- в центре и посадка.
+\end{taskbox}
+
+\begin{taskbox}[Старт и останов тумблером]
+Тумблер вверх --- предстарт и взлёт, окружность; тумблер вниз --- прекратить, вернуться в точку над стартом, сесть.
+\end{taskbox}
+
+\begin{taskbox}[Лоитер]
+Удержание малой окружности $r = 0.2$~м неограниченно долго с остановкой по тумблеру или \verb|LOW_VOLTAGE2|.
+\end{taskbox}
+
+\subsubsection*{Продвинутые}
+
+\begin{taskbox}[Радиус с пульта]
+Седьмой канал (\verb|rc_chans[7]|, от $-1$ до $1$) задаёт радиус окружности от 0.2 до 1.0~м: $r = 0.6 + 0.4\cdot\mathrm{ch7}$.
+\end{taskbox}
+
+\begin{taskbox}[Ограничение скорости поворота]
+Курс меняется не быстрее \verb|maxYawRate| рад/с: на тике таймера приращение ограничивается \verb|maxYawRate * dt|.
+\end{taskbox}
+
+\begin{taskbox}[Повтор после посадки]
+По \verb|COPTER_LANDED| через 3~с миссия начинается заново; после третьего круга --- выключение моторов.
+\end{taskbox}
+
+\begin{taskbox}[Лепесток]
+Траектория $r = r_0\,(1 + 0.2\sin k\theta)$ при $k \ge 3$, параметр --- угол таймера.
+\end{taskbox}
+
+\begin{taskbox}[Точность навигации]
+Пройдите 8 точек окружности и в терминал печатайте интервалы времени между событиями \verb|POINT_REACHED| (\verb|time()| возвращает секунды). Насколько они одинаковы?
+\end{taskbox}
+
+\begin{taskbox}[Демонстрация]
+Старт с пульта, окружность около двух минут, индикация этапов, посадка, выключение моторов после \verb|COPTER_LANDED|.
+\end{taskbox}
+
+\subsection*{Итоги главы}
+\begin{itemize}
+    \item Миссия --- цепочка «команда $\to$ событие $\to$ команда»; цепочку ведёт \verb|callback|.
+    \item Предстарт, взлёт, точки, посадка; счётчик шагов для маршрута; таймер для плавных траекторий.
+    \item Координаты в метрах от старта, Z вверх; курс в радианах.
+    \item Сложная миссия --- конечный автомат: состояние проверяется вместе с событием.
+    \item Failsafe обязателен: \verb|SHOCK| --- моторы выключить, \verb|LOW_VOLTAGE2| --- сесть.
+\end{itemize}

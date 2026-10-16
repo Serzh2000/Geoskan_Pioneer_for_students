@@ -1,0 +1,141 @@
+% =============================================================================
+% Программирование дронов и создание автономных беспилотных миссий
+% Сборка: build.bat (XeLaTeX + minted + biber); результат — build/main.pdf.
+% Все примеры кода вставляются из examples/ и проверяются тестом
+% simulator/tests/lessons-book-examples.test.ts.
+% =============================================================================
+
+\documentclass[
+    fontsize=14pt,
+    DIV=12,
+    headings=big,
+    numbers=noenddot,
+    toc=listof,
+    toc=bib,
+    headinclude=true,
+    footinclude=false
+]{scrartcl}
+
+\input{styles/preamble.tex}
+
+\begin{document}
+
+\makePioneerTitle
+    {Программирование дронов и создание автономных беспилотных миссий}
+    {Курс «Программные средства БПЛА»}
+    {Корягин Сергей Андреевич}
+    {асп. СПбГЭТУ «ЛЭТИ», педагог ЦО «Кудрово»}
+    {г. Кудрово, \the\year}
+
+\input{chapters/intro/annotation.tex}
+\rmfamily
+
+\tableofcontents
+\clearpage
+
+% ------------------------------------------------------------ Введение и старт
+\input{chapters/intro/00_intro.tex}
+\clearpage
+
+\input{chapters/start/01_where_to_code.tex}
+\input{chapters/start/02_simulator.tex}
+\input{chapters/start/03_first_program.tex}
+\input{chapters/start/04_real_drone.tex}
+\clearpage
+
+% ============================================================
+\part{Программирование на Lua}
+% ============================================================
+
+\input{chapters/lua-language/00_section.tex}
+\input{chapters/lua-language/01_variables.tex}
+\input{chapters/lua-language/02_arithmetic.tex}
+\input{chapters/lua-language/03_logic.tex}
+\input{chapters/lua-language/04_conditions.tex}
+\input{chapters/lua-language/05_loops.tex}
+\input{chapters/lua-language/06_functions.tex}
+\input{chapters/lua-language/07_mistakes_quiz.tex}
+\clearpage
+
+\input{chapters/lua-leds/00_section.tex}
+\input{chapters/lua-leds/01_hardware_api.tex}
+\input{chapters/lua-leds/02_timers.tex}
+\input{chapters/lua-leds/03_events.tex}
+\input{chapters/lua-leds/04_patterns.tex}
+\input{chapters/lua-leds/05_quiz_labs.tex}
+\clearpage
+
+\input{chapters/lua-missions/00_section.tex}
+\input{chapters/lua-missions/01_lifecycle.tex}
+\input{chapters/lua-missions/02_coordinates.tex}
+\input{chapters/lua-missions/03_stages.tex}
+\input{chapters/lua-missions/04_circle.tex}
+\input{chapters/lua-missions/05_architecture.tex}
+\input{chapters/lua-missions/06_mistakes.tex}
+\input{chapters/lua-missions/07_quiz_labs.tex}
+\clearpage
+
+% ============================================================
+\part{Программирование на Python}
+% ============================================================
+
+\input{chapters/python/00_section.tex}
+\input{chapters/python/01_intro.tex}
+\input{chapters/python/02_variables.tex}
+\input{chapters/python/03_arithmetic.tex}
+\input{chapters/python/04_logic.tex}
+\input{chapters/python/05_branching.tex}
+\input{chapters/python/06_loops.tex}
+\input{chapters/python/07_functions.tex}
+\clearpage
+
+\input{chapters/python-sdk/00_where_to_run.tex}
+\input{chapters/python-sdk/01_connect_leds.tex}
+\input{chapters/python-sdk/02_flight.tex}
+\clearpage
+
+\input{chapters/python-sdk/10_vision_section.tex}
+\input{chapters/python/11_aruco_basics_theory.tex}
+\input{chapters/python/12_visual_nav.tex}
+\input{chapters/python/13_camera_advanced.tex}
+\input{chapters/python/14_telemetry.tex}
+\input{chapters/python/15_human_tracking.tex}
+\input{chapters/python/16_swarm.tex}
+\input{chapters/python/17_final_projects.tex}
+\clearpage
+
+% ============================================================
+\part{Профессиональные навигационные системы}
+% ============================================================
+
+\input{chapters/python/18_advanced_theory.tex}
+\clearpage
+\input{chapters/python/19_map_creation_theory.tex}
+\clearpage
+\input{chapters/python/20_complex_navigation.tex}
+\clearpage
+\input{chapters/python/21_technical_implementation.tex}
+\clearpage
+\input{chapters/python/22_practical_tasks.tex}
+\clearpage
+\input{chapters/python/23_troubleshooting.tex}
+\clearpage
+
+% ============================================================
+\part{Приложения}
+\appendix
+% ============================================================
+
+\input{chapters/appendix/lua-api.tex}
+\clearpage
+\input{chapters/appendix/cheatsheet.tex}
+\clearpage
+\input{chapters/rc_control/rc_control.tex}
+\clearpage
+\input{chapters/python/24_appendices.tex}
+\clearpage
+
+\nocite{*}
+\printbibliography[heading=bibintoc, title={Список литературы}]
+
+\end{document}

@@ -1,0 +1,38 @@
+\section{Урок 7: интерактивное управление и запуск Lua-сценариев}
+
+\subsection{Цели урока}
+\begin{itemize}
+\item Понять, как устроен ручной канал управления через клавиатуру.
+\item Освоить отправку RC-каналов и логику привязки клавиш.
+\item Научиться запускать и останавливать Lua-сценарий с Python.
+\end{itemize}
+
+\subsection{Опорные листинги}
+\lstinputlisting[style=GeoskanStyle,language=pythoncustom,caption={Ручное управление через WASD и RC-каналы}]{../../examples/python/02_pioneer_sdk/WASD_flight.py}
+\lstinputlisting[style=GeoskanStyle,language=pythoncustom,caption={Управление Lua-скриптом на борту}]{../../examples/python/02_pioneer_sdk/LUA_script_start.py}
+
+\subsection{Ключевые команды}
+\begin{itemize}
+\item \texttt{send\_rc\_channels(channel\_1,\dots,channel\_5)}
+\item \texttt{lua\_script\_control("Start")} и \texttt{lua\_script\_control("Stop")}
+\item \texttt{cv2.waitKey(1)}
+\end{itemize}
+
+\begin{warnbox}
+Интерактивные скрипты подходят для тренировки пилотирования и диагностики, но не заменяют автономные безопасные миссии.
+\end{warnbox}
+
+\begin{taskbox}[Минимальный набор упражнений]
+\begin{enumerate}
+\item Измените шаг каналов \texttt{min\_v/max\_v} и проверьте чувствительность.
+\item Добавьте клавишу экстренной остановки с \texttt{land()}.
+\item Реализуйте текстовую подсказку активной команды в консоли.
+\end{enumerate}
+\end{taskbox}
+
+\subsection{Критерии успешности}
+\begin{enumerate}
+\item Все горячие клавиши вызывают ожидаемую реакцию.
+\item При выходе через \texttt{ESC} соединение закрывается корректно.
+\item Lua-скрипт запускается и останавливается по командам без перезапуска Python.
+\end{enumerate}

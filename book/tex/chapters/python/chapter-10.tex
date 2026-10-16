@@ -1,0 +1,39 @@
+\section{Уроки 13--14: многодронные сценарии и итоговый проект}
+
+\subsection{Цели уроков}
+\begin{itemize}
+\item Понять организацию роя через потоки и события.
+\item Научиться синхронизировать этапы взлёта и переходов по точкам.
+\item Спроектировать итоговую миссию с критериями приёмки.
+\end{itemize}
+
+\subsection{Опорные листинги}
+\lstinputlisting[style=GeoskanStyle,language=pythoncustom,caption={Синхронный полёт двух дронов}]{../../examples/python/group_flight_examples/swarm_OPT.py}
+\lstinputlisting[style=GeoskanStyle,language=pythoncustom,caption={Синхронный полёт с PiZero и MAVLink-портом}]{../../examples/python/group_flight_examples/swarm_OPT_PiZero.py}
+\lstinputlisting[style=GeoskanStyle,language=pythoncustom,caption={Круговой роевой полёт с фазовым сдвигом}]{../../examples/python/group_flight_examples/swarm_circle_IRNAV.py}
+
+\subsection{Итоговый проект}
+\begin{infobox}[ТЗ проекта]
+Команда разрабатывает миссию из трёх этапов: взлёт, фигура по точкам, посадка. На каждом этапе фиксируются телеметрия и один критерий безопасности.
+\end{infobox}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.26\textwidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.23\textwidth}}
+\toprule
+Этап & Проверяемый результат & Критерий зачёта \\
+\midrule
+Старт миссии & Все аппараты перешли в состояние полёта & Нет рассинхронизации старта более 2 с \\
+Маршрут & Прохождение всех точек & Не менее 90\% точек достигнуто \\
+Завершение & Штатная посадка & Нет аварийных выключений \\
+\bottomrule
+\end{tabularx}
+\caption{Рубрикатор итоговой практики}
+\end{table}
+
+\subsection{Контрольные вопросы}
+\begin{enumerate}
+\item Для чего в роевых скриптах используется \texttt{threading.Event}?
+\item Почему в учебном коде нежелателен \texttt{while not point\_reached(): pass} без паузы?
+\item Какие данные нужно логировать для разбора инцидентов?
+\end{enumerate}

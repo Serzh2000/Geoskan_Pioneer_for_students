@@ -1,0 +1,49 @@
+\section{Уроки 10--11: ArUco-метки и визуальная обратная связь}
+
+\subsection{Цели уроков}
+\begin{itemize}
+\item Детектировать ArUco-метки в видеопотоке.
+\item Оценивать положение маркера через \texttt{solvePnP}.
+\item Управлять дроном на основе визуальных признаков.
+\end{itemize}
+
+\subsection{Опорные листинги}
+\lstinputlisting[style=GeoskanStyle,language=pythoncustom,caption={Базовая детекция ArUco}]{../../examples/python/aruco_examples/detect_aruco.py}
+\lstinputlisting[style=GeoskanStyle,language=pythoncustom,caption={Координаты и оси маркера}]{../../examples/python/aruco_examples/detect_aruco_coordinates.py}
+\lstinputlisting[style=GeoskanStyle,language=pythoncustom,caption={Полёт с визуальной стабилизацией по маркеру}]{../../examples/python/aruco_examples/aruco_flight.py}
+
+\subsection{Логика регулирования}
+\begin{itemize}
+\item По дальности до маркера корректируется скорость \texttt{vy}.
+\item По положению центра маркера в кадре корректируется \texttt{yaw\_rate}.
+\item При потере маркера выполняется остановка команды движения.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\draw[GeoskanBlue,thick] (0,0) rectangle (7,4);
+\draw[dashed] (2.3,0) -- (2.3,4);
+\draw[dashed] (4.7,0) -- (4.7,4);
+\node at (1.15,3.5) {Поворот влево};
+\node at (3.5,3.5) {Норма};
+\node at (5.85,3.5) {Поворот вправо};
+\fill[GeoskanOrange] (5.5,2.0) circle (2.5pt);
+\end{tikzpicture}
+\caption{Разделение кадра для управления рысканьем}
+\end{figure}
+
+\begin{taskbox}[Минимальный набор упражнений]
+\begin{enumerate}
+\item Настройте пороги дальности 1.0--1.5 м под свою площадку.
+\item Измените размер метки в \texttt{size\_of\_marker} и оцените влияние на координаты.
+\item Добавьте вывод текущего режима: \texttt{approach}, \texttt{hold}, \texttt{retreat}.
+\end{enumerate}
+\end{taskbox}
+
+\subsection{Критерии успешности}
+\begin{enumerate}
+\item Маркер обнаруживается устойчиво в 8 из 10 попыток.
+\item Команды поворота соответствуют положению маркера в кадре.
+\item При потере маркера дрон останавливается без дрейфа.
+\end{enumerate}

@@ -43,5 +43,7 @@ docs/**/_build/
 
 # LaTeX build output (book/build.bat writes to book/build)
 book/build/
-personal/lessons/build/
 _minted*/
+book/tex/main.atfi
+book/tex/main.bcf
+book/tex/main.run.xml

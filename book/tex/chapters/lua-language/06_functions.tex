@@ -1,0 +1,38 @@
+\subsection{Функции}
+
+Функция --- именованный блок кода, который принимает параметры и возвращает результат. Объявляется словом \verb|function|, заканчивается \verb|end|, результат отдаёт \verb|return|.
+
+\begin{codefile}{lua/04_language/lua_functions.lua}
+\end{codefile}
+
+\paragraph{Что происходит.}
+\begin{itemize}
+    \item \verb|local function average(a, b)| --- локальная функция: видна только в этом файле ниже объявления. Вызов \verb|average(1, 2)| подставляет \verb|a = 1|, \verb|b = 2| и возвращает \verb|1.5|.
+    \item Функция может вернуть несколько значений: \verb|return color, word|. Так устроены датчики дрона: \verb|local x, y, z = Sensors.lpsPosition()| возвращает три координаты сразу (все датчики --- в приложении~\ref{sec:lua-api}).
+    \item Функцию можно передать как значение. Например, \verb|Timer.callLater(3, blink)| просит вызвать функцию \verb|blink| через 3~секунды (таймеры разобраны в главе~\ref{sec:leds}): сюда передаётся сама функция \verb|blink|, а \verb|Timer.callLater(3, blink())| передал бы результат её вызова. Второе --- ошибка, симулятор её ловит.
+\end{itemize}
+
+\subsubsection*{Функция, которую вызываем не мы}
+
+Обычно функцию вызывает наша программа. Но есть функция, которую вызывает \textbf{автопилот}:
+
+\begin{codebox}[Обработчик событий]
+\begin{verbatim}
+function callback(event)
+  -- сюда автопилот передаёт событие:
+  -- взлёт завершён, точка достигнута, дрон сел...
+end
+\end{verbatim}
+\end{codebox}
+
+Мы только определяем её --- глобально, без \verb|local|, ровно с таким именем. Когда произойдёт событие, автопилот сам вызовет \verb|callback| и передаст номер события. Что с ним делать, разбирают главы~\ref{sec:leds} и~\ref{sec:missions}; пока запомните: \textbf{в каждой программе, которая командует автопилотом, есть \texttt{callback}}, даже пустой. Программам, которые только зажигают светодиоды, он не нужен.
+
+\subsubsection*{Задачи для самостоятельного решения}
+\begin{enumerate}
+  \item Напишите функцию \verb|square(x)|, возвращающую квадрат числа; проверьте на 5.
+  \item Напишите \verb|isEven(n)|, возвращающую \verb|true| для чётных чисел.
+  \item Напишите \verb|clamp(v, lo, hi)|, ограничивающую \verb|v| диапазоном \verb|[lo, hi]|.
+  \item Напишите \verb|toRadians(deg)| и проверьте, что \verb|toRadians(180)| равно \verb|math.pi|.
+  \item Напишите \verb|polar(r, deg)|, возвращающую две координаты \verb|x, y| точки окружности радиуса \verb|r| под углом \verb|deg| градусов.
+  \item Напишите функцию \verb|describeBattery(v)|: ниже 3.5~В --- \verb|"critical"|, ниже 3.8 --- \verb|"low"|, иначе \verb|"ok"|.
+\end{enumerate}

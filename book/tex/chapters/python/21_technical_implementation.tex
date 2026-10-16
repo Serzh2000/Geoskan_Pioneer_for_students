@@ -1,0 +1,48 @@
+\section{Техническая реализация программных модулей}
+
+В этой главе мы разберем исходный код инструментов, которые используются для создания карт и навигации.
+
+\subsection{Генератор карт (Marker Map Builder)}
+Скрипт \texttt{19\_map\_creation\_example3\_builder.py} (глава «Создание навигационных карт») позволяет создавать цифровые карты полигонов и экспортировать их в форматы JSON, XML и KML.
+
+\subsubsection{Структура класса Marker}
+Каждый маркер описывается классом \texttt{Marker}, который хранит:
+\begin{itemize}
+    \item \texttt{id}: Уникальный номер маркера.
+    \item \texttt{size}: Физический размер стороны в метрах.
+    \item \texttt{x, y, z}: Локальные координаты относительно начала координат карты.
+    \item \texttt{yaw}: Угол поворота (ориентация).
+    \item \texttt{dictionary}: Тип словаря (например, DICT\_6X6\_250).
+\end{itemize}
+
+\begin{codefiletitle}[python]{Класс Marker}{python/advanced_navigation/marker_class_code.py}
+\end{codefiletitle}
+
+\subsubsection{Экспорт в XML}
+Метод \texttt{save\_xml} генерирует структуру, понятную большинству промышленных систем. Мы используем f-строки для формирования XML-тегов.
+
+\begin{codefiletitle}[python]{Экспорт в XML}{python/advanced_navigation/save_xml_code.py}
+\end{codefiletitle}
+
+\subsubsection{Экспорт в KML для Google Earth}
+Для отображения маркеров на глобусе Google Earth используется формат KML. Главная сложность здесь — перевод локальных метров $(x, y)$ в глобальные градусы широты и долготы.
+
+Мы используем приближенную формулу (для малых расстояний):
+\begin{itemize}
+    \item 1 градус широты $\approx 111132$ метра.
+    \item 1 градус долготы $\approx 111132 \cdot \cos(\text{широта})$ метров.
+\end{itemize}
+
+\begin{warnbox}{Точность GPS}
+Данная формула имеет погрешность. Для профессиональной геодезии следует использовать библиотеку \texttt{pyproj} и проекцию UTM.
+\end{warnbox}
+
+\subsection{Модуль визуализации}
+Для проверки правильности карты полезно отрисовать её на 2D-плоскости перед полетом. Библиотека \texttt{matplotlib} позволяет построить схему расположения маркеров.
+
+\begin{codefiletitle}[python]{Визуализация карты}{python/advanced_navigation/plot_map_code.py}
+\end{codefiletitle}
+
+\begin{taskbox}[Задание 7: Свой парсер]
+Напишите функцию \texttt{load\_json(filename)}, которая считывает файл карты и создает объекты класса \texttt{Marker}. Проверьте, что карта корректно загружается после сохранения.
+\end{taskbox}

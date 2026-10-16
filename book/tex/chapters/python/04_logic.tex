@@ -1,0 +1,47 @@
+\subsection{Логические операции}
+
+Логические операторы позволяют комбинировать условия. Результатом всегда является \texttt{True} (Истина) или \texttt{False} (Ложь).
+
+\subsubsection*{Операторы сравнения}
+\begin{itemize}
+    \item \texttt{==} Равно
+    \item \texttt{!=} Не равно
+    \item \texttt{>} Больше
+    \item \texttt{<} Меньше
+    \item \texttt{>=} Больше или равно
+    \item \texttt{<=} Меньше или равно
+\end{itemize}
+
+\subsubsection*{Логические связки}
+\begin{itemize}
+    \item \texttt{and} (И) — истина, только если оба условия истинны.
+    \item \texttt{or} (ИЛИ) — истина, если хотя бы одно условие истинно.
+    \item \texttt{not} (НЕ) — инвертирует значение (делает истину ложью и наоборот).
+\end{itemize}
+
+\begin{codefile}[python]{python/01_python_basics/04_logic.py}
+\end{codefile}
+
+\begin{taskbox}[Проверка безопасности]
+Создайте переменную \texttt{wind\_speed = 7}. Напишите логическое выражение, которое возвращает \texttt{True}, если скорость ветра меньше 5 м/с.
+\end{taskbox}
+
+\subsubsection*{Задачи для самостоятельного решения}
+
+\begin{enumerate}
+    \item Проверьте, больше ли 10 числа 5.
+    \item Проверьте, меньше или равно 5 числу 5.
+    \item Равны ли числа 100 и 100?
+    \item Правда ли, что 10 не равно 20?
+    \item Проверьте условие: (5 > 0) и (5 < 10).
+    \item Проверьте условие: (5 > 0) или (5 > 10).
+    \item Инвертируйте значение \texttt{True} с помощью \texttt{not}.
+    \item Дано \texttt{x = 15}. Проверьте, лежит ли \texttt{x} между 10 и 20 (строго).
+    \item Дано \texttt{n = 4}. Проверьте, делится ли оно на 2 без остатка (\texttt{n \% 2 == 0}).
+    \item Равны ли строки "test" и "Test"?
+    \item Дано \texttt{battery = 4.0} и \texttt{connected = True}. Разрешен ли полет? (нужно и то, и другое).
+    \item Дано \texttt{obstacle = False}. Есть ли опасность? (Если препятствие есть ИЛИ высота < 0.5).
+    \item Проверьте сложное условие: (2 + 2 == 4) и (не (3 > 5)).
+    \item Равны ли число 5 и строка "5"?
+    \item Чему равно \texttt{bool(1)}? А \texttt{bool(0)}?
+\end{enumerate}

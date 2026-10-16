@@ -1,0 +1,47 @@
+\subsection{Подключение и телеметрия}
+
+\begin{codefile}[python]{python/02_pioneer_sdk/08_drone_connect.py}
+\end{codefile}
+
+\begin{itemize}
+    \item \verb|Pioneer()| --- объект связи с дроном. Создаётся один раз.
+    \item \verb|get_battery_status()| --- напряжение батареи в вольтах.
+    \item \verb|try: ... finally: ...| --- конструкция Python: сначала выполняется блок \verb|try|, а блок \verb|finally| выполняется \emph{всегда} после него, даже если в \verb|try| произошла ошибка. Поэтому \verb|close_connection()| в \verb|finally| закрывает связь даже при ошибке или \key{Ctrl+C}; иначе порт останется занят.
+\end{itemize}
+
+\begin{taskbox}[Диагностика]
+Подключитесь, прочитайте заряд и, если напряжение ниже 3.6~В, напечатайте «Low Battery!».
+\end{taskbox}
+
+\subsection{Светодиоды из Python}
+
+Первый видимый результат без взлёта --- как и в Lua, подсветка. Метод один:
+
+\begin{codebox}[led\_control]
+\verb|pioneer.led_control(led_id=255, r=0, g=255, b=0)| --- цвет светодиода \verb|led_id|; \verb|255| означает «все сразу». Компоненты --- целые числа от \verb|0| до \verb|255| (в Lua было \verb|0..1|). Значения вне диапазона библиотека отвергает ошибкой \verb|ValueError|.
+\end{codebox}
+
+\begin{center}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\verb|(255, 0, 0)| красный & \verb|(0, 255, 0)| зелёный & \verb|(0, 0, 255)| синий \\
+\verb|(255, 255, 0)| жёлтый & \verb|(255, 255, 255)| белый & \verb|(0, 0, 0)| выключено \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Пример связывает цвет с показаниями дальномера --- датчика расстояния до поверхности под дроном:
+
+\begin{codefile}[python]{python/03_flight_control/LED_hight_change.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Бесконечный цикл \verb|while True| раз в 0.1~с читает дальномер \verb|get_dist_sensor_data()| и выбирает цвет по порогам высоты. В Python такой цикл допустим: программа работает на компьютере, автопилот дрона он не блокирует. Выход --- \key{Ctrl+C}: блок \verb|except KeyboardInterrupt| гасит подсветку, \verb|finally| закрывает соединение. Поднимите дрон рукой (в симуляторе --- перетащите) и смотрите, как меняется цвет.
+
+\begin{taskbox}[Светофор батареи]
+Выше 4.0~В --- зелёный, от 3.7 до 4.0 --- жёлтый, ниже 3.7 --- красный. Обновлять раз в секунду.
+\end{taskbox}
+
+\begin{taskbox}[Первая индикация]
+Подключиться, включить зелёный на 2~с, выключить, корректно закрыть соединение.
+\end{taskbox}

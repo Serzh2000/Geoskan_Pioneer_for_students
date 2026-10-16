@@ -1,0 +1,41 @@
+\section{Уроки 1--2: первое подключение, арминг, взлёт и посадка}
+
+\subsection{Цели уроков}
+\begin{itemize}
+\item Запускать базовый цикл управления без аварийного завершения.
+\item Понимать разницу между \texttt{disarm()} и \texttt{land()}.
+\item Формировать безопасный блок \texttt{try/finally}.
+\end{itemize}
+
+\subsection{Ключевые команды}
+\begin{itemize}
+\item \texttt{Pioneer()}
+\item \texttt{arm()}, \texttt{takeoff()}, \texttt{land()}, \texttt{disarm()}
+\item \texttt{close\_connection()}
+\end{itemize}
+
+\subsection{Опорные листинги}
+\lstinputlisting[style=GeoskanStyle,language=pythoncustom,caption={Минимальное управление моторами и просмотром видеопотока}]{../../examples/python/test.py}
+\lstinputlisting[style=GeoskanStyle,language=pythoncustom,caption={Взлёт, выход на точку и посадка}]{../../examples/python/mission_examples/PiZero_test.py}
+
+\subsection{Критерии успешности}
+\begin{enumerate}
+\item Дрон выполняет арминг и взлёт без ручного вмешательства.
+\item После команды посадки двигатели корректно останавливаются.
+\item При \texttt{KeyboardInterrupt} аварийный сценарий не оставляет дрон в воздухе.
+\end{enumerate}
+
+\begin{taskbox}[Минимальный набор упражнений]
+\begin{enumerate}
+\item Запустите \texttt{test.py}, проверьте команды \texttt{1}, \texttt{2}, \texttt{ESC}.
+\item Запустите \texttt{PiZero\_test.py} и зафиксируйте в журнале время от \texttt{takeoff()} до \texttt{land()}.
+\item Добавьте паузу перед \texttt{disarm()} и объясните, зачем она нужна.
+\end{enumerate}
+\end{taskbox}
+
+\subsection{Контрольные вопросы}
+\begin{enumerate}
+\item Почему \texttt{land()} предпочтительнее \texttt{disarm()} при штатном завершении?
+\item Что должно находиться в блоке \texttt{finally}?
+\item Какие признаки устойчивого соединения вы видите в ходе запуска?
+\end{enumerate}

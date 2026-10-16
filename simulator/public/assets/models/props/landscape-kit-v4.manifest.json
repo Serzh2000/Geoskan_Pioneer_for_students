@@ -1,0 +1,127 @@
+{
+  "source": "Original local Blender geometry, no external assets",
+  "license": "Project terms: educational use with attribution; see README.md#авторство-и-права",
+  "attribution": "Корягин С. А. — https://sakoryagin.ru",
+  "sourceScript": "tools/build_landscape_assets_v4.py",
+  "coordinates": "metres; Z up; origin at footprint centre, ground level",
+  "request": "Живой мир: пожарная часть и техника, ремонтная бригада, самолёт, ротор ветряка",
+  "specification": "Ground-centred Z-up metre geometry; at most 5000 triangles and 6 materials per model; embedded GLB, no textures",
+  "validation": "GLB header/length, embedded buffers, indices, finite normals/positions, ground anchor, bounds, budgets, roof slopes",
+  "assets": {
+    "FireStation": {
+      "triangles": 660,
+      "drawCalls": 6,
+      "min": [
+        -12,
+        -7.5,
+        0
+      ],
+      "max": [
+        12,
+        7.5,
+        14.5
+      ]
+    },
+    "FireTruck": {
+      "triangles": 2076,
+      "drawCalls": 5,
+      "min": [
+        -4.7,
+        -1.55,
+        0
+      ],
+      "max": [
+        4.45,
+        1.55,
+        3.47
+      ]
+    },
+    "RepairTruck": {
+      "triangles": 1732,
+      "drawCalls": 5,
+      "min": [
+        -3.95,
+        -2,
+        0
+      ],
+      "max": [
+        3.75,
+        2,
+        3.28
+      ]
+    },
+    "RepairBoom": {
+      "triangles": 284,
+      "drawCalls": 3,
+      "min": [
+        -0.35,
+        -0.54,
+        -0.51
+      ],
+      "max": [
+        12.04,
+        0.54,
+        0.48
+      ]
+    },
+    "Airplane": {
+      "triangles": 808,
+      "drawCalls": 5,
+      "min": [
+        -4.03,
+        -4.91,
+        0
+      ],
+      "max": [
+        4.5,
+        4.91,
+        3.47
+      ]
+    },
+    "WindTurbineTower": {
+      "triangles": 156,
+      "drawCalls": 4,
+      "min": [
+        -1.8,
+        -1.9,
+        0
+      ],
+      "max": [
+        1.8,
+        2.3,
+        20.25
+      ]
+    },
+    "TurbineRotor": {
+      "triangles": 192,
+      "drawCalls": 3,
+      "min": [
+        -8.8,
+        -1.4,
+        -5.14
+      ],
+      "max": [
+        8.8,
+        0.15,
+        10.1
+      ]
+    }
+  },
+  "files": [
+    {
+      "name": "landscape-kit-v4.blend",
+      "bytes": 131200,
+      "sha256": "913b72d7da7122d31239094ba8de330a7fcac64eedc81046773be0853853d984"
+    },
+    {
+      "name": "landscape-kit-v4.glb",
+      "bytes": 407044,
+      "sha256": "cf9f85f89412e9d4d495cf3c1cd693b189fbbfea8b91e388b0d39474ef9a8dc5"
+    },
+    {
+      "name": "landscape-kit-v4.mesh.json",
+      "bytes": 666113,
+      "sha256": "0c961828099c908f0c6eaf05dd724e37d3b7bab5011ec68b7147b66f89543711"
+    }
+  ]
+}

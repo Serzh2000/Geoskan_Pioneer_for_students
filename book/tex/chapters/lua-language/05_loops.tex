@@ -1,0 +1,38 @@
+\subsection{Циклы}
+
+Три вида повторения: числовой \verb|for| (счётчик от начала до конца включительно, с шагом), \verb|while| (пока условие истинно) и \verb|repeat ... until| (тело выполняется хотя бы один раз). Для таблиц есть \verb|for ... in ipairs(a)| и \verb|for ... in pairs(t)|.
+
+\begin{codefile}{lua/04_language/loops_sum.lua}
+\end{codefile}
+
+Границы \verb|for i = 1, 10| включительны: \verb|i| принимает значения от 1 до 10. Светодиоды линейки (29 штук, глава~\ref{sec:leds}) нумеруются с нуля, поэтому их обходят циклом \verb|for i = 0, 28 do|.
+
+\begin{codefile}{lua/04_language/loops_while.lua}
+\end{codefile}
+
+\begin{codefile}{lua/04_language/loops_iterators.lua}
+\end{codefile}
+
+\paragraph{Что происходит.}
+\begin{itemize}
+    \item \verb|ipairs| перебирает массив по порядку и останавливается на первом «пропуске» (\verb|nil|); \verb|pairs| перебирает все ключи словаря, порядок не гарантирован.
+    \item \verb|break| прерывает цикл. Оператора \verb|continue| в Lua нет --- вместо него условие внутри тела.
+\end{itemize}
+
+\begin{warnbox}[Вечный цикл останавливает дрон]
+Цикл \verb|while true do ... end| без выхода никогда не вернёт управление автопилоту: события перестанут приходить, таймеры --- срабатывать. Повторяющиеся действия на дроне делают таймером \verb|Timer.new| (глава~\ref{sec:leds}), а не бесконечным циклом. Симулятор не даст запустить такую программу и объяснит почему.
+\end{warnbox}
+
+\begin{codefile}{lua/04_language/lua_platform_infinite_loop.lua}
+\end{codefile}
+
+\subsubsection*{Задачи для самостоятельного решения}
+\begin{enumerate}
+  \item Посчитайте сумму чисел от 1 до 100.
+  \item Найдите максимум в массиве \verb|a = {3, 9, 2, 7}|.
+  \item Постройте массив \verb|b| из квадратов элементов \verb|a|.
+  \item Вычислите факториал \verb|n = 6| циклом \verb|while|.
+  \item Заполните таблицу \verb|idx| значениями от 0 до 28 (как номера светодиодов) и напечатайте \verb|#idx|.
+  \item Постройте массив из первых 10 чисел Фибоначчи.
+  \item Скопируйте словарь \verb|t = {x = 1, y = 2}| в \verb|copy|, увеличив каждое значение на 1.
+\end{enumerate}
