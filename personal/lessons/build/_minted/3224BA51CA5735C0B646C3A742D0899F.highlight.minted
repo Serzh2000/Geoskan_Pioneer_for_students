@@ -1,7 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{суммирование} \PYG{l+m+mf}{1.}\PYG{l+m+mf}{.10}
-\PYG{n}{local} \PYG{n+nb}{sum} \PYG{o}{=} \PYG{l+m+mi}{0}
-\PYG{k}{for} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{10} \PYG{n}{do}
-  \PYG{n+nb}{sum} \PYG{o}{=} \PYG{n+nb}{sum} \PYG{o}{+} \PYG{n}{i}
-\PYG{n}{end}
-\end{MintedVerbatim}

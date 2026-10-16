@@ -1,6 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{o}{\PYGZhy{}}\PYG{o}{\PYGZhy{}} \PYG{n}{безопасно} \PYG{n}{работаем} \PYG{n}{с} \PYG{n}{полями}\PYG{p}{,} \PYG{n}{если} \PYG{n}{таблица} \PYG{n}{и} \PYG{n}{поле} \PYG{n}{существуют}
-\PYG{k}{if} \PYG{n}{t} \PYG{o+ow}{and} \PYG{n}{t}\PYG{o}{.}\PYG{n}{value} \PYG{n}{then}
-  \PYG{n}{result} \PYG{o}{=} \PYG{n}{t}\PYG{o}{.}\PYG{n}{value} \PYG{o}{*} \PYG{l+m+mi}{2}
-\PYG{n}{end}
-\end{MintedVerbatim}

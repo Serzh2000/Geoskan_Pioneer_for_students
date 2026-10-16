@@ -1,7 +1,0 @@
-\begin{MintedVerbatim}[commandchars=\\\{\}]
-\PYG{n}{local} \PYG{n}{function} \PYG{n}{changeColor}\PYG{p}{(}\PYG{n}{color}\PYG{p}{)}
-  \PYG{k}{for} \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{ledNumber} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1} \PYG{n}{do}
-    \PYG{n}{leds}\PYG{p}{:}\PYG{n+nb}{set}\PYG{p}{(}\PYG{n}{i}\PYG{p}{,} \PYG{n}{table}\PYG{o}{.}\PYG{n}{unpack}\PYG{p}{(}\PYG{n}{color}\PYG{p}{)}\PYG{p}{)}
-  \PYG{n}{end}
-\PYG{n}{end}
-\end{MintedVerbatim}

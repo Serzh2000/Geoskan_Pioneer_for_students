@@ -40,3 +40,8 @@ docs/**/_build/
 # Tool leftovers
 *.stackdump
 .impeccable/
+
+# LaTeX build output (book/build.bat writes to book/build)
+book/build/
+personal/lessons/build/
+_minted*/
