@@ -1,12 +1,17 @@
 import * as THREE from 'three';
 import { tablerIcon, type TablerIconName } from '../ui/icons/tabler.js';
 import { renderWithoutEditorOverlays } from '../scene/core/editor-overlays.js';
+import { scanMarkers, type ProjectedMarker } from '../python/marker-detection.js';
+import { MARKER_DICTIONARIES } from '../environment/obstacles/marker-dictionaries.js';
 
 /*
  * Small picture-in-picture windows in the viewport showing what the current
  * drone's cameras see: the front camera (fpv_camera at the ESP32 lens - the
  * very frame Camera.get_frame()/cv2 get in Python) and a camera looking
  * straight down from under the drone, where the optical-flow sensor looks.
+ *
+ * The downward window also marks the ArUco/AprilTag markers it sees, the way cv2.aruco draws a detection: the outline,
+ * the marker's own axes (X red, Y green, Z blue), its number and dictionary, and where it is relative to the camera.
  *
  * They are drawn into the main canvas with the scissor test right after the
  * main view (no second WebGL context), reusing the shadow maps the main pass
@@ -32,6 +37,15 @@ const ORDER: ViewId[] = ['front', 'bottom'];
 const STORAGE_KEY = 'geoskan_camera_views_v1';
 const BOTTOM_CAMERA_NAME = 'bottom_camera';
 const SKY_COLOR = 0xaebdc8;
+
+/** Windows that mark the markers they see. */
+const MARKER_VIEWS: ReadonlySet<ViewId> = new Set<ViewId>(['bottom']);
+/** Width of the virtual camera frame the detection thresholds (minimum marker size) are expressed in, like a real frame. */
+const DETECTION_FRAME_WIDTH = 640;
+/** The scene is walked for marker sheets at most this often; the sheets themselves are read fresh every frame. */
+const SHEET_LIST_MAX_AGE_MS = 400;
+/** Whether a marker is hidden changes slowly; the outline itself is reprojected every frame. */
+const OCCLUSION_MAX_AGE_MS = 250;
 
 const open: Record<ViewId, boolean> = { front: false, bottom: false };
 // Окно, которое перетащили, стоит там, куда его поставили: левый верхний
@@ -184,7 +198,8 @@ function ensureUi(host: HTMLElement) {
                     ${id === 'front' ? `<button type="button" class="scene-camera-view__btn" data-fullscreen aria-label="Смотреть с этой камеры на весь экран" title="На весь экран (режим FPV)">${icon('maximize', 14)}</button>` : ''}
                     <button type="button" class="scene-camera-view__btn" data-close="${id}" aria-label="Закрыть окно «${VIEWS[id].title}»">${icon('x', 14)}</button>
                 </header>
-                <div class="scene-camera-view__body" data-slot="${id}"><span class="scene-camera-view__empty">Нет изображения</span></div>
+                <div class="scene-camera-view__body" data-slot="${id}"><span class="scene-camera-view__empty">Нет изображения</span>${MARKER_VIEWS.has(id)
+                    ? '<svg class="scene-camera-view__ar" aria-hidden="true"></svg><div class="scene-camera-view__ar-info" aria-live="off"></div>' : ''}</div>
             </section>`).join('')}
         </div>`;
     root.addEventListener('click', (event) => {
@@ -207,6 +222,62 @@ function ensureUi(host: HTMLElement) {
     render();
     // Вьюпорт сузился (панель редактора, окно браузера) — окна остаются внутри.
     new ResizeObserver(() => ORDER.forEach(placeView)).observe(root);
+}
+
+const AXIS_COLORS = { x: '#ef4444', y: '#4ade80', z: '#60a5fa' } as const;
+const OUTLINE = '#22d3ee';
+
+const fmt = (value: number) => (value >= 0 ? '+' : '−') + Math.abs(value).toFixed(2);
+const svgLine = (a: [number, number], b: [number, number], color: string, width = 2) =>
+    `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="${color}" stroke-width="${width}" stroke-linecap="round"/>`;
+
+/**
+ * Draws what cv2.aruco would report over the window: for each marker the outline with its first corner marked, the
+ * axes with their letters, the number next to it, and below the image the dictionary, number and position (tvec).
+ */
+function drawMarkers(slot: HTMLElement, markers: ProjectedMarker[], width: number, height: number, scale: number) {
+    const svg = slot.querySelector<SVGSVGElement>('.scene-camera-view__ar');
+    const info = slot.querySelector<HTMLElement>('.scene-camera-view__ar-info');
+    if (!svg || !info) return;
+    if (!markers.length) {
+        if (svg.childElementCount) svg.replaceChildren();
+        if (info.childElementCount) info.replaceChildren();
+        return;
+    }
+    const px = (p: [number, number]): [number, number] => [p[0] * scale, p[1] * scale];
+    let shapes = '';
+    for (const marker of markers) {
+        const corners = marker.corners.map(px);
+        shapes += `<polygon points="${corners.map(c => `${c[0].toFixed(1)},${c[1].toFixed(1)}`).join(' ')}" fill="rgba(34,211,238,.14)" stroke="${OUTLINE}" stroke-width="2" stroke-linejoin="round"/>`;
+        shapes += `<rect x="${(corners[0][0] - 3).toFixed(1)}" y="${(corners[0][1] - 3).toFixed(1)}" width="6" height="6" fill="#ef4444"/>`;
+        if (marker.axes) {
+            const origin = px(marker.axes.origin);
+            for (const axis of ['x', 'y', 'z'] as const) {
+                const end = px(marker.axes[axis]);
+                shapes += svgLine(origin, end, AXIS_COLORS[axis], 2.5);
+                shapes += `<text x="${(end[0] + (end[0] >= origin[0] ? 4 : -10)).toFixed(1)}" y="${(end[1] + 4).toFixed(1)}" fill="${AXIS_COLORS[axis]}" class="scene-camera-view__ar-axis">${axis.toUpperCase()}</text>`;
+            }
+        }
+        const top = Math.min(...corners.map(c => c[1])), left = Math.min(...corners.map(c => c[0]));
+        shapes += `<text x="${Math.max(2, left).toFixed(1)}" y="${Math.max(11, top - 4).toFixed(1)}" class="scene-camera-view__ar-id">ID ${marker.id}</text>`;
+    }
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.innerHTML = shapes;
+
+    const lines = markers.slice(0, 2).map((marker) => {
+        const kind = MARKER_DICTIONARIES[marker.dictionary].kind === 'aruco' ? 'ArUco' : 'AprilTag';
+        const [x, y, z] = marker.position;
+        return `<span><b>${kind} ${marker.dictionary.replace(/^DICT_/, '')} · ID ${marker.id}</b><br>x ${fmt(x)} y ${fmt(y)} z ${fmt(z)} м</span>`;
+    });
+    if (markers.length > 2) lines.push(`<span>ещё ${markers.length - 2}</span>`);
+    const html = lines.join('');
+    if (info.innerHTML !== html) info.innerHTML = html;
+}
+
+function updateMarkerOverlay(id: ViewId, slot: HTMLElement, camera: THREE.PerspectiveCamera, width: number, height: number) {
+    const frameWidth = DETECTION_FRAME_WIDTH;
+    const frameHeight = Math.round(frameWidth / camera.aspect);
+    drawMarkers(slot, scanMarkers(camera, frameWidth, frameHeight, { maxSheetAgeMs: SHEET_LIST_MAX_AGE_MS, maxOcclusionAgeMs: OCCLUSION_MAX_AGE_MS }), width, height, width / frameWidth);
 }
 
 /** A camera under the drone looking straight down, image top = drone's nose. */
@@ -275,6 +346,7 @@ export function renderCameraViews(renderer: THREE.WebGLRenderer, scene: THREE.Sc
             // the same in both UI themes.
             renderer.setClearColor(scene.background instanceof THREE.Color ? scene.background : SKY_COLOR, 1);
             renderWithoutEditorOverlays(scene, () => renderer.render(scene, camera));
+            if (MARKER_VIEWS.has(id)) updateMarkerOverlay(id, slot, camera, rect.width, rect.height);
         }
     } finally {
         renderer.setScissorTest(false);

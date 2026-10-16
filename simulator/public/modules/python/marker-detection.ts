@@ -72,23 +72,64 @@ function isHidden(node: THREE.Object3D): boolean {
 
 const raycaster = new THREE.Raycaster();
 
-export function detectVisibleMarkers(droneId: string, camera: THREE.PerspectiveCamera, width: number, height: number) {
-    const found: DetectedMarker[] = [];
-    if (!envGroup) {
-        detectionsByDrone.set(droneId, found);
-        lastCapturedDroneId = droneId;
-        return found;
-    }
+type PixelPoint = [number, number];
+
+/** A marker that a camera sees, with what a pose estimator would give: the image corners, the marker's own axes, and where it is. */
+export type ProjectedMarker = {
+    id: number;
+    dictionary: MarkerDictionaryId;
+    /** Clean image corners (top-left, top-right, bottom-right, bottom-left of the printed marker), px. */
+    corners: PixelPoint[];
+    /** The marker's coordinate frame as cv2.drawFrameAxes draws it: X right along the top edge, Y up the marker, Z out of its face. */
+    axes: { origin: PixelPoint; x: PixelPoint; y: PixelPoint; z: PixelPoint } | null;
+    /** Centre of the marker in the camera frame like OpenCV's tvec: X right, Y down, Z forward, metres. */
+    position: [number, number, number];
+    /** Straight-line distance from the camera to the marker centre, metres. */
+    distance: number;
+};
+
+/** The marker sheets of the environment. Walking the whole scene every frame is wasteful: a camera window rescans often. */
+let sheetCache: { at: number; list: THREE.Mesh[] } | null = null;
+function markerSheets(maxAgeMs: number): THREE.Mesh[] {
+    const now = performance.now();
+    if (sheetCache && now - sheetCache.at < maxAgeMs) return sheetCache.list.filter(sheet => !isHidden(sheet));
+    const list: THREE.Mesh[] = [];
+    envGroup?.traverse((node) => {
+        if (node.name === MARKER_SHEET_NAME && (node as THREE.Mesh).isMesh) list.push(node as THREE.Mesh);
+    });
+    sheetCache = { at: now, list };
+    return list.filter(sheet => !isHidden(sheet));
+}
+
+const toPixels = (point: THREE.Vector3, camera: THREE.PerspectiveCamera, width: number, height: number): PixelPoint | null => {
+    const ndc = point.clone().project(camera);
+    if (ndc.z > 1) return null;
+    return [(ndc.x + 1) / 2 * width, (1 - ndc.y) / 2 * height];
+};
+
+/**
+ * Every marker sheet that `camera` sees in a `width` x `height` image, by the same rules the cv2 emulation uses: fully in
+ * view, facing the camera, big enough, not hidden. Pure: it keeps no state, so a camera window can call it freely.
+ */
+export type ScanOptions = {
+    /** Reuse the list of marker sheets found this recently instead of walking the scene again. */
+    maxSheetAgeMs?: number;
+    /** Reuse "this marker is not hidden" from a test this recent instead of casting a ray again. */
+    maxOcclusionAgeMs?: number;
+};
+
+const occlusionCache = new WeakMap<THREE.Object3D, { at: number; visible: boolean }>();
+
+export function scanMarkers(camera: THREE.PerspectiveCamera, width: number, height: number, options: ScanOptions = {}): ProjectedMarker[] {
+    const { maxSheetAgeMs = 0, maxOcclusionAgeMs = 0 } = options;
+    const found: ProjectedMarker[] = [];
+    if (!envGroup) return found;
 
     camera.updateMatrixWorld(true);
     const cameraPosition = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
+    const toCameraSpace = camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
 
-    const sheets: THREE.Mesh[] = [];
-    envGroup.traverse((node) => {
-        if (node.name === MARKER_SHEET_NAME && (node as THREE.Mesh).isMesh && !isHidden(node)) sheets.push(node as THREE.Mesh);
-    });
-
-    for (const sheet of sheets) {
+    for (const sheet of markerSheets(maxSheetAgeMs)) {
         const marker = sheet.parent;
         if (!marker) continue;
         const dictionary = marker.userData.markerDictionary as MarkerDictionaryId;
@@ -107,7 +148,7 @@ export function detectVisibleMarkers(droneId: string, camera: THREE.PerspectiveC
         const distance = toCamera.length();
         if (normal.dot(toCamera.normalize()) < MIN_FACING) continue;
 
-        const pixels: Array<[number, number]> = [];
+        const pixels: PixelPoint[] = [];
         let inView = true;
         for (const point of world) {
             const ndc = point.clone().project(camera);
@@ -123,19 +164,44 @@ export function detectVisibleMarkers(droneId: string, camera: THREE.PerspectiveC
         if (side < MIN_SIDE_PX) continue;
 
         // Something between the camera and the marker's centre hides it.
-        raycaster.set(cameraPosition, center.clone().sub(cameraPosition).normalize());
-        raycaster.far = distance + 0.05;
-        const firstHit = raycaster.intersectObjects(envGroup.children, true)
-            .find((hit) => (hit.object as THREE.Mesh).isMesh && !isHidden(hit.object));
-        if (firstHit && firstHit.object !== sheet && firstHit.distance < distance - 0.03) continue;
+        const now = performance.now();
+        const cached = maxOcclusionAgeMs > 0 ? occlusionCache.get(sheet) : undefined;
+        let visible: boolean;
+        if (cached && now - cached.at < maxOcclusionAgeMs) visible = cached.visible;
+        else {
+            raycaster.set(cameraPosition, center.clone().sub(cameraPosition).normalize());
+            raycaster.far = distance + 0.05;
+            const firstHit = raycaster.intersectObjects(envGroup.children, true)
+                .find((hit) => (hit.object as THREE.Mesh).isMesh && !isHidden(hit.object));
+            visible = !(firstHit && firstHit.object !== sheet && firstHit.distance < distance - 0.03);
+            occlusionCache.set(sheet, { at: now, visible });
+        }
+        if (!visible) continue;
+
+        const axisLength = half;
+        const axisEnd = (x: number, y: number, depth: number) => toPixels(new THREE.Vector3(x, y, z + depth).applyMatrix4(sheet.matrixWorld), camera, width, height);
+        const origin = toPixels(center, camera, width, height);
+        const ends = { x: axisEnd(axisLength, 0, 0), y: axisEnd(0, axisLength, 0), z: axisEnd(0, 0, axisLength) };
+        const inCamera = center.clone().applyMatrix4(toCameraSpace);
 
         found.push({
             id: Number(marker.userData.value) || 0,
             dictionary,
-            corners: pixels.map(([x, y]) => [x + gaussian() * CORNER_NOISE_PX, y + gaussian() * CORNER_NOISE_PX])
+            corners: pixels,
+            axes: origin && ends.x && ends.y && ends.z ? { origin, ...ends as { x: PixelPoint; y: PixelPoint; z: PixelPoint } } : null,
+            position: [inCamera.x, -inCamera.y, -inCamera.z],
+            distance
         });
     }
+    return found;
+}
 
+export function detectVisibleMarkers(droneId: string, camera: THREE.PerspectiveCamera, width: number, height: number) {
+    const found: DetectedMarker[] = scanMarkers(camera, width, height).map(marker => ({
+        id: marker.id,
+        dictionary: marker.dictionary,
+        corners: marker.corners.map(([x, y]) => [x + gaussian() * CORNER_NOISE_PX, y + gaussian() * CORNER_NOISE_PX] as [number, number])
+    }));
     detectionsByDrone.set(droneId, found);
     lastCapturedDroneId = droneId;
     return found;
