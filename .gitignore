@@ -36,3 +36,7 @@ docs/**/_build/
 # Editor/IDE
 .vscode/
 .idea/
+
+# Tool leftovers
+*.stackdump
+.impeccable/
