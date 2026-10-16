@@ -121,6 +121,31 @@ export function decideTier(state: GovernorState, medianMs: number, sampleCount: 
     return next;
 }
 
+/**
+ * Where the automatic setting starts, from what is known before the first frame: the GPU name and the pixels to fill. A
+ * software rasteriser starts two tiers down, a phone or integrated GPU one, and a very large canvas one more; the
+ * governor then moves from there by the measured frame time, in either direction.
+ */
+export function initialTier(gpuName: string, pixels: number): number {
+    const name = gpuName.toLowerCase();
+    let tier = 0;
+    if (/swiftshader|llvmpipe|software|basic render/.test(name)) tier = 2;
+    else if (/mali|adreno|powervr|apple gpu|videocore/.test(name)) tier = 1;
+    else if (/intel/.test(name) && !/arc/.test(name)) tier = 1;
+    if (pixels > 8_000_000) tier += 1;
+    return Math.min(MAX_TIER, tier);
+}
+
+function gpuNameOf(renderer: THREE.WebGLRenderer): string {
+    try {
+        const gl = renderer.getContext();
+        const info = gl.getExtension('WEBGL_debug_renderer_info');
+        return info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
+    } catch { return ''; }
+}
+
+let startTierChosen = false;
+
 /** Share of the proxy distance below which a far prop goes back to its full model: stops it flickering at the border. */
 export const PROXY_HYSTERESIS = 0.9;
 
@@ -177,6 +202,7 @@ export function setQualitySetting(next: QualitySetting): void {
     try { globalThis.localStorage?.setItem(QUALITY_STORAGE_KEY, setting); } catch { /* storage unavailable */ }
     frameTimes = [];
     governor = createGovernorState(manualTier() ?? 0, performance.now());
+    startTierChosen = manualTier() !== null;
     appliedTier = -1;
     lastLodAt = 0;
     listeners.forEach(listener => listener({ setting, tier: getQualityTier() }));
@@ -268,6 +294,14 @@ function updateDistanceLod(ctx: QualityContext, tier: QualityTier) {
 
 /** Call once per rendered frame, before renderer.render. Cheap: a few comparisons per call. */
 export function updateQuality(ctx: QualityContext, now = performance.now()): void {
+    if (!startTierChosen) {
+        startTierChosen = true;
+        if (manualTier() === null) {
+            const size = ctx.renderer.getSize(new THREE.Vector2());
+            const ratio = ctx.renderer.getPixelRatio();
+            governor = createGovernorState(initialTier(gpuNameOf(ctx.renderer), size.x * size.y * ratio * ratio), now);
+        }
+    }
     if (lastFrameAt) {
         const delta = now - lastFrameAt;
         if (delta < 1000) {

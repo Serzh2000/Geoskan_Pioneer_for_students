@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { QUALITY_TIERS, GOVERNOR, MAX_TIER, createGovernorState, decideTier, lodFlags, median, parseQualitySetting, tierOfSetting } from '../public/modules/scene/core/quality.js';
+import { QUALITY_TIERS, GOVERNOR, MAX_TIER, createGovernorState, decideTier, initialTier, lodFlags, median, parseQualitySetting, tierOfSetting } from '../public/modules/scene/core/quality.js';
 
 const slow = GOVERNOR.slowMs + 10, good = GOVERNOR.goodMs - 2, enough = GOVERNOR.minSamples;
 
@@ -71,6 +71,17 @@ describe('quality governor', () => {
         expect(state.tier).toBe(2);
         state = decideTier(state, GOVERNOR.slowMs * 2 + 1, enough, 3 * GOVERNOR.downCooldownMs);
         expect(state.tier).toBe(MAX_TIER);
+    });
+
+    it('starts from the hardware: discrete GPUs at full quality, integrated and phone GPUs lower, software lowest', () => {
+        expect(initialTier('ANGLE (NVIDIA, NVIDIA GeForce GTX 1060 6GB Direct3D11)', 2_000_000)).toBe(0);
+        expect(initialTier('ANGLE (Intel, Intel(R) UHD Graphics 630 Direct3D11)', 2_000_000)).toBe(1);
+        expect(initialTier('Intel(R) Arc(TM) A770', 2_000_000)).toBe(0);
+        expect(initialTier('Mali-G78', 1_000_000)).toBe(1);
+        expect(initialTier('Google SwiftShader', 1_000_000)).toBe(2);
+        expect(initialTier('NVIDIA GeForce RTX 4070', 12_000_000)).toBe(1);
+        expect(initialTier('', 2_000_000)).toBe(0);
+        expect(initialTier('SwiftShader', 20_000_000)).toBe(3);
     });
 
     it('tiers get cheaper and lodFlags follows them', () => {
