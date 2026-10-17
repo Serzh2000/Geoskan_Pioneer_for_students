@@ -263,6 +263,7 @@ describeBook('примеры из книги: Lua в симуляторе', () =
 type PythonExpectation =
     | { mode: 'run'; stdout: string[] }
     | { mode: 'sdk'; scenario: PythonScenario; trace: string[]; landedBeforeDisarm?: boolean }
+    | { mode: 'onboard'; runs: Array<{ scenario: PythonScenario; trace: string[] }> }
     | { mode: 'compile' };
 
 const PY_TAKEOFF = ['arm', 'takeoff'];
@@ -299,7 +300,82 @@ const PYTHON_EXPECTATIONS: Record<string, PythonExpectation> = {
     'ex2_forward_turn_return.py': { mode: 'sdk', scenario: { seconds: 60 }, trace: [...PY_TAKEOFF, 'goto 1,0,1', 'yaw 3.142', 'goto 0,0,1', 'land'] },
     'ex3_forward_turn_return.py': { mode: 'sdk', scenario: { seconds: 60 }, trace: [...PY_TAKEOFF, 'goto 1,0,1', 'yaw 3.142', 'goto 0,0,1', 'land'] },
     'GET_dist_sensor_data.py': { mode: 'sdk', scenario: { seconds: 5 }, trace: [] },
-    'go_to_local_point.py': { mode: 'sdk', scenario: { seconds: 60 }, trace: [...PY_TAKEOFF, 'goto 0,0,1', 'goto 0,1,1', 'goto 1,1,1', 'land'] }
+    'go_to_local_point.py': { mode: 'sdk', scenario: { seconds: 60 }, trace: [...PY_TAKEOFF, 'goto 0,0,1', 'goto 0,1,1', 'goto 1,1,1', 'land'] },
+
+    // Бортовые программы: pioneer_sdk2 и pioneer_rknn (helpers/python/run_onboard.py).
+    'sdk2_01_connect.py': {
+        mode: 'onboard',
+        runs: [{ scenario: { seconds: 10 }, trace: ['print Батарея: 7.90 В, 31.0 °C', 'led 0 0,1,0', 'led 0 1,0.5,0', 'led 0 0,0,0', 'led 3 0,0,0', 'exit'] }]
+    },
+    'sdk2_02_takeoff_land.py': {
+        mode: 'onboard',
+        runs: [
+            { scenario: { seconds: 20 }, trace: [...PY_TAKEOFF, 'print В воздухе', 'land', 'print Сели', 'disarm', 'exit'] },
+            { scenario: { seconds: 20, armFails: true }, trace: ['arm', 'disarm', 'exit Моторы не запустились'] }
+        ]
+    },
+    'sdk2_03_square.py': {
+        mode: 'onboard',
+        runs: [{
+            scenario: { seconds: 60 },
+            trace: [...PY_TAKEOFF, 'goto 1,0,1', 'goto 1,1,1', 'yaw 90', 'goto 0,1,1', 'yaw 180', 'goto 0,0,1', 'yaw -90', 'yaw 0', 'land', 'disarm', 'exit']
+        }]
+    },
+    'sdk2_04_events.py': {
+        mode: 'onboard',
+        runs: [
+            {
+                scenario: { seconds: 90 },
+                trace: [...PY_TAKEOFF, 'print Событие: TAKEOFF_COMPLETE', 'goto 1,0,1', 'goto 0,0,1', 'goto 1,0,1', 'goto 0,0,1', 'goto 1,0,1', 'goto 0,0,1', 'land', 'disarm', 'exit']
+            },
+            {
+                scenario: { seconds: 90, lowVoltageAt: 10 },
+                trace: [...PY_TAKEOFF, 'goto 0,0,1', 'event LOW_VOLTAGE1', 'print Батарея садится - возвращаемся', 'led 0 1,0,0', 'goto 0,0,1', 'land', 'disarm', 'exit']
+            }
+        ]
+    },
+    'sdk2_05_manual_speed.py': {
+        mode: 'onboard',
+        runs: [{ scenario: { seconds: 30 }, trace: [...PY_TAKEOFF, 'speed 0.5,0,0,0', 'speed 0,0.5,0,0', 'speed 0,0,0.3,0', 'speed 0,0,0,0.5', 'land', 'disarm', 'exit'] }]
+    },
+    'sdk2_06_camera_stream.py': { mode: 'onboard', runs: [{ scenario: { seconds: 3 }, trace: ['camera MAIN', 'show stream'] }] },
+    'sdk2_07_servo_camera.py': {
+        mode: 'onboard',
+        runs: [{
+            scenario: { seconds: 30 },
+            trace: [...PY_TAKEOFF, 'servo 0', 'servo -45', 'text angle -45', 'servo -80', 'text angle -80', 'servo 0', 'land', 'disarm', 'exit']
+        }]
+    },
+    'rknn_01_models.py': { mode: 'onboard', runs: [{ scenario: { seconds: 3 }, trace: ['print Модели на дроне:', 'exit'] }] },
+    'rknn_02_detect.py': {
+        mode: 'onboard',
+        runs: [{ scenario: { seconds: 4, yolo: [[1, 3, 0, 0.87]] }, trace: ['model yolov8n', 'camera MAIN', 'show stream', 'rect 200,90-440,450', 'text person 0.87'] }]
+    },
+    'rknn_03_pose_signal.py': {
+        mode: 'onboard',
+        runs: [{
+            scenario: { seconds: 6, pose: [[1, 3, 'up'], [3, 5, 'down']] },
+            trace: ['model yolov8n-pose', 'led 0 1,0,0', 'print Руки подняты', 'led 0 0,1,0', 'led 0 1,0,0']
+        }]
+    },
+    'rknn_04_ocr.py': {
+        mode: 'onboard',
+        runs: [{ scenario: { seconds: 5, ocr: [[1, 2, 'ПОСАДКА 3', 0.9], [3, 4, 'шум', 0.3]] }, trace: ['camera MAIN', 'print Вижу текст: ПОСАДКА 3'] }]
+    },
+    'rknn_05_search_person.py': {
+        mode: 'onboard',
+        runs: [
+            {
+                scenario: { seconds: 30, yolo: [[8, 20, 0, 0.8]] },
+                trace: [...PY_TAKEOFF, 'speed 0,0,0,0.3', 'speed 0,0,0,0', 'print Человек найден', 'led 0 0,1,0', 'land', 'disarm', 'release', 'exit']
+            },
+            {
+                // Один кадр с человеком - ещё не находка: нужно CONFIRM кадров подряд.
+                scenario: { seconds: 60, yolo: [[8, 8.05, 0, 0.8]] },
+                trace: [...PY_TAKEOFF, 'speed 0,0,0,0.3', 'print Никого не нашли', 'led 0 1,0,0', 'land', 'disarm', 'release', 'exit']
+            }
+        ]
+    }
 };
 
 const python = findPython();
@@ -330,6 +406,17 @@ describeBook('примеры из книги: Python', () => {
             const result = spawnSync(python!, ['-I', '-X', 'utf8', full], { encoding: 'utf8', timeout: 60_000 });
             expect({ status: result.status, stderr: result.stderr }).toEqual({ status: 0, stderr: '' });
             for (const line of expectation.stdout) expect(result.stdout).toContain(line);
+            return;
+        }
+        if (expectation.mode === 'onboard') {
+            for (const run of expectation.runs) {
+                const events = runPythonScenario(fs.readFileSync(full, 'utf8'), run.scenario, 'onboard');
+                const names = events.map((event) => event.what);
+                // ignored - команда не того этапа полёта: SDK 2 молча её пропустил.
+                const problems = names.filter((name) => name.startsWith('error') || name.startsWith('ignored'));
+                expect({ problems, trace: names }).toEqual({ problems: [], trace: names });
+                expectSubsequence(events, run.trace);
+            }
             return;
         }
         // Примеры лежат рядом со своими модулями (grader.py); поддельный SDK

@@ -1,0 +1,269 @@
+\section{Pioneer SDK 2: программа на борту дрона}
+\label{sec:sdk2}
+
+\begin{infobox}[Цели главы]
+\begin{itemize}
+    \item Понимать, чем программа на борту дрона отличается от программы на компьютере.
+    \item Запускать Python-программу на микрокомпьютере Пионера через библиотеку \texttt{pioneer\_sdk2}.
+    \item Пользоваться блокирующими командами взлёта и посадки и понимать, как SDK~2 следит за порядком команд.
+    \item Реагировать на события автопилота через подписку и показывать видео с камеры в браузере.
+\end{itemize}
+\end{infobox}
+
+\subsection{Программа переезжает на дрон}
+
+До сих пор Python-программа работала на компьютере и отдавала команды по Wi-Fi (глава~\ref{sec:python-sdk}). У Пионера Мини~2 и у модулей с микрокомпьютером Radxa Zero~3W есть собственный компьютер с операционной системой Pioneer~OS. Программа может работать прямо на нём:
+\begin{itemize}
+    \item полёт не зависит от Wi-Fi: пропала связь с ноутбуком --- программа продолжает работать;
+    \item кадры камеры приходят без задержки сети, а рядом есть нейропроцессор (глава~\ref{sec:rknn});
+    \item ноутбук нужен только чтобы записать программу и запустить её.
+\end{itemize}
+
+Для бортовых программ есть библиотека \texttt{pioneer\_sdk2}. В образ Pioneer~OS для Пионера Мини~2 и Radxa Zero~3W она уже встроена. На модуле Raspberry Pi Zero её устанавливают командой \verb|pip install pioneer-sdk2|; библиотека требует Python~3.12.
+
+\subsubsection*{Пионер Мини 2 в симуляторе}
+
+В симуляторе есть модель Пионера Мини~2. На панели \ui{Рой} нажмите \ui{Мини 2} --- рядом с Базовым появится второй дрон. Пока он выбран, редактор работает только на Python: Lua и Blockly у Мини~2 нет, справочник и автодополнение показывают команды \texttt{pioneer\_sdk2}, а в списке примеров --- программы этой главы. Импорт \texttt{pioneer\_sdk} для Мини~2 (и \texttt{pioneer\_sdk2} для Базового) симулятор остановит с подсказкой.
+
+\begin{infobox}[Чем симулятор отличается от дрона]
+Программа выполняется в браузере, а не на борту; \texttt{ImageViewer} показывает кадры в окне симулятора, а не по адресу \texttt{10.42.0.1:8889}. У Мини~2 в симуляторе два светодиода --- передние индикаторы (0 --- левый, 1 --- правый), захват \verb|grab_close()| подхватывает груз так же, как магнит Базового, а GPS и параметров автопилота нет. Остальное --- порядок команд, события, градусы, \verb|interval|, сообщения \verb|logger| --- как у настоящей библиотеки.
+\end{infobox}
+
+\subsubsection*{Как запустить программу на дроне}
+
+\begin{enumerate}
+    \item Включите дрон и подключите компьютер к его сети Wi-Fi (у Пионера Мини~2 имя сети начинается с \texttt{PMINI2}).
+    \item Скопируйте программу на дрон командой \texttt{scp} и войдите на него по SSH. Адрес дрона в его сети --- \texttt{10.42.0.1}; имя пользователя и пароль указаны в документации к вашему образу (на Пионере Мини~2 пользователь --- \texttt{pioneermini}).
+    \item Запустите программу: \verb|python3 имя_файла.py|. Остановить --- \key{Ctrl}+\key{C}.
+\end{enumerate}
+
+\begin{codebox}[Терминал компьютера]
+\begin{verbatim}
+scp sdk2_01_connect.py pioneermini@10.42.0.1:~/
+ssh pioneermini@10.42.0.1
+python3 sdk2_01_connect.py
+\end{verbatim}
+\end{codebox}
+
+\begin{infobox}[Модуль Raspberry Pi Zero]
+На нём \verb|Pioneer()| нужно передать адрес автопилота: \verb|Pioneer(tcp="10.42.0.1:20556")|, если вы подключаетесь к модулю, или адрес из свойств системы, если модуль сам подключается к вашей точке доступа. На Пионере Мини~2 и Radxa Zero~3W адрес по умолчанию \texttt{127.0.0.1:20556} уже верный.
+\end{infobox}
+
+\subsubsection*{Чем SDK 2 отличается от SDK}
+
+Большая часть команд называется так же. Отличия, на которых чаще всего ошибаются:
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.24\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+& \textbf{pioneer\_sdk} & \textbf{pioneer\_sdk2} \\
+\midrule
+Где работает & на компьютере, по Wi-Fi & на борту дрона \\
+Модуль & \verb|pioneer_sdk| & \verb|pioneer_sdk2| \\
+\verb|arm|, \verb|takeoff|, \verb|land| & возвращаются сразу, ждать --- \verb|time.sleep| & ждут события автопилота: моторы запущены, взлёт завершён, дрон сел \\
+Курс \verb|yaw| в точке & радианы, аргумент обязателен & \textbf{градусы}, можно не указывать \\
+Цвет подсветки & 0..255 & \textbf{0..1} \\
+Команда скорости & повторять каждые 0.05~с & одна команда держит скорость \verb|interval| секунд \\
+События & только опрос \verb|point_reached()| & опрос и подписка \verb|subscribe| \\
+Камера & \verb|Camera()|, окно \verb|cv2.imshow| & \verb|Camera(CameraType.MAIN)|, видео в браузере через \verb|ImageViewer| \\
+Порядок команд & не проверяется & проверяется: взлёт без \verb|arm| --- ошибка \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Подключение, телеметрия, подсветка}
+
+\begin{codefile}[python]{python-onboard/pioneer_sdk2/sdk2_01_connect.py}
+\end{codefile}
+
+\paragraph{Что происходит.} \verb|Pioneer()| подключается к автопилоту по внутреннему адресу. \verb|get_battery_status()| возвращает пару (напряжение в вольтах, температура), \verb|get_local_position_lps()| --- тройку координат в метрах. Если данных нет, обе команды возвращают \verb|None|, поэтому результат проверяется перед распаковкой. Цвет подсветки --- доли от 0 до 1: \verb|g=1| --- зелёный на полную яркость, \verb|g=0.5| --- на половину. \verb|led_control()| без аргументов гасит все светодиоды.
+
+\subsection{Взлёт и посадка}
+
+\begin{codefile}[python]{python-onboard/pioneer_sdk2/sdk2_02_takeoff_land.py}
+\end{codefile}
+
+\paragraph{Что происходит.} В SDK~2 команды взлёта и посадки \emph{блокирующие}: \verb|arm()| возвращается, когда автопилот сообщил о запуске моторов, \verb|takeoff()| --- когда взлёт завершён, \verb|land()| --- когда дрон стоит на земле. Пауз \verb|time.sleep| после них больше не нужно: программа сама ждёт ровно столько, сколько длится действие.
+
+\verb|arm()| ждёт моторов 5~секунд. Не дождался --- выключает моторы и возвращает \verb|False|; программа это проверяет и завершается, не пытаясь взлетать.
+
+\begin{warnbox}[finally: сначала посадка]
+Если программу прервали в полёте (\key{Ctrl}+\key{C} или ошибка), \verb|disarm()| в \verb|finally| выключил бы моторы в воздухе. Переменная \verb|in_air| помнит, что дрон летит, и тогда \verb|finally| сначала сажает его. Звать \verb|land()| на земле нельзя: команда будет вечно ждать события «дрон сел», которое уже не придёт.
+\end{warnbox}
+
+\subsubsection*{Порядок команд --- конечный автомат}
+
+SDK~2 сам ведёт состояние полёта --- это знакомый по главе~\ref{sec:missions-architecture} конечный автомат с тремя состояниями:
+
+\begin{center}
+\begin{tikzpicture}[
+    st/.style={draw=GeoskanBlue, rounded corners, thick, minimum width=2.4cm, minimum height=0.9cm, font=\sffamily\small},
+    ar/.style={-latex, thick, GeoskanBlue},
+    lb/.style={font=\ttfamily\footnotesize, fill=white, inner sep=1pt}]
+    \node[st] (land) at (0,0) {ON\_LAND};
+    \node[st] (armed) at (4.2,0) {ARMED};
+    \node[st] (sky) at (8.4,0) {IN\_SKY};
+    \draw[ar] (land) -- node[lb, above=2pt] {arm()} (armed);
+    \draw[ar] (armed) -- node[lb, above=2pt] {takeoff()} (sky);
+    \draw[ar] (sky.south) -- ++(0,-0.7) -| node[lb, pos=0.25, below=2pt] {land(), disarm()} (land.south);
+\end{tikzpicture}
+\end{center}
+
+В каждом состоянии разрешена своя команда: на земле --- \verb|arm()|, с запущенными моторами --- \verb|takeoff()|, в воздухе --- полётные команды (\verb|go_to_local_point|, \verb|set_manual_speed|, \verb|set_yaw|). Остальные SDK проверяет так:
+
+\begin{center}
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Состояние} & \verb|arm()| & \verb|takeoff()| & \textbf{полётные команды} \\
+\midrule
+ON\_LAND & выполняется & \textcolor{red}{RuntimeError} & игнорируется, \verb|False| \\
+ARMED & игнорируется, \verb|False| & выполняется & \textcolor{red}{RuntimeError} \\
+IN\_SKY & \textcolor{red}{RuntimeError} & игнорируется, \verb|False| & выполняются \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Правило за таблицей одно: команду \emph{прошлого} этапа SDK молча пропускает (взлетать второй раз незачем), а попытку \emph{перескочить} этап --- например, \verb|takeoff()| без \verb|arm()| --- останавливает исключением \verb|RuntimeError|. \verb|land()| и \verb|disarm()| не проверяются: они должны работать всегда. Контроль работает, пока у \verb|Pioneer| включены оба флага \verb|wait_callback| и \verb|safety_command| (так по умолчанию); выключать его стоит, только если порядок команд вы контролируете сами.
+
+\subsection{Полёт по точкам}
+
+\begin{codefile}[python]{python-onboard/pioneer_sdk2/sdk2_03_square.py}
+\end{codefile}
+
+\paragraph{Что происходит.} \verb|go_to_local_point| в SDK~2 \emph{не} блокирующая: команда отправляет точку и сразу возвращается. Дожидаться прибытия по-прежнему нужно через \verb|point_reached()|, как в главе~\ref{sec:python-sdk}. Курс --- в \textbf{градусах}: 0 --- нос вдоль оси X, 90 --- вдоль оси Y. В списке у каждой вершины свой курс, и дрон летит по квадрату носом вперёд. Отдельной точки над стартом здесь нет: \verb|takeoff()| возвращается уже после взлёта.
+
+\begin{rulebox}[Градусы и радианы]
+В SDK~2 курс \verb|yaw| в \verb|go_to_local_point| и \verb|set_yaw| --- в градусах, а скорость поворота \verb|yaw_rate| в \verb|set_manual_speed| --- в радианах в секунду. Переносите программы из главы~\ref{sec:python-sdk} внимательно: \verb|yaw=math.pi| там --- это \verb|yaw=180| здесь.
+\end{rulebox}
+
+\subsection{События: подписка вместо опроса}
+
+Опрос \verb|point_reached()| знает только про одну точку. Автопилот сообщает и о другом: батарея садится, сильный удар, моторы запущены. В SDK~2 на события можно подписаться --- как на \verb|callback| в Lua:
+
+\begin{codebox}[subscribe]
+\verb|pioneer.subscribe(функция, Event.LOW_VOLTAGE1)| --- вызывать функцию при этом событии; без второго аргумента --- при любом событии. Функция получает событие одним аргументом; \verb|event.name| --- его имя. Отписаться --- \verb|pioneer.unsubscribe(функция, событие)|.
+\end{codebox}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily}l X@{}}
+\toprule
+\textrm{\textbf{Событие}} & \textbf{Когда приходит} \\
+\midrule
+ENGINES\_STARTED & моторы запущены \\
+TAKEOFF\_COMPLETE & взлёт завершён \\
+POINT\_DECELERATION & дрон начал тормозить перед точкой \\
+POINT\_REACHED & точка достигнута \\
+COPTER\_LANDED & дрон сел \\
+DISARM & моторы выключены \\
+LOW\_VOLTAGE1 & батарея садится, но вернуться домой хватит \\
+LOW\_VOLTAGE2 & батарея почти пуста, автопилот начал аварийную посадку \\
+SHOCK & сильный удар, возможна потеря управления \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{codefile}[python]{python-onboard/pioneer_sdk2/sdk2_04_events.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Это патруль с аварийным возвратом --- тот же автомат, что в Lua-миссии из главы~\ref{sec:missions-architecture}, только на Python. Функция \verb|on_event| печатает каждое событие, а при \verb|LOW_VOLTAGE1| поднимает флаг \verb|low_battery|. Решение принимает основной цикл: \verb|fly_to| замечает флаг, прерывает ожидание точки, и автомат переходит из \verb|PATROL| в \verb|RETURN|. Домой дрон летит уже без проверки флага (\verb|can_abort=False|): иначе низкий заряд прервал бы и возвращение.
+
+\begin{rulebox}[Обработчик события --- короткий]
+SDK вызывает обработчик из своего служебного потока, который принимает данные от автопилота. Пока обработчик работает, следующие события ждут. Поэтому в обработчике только запоминают факт (флаг, счётчик), а летают --- в основном цикле. Блокирующую команду вроде \verb|land()| из обработчика не вызывайте: она ждёт события, которое этот же поток и должен доставить.
+\end{rulebox}
+
+\subsection{Полёт со скоростью}
+
+\begin{codefile}[python]{python-onboard/pioneer_sdk2/sdk2_05_manual_speed.py}
+\end{codefile}
+
+\paragraph{Что происходит.} В SDK~2 у \verb|set_manual_speed| есть аргумент \verb|interval|: одна команда держит скорость столько секунд, после чего дрон сам останавливается. Повторять команду в цикле каждые 0.05~с, как в главе~\ref{sec:python-manual-speed}, не нужно. В регуляторе, который пересчитывает скорость на каждом кадре, \verb|interval| делают коротким (0.3--0.5~с): если программа зависнет, дрон через полсекунды остановится сам. Скорость поворота \verb|yaw_rate| --- в рад/с и не больше 1.82; большее значение SDK отбросит без сообщения.
+
+\subsection{Камера и видео в браузере}
+
+На дроне нет экрана, поэтому \verb|cv2.imshow| из главы~\ref{sec:python-vision} здесь не работает. Кадры берут из \verb|Camera|, а смотрят в браузере --- через \verb|ImageViewer|:
+
+\begin{codefile}[python]{python-onboard/pioneer_sdk2/sdk2_06_camera_stream.py}
+\end{codefile}
+
+\paragraph{Что происходит.} \verb|Camera(camera_type=CameraType.MAIN)| открывает переднюю камеру; у Пионера Мини~2 есть ещё \verb|CameraType.OPT| --- нижняя камера оптического потока. \verb|get_cv_frame()| возвращает кадр --- массив numpy с цветами в порядке BGR, тот же формат, что в главе про камеру; если кадра нет 5~секунд, будет \verb|TimeoutError|. \verb|viewer.imshow(name="stream", frame=frame)| отправляет кадр в видеопоток с именем \texttt{stream}; на компьютере, подключённом к Wi-Fi дрона, он открывается по адресу \texttt{http://10.42.0.1:8889/stream}. Имя потока --- последняя часть адреса, так что программа может показывать несколько потоков сразу.
+
+\begin{infobox}[Какие классы есть на вашем модуле]
+Набор классов SDK~2 зависит от платы: \verb|Camera| и \verb|CameraType| есть везде, где есть камера; \verb|ImageViewer| --- на Пионере Мини~2 и Radxa Zero~3W; \verb|ServoCamera| (наклон камеры) --- только на Пионере Мини~2. Импорт класса, которого у платы нет, завершится ошибкой с пояснением.
+\end{infobox}
+
+\subsubsection*{Наклон камеры: сервопривод}
+
+Передняя камера Пионера Мини~2 стоит на сервоприводе и наклоняется вверх-вниз. Им управляет класс \verb|ServoCamera|:
+
+\begin{codebox}[ServoCamera]
+\verb|servo = ServoCamera()| --- подключиться к сервоприводу (SDK проверяет, что он есть на борту).\\
+\verb|servo.set_angle(angle, priority=ServoPriority.LOW)| --- наклонить камеру: \verb|angle| в градусах от $-80$ (почти вниз) до $30$ (вверх), $0$ --- прямо вперёд. Угол вне диапазона --- \verb|ValueError|. \verb|priority| --- приоритет команды: \verb|ServoPriority.HIGH|, \verb|MEDIUM| или \verb|LOW|.
+\end{codebox}
+
+\begin{codefile}[python]{python-onboard/pioneer_sdk2/sdk2_07_servo_camera.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Дрон взлетает и по очереди наклоняет камеру: вперёд, на $45^\circ$ вниз, почти отвесно вниз и обратно. После каждой команды программа две секунды показывает кадры с подписью угла --- видно, как в кадр входит площадка под дроном. \verb|set_angle| возвращается сразу, а сервопривод поворачивается за доли секунды, поэтому первые кадры после команды ещё «доезжают». Наклон меняет и кадры \verb|Camera(CameraType.MAIN)|: камеру, смотрящую вниз, можно использовать, чтобы искать метки на полу, не сажая дрон.
+
+\subsection{Справочник команд}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.43\linewidth} X@{}}
+\toprule
+\textbf{Команда} & \textbf{Что делает} \\
+\midrule
+\verb|arm(timeout=5)| & запустить моторы и ждать; \verb|False|, если не вышло \\
+\verb|takeoff()| / \verb|land()| & взлететь / сесть и ждать окончания \\
+\verb|disarm()| & выключить моторы немедленно \\
+\verb|go_to_local_point(x, y, z, yaw)| & лететь в точку, курс в градусах \\
+\verb|go_to_local_point_body_fixed(...)| & то же, смещение относительно дрона \\
+\verb|point_reached()| & \verb|True| один раз после прибытия \\
+\verb|set_manual_speed(vx, vy, vz,| \verb|yaw_rate, interval=1.0)| & скорость (м/с, рад/с) на \verb|interval| секунд \\
+\verb|set_yaw(yaw)| & повернуться на курс в градусах \\
+\verb|rtl()| & вернуться в точку взлёта \\
+\verb|led_control(led_id=255, r, g, b)| & цвет 0..1; 255 --- все светодиоды \\
+\verb|subscribe(функция, событие)| & вызывать функцию при событии \\
+\verb|get_battery_status()| & (напряжение, температура) \\
+\verb|get_local_position_lps()| & (x, y, z) в метрах \\
+\verb|get_local_yaw_lps()| & курс в градусах, от $-180$ до $180$ \\
+\verb|get_ranger_data()| & дальномеры Ranger: вправо, влево, вперёд, назад, вниз \\
+\verb|grab_close()| / \verb|grab_open()| & закрыть / открыть захват \\
+\verb|ServoCamera().set_angle(angle)| & наклон камеры, от $-80$ до $30^\circ$ \\
+\verb|get_dist_sensor_data()| & дальномер, метры \\
+\verb|close_connection()| & закрыть соединение \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Задания к главе}
+
+\subsubsection*{Уровень 1}
+\begin{enumerate}
+    \item Перенесите программу «Вперёд и назад» из главы~\ref{sec:python-sdk} на SDK~2: уберите лишние паузы, переведите курс в градусы.
+    \item Подключитесь к дрону и раз в секунду печатайте напряжение батареи и высоту по дальномеру, пока не нажата \key{Ctrl}+\key{C}.
+\end{enumerate}
+
+\subsubsection*{Уровень 2}
+\begin{enumerate}
+    \item Добавьте в патруль обработку события \verb|SHOCK|: красная подсветка и немедленная посадка из основного цикла.
+    \item Напишите программу, которая вызывает \verb|takeoff()| без \verb|arm()|, и объясните по таблице состояний, что произошло.
+\end{enumerate}
+
+\subsubsection*{Уровень 3: мини-проект}
+\textbf{Квадрат с камерой.} Дрон облетает квадрат, а программа показывает в браузере видео с камеры с подписью: номер вершины, к которой летит дрон, и напряжение батареи. Подсказка: ожидание точки и показ кадров должны идти в одном цикле.
+
+\subsection*{Итоги}
+\begin{itemize}
+    \item \texttt{pioneer\_sdk2} работает на борту дрона; программа копируется по \texttt{scp} и запускается по SSH.
+    \item \verb|arm()|, \verb|takeoff()|, \verb|land()| ждут окончания действия; \verb|go_to_local_point| --- нет, ждите \verb|point_reached()|.
+    \item SDK~2 ведёт автомат ON\_LAND $\to$ ARMED $\to$ IN\_SKY: команда прошлого этапа игнорируется, пропуск этапа --- \verb|RuntimeError|.
+    \item Курс --- градусы, цвет --- 0..1, скорость держится \verb|interval| секунд.
+    \item События --- через \verb|subscribe|; обработчик только ставит флаг.
+    \item Видео --- \verb|Camera| $\to$ \verb|ImageViewer| $\to$ браузер.
+    \item Наклон камеры Мини~2 --- \verb|ServoCamera().set_angle(angle)|, от $-80$ до $30^\circ$.
+    \item В симуляторе Мини~2 добавляется на панели \ui{Рой}; программы этой главы запускаются там без изменений.
+\end{itemize}

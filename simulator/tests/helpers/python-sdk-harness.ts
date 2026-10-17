@@ -12,7 +12,12 @@ import type { SimEvent } from './lua-sim-harness.js';
  * пользуются, пропускаются (см. findPython).
  */
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const RUNNER = path.join(HERE, 'python', 'run_scenario.py');
+const RUNNERS = {
+    // pioneer_sdk для программ на компьютере / в симуляторе
+    sdk: path.join(HERE, 'python', 'run_scenario.py'),
+    // pioneer_sdk2 + pioneer_rknn для программ на борту дрона
+    onboard: path.join(HERE, 'python', 'run_onboard.py')
+};
 
 let cachedPython: string | null | undefined;
 
@@ -26,9 +31,19 @@ export function findPython(): string | null {
     return cachedPython;
 }
 
-export type PythonScenario = { seconds: number; tof?: Array<[number, number]>; pos?: [number, number, number] };
+export type PythonScenario = {
+    seconds: number;
+    tof?: Array<[number, number]>;
+    pos?: [number, number, number];
+    // только для run_onboard.py
+    lowVoltageAt?: number;
+    armFails?: boolean;
+    yolo?: Array<[number, number, number, number]>;
+    pose?: Array<[number, number, 'up' | 'down']>;
+    ocr?: Array<[number, number, string, number]>;
+};
 
-export function runPythonScenario(code: string, scenario: PythonScenario): SimEvent[] {
+export function runPythonScenario(code: string, scenario: PythonScenario, runner: keyof typeof RUNNERS = 'sdk'): SimEvent[] {
     const python = findPython();
     if (!python) throw new Error('Python 3 не найден');
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pioneer-py-'));
@@ -37,7 +52,7 @@ export function runPythonScenario(code: string, scenario: PythonScenario): SimEv
     fs.writeFileSync(scriptPath, code, 'utf8');
     fs.writeFileSync(configPath, JSON.stringify(scenario), 'utf8');
     try {
-        const result = spawnSync(python, [RUNNER, scriptPath, configPath], {
+        const result = spawnSync(python, [RUNNERS[runner], scriptPath, configPath], {
             encoding: 'utf8',
             timeout: 60_000,
             env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
