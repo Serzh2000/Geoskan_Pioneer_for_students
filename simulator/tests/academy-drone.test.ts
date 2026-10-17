@@ -31,6 +31,16 @@ test('messages must surround the actual command, including events in the same fr
     }
 });
 
+test('in Lua the queued command is accepted after the second print: the order of the lines in the program decides, not sleep()', () => {
+    const lua = 'print("До arm")\nap.push(Ev.MCE_PREFLIGHT)\nprint("После arm")';
+    const queued = [print('До arm'), print('После arm'), arm];
+    expect(gradeDroneAcademy(6, samples(), queued, { code: lua }).solved).toBe(true);
+    expect(gradeDroneAcademy(6, samples(), queued, { code: 'print("До arm")\nprint("После arm")\nap.push(Ev.MCE_PREFLIGHT)' }).solved).toBe(false);
+    expect(gradeDroneAcademy(6, samples(), [print('До arm'), print('После arm')], { code: lua }).solved).toBe(false);   // never accepted
+    expect(gradeDroneAcademy(9, samples(), [print('Начинаю подготовку'), print('Команда отправлена'), arm],
+        { code: 'print("Начинаю подготовку")\nap.push(Ev.MCE_PREFLIGHT)\nprint("Команда отправлена")' }).solved).toBe(true);
+});
+
 test('observation, edited comment and the second independent run have separate gates', () => {
     expect(gradeDroneAcademy(1, samples('IDLE'), [], { code: '' }).solved).toBe(false);
     expect(gradeDroneAcademy(1, samples('IDLE'), [], { code: '', lift: 'rotors', vision: 'camera' }).solved).toBe(true);

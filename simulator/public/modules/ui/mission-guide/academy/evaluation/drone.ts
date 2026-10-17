@@ -36,7 +36,20 @@ export function gradeDroneAcademy(number: number, samples: DroneSample[], events
         const first = events.findIndex(event => event.kind === 'print' && event.text?.trim().toLowerCase() === before.toLowerCase());
         const arm = events.findIndex(event => event.kind === 'arm' && event.accepted);
         const final = events.findIndex(event => event.kind === 'print' && event.text?.trim().toLowerCase() === after.toLowerCase());
-        if (first < 0 || arm <= first || final <= arm) diagnostics.push(error('Сопоставьте сообщения с командой', `Нужен порядок «${before}» → принятая подготовка → «${after}».`, 'Переставьте print относительно команды. Одно последнее сообщение не подтверждает весь порядок.'));
+        // In Lua ap.push only queues the command: the autopilot accepts it on its next tick, after the program has already printed
+        // the second message. The lesson is about the order the program sends things in, so the order of the lines in the program
+        // counts as much as the order of the log; a student must not have to discover sleep() to pass.
+        const inLog = first >= 0 && arm > first && final > arm;
+        const lines = activity.code.split('\n');
+        const at = (test: (line: string) => boolean) => lines.findIndex(test);
+        const sentBetween = (() => {
+            const a = at(line => line.toLowerCase().includes(before.toLowerCase()) && /print/.test(line));
+            const b = at(line => /ap\.push\s*\(\s*Ev\.MCE_PREFLIGHT|\.arm\s*\(/.test(line));
+            const d = at(line => line.toLowerCase().includes(after.toLowerCase()) && /print/.test(line));
+            return a >= 0 && b > a && d > b;
+        })();
+        const inProgram = first >= 0 && arm > first && final > first && sentBetween;
+        if (!inLog && !inProgram) diagnostics.push(error('Сопоставьте сообщения с командой', `Нужен порядок «${before}» → принятая подготовка → «${after}».`, 'Переставьте print относительно команды. Одно последнее сообщение не подтверждает весь порядок.'));
     }
     if (!diagnostics.length && number === 5 && !activity.previousRun) {
         return { solved: false, complete: true, diagnostics: [{ kind: 'info', title: 'Первый опыт записан — повторите', reason: 'Подготовка прошла из исходной точки. Теперь нужен второй запуск этой же программы после сброса.', fix: 'Нажмите «Повторить проверку». Код между запусками не меняйте.' }] };
