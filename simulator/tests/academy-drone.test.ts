@@ -5,6 +5,7 @@ import { gradeDroneAcademy } from '../public/modules/ui/mission-guide/academy/ev
 import { beginLearningCapture, recordLearningEvent, finishLearningCapture, type LearningEvent } from '../public/modules/core/learning-journal.js';
 import { collectLuaBlockingIssues } from '../public/modules/app/script-execution-notice/lua-validation.js';
 import type { DroneSnapshot } from '../public/modules/ui/mission-guide/evaluation/text/snapshot.js';
+import { findPython } from './helpers/python-sdk-harness.js';
 
 const idle: DroneSnapshot = { pos: { x: 0, y: 0, z: 0 }, leds: [], fsmState: 'IDLE', flightMode: 'AUTO', pointReachedFlag: false, recentApiCalls: [], fsmTransitions: [], status: 'РАБОТАЕТ' };
 const samples = (state = 'PREFLIGHT', status = 'РАБОТАЕТ') => [{ elapsedMs: 0, snapshot: { ...idle, fsmState: state, status } }];
@@ -98,7 +99,7 @@ except Exception as exception:
     error = str(exception)
 print(json.dumps({'accepted': accepted, 'error': error}))
 `;
-        const result = spawnSync(process.env.PYTHON || 'python', ['-c', harness], { encoding: 'utf8', timeout: 10000 });
+        const result = spawnSync(findPython() ?? 'python3', ['-c', harness], { encoding: 'utf8', timeout: 10000 });
         if (result.error) throw result.error;
         expect(result.status).toBe(0);
         const outcome = JSON.parse(result.stdout.trim().split('\n').pop()!);

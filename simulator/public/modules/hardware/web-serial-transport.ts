@@ -109,7 +109,7 @@ async function openPort(port: SerialPortLike, baudRate: number): Promise<void> {
         await port.open({ baudRate });
     } catch (error) {
         console.warn('[DRONE] port.open failed', error);
-        throw new Error('Не удалось открыть порт дрона. Закройте Pioneer Station и другие вкладки с симулятором, затем повторите.');
+        throw new Error('Не удалось открыть порт дрона. Закройте Pioneer Station и другие вкладки с симулятором, затем повторите.', { cause: error });
     }
 }
 

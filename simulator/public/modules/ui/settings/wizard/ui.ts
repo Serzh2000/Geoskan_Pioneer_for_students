@@ -4,7 +4,7 @@ import { CHANNEL_LABELS, STEPS } from './config.js';
 import { getBestAuxCandidate } from './detection.js';
 import { buildChannelRows, describeTarget, type ChannelRow } from './radio-model.js';
 import { buildSummaryHtml, formatRefLabel } from './summary.js';
-import type { ChannelKey, ObservedInputStats, PrimaryChannelKey } from '../types.js';
+import type { ChannelKey, ObservedInputStats } from '../types.js';
 import type {
     AuxDetectionResult,
     WizardAuxChannelKey,

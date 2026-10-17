@@ -12,6 +12,8 @@ export default [
           "**/tools/scratch/**",
           "**/vendor/**",
           "**/dist/assets/*.js",
+          // Snapshots the design plugin keeps of edited files: ignored by git, so CI never sees them.
+          "**/.impeccable/**",
           "**/*.min.js"
       ]
   },
@@ -24,7 +26,8 @@ export default [
           "@typescript-eslint/no-explicit-any": "warn",
           "@typescript-eslint/no-var-requires": "off",
           "no-undef": "off", // TypeScript handles this
-          "@typescript-eslint/no-unused-vars": "warn",
+          // A leading underscore marks a parameter that is unused on purpose (a fixed callback signature).
+          "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
           "no-unused-vars": "off",
           "no-empty": "error",
           "max-lines": ["warn", { max: 300, skipBlankLines: true, skipComments: true }]

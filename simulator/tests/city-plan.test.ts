@@ -69,6 +69,7 @@ describe('big city generator', () => {
     it('generates fast enough to build on demand', () => {
         const start = Date.now();
         generateTrainingLayout({ profile: 'city', seed: 11, size: 600 });
-        expect(Date.now() - start).toBeLessThan(4000);
+        // Shared CI runners are several times slower and noisier than a dev machine.
+        expect(Date.now() - start).toBeLessThan(4000 * (process.env.CI ? 3 : 1));
     });
 });

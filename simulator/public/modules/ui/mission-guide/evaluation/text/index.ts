@@ -60,6 +60,8 @@ async function evaluateTextLesson(
         const remaining = waitMs - (performance.now() - startedAt);
         if (remaining <= 0) break;
         await wait(Math.min(100, remaining));
+    // Выход - только по break выше: дрон закончил, разбился или вышло время.
+    // eslint-disable-next-line no-constant-condition
     } while (true);
     const snapshot = samples[samples.length - 1]?.snapshot || null;
 

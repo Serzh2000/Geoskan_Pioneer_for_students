@@ -4,6 +4,7 @@ import type { LearningEvent } from '../public/modules/core/learning-journal.js';
 import type { DroneSample } from '../public/modules/ui/mission-guide/evaluation/text/trace.js';
 import { PIONEER_CV_PRELUDE } from '../public/modules/python/pioneer-sdk-cv-prelude.js';
 import { visionHarness } from './academy-vision-harness.js';
+import { findPython } from './helpers/python-sdk-harness.js';
 
 type Outcome = { events: LearningEvent[]; samples: DroneSample[]; error: string | null };
 export function executeAcademyLua(code: string, options: { flight?: boolean; hill?: boolean } = {}): Outcome {
@@ -227,7 +228,7 @@ except Exception as exception:
 snapshot=dict(leds=leds,pos=dict(zip(['x','y','z'],position)),fsmState=state,flightMode='AUTO',pointReachedFlag=reached,recentApiCalls=[],fsmTransitions=[],status='ОШИБКА' if error else 'РАБОТАЕТ')
 print(json.dumps(dict(events=events,error=error,samples=[dict(elapsedMs=0,snapshot=snapshot)])))
 `;
-    const result = spawnSync(process.env.PYTHON || 'python', ['-'], { input: harness, encoding: 'utf8', timeout: 10000 });
+    const result = spawnSync(findPython() ?? 'python3', ['-'], { input: harness, encoding: 'utf8', timeout: 10000 });
     if (result.error) throw result.error;
     if (result.status !== 0) throw new Error(result.stderr);
     return JSON.parse(result.stdout.trim()) as Outcome;

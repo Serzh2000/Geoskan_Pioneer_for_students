@@ -22,15 +22,25 @@ defaults:
 jobs:
   check:
     name: type-check, lint, test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: simulator/package-lock.json
+
+      # The book's Python examples run in real CPython against fake pioneer_sdk /
+      # pioneer_sdk2 modules (tests/helpers/python); the onboard ones need numpy.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python packages for the example tests
+        run: python -m pip install --disable-pip-version-check numpy
 
       - name: Install dependencies
         run: npm ci
@@ -41,5 +51,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # One worker: several suites run Python programs on a sped-up real-time
+      # clock, and parallel workers on a 2-core runner make them miss their timing.
       - name: Test
-        run: npm test
+        env:
+          PYTHON: python
+        run: npm test -- --runInBand

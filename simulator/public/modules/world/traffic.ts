@@ -541,7 +541,7 @@ export function createTraffic(paths: RoadLike[], options: { seed?: number; count
             const cur = a.seg;
             if (cur.isConn) {
                 const lane = cur.toLane!;
-                net.nodes[cur.node].inside.includes(a) && removeFrom(net.nodes[cur.node].inside, a);
+                if (net.nodes[cur.node].inside.includes(a)) removeFrom(net.nodes[cur.node].inside, a);
                 if (a.permits[0] === cur) a.permits.shift();
                 a.ri++;
                 if (a.ri >= a.route.length - 1) { a.route = planRoute(net, lane, random); a.ri = 0; }

@@ -50,7 +50,7 @@ function writeSession(session: SceneSession): void {
 
 /** Puts the saved objects and drone poses back. Returns how many objects came back. */
 export function restoreSceneSession(callbacks: UICallbacks): number {
-    let session: SceneSession | null = null;
+    let session: SceneSession | null;
     try {
         session = parseSceneSession(localStorage.getItem(SCENE_SESSION_KEY));
     } catch {
