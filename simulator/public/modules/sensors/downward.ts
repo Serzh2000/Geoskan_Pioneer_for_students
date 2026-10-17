@@ -20,6 +20,8 @@ export type SurfaceBelow = {
     velocity: THREE.Vector3;
     /** True when it's a car / train roof rather than the ground or a building. */
     onVehicle: boolean;
+    /** The mesh that was hit; null for the plain ground plane. */
+    object: THREE.Object3D | null;
 };
 
 function vehicleUnitOf(node: THREE.Object3D | null): THREE.Object3D | null {
@@ -31,7 +33,7 @@ function vehicleUnitOf(node: THREE.Object3D | null): THREE.Object3D | null {
 }
 
 export function measureSurfaceBelow(position: { x: number; y: number; z: number }): SurfaceBelow {
-    const ground: SurfaceBelow = { range: Math.max(0, position.z), velocity: new THREE.Vector3(), onVehicle: false };
+    const ground: SurfaceBelow = { range: Math.max(0, position.z), velocity: new THREE.Vector3(), onVehicle: false, object: null };
     if (!envGroup || position.z <= 0) return ground;
 
     raycaster.set(new THREE.Vector3(position.x, position.y, position.z), DOWN);
@@ -45,7 +47,8 @@ export function measureSurfaceBelow(position: { x: number; y: number; z: number 
         return {
             range: Math.max(0, hit.distance),
             velocity: (unit?.userData.velocity as THREE.Vector3 | undefined)?.clone() ?? new THREE.Vector3(),
-            onVehicle: !!unit
+            onVehicle: !!unit,
+            object: mesh
         };
     }
     return ground;

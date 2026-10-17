@@ -158,6 +158,7 @@
     border-radius: inherit;
 }
 
-#canvas-container canvas { display: block; width: 100%; height: 100%; }
+/* Жесты пальцами - камере сцены (DroneOrbitControls), а не прокрутке и масштабу страницы. */
+#canvas-container canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 #canvas { width: 100%; height: 100%; outline: none; }
 

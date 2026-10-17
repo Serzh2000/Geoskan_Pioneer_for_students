@@ -6,16 +6,19 @@ import {
     applyCrashState,
     shouldCrashOnGroundImpact
 } from './events.js';
+import { supportHeightBelow, terrainHeightAt } from './ground.js';
 
 function stopDroneAtGround(simState: DroneState) {
     setDroneFsmState(simState, 'IDLE');
     simState.vel = { x: 0, y: 0, z: 0 };
-    simState.target_pos = { ...simState.pos, z: 0 };
-    simState.target_alt = 0;
+    simState.target_pos = { ...simState.pos };
+    simState.target_alt = simState.pos.z;
 }
 
+// Земля под дроном - рельеф карты (physics/ground.ts), а не плоскость z = 0.
 export function resolveGroundContact(simState: DroneState, id: string, prevPos: Vector3) {
-    if (simState.pos.z > 0) return;
+    const ground = terrainHeightAt(simState.pos.x, simState.pos.y);
+    if (simState.pos.z > ground) return;
 
     const verticalImpactSpeed = Math.max(0, -simState.vel.z);
     const totalImpactSpeed = Math.sqrt(
@@ -24,13 +27,14 @@ export function resolveGroundContact(simState: DroneState, id: string, prevPos: 
         + simState.vel.z ** 2
     );
 
-    simState.pos.z = 0;
+    simState.pos.z = ground;
+    const fallHeight = prevPos.z - ground;
 
-    if (shouldCrashOnGroundImpact(prevPos.z, verticalImpactSpeed, totalImpactSpeed)) {
+    if (shouldCrashOnGroundImpact(fallHeight, verticalImpactSpeed, totalImpactSpeed)) {
         applyCrashState(
             simState,
             id,
-            `жесткий удар о землю: h=${prevPos.z.toFixed(2)}м, vz=${verticalImpactSpeed.toFixed(2)}м/с, v=${totalImpactSpeed.toFixed(2)}м/с`
+            `жесткий удар о землю: h=${fallHeight.toFixed(2)}м, vz=${verticalImpactSpeed.toFixed(2)}м/с, v=${totalImpactSpeed.toFixed(2)}м/с`
         );
         return;
     }
@@ -52,7 +56,8 @@ export function updateDisarmedFallState(simState: DroneState, id: string, dt: nu
     simState.pos.y += simState.vel.y * dt;
     simState.pos.z += simState.vel.z * dt;
 
-    if (simState.pos.z > 0) return;
+    const ground = terrainHeightAt(simState.pos.x, simState.pos.y);
+    if (simState.pos.z > ground) return;
 
     const verticalImpactSpeed = Math.max(0, -impactVel.z);
     const totalImpactSpeed = Math.sqrt(
@@ -60,13 +65,13 @@ export function updateDisarmedFallState(simState: DroneState, id: string, dt: nu
         + impactVel.y ** 2
         + impactVel.z ** 2
     );
-    simState.pos.z = 0;
+    simState.pos.z = ground;
 
-    if (shouldCrashOnGroundImpact(prevPos.z, verticalImpactSpeed, totalImpactSpeed)) {
+    if (shouldCrashOnGroundImpact(prevPos.z - ground, verticalImpactSpeed, totalImpactSpeed)) {
         simState.status = 'CRASHED';
         simState.running = false;
         simState.target_pos = { ...simState.pos };
-        simState.target_alt = 0;
+        simState.target_alt = ground;
         simState.vel = { x: 0, y: 0, z: 0 };
         log(
             `[Physics] Дрон ${id} разрушен при ударе о землю: h=${prevPos.z.toFixed(2)}м, vz=${verticalImpactSpeed.toFixed(2)}м/с, v=${totalImpactSpeed.toFixed(2)}м/с.`,
@@ -89,22 +94,26 @@ export function updateCrashedState(simState: DroneState, dt: number) {
     simState.pos.y += simState.vel.y * dt;
     simState.pos.z += simState.vel.z * dt;
 
-    if (simState.pos.z <= 0) {
-        simState.pos.z = 0;
+    const ground = terrainHeightAt(simState.pos.x, simState.pos.y);
+    if (simState.pos.z <= ground) {
+        simState.pos.z = ground;
         simState.vel = { x: 0, y: 0, z: 0 };
     }
 }
 
+// Дрон в покое стоит на своей опоре: рельефе, крыше, площадке. Поставленный выше - опускается на неё,
+// оказавшийся внутри холма (карту загрузили, когда дрон уже стоял) - поднимается на поверхность.
 export function updateGroundedState(simState: DroneState, dt: number) {
-    if (simState.pos.z > 0) {
+    const support = supportHeightBelow(simState);
+    if (simState.pos.z > support) {
         simState.vel.z -= 9.81 * dt;
         simState.pos.z += simState.vel.z * dt;
-        if (simState.pos.z <= 0) {
-            simState.pos.z = 0;
+        if (simState.pos.z <= support) {
+            simState.pos.z = support;
             simState.vel.z = 0;
         }
     } else {
-        simState.pos.z = 0;
+        simState.pos.z = support;
         simState.vel.z = 0;
     }
     simState.vel.x = 0;

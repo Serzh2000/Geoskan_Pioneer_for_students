@@ -4,6 +4,10 @@ import type { DroneState } from '../core/state.js';
 import { completePointReached, completeTakeoff, isMovementReached } from '../autopilot/fsm.js';
 import { triggerLuaCallback } from '../lua/index.js';
 import { getObstacles } from '../drone/index.js';
+import { supportObjectBelow, terrainHeightAt } from './ground.js';
+
+// Слой над опорой, в котором она не считается препятствием на взлёте: запас столкновений 0.18 м и ещё немного.
+const LIFTOFF_SUPPORT_BAND = 0.3;
 import { log } from '../shared/logging/logger.js';
 import { shouldDispatchLuaEvent } from '../lua/mission-guard.js';
 import { obstacleHasCollision, sampleSegmentPoints } from './collisions.js';
@@ -91,11 +95,24 @@ export function checkPhysicsEvents(simState: DroneState, prevPos: { x: number; y
     const start = new THREE.Vector3(prevPos.x, prevPos.y, prevPos.z);
     const end = new THREE.Vector3(simState.pos.x, simState.pos.y, simState.pos.z);
     const samples = sampleSegmentPoints(start, end);
+    // Высота над землёй, а не над z = 0: на рельефе карты дрон стоит выше нуля.
+    const groundNow = terrainHeightAt(simState.pos.x, simState.pos.y);
+    const groundBefore = terrainHeightAt(prevPos.x, prevPos.y);
+    const isNotJustTakingOff = simState.pos.z - groundNow > 0.1 || prevPos.z - groundBefore > 0.1;
+    // Первые сантиметры взлёта с крыши или площадки: опора под дроном - не препятствие.
+    const liftoffZ = simState.liftoffZ;
+    const leavingSupport = simState.fsmState === 'TAKEOFF_PROCESS'
+        && typeof liftoffZ === 'number'
+        && Math.min(prevPos.z, simState.pos.z) < liftoffZ + LIFTOFF_SUPPORT_BAND;
+    let support: THREE.Object3D | null | undefined;
     for (const obj of obstacles) {
         if (!obj.userData || !obj.userData.type) continue;
 
-        const isNotJustTakingOff = simState.pos.z > 0.1 || prevPos.z > 0.1;
         if (isNotJustTakingOff && obstacleHasCollision(obj, samples)) {
+            if (leavingSupport) {
+                if (support === undefined) support = supportObjectBelow(prevPos.x, prevPos.y, liftoffZ!);
+                if (support && !obstacleHasCollision(obj, samples, support)) continue;
+            }
             simState.pos = { ...prevPos };
             applyCrashState(simState, id, `столкновение с объектом "${obj.userData.type}"`);
             return;

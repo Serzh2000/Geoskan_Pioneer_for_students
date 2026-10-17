@@ -5,22 +5,44 @@ import { PointerDragSession } from './pointer-drag.js';
  * Unrestricted fly-through camera for the "free" view's "Полёт" sub-mode -
  * the counterpart to DroneOrbitControls' "Орбита" sub-mode, which always
  * orbits a fixed target. This one has no target at all: LMB-drag looks
- * around (yaw/pitch), WASD moves along the view direction, Space/C move
- * straight up/down, Shift boosts speed. Z stays vertical throughout,
+ * around (yaw/pitch), WASD moves along the view direction, Space/E and C/Q
+ * move straight up/down, the wheel dollies forward/back, Shift boosts speed. Z stays vertical throughout,
  * matching the rest of the scene's up-axis convention (see
  * DroneOrbitControls' own spherical setup).
  */
 
 const LOOK_SENSITIVITY = 0.0032;
 const BASE_SPEED = 6; // world units / second
-const BOOST_MULTIPLIER = 3;
+const BOOST_MULTIPLIER = 5;
 const MIN_PITCH = -Math.PI / 2 + 0.02;
 const MAX_PITCH = Math.PI / 2 - 0.02;
 // Keeps the camera from flying through the ground plane; matches the small
 // clearance DroneOrbitControls' own elevation clamp effectively enforces.
 const MIN_CAMERA_Z = 0.15;
 
-const MOVE_KEYS = new Set(['w', 'a', 's', 'd', ' ', 'c', 'shift']);
+const MOVE_KEYS = new Set(['w', 'a', 's', 'd', ' ', 'c', 'q', 'e', 'shift']);
+// Колесо в полёте двигает камеру вперёд-назад: шаг пропорционален прокрутке.
+const WHEEL_DOLLY_RATE = 0.02;
+
+// Набор кода в редакторе или текста в поле - не полёт камеры.
+function isEditableTarget(target: EventTarget | null): boolean {
+    const element = target as HTMLElement | null;
+    if (!element || typeof element.closest !== 'function') return false;
+    return Boolean(element.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], .monaco-editor'));
+}
+
+/**
+ * Клавиши достаются камере, только когда фокус на сцене или ни на чём (body):
+ * стрелки в списке дронов, меню и полях принадлежат им.
+ */
+function isSceneKeyTarget(target: EventTarget | null, sceneElement: HTMLElement): boolean {
+    if (isEditableTarget(target)) return false;
+    if (typeof document === 'undefined') return true;
+    const element = target as Node | null;
+    if (!element || element === document.body || element === document.documentElement || (element as unknown) === document) return true;
+    const scene = sceneElement.parentElement ?? sceneElement;
+    return typeof scene.contains === 'function' && scene.contains(element);
+}
 
 export class FreeFlyControls {
     camera: THREE.PerspectiveCamera;
@@ -43,6 +65,7 @@ export class FreeFlyControls {
     private readonly onKeyDown: (event: KeyboardEvent) => void;
     private readonly onKeyUp: (event: KeyboardEvent) => void;
     private readonly onBlur: () => void;
+    private readonly onWheel: (event: WheelEvent) => void;
 
     constructor(camera: THREE.PerspectiveCamera, domElement: HTMLElement) {
         this.camera = camera;
@@ -68,7 +91,9 @@ export class FreeFlyControls {
             }
         };
         this.onKeyDown = (event) => {
-            if (!this.enabled) return;
+            if (!this.enabled || event.ctrlKey || event.metaKey || event.altKey) return;
+            // Раньше W/A/S/D/пробел глотались и в редакторе кода: preventDefault не давал их напечатать.
+            if (!isSceneKeyTarget(event.target, this.domElement)) return;
             const key = event.key.toLowerCase();
             if (!MOVE_KEYS.has(key)) return;
             this.pressedKeys.add(key);
@@ -78,10 +103,19 @@ export class FreeFlyControls {
             this.pressedKeys.delete(event.key.toLowerCase());
         };
         this.onBlur = () => this.cancelInteraction();
+        this.onWheel = (event) => {
+            if (!this.enabled) return;
+            event.preventDefault();
+            const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 400 : 1;
+            const step = THREE.MathUtils.clamp(-event.deltaY * unit * WHEEL_DOLLY_RATE, -12, 12);
+            const { forward } = this.getBasis();
+            this.camera.position.addScaledVector(forward, step * (this.pressedKeys.has('shift') ? BOOST_MULTIPLIER : 1));
+        };
 
         this.domElement.addEventListener('pointerdown', this.onPointerDown);
         this.domElement.addEventListener('pointermove', this.onPointerMove);
         this.domElement.addEventListener('pointerup', this.onPointerUp);
+        this.domElement.addEventListener('wheel', this.onWheel as EventListener, { passive: false });
         window.addEventListener('keydown', this.onKeyDown);
         window.addEventListener('keyup', this.onKeyUp);
         window.addEventListener('blur', this.onBlur);
@@ -116,8 +150,8 @@ export class FreeFlyControls {
         if (this.pressedKeys.has('s')) move.sub(forward);
         if (this.pressedKeys.has('d')) move.add(right);
         if (this.pressedKeys.has('a')) move.sub(right);
-        if (this.pressedKeys.has(' ')) move.z += 1;
-        if (this.pressedKeys.has('c')) move.z -= 1;
+        if (this.pressedKeys.has(' ') || this.pressedKeys.has('e')) move.z += 1;
+        if (this.pressedKeys.has('c') || this.pressedKeys.has('q')) move.z -= 1;
 
         if (move.lengthSq() > 0) {
             move.normalize();
@@ -139,6 +173,7 @@ export class FreeFlyControls {
         this.domElement.removeEventListener('pointerdown', this.onPointerDown);
         this.domElement.removeEventListener('pointermove', this.onPointerMove);
         this.domElement.removeEventListener('pointerup', this.onPointerUp);
+        this.domElement.removeEventListener('wheel', this.onWheel as EventListener);
         window.removeEventListener('keydown', this.onKeyDown);
         window.removeEventListener('keyup', this.onKeyUp);
         window.removeEventListener('blur', this.onBlur);

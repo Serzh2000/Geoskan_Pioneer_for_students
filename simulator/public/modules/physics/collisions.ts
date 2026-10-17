@@ -129,7 +129,8 @@ function fpvCubeHasCollision(cube: THREE.Object3D, samples: THREE.Vector3[]) {
     return false;
 }
 
-export function obstacleHasCollision(obj: THREE.Object3D, samples: THREE.Vector3[]) {
+/** ignore - меш, который не считается препятствием (опора, с которой дрон взлетает). */
+export function obstacleHasCollision(obj: THREE.Object3D, samples: THREE.Vector3[], ignore: THREE.Object3D | null = null) {
     if (isGateObject(obj)) {
         return gateHasCollision(obj, samples);
     }
@@ -151,8 +152,8 @@ export function obstacleHasCollision(obj: THREE.Object3D, samples: THREE.Vector3
     }
 
     obj.updateWorldMatrix(true, true);
-    if ((obj as THREE.Mesh).isMesh && obj.visible && meshBlocks(obj as THREE.Mesh, samples)) return true;
-    return meshesHit(obj, samples);
+    if ((obj as THREE.Mesh).isMesh && obj.visible && obj !== ignore && meshBlocks(obj as THREE.Mesh, samples)) return true;
+    return meshesHit(obj, samples, ignore);
 }
 
 /*
@@ -166,9 +167,9 @@ export function obstacleHasCollision(obj: THREE.Object3D, samples: THREE.Vector3
 const FAR_PROP_DISTANCE = 60;      // the biggest prop (the mall) is about 25 m across from its centre
 const farProbe = new THREE.Vector3();
 
-function meshesHit(node: THREE.Object3D, samples: THREE.Vector3[]): boolean {
+function meshesHit(node: THREE.Object3D, samples: THREE.Vector3[], ignore: THREE.Object3D | null = null): boolean {
     for (const child of node.children) {
-        if (!child.visible) continue;
+        if (!child.visible || child === ignore) continue;
         // A training map holds thousands of props: those far from the drone cannot touch it, so skip them cheaply
         // instead of building their bounding boxes every physics step.
         if (child.userData.presetSlot !== undefined && samples.length) {
@@ -177,7 +178,7 @@ function meshesHit(node: THREE.Object3D, samples: THREE.Vector3[]): boolean {
         }
         if (hasCustomCollisionShape(child) || shouldSkipCollisionForObject(child)) continue;
         if ((child as THREE.Mesh).isMesh && meshBlocks(child as THREE.Mesh, samples)) return true;
-        if (meshesHit(child, samples)) return true;
+        if (meshesHit(child, samples, ignore)) return true;
     }
     return false;
 }
@@ -186,6 +187,8 @@ function meshesHit(node: THREE.Object3D, samples: THREE.Vector3[]): boolean {
 // marker maps, decals): something to land on, not to crash into. Hitting
 // the ground itself is handled by the ground-impact physics.
 const FLAT_SURFACE_MAX_TOP = 0.08;
+// Насколько дрон должен уйти в склон, чтобы это было столкновением, а не касанием земли.
+const TERRAIN_PENETRATION = 0.05;
 
 function meshBlocks(mesh: THREE.Mesh, samples: THREE.Vector3[]): boolean {
     if (mesh.userData.trainingGround) {
@@ -196,8 +199,10 @@ function meshBlocks(mesh: THREE.Mesh, samples: THREE.Vector3[]): boolean {
             const local = mesh.worldToLocal(sample.clone());
             if (Math.max(Math.abs(local.x), Math.abs(local.y)) > layout.size / 2) return false;
             if (distanceToWater(layout, local) === 0 && local.z < radius) return true;
+            // Рельеф - это земля: касание сверху решает физика земли (physics/ground.ts,
+            // посадка или жёсткий удар). Препятствие - только склон, в который дрон влетел.
             const height = trainingHeightAt(layout, local.x, local.y);
-            return height > FLAT_SURFACE_MAX_TOP && local.z < height + radius;
+            return height > FLAT_SURFACE_MAX_TOP && local.z < height - TERRAIN_PENETRATION;
         });
     }
     if (mesh.userData.trainingTrees) {

@@ -167,7 +167,10 @@ export function enterTakeoffProcess(drone: DroneState) {
     drone.preflightDeadlineMs = null;
     drone.target_pos.x = drone.pos.x;
     drone.target_pos.y = drone.pos.y;
-    drone.target_pos.z = Math.max(config.mission.takeoffAlt, TAKEOFF_MIN_ALTITUDE);
+    // Высота взлёта - над точкой старта, как у настоящего Пионера: с холма или крыши
+    // дрон поднимается на ту же высоту над опорой, что и с земли (на ровной земле z = 0 - как раньше).
+    drone.liftoffZ = drone.pos.z;
+    drone.target_pos.z = drone.pos.z + Math.max(config.mission.takeoffAlt, TAKEOFF_MIN_ALTITUDE);
     drone.target_alt = drone.target_pos.z;
     drone.pointReachedFlag = false;
     drone.pendingLocalPoint = false;

@@ -1,3 +1,4 @@
+import { terrainHeightAt } from './ground.js';
 import { getAutopilotRuntimeConfig } from '../autopilot/params-runtime.js';
 import type { DroneState } from '../core/state.js';
 import { emitMissionGamepadOverride } from '../core/mission-notices.js';
@@ -243,7 +244,9 @@ function updateAutoFlight(simState: DroneState, dt: number) {
         upwardVelocityLimit = Math.min(upwardVelocityLimit, config.mission.vTakeoff);
     }
 
-    if (simState.fsmState === 'LANDING_PROCESS' && simState.pos.z <= config.mission.landingAlt) {
+    // Медленный участок посадки - над землёй под дроном (на холме карты земля выше нуля).
+    if (simState.fsmState === 'LANDING_PROCESS'
+        && simState.pos.z - terrainHeightAt(simState.pos.x, simState.pos.y) <= config.mission.landingAlt) {
         downwardVelocityLimit = Math.min(downwardVelocityLimit, config.mission.vLanding);
     }
 
@@ -254,6 +257,7 @@ function updateAutoFlight(simState: DroneState, dt: number) {
     if (manual && !manualActive) {
         simState.manualVelocity = null;
         simState.target_pos = { ...simState.pos };
+        if (manual.yawRate) simState.target_yaw = simState.orientation.yaw;
     }
 
     const timed = manualActive ? null : resolveTimedGoTo(simState);
@@ -296,6 +300,12 @@ function updateAutoFlight(simState: DroneState, dt: number) {
     simState.pos.x += simState.vel.x * dt;
     simState.pos.y += simState.vel.y * dt;
 
+    // pioneer_sdk2.set_manual_speed: одна команда держит и скорость поворота.
+    if (manualActive && manual!.yawRate) {
+        // Регулятор курса ниже даёт скорость поворота errYaw * kpYaw, отсюда
+        // и опережение цели: ровно yawRate рад/с.
+        simState.target_yaw = simState.orientation.yaw + manual!.yawRate / Math.max(kpYaw, 1e-3);
+    }
     let errYaw = simState.target_yaw - simState.orientation.yaw;
     while (errYaw > Math.PI) errYaw -= 2 * Math.PI;
     while (errYaw < -Math.PI) errYaw += 2 * Math.PI;
