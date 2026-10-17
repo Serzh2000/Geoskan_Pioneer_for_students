@@ -4,6 +4,14 @@
  * и подключает раскрывающиеся 3D-визуализации для методов автопилота.
  */
 import { apiDocs, pythonApiDocs } from '../../docs/api-docs.js';
+import { pythonSdk2ApiDocs } from '../../docs/python-sdk2-api-docs.js';
+import { currentDroneId, drones } from '../../core/state.js';
+import { droneModelProfile } from '../../core/drone-models.js';
+
+/** Справочник Python зависит от модели выбранного дрона: у Мини 2 - pioneer_sdk2. */
+function pythonSdkOfCurrentDrone() {
+    return droneModelProfile(drones[currentDroneId]?.model).pythonSdk;
+}
 import { ApiMethodPreview } from './preview/index.js';
 import {
     buildSections,
@@ -74,7 +82,7 @@ function destroyPreviews(): void {
 }
 
 function renderToolbar(language: ScriptLanguage, sections: ApiSection[], totalCount: number): string {
-    const label = language === 'lua' ? 'Lua' : 'Python';
+    const label = language === 'lua' ? 'Lua' : `Python · ${pythonSdkOfCurrentDrone()}`;
     const escapedQuery = escapeHtml(uiState.query);
     const chips = [
         { id: 'all' as const, title: 'Все', count: totalCount },
@@ -382,7 +390,9 @@ export function renderApiDocs(
     }
     uiState.language = language;
 
-    const docs = language === 'python' ? pythonApiDocs : apiDocs;
+    const docs = language === 'python'
+        ? (pythonSdkOfCurrentDrone() === 'pioneer_sdk2' ? pythonSdk2ApiDocs : pythonApiDocs)
+        : apiDocs;
     const sections = buildSections(docs, language, uiState.query);
     const totalEntries = sections.reduce((count, section) => count + section.entries.length, 0);
 

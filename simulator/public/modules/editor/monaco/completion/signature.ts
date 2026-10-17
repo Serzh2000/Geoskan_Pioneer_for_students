@@ -1,5 +1,5 @@
 import type { ApiDoc } from '../../../docs/api-docs-types.js';
-import { LUA_DOC_TABLE, LUA_EV_ENTRIES, PYTHON_DOC_TABLE } from './catalog.js';
+import { LUA_DOC_TABLE, LUA_EV_ENTRIES, activePythonDocTable } from './catalog.js';
 import type { CallContext, ScriptLanguage } from './call-context.js';
 import { resolveLuaOwnerName, resolvePythonOwnerName } from './context.js';
 import type { CompletionDocEntry } from './types.js';
@@ -19,7 +19,7 @@ export interface ResolvedSignature {
 }
 
 function docTable(language: ScriptLanguage): Record<string, ApiDoc> {
-    return language === 'lua' ? LUA_DOC_TABLE : PYTHON_DOC_TABLE;
+    return language === 'lua' ? LUA_DOC_TABLE : activePythonDocTable();
 }
 
 /** Finds the documentation key of a callee: `leds:set` becomes `Ledbar:set` once `leds` is known to be a Ledbar. */

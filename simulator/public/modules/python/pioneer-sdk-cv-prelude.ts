@@ -220,7 +220,18 @@ def _cv2_imshow(name, frame):
     if frame is None: return None
     shape=getattr(frame, 'shape', None)
     if shape is not None and hasattr(frame, 'tobytes'):
-        return js.pioneer_cv_imshow_pixels(name, int(shape[1]), int(shape[0]), list(frame.tobytes()))
+        texts = _frame_texts.pop(id(frame), None)
+        # Буфер, а не list(frame.tobytes()): список из сотен тысяч чисел стоил ~40 мс на кадр.
+        # numpy сразу собирает RGBA для canvas: векторно это ~1 мс, поэлементный цикл в JS - ~8 мс.
+        np = _numpy_or_none()
+        if np is not None and isinstance(frame, np.ndarray) and frame.ndim == 3 and frame.shape[2] == 3:
+            rgba = np.empty((int(shape[0]), int(shape[1]), 4), dtype=np.uint8)
+            rgba[..., 0] = frame[..., 2]
+            rgba[..., 1] = frame[..., 1]
+            rgba[..., 2] = frame[..., 0]
+            rgba[..., 3] = 255
+            return js.pioneer_cv_imshow_pixels(name, int(shape[1]), int(shape[0]), rgba, texts, "rgba")
+        return js.pioneer_cv_imshow_pixels(name, int(shape[1]), int(shape[0]), frame.tobytes(), texts)
     # Окно предпросмотра текстовое, поэтому настоящий кадр (numpy-массив) туда не отдать:
     # вместо сырых пикселей уходит описание кадра, иначе окно получит бесполезный прокси.
     payload = getattr(frame, "payload", None)
@@ -255,6 +266,68 @@ def _cv2_circle(frame, center, radius, color, thickness=1):
 
 def _cv2_destroy_all_windows():
     return js.pioneer_cv_destroy_all_windows()
+
+# Подписи cv2.putText рисует окно предпросмотра (шрифт браузера), а не пиксели
+# кадра: они запоминаются при кадре и уходят в imshow вместе с ним.
+_frame_texts = {}
+
+def _cv2_put_text(frame, text, org, font_face=0, font_scale=1.0, color=(255, 255, 255), thickness=1, *args, **kwargs):
+    texts = _frame_texts.setdefault(id(frame), [])
+    x, y = [int(round(float(v))) for v in org]
+    texts.append([str(text), x, y, float(font_scale), [int(c) for c in list(color)[:3]], int(thickness)])
+    if len(_frame_texts) > 16:
+        del _frame_texts[next(iter(_frame_texts))]
+    return frame
+
+def _cv2_rectangle(frame, pt1, pt2, color, thickness=1, *args, **kwargs):
+    x0, y0 = [int(round(float(v))) for v in pt1]
+    x1, y1 = [int(round(float(v))) for v in pt2]
+    x0, x1 = sorted((x0, x1)); y0, y1 = sorted((y0, y1))
+    h, w = frame.shape[0], frame.shape[1]
+    x0, x1 = max(0, x0), min(w - 1, x1); y0, y1 = max(0, y0), min(h - 1, y1)
+    if x0 > x1 or y0 > y1:
+        return frame
+    colour = list(color)[:3]
+    if thickness < 0:
+        frame[y0:y1 + 1, x0:x1 + 1] = colour
+        return frame
+    t = max(1, int(thickness))
+    frame[y0:min(y0 + t, y1 + 1), x0:x1 + 1] = colour
+    frame[max(y1 - t + 1, y0):y1 + 1, x0:x1 + 1] = colour
+    frame[y0:y1 + 1, x0:min(x0 + t, x1 + 1)] = colour
+    frame[y0:y1 + 1, max(x1 - t + 1, x0):x1 + 1] = colour
+    return frame
+
+def _cv2_resize(image, size, *args, **kwargs):
+    np = _numpy_or_none()
+    w, h = int(size[0]), int(size[1])
+    rows = (np.arange(h) * image.shape[0] // h).astype(int)
+    cols = (np.arange(w) * image.shape[1] // w).astype(int)
+    return image[rows][:, cols].copy()
+
+def _cv2_cvt_color(image, code):
+    np = _numpy_or_none()
+    if code == cv2.COLOR_BGR2RGB:
+        return image[..., ::-1].copy()
+    if code == cv2.COLOR_BGR2GRAY:
+        gray = image[..., 0] * 0.114 + image[..., 1] * 0.587 + image[..., 2] * 0.299
+        return gray.astype(np.uint8)
+    if code == cv2.COLOR_GRAY2BGR:
+        return np.stack([image, image, image], axis=-1)
+    return image.copy()
+
+cv2.FONT_HERSHEY_SIMPLEX = 0
+cv2.FONT_HERSHEY_PLAIN = 1
+cv2.LINE_AA = 16
+cv2.FILLED = -1
+cv2.COLOR_BGR2RGB = 4
+cv2.COLOR_RGB2BGR = 4
+cv2.COLOR_BGR2GRAY = 6
+cv2.COLOR_GRAY2BGR = 8
+cv2.putText = _cv2_put_text
+cv2.rectangle = _cv2_rectangle
+cv2.resize = _cv2_resize
+cv2.cvtColor = _cv2_cvt_color
 
 cv2.imwrite = lambda *args, **kwargs: True
 cv2.imdecode = lambda buffer, flags=1: SimCvFrame({"buffer_size": len(buffer) if buffer is not None else 0, "flags": flags})

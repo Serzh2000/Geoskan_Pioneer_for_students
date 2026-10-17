@@ -1,5 +1,5 @@
 import { luaStdlibDocs } from '../../docs/lua-stdlib-docs.js';
-import { LUA_DOC_TABLE, PYTHON_DOC_TABLE } from './completion/catalog.js';
+import { LUA_DOC_TABLE, activePythonDocTable } from './completion/catalog.js';
 
 let hoverProvidersRegistered = false;
 
@@ -93,7 +93,7 @@ export function setupHoverProvider(monaco: any) {
 
             // Resolve documentation on demand to keep provider stateless.
             let found: any = undefined;
-            for (const [key, doc] of Object.entries(PYTHON_DOC_TABLE as any)) {
+            for (const [key, doc] of Object.entries(activePythonDocTable() as any)) {
                 // Bare names (print, len, range) match the word itself; members match by their last part.
                 const method = key.split('.').slice(-1)[0];
                 if (method === last && (key.includes('.') || parts.length === 1)) {

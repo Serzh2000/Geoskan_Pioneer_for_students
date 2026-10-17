@@ -115,6 +115,14 @@ function classifyEntry(name: string, language: ScriptLanguage): ApiCategoryId {
     }
     if (['time', 'launchtime', 'deltatime', 'sleep', 'boardnumber'].includes(lowerName)) return 'globals';
 
+    // pioneer_sdk2 (Пионер Мини 2)
+    if (language === 'python') {
+        if (name === 'Event' || /subscribe/.test(lowerName)) return 'events';
+        if (/^(imageviewer|servocamera)/.test(lowerName) || name === 'Camera') return 'camera';
+        if (/grab_|get_ranger_data/.test(lowerName)) return 'peripherals';
+        if (name === 'Pioneer' || name === 'FlyState' || /(rtl|set_yaw|point_deceleration|get_fly_state)/.test(lowerName)) return 'autopilot';
+        if ((name.startsWith('Pioneer.get_') && !lowerName.includes('get_autopilot_state')) || /(uptime|flight_time)/.test(lowerName)) return 'sensors';
+    }
     if (language === 'python' && name.startsWith('Pioneer.')) {
         if (/(arm|disarm|takeoff|land|go_to_|point_reached|set_manual_speed|get_autopilot_state)/.test(lowerName)) {
             return 'autopilot';

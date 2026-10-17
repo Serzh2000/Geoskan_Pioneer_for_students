@@ -5,6 +5,7 @@ import { resetState, resetRuntimeStatePreservePose, drones, currentDroneId, curr
 import { init3D, updateDrone3D, is3DActive, addObject, appendPointToSelectedLinearObject, clearSceneSelection, deleteSelectedObject, finishSelectedLinearObjectEditing, getSelectedSceneObjectId, isSelectedLinearObjectEditingActive, listSceneObjects, focusSceneObjectById, resetDroneToOrigin, resetSelectedSceneObjectTransform, rotateSelectedSceneObjectByDegrees, selectSceneObjectById, toggleMultiSelectObjectById, setSceneObjectTransformMode, getSceneObjectTransformMode, setSelectedObjectTransform, startSelectedLinearObjectEditing, updateSelectedSceneObject, deleteSceneObjectById } from './modules/drone/index.js';
 import { runLuaScript, stopLuaScript } from './modules/lua/index.js';
 import { runPythonScript, stopPythonScript } from './modules/python/index.js';
+import { examplesSetFor, supportsLanguage } from './modules/core/drone-models.js';
 /**
  * Main browser entry point for the simulator.
  * Wires together the 3D scene, editor, UI controls, and script runtimes.
@@ -170,6 +171,13 @@ async function startSimulation() {
 
     for (const id in drones) {
         const drone = drones[id];
+        // Пионер Мини 2 программируется только на Python (pioneer_sdk2).
+        if (!supportsLanguage(drone.model, 'lua')) {
+            if (id === currentDroneId) {
+                log(`${drone.name}: у Пионера Мини 2 нет Lua - выберите язык Python.`, 'warn');
+            }
+            continue;
+        }
         
         // Always try to run, even if it was running before (stop it first)
         const code = drone.script;
@@ -285,7 +293,8 @@ function clearSceneObjects() {
 
 async function loadFileContent(path: string) {
     try {
-        const res = await fetch(`/api/file-content?path=${encodeURIComponent(path)}&lang=${currentScriptLanguage}`);
+        const examples = examplesSetFor(drones[currentDroneId]?.model, currentScriptLanguage);
+        const res = await fetch(`/api/file-content?path=${encodeURIComponent(path)}&lang=${examples}`);
         const data = await res.json();
         setEditorValue(data.content);
         log(`Файл загружен: ${path}`, 'success');

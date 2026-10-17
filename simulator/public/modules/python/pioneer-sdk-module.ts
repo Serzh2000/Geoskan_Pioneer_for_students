@@ -1,5 +1,6 @@
 import { installJsRuntimeAPI } from './pioneer-js-bridge.js';
 import { PIONEER_CV_PRELUDE } from './pioneer-sdk-cv-prelude.js';
+import { PIONEER_SDK2_PRELUDE } from './pioneer-sdk2-module.js';
 
 const PIONEER_SDK_PRELUDE = `
 import asyncio, inspect, sys, types
@@ -280,5 +281,7 @@ export async function installPioneerSdkModule(pyodide: any) {
     if ((window as any).__pioneer_sdk_installed) return;
     installJsRuntimeAPI();
     pyodide.runPython(PIONEER_SDK_PRELUDE);
+    // pioneer_sdk2 (Пионер Мини 2) строится поверх классов первого SDK.
+    pyodide.runPython(PIONEER_SDK2_PRELUDE);
     (window as any).__pioneer_sdk_installed = true;
 }

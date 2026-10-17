@@ -12,6 +12,7 @@ import { DRONE_MODEL_OFFSET } from './layout.js';
 import { createBlenderModel } from './blender-model.js';
 import { createLEDMatrix } from './leds.js';
 import { findLedGlowSprite, updateLedGlowSprite } from './led-glow.js';
+import { droneModelProfile, type DroneModelId } from '../core/drone-models.js';
 
 // Lit LEDs need to read clearly as individual points even with no bloom pass
 // in the renderer (see led-glow.ts): the material itself goes close to fully
@@ -36,16 +37,57 @@ const BASE_LED_LIGHT_INTENSITY = 0.75;
 const MATRIX_GLOW_LIGHT_INTENSITY = 0.28;
 const MATRIX_GLOW_DESATURATION = 0.6;
 
-export function createDroneModel() {
-    const model = createBlenderModel(createLegacyDroneModel);
-    // The supplied Basic assembly has no matrix module. Display the simulator's
-    // optional teaching module when a program actually lights its pixels.
-    const matrix = createLEDMatrix();
-    matrix.position.set(0, 0, 0.23);
-    matrix.userData.showWhenActive = true;
-    matrix.visible = false;
-    model.add(matrix);
-    return model;
+/**
+ * 3D-модель дрона. Без аргумента — Пионер Базовый, как раньше. mesh.userData.droneModel хранит модель:
+ * по ней updateLEDs знает, сколько светодиодов на корпусе, а setDroneCameraTilt — есть ли камера на сервоприводе.
+ */
+export function createDroneModel(model: DroneModelId = 'pioneer-basic') {
+    const profile = droneModelProfile(model);
+    const mesh = createBlenderModel(createLegacyDroneModel, profile.id);
+    mesh.userData.droneModel = profile.id;
+    if (profile.ledMatrix) {
+        // The supplied Basic assembly has no matrix module. Display the simulator's
+        // optional teaching module when a program actually lights its pixels.
+        const matrix = createLEDMatrix();
+        matrix.position.set(0, 0, 0.23);
+        matrix.userData.showWhenActive = true;
+        matrix.visible = false;
+        mesh.add(matrix);
+    }
+    return mesh;
+}
+
+/**
+ * Наклон камеры на сервоприводе (ServoCamera.set_angle): градусы, 0 — прямо вперёд, отрицательные — вниз.
+ * Ограничивается диапазоном модели (у Мини 2 от −80 до 30). Модель без такой камеры (Базовый) не меняется.
+ * Угол, заданный до загрузки GLB, применяется, когда модель загрузится.
+ */
+export function setDroneCameraTilt(mesh: THREE.Object3D, degrees: number, options: { smooth?: boolean } = {}) {
+    const range = droneModelProfile(mesh.userData.droneModel).servoCamera;
+    if (!range || !Number.isFinite(degrees)) return;
+    const clamped = THREE.MathUtils.clamp(degrees, range.min, range.max);
+    mesh.userData.cameraTiltDeg = clamped;
+    // smooth: камеру ведёт сервопривод - угол догоняет цель в updateCameraTilt.
+    if (options.smooth) return;
+    mesh.userData.cameraTiltCurrentDeg = clamped;
+    const gimbal = mesh.getObjectByName('camera_gimbal');
+    if (gimbal) gimbal.rotation.x = THREE.MathUtils.degToRad(clamped);
+}
+
+/** Скорость сервопривода камеры, градусов в секунду: поворот на весь диапазон - меньше секунды. */
+export const CAMERA_SERVO_SPEED_DEG_S = 180;
+
+/** Каждый кадр: сервопривод поворачивает камеру к заданному углу с конечной скоростью. */
+export function updateCameraTilt(mesh: THREE.Object3D, dt: number) {
+    const target = mesh.userData.cameraTiltDeg;
+    if (typeof target !== 'number') return;
+    const current = typeof mesh.userData.cameraTiltCurrentDeg === 'number' ? mesh.userData.cameraTiltCurrentDeg : 0;
+    if (current === target) return;
+    const step = CAMERA_SERVO_SPEED_DEG_S * Math.max(0, dt);
+    const next = Math.abs(target - current) <= step ? target : current + Math.sign(target - current) * step;
+    mesh.userData.cameraTiltCurrentDeg = next;
+    const gimbal = mesh.getObjectByName('camera_gimbal');
+    if (gimbal) gimbal.rotation.x = THREE.MathUtils.degToRad(next);
 }
 
 function createLegacyDroneModel() {
@@ -89,8 +131,9 @@ export function updateLEDs(droneMesh: THREE.Object3D, droneState: any) {
     let matrixActiveCount = 0;
     let matrixBrightnessSum = 0;
 
-    // Update Base LEDs (0-3)
-    for (let i = 0; i < 4; i++) {
+    // Светодиоды на корпусе: 0-3 у Базового, 0-1 (передние индикаторы) у Мини 2.
+    const profile = droneModelProfile(droneMesh.userData.droneModel);
+    for (let i = 0; i < profile.ledCount; i++) {
         const led = droneState.leds[i] || {r:0, g:0, b:0, w:0};
         const ledObject = droneMesh.getObjectByName(`base_led_${i}`);
 
@@ -117,7 +160,8 @@ export function updateLEDs(droneMesh: THREE.Object3D, droneState: any) {
     // Blender (`led_module` / `module_led_N`) when the asset provides one, otherwise
     // the synthetic teaching matrix (`led_matrix_group` / `matrix_led_N`).
     const usingRealModule = !!droneMesh.getObjectByName('led_module');
-    for (let i = 0; i < MODULE_LED_COUNT; i++) {
+    const moduleLedCount = profile.ledMatrix ? MODULE_LED_COUNT : 0; // модуль 5x5 только у Базового
+    for (let i = 0; i < moduleLedCount; i++) {
         const stateIdx = i + 4;
         if (stateIdx >= droneState.leds.length) break;
 
@@ -191,7 +235,11 @@ function applyLedMaterialState(ledObject: THREE.Object3D, color: THREE.Color, st
             }
             material.envMapIntensity = LED_ENV_MAP_INTENSITY;
 
-            material.color.setScalar(LED_OFF_BASE_COLOR).lerp(color, strength * LED_MATERIAL_TINT_MIX);
+            // Линза, у которой свой цвет и в выключенном состоянии (янтарные индикаторы Мини 2), тускнеет до него.
+            const offColor = material.userData.ledOffColor;
+            if (offColor instanceof THREE.Color) material.color.copy(offColor);
+            else material.color.setScalar(LED_OFF_BASE_COLOR);
+            material.color.lerp(color, strength * LED_MATERIAL_TINT_MIX);
             material.emissive.copy(color);
             material.emissiveIntensity = strength > 0 ? LED_EMISSIVE_INTENSITY * strength : 0;
         });

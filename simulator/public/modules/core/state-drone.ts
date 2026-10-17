@@ -2,6 +2,7 @@ import {
     DEFAULT_LUA_SCRIPT,
     DEFAULT_PYTHON_SCRIPT
 } from './state-types.js';
+import { DEFAULT_DRONE_MODEL, type DroneModelId } from './drone-models.js';
 import type {
     DroneState,
     LuaDiagnosticsState,
@@ -46,11 +47,13 @@ export function createDroneRecord(
     name: string,
     x: number = 0,
     y: number = 0,
-    z: number = 0
+    z: number = 0,
+    model: DroneModelId = DEFAULT_DRONE_MODEL
 ): DroneState {
     return {
         id,
         name,
+        model,
         running: false,
         luaHasEventCallback: false,
         luaHandlesEnginesStarted: false,

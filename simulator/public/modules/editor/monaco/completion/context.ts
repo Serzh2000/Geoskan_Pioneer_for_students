@@ -1,4 +1,4 @@
-import { LUA_CATALOG, PYTHON_CATALOG, getOwnerMembers } from './catalog.js';
+import { LUA_CATALOG, activePythonCatalog, getOwnerMembers } from './catalog.js';
 import type { CompletionCatalog, MemberAccessContext, MemberSeparator } from './types.js';
 
 export function getTextBeforeCursor(model: any, position: any): string {
@@ -114,10 +114,10 @@ export function resolveLuaOwnerName(documentText: string, symbolName: string): s
 }
 
 export function resolvePythonOwnerName(documentText: string, symbolName: string): string | null {
-    if (PYTHON_CATALOG.ownerNames.has(symbolName)) {
+    if (activePythonCatalog().ownerNames.has(symbolName)) {
         return symbolName;
     }
 
-    const symbolTypes = inferPythonSymbolTypes(documentText, PYTHON_CATALOG);
+    const symbolTypes = inferPythonSymbolTypes(documentText, activePythonCatalog());
     return symbolTypes.get(symbolName) || null;
 }

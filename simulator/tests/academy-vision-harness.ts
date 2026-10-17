@@ -26,8 +26,10 @@ def detect(dictionary,token):
     markers=frame_markers.get(token,[]) if dictionary=='DICT_6X6_250' else []
     events.append(dict(kind='detect',time=clock,frameId=token,dictionary=dictionary,markers=markers,pos=pose(),yaw=yaw))
     return [(marker['id'],marker['corners']) for marker in markers]
-def display(name,width,height,pixels):
-    assert len(pixels)==width*height*3
+def display(name,width,height,pixels,texts=None,fmt='bgr'):
+    channels=4 if fmt=='rgba' else 3
+    assert getattr(pixels,'nbytes',None) or len(pixels)==width*height*channels
+    assert getattr(pixels,'nbytes',width*height*channels)==width*height*channels
     events.append(dict(kind='display',time=clock,width=width,height=height))
 def annotation(x,y): events.append(dict(kind='annotation',time=clock,point=dict(x=x,y=y)))
 js=types.SimpleNamespace(pioneer_cv_detect_markers=detect,pioneer_cv_imshow_pixels=display,pioneer_cv_annotation=annotation,pioneer_cv_destroy_all_windows=lambda:None,pioneer_cv_wait_key=lambda delay:-1)

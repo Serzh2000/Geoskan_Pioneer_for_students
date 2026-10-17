@@ -22,6 +22,7 @@ import type {
     ScriptLanguage,
     Vector3
 } from './state-types.js';
+import { DEFAULT_DRONE_MODEL, type DroneModelId } from './drone-models.js';
 import {
     createDroneRecord,
     createDefaultPioneerConnectionSettings,
@@ -136,8 +137,15 @@ export function matchesAuxRange(value: number, range: AuxChannelRange): boolean 
     return value >= min && value <= max;
 }
 
-export function createDroneState(id: string, name: string, x: number = 0, y: number = 0, z: number = 0): DroneState {
-    const drone = createDroneRecord(id, name, x, y, z);
+export function createDroneState(
+    id: string,
+    name: string,
+    x: number = 0,
+    y: number = 0,
+    z: number = 0,
+    model: DroneModelId = DEFAULT_DRONE_MODEL
+): DroneState {
+    const drone = createDroneRecord(id, name, x, y, z, model);
     drones[id] = drone;
     pathPoints[id] = [];
     pathPointsVersion[id] = 0;

@@ -1,13 +1,8 @@
 import { latestMarkerDetections, markersInFrame } from './marker-detection.js';
 import { recordLearningEvent } from '../core/learning-journal.js';
 import { getDroneOrDefault } from './runtime-shared.js';
-type CvWindowState = {
-    root: HTMLDivElement;
-    title: HTMLDivElement;
-    body: HTMLDivElement;
-};
+import { destroyAllCvWindows, drawCvFrame, isCvWindowShowing, openCvWindow, setCvWindowCloseHandler, showCvText, type CvTextOverlay } from './cv-window.js';
 
-const cvWindows = new Map<string, CvWindowState>();
 let cvKeyboardInstalled = false;
 let lastCvKeyCode = -1;
 
@@ -23,110 +18,6 @@ function installCvKeyboardBridge() {
             lastCvKeyCode = event.key.charCodeAt(0);
         }
     });
-}
-
-function ensureCvWindow(windowName: string) {
-    const existing = cvWindows.get(windowName);
-    if (existing) {
-        existing.root.style.display = 'flex';
-        existing.title.textContent = windowName || 'OpenCV Preview';
-        return existing;
-    }
-
-    const host = document.body;
-    if (!host) return null;
-
-    const root = document.createElement('div');
-    root.className = 'python-cv-modal modal-overlay';
-    root.style.position = 'fixed';
-    root.style.inset = '0';
-    root.style.display = 'flex';
-    root.style.alignItems = 'center';
-    root.style.justifyContent = 'center';
-    root.style.padding = '24px';
-    root.style.background = 'rgba(2, 6, 23, 0.7)';
-    root.style.backdropFilter = 'blur(4px)';
-    root.style.zIndex = '1200';
-
-    const header = document.createElement('div');
-    header.style.display = 'flex';
-    header.style.alignItems = 'center';
-    header.style.justifyContent = 'space-between';
-    header.style.padding = '14px 16px';
-    header.style.background = 'rgba(30, 41, 59, 0.95)';
-    header.style.borderBottom = '1px solid rgba(148, 163, 184, 0.18)';
-
-    const title = document.createElement('div');
-    title.textContent = windowName || 'OpenCV Preview';
-    title.style.fontSize = '16px';
-    title.style.fontWeight = '600';
-
-    const hint = document.createElement('div');
-    hint.textContent = '`q` or `Esc`';
-    hint.style.fontSize = '12px';
-    hint.style.opacity = '0.75';
-    hint.style.marginLeft = '8px';
-
-    const titleWrap = document.createElement('div');
-    titleWrap.style.display = 'flex';
-    titleWrap.style.alignItems = 'center';
-    titleWrap.append(title, hint);
-
-    const closeBtn = document.createElement('button');
-    closeBtn.type = 'button';
-    closeBtn.textContent = 'Закрыть';
-    closeBtn.style.border = '1px solid rgba(148, 163, 184, 0.28)';
-    closeBtn.style.background = 'rgba(15, 23, 42, 0.65)';
-    closeBtn.style.color = '#e2e8f0';
-    closeBtn.style.cursor = 'pointer';
-    closeBtn.style.fontSize = '13px';
-    closeBtn.style.padding = '6px 10px';
-    closeBtn.style.borderRadius = '8px';
-    closeBtn.addEventListener('click', () => {
-        root.style.display = 'none';
-        lastCvKeyCode = 27;
-    });
-
-    root.addEventListener('click', (event) => {
-        if (event.target === root) {
-            root.style.display = 'none';
-            lastCvKeyCode = 27;
-        }
-    });
-
-    header.append(titleWrap, closeBtn);
-
-    const content = document.createElement('div');
-    content.className = 'python-cv-modal__content';
-    content.style.width = 'min(820px, calc(100vw - 48px))';
-    content.style.maxHeight = 'min(88vh, 920px)';
-    content.style.background = 'rgba(10, 14, 24, 0.98)';
-    content.style.border = '1px solid rgba(96, 165, 250, 0.45)';
-    content.style.borderRadius = '16px';
-    content.style.boxShadow = '0 24px 60px rgba(0, 0, 0, 0.45)';
-    content.style.color = '#e5eefc';
-    content.style.overflow = 'hidden';
-    content.style.display = 'flex';
-    content.style.flexDirection = 'column';
-
-    const body = document.createElement('div');
-    body.style.padding = '16px';
-    body.style.fontFamily = 'ui-monospace, SFMono-Regular, Consolas, monospace';
-    body.style.fontSize = '13px';
-    body.style.lineHeight = '1.45';
-    body.style.whiteSpace = 'pre-wrap';
-    body.style.minHeight = '320px';
-    body.style.maxHeight = 'calc(88vh - 64px)';
-    body.style.overflow = 'auto';
-    body.textContent = 'Ожидание кадра...';
-
-    content.append(header, body);
-    root.appendChild(content);
-    host.appendChild(root);
-
-    const state = { root, title, body };
-    cvWindows.set(windowName, state);
-    return state;
 }
 
 function renderCvFrameSummary(frame: unknown) {
@@ -171,6 +62,8 @@ function renderCvFrameSummary(frame: unknown) {
 
 export function installCvRuntimeAPI(w: any) {
     installCvKeyboardBridge();
+    // Кнопка «Закрыть» окна - как Esc: cv2.waitKey вернёт 27.
+    setCvWindowCloseHandler(() => { lastCvKeyCode = 27; });
     // [[id, [[x, y] x4]], ...] for the last captured frame, one dictionary.
     w.pioneer_cv_detect_markers = (dictionary: string, frameId = 0) => {
         const id = String(w.SIM_DRONE_ID || '');
@@ -183,32 +76,37 @@ export function installCvRuntimeAPI(w: any) {
         const id = String(w.SIM_DRONE_ID || '');
         recordLearningEvent(id, { kind: 'annotation', time: getDroneOrDefault(id).current_time, point: { x: Number(x), y: Number(y) } });
     };
-    w.pioneer_cv_imshow_pixels = (windowName: string, width: number, height: number, raw: any) => {
-        const data = typeof raw?.toJs === 'function' ? raw.toJs() : raw;
+    // Кадр приходит буфером (numpy-массив или bytes) - без списка из сотен тысяч чисел,
+    // на который уходило по 40 мс на кадр.
+    w.pioneer_cv_imshow_pixels = (windowName: string, width: number, height: number, raw: any, rawTexts?: any, format: string = 'bgr') => {
         const wFrame = Math.trunc(Number(width)), hFrame = Math.trunc(Number(height));
-        if (!data || wFrame < 1 || hFrame < 1 || wFrame * hFrame > 1920 * 1080 || data.length !== wFrame * hFrame * 3) return null;
-        const cvWindow = ensureCvWindow(String(windowName || 'Камера'));
-        if (!cvWindow) return null;
-        const canvas = document.createElement('canvas');
-        canvas.width = wFrame; canvas.height = hFrame;
-        canvas.style.width = '100%'; canvas.style.height = 'auto';
-        const context = canvas.getContext('2d');
-        if (!context) return null;
-        const pixels = context.createImageData(wFrame, hFrame);
-        for (let src = 0, dest = 0; src < data.length; src += 3, dest += 4) {
-            pixels.data[dest] = Number(data[src + 2]); pixels.data[dest + 1] = Number(data[src + 1]); pixels.data[dest + 2] = Number(data[src]); pixels.data[dest + 3] = 255;
-        }
-        context.putImageData(pixels, 0, 0);
-        cvWindow.body.replaceChildren(canvas);
+        if (wFrame < 1 || hFrame < 1 || wFrame * hFrame > 1920 * 1080) return null;
+        const cvWindow = openCvWindow(String(windowName || 'Камера'));
         const id = String(w.SIM_DRONE_ID || '');
         recordLearningEvent(id, { kind: 'display', time: getDroneOrDefault(id).current_time, width: wFrame, height: hFrame });
+        if (!cvWindow || !isCvWindowShowing(cvWindow)) return null;
+        let buffer: { data: Uint8Array; release: () => void } | null = null;
+        try {
+            let data: ArrayLike<number> | null;
+            if (typeof raw?.getBuffer === 'function') {
+                buffer = raw.getBuffer('u8');
+                data = buffer!.data;
+            } else {
+                data = typeof raw?.toJs === 'function' ? raw.toJs() : raw;
+            }
+            const rgba = format === 'rgba';
+            if (!data || data.length !== wFrame * hFrame * (rgba ? 4 : 3)) return null;
+            const texts = (typeof rawTexts?.toJs === 'function' ? rawTexts.toJs() : rawTexts) as CvTextOverlay[] | null | undefined;
+            drawCvFrame(cvWindow, wFrame, hFrame, data, texts, rgba ? 'rgba' : 'bgr');
+        } finally {
+            buffer?.release();
+        }
         return null;
     };
     w.pioneer_cv_imshow = (windowName: string, frame: unknown) => {
-        const cvWindow = ensureCvWindow(String(windowName || 'OpenCV Preview'));
+        const cvWindow = openCvWindow(String(windowName || 'OpenCV Preview'));
         if (!cvWindow) return null;
-        cvWindow.root.style.display = 'flex';
-        cvWindow.body.textContent = renderCvFrameSummary(frame);
+        showCvText(cvWindow, renderCvFrameSummary(frame));
         return null;
     };
     w.pioneer_cv_wait_key = (_delayMs: number) => {
@@ -217,10 +115,7 @@ export function installCvRuntimeAPI(w: any) {
         return keyCode;
     };
     w.pioneer_cv_destroy_all_windows = () => {
-        for (const state of cvWindows.values()) {
-            state.root.remove();
-        }
-        cvWindows.clear();
+        destroyAllCvWindows();
         return null;
     };
 }

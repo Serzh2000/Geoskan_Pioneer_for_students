@@ -11,13 +11,25 @@
                         <section class="pk-section" aria-labelledby="drone-list-title">
                             <div class="pk-section__head">
                                 <h3 id="drone-list-title" class="pk-section__title">Дроны</h3>
-                                <button id="add-drone-btn" class="btn-secondary btn--sm" type="button">
+                                <button id="add-drone-btn" class="btn-secondary btn--sm" type="button" data-drone-model="pioneer-basic" title="Добавить Пионер Базовый: Lua и Python (pioneer_sdk)">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
-                                    <span>Добавить</span>
+                                    <span>Базовый</span>
+                                </button>
+                                <button id="add-mini2-btn" class="btn-secondary btn--sm" type="button" data-drone-model="pioneer-mini2" title="Добавить Пионер Мини 2: только Python (pioneer_sdk2)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+                                    <span>Мини 2</span>
                                 </button>
                             </div>
                             <div id="drone-list" class="pk-list swarm-list" role="listbox" aria-label="Список дронов"></div>
                             <button id="del-drone-btn" type="button" hidden>Удалить</button>
+                        </section>
+                        <section class="pk-section" aria-labelledby="drone-model-title">
+                            <div class="pk-section__head"><h3 id="drone-model-title" class="pk-section__title">Модель дрона</h3></div>
+                            <div id="drone-model-seg" class="pk-seg" role="radiogroup" aria-labelledby="drone-model-title">
+                                <button type="button" class="pk-seg__btn" role="radio" aria-checked="false" data-drone-model="pioneer-basic">Пионер Базовый</button>
+                                <button type="button" class="pk-seg__btn" role="radio" aria-checked="false" data-drone-model="pioneer-mini2">Пионер Мини 2</button>
+                            </div>
+                            <p id="drone-model-hint" class="pk-section__hint"></p>
                         </section>
                         <section class="pk-section" aria-labelledby="swarm-bridge-title">
                             <div class="pk-section__head"><h3 id="swarm-bridge-title" class="pk-section__title">Внешний Python</h3></div>

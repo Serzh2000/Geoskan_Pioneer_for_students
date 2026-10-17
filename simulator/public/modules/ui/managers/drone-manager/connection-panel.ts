@@ -1,4 +1,5 @@
 import { log } from '../../../shared/logging/logger.js';
+import { droneModelProfile } from '../../../core/drone-models.js';
 import { drones, ensureDronePythonConnectionSettings } from '../../../core/state.js';
 import type { PioneerConnectionMethod, PythonExecutionTarget } from '../../../core/state.js';
 import { clearExternalBridgeQueue, isExternalBridgeEnabled, setExternalBridgeEnabled } from '../../../python/external-bridge.js';
@@ -147,9 +148,12 @@ export function createConnectionPanel(options: ConnectionPanelOptions) {
             dom.bridgeDisableBtn.hidden = !bridgeEnabled;
             dom.bridgeEnableBtn.disabled = !activeDroneId || bridgeEnabled;
             dom.bridgeDisableBtn.disabled = !activeDroneId || !bridgeEnabled;
+            // Пионер Мини 2 управляется программой на его борту (pioneer_sdk2),
+            // внешнего MAVLink-подключения у него нет.
+            const onboardOnly = !!activeDroneId && droneModelProfile(drones[activeDroneId]?.model).pythonSdk === 'pioneer_sdk2';
             if (dom.bridgeToggle) {
                 dom.bridgeToggle.checked = bridgeEnabled;
-                dom.bridgeToggle.disabled = !activeDroneId;
+                dom.bridgeToggle.disabled = !activeDroneId || (onboardOnly && !bridgeEnabled);
             }
             dom.bridgeCodeStep?.classList.toggle('is-off', !bridgeEnabled);
             document.querySelectorAll<HTMLButtonElement>('#swarm-bridge-code-step [data-copy-target]').forEach((button) => { button.disabled = !bridgeEnabled; });
@@ -179,6 +183,12 @@ export function createConnectionPanel(options: ConnectionPanelOptions) {
             return;
         }
 
+        const profile = droneModelProfile(drones[activeDroneId].model);
+        const steps = dom.bridgeSummary.parentElement?.querySelector<HTMLElement>('.swarm-steps');
+        if (steps) steps.hidden = profile.pythonSdk === 'pioneer_sdk2';
+        if (profile.pythonSdk === 'pioneer_sdk2') {
+            dom.bridgeSummary.textContent = `${profile.title} выполняет Python-программу на своём борту через pioneer_sdk2. Пишите её во вкладке «Код» - внешнее подключение с компьютера не нужно.`;
+        }
         const bridgeEnabled = isExternalBridgeEnabled(activeDroneId);
         setBridgeStatus(bridgeEnabled ? 'Разрешено' : 'Запрещено', bridgeEnabled ? 'success' : 'plain');
         const connection = ensureDronePythonConnectionSettings(activeDroneId);

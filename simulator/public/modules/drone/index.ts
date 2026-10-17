@@ -8,7 +8,7 @@ import { renderCameraViews } from './camera-views.js';
 import { drones, currentDroneId, simSettings } from '../core/state.js';
 import { log } from '../shared/logging/logger.js';
 import { envGroup } from '../environment/index.js';
-import { createDroneModel, updateLEDs, animateRotors } from '../drone-model/index.js';
+import { createDroneModel, updateLEDs, animateRotors, updateCameraTilt } from '../drone-model/index.js';
 import { setEsp32Attached, updateEsp32Module } from '../drone-model/esp32-module.js';
 import { updateCamera } from '../scene/core/camera.js';
 import { getCameraMode } from '../scene/core/camera-mode-state.js';
@@ -172,8 +172,14 @@ export function init3D(container: HTMLElement) {
 
 export function syncDrones() {
     for (const id in drones) {
+        // Модель дрона сменилась (Базовый <-> Мини 2) - пересобрать его 3D-модель.
+        if (droneMeshes[id] && droneMeshes[id].userData.droneModel !== drones[id].model) {
+            scene.remove(droneMeshes[id]);
+            disposeTrailForDrone(id);
+            delete droneMeshes[id];
+        }
         if (!droneMeshes[id]) {
-            const mesh = createDroneModel();
+            const mesh = createDroneModel(drones[id].model);
             mesh.up.set(0, 0, 1);
             // Cache the orientation arrow reference once at build time so the
             // per-frame update loop doesn't need to walk the mesh's subtree
@@ -255,6 +261,7 @@ export function updateDrone3D(dt: number, render = true) {
             resetDroneVisuals(id, mesh);
             updateLEDs(mesh, drone);
             animateRotors(mesh, dt, drone);
+            updateCameraTilt(mesh, dt);
             
             mesh.position.set(drone.pos.x, drone.pos.y, drone.pos.z);
             mesh.rotation.set(drone.orientation.pitch, drone.orientation.roll, drone.orientation.yaw, 'ZYX');

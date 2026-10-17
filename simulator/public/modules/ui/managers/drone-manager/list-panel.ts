@@ -13,6 +13,8 @@ import { stopLuaScript } from '../../../lua/index.js';
 import { disposePythonRunState, stopPythonScript } from '../../../python/index.js';
 import { setExternalBridgeEnabled } from '../../../python/external-bridge.js';
 import type { DroneManagerDom } from './dom.js';
+import { DRONE_MODELS, droneModelProfile, type DroneModelId } from '../../../core/drone-models.js';
+import { DEFAULT_PYTHON_SCRIPT, DEFAULT_SDK2_PYTHON_SCRIPT } from '../../../core/state-types.js';
 import {
     getDroneAddress,
     getDroneTransportSummary,
@@ -72,7 +74,63 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
         if (onSceneUpdate) onSceneUpdate();
     }
 
+    const MODEL_HINTS: Record<DroneModelId, string> = {
+        'pioneer-basic': 'Lua и Python (pioneer_sdk). Программу можно загрузить на настоящий дрон кнопкой «На дрон».',
+        'pioneer-mini2': 'Только Python и pioneer_sdk2: программа выполняется на борту. Камера наклоняется сервоприводом.'
+    };
+
+    /** Переключатель «Модель дрона» показывает модель выбранного дрона. */
+    function renderModelSwitch() {
+        const drone = drones[currentDroneId];
+        const model = droneModelProfile(drone?.model).id;
+        dom.modelSeg?.querySelectorAll<HTMLButtonElement>('[data-drone-model]').forEach((button) => {
+            const active = button.dataset.droneModel === model;
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-checked', active ? 'true' : 'false');
+            button.disabled = !drone || drone.running;
+        });
+        if (dom.modelHint) {
+            dom.modelHint.textContent = drone?.running
+                ? 'Остановите программу, чтобы сменить модель.'
+                : MODEL_HINTS[model];
+        }
+    }
+
+    /**
+     * Сменить модель выбранного дрона (Базовый <-> Мини 2): 3D-модель пересоберётся
+     * сама (drone/index.ts, syncDrones), язык редактора подстроится под модель.
+     */
+    function setDroneModel(id: string, model: DroneModelId) {
+        const drone = drones[id];
+        if (!drone || drone.model === model || drone.running) return;
+        const profile = DRONE_MODELS[model];
+        stopLuaScript(id);
+        stopPythonScript(id);
+        if (id === currentDroneId && currentScriptLanguage === 'python') {
+            drone.pythonScript = getEditorValue();
+        }
+        drone.model = model;
+        // Имя по умолчанию следует за моделью: «Пионер Базовый 1» -> «Пионер Мини 2 · 1».
+        const defaultName = drone.name.match(/^Пионер (?:Базовый|Мини 2(?: ·)?) (\d+)$/);
+        if (defaultName) {
+            drone.name = /\d$/.test(profile.namePrefix) ? `${profile.namePrefix} · ${defaultName[1]}` : `${profile.namePrefix} ${defaultName[1]}`;
+        }
+        // Программа на чужой библиотеке не запустится - даём шаблон своей.
+        const usesSdk2 = /^\s*(?:from|import)\s+pioneer_sdk2\b/m.test(drone.pythonScript);
+        if (profile.pythonSdk === 'pioneer_sdk2' && !usesSdk2) drone.pythonScript = DEFAULT_SDK2_PYTHON_SCRIPT;
+        if (profile.pythonSdk === 'pioneer_sdk' && usesSdk2) drone.pythonScript = DEFAULT_PYTHON_SCRIPT;
+        // Язык, справочник, примеры и кнопка «На дрон» подстраиваются по этому событию.
+        emitDroneSelectionChanged(id);
+        if (id === currentDroneId) {
+            setEditorValue(currentScriptLanguage === 'lua' ? drone.script : drone.pythonScript);
+        }
+        updateList();
+        if (onSceneUpdate) onSceneUpdate();
+        log(`${drone.name}: модель - ${profile.title}`, 'success');
+    }
+
     function updateList() {
+        renderModelSwitch();
         if (!listEl) {
             return;
         }
@@ -141,7 +199,11 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
 
             const meta = document.createElement('span');
             meta.className = 'pk-row__meta';
-            meta.textContent = isConfirming ? 'Удалить этого дрона?' : getDroneAddress(id);
+            const profile = droneModelProfile(drones[id].model);
+            const onboard = profile.pythonSdk === 'pioneer_sdk2';
+            meta.textContent = isConfirming
+                ? 'Удалить этого дрона?'
+                : onboard ? 'Python на борту · pioneer_sdk2' : getDroneAddress(id);
 
             text.appendChild(name);
             text.appendChild(meta);
@@ -168,7 +230,7 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
             } else {
                 const port = document.createElement('span');
                 port.className = 'pk-row__end swarm-list__port';
-                port.textContent = `порт ${connection.mavlinkPort || index + 1}`;
+                port.textContent = onboard ? 'SDK 2' : `порт ${connection.mavlinkPort || index + 1}`;
                 item.appendChild(port);
 
                 if (canDelete) {
@@ -293,10 +355,12 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
             focusRow(nextDroneId);
         });
 
-        dom.addBtn?.addEventListener('click', () => {
+        const addDrone = (model: DroneModelId) => {
+            const profile = DRONE_MODELS[model];
             const num = Object.keys(drones).length + 1;
             const id = `drone_${num}_${Date.now()}`;
-            const name = `Пионер Базовый ${num}`;
+            // «Пионер Мини 2 · 3», чтобы номер не сливался с цифрой в названии модели.
+            const name = /\d$/.test(profile.namePrefix) ? `${profile.namePrefix} · ${num}` : `${profile.namePrefix} ${num}`;
             const sourceDroneId = getActiveDroneId() || currentDroneId;
             const sourceConnection = ensureDronePythonConnectionSettings(sourceDroneId);
             const nextPort = getNextAvailableMavlinkPort(sourceConnection.mavlinkPort || 8001);
@@ -305,7 +369,8 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
             const x = (Math.random() - 0.5) * 4;
             const y = (Math.random() - 0.5) * 4;
 
-            createDroneState(id, name, x, y, 0);
+            const created = createDroneState(id, name, x, y, 0, model);
+            if (profile.pythonSdk === 'pioneer_sdk2') created.pythonScript = DEFAULT_SDK2_PYTHON_SCRIPT;
             const createdConnection = ensureDronePythonConnectionSettings(id);
             createdConnection.executionTarget = sourceConnection.executionTarget;
             createdConnection.simulator = sourceConnection.simulator;
@@ -325,7 +390,17 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
             reportDroneManagerDebug('H5', 'Created drone from manager', { id, name });
             switchDrone(id);
             updateList();
-            log(`Добавлен новый дрон: ${name} (${createdConnection.ip}:${createdConnection.mavlinkPort}, camera:${createdConnection.cameraPort}, ${createdConnection.connectionMethod})`, 'success');
+            log(profile.pythonSdk === 'pioneer_sdk2'
+                ? `Добавлен новый дрон: ${name} (Python, pioneer_sdk2)`
+                : `Добавлен новый дрон: ${name} (${createdConnection.ip}:${createdConnection.mavlinkPort}, camera:${createdConnection.cameraPort}, ${createdConnection.connectionMethod})`, 'success');
+        };
+        dom.addBtn?.addEventListener('click', () => addDrone('pioneer-basic'));
+        dom.addMini2Btn?.addEventListener('click', () => addDrone('pioneer-mini2'));
+        dom.modelSeg?.addEventListener('click', (event) => {
+            const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-drone-model]');
+            const model = button?.dataset.droneModel;
+            if (!button || button.disabled || !model || !(model in DRONE_MODELS)) return;
+            setDroneModel(currentDroneId, model as DroneModelId);
         });
 
         dom.delBtn?.addEventListener('click', () => {

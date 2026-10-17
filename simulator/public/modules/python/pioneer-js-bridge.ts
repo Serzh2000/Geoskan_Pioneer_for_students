@@ -37,6 +37,8 @@ import {
     isDroneCameraConnected
 } from './pioneer-js-bridge-camera.js';
 import { installCvRuntimeAPI } from './pioneer-js-bridge-cv.js';
+import { installSdk2RuntimeAPI } from './pioneer-sdk2-bridge.js';
+import { droneModelProfile } from '../core/drone-models.js';
 
 // Python scripts run synchronously between asyncio yields, same as a Lua chunk between
 // coroutine resumes, so a malformed numeric argument must not become NaN and silently
@@ -49,6 +51,7 @@ function toFiniteNumber(value: unknown, fallback: number): number {
 export function installJsRuntimeAPI() {
     const w = window as any;
     installCvRuntimeAPI(w);
+    installSdk2RuntimeAPI(w);
 
     w.py_is_cancelled = (id: string) => Boolean(cancelledRuns[id]);
     w.pioneer_input = (promptText: string) => {
@@ -139,7 +142,7 @@ export function installJsRuntimeAPI() {
         });
     };
 
-    w.pioneer_go_to_local_point = (id: string, x: any, y: any, z: any, yaw: any) => {
+    w.pioneer_go_to_local_point = (id: string, x: unknown, y: unknown, z: unknown, yaw: unknown) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
         // Координаты сцены, как у get_local_position_lps() и Ctrl+ЛКМ.
@@ -155,7 +158,7 @@ export function installJsRuntimeAPI() {
     // дрона. pioneer_sdk переводит (x, y, z) в BODY_FRD как y — вперёд, x —
     // вправо, z — вверх (aruco_flight.py: vy > 0 — к маркеру), а курс —
     // поворот от текущего. Раньше здесь летели в абсолютную точку.
-    w.pioneer_go_to_local_point_body_fixed = (id: string, x: any, y: any, z: any, yaw: any) => {
+    w.pioneer_go_to_local_point_body_fixed = (id: string, x: unknown, y: unknown, z: unknown, yaw: unknown) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
         const shift = bodyPlanarToWorld(toFiniteNumber(x, 0), toFiniteNumber(y, 0), d.orientation.yaw);
@@ -173,7 +176,7 @@ export function installJsRuntimeAPI() {
     };
 
     const MANUAL_SPEED_TIMEOUT_MS = 500;
-    w.pioneer_set_manual_speed = (id: string, vx: any, vy: any, vz: any, yaw_rate: any) => {
+    w.pioneer_set_manual_speed = (id: string, vx: unknown, vy: unknown, vz: unknown, yaw_rate: unknown) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
         const now = performance.now();
@@ -209,7 +212,7 @@ export function installJsRuntimeAPI() {
     // Скорость в осях дрона (vx — вправо, vy — вперёд, как у
     // go_to_local_point_body_fixed) переводится в мировые оси. Раньше она
     // шла в мир без поворота.
-    w.pioneer_set_manual_speed_body_fixed = (id: string, vx: any, vy: any, vz: any, yaw_rate: any) => {
+    w.pioneer_set_manual_speed_body_fixed = (id: string, vx: unknown, vy: unknown, vz: unknown, yaw_rate: unknown) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
         const world = bodyPlanarToWorld(toFiniteNumber(vx, 0), toFiniteNumber(vy, 0), d.orientation.yaw);
@@ -264,7 +267,7 @@ export function installJsRuntimeAPI() {
 
     // pioneer_sdk.cargo_set(): реле захвата — тот же магнит, что Lua включает
     // через Gpio (lua/hardware/io.ts).
-    w.pioneer_cargo_set = (id: string, grab: any) => {
+    w.pioneer_cargo_set = (id: string, grab: unknown) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         getDroneOrDefault(id).magnetGripper.active = Boolean(grab);
         return true;
@@ -290,7 +293,7 @@ export function installJsRuntimeAPI() {
         }
     };
 
-    w.pioneer_led_control = (id: string, led_id: any, r: any, g: any, b: any) => {
+    w.pioneer_led_control = (id: string, led_id: unknown, r: unknown, g: unknown, b: unknown) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
         const ledId = toFiniteNumber(led_id, -1);
@@ -304,7 +307,7 @@ export function installJsRuntimeAPI() {
             }
             return true;
         }
-        if (Number.isInteger(ledId) && ledId >= 0 && ledId < Math.min(4, d.leds.length)) {
+        if (Number.isInteger(ledId) && ledId >= 0 && ledId < Math.min(droneModelProfile(d.model).ledCount, d.leds.length)) {
             d.leds[ledId] = { r: rn, g: gn, b: bn, w: 0 };
             recordLearningEvent(d.id, { kind: 'led', time: d.current_time, ledId, color: d.leds[ledId] });
             return true;
@@ -314,14 +317,14 @@ export function installJsRuntimeAPI() {
 
     w.pioneer_send_rc_channels = (
         id: string,
-        channel_1: any,
-        channel_2: any,
-        channel_3: any,
-        channel_4: any,
-        channel_5: any,
-        channel_6: any,
-        channel_7: any,
-        channel_8: any
+        channel_1: unknown,
+        channel_2: unknown,
+        channel_3: unknown,
+        channel_4: unknown,
+        channel_5: unknown,
+        channel_6: unknown,
+        channel_7: unknown,
+        channel_8: unknown
     ) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const d = getDroneOrDefault(id);
@@ -336,7 +339,7 @@ export function installJsRuntimeAPI() {
         return true;
     };
 
-    w.pioneer_lua_script_control = (id: string, command: any) => {
+    w.pioneer_lua_script_control = (id: string, command: unknown) => {
         if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
         const droneId = String(id || w.SIM_DRONE_ID || '');
         const drone = getDroneOrDefault(droneId);

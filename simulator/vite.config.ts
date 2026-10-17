@@ -49,9 +49,11 @@ function htmlIncludesPlugin(rootDir: string): Plugin {
 function examplesApiPlugin(projectRoot: string): Plugin {
   const existing = (candidates: string[]) => [...new Set(candidates.map((candidate) => path.resolve(candidate)))].filter((candidate) => fs.existsSync(candidate));
   const rootsFor = (lang: string) =>
-    lang === 'python'
-      ? existing([path.join(projectRoot, 'examples-python'), path.resolve(projectRoot, '..', 'examples', 'python')])
-      : existing([path.join(projectRoot, 'examples'), path.resolve(projectRoot, '..', 'examples', 'lua')]);
+    lang === 'python-sdk2'
+      ? existing([path.join(projectRoot, 'examples-python-sdk2'), path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'pioneer_sdk2')])
+      : lang === 'python'
+        ? existing([path.join(projectRoot, 'examples-python'), path.resolve(projectRoot, '..', 'examples', 'python')])
+        : existing([path.join(projectRoot, 'examples'), path.resolve(projectRoot, '..', 'examples', 'lua')]);
   const sendJson = (res: import('node:http').ServerResponse, status: number, body: unknown) => {
     res.statusCode = status;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -64,14 +66,15 @@ function examplesApiPlugin(projectRoot: string): Plugin {
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url ?? '/', 'http://localhost');
         if (req.method !== 'GET' || (url.pathname !== '/api/files' && url.pathname !== '/api/file-content')) return next();
-        const lang = url.searchParams.get('lang') === 'python' ? 'python' : 'lua';
+        const requested = url.searchParams.get('lang');
+        const lang = requested === 'python' || requested === 'python-sdk2' ? requested : 'lua';
         const roots = rootsFor(lang);
         try {
           if (url.pathname === '/api/files') {
             const seen = new Set<string>();
             const files: string[] = [];
             for (const root of roots) {
-              for (const file of await glob(`**/*.${lang === 'python' ? 'py' : 'lua'}`, { cwd: root, nodir: true })) {
+              for (const file of await glob(`**/*.${lang === 'lua' ? 'lua' : 'py'}`, { cwd: root, nodir: true })) {
                 const normalized = file.split('\\').join('/');
                 if (!seen.has(normalized)) {
                   seen.add(normalized);

@@ -100,9 +100,13 @@ export interface AuxChannelRange {
 
 export type FlightMode = 'AUTO' | 'LOITER' | 'ALTHOLD' | 'STABILIZE';
 
+import type { DroneModelId } from './drone-models.js';
+
 export interface DroneState {
     id: string;
     name: string;
+    /** Модель дрона (core/drone-models.ts): внешний вид, языки, Python-библиотека. */
+    model: DroneModelId;
     running: boolean;
     luaHasEventCallback: boolean;
     /** True when the current script explicitly consumes Ev.ENGINES_STARTED. */
@@ -141,7 +145,16 @@ export interface DroneState {
      * expiresAt (performance.now() ms). While fresh, the autopilot tracks this
      * velocity instead of target_pos - like the real Pioneer's speed setpoints.
      */
-    manualVelocity?: { x: number; y: number; z: number; expiresAt: number } | null;
+    manualVelocity?: {
+        x: number;
+        y: number;
+        z: number;
+        expiresAt: number;
+        /** pioneer_sdk2: поворот, рад/с, всё время действия команды. */
+        yawRate?: number;
+    } | null;
+    /** Высота опоры, с которой начался последний взлёт (physics/events.ts: опора - не препятствие). */
+    liftoffZ?: number | null;
     pendingLocalPoint?: boolean;
     pendingLocalPointSource?: CommandSource | null;
     pendingLocalPointTarget?: Vector3 | null;
@@ -199,5 +212,25 @@ export const DEFAULT_PYTHON_SCRIPT = [
     'time.sleep(2)',
     '',
     'pioneer.land()',
+    'pioneer.close_connection()'
+].join('\n');
+
+/** Шаблон программы для Пионера Мини 2: pioneer_sdk2, команды ждут события сами. */
+export const DEFAULT_SDK2_PYTHON_SCRIPT = [
+    '# Пионер Мини 2: программа выполняется на борту дрона',
+    'from pioneer_sdk2 import Pioneer',
+    'import time',
+    '',
+    'pioneer = Pioneer()',
+    '',
+    'pioneer.arm()        # ждёт запуска моторов',
+    'pioneer.takeoff()    # ждёт окончания взлёта',
+    '',
+    '# Курс yaw - в градусах',
+    'pioneer.go_to_local_point(x=1, y=1, z=1, yaw=0)',
+    'while not pioneer.point_reached():',
+    '    time.sleep(0.05)',
+    '',
+    'pioneer.land()       # ждёт посадки',
     'pioneer.close_connection()'
 ].join('\n');

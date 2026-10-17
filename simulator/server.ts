@@ -94,7 +94,24 @@ function resolvePythonExamplesRoots(): string[] {
     ]);
 }
 
-function examplesRootsFor(lang: ScriptLanguage, luaRoots: string[], pythonRoots: string[]): string[] {
+// Programs for Pioneer Mini 2 (pioneer_sdk2): the book's onboard examples.
+function resolvePythonSdk2ExamplesRoots(): string[] {
+    return dedupeExistingPaths([
+        ...(resourcesDir ? [path.join(resourcesDir, 'examples-python-sdk2')] : []),
+        path.join(runtimeDir, 'examples-python-sdk2'),
+        path.join(projectRoot, 'examples-python-sdk2'),
+        path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'pioneer_sdk2')
+    ]);
+}
+
+type ExamplesSet = ScriptLanguage | 'python-sdk2';
+
+function parseExamplesSet(value: unknown): ExamplesSet {
+    return value === 'python' || value === 'python-sdk2' ? value : 'lua';
+}
+
+function examplesRootsFor(lang: ExamplesSet, luaRoots: string[], pythonRoots: string[]): string[] {
+    if (lang === 'python-sdk2') return resolvePythonSdk2ExamplesRoots();
     return lang === 'python' ? pythonRoots : luaRoots;
 }
 
@@ -184,9 +201,9 @@ function createApp(options: StartServerOptions): express.Express {
     // Python never offers a Lua script and vice versa. Defaults to Lua for
     // callers that predate this parameter.
     app.get('/api/files', async (req: express.Request, res: express.Response) => {
-        const lang: ScriptLanguage = req.query.lang === 'python' ? 'python' : 'lua';
+        const lang = parseExamplesSet(req.query.lang);
         const roots = examplesRootsFor(lang, luaExamplesRoots, pythonExamplesRoots);
-        const extension = lang === 'python' ? 'py' : 'lua';
+        const extension = lang === 'lua' ? 'lua' : 'py';
         console.log(`Listing ${lang} files in:`, roots.join(', '));
 
         try {
@@ -215,7 +232,7 @@ function createApp(options: StartServerOptions): express.Express {
         if (!relativePath) {
             return res.status(400).json({ error: 'Path required' });
         }
-        const lang: ScriptLanguage = req.query.lang === 'python' ? 'python' : 'lua';
+        const lang = parseExamplesSet(req.query.lang);
         const roots = examplesRootsFor(lang, luaExamplesRoots, pythonExamplesRoots);
 
         for (const examplesRoot of roots) {

@@ -1,4 +1,4 @@
-import { LUA_CATALOG, LUA_EV_ENTRIES, PYTHON_CATALOG, getOwnerMembers } from './catalog.js';
+import { LUA_CATALOG, LUA_EV_ENTRIES, activePythonCatalog, getOwnerMembers } from './catalog.js';
 import { findCallContext } from './call-context.js';
 import { extractMemberAccessContext, resolveLuaOwnerName, resolvePythonOwnerName } from './context.js';
 import { eventConstantEntries, getArgumentEntries } from './signature.js';
@@ -54,15 +54,15 @@ export function getPythonCompletionEntries(documentText: string, textBeforeCurso
         if (!owner) {
             return [];
         }
-        return getOwnerMembers(PYTHON_CATALOG, owner, '.');
+        return getOwnerMembers(activePythonCatalog(), owner, '.');
     }
 
     return dedupeDocEntries([
-        ...extractPythonUserSymbols(documentText, new Set([...reservedNames(PYTHON_CATALOG), 'pioneer'])),
-        ...PYTHON_CATALOG.globalEntries,
-        ...PYTHON_CATALOG.ownerEntries,
+        ...extractPythonUserSymbols(documentText, new Set([...reservedNames(activePythonCatalog()), 'pioneer'])),
+        ...activePythonCatalog().globalEntries,
+        ...activePythonCatalog().ownerEntries,
         // time.sleep and math.sin can be typed whole; the SDK's classes need the student's variable, so only the library is listed.
-        ...PYTHON_CATALOG.qualifiedEntries.filter((entry) => /^(time|math)\./.test(entry.label)),
+        ...activePythonCatalog().qualifiedEntries.filter((entry) => /^(time|math)\./.test(entry.label)),
         {
             label: 'pioneer',
             kind: 'Variable',

@@ -33,6 +33,11 @@ const targets = [
         label: 'Python examples',
         source: path.resolve(projectRoot, '..', 'examples', 'python'),
         dest: path.join(projectRoot, 'examples-python')
+    },
+    {
+        label: 'Pioneer Mini 2 examples (pioneer_sdk2)',
+        source: path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'pioneer_sdk2'),
+        dest: path.join(projectRoot, 'examples-python-sdk2')
     }
 ];
 

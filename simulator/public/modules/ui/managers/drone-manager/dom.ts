@@ -2,6 +2,9 @@ export type DroneManagerDom = {
     list: HTMLDivElement | null;
     listCount: HTMLElement | null;
     addBtn: HTMLButtonElement | null;
+    addMini2Btn: HTMLButtonElement | null;
+    modelSeg: HTMLElement | null;
+    modelHint: HTMLElement | null;
     delBtn: HTMLButtonElement | null;
     bridgeStatus: HTMLElement | null;
     bridgeSummary: HTMLElement | null;
@@ -34,6 +37,9 @@ export function collectDroneManagerDom(): DroneManagerDom {
         list: document.getElementById('drone-list') as HTMLDivElement | null,
         listCount: document.getElementById('drone-list-count'),
         addBtn: document.getElementById('add-drone-btn') as HTMLButtonElement | null,
+        addMini2Btn: document.getElementById('add-mini2-btn') as HTMLButtonElement | null,
+        modelSeg: document.getElementById('drone-model-seg'),
+        modelHint: document.getElementById('drone-model-hint'),
         delBtn: document.getElementById('del-drone-btn') as HTMLButtonElement | null,
         bridgeStatus: document.getElementById('swarm-bridge-status'),
         bridgeSummary: document.getElementById('swarm-bridge-summary'),

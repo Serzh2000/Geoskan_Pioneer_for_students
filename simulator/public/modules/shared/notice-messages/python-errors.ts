@@ -129,6 +129,25 @@ const SYNTAX_ENTRIES: DictionaryEntry[] = [
 
 const RUNTIME_ENTRIES: DictionaryEntry[] = [
     {
+        // checkPythonSdkForDrone (python/browser-runtime.ts): у Мини 2 своя библиотека.
+        id: 'py.runtime.sdkForMini2',
+        test: /Пионер Мини 2 программируется через pioneer_sdk2/,
+        build: (_m, { line }) => ({
+            title: 'Мини 2 программируется через pioneer_sdk2',
+            message: `${atLine(line)} подключается ${code('pioneer_sdk')} - библиотека Пионера Базового. У Пионера Мини 2 программа работает на его борту через ${code('pioneer_sdk2')}: курс в градусах, цвет 0..1, arm/takeoff/land ждут окончания действия.`,
+            example: 'from pioneer_sdk2 import Pioneer\n\npioneer = Pioneer()\npioneer.arm()\npioneer.takeoff()'
+        })
+    },
+    {
+        id: 'py.runtime.sdk2ForBasic',
+        test: /pioneer_sdk2 - библиотека Пионера Мини 2/,
+        build: (_m, { line }) => ({
+            title: 'pioneer_sdk2 - только для Мини 2',
+            message: `${atLine(line)} подключается ${code('pioneer_sdk2')}, а выбран Пионер Базовый. Для него используйте ${code('pioneer_sdk')} или добавьте дрон «Мини 2» на панели «Рой».`,
+            example: 'from pioneer_sdk import Pioneer'
+        })
+    },
+    {
         id: 'py.runtime.nameError',
         test: /NameError: name '([^']+)' is not defined/,
         build: (m, { line }) => ({

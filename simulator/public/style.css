@@ -36,6 +36,7 @@
 @import url('./styles/core/theme.css');
 
 @import url('./styles/overlays/onboarding-tour.css');
+@import url('./styles/overlays/python-cv-window.css');
 @import url('./styles/overlays/marker-settings.css');
 @import url('./styles/overlays/building-settings.css');
 

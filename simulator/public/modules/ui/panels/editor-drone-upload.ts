@@ -47,6 +47,8 @@ export function initEditorDroneUpload(): void {
     syncAvailability();
     // The language handler runs first; read the state once it has settled.
     languageSelect?.addEventListener('change', () => window.requestAnimationFrame(syncAvailability));
+    // Выбор Пионера Мини 2 сам переключает язык на Python - кнопка Lua-загрузки прячется и тогда.
+    window.addEventListener('drone-selection-changed', () => window.setTimeout(syncAvailability, 0));
 
     button.addEventListener('click', async () => {
         if (busy) return;

@@ -1,4 +1,5 @@
-import { currentScriptLanguage, type ScriptLanguage } from '../../core/state.js';
+import { currentDroneId, currentScriptLanguage, drones, type ScriptLanguage } from '../../core/state.js';
+import { examplesSetFor } from '../../core/drone-models.js';
 import { getEditorValue } from '../../editor/index.js';
 import type { UICallbacks } from '../index.js';
 import { scriptFileName } from '../../shared/funny-names.js';
@@ -74,7 +75,8 @@ export function refreshFileList(language: ScriptLanguage): void {
     if (status) status.textContent = 'Загружаю примеры…';
     delete fileSelector.dataset.state;
     fileSelector.title = 'Выберите пример программы или откройте свой файл';
-    fetch(`/api/files?lang=${language}`)
+    // Мини 2 получает свои примеры: программы на pioneer_sdk2.
+    fetch(`/api/files?lang=${examplesSetFor(drones[currentDroneId]?.model, language)}`)
         .then((res) => {
             if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
             return res.json();

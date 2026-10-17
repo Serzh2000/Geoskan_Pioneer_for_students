@@ -11,6 +11,7 @@ import {
     resetPythonDroneBindings
 } from './runtime-shared.js';
 import { ensureNumpyLoaded, ensurePyodide } from './pyodide-loader.js';
+import { droneModelProfile } from '../core/drone-models.js';
 
 // get_cv_frame собирает настоящий numpy-массив, но подгрузить пакет можно только из async-кода,
 // а сам вызов в скрипте синхронный. Поэтому решение принимается по исходнику до запуска.
@@ -57,6 +58,23 @@ __sim_validation_result
     });
 }
 
+// Пионер Мини 2 программируется только через pioneer_sdk2, Базовый - через
+// pioneer_sdk. Импорт чужой библиотеки ловится до запуска, с номером строки.
+const SDK_IMPORT = /^[ \t]*(?:from|import)[ \t]+(pioneer_sdk2?)\b/gm;
+
+export function checkPythonSdkForDrone(droneId: string, code: string): void {
+    const profile = droneModelProfile(drones[droneId]?.model);
+    for (const match of code.matchAll(SDK_IMPORT)) {
+        const library = match[1];
+        if (library === profile.pythonSdk) continue;
+        const line = code.slice(0, match.index ?? 0).split('\n').length;
+        const message = profile.pythonSdk === 'pioneer_sdk2'
+            ? `${profile.title} программируется через pioneer_sdk2: from pioneer_sdk2 import Pioneer`
+            : `${library} - библиотека Пионера Мини 2. Для дрона «${profile.title}» используйте pioneer_sdk или добавьте дрон «Пионер Мини 2».`;
+        throw createScriptFailureError('runtime', message, { line, column: null, details: match[0].trim() });
+    }
+}
+
 export function hasActiveBrowserPythonRun(droneId: string): boolean {
     return Boolean(activeRuns[droneId]);
 }
@@ -82,13 +100,14 @@ export async function runBrowserPythonScript(droneId: string, code: string): Pro
 
     const normalizedUserCode = (code || '').replace(/\r\n/g, '\n');
     await validatePythonSyntax(pyodide, normalizedUserCode);
+    checkPythonSdkForDrone(droneId, normalizedUserCode);
 
     if (NUMPY_DEPENDENT_SOURCE.test(normalizedUserCode)) {
         await ensureNumpyLoaded();
     }
 
     const wrapped = `
-import ast, asyncio, builtins, js
+import ast, asyncio, builtins, inspect, js
 
 if not hasattr(builtins, "__sim_base_print"):
     builtins.__sim_base_print = builtins.print
@@ -109,6 +128,14 @@ def __sim_input(prompt=""):
 
 builtins.print = __sim_print
 builtins.input = __sim_input
+builtins.__sim_bg_tasks = []
+
+async def __sim_await(value):
+    # arm/takeoff/land/get_cv_frame: у pioneer_sdk2 они ждут события автопилота
+    # или следующего кадра (корутина), у pioneer_sdk возвращают результат сразу.
+    if inspect.isawaitable(value):
+        return await value
+    return value
 
 __sim_source = ${JSON.stringify(normalizedUserCode)}
 
@@ -117,6 +144,7 @@ class __SimAsyncify(ast.NodeTransformer):
         self.user_functions = set()
         self.user_methods = set()
         self.awaitable_attrs = {"start", "join", "wait", "stop"}
+        self.maybe_awaitable_attrs = {"arm", "takeoff", "land", "get_cv_frame"}
 
     def collect(self, tree):
         for node in tree.body:
@@ -180,6 +208,8 @@ class __SimAsyncify(ast.NodeTransformer):
 
         if should_await:
             return ast.Await(value=node)
+        if isinstance(node.func, ast.Attribute) and node.func.attr in self.maybe_awaitable_attrs:
+            return ast.Await(value=ast.Call(func=ast.Name(id="__sim_await", ctx=ast.Load()), args=[node], keywords=[]))
         return node
 
 __sim_tree = ast.parse(__sim_source, "<user-script>", "exec")
@@ -208,6 +238,10 @@ except Exception as e:
     else:
         raise
 finally:
+    # Фоновые задачи библиотек (поток событий pioneer_sdk2) живут, пока живёт программа.
+    for __sim_task in builtins.__sim_bg_tasks:
+        __sim_task.cancel()
+    builtins.__sim_bg_tasks = []
     builtins.print = builtins.__sim_base_print
     builtins.input = builtins.__sim_base_input
 `;

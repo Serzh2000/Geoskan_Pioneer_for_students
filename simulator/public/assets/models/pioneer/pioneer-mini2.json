@@ -1,0 +1,107 @@
+{
+  "source_file": "Pioneer_Mini_2_reworked.blend",
+  "source_sha256": "0700f2431ccf4a81e6ce863691c71eab9fab11b6f949dcd2a21fa4227e7753fc",
+  "output_sha256": "c584a67fbf8b0736771273538760ad692cf95154c0f278eb3906cb4ad9a0d907",
+  "coordinate_system": "Z-up; forward +Y (source turned 180 deg about Z); 2 scene units per physical metre; feet at z=0",
+  "scale_is_estimated": true,
+  "web_optimization": "Collections 01-07 only; USB contacts and hidden motor windings dropped; bevels 1-2 segments; every part decimated to a size-dependent budget; transmission removed",
+  "triangles_before_decimation": 106026,
+  "triangles_exported": 31362,
+  "dropped_objects": 72,
+  "heaviest_parts": [
+    "1598 V2 • white cover",
+    "1100 V2 • right guard rim",
+    "1100 V2 • left guard rim",
+    "1100 V2 • guard inward lip.001",
+    "1100 V2 • guard inward lip",
+    "976 V2 • bottom shell",
+    "420 V2 • propeller 4 blade 2",
+    "420 V2 • propeller 4 blade 1",
+    "420 V2 • propeller 3 blade 2",
+    "420 V2 • propeller 3 blade 1",
+    "420 V2 • propeller 2 blade 2",
+    "420 V2 • propeller 2 blade 1",
+    "420 V2 • propeller 1 blade 2",
+    "420 V2 • propeller 1 blade 1",
+    "380 V2 • side cover boundary.001",
+    "380 V2 • side cover boundary",
+    "380 V2 • side accessory bridge.001",
+    "380 V2 • side accessory bridge",
+    "380 V2 • motor 4 seat flange",
+    "380 V2 • motor 3 seat flange",
+    "380 V2 • motor 2 seat flange",
+    "380 V2 • motor 1 seat flange",
+    "380 V2 • lower shell joint",
+    "380 V2 • landing foot 4",
+    "380 V2 • landing foot 3",
+    "380 V2 • landing foot 2",
+    "380 V2 • landing foot 1",
+    "380 V2 • guard semicircular mounting plate.003",
+    "380 V2 • guard semicircular mounting plate.002",
+    "380 V2 • guard semicircular mounting plate.001"
+  ],
+  "source_objects_by_group": {
+    "frame": 124,
+    "rotor_0": 4,
+    "rotor_2": 4,
+    "rotor_3": 4,
+    "rotor_1": 4,
+    "camera_gimbal": 8,
+    "base_led_1": 1,
+    "base_led_0": 1
+  },
+  "rotor_centers": [
+    [
+      0.116,
+      0.069,
+      0.0866
+    ],
+    [
+      -0.116,
+      -0.069,
+      0.0866
+    ],
+    [
+      -0.116,
+      0.069,
+      0.0866
+    ],
+    [
+      0.116,
+      -0.069,
+      0.0866
+    ]
+  ],
+  "rotor_source_index": {
+    "rotor_0": 1,
+    "rotor_2": 2,
+    "rotor_3": 3,
+    "rotor_1": 4
+  },
+  "propeller_pitch_handedness": {
+    "rotor_0": "ccw",
+    "rotor_1": "ccw",
+    "rotor_2": "cw",
+    "rotor_3": "cw"
+  },
+  "led_order": [
+    "drone's left (front indicator)",
+    "drone's right (front indicator)"
+  ],
+  "camera_gimbal": [
+    -0.0152,
+    0.07,
+    0.066
+  ],
+  "fpv_lens": [
+    -0.015178,
+    0.087219,
+    0.066012
+  ],
+  "bottom_camera_mount": [
+    -0.0,
+    -3.5e-05,
+    0.0446
+  ],
+  "provenance": "User-provided Blender reconstruction from photos; original rights retained; no new license assigned"
+}
