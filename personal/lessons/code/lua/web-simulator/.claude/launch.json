@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sim-vite",
+      "runtimeExecutable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-Command",
+        "Set-Location 'C:\\Users\\serzh\\Documents\\GitHub\\Geoskan-Pioneer-for-students\\simulator'; & 'C:\\Program Files\\nodejs\\node.exe' node_modules/vite/bin/vite.js --port 3021 --strictPort"
+      ],
+      "port": 3021
+    }
+  ]
+}
