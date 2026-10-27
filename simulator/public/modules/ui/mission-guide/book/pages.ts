@@ -2,7 +2,6 @@ import { escapeHtml, renderInline } from '../render/shared.js';
 import type { BookContext } from './context.js';
 import { renderLedbarFigure } from './ledbar.js';
 import { renderListing } from './listing.js';
-import { STEP_LABELS } from './steps.js';
 
 /** A printed page: running head, body, page number. */
 export function page(side: 'left' | 'right', head: string, number: number, body: string): string {
@@ -13,9 +12,8 @@ export function page(side: 'left' | 'right', head: string, number: number, body:
     </article>`;
 }
 
-function renderHeading(ctx: BookContext, part: string): string {
-    return `<p class="book-kicker">${escapeHtml(ctx.source.label)} · ${escapeHtml(part)}</p>
-        <h1 class="book-title" id="guide-lesson-title">${escapeHtml(ctx.source.lesson.title)}</h1>
+function renderHeading(ctx: BookContext): string {
+    return `<h1 class="book-title" id="guide-lesson-title">${escapeHtml(ctx.source.lesson.title)}</h1>
         <span class="book-rule" aria-hidden="true"></span>`;
 }
 
@@ -33,7 +31,7 @@ function renderTurn(ctx: BookContext, target: 'demo' | 'practice', label: string
 export function renderTheoryPages(ctx: BookContext): [string, string] {
     const { book, source } = ctx;
     const left = page('left', ctx.head, ctx.pages[0], `
-        ${renderHeading(ctx, STEP_LABELS.theory)}
+        ${renderHeading(ctx)}
         ${book.theory.map(text => `<p class="book-text">${renderInline(text)}</p>`).join('')}`);
     const right = page('right', book.chapter, ctx.pages[1], `
         <h2 class="book-label">Пример</h2>
@@ -48,7 +46,7 @@ export function renderTheoryPages(ctx: BookContext): [string, string] {
 export function renderDemoPages(ctx: BookContext): [string, string] {
     const { book, source } = ctx;
     const left = page('left', ctx.head, ctx.pages[0], `
-        ${renderHeading(ctx, STEP_LABELS.demo)}
+        ${renderHeading(ctx)}
         ${renderListing(book.code)}
         <div class="book-watch"><h2 class="book-label">Что смотреть</h2><p class="book-text">${renderInline(book.watch)}</p></div>
         <div class="book-actions">

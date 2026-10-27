@@ -16,7 +16,7 @@ export type TextCheckParts = {
 };
 
 /** What a finished (or running) check says, shared by the plain lesson page and the book spread. */
-export function renderTextCheckParts(track: 'lua' | 'python', lesson: GuideTextLesson): TextCheckParts {
+export function renderTextCheckParts(track: 'lua' | 'python', lesson: GuideTextLesson, idleText?: string): TextCheckParts {
     const hasChecked = isLessonChecked(track, lesson.id);
     const key = walkthroughKey(track, lesson.id);
     const evaluation = getWalkthroughResult(key, getMissionGuideDraft(track, lesson.id, lesson.starterCode));
@@ -30,7 +30,7 @@ export function renderTextCheckParts(track: 'lua' | 'python', lesson: GuideTextL
         ? '<div class="guide-verdict guide-verdict--idle" role="status"><h2 class="guide-verdict__title">Программа выполняется</h2><p>Наблюдайте сцену — результат появится после проверки.</p></div>'
         : anotherTrial
             ? `<div class="guide-verdict guide-verdict--success" role="status"><h2 class="guide-verdict__title">Опыт выполнен правильно</h2><p>Для сравнения нужен следующий запуск по условию урока.</p>${expected}</div>`
-            : renderCheckVerdict(hasChecked, solved, diagnostics.length, false, { expected: lesson.expectedOutcome, next: folded.next, hasErrors: diagnostics.some(item => item.kind === 'error') });
+            : renderCheckVerdict(hasChecked, solved, diagnostics.length, false, { expected: lesson.expectedOutcome, next: folded.next, hasErrors: diagnostics.some(item => item.kind === 'error'), idleText });
     return {
         hasChecked, solved, pending, verdict,
         flightRecord: hasChecked && !pending && evaluation?.timeline ? renderFlightRecord(evaluation.timeline) : '',

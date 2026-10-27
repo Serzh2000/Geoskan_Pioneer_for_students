@@ -12,7 +12,7 @@ export function renderScenePlaceholder(): string {
 /** A failed first run is normal; the verdict says so before it lists what to fix. */
 export const RETRY_NORMALIZER = 'Так бывает у большинства первых запусков. Исправьте замечание ниже и запустите снова.';
 
-type VerdictOptions = { expected?: string; hasErrors?: boolean; next?: string };
+type VerdictOptions = { expected?: string; hasErrors?: boolean; next?: string; idleText?: string };
 
 /** One verdict for the whole step: tone by fill, the expected behaviour as its last line. */
 export function renderCheckVerdict(hasChecked: boolean, solved: boolean, diagnosticsCount: number, launchedWithWarnings: boolean, options: VerdictOptions = {}): string {
@@ -28,7 +28,7 @@ export function renderCheckVerdict(hasChecked: boolean, solved: boolean, diagnos
             </div>
         </div>
     `;
-    if (!hasChecked) return verdict('idle', 'Пока не проверено', 'Выполните задание на шаге практики и запустите проверку.');
+    if (!hasChecked) return verdict('idle', 'Пока не проверено', options.idleText ?? 'Выполните задание на шаге практики и запустите проверку.');
     if (solved) return verdict('success', 'Решение принято', 'Автопроверка пройдена: поведение сцены совпало с целью урока.');
     if (launchedWithWarnings) return verdict('warning', 'Есть замечания', `Сцена уже показывает текущую версию, но решение пока не совпадает с целью задания. Замечаний: ${diagnosticsCount}.`, true);
     return verdict(options.hasErrors ? 'danger' : 'warning', 'Нужно исправить', `Проверка показала проблемы в логике. Замечаний: ${diagnosticsCount}.`, true);

@@ -37,16 +37,18 @@ type CheckParams = {
     hasWorkspaceContent: boolean;
     expectedOutcome?: string;
     pending?: boolean;
+    /** What the verdict says before the first check, when the page is not the plain lesson page. */
+    idleText?: string;
 };
 
 /** The verdict and the diagnostics of a Blockly check, shared by the lesson page and the book spread. */
 export function renderCheckParts(params: CheckParams): { verdict: string; diagnostics: string } {
-    const { hasChecked, solved, diagnostics, launchedWithWarnings, expectedOutcome, pending = false } = params;
+    const { hasChecked, solved, diagnostics, launchedWithWarnings, expectedOutcome, pending = false, idleText } = params;
     const folded = foldSuccess(diagnostics, solved);
     return {
         verdict: pending
             ? '<div class="guide-verdict guide-verdict--idle" role="status"><h2 class="guide-verdict__title">Программа выполняется</h2><p>Наблюдайте сцену — результат появится после проверки.</p></div>'
-            : renderCheckVerdict(hasChecked, solved, diagnostics.length, launchedWithWarnings, { expected: expectedOutcome, next: folded.next, hasErrors: diagnostics.some(item => item.kind === 'error') }),
+            : renderCheckVerdict(hasChecked, solved, diagnostics.length, launchedWithWarnings, { expected: expectedOutcome, next: folded.next, hasErrors: diagnostics.some(item => item.kind === 'error'), idleText }),
         diagnostics: hasChecked && !pending ? sortDiagnostics(folded.rest).map(renderDiagnosticCard).join('') : ''
     };
 }

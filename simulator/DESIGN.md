@@ -301,9 +301,15 @@ in `pioneer:mission-guide:book-step:v1`. Owners: `modules/ui/mission-guide/book/
 The page is paper in both themes (cream, ink, a large serif); the desk and the bar above it follow the application
 theme. Inside the sheet the application's tokens are set back to their light values, so the shared components (buttons,
 verdicts, diagnostics, fields) draw themselves light on the paper without overrides. Orange stays the next action: the
-primary button of the spread. Navigation is bookmarks: numbered lesson tabs and the three parts in the bar, the
-language as a segmented control, chapter tabs on the outer edge (the open chapter spells its title vertically); each
-row is named in the margin. Tab state is fill, never an underline.
+primary button of the spread. Navigation is bookmarks: numbered lesson tabs and the language (a segmented control) in the
+bar, the three parts as folder tabs on the top edge of the sheet (the open one is the sheet's own paper), chapter tabs on
+the outer edge (the open chapter spells its title vertically); each row is named in the margin. Tab state is fill, never an
+underline. Labels are sentence case; the only capitals are the running head of a printed page, which says the lesson and
+the part. The practice page is built from three parts: the lead (what to achieve), the recipe (what to build, a numbered
+sequence whose bold values are the numbers to type), and the bench (the editor or the Blockly workspace with its own
+action strip and status line); hints, the ready solution and references are quiet rows under it. The result page holds
+the scene and the verdict, which already carries the goal, so the goal is never printed twice. Below 1060 px the two
+pages stack.
 
 Sanctioned exception to "no new font": the reading text is a serif (Source Serif 4, OFL) and the margin labels a
 handwriting (Caveat, OFL), both bundled in `assets/fonts/book/` and scoped to `.book`. Controls, verdicts,

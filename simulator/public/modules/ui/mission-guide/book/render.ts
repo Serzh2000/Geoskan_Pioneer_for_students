@@ -3,7 +3,7 @@ import { describeLessonNav } from '../render/lesson-nav.js';
 import { isLessonCompleted } from '../state.js';
 import { walkthroughKey, isWalkthroughBusy } from '../walkthrough/state.js';
 import type { GuideTextLesson, GuideTextLessonState } from '../types.js';
-import { PAGES_PER_LESSON, spreadPages, type BookContext, type BookNav } from './context.js';
+import { PAGES_PER_LESSON, bookHead, spreadPages, type BookContext, type BookNav } from './context.js';
 import { spreadCurls } from './curls.js';
 import { buildBookLesson } from './data.js';
 import { renderBookFrame } from './frame.js';
@@ -13,11 +13,6 @@ import { courseSource, practiceSource, type BookSource } from './source.js';
 import { getBookStep } from './steps.js';
 
 export { renderBookSwitch } from './frame.js';
-
-/** The running head of the left page: the book's title and its language. */
-export function bookHead(source: BookSource): string {
-    return `Учебник пилота · ${source.volume === 'python' ? 'Python' : source.volume === 'lua' ? 'Lua' : 'Blockly'}`;
-}
 
 function textNav(state: GuideTextLessonState, source: BookSource): BookNav {
     const nav = describeLessonNav(state, source.language, source.lesson as GuideTextLesson);
@@ -38,7 +33,7 @@ export function renderBookGuide(state: GuideTextLessonState, track: 'lua' | 'pyt
     const completed = isLessonCompleted(track, lesson.id);
     const ctx: BookContext = {
         source, book: buildBookLesson(source), step, pages: spreadPages(source, step),
-        totalPages: state.lessons.length * PAGES_PER_LESSON, head: bookHead(source), nav: textNav(state, source)
+        totalPages: state.lessons.length * PAGES_PER_LESSON, head: bookHead(source, step), nav: textNav(state, source)
     };
     const [left, right] = step === 'theory'
         ? renderTheoryPages(ctx)

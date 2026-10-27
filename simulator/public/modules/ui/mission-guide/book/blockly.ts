@@ -1,7 +1,7 @@
 import { escapeHtml } from '../render/shared.js';
 import type { BlocklyView } from '../render/blockly-view.js';
 import { walkthroughKey } from '../walkthrough/state.js';
-import { PAGES_PER_LESSON, spreadPages, type BookContext, type BookNav } from './context.js';
+import { PAGES_PER_LESSON, bookHead, spreadPages, type BookContext, type BookNav } from './context.js';
 import { spreadCurls } from './curls.js';
 import { buildBookLesson } from './data.js';
 import { renderBookFrame } from './frame.js';
@@ -27,7 +27,7 @@ export function renderBlocklyBook(view: BlocklyView): string {
     const step = getBookStep(walkthroughKey(language, lesson.id));
     const ctx: BookContext = {
         source, book: buildBookLesson(source), step, pages: spreadPages(source, step),
-        totalPages: view.state.lessons.length * PAGES_PER_LESSON, head: 'Учебник пилота · Blockly', nav: blocklyNav(view)
+        totalPages: view.state.lessons.length * PAGES_PER_LESSON, head: bookHead(source, step), nav: blocklyNav(view)
     };
     const [left, right] = step === 'theory'
         ? renderTheoryPages(ctx)
