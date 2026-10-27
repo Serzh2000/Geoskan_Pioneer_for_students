@@ -45,7 +45,7 @@
 .book__spreads { display: flex; gap: 4px; margin: 0; padding: 0 0 6px; list-style: none; font: 600 12px/1 var(--font-sans); color: var(--bk-muted); }
 .book__spreads li { padding: 6px 10px; border-radius: 8px; }
 .book__spreads [aria-current] { background: var(--bk-accent-soft); color: var(--bk-accent); }
-.book-view { margin-bottom: 6px; }
+.book-view { margin-bottom: 6px; flex: 0 0 auto; white-space: nowrap; }
 .book-close { margin-bottom: 4px; }
 .book__body { display: flex; align-items: flex-start; max-width: 1680px; margin: 0 auto; }
 .book__edge { position: sticky; top: 74px; flex: 0 0 auto; display: grid; justify-items: start; gap: 6px; width: 56px; margin-left: 6px; padding-top: 14px; }
