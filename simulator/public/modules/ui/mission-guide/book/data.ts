@@ -21,18 +21,34 @@ export type BookLesson = {
 
 type Reading = Pick<BookLesson, 'paragraphs' | 'key' | 'words'>;
 
-const SCAFFOLD = [/^local leds = Ledbar\.new\(29\)$/, /^function callback\(event\)$/, /^end$/, /^from pioneer_sdk import /, /^import /, /^pioneer = Pioneer\(/];
+const SCAFFOLD = [/^local leds = Ledbar\.new\(29\)$/, /^function callback\(event\)$/, /^end$/, /^from pioneer_sdk import /, /^import /, /^pioneer\s*=\s*Pioneer\(/];
 const MAX_BLOCK_WORDS = 4;
+const MIN_CAPTION = 14;
 
 function sentences(text: string): string[] {
     return text.match(/[^.!?]+[.!?]+/g)?.map(item => item.trim()) ?? [text.trim()];
 }
 
-/** The line of the reference solution that carries the lesson, without the lines every program starts with. */
+/**
+ * The line of the reference solution the student has to write: the first one the starter does not already have,
+ * without the lines every program starts with.
+ */
 function keyLine(lesson: GuideTextLesson): string {
+    const starter = lesson.starterCode.split('\n').map(line => line.trim()).filter(Boolean);
+    const solution = lesson.solutionCode.split('\n').map(line => line.trim()).filter(Boolean);
+    // A starter with blanks keeps the shape of the solution: the first line that differs is the one to write.
+    const written = starter.length === solution.length ? solution[starter.findIndex((line, index) => line !== solution[index])] : undefined;
+    if (written && !SCAFFOLD.some(rule => rule.test(written)) && !/^(--|#)/.test(written)) return written;
+    const given = new Set(starter);
     const lines = lesson.solutionCode.split('\n').map(line => line.trim()).filter(line => line && !SCAFFOLD.some(rule => rule.test(line)));
+    const code = lines.filter(line => !/^(--|#)/.test(line));
     // A lesson about editing a comment has nothing but the comment to frame.
-    return lines.find(line => !/^(--|#)/.test(line)) ?? lines[0] ?? '';
+    return code.find(line => !given.has(line)) ?? code[0] ?? lines[0] ?? '';
+}
+
+/** A one-word hint is no caption for a frame. */
+function caption(text: string | undefined): string {
+    return text && text.length >= MIN_CAPTION ? text : '';
 }
 
 /** The first lighting lesson, written by hand; the others take their pages from the course data. */
@@ -70,7 +86,7 @@ function courseReading(lesson: GuideTextLesson, source: BookSource): Reading {
     const parts = sentences(lesson.summary);
     return {
         paragraphs: parts.length > 1 ? parts.slice(1) : parts,
-        key: { code: keyLine(lesson), caption: sentences(lesson.builderHint)[0] ?? '' },
+        key: { code: keyLine(lesson), caption: caption(sentences(lesson.builderHint)[0]) },
         words: [{ term: lesson.apiFocus[0]?.title ?? 'Тема', meaning: parts[0] }]
     };
 }

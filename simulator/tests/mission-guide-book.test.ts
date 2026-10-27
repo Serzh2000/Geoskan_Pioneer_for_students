@@ -31,7 +31,9 @@ describe('book lessons', () => {
             for (const lesson of course(track)) {
                 const book = buildBookLesson(courseSource(lesson, track));
                 if (lesson.academy!.mode === 'code') expect(book.key.code).not.toBe('');
-                expect(book.key.code).not.toMatch(/^local leds = |^from pioneer_sdk|^import /);
+                expect(book.key.code).not.toMatch(/^local leds = |^from pioneer_sdk|^import |^pioneer\s*=\s*Pioneer\(/);
+                // The frame shows what the student writes, not a helper every program of the chapter carries.
+                expect(book.key.code).not.toMatch(/^def wait_for|___/);
                 expect(book.paragraphs.join('').length).toBeGreaterThan(20);
                 expect(book.words.length).toBeGreaterThan(0);
                 expect(book.figure).toBe(lesson.chapterId === 'lights' ? 'ledbar' : 'drone');
