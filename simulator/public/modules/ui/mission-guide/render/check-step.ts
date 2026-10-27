@@ -26,7 +26,7 @@ export function renderResultScene(previewActive: boolean): string {
     return `<div class="guide-result__scene"><div id="mission-guide-scene-preview-host" class="guide-scene-preview-host pk-device ${previewActive ? 'is-active' : ''}">${previewActive ? '' : renderScenePlaceholder()}</div></div>`;
 }
 
-export function renderCheckStep(params: {
+type CheckParams = {
     language: ScriptLanguage;
     lessonId: string;
     hasChecked: boolean;
@@ -37,28 +37,28 @@ export function renderCheckStep(params: {
     hasWorkspaceContent: boolean;
     expectedOutcome?: string;
     pending?: boolean;
-}): string {
-    const {
-        lessonId,
-        hasChecked,
-        solved,
-        diagnostics,
-        launchedWithWarnings,
-        previewActive,
-        hasWorkspaceContent,
-        expectedOutcome,
-        pending = false
-    } = params;
+};
 
+/** The verdict and the diagnostics of a Blockly check, shared by the lesson page and the book spread. */
+export function renderCheckParts(params: CheckParams): { verdict: string; diagnostics: string } {
+    const { hasChecked, solved, diagnostics, launchedWithWarnings, expectedOutcome, pending = false } = params;
     const folded = foldSuccess(diagnostics, solved);
-    const sortedDiagnostics = sortDiagnostics(folded.rest);
+    return {
+        verdict: pending
+            ? '<div class="guide-verdict guide-verdict--idle" role="status"><h2 class="guide-verdict__title">Программа выполняется</h2><p>Наблюдайте сцену — результат появится после проверки.</p></div>'
+            : renderCheckVerdict(hasChecked, solved, diagnostics.length, launchedWithWarnings, { expected: expectedOutcome, next: folded.next, hasErrors: diagnostics.some(item => item.kind === 'error') }),
+        diagnostics: hasChecked && !pending ? sortDiagnostics(folded.rest).map(renderDiagnosticCard).join('') : ''
+    };
+}
+
+export function renderCheckStep(params: CheckParams): string {
+    const { lessonId, hasChecked, previewActive, hasWorkspaceContent, pending = false } = params;
+    const { verdict, diagnostics } = renderCheckParts(params);
 
     return `
         <div class="guide-result">
             <div class="guide-result__main">
-                ${pending
-            ? '<div class="guide-verdict guide-verdict--idle" role="status"><h2 class="guide-verdict__title">Программа выполняется</h2><p>Наблюдайте сцену — результат появится после проверки.</p></div>'
-            : renderCheckVerdict(hasChecked, solved, diagnostics.length, launchedWithWarnings, { expected: expectedOutcome, next: folded.next, hasErrors: diagnostics.some(item => item.kind === 'error') })}
+                ${verdict}
                 <div class="guide-actions">
                     ${pending
             ? '<button type="button" class="btn-secondary" data-walkthrough-cancel>Остановить проверку</button>'
@@ -68,7 +68,7 @@ export function renderCheckStep(params: {
                     <button type="button" class="btn-secondary" data-guide-launch="checked" ${hasWorkspaceContent ? '' : 'disabled'}>Перезапустить сцену</button>`
             : ''}
                 </div>
-                <div class="guide-diagnostics" id="diagnostics-container">${hasChecked && !pending ? sortedDiagnostics.map(renderDiagnosticCard).join('') : ''}</div>
+                <div class="guide-diagnostics" id="diagnostics-container">${diagnostics}</div>
             </div>
             ${renderResultScene(previewActive)}
         </div>

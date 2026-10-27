@@ -1,5 +1,6 @@
 import { attachLearningInteractions } from './interactions/learning.js';
 import { attachWalkthroughBindings } from './interactions/walkthrough.js';
+import { attachBookBindings } from './interactions/book.js';
 import { isWalkthroughBusy, syncWalkthroughSession, walkthroughKey } from './walkthrough/state.js';
 import { renderCourseOutline } from './render/course-outline.js';
 import { attachAcademyBindings } from './interactions/academy.js';
@@ -105,7 +106,9 @@ export function renderMissionGuidePanel(language: ScriptLanguage = 'lua'): void 
         }));
     }
     const page = container.querySelector<HTMLElement>('[data-guide-portal-page]')?.dataset.guidePortalPage;
-    const step = container.querySelector<HTMLElement>('.guide-walkthrough')?.dataset.walkthroughStep;
+    const step = container.querySelector<HTMLElement>('.guide-walkthrough, .book')?.dataset.walkthroughStep;
+    // The bookmarks replace the contents list while a book spread is open.
+    overlay?.querySelector('.guide-modal')?.classList.toggle('is-book', Boolean(container.querySelector('.book')));
     const view = `${track}:${activeLessonId}:${page}:${step}`;
     if (previousView !== view) container.scrollTop = 0;
     container.dataset.learningView = view;
@@ -114,6 +117,7 @@ export function renderMissionGuidePanel(language: ScriptLanguage = 'lua'): void 
         ? getActiveLesson(getGuideLessonState(language), language)
         : getActiveTextLesson(track === 'python' ? getPythonTextLessonState() : getLuaTextLessonState(), track);
     attachWalkthroughBindings(container, lessonLanguage, walkthroughLesson, renderMissionGuidePanel);
+    attachBookBindings(container, lessonLanguage, walkthroughLesson, renderMissionGuidePanel);
     attachAcademyBindings(container, lessonLanguage, activeLessonId, renderMissionGuidePanel);
     const busy = isWalkthroughBusy(walkthroughKey(lessonLanguage, activeLessonId));
     container.setAttribute('aria-busy', String(busy));

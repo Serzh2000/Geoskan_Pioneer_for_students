@@ -280,3 +280,24 @@ border-strong и увеличенными промежутками. «Объек
 размещены рядом, если внутренняя ширина панели не меньше 300 px. Размеры
 интерактивных контролов сохранены. Выбор камеры имеет сплошную акцентную заливку,
 контрастный тёмный текст и переход 160 мс; уменьшение движения отключает переход.
+
+## Book view · October 2026
+
+Every lesson list of the textbook is also laid out as a book (the numbered course, Lua 72 and Python 108; the ten extra practice tasks of each text track, the last chapter «Доп»; the ten Blockly assignments, whose workspace sits on the code sheet): one lesson is
+three spreads (Идея, Практика, Разбор) over the same five-stage state, so progress, drafts,
+gates and checks are shared with the plain page. Owners: `modules/ui/mission-guide/book/`
+(data, bookmarks, spread markup, LED-strip figure) and `panels/book.css`; the switch lives in
+the lesson (`Обычный вид` / `Книжный вид`, remembered in `pioneer:mission-guide:book:v1`).
+
+The book wears the application's tokens: pages are `--card-bg`, the desk `--panel-bg-strong`,
+text/muted/line/accent come from `--text-*`, `--pc-*`, `--border-*`, `--accent-*`; corners are 8 px
+(controls, frames) and 12 px (the sheet); buttons are the global `.btn-primary/.btn-secondary`.
+Orange stays the next action: the primary button of the spread. Bookmarks replace the course rail:
+numbered lesson tabs on the top edge, chapter tabs on the outer edge, each row named in the margin
+("Уроки главы «…» · N из M", "Главы курса"); the open chapter tab spells its title vertically.
+Tab state is fill (`--accent-soft` for the current one, success soft for done), never an underline.
+
+Sanctioned exception to "no new font": the reading text is a serif (Source Serif 4, OFL) and the
+margin notes a handwriting (Caveat, OFL), both bundled in `assets/fonts/book/` and scoped to `.book`.
+Controls, verdicts, diagnostics, flight record and the editor keep Inter/mono. `Обычный вид` returns any
+lesson to the plain page and the course rail.
