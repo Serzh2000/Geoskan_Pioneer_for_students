@@ -1,7 +1,6 @@
 import type { BookLesson } from './data.js';
 import type { BookSource } from './source.js';
-
-export type Spread = 1 | 2 | 3;
+import { BOOK_STEPS, type BookStep } from './steps.js';
 
 /** Where a finished lesson leads, already turned into the markup of its button. */
 export type BookNav = {
@@ -16,7 +15,7 @@ export type BookNav = {
 export type BookContext = {
     source: BookSource;
     book: BookLesson;
-    spread: Spread;
+    step: BookStep;
     /** Printed numbers of the left and the right page. */
     pages: [number, number];
     /** Pages in the whole volume, to tell how thick the read and the unread parts are. */
@@ -26,14 +25,9 @@ export type BookContext = {
     nav: BookNav;
 };
 
-export const SPREAD_NAMES = ['Идея', 'Практика', 'Разбор'];
-export const PAGES_PER_LESSON = 6;
+export const PAGES_PER_LESSON = BOOK_STEPS.length * 2;
 
-export function spreadPages(source: BookSource, spread: Spread): [number, number] {
-    const base = source.pageOffset + (source.number - 1) * PAGES_PER_LESSON + (spread - 1) * 2;
+export function spreadPages(source: BookSource, step: BookStep): [number, number] {
+    const base = source.pageOffset + (source.number - 1) * PAGES_PER_LESSON + BOOK_STEPS.indexOf(step) * 2;
     return [base + 1, base + 2];
-}
-
-export function spreadOfStep(step: string): Spread {
-    return step === 'reflect' ? 3 : step === 'build' || step === 'check' ? 2 : 1;
 }

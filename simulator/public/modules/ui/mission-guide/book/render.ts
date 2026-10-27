@@ -1,18 +1,16 @@
 import { escapeHtml } from '../render/shared.js';
 import { describeLessonNav } from '../render/lesson-nav.js';
-import { getMissionGuideDraft } from '../support/monaco-preview.js';
 import { isLessonCompleted } from '../state.js';
-import { getWalkthroughContent } from '../walkthrough/content.js';
-import { getWalkthroughProgress, getWalkthroughResult, isWalkthroughBusy, walkthroughKey } from '../walkthrough/state.js';
+import { walkthroughKey, isWalkthroughBusy } from '../walkthrough/state.js';
 import type { GuideTextLesson, GuideTextLessonState } from '../types.js';
-import { PAGES_PER_LESSON, spreadOfStep, spreadPages, type BookContext, type BookNav } from './context.js';
+import { PAGES_PER_LESSON, spreadPages, type BookContext, type BookNav } from './context.js';
 import { spreadCurls } from './curls.js';
-import { renderTextCheckParts } from '../render/text-check.js';
 import { buildBookLesson } from './data.js';
 import { renderBookFrame } from './frame.js';
-import { renderFigurePage, renderIdeaPage, renderReviewPage, renderStampPage } from './pages.js';
+import { renderDemoPages, renderTheoryPages } from './pages.js';
 import { renderCodeTaskPage, renderCodeTrialPage } from './practice-pages.js';
 import { courseSource, practiceSource, type BookSource } from './source.js';
+import { getBookStep } from './steps.js';
 
 export { renderBookSwitch } from './frame.js';
 
@@ -36,19 +34,16 @@ function textNav(state: GuideTextLessonState, source: BookSource): BookNav {
 export function renderBookGuide(state: GuideTextLessonState, track: 'lua' | 'python', lesson: GuideTextLesson): string {
     const source = lesson.academy ? courseSource(lesson, track) : practiceSource(state, lesson, track);
     const key = walkthroughKey(track, lesson.id);
-    const progress = getWalkthroughProgress(key, getWalkthroughContent(lesson).correct);
-    const spread = spreadOfStep(progress.step);
-    const ctx: BookContext = { source, book: buildBookLesson(source), spread, pages: spreadPages(source, spread), totalPages: state.lessons.length * PAGES_PER_LESSON, head: bookHead(source), nav: textNav(state, source) };
-    const check = renderTextCheckParts(track, lesson);
+    const step = getBookStep(key);
     const completed = isLessonCompleted(track, lesson.id);
-    const [left, right] = spread === 1
-        ? [renderIdeaPage(ctx), renderFigurePage(ctx)]
-        : spread === 2
-            ? [renderCodeTaskPage(ctx), renderCodeTrialPage(ctx, progress.step)]
-            : [renderReviewPage(ctx), renderStampPage(ctx, {
-                completed,
-                solved: Boolean(getWalkthroughResult(key, getMissionGuideDraft(track, lesson.id, lesson.starterCode))?.solved)
-            })];
-    const curls = spreadCurls(ctx, { ready: progress.answer === getWalkthroughContent(lesson).correct, hasChecked: check.hasChecked, solved: check.solved, pending: check.pending, completed });
-    return renderBookFrame(ctx, progress.step, left, right, curls, isWalkthroughBusy(key));
+    const ctx: BookContext = {
+        source, book: buildBookLesson(source), step, pages: spreadPages(source, step),
+        totalPages: state.lessons.length * PAGES_PER_LESSON, head: bookHead(source), nav: textNav(state, source)
+    };
+    const [left, right] = step === 'theory'
+        ? renderTheoryPages(ctx)
+        : step === 'demo'
+            ? renderDemoPages(ctx)
+            : [renderCodeTaskPage(ctx), renderCodeTrialPage(ctx, completed)];
+    return renderBookFrame(ctx, left, right, spreadCurls(ctx, { completed }), isWalkthroughBusy(key));
 }

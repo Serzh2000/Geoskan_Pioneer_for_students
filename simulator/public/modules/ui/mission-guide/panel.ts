@@ -157,7 +157,8 @@ export function renderMissionGuidePanel(language: ScriptLanguage = 'lua'): void 
     }
 
     if (!container.querySelector('#mission-guide-scene-preview-host')) restoreMissionGuideScenePreview();
-    if ('academy' in walkthroughLesson && walkthroughLesson.academy && step === 'build') setMissionGuideScenePreviewActive(true);
+    // The numbered course and the book open their scene with the practice (and the demonstration of the book).
+    if (step === 'build' && (('academy' in walkthroughLesson && walkthroughLesson.academy) || container.querySelector('.book'))) setMissionGuideScenePreviewActive(true);
     mountMissionGuideScenePreview();
     if (track !== 'blockly') {
         const textState = track === 'python' ? getPythonTextLessonState() : getLuaTextLessonState();

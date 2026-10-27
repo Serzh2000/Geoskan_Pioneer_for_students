@@ -18,8 +18,10 @@ import { mountMissionGuideBlocklyPreview } from '../support/blockly-preview.js';
 import {
     setLessonBanner,
     setLessonChecked,
+    setLessonCompleted,
     setActiveGuideStep
 } from '../state.js';
+import { isBookView } from '../book/view.js';
 
 function getMainWorkspaceSnapshot(): {
     sequenceIds: string[];
@@ -81,6 +83,8 @@ function executeLessonLaunch(
                 diagnostics: [...evaluation.diagnostics, ...runtime.diagnostics]
             };
             if (!finishWalkthroughCheck(key, token, snapshot?.workspaceXml || '', combined)) return;
+            // In the book a passed practice is the end of the lesson; the plain page asks for the review first.
+            if (combined.solved && isBookView()) setLessonCompleted(language, lesson.id, true);
             setLessonChecked(language, lesson.id, true);
             setLessonBanner(language, lesson.id, {
                 kind: combined.solved ? 'success' : 'warning',

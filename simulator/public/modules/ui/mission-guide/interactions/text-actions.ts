@@ -25,7 +25,9 @@ import {
     setActiveLessonId,
     setLessonBanner,
     setLessonChecked,
+    setLessonCompleted,
 } from '../state.js';
+import { isBookView } from '../book/view.js';
 import type { GuideEvaluation, RenderMissionGuidePanel } from '../types.js';
 
 const repeatedExperiments = new Map<string, string>();
@@ -187,6 +189,8 @@ export function attachTextGuideBindings(
         }));
         if (capture) finishLearningCapture(capture.droneId, capture.token);
         if (!finishWalkthroughCheck(key, token, code, evaluation)) return;
+        // In the book a passed practice is the end of the lesson; the plain page asks for the review first.
+        if (evaluation.solved && isBookView()) setLessonCompleted(track, lesson.id, true);
 
         if ([5, 54, 107].includes(lesson.academy?.number || 0) && !evaluation.diagnostics.some(item => item.kind === 'error')) {
             repeatedExperiments.set(experimentKey, code);

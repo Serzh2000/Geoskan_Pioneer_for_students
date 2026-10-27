@@ -3,13 +3,15 @@ import { currentScriptLanguage } from '../../../core/state.js';
 import { switchGuideTrack } from '../course-navigation.js';
 import { saveMissionGuideDraft } from '../support/monaco-preview.js';
 import { getLedbarState, setLedbarState, syncLedbarFigure, type LedbarState } from '../book/ledbar.js';
-import { getWalkthroughContent, type WalkthroughLesson } from '../walkthrough/content.js';
-import { answerWalkthrough, getWalkthroughProgress, moveWalkthrough, walkthroughKey } from '../walkthrough/state.js';
+import { runExample, stopExample } from '../book/demo.js';
+import { BOOK_STEPS, setBookStep, type BookStep } from '../book/steps.js';
+import { walkthroughKey } from '../walkthrough/state.js';
+import type { WalkthroughLesson } from '../walkthrough/content.js';
 import type { GuidePracticeTrack, RenderMissionGuidePanel } from '../types.js';
 
 const KNOBS = ['index', 'r', 'g', 'b'] as const;
 
-/** Wires the controls only the book spread has: the prediction marks, the view switch, the volumes, the LED strip knobs. */
+/** Wires the controls only the book has: the parts of a lesson, the example run, the view switch, the volumes, the LED strip knobs. */
 export function attachBookBindings(container: HTMLElement, track: 'lua' | 'python', lesson: WalkthroughLesson, rerender: RenderMissionGuidePanel): void {
     container.querySelectorAll<HTMLButtonElement>('[data-book-view]').forEach(button => {
         button.addEventListener('click', () => {
@@ -36,20 +38,35 @@ export function attachBookBindings(container: HTMLElement, track: 'lua' | 'pytho
     });
 
     const key = walkthroughKey(track, lesson.id);
-    const correct = getWalkthroughContent(lesson).correct;
-    container.querySelectorAll<HTMLButtonElement>('[data-book-answer]').forEach(button => {
+    container.querySelectorAll<HTMLButtonElement>('[data-book-step]').forEach(button => {
         button.addEventListener('click', () => {
-            answerWalkthrough(key, Number(button.dataset.bookAnswer), correct);
-            // The book shows the idea and the prediction on one spread, so marking an answer is also the first step forward.
-            if (getWalkthroughProgress(key, correct).step === 'device') moveWalkthrough(key, 'predict', correct, '');
+            const step = button.dataset.bookStep as BookStep;
+            if (button.disabled || !BOOK_STEPS.includes(step)) return;
+            setBookStep(key, step);
             rerender(track);
         });
     });
 
+    const status = container.querySelector<HTMLElement>('[data-book-demo-status]');
+    container.querySelector<HTMLButtonElement>('[data-book-demo]')?.addEventListener('click', event => {
+        const code = container.querySelector<HTMLElement>('[data-book-code]')?.textContent ?? '';
+        const button = event.currentTarget as HTMLButtonElement;
+        button.disabled = true;
+        if (status) status.textContent = 'Запускаю пример…';
+        void runExample(track, code).then(started => {
+            if (status && started) status.textContent = 'Пример выполняется. Смотрите сцену; запустить его ещё раз можно в любой момент.';
+        }).catch(() => {
+            if (status) status.textContent = 'Пример не удалось запустить. Нажмите «Остановить и сбросить» и повторите.';
+        }).finally(() => { button.disabled = false; });
+    });
+    container.querySelector<HTMLButtonElement>('[data-book-demo-stop]')?.addEventListener('click', () => {
+        stopExample();
+        if (status) status.textContent = 'Сцена сброшена. Можно запустить пример снова.';
+    });
+
     container.querySelectorAll<HTMLElement>('[data-lb-figure]').forEach(figure => {
         const id = figure.dataset.lbLesson || lesson.id;
-        const state = getLedbarState(id);
-        syncLedbarFigure(figure, track, state);
+        syncLedbarFigure(figure, track, getLedbarState(id));
         figure.querySelectorAll<HTMLInputElement>('input[data-lb]').forEach(input => {
             input.addEventListener('input', () => {
                 const knob = input.dataset.lb as typeof KNOBS[number];

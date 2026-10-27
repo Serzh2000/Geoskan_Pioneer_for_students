@@ -118,5 +118,5 @@ export function renderVolumes(active: BookVolume, busy: boolean): string {
         ['lua', 'Lua', ACADEMY_LESSONS.filter(item => item.languages.includes('lua')).length],
         ['blockly', 'Blockly', getGuideLessonState('lua').lessons.length]
     ] as const;
-    return volumes.map(([id, name, count]) => `<button type="button" class="book-tab book-tab--volume${id === active ? ' is-current' : ''}" role="tab" aria-selected="${id === active}" data-book-track="${id}" ${busy ? 'disabled' : ''} aria-label="${name}, ${count} ${id === 'blockly' ? 'заданий' : 'уроков'}" title="Том «${name}»: ${count}"><span>${name}</span><small>${count}</small></button>`).join('');
+    return volumes.map(([id, name, count]) => `<button type="button" class="pk-seg__btn${id === active ? ' is-active' : ''}" role="tab" aria-selected="${id === active}" data-book-track="${id}" ${busy ? 'disabled' : ''} aria-label="${name}, ${count} ${id === 'blockly' ? 'заданий' : 'уроков'}" title="Том «${name}»: ${count}">${name} <small>${count}</small></button>`).join('');
 }

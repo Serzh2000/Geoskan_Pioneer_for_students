@@ -1,5 +1,4 @@
 import { escapeHtml, renderInline } from '../render/shared.js';
-import { renderScenePlaceholder } from '../render/results.js';
 import { renderRunBanner } from '../render/navigation.js';
 import { renderTextCheckParts } from '../render/text-check.js';
 import { practiceNote } from '../render/practice-note.js';
@@ -9,7 +8,6 @@ import { blocklyPracticeSteps } from '../render/blockly-copy.js';
 import { renderTargetRoute } from '../render/support.js';
 import { renderCheckParts } from '../render/check-step.js';
 import type { BlocklyView } from '../render/blockly-view.js';
-import { isMissionGuideScenePreviewActive } from '../support/scene-preview.js';
 import type { GuideTextLesson } from '../types.js';
 import type { BookContext } from './context.js';
 import { page } from './pages.js';
@@ -19,10 +17,8 @@ type TrialParts = {
     verdict: string;
     diagnostics: string;
     flightRecord?: string;
-    hasChecked: boolean;
-    solved: boolean;
     pending: boolean;
-    sceneActive: boolean;
+    completed: boolean;
 };
 
 function renderHint(hint: string): string {
@@ -33,10 +29,6 @@ function renderLinks(links: GuideTextLesson['links']): string {
     return links.length
         ? `<p class="book-links">${links.map(link => `<button type="button" class="book-link" data-guide-query="${escapeHtml(link.query)}">${escapeHtml(link.label)}</button>`).join('')}</p>`
         : '';
-}
-
-function renderMargin(ctx: BookContext): string {
-    return ctx.book.margin ? `<p class="book-hand book-hand--hint">${escapeHtml(ctx.book.margin)}</p>` : '';
 }
 
 function renderHeading(ctx: BookContext): string {
@@ -70,8 +62,7 @@ export function renderCodeTaskPage(ctx: BookContext): string {
         ${renderHint(source.hint)}
         ${renderLinks(lesson.links)}
         <p class="book-status" role="status" data-guide-draft-status>Черновик этого урока сохраняется при переходах между вкладками.</p>
-        ${renderRunBanner(source.language, lesson.id)}
-        ${renderMargin(ctx)}`);
+        ${renderRunBanner(source.language, lesson.id)}`);
 }
 
 /** Page 1 of the practice spread for a Blockly assignment: the task, the steps and the workspace. */
@@ -98,17 +89,16 @@ export function renderBlocksTaskPage(ctx: BookContext, view: BlocklyView): strin
         <details class="book-fold"><summary>Посмотреть готовое решение</summary><p>Сначала попробуйте собрать программу самостоятельно. Загрузка решения заменит текущие блоки в редакторе.</p><button type="button" class="btn-secondary btn--sm" data-guide-fill="${escapeHtml(lesson.id)}">Заменить блоки готовым решением</button></details>
         <p class="book-links"><button type="button" class="book-link" data-guide-open-editor-fallback>Открыть в полноэкранном редакторе</button></p>
         <p class="book-status" role="status">${escapeHtml(statusLine)}</p>
-        ${renderRunBanner(view.language, lesson.id)}
-        ${renderMargin(ctx)}`);
+        ${renderRunBanner(view.language, lesson.id)}`);
 }
 
 /** Page 2 of the practice spread: the scene, the trial and its result. */
 function renderTrialPage(ctx: BookContext, parts: TrialParts): string {
     const { source } = ctx;
-    const { verdict, diagnostics, flightRecord, hasChecked, solved, pending, sceneActive } = parts;
+    const { verdict, diagnostics, flightRecord, pending, completed } = parts;
     return page('right', ctx.book.chapter, ctx.pages[1], `
         <figure class="book-figure">
-            <div id="mission-guide-scene-preview-host" class="guide-scene-preview-host book-scene ${sceneActive ? 'is-active' : ''}">${sceneActive ? '' : renderScenePlaceholder()}</div>
+            <div id="mission-guide-scene-preview-host" class="guide-scene-preview-host book-scene is-active"></div>
             <figcaption class="book-caption"><b>Рис. ${source.number}б.</b> Дрон в симуляторе</figcaption>
         </figure>
         <section class="book-trial" aria-label="Испытание"><h2 class="book-label">Испытание</h2>
@@ -117,27 +107,23 @@ function renderTrialPage(ctx: BookContext, parts: TrialParts): string {
             ${flightRecord ? `<details class="book-fold"><summary>Запись полёта</summary>${flightRecord}</details>` : ''}
             <div class="guide-diagnostics" id="diagnostics-container">${diagnostics}</div>
         </section>
+        ${completed ? `<div class="book-done"><div class="book-stamp is-set" aria-hidden="true"><span>Пройдено</span></div><div class="book-done__next"><p class="book-text">${escapeHtml(ctx.nav.note)}</p>${ctx.nav.next}</div></div>` : ''}
         <div class="book-turn">
-            <button type="button" class="btn-secondary" data-walkthrough-step="predict" ${pending ? 'disabled' : ''}><span aria-hidden="true">←</span> К идее</button>
-            ${pending
-                ? '<button type="button" class="btn-primary" data-walkthrough-cancel>Остановить проверку</button>'
-                : `<button type="button" class="btn-primary" data-walkthrough-step="reflect" ${solved && hasChecked ? '' : 'disabled'}>К разбору <span aria-hidden="true">→</span></button>`}
+            <button type="button" class="btn-secondary book-ghost" data-book-step="demo" ${pending ? 'disabled' : ''}><span aria-hidden="true">←</span> К демонстрации</button>
+            ${pending ? '<button type="button" class="btn-primary" data-walkthrough-cancel>Остановить проверку</button>' : ''}
         </div>`);
 }
 
-export function renderCodeTrialPage(ctx: BookContext, step: string): string {
-    const lesson = ctx.source.lesson as GuideTextLesson;
-    const parts = renderTextCheckParts(ctx.source.language, lesson);
-    // The numbered course activates the scene when its practice opens; the extra tasks wait for the first run.
-    return renderTrialPage(ctx, { ...parts, sceneActive: (ctx.source.kind === 'course' && step === 'build') || isMissionGuideScenePreviewActive() });
+export function renderCodeTrialPage(ctx: BookContext, completed: boolean): string {
+    return renderTrialPage(ctx, { ...renderTextCheckParts(ctx.source.language, ctx.source.lesson as GuideTextLesson), completed });
 }
 
 export function renderBlocksTrialPage(ctx: BookContext, view: BlocklyView): string {
-    const { lesson, runtimeResult, hasChecked, evaluation, launchedWithWarnings, previewActive, hasWorkspaceContent, checking, language } = view;
+    const { lesson, runtimeResult, hasChecked, evaluation, launchedWithWarnings, previewActive, hasWorkspaceContent, checking, language, isCompleted } = view;
     const { verdict, diagnostics } = renderCheckParts({
         language, lessonId: lesson.id, hasChecked, solved: Boolean(runtimeResult?.solved),
         diagnostics: runtimeResult?.diagnostics || evaluation.diagnostics, launchedWithWarnings, previewActive,
         hasWorkspaceContent, expectedOutcome: lesson.expectedOutcome, pending: checking
     });
-    return renderTrialPage(ctx, { verdict, diagnostics, hasChecked, solved: Boolean(runtimeResult?.solved), pending: checking, sceneActive: previewActive });
+    return renderTrialPage(ctx, { verdict, diagnostics, pending: checking, completed: isCompleted });
 }

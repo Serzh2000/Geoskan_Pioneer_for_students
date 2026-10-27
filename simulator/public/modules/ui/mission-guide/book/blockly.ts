@@ -1,19 +1,19 @@
 import { escapeHtml } from '../render/shared.js';
 import type { BlocklyView } from '../render/blockly-view.js';
-import { getWalkthroughContent } from '../walkthrough/content.js';
-import { getWalkthroughProgress, walkthroughKey } from '../walkthrough/state.js';
-import { PAGES_PER_LESSON, spreadOfStep, spreadPages, type BookContext, type BookNav } from './context.js';
+import { walkthroughKey } from '../walkthrough/state.js';
+import { PAGES_PER_LESSON, spreadPages, type BookContext, type BookNav } from './context.js';
 import { spreadCurls } from './curls.js';
 import { buildBookLesson } from './data.js';
 import { renderBookFrame } from './frame.js';
-import { renderFigurePage, renderIdeaPage, renderReviewPage, renderStampPage } from './pages.js';
+import { renderDemoPages, renderTheoryPages } from './pages.js';
 import { renderBlocksTaskPage, renderBlocksTrialPage } from './practice-pages.js';
 import { blocklySource } from './source.js';
+import { getBookStep } from './steps.js';
 
 function blocklyNav(view: BlocklyView): BookNav {
     const { nextLesson, lessonIndex } = view;
     return {
-        note: nextLesson ? 'Можно переходить к следующему уроку.' : 'Все десять практикумов Blockly завершены.',
+        note: nextLesson ? 'Урок пройден. Можно переходить к следующему.' : 'Все десять практикумов Blockly завершены.',
         hasPrevious: lessonIndex > 0,
         nextAttr: nextLesson ? 'data-guide-nav="next"' : '',
         next: nextLesson ? `<button type="button" class="btn-primary" data-guide-nav="next">Дальше: ${escapeHtml(nextLesson.title)} <span aria-hidden="true">→</span></button>` : ''
@@ -24,18 +24,15 @@ function blocklyNav(view: BlocklyView): BookNav {
 export function renderBlocklyBook(view: BlocklyView): string {
     const { lesson, language } = view;
     const source = blocklySource(view.state, lesson, language);
-    const progress = getWalkthroughProgress(walkthroughKey(language, lesson.id), getWalkthroughContent(lesson).correct);
-    const spread = spreadOfStep(progress.step);
+    const step = getBookStep(walkthroughKey(language, lesson.id));
     const ctx: BookContext = {
-        source, book: buildBookLesson(source), spread, pages: spreadPages(source, spread), totalPages: view.state.lessons.length * PAGES_PER_LESSON,
-        head: 'Учебник пилота · Blockly', nav: blocklyNav(view)
+        source, book: buildBookLesson(source), step, pages: spreadPages(source, step),
+        totalPages: view.state.lessons.length * PAGES_PER_LESSON, head: 'Учебник пилота · Blockly', nav: blocklyNav(view)
     };
-    const [left, right] = spread === 1
-        ? [renderIdeaPage(ctx), renderFigurePage(ctx)]
-        : spread === 2
-            ? [renderBlocksTaskPage(ctx, view), renderBlocksTrialPage(ctx, view)]
-            : [renderReviewPage(ctx), renderStampPage(ctx, { completed: view.isCompleted, solved: Boolean(view.runtimeResult?.solved) })];
-    const solved = Boolean(view.runtimeResult?.solved);
-    const curls = spreadCurls(ctx, { ready: progress.answer === getWalkthroughContent(lesson).correct, hasChecked: view.hasChecked, solved, pending: view.checking, completed: view.isCompleted });
-    return renderBookFrame(ctx, progress.step, left, right, curls, view.checking);
+    const [left, right] = step === 'theory'
+        ? renderTheoryPages(ctx)
+        : step === 'demo'
+            ? renderDemoPages(ctx)
+            : [renderBlocksTaskPage(ctx, view), renderBlocksTrialPage(ctx, view)];
+    return renderBookFrame(ctx, left, right, spreadCurls(ctx, { completed: view.isCompleted }), view.checking);
 }

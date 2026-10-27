@@ -283,29 +283,35 @@ border-strong и увеличенными промежутками. «Объек
 
 ## Book view · October 2026
 
-Every lesson list of the textbook is also laid out as a book (the numbered course, Lua 72 and Python 108; the ten extra practice tasks of each text track, the last chapter «Доп»; the ten Blockly assignments, whose workspace sits on the code sheet): one lesson is
-three spreads (Идея, Практика, Разбор) over the same five-stage state, so progress, drafts,
-gates and checks are shared with the plain page. Owners: `modules/ui/mission-guide/book/`
-(data, bookmarks, spread markup, LED-strip figure) and `panels/book.css`; the switch lives in
-the lesson (`Обычный вид` / `Книжный вид`, remembered in `pioneer:mission-guide:book:v1`).
+Every lesson list of the textbook is also laid out as a book: the numbered course (Lua 72, Python 108), the ten
+extra practice tasks of each text track (the last chapter «Доп»), and the ten Blockly assignments (their workspace
+sits on the code sheet). Every topic has the same three parts, which the student may open in any order:
 
-The book wears the application's tokens: pages are `--card-bg`, the desk `--panel-bg-strong`,
-text/muted/line/accent come from `--text-*`, `--pc-*`, `--border-*`, `--accent-*`; corners are 8 px
-(controls, frames) and 12 px (the sheet); buttons are the global `.btn-primary/.btn-secondary`.
-Orange stays the next action: the primary button of the spread. Bookmarks replace the course rail:
-numbered lesson tabs on the top edge, chapter tabs on the outer edge, each row named in the margin
-("Уроки главы «…» · N из M", "Главы курса"); the open chapter tab spells its title vertically.
-Tab state is fill (`--accent-soft` for the current one, success soft for done), never an underline.
+1. **Теория** — the fragment the lesson is built for, explained, with an example read piece by piece.
+2. **Демонстрация** — the same example runs in the simulator while the student watches.
+3. **Практика** — the lesson's task, the code sheet (or the Blockly workspace) and the check. A passed check
+   ends the lesson (a stamp and the way to the next one); there are no gates between the parts.
 
-Sanctioned exception to "no new font": the reading text is a serif (Source Serif 4, OFL) and the
-margin notes a handwriting (Caveat, OFL), both bundled in `assets/fonts/book/` and scoped to `.book`.
-Controls, verdicts, diagnostics, flight record and the editor keep Inter/mono. `Обычный вид` returns any
-lesson to the plain page and the course rail.
+The examples are authored per lesson in `book/examples/` (one file per chapter, `topics.ts` for the extra
+tasks and Blockly) and are run by `tests/mission-guide-examples.test.ts` in the same harness as the lessons, so none
+of them can fail to run or give away the task. The plain page keeps the five-stage walkthrough and is reachable with
+«Показать обычный вид урока»; the choice is remembered in `pioneer:mission-guide:book:v1`, the part a lesson was left on
+in `pioneer:mission-guide:book-step:v1`. Owners: `modules/ui/mission-guide/book/` and `panels/book.css`.
 
-The book is a physical object, and that is the one place its shading differs from the flat panels:
-the open spread rests on stacked page edges (box-shadow layers, thicker on the side with more pages, from the
-share of the volume already read) and its gutter is shaded with a narrow gradient. Pages that can be turned
-carry a lifted corner (`.book-curl`, bottom outer corners) that rises under the pointer and does what the
-spread's main button does. Turning a page plays a 760 ms leaf over the spine (`book/turn.ts`): copies of the
-replaced pages are swung in 3D above the new spread; it plays only between spreads of one volume in the
-two-column layout and never under `prefers-reduced-motion`.
+The page is paper in both themes (cream, ink, a large serif); the desk and the bar above it follow the application
+theme. Inside the sheet the application's tokens are set back to their light values, so the shared components (buttons,
+verdicts, diagnostics, fields) draw themselves light on the paper without overrides. Orange stays the next action: the
+primary button of the spread. Navigation is bookmarks: numbered lesson tabs and the three parts in the bar, the
+language as a segmented control, chapter tabs on the outer edge (the open chapter spells its title vertically); each
+row is named in the margin. Tab state is fill, never an underline.
+
+Sanctioned exception to "no new font": the reading text is a serif (Source Serif 4, OFL) and the margin labels a
+handwriting (Caveat, OFL), both bundled in `assets/fonts/book/` and scoped to `.book`. Controls, verdicts,
+diagnostics, flight record and the editor keep Inter/mono.
+
+The book is a physical object, and that is the one place its shading differs from the flat panels: the open spread
+rests on stacked page edges (box-shadow layers, thicker on the side with more pages, from the share of the volume
+already read) and its gutter is shaded with a narrow gradient. Pages that can be turned carry a lifted corner
+(`.book-curl`, bottom outer corners) that rises under the pointer and turns the page. Turning plays a 760 ms leaf over
+the spine (`book/turn.ts`): copies of the replaced pages are swung in 3D above the new spread; it plays only between
+spreads of one volume in the two-column layout and never under `prefers-reduced-motion`.
