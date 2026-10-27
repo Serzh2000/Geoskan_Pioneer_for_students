@@ -70,7 +70,58 @@
 .book-tab--volume small { font: 600 10px/1 var(--font-mono); }
 
 /* ---- the sheet: two pages, a spine between them ---- */
-.book__sheet { flex: 1 1 auto; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: max(580px, calc(100dvh - 116px)); border: 1px solid var(--bk-line); border-radius: 12px; background: var(--bk-page); outline: none; }
+/*
+ * The volume: the block of pages shows as stacked edges under the sheet, thicker on the side with more pages.
+ * --bk-read is the share of the volume already behind the open spread; one edge is a 1 px line of --bk-left / --bk-right px.
+ */
+.book__sheet {
+    --bk-left: calc(.7 + var(--bk-read, .3) * 1.6);
+    --bk-right: calc(2.2 - var(--bk-read, .3) * 1.6);
+    --bk-edge: color-mix(in srgb, var(--bk-page) 72%, var(--bk-strong));
+    position: relative; isolation: isolate; flex: 1 1 auto; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    min-height: max(580px, calc(100dvh - 116px)); border: 1px solid var(--bk-line); border-radius: 6px; background: var(--bk-page); outline: none;
+    box-shadow:
+        calc(var(--bk-right) * 1px) calc(var(--bk-right) * 1px) 0 var(--bk-edge), calc(var(--bk-right) * 2px) calc(var(--bk-right) * 2px) 0 var(--bk-line-strong),
+        calc(var(--bk-right) * 3px) calc(var(--bk-right) * 3px) 0 var(--bk-edge), calc(var(--bk-right) * 4px) calc(var(--bk-right) * 4px) 0 var(--bk-line-strong),
+        calc(var(--bk-right) * 5px) calc(var(--bk-right) * 5px) 0 var(--bk-edge), calc(var(--bk-right) * 6px) calc(var(--bk-right) * 6px) 0 var(--bk-line-strong),
+        calc(var(--bk-left) * -1px) calc(var(--bk-left) * 1px) 0 var(--bk-edge), calc(var(--bk-left) * -2px) calc(var(--bk-left) * 2px) 0 var(--bk-line-strong),
+        calc(var(--bk-left) * -3px) calc(var(--bk-left) * 3px) 0 var(--bk-edge), calc(var(--bk-left) * -4px) calc(var(--bk-left) * 4px) 0 var(--bk-line-strong),
+        calc(var(--bk-left) * -5px) calc(var(--bk-left) * 5px) 0 var(--bk-edge), calc(var(--bk-left) * -6px) calc(var(--bk-left) * 6px) 0 var(--bk-line-strong),
+        0 26px 34px -14px rgb(0 0 0 / .4);
+}
+/* The gutter: the pages bend into the spine. A physical object, so the one place in the textbook that shades with a gradient. */
+.book__sheet::before { content: ''; position: absolute; z-index: 1; top: 0; bottom: 0; left: 50%; width: 52px; transform: translateX(-50%); pointer-events: none; background: linear-gradient(90deg, transparent, rgb(0 0 0 / .1) 40%, rgb(0 0 0 / .18) 50%, rgb(0 0 0 / .1) 60%, transparent); }
+html[data-theme="dark"] .book__sheet::before { background: linear-gradient(90deg, transparent, rgb(0 0 0 / .26) 40%, rgb(0 0 0 / .4) 50%, rgb(0 0 0 / .26) 60%, transparent); }
+
+/* ---- a lifted corner marks a page that can be turned; it rises when the pointer comes near ---- */
+.book-curl { position: absolute; z-index: 2; bottom: 0; width: 46px; height: 46px; padding: 0; border: 0; background: none; cursor: pointer; filter: drop-shadow(-2px -2px 3px rgb(0 0 0 / .3)); transition: width .18s ease, height .18s ease, opacity .15s; }
+.book-curl--next { right: 0; }
+.book-curl--back { left: 0; transform: scaleX(-1); }
+.book-curl:hover, .book-curl:focus-visible { width: 68px; height: 68px; outline: none; }
+.book-curl::before { content: ''; position: absolute; inset: 0; background: var(--bk-desk); clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+.book-curl::after { content: ''; position: absolute; inset: 0; background: color-mix(in srgb, var(--bk-page) 88%, var(--bk-strong)); clip-path: polygon(0 0, 100% 0, 0 100%); transition: background-color .15s; }
+.book-curl:focus-visible::after { background: var(--accent-color); }
+.book__sheet[data-turning] .book-curl { opacity: 0; transition: none; }
+
+/* ---- the turn: a leaf of copies of the old pages, swung over the spine (book/turn.ts) ---- */
+.book-turn-layer { position: absolute; inset: 0; z-index: 5; perspective: 2600px; pointer-events: none; }
+.book-turn-under, .book-leaf { position: absolute; top: 0; bottom: 0; width: 50%; }
+.book-turn-under { background: var(--bk-page); overflow: hidden; }
+.book-turn-under--left { left: 0; }
+.book-turn-under--right { right: 0; }
+.book-turn-under > .book-page, .book-face > .book-page { height: 100%; }
+.book-leaf { transform-style: preserve-3d; animation: 760ms cubic-bezier(.45, .05, .25, 1) forwards; }
+.book-leaf--forward { left: 50%; transform-origin: 0 50%; animation-name: book-leaf-forward; }
+.book-leaf--back { left: 0; transform-origin: 100% 50%; animation-name: book-leaf-back; }
+.book-face { position: absolute; inset: 0; overflow: hidden; background: var(--bk-page); backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: 0 0 22px rgb(0 0 0 / .28); }
+.book-face--back { transform: rotateY(180deg); }
+.book-face::after { content: ''; position: absolute; inset: 0; background: #000; opacity: 0; animation: 760ms ease-in-out forwards; }
+.book-face--front::after { animation-name: book-shade-in; }
+.book-face--back::after { animation-name: book-shade-out; }
+@keyframes book-leaf-forward { from { transform: rotateY(0deg); } to { transform: rotateY(-180deg); } }
+@keyframes book-leaf-back { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
+@keyframes book-shade-in { from { opacity: 0; } to { opacity: .32; } }
+@keyframes book-shade-out { from { opacity: .32; } to { opacity: 0; } }
 .book-page { display: flex; flex-direction: column; min-width: 0; padding: 20px clamp(18px, 3vw, 36px) 14px; }
 .book-page--right { border-left: 1px solid var(--bk-line); }
 .book-head { padding-bottom: 6px; border-bottom: 1px solid var(--bk-line); font: 700 11px/1.2 var(--bk-serif); letter-spacing: .16em; text-transform: uppercase; color: var(--bk-muted); }
@@ -193,6 +244,7 @@
 @container lesson (max-width: 880px) {
     .book__sheet { width: 100%; grid-template-columns: minmax(0, 1fr); }
     .book-page--right { border-left: 0; border-top: 1px solid var(--bk-line); }
+    .book__sheet::before { display: none; }
     .book__spreads { display: none; }
     .book__top { gap: 8px; }
     .book__lessons { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }

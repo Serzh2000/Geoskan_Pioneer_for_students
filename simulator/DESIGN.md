@@ -301,3 +301,11 @@ Sanctioned exception to "no new font": the reading text is a serif (Source Serif
 margin notes a handwriting (Caveat, OFL), both bundled in `assets/fonts/book/` and scoped to `.book`.
 Controls, verdicts, diagnostics, flight record and the editor keep Inter/mono. `Обычный вид` returns any
 lesson to the plain page and the course rail.
+
+The book is a physical object, and that is the one place its shading differs from the flat panels:
+the open spread rests on stacked page edges (box-shadow layers, thicker on the side with more pages, from the
+share of the volume already read) and its gutter is shaded with a narrow gradient. Pages that can be turned
+carry a lifted corner (`.book-curl`, bottom outer corners) that rises under the pointer and does what the
+spread's main button does. Turning a page plays a 760 ms leaf over the spine (`book/turn.ts`): copies of the
+replaced pages are swung in 3D above the new spread; it plays only between spreads of one volume in the
+two-column layout and never under `prefers-reduced-motion`.

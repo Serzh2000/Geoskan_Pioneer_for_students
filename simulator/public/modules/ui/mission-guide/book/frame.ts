@@ -1,6 +1,7 @@
 import { escapeHtml } from '../render/shared.js';
 import { renderBookmarks, renderVolumes } from './bookmarks.js';
 import { SPREAD_NAMES, type BookContext } from './context.js';
+import { renderCurl, type Curls } from './curls.js';
 
 /** The way back to the book from the plain lesson page. */
 export function renderBookSwitch(): string {
@@ -8,8 +9,10 @@ export function renderBookSwitch(): string {
 }
 
 /** The book around a spread: bookmarks on three edges, the close button, the sheet with its two pages. */
-export function renderBookFrame(ctx: BookContext, step: string, left: string, right: string, busy: boolean): string {
+export function renderBookFrame(ctx: BookContext, step: string, left: string, right: string, curls: Curls, busy: boolean): string {
     const { source, spread } = ctx;
+    // How much of the volume lies on the left: the block of read pages is thicker the further the reader has gone.
+    const read = Math.min(1, Math.max(0, ctx.pages[0] / Math.max(1, ctx.totalPages))).toFixed(3);
     const marks = renderBookmarks(source.volume, source.language, source.lesson.id);
     return `
         <div class="guide-modal-layout book-layout" data-guide-language="${source.language}" data-guide-portal-page="lesson">
@@ -28,7 +31,7 @@ export function renderBookFrame(ctx: BookContext, step: string, left: string, ri
                         <p class="book-margin-label book-margin-label--edge" id="book-volumes-label">Язык курса</p>
                         <nav class="book__chapters book__volumes" role="tablist" aria-labelledby="book-volumes-label">${renderVolumes(source.volume, busy)}</nav>
                     </div>
-                    <div class="book__sheet" id="guide-walkthrough-content" tabindex="-1" role="region" aria-label="Разворот ${spread} из 3: ${SPREAD_NAMES[spread - 1]}">${left}${right}</div>
+                    <div class="book__sheet" id="guide-walkthrough-content" tabindex="-1" role="region" data-book-page="${ctx.pages[0]}" data-book-lesson="${escapeHtml(source.lesson.id)}" style="--bk-read: ${read}" aria-label="Разворот ${spread} из 3: ${SPREAD_NAMES[spread - 1]}">${left}${right}${renderCurl('back', curls.back)}${renderCurl('next', curls.next)}</div>
                     <div class="book__edge">
                         <p class="book-margin-label book-margin-label--edge" id="book-chapters-label">Главы курса</p>
                         <nav class="book__chapters" aria-labelledby="book-chapters-label">${marks.chapters}</nav>

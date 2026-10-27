@@ -1,6 +1,7 @@
 import { attachLearningInteractions } from './interactions/learning.js';
 import { attachWalkthroughBindings } from './interactions/walkthrough.js';
 import { attachBookBindings } from './interactions/book.js';
+import { captureSheet, playPageTurn } from './book/turn.js';
 import { isWalkthroughBusy, syncWalkthroughSession, walkthroughKey } from './walkthrough/state.js';
 import { renderCourseOutline } from './render/course-outline.js';
 import { attachAcademyBindings } from './interactions/academy.js';
@@ -85,7 +86,9 @@ export function renderMissionGuidePanel(language: ScriptLanguage = 'lua'): void 
         outline.querySelector<HTMLElement>('[aria-current="page"]')?.scrollIntoView?.({ block: 'nearest' });
     }
     // Authored renderers escape lesson copy; only trusted renderer markup enters this host.
+    const sheetBefore = captureSheet(container);
     container.innerHTML = bodyHtml;
+    playPageTurn(container, sheetBefore);
     if (outline) attachAcademyBindings(outline, lessonLanguage, activeLessonId, renderMissionGuidePanel);
     if (outline) {
         outline.querySelectorAll<HTMLButtonElement>('[data-guide-open-lesson]').forEach(button => button.addEventListener('click', () => {
