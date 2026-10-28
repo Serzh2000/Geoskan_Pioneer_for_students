@@ -142,8 +142,8 @@ export function attachTextGuideBindings(
         if ([54, 107].includes(lesson.academy?.number || 0) && repeatedExperiments.get(experimentKey) !== code) experimentTrials.delete(experimentKey);
         const activity = {
             code,
-            lift: container.querySelector<HTMLSelectElement>('[data-academy-part="lift"]')?.value,
-            vision: container.querySelector<HTMLSelectElement>('[data-academy-part="vision"]')?.value,
+            lift: container.querySelector<HTMLInputElement>('[data-academy-part="lift"]:checked')?.value,
+            vision: container.querySelector<HTMLInputElement>('[data-academy-part="vision"]:checked')?.value,
             previousRun: repeatedExperiments.get(experimentKey) === code,
             trials: [...(experimentTrials.get(experimentKey) || [])], scene: getAcademySceneEvidence()
         };

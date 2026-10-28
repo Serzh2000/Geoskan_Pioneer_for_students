@@ -1,5 +1,6 @@
 import type { GuideTextLesson } from '../../types.js';
 import { ACADEMY_LESSONS } from '../catalog.js';
+import { localize } from '../../book/localize.js';
 
 export type AcademyCodeExercise = {
     number: number; task: string; observation: string; hint: string; experiment: string;
@@ -15,6 +16,8 @@ export function compileAcademyExercise(exercise: AcademyCodeExercise, language: 
         ? `local leds = Ledbar.new(29)\n\n${code}\n${code.includes('function callback') ? '' : '\nfunction callback(event)\nend\n'}`
         : `from pioneer_sdk import Pioneer\nimport time\n\npioneer = Pioneer(simulator=True)\n\n${code}\n`;
     const correct = exercise.number % 2;
+    // The task and the hint may carry <lua>/<py> passages: each track keeps only its own.
+    exercise = { ...exercise, task: localize(exercise.task, language), hint: localize(exercise.hint, language) };
     return {
         id: `${language}-${lesson.id}`, topicId: lesson.id, chapterId: lesson.moduleId,
         badge: `Урок ${lesson.number}`, title: lesson.title, goal: exercise.task,

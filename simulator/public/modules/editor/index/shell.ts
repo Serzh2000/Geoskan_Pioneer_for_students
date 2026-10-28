@@ -21,6 +21,7 @@ import {
     type TextEditorValueMode
 } from '../text-editor.js';
 import type { AppTheme } from '../../app/theme-toggle.js';
+import type { EditorTheme } from '../text-editor.js';
 import { getBlocklyThemeByName } from '../runtime.js';
 import {
     createEditorAutofitContext,
@@ -152,11 +153,11 @@ export function layoutEditor(): void {
     layoutTextEditorInstance(editorIndexState.editorInstance);
 }
 
-export function setEditorTheme(theme: AppTheme): void {
+export function setEditorTheme(theme: EditorTheme): void {
     if (hasFallbackEditor()) return;
 
     setTextEditorTheme(theme);
-    const resolvedTheme = getBlocklyThemeByName(theme);
+    const resolvedTheme = getBlocklyThemeByName(theme === 'paper' ? 'light' : theme);
     if (resolvedTheme) {
         editorIndexState.blocklyWorkspace?.setTheme(resolvedTheme);
     }

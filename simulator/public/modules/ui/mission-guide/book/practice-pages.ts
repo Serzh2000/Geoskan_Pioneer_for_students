@@ -10,6 +10,8 @@ import { renderCheckParts } from '../render/check-step.js';
 import type { BlocklyView } from '../render/blockly-view.js';
 import type { GuideTextLesson } from '../types.js';
 import type { BookContext } from './context.js';
+import { renderStamp } from './glyphs.js';
+import { localize } from './localize.js';
 import { page } from './pages.js';
 
 /** What the right page of the practice spread shows of a check, whichever editor the lesson uses. */
@@ -29,11 +31,24 @@ function renderHeading(ctx: BookContext): string {
         <span class="book-rule" aria-hidden="true"></span>`;
 }
 
+/**
+ * The task in a frame, as a textbook sets it: the label on the edge, one sentence of the goal to a numbered line, the
+ * rule of the sheet under a thin line. A goal of a single sentence stays a sentence.
+ */
+function renderAssignment(goal: string, note = ''): string {
+    // A dot inside `code` or inside a number (`ap.push`, 1.5) does not end a sentence.
+    const sentences = goal.match(/(?:`[^`]*`|[^.!?`]|[.!?](?!\s|$))+[.!?]+(?=\s|$)/g)?.map(item => item.trim()).filter(Boolean) ?? [goal.trim()];
+    const body = sentences.length > 1
+        ? `<ol class="book-assignment__list">${sentences.map(item => `<li>${renderInline(item)}</li>`).join('')}</ol>`
+        : `<p class="book-assignment__text">${renderInline(goal)}</p>`;
+    return `<section class="book-assignment" aria-labelledby="book-assignment-label"><h2 class="book-assignment__label" id="book-assignment-label">Задание</h2>${body}${note ? `<p class="book-assignment__note">${escapeHtml(note)}</p>` : ''}</section>`;
+}
+
 /** The sheet the student works on: the editor or the workspace, with the actions that belong to it right under it. */
 function renderBench(options: { label: string; body: string; actions: string; status: string; plain?: boolean }): string {
     return `<section class="book-bench" aria-label="Рабочий лист">
-        <header class="book-bench__bar"><h2>Рабочий лист</h2><span>${escapeHtml(options.label)}</span></header>
-        <div class="book-bench__body${options.plain ? ' book-bench__body--form' : ''}">${options.body}</div>
+        <div class="book-bench__sheet"><span class="book-bench__tag">${escapeHtml(options.label)}</span>
+        <div class="book-bench__body${options.plain ? ' book-bench__body--form' : ''}">${options.body}</div></div>
         <footer class="book-bench__actions">${options.actions}${options.status}</footer>
     </section>`;
 }
@@ -62,19 +77,18 @@ export function renderCodeTaskPage(ctx: BookContext): string {
         body: inspect
             ? renderInspectionQuestions()
             : '<div id="mission-guide-monaco-preview-host" class="guide-monaco-preview-host"><div class="guide-monaco-preview__placeholder">Загружаю редактор…</div></div>',
-        actions: `<button type="button" class="btn-primary" data-guide-text-check>${inspect ? 'Проверить наблюдение' : 'Проверить и запустить'}</button>
-            ${inspect ? '' : '<button type="button" class="btn-secondary" data-guide-text-starter>Вернуть заготовку</button><button type="button" class="btn-secondary" data-guide-text-undo hidden>Отменить замену</button>'}
-            <button type="button" class="btn-secondary book-ghost" data-guide-text-reset>Сбросить проверку</button>`,
+        actions: `${renderStamp(inspect ? 'check' : 'run', inspect ? 'Проверить наблюдение' : 'Проверить и запустить', 'data-guide-text-check', true)}
+            ${inspect ? '' : `${renderStamp('starter', 'Вернуть заготовку', 'data-guide-text-starter')}${renderStamp('undo', 'Отменить замену', 'data-guide-text-undo hidden')}`}
+            ${renderStamp('reset', 'Сбросить проверку', 'data-guide-text-reset')}`,
         status: `<p class="book-bench__status" role="status" data-guide-draft-status>${DRAFT_NOTE}</p>`
     });
     return page('left', ctx.head, ctx.pages[0], `
         ${renderHeading(ctx)}
-        <p class="book-text book-task">${renderInline(lesson.goal)}</p>
-        <p class="book-note">${escapeHtml(practiceNote(source.language, lesson))}</p>
+        ${renderAssignment(localize(lesson.goal, source.language), practiceNote(source.language, { ...lesson, goal: localize(lesson.goal, source.language) }))}
         ${renderTerrainPrep(lesson)}
         ${bench}
         ${renderHelp([
-            source.hint ? helpFold('Подсказка', `<p>${renderInline(source.hint)}</p>`) : '',
+            source.hint ? helpFold('Подсказка', `<p>${renderInline(localize(source.hint, source.language))}</p>`) : '',
             ...helpLinks(lesson.links)
         ].filter(Boolean))}
         ${renderRunBanner(source.language, lesson.id)}`);
@@ -95,18 +109,18 @@ export function renderBlocksTaskPage(ctx: BookContext, view: BlocklyView): strin
         body: `<div id="mission-guide-blockly-preview-host" class="guide-blockly-preview-host ${blocklyPreviewActive ? 'is-active' : ''}">
             ${blocklyPreviewActive ? '' : '<div class="guide-blockly-preview__placeholder"><p>Откройте редактор и соедините блоки сверху вниз. Текущая программа останется в рабочей области.</p><button type="button" class="btn-primary" data-guide-open-editor>Открыть редактор Blockly</button></div>'}
         </div>`,
-        actions: `<button type="button" class="btn-primary" data-guide-check="${escapeHtml(lesson.id)}">Проверить и запустить</button>
-            <button type="button" class="btn-secondary" data-guide-launch="${hasChecked ? 'checked' : 'unchecked'}" ${hasWorkspaceContent ? '' : 'disabled'}>Перезапустить сцену</button>
-            <button type="button" class="btn-secondary book-ghost" data-guide-reset="${escapeHtml(lesson.id)}">Сбросить проверку</button>`,
+        actions: `${renderStamp('run', 'Проверить и запустить', `data-guide-check="${escapeHtml(lesson.id)}"`, true)}
+            ${renderStamp('restart', 'Перезапустить сцену', `data-guide-launch="${hasChecked ? 'checked' : 'unchecked'}" ${hasWorkspaceContent ? '' : 'disabled'}`)}
+            ${renderStamp('reset', 'Сбросить проверку', `data-guide-reset="${escapeHtml(lesson.id)}"`)}`,
         status: `<p class="book-bench__status" role="status">${escapeHtml(statusLine)}</p>`
     });
     return page('left', ctx.head, ctx.pages[0], `
         ${renderHeading(ctx)}
-        <p class="book-text book-task">${renderInline(lesson.goal)}</p>
+        ${renderAssignment(localize(lesson.goal, view.language))}
         ${renderRecipe(lesson)}
         ${bench}
         ${renderHelp([
-            lesson.builderHint ? helpFold('Подсказка', `<p>${renderInline(lesson.builderHint)}</p>`) : '',
+            lesson.builderHint ? helpFold('Подсказка', `<p>${renderInline(localize(lesson.builderHint, view.language))}</p>`) : '',
             helpFold('Готовое решение', `<p>Сначала попробуйте собрать сами. Загрузка решения заменит текущие блоки в редакторе.</p><button type="button" class="btn-secondary btn--sm" data-guide-fill="${escapeHtml(lesson.id)}">Заменить блоки решением</button>`),
             '<button type="button" class="book-help__row" data-guide-open-editor-fallback>Открыть во весь экран</button>'
         ].filter(Boolean))}

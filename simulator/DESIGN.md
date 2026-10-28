@@ -311,13 +311,57 @@ action strip and status line); hints, the ready solution and references are quie
 the scene and the verdict, which already carries the goal, so the goal is never printed twice. Below 1060 px the two
 pages stack.
 
+Volume identity (`panels/book-volumes.css`, `book/volume-marks.ts`, driven by `data-book-volume` on `.book`): the three volumes are
+three books on one shelf with the same design language. Each has a binding colour (Python deep teal-green #1d6a5a, Lua indigo
+#3d4a9c, Blockly raspberry #9a2c52; never orange, which stays the next action) and a drawn mark (a prompt, a crescent, a brick).
+The identity lives in the object, not in fills across the text: the page edges are tinted and the last two edge layers are the
+cover board (`--bk-cover`, `--bk-cover-2`), a ribbon of the volume (mark and name in Caveat) hangs from the top edge beside the
+gutter (at the right edge when the pages stack) and is outside the pages, so a turning leaf passes over it; the inactive folder
+tabs are cut from the volume's paper; the running head says «Том Python · …» with the mark, the page foot names the volume; in the
+bar's volume control every segment carries its mark and the open one is filled with its own colour. Colour is never the only
+sign (mark and written name), text and marks on the cream paper keep contrast above 4.5:1.
+
 Sanctioned exception to "no new font": the reading text is a serif (Source Serif 4, OFL) and the margin labels a
 handwriting (Caveat, OFL), both bundled in `assets/fonts/book/` and scoped to `.book`. Controls, verdicts,
 diagnostics, flight record and the editor keep Inter/mono.
 
 The book is a physical object, and that is the one place its shading differs from the flat panels: the open spread
 rests on stacked page edges (box-shadow layers, thicker on the side with more pages, from the share of the volume
-already read) and its gutter is shaded with a narrow gradient. Pages that can be turned carry a lifted corner
-(`.book-curl`, bottom outer corners) that rises under the pointer and turns the page. Turning plays a 760 ms leaf over
-the spine (`book/turn.ts`): copies of the replaced pages are swung in 3D above the new spread; it plays only between
-spreads of one volume in the two-column layout and never under `prefers-reduced-motion`.
+already read) and its gutter is shaded with a narrow gradient. Pages that can be turned carry a peeled corner (`.book-curl`, bottom outer corners; `book/curls.ts`, `panels/book-turn.css`): a
+curved fold, the back of the paper (cream, darker into the crease, with the page grain) over the sheet beneath it, a soft
+shadow under the flap. It is a corner at rest and peels further as the pointer comes near the corner of the sheet (not only
+over the corner itself; the sheet writes the proximity into `--near`), fully on hover, focus and press; only the folded
+part answers the pointer, nothing under it is tinted, and it is absent where the page cannot be turned. Turning plays an 880 ms page curl (`book/turn.ts`) staged on top of the already redrawn spread from copies of the
+old pages (the live scene, editor and workspace are left out of the copies; the scene's place on the turning page is the dark
+floor of the scene): a straight fold sweeps from the pressed corner (it starts as the diagonal of the peeled corner and
+straightens toward the spine), the part of the paper beyond it is laid back over the rest, its back showing the next page the
+right way round. Where the paper turns over the fold it is rolled round a cylinder, a narrow band of the back, squeezed,
+lit and shaded as a curve whose radius grows while the leaf is in the air and shrinks to nothing as it lies down; the leaf
+casts a soft shadow on the page it uncovers and the gutter keeps its shading. Every frame is computed in script (requestAnimationFrame)
+and writes only clip paths and transforms of a few copies. The live overlays of the new spread (scene gizmo, camera buttons,
+view-mode bar) are hidden while `data-turning` is set on the sheet and fade back in once the leaf has landed, so nothing of the
+new page floats above the turning paper. It plays only between spreads of one
+volume in the two-column layout and never under `prefers-reduced-motion`.
+
+### Book view: the printed viewport, drawn actions, printed paper
+
+The demonstration page has one figure, the plate «Сцена симулятора» (`book/scene-plate.ts`, `book/scene-print.ts`,
+`panels/book-scene.css`): the viewport of the simulator. Before the example runs it is an ink print of that very viewport,
+an engraving of what the 3D scene looks like now (the drone on its pad, the grid, the horizon): the live WebGL frame is
+rendered once and read in the same task (`renderer.render` then `drawImage`, so no `preserveDrawingBuffer`), turned into
+contour lines (difference of two blurs, heavier where the contrast is) and two-direction hatching by luminance band, in the
+ink colour on transparent canvases with a slight wobble; it is cached by size and what the viewport shows and taken again
+when the scene reset brings the drone back. When the example runs, the pen tears the print off along a ragged paper edge
+(a CSS mask sweep of about a second: the sheet with the lines first, the hatching a moment behind) and the live scene, with
+its volume, colour and motion, is there under it. Stopping prints the scene again and lays the print back over it. The live
+scene stays mounted in `#mission-guide-scene-preview-host` the whole time and is never masked (a WebGL canvas under a mask
+can paint black); in the print state a sheet of paper lies over it and the host takes no pointer, so its controls (gizmo,
+camera buttons, view bar) are hidden by the paper and are the page's own again once the scene is live. Under
+`prefers-reduced-motion` the states switch at once. The LED strip with sliders on the theory page (`book/ledbar.ts`) is
+the one other figure.
+
+The actions of a page are drawn pictograms with a handwritten caption (`book/glyphs.ts`, `.book-stamp-btn`), not buttons;
+orange marks the next action. The task is set in a frame with the label on its edge and one sentence to a numbered line
+(`renderAssignment`). A question is answered by a tick in a box that a pencil draws (`.ck-*`), never by a drop-down. The
+pages have a paper grain that lies over the ink as well as under it (`--bk-grain`, `.book__sheet::after`); frames, the
+plate and the editor (theme `pioneer-paper`, transparent background) are the page itself, not cards on it.

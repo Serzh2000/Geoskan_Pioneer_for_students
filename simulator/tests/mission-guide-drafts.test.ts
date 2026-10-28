@@ -22,7 +22,8 @@ jest.unstable_mockModule('../public/modules/editor/index.js', () => ({
     setEditorValue: async (value: string) => { edit(value); },
     setEditorLanguage: setLanguage,
     setBlocklyEditorEnabled: () => { editorState.blocklyEnabled = false; },
-    revealEditorStart: () => undefined
+    revealEditorStart: () => undefined,
+    setEditorTheme: () => undefined
 }));
 
 describe('Lesson drafts', () => {
@@ -37,16 +38,17 @@ describe('Lesson drafts', () => {
             isConnected: true,
             appendChild: () => { root.parentNode = host; root.parentElement = host; },
             querySelector: () => null,
+            closest: () => null,
             classList: { add: () => undefined, remove: () => undefined }
         };
         let hasHost = true;
         Object.defineProperty(globalThis, 'document', { configurable: true, value: {
-            documentElement: { contains: () => true },
+            documentElement: { contains: () => true, dataset: {} },
             getElementById: (id: string) => id === 'monaco-editor-root' ? root
                 : id === 'mission-guide-monaco-preview-host' ? (hasHost ? host : null) : {}
         } });
         Object.defineProperty(globalThis, 'window', { configurable: true, value: {
-            requestAnimationFrame: () => 0, setTimeout: () => 0, dispatchEvent: () => true
+            requestAnimationFrame: () => 0, setTimeout: () => 0, dispatchEvent: () => true, addEventListener: () => undefined
         } });
         Object.defineProperty(globalThis, 'MutationObserver', { configurable: true, value: class { observe() {} } });
         try {

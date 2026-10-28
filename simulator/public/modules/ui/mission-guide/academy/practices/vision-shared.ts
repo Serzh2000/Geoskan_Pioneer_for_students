@@ -61,7 +61,7 @@ export function compileVisionExercise(exercise: VisionExercise): GuideTextLesson
         badge: `Урок ${lesson.number}`, title: lesson.title, goal: exercise.task,
         summary: lesson.explanation, lessonIntro: `${lesson.explanation} ${exercise.hint}`, expectedOutcome: exercise.observation,
         builderHint: exercise.hint, starterCode: source, solutionCode: source.split('___').join(exercise.answer),
-        apiFocus: [{ title: lesson.concept, summary: exercise.hint }], links: [{ label: 'Камера и ArUco', query: 'Camera get_cv_frame cv2 aruco' }],
+        apiFocus: [{ title: lesson.concept, summary: exercise.hint }], links: [{ label: 'Камера и ArUco', query: 'Camera get_cv_frame cv2 aruco' }, ...(exercise.number >= 92 ? [{ label: 'Скорость дрона', query: 'set_manual_speed' }] : [])],
         academy: { number: lesson.number, mode: 'code', waitMs: 420000, doneMessage: 'Опыт завершён', hints: [exercise.hint], experiment: exercise.experiment,
             teaching: { deviceTitle: lesson.title, device: `${lesson.explanation} ${exercise.hint} В этих уроках Camera(view="bottom") выбирает нижнюю камеру симулятора. Параметр view — расширение симулятора; при переносе на аппарат источник камеры настраивается под его оборудование. Распознавание здесь моделируется по видимости, перекрытиям и проекции меток, поэтому опыт учит обработке результатов API, а не качеству настоящего OpenCV на шумных фотографиях.`,
                 question: exercise.question.includes('?') ? exercise.question : `${exercise.question.replace(/…$/, '')}?`, correct, choices: (correct ? [exercise.wrong, exercise.right] : [exercise.right, exercise.wrong]).map((text, index) => ({ text, feedback: `${index === correct ? 'Верно. ' : 'Попробуйте снова. '}${exercise.feedback}` })),

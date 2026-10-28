@@ -18,6 +18,9 @@
 @import url('./styles/panels/api-docs.css');
 @import url('./styles/panels/guide-panel.css');
 @import url('./styles/panels/book.css');
+@import url('./styles/panels/book-nav.css');
+@import url('./styles/panels/book-turn.css');
+@import url('./styles/panels/book-volumes.css');
 @import url('./styles/panels/settings.css');
 @import url('./styles/overlays/hud-and-settings.css');
 @import url('./styles/overlays/hud-and-settings/autopilot-params-modal.css');
@@ -27,6 +30,7 @@
 @import url('./styles/scene/route-drawing.css');
 @import url('./styles/core/forms.css');
 @import url('./styles/panels/telemetry.css');
+@import url('./styles/panels/book-scene.css');
 @import url('./styles/panels/drone-link.css');
 @import url('./styles/scene/environment-control.css');
 @import url('./styles/scene/editor.css');

@@ -172,6 +172,39 @@ export function setupSyntaxHighlighting(monaco: any) {
         }
     });
 
+    // The textbook page: ink on cream, the colours of the printed listings next to it (book.css).
+    monaco.editor.defineTheme('pioneer-paper', {
+        base: 'vs',
+        inherit: true,
+        rules: [
+            { token: 'keyword.class', foreground: '1b2333', fontStyle: 'bold' },
+            { token: 'function.call', foreground: 'a84a00', fontStyle: 'bold' },
+            { token: 'constant', foreground: '1f4e8c', fontStyle: 'bold' },
+            { token: 'comment', foreground: '17744a', fontStyle: 'italic' },
+            { token: 'string', foreground: '8d4b07' },
+            { token: 'number', foreground: '0f6b64' },
+            { token: 'keyword', foreground: '5b3f8c', fontStyle: 'bold' }
+        ],
+        colors: {
+            'editor.background': '#fffdf800',
+            'editor.foreground': '#1b2333',
+            'editorLineNumber.foreground': '#a39a85',
+            'editorLineNumber.activeForeground': '#566074',
+            'editorCursor.foreground': '#ff6b00',
+            'editor.selectionBackground': '#ffd7bd',
+            'editor.inactiveSelectionBackground': '#efe6d2',
+            'editorIndentGuide.background1': '#e3dccb',
+            'editorWidget.background': '#fbf8f0',
+            'editorWidget.border': '#c9c1ac',
+            'editorSuggestWidget.background': '#fbf8f0',
+            'editorSuggestWidget.border': '#c9c1ac',
+            'editorSuggestWidget.selectedBackground': '#f2ede0',
+            'editorHoverWidget.background': '#fbf8f0',
+            'editorHoverWidget.border': '#c9c1ac',
+            'scrollbarSlider.background': '#c9c1ac66'
+        }
+    });
+
     monaco.editor.defineTheme('pioneer-dark', {
         base: 'vs-dark',
         inherit: true,

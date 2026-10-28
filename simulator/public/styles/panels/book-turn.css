@@ -1,0 +1,74 @@
+/*
+ * The paper of the book in motion: the lifted corners (book/curls.ts) and the turn of a page (book/turn.ts).
+ * The shading here is the physical object's (a fold, a cast shadow, a catch of light), the one sanctioned exception to the
+ * "state is fill" contract of book.css; every state of a control is still a fill.
+ */
+
+/* ---- a lifted corner marks a page that can be turned; it peels toward the pointer ---- */
+/* --near is set by the sheet from the pointer's distance (0..1); hover, focus and press lift it fully. */
+.book-curl {
+    --near: 0; --hot: 0; --peel: max(var(--near), var(--hot));
+    position: absolute; z-index: 2; bottom: 0; width: 104px; height: 104px; padding: 0; border: 0; background: none; outline: none;
+    pointer-events: none; -webkit-tap-highlight-color: transparent;
+}
+.book-curl--next { right: 0; }
+.book-curl--back { left: 0; transform: scaleX(-1); }
+.book-curl:hover, .book-curl:focus-visible, .book-curl:active { --hot: 1; }
+/* Only the folded part answers the pointer, and it grows with the peel. */
+.book-curl__hit {
+    --leg: calc((.42 + .58 * var(--peel)) * 64px + 8px);
+    position: absolute; inset: 0; pointer-events: auto; cursor: pointer;
+    clip-path: polygon(100% 100%, 100% calc(100% - var(--leg)), calc(100% - var(--leg)) 100%);
+}
+.book-curl__art {
+    position: absolute; right: 0; bottom: 0; width: 100px; height: 100px; pointer-events: none; transform-origin: 100% 100%;
+    transform: scale(calc(.42 + .58 * var(--peel))); transition: transform .16s cubic-bezier(.2, .7, .3, 1); will-change: transform;
+}
+.book-curl:active .book-curl__art { transform: scale(1.08); transition-duration: .08s; }
+.book-curl__under, .book-curl__flap { position: absolute; inset: 0; display: block; }
+/* What the fold uncovers: the next sheet, dark under the crease where the flap shades it. */
+.book-curl__under {
+    clip-path: path('M36 100 Q58 58 100 36 L100 94 Q100 100 94 100 Z');
+    background: var(--bk-grain), linear-gradient(135deg, transparent 58%, #b9ae92 66%, #d6cdb5 80%, #e9e2cf 100%);
+}
+/* The back of the paper: cream, darker where it turns into the crease, with the grain of the page. */
+.book-curl__flapwrap {
+    position: absolute; inset: 0; display: block;
+    filter: drop-shadow(1px 2px 2.5px rgb(40 25 5 / .38)) drop-shadow(-1px -1px 1.5px rgb(40 25 5 / .16));
+}
+.book-curl__flap {
+    clip-path: path('M36 100 Q30 66 42 42 Q66 30 100 36 Q58 58 36 100 Z');
+    background: var(--bk-grain), linear-gradient(135deg, #fffdf6 38%, #f6f0df 52%, #e3d9bf 62%, #cfc4a6 67%);
+    transition: background-color .15s;
+}
+.book-curl:focus-visible .book-curl__flap { background: var(--bk-grain), linear-gradient(135deg, #ffe9cf 38%, #f9dcb8 54%, #e8c496 64%, #d4a874 67%); }
+.book__sheet[data-turning] .book-curl { opacity: 0; transition: none; }
+.book__sheet[data-turning] .book-curl__art { transition: none; }
+@media (prefers-reduced-motion: reduce) { .book-curl__art { transition: none; } }
+
+/* ---- the turn: a page curl cut from copies of the old pages (book/turn.ts) ---- */
+/* Above everything the new spread carries (the scene overlays reach z-index 94), and out of the reach of the pointer. */
+.book-turn-layer { --turn-dir: 1; position: absolute; inset: 0; z-index: 400; pointer-events: none; }
+.book-turn-layer--back { --turn-dir: -1; }
+.book-turn-clip, .book-turn-leaf { position: absolute; inset: 0; }
+/* One sheet of paper: the copy of a page on cream, with the grain over the ink as on the real sheet. */
+.book-turn-paper { position: absolute; overflow: hidden; background-color: var(--bk-page); background-image: var(--bk-grain); }
+.book-turn-paper::after { content: ''; position: absolute; inset: 0; background-image: var(--bk-grain); mix-blend-mode: multiply; opacity: .9; pointer-events: none; }
+.book-turn-paper > .book-page { height: 100%; }
+.book-turn-paper--moving { left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+/* The leaf throws its shadow on the page below it, on both sides of the fold. */
+.book-turn-leaf { filter: drop-shadow(calc(var(--turn-dir) * -3px) 3px 5px rgb(40 25 5 / .34)) drop-shadow(calc(var(--turn-dir) * -10px) 9px 18px rgb(40 25 5 / .22)); }
+/* The roll: the paper turning over the fold, bright where it faces the lamp and dark where it turns away. Strips along the fold. */
+.book-turn-roll, .book-turn-cast { position: absolute; left: 0; top: 0; width: 100px; height: 1600px; transform-origin: 0 0; will-change: transform; }
+.book-turn-roll { background: linear-gradient(90deg, rgb(255 252 240 / 0) 0%, rgb(255 252 240 / .5) 30%, rgb(255 252 240 / .14) 52%, rgb(60 38 10 / .24) 78%, rgb(40 24 6 / .58) 100%); }
+.book-turn-cast { background: linear-gradient(90deg, rgb(40 25 5 / .52) 0%, rgb(40 25 5 / .3) 22%, rgb(40 25 5 / .12) 55%, rgb(40 25 5 / .03) 85%, rgb(40 25 5 / 0) 100%); will-change: transform, opacity; }
+/* The gutter keeps its shading while the pages move over it. */
+.book-turn-gutter { position: absolute; top: 0; bottom: 0; width: 56px; margin-left: -28px; background: linear-gradient(90deg, transparent, rgb(60 40 10 / .07) 40%, rgb(60 40 10 / .14) 50%, rgb(60 40 10 / .07) 60%, transparent); }
+
+/* The new spread's live overlays (scene gizmo, camera buttons, view bar) belong to a page that is not yet there: they stay out
+   while the leaf is in the air and come back once it has landed. */
+.guide-scene-preview-host :is(.scene-orientation-widget, .scene-camera-views, .drone-print-bubbles, .viewport-camera-controls-row, .fpv-overlay, .scene-hotbar, .environment-popover, .scene-hud-readout, .scene-onboarding) { transition: opacity .3s ease .04s; }
+.book__sheet[data-turning] .guide-scene-preview-host :is(.scene-orientation-widget, .scene-camera-views, .drone-print-bubbles, .viewport-camera-controls-row, .fpv-overlay, .scene-hotbar, .environment-popover, .scene-hud-readout, .scene-onboarding) { opacity: 0 !important; transition: none; }
+
+/* The live scene cannot be copied onto the leaf: its place on the turning page is the dark floor of the scene, so the swap is not a hole in the paper. */
+.book-turn-paper .guide-scene-preview-host { background: radial-gradient(ellipse at 50% 58%, #4a5b68 0%, #36444f 62%, #2c3841 100%); }

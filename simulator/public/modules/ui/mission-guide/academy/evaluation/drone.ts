@@ -52,7 +52,7 @@ export function gradeDroneAcademy(number: number, samples: DroneSample[], events
         if (!inLog && !inProgram) diagnostics.push(error('Сопоставьте сообщения с командой', `Нужен порядок «${before}» → принятая подготовка → «${after}».`, 'Переставьте print относительно команды. Одно последнее сообщение не подтверждает весь порядок.'));
     }
     if (!diagnostics.length && number === 5 && !activity.previousRun) {
-        return { solved: false, complete: true, diagnostics: [{ kind: 'info', title: 'Первый опыт записан — повторите', reason: 'Подготовка прошла из исходной точки. Теперь нужен второй запуск этой же программы после сброса.', fix: 'Нажмите «Повторить проверку». Код между запусками не меняйте.' }] };
+        return { solved: false, complete: true, diagnostics: [{ kind: 'info', title: 'Первый опыт записан — повторите', reason: 'Подготовка прошла из исходной точки. Теперь нужен второй запуск этой же программы после сброса.', fix: 'Нажмите «Проверить и запустить» ещё раз. Код между запусками не меняйте.' }] };
     }
     const solved = !diagnostics.some(item => item.kind === 'error');
     if (solved) diagnostics.push({ kind: 'success', title: number === 4 ? 'Ожидаемое отклонение подтверждено' : number === 5 ? 'Два опыта совпали' : 'Опыт подтверждён',

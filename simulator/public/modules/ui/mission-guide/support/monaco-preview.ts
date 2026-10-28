@@ -1,4 +1,4 @@
-import { getEditorValue, revealEditorStart, setBlocklyEditorEnabled, setEditorLanguage, setEditorValue } from '../../../editor/index.js';
+import { getEditorValue, revealEditorStart, setBlocklyEditorEnabled, setEditorLanguage, setEditorTheme, setEditorValue } from '../../../editor/index.js';
 
 // Зеркалит support/blockly-preview.ts: та же идея переноса живого DOM-узла в
 // хост внутри гайда, но для текстового (Monaco) редактора вместо Blockly-
@@ -62,6 +62,18 @@ function getPreviewHost(): HTMLDivElement | null {
     return document.getElementById('mission-guide-monaco-preview-host') as HTMLDivElement | null;
 }
 
+// The textbook page is paper in both app themes, so the editor lying on it is light too; it gets the app theme back on leaving.
+function syncEditorPaperTheme(): void {
+    const onPaper = previewActive && Boolean(getPreviewHost()?.closest('.book'));
+    setEditorTheme(onPaper ? 'paper' : document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
+}
+let themeListener = false;
+function listenForAppTheme(): void {
+    if (themeListener) return;
+    themeListener = true;
+    window.addEventListener('app-theme-change', syncEditorPaperTheme);
+}
+
 function layoutMonacoSoon(): void {
     window.requestAnimationFrame(() => {
         window.dispatchEvent(new Event('resize'));
@@ -84,6 +96,7 @@ function reattachIfNeeded(): void {
             previewHost.appendChild(monacoRoot);
             previewHost.querySelector('.guide-monaco-preview__placeholder')?.remove();
             previewHost.classList.add('is-active');
+            syncEditorPaperTheme();
             layoutMonacoSoon();
         }
         return;
@@ -139,6 +152,8 @@ export async function mountMissionGuideMonacoPreview(language: 'lua' | 'python',
     previewHost.classList.add('is-active');
     previewActive = true;
     ensureModalBodyObserver();
+    listenForAppTheme();
+    syncEditorPaperTheme();
 
     if (loadDraft) {
         await setEditorValue(lessonDrafts.get(draftKey) ?? starterCode);
@@ -170,5 +185,6 @@ export function restoreMissionGuideMonacoPreview(): void {
     previewActive = false;
     activeDraftKey = null;
     cachedMonacoRoot = monacoRoot;
+    syncEditorPaperTheme();
     layoutMonacoSoon();
 }

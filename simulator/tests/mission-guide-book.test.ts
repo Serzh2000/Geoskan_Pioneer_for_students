@@ -41,8 +41,10 @@ describe('book lessons', () => {
             expect(book.theory.join('')).not.toBe('');
             expect(book.code).not.toBe('');
             expect(book.watch).not.toBe('');
+            // The lighting lessons get the LED strip on the theory page; the demonstration of every lesson is the viewport.
             expect(book.figure).toBe(
-                source.kind === 'course' ? (source.lesson as { chapterId: string }).chapterId === 'lights' ? 'ledbar' : 'drone'
+                source.kind === 'course'
+                    ? (source.lesson as { chapterId: string }).chapterId === 'lights' ? 'ledbar' : 'drone'
                     : source.lesson.id.includes('led') ? 'ledbar' : 'drone'
             );
         }

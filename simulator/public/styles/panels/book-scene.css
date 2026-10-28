@@ -1,0 +1,42 @@
+/*
+ * The plate of the demonstration (book/scene-plate.ts): the viewport of the simulator, printed in ink until the example
+ * runs. The live scene is always there, under a sheet of paper that carries the contour lines; the sweep tears the sheet
+ * away along a ragged edge and the hatching, a layer of its own, goes a moment later. Stopping lays the print back.
+ * data-scene: print | reveal | live | settle. --bp-erase is the torn-edge mask (three frames wide, opaque on the right).
+ * The live scene is never masked or filtered: a WebGL canvas under a mask can paint black.
+ */
+.book .book-plate-figure { align-content: start; }
+.book .book-plate { position: relative; align-self: start; width: 100%; aspect-ratio: 16 / 10; border: 1px solid var(--bk-line-strong); border-radius: 3px; background: var(--bk-inset); box-shadow: 2px 3px 0 var(--bk-line); overflow: hidden; }
+.book .book-plate .book-plate__live { position: absolute; inset: 0; z-index: 0; isolation: isolate; height: auto; aspect-ratio: auto; max-height: none; border: 0; border-radius: 0; background: transparent; }
+.book .book-plate__paper { position: absolute; z-index: 1; inset: 0; background: radial-gradient(ellipse at 50% 45%, rgb(255 252 244 / .45), transparent 75%), var(--bk-inset); box-shadow: inset 0 0 0 5px rgb(255 252 244 / .55), inset 0 0 0 6px var(--bk-line); pointer-events: none; }
+.book .book-plate canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity .35s; }
+.book .book-plate[data-printed] canvas { opacity: 1; }
+.book .book-plate__hatch { z-index: 2; mix-blend-mode: multiply; }
+.book .book-plate :is(.book-plate__paper, .book-plate__hatch) { mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat; mask-size: 300% 100%; -webkit-mask-size: 300% 100%; }
+
+/* Under the print the viewport takes no pointer; once it is live the print is gone and the scene is the page's own. */
+.book .book-plate[data-scene='print'] .book-plate__live { pointer-events: none; }
+.book .book-plate[data-scene='live'] :is(.book-plate__paper, .book-plate__hatch) { display: none; }
+
+.book .book-plate[data-scene='reveal'] :is(.book-plate__paper, .book-plate__hatch), .book .book-plate[data-scene='settle'] :is(.book-plate__paper, .book-plate__hatch) { mask-image: var(--bp-erase); -webkit-mask-image: var(--bp-erase); }
+.book .book-plate[data-scene='reveal'] .book-plate__live, .book .book-plate[data-scene='settle'] .book-plate__live { pointer-events: none; }
+
+.book .book-plate[data-scene='reveal'] .book-plate__paper { animation: bp-sweep 1.05s cubic-bezier(.45, 0, .35, 1) both; }
+.book .book-plate[data-scene='reveal'] .book-plate__hatch { animation: bp-sweep 1.05s cubic-bezier(.45, 0, .35, 1) .16s both; }
+.book .book-plate[data-scene='settle'] .book-plate__paper { animation: bp-sweep .95s cubic-bezier(.45, 0, .35, 1) .16s reverse both; }
+.book .book-plate[data-scene='settle'] .book-plate__hatch { animation: bp-sweep .95s cubic-bezier(.45, 0, .35, 1) reverse both; }
+
+@keyframes bp-sweep { from { mask-position: 100% 0; -webkit-mask-position: 100% 0; } to { mask-position: 0% 0; -webkit-mask-position: 0% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .book .book-plate :is(.book-plate__paper, .book-plate__hatch) { animation: none !important; }
+}
+
+/*
+ * The speech bubble of print(): the sheet gives every token its light value (ink on paper), but the bubble takes its
+ * background from the application theme, so on a dark theme it came out as dark ink on a dark bubble: an empty bubble.
+ * On the page it is a paper label, whatever the theme.
+ */
+html .book .guide-scene-preview-host .drone-print-bubble,
+html .book .guide-scene-preview-host .drone-print-bubble::after { background: #fffdf8; border-color: rgb(27 35 51 / .28); }
+html .book .guide-scene-preview-host .drone-print-bubble { color: #1b2333; }

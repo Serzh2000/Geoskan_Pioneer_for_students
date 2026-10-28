@@ -1,3 +1,4 @@
+import { localize } from '../../book/localize.js';
 import { compileAcademyExercise, type AcademyCodeExercise } from './shared.js';
 
 export const TELEMETRY_FLIGHTS = [
@@ -67,17 +68,24 @@ ${reportPython}` : ''}
 print("Опыт завершён")`;
 }
 
+/** The texts of an exercise are written once for both languages; each language keeps only its own `<lua>`/`<py>` passages. */
+function localizedExercise(exercise: LessonInput, language: 'lua' | 'python'): LessonInput {
+    const keep = (text: string) => localize(text, language);
+    return { ...exercise, task: keep(exercise.task), hint: keep(exercise.hint), experiment: keep(exercise.experiment), observation: keep(exercise.observation),
+        question: keep(exercise.question), right: keep(exercise.right), wrong: keep(exercise.wrong), feedback: keep(exercise.feedback) };
+}
+
 type LessonInput = Omit<AcademyCodeExercise, 'lua' | 'python' | 'luaAnswer' | 'pythonAnswer'> & { answer: string; lua?: string; python?: string };
 const exercises: LessonInput[] = [
-    { number: 64, answer: '2', task: 'Прочитайте положение до arm, после взлёта и после прибытия к (2,0,1). Дополните целевой X, не подменяя измерения целевыми числами.',
-        observation: 'Три измерения показывают землю, завершённый подъём и достигнутую точку.', hint: 'Lua Sensors.lpsPosition() возвращает x,y,z; Python get_local_position_lps() — три компоненты. Вызывайте чтение заново на каждом этапе.',
+    { number: 64, answer: '2', task: 'Прочитайте положение до <lua>подготовки двигателей</lua><py>arm</py>, после взлёта и после прибытия к (2,0,1). Дополните целевой X, не подменяя измерения целевыми числами.',
+        observation: 'Три измерения показывают землю, завершённый подъём и достигнутую точку.', hint: '<lua>Sensors.lpsPosition()</lua><py>get_local_position_lps()</py> возвращает x,y,z. Вызывайте чтение заново на каждом этапе.',
         experiment: 'Почему измерение после взлёта отличается от последующей цели?', question: 'Что показывает телеметрия положения?', right: 'Измеренное текущее положение', wrong: 'Только последнюю отправленную цель', feedback: 'Намерение и измеренный результат — разные данные.' },
-    { number: 65, answer: '0.2', task: 'Во время подъёма к Z=2 выводите измеренную высоту сначала каждые 0.2 секунды, затем повторите с периодом 0.8. Сравните плотность наблюдений.',
-        observation: 'Подтверждены два периода реальных чтений положения во время движения.', hint: 'Меньший период даёт больше измерений. Меняйте только интервал Timer.callLater / time.sleep внутри опроса; это секунды, не частота в герцах.',
+    { number: 65, answer: '0.2', task: 'Заготовка выводит измеренную высоту во время подъёма к Z=2. Впишите вместо ___ период 0.2 секунды и запустите проверку. Затем замените 0.2 на 0.8 и запустите проверку ещё раз.',
+        observation: 'Подтверждены два периода реальных чтений положения во время движения.', hint: 'Меньший период даёт больше измерений. Меняйте только интервал <lua>Timer.callLater</lua><py>time.sleep</py> внутри опроса; это секунды, не частота в герцах.',
         experiment: 'Какой период соответствует пяти измерениям в секунду?', question: 'При каком периоде записей больше?', right: '0.2 секунды', wrong: '0.8 секунды', feedback: 'Частота обратно пропорциональна периоду.' },
     { number: 66, answer: 'nil', waitMs: 2000,
-        task: 'measurement намеренно недоступно (nil/None). Добавьте проверку перед сравнением и выведите «Нет данных» без полётных команд.', observation: 'Отсутствие измерения не заменяется нулём и не вызывает ошибки сравнения.',
-        hint: 'Это контролируемая заготовка отказа, а не отключение датчика. Lua сравнивает с nil, Python с None через is. В ветке отсутствия не оцениваем высоту.', experiment: 'Замените measurement числом 0: почему это другой исход?',
+        task: 'Переменная measurement намеренно пуста: в ней нет измерения (<lua>nil</lua><py>None</py>). Впишите вместо ___ значение, которое означает отсутствие данных, чтобы проверка сработала до сравнения. Выведите «Нет данных» без полётных команд.', observation: 'Отсутствие измерения не заменяется нулём и не вызывает ошибки сравнения.',
+        hint: 'Это контролируемая заготовка отказа, а не отключение датчика. <lua>Сравнивайте измерение с nil.</lua><py>Сравнивайте измерение с None через is.</py> В ветке отсутствия не оцениваем высоту.', experiment: 'Замените measurement числом 0: почему это другой исход?',
         question: 'Отсутствие измерения и высота 0 — одно?', right: 'Нет, ноль является доступным числом', wrong: 'Да, отсутствие всегда означает землю', feedback: 'Сначала проверяем доступность, затем используем значение.',
         lua: 'local measurement=nil\nif measurement==___ then print("Нет данных")\nelseif measurement<0.2 then print("На земле") end', python: 'measurement=None\nif measurement is ___: print("Нет данных")\nelif measurement<0.2: print("На земле")' },
     { number: 67, answer: '1.8', task: 'Летите к Z=2 и включайте зелёный только когда новое измерение Z достигло 1.8. Период опроса — 0.1 секунды.', observation: 'Первая зелёная команда следует за реальным измерением Z≥1.8.',
@@ -93,26 +101,27 @@ const exercises: LessonInput[] = [
         lua: 'for _,err in ipairs({-0.04,0.03,-0.02,0.2,-0.2}) do\n    local command=0\n    if math.abs(err)>___ then command=err>0 and 1 or -1 end\n    print(command)\nend', python: 'for err in [-0.04,0.03,-0.02,0.2,-0.2]:\n    command=0\n    if abs(err)>___: command=1 if err>0 else -1\n    print(command)' },
     { number: 70, answer: '0.4', waitMs: 2000,
         task: 'Ограничьте вычисленную скорость диапазоном [-0.4,0.4]. Для ошибок -10,0,10 и коэффициента 0.5 выведите три результата без движения аппарата.', observation: 'Команды равны -0.4,0,0.4, хотя необрезанные значения были -5,0,5.',
-        hint: 'Сначала умножаем ошибку на коэффициент, затем max(-limit,min(limit,value)). Отлаживаем расчёт до подключения моторов.', experiment: 'Добавьте ошибку 0.2: почему результат 0.1 не должен стать 0.4?',
+        hint: 'Сначала умножаем ошибку на коэффициент, затем <lua>math.max(-limit,math.min(limit,value))</lua><py>max(-limit,min(limit,value))</py>. Отлаживаем расчёт до подключения моторов.', experiment: 'Добавьте ошибку 0.2: почему результат 0.1 не должен стать 0.4?',
         question: 'Что происходит с уже допустимой командой?', right: 'Её величина сохраняется', wrong: 'Она всегда заменяется максимумом', feedback: 'Ограничение обрезает только выход за границы.',
         lua: 'local limit=___\nfor _,err in ipairs({-10,0,10}) do\n    print(math.max(-limit,math.min(limit,err*0.5)))\nend', python: 'limit=___\nfor err in [-10,0,10]:\n    print(max(-limit,min(limit,err*0.5)))' },
     { number: 71, answer: '0.15', waitMs: 3500,
-        task: 'Без arm проверьте два исхода: цель X=0 совпадает со стартом; цель X=100 за секунду не достигается. Выведите «Цель достигнута», затем «тайм-аут».', observation: 'Успех использует реальное положение; второй исход появляется после ограниченного ожидания.',
+        task: 'Без <lua>подготовки двигателей</lua><py>arm</py> проверьте два исхода: цель X=0 совпадает со стартом; цель X=100 за секунду не достигается. Допуск достижения цели — 0.15 м, впишите его вместо ___. Выведите «Цель достигнута», затем «тайм-аут».', observation: 'Успех использует реальное положение; второй исход появляется после ограниченного ожидания.',
         hint: 'Мы намеренно не отправляем движение. Этот опыт проверяет диагностику ожидания, а не дальний маршрут.', experiment: 'Замените первую цель на 100: какое сообщение должно измениться?',
         question: 'Что сохраняем при неудачном ожидании?', right: 'Причину и этап остановки', wrong: 'Всегда сообщаем об успехе', feedback: 'Диагностика различает достижение цели и истечение срока.',
         lua: 'local x=Sensors.lpsPosition()\nif math.abs(0-x)<___ then print("Цель достигнута") end\nTimer.callLater(1,function()\n    local x=Sensors.lpsPosition()\n    if math.abs(100-x)>=0.15 then print("тайм-аут") end\n    print("Опыт завершён")\nend)',
         python: 'x,y,z=pioneer.get_local_position_lps()\nif abs(0-x)<___: print("Цель достигнута")\ndeadline=time.monotonic()+1\nwhile time.monotonic()<deadline:\n    x,y,z=pioneer.get_local_position_lps()\n    if abs(100-x)<0.15: break\n    time.sleep(0.05)\nelse:\n    print("тайм-аут")\nprint("Опыт завершён")' },
-    { number: 72, answer: 'Цель', task: 'Выполните полёт к (1,1,1) с посадкой и запишите положение старта, цель, измеренное прибытие и положение после остановки. Дополните подпись цели.',
+    { number: 72, answer: 'Цель', task: 'Выполните полёт к (1,1,1) с посадкой: заготовка записывает положение старта, цель, измеренное прибытие и положение после остановки. Подпись цели — слово «Цель» с большой буквы, впишите его вместо ___.',
         observation: 'Отчёт содержит намерение перед движением и реальные измерения трёх этапов.', hint: 'Заготовка читает положение заново в каждом этапе. Цель подписывается отдельно от измеренного результата; одной строки «успех» мало.',
         experiment: 'Сравните заданную и измеренную точки: укладывается ли разность в допуск?', question: 'Чем подкрепляется вывод «миссия выполнена»?', right: 'Измерениями и подтверждениями всех этапов', wrong: 'Одной заранее напечатанной строкой', feedback: 'Отчёт связывает план с наблюдаемым результатом.' }
 ];
 
 export function getTelemetryAcademyPractices(language: 'lua' | 'python') {
     return exercises.map(exercise => {
-        const lesson = compileAcademyExercise({ ...exercise, lua: exercise.lua ?? flight(exercise.number, 'lua'), python: exercise.python ?? flight(exercise.number, 'python'),
+        const view = localizedExercise(exercise, language);
+        const lesson = compileAcademyExercise({ ...view, lua: exercise.lua ?? flight(exercise.number, 'lua'), python: exercise.python ?? flight(exercise.number, 'python'),
             luaAnswer: exercise.answer, pythonAnswer: exercise.number === 66 ? 'None' : exercise.answer, waitMs: exercise.waitMs ?? 90000 }, language);
         if (TELEMETRY_FLIGHTS.some(item => item.number === exercise.number) || exercise.number === 71) lesson.academy!.doneMessage = 'Опыт завершён';
-        lesson.academy!.teaching.device = `${lesson.summary} ${exercise.hint} ${exercise.observation}`;
+        lesson.academy!.teaching.device = `${lesson.summary} ${view.hint} ${view.observation}`;
         lesson.links = [{ label: 'Измерение положения', query: language === 'lua' ? 'Sensors.lpsPosition' : 'get_local_position_lps' }];
         return lesson;
     });

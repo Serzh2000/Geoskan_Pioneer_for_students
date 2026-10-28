@@ -46,11 +46,8 @@
 .guide-modal.is-book .guide-modal__body { padding: 0; background: var(--panel-bg-strong); }
 .guide-modal.is-book .guide-modal-layout { max-width: none; }
 
-/* ---- the bar: the lessons of the chapter, the three parts, the language, close ---- */
+/* ---- the bar: contents, where you are, the lessons around, the language, close (book-nav.css) ---- */
 .book__top { position: sticky; top: 0; z-index: 3; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 16px; max-width: 1560px; margin: 0 auto; padding: 12px 0 0; background: var(--bk-desk); }
-.book__lessons-wrap { flex: 1 1 300px; min-width: 0; display: grid; gap: 2px; }
-.book-margin-label { margin: 0; overflow: hidden; font: 500 16px/1.2 var(--bk-hand); color: var(--pc-accent); text-overflow: ellipsis; white-space: nowrap; }
-.book__lessons { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px; }
 .book__volumes { flex: 0 0 auto; margin-bottom: 4px; }
 .book__volumes .pk-seg__btn { min-height: 34px; padding: 0 14px; font-size: 13px; }
 .book__stage { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
@@ -63,22 +60,7 @@
 .book-part:focus-visible { outline: 2px solid var(--accent-color); outline-offset: -4px; }
 .book-close { margin-bottom: 4px; }
 .book__body { display: flex; align-items: flex-start; max-width: 1560px; margin: 0 auto; }
-.book__edge { position: sticky; top: 92px; flex: 0 0 auto; display: grid; justify-items: start; gap: 6px; width: 54px; margin-left: 6px; padding-top: 14px; }
-.book-margin-label--edge { font-size: 15px; line-height: 1; }
-.book__chapters { display: flex; flex-direction: column; gap: 4px; }
 .book__foot { max-width: 1560px; margin: 18px auto 0; text-align: right; }
-.book-tab { display: inline-flex; align-items: center; justify-content: center; gap: 3px; border: 0; background: var(--pk-inset); color: var(--pc-muted); font: 600 12px/1 var(--font-mono); cursor: pointer; transition: background-color .15s, color .15s; }
-.book-tab:hover:not(:disabled):not(.is-current) { background: var(--pk-hover); color: var(--text-strong); }
-.book-tab:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
-.book-tab:disabled { cursor: default; opacity: .5; }
-.book-tab.is-done:not(.is-current) { background: var(--pk-success-soft); color: var(--pc-success); }
-.book-tab.is-current { background: var(--accent-soft); color: var(--pc-accent); }
-.book-tab i { font-style: normal; font-size: 11px; color: var(--pc-success); }
-.book-tab--lesson { min-width: 38px; height: 34px; padding: 0 10px; border-radius: 8px; }
-.book-tab--chapter { width: 44px; height: 34px; padding: 0; flex-direction: column; gap: 2px; border-radius: 8px; }
-.book-tab--chapter small { font: 600 9px/1 var(--font-sans); }
-.book-tab--chapter.is-current { height: auto; min-height: 34px; padding: 8px 0; gap: 8px; }
-.book-tab--chapter em { font: 600 12px/1.2 var(--font-sans); font-style: normal; writing-mode: vertical-rl; }
 .book-link { padding: 4px 2px; border: 0; background: none; color: var(--pc-muted); font: 500 13px/1.3 var(--font-sans); cursor: pointer; }
 .book-link:hover { color: var(--text-strong); }
 .book-link:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
@@ -126,7 +108,7 @@
 /* ---- the example: a printed listing and its notes ---- */
 .book-listing { margin: 0; padding: 14px 0; border: 1px solid var(--bk-line-strong); border-radius: 10px; background: #fffdf8; overflow-x: auto; counter-reset: line; }
 .book-listing code { display: block; white-space: normal; font: 500 15.5px/1.75 var(--font-mono); color: var(--bk-ink); }
-.book-line { display: block; padding: 0 18px 0 0; white-space: pre; counter-increment: line; }
+.book-line { display: block; padding: 0 18px 0 calc(4.8em + 1px); text-indent: calc(-4.8em - 1px); white-space: pre-wrap; overflow-wrap: anywhere; counter-increment: line; }
 .book-line::before { content: counter(line); display: inline-block; width: 3em; margin-right: 1em; padding-right: .8em; text-align: right; color: #a39a85; border-right: 1px solid var(--bk-line); }
 .book-line--comment { color: var(--pc-success); font-style: italic; }
 .book-steps { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; counter-reset: step; }
@@ -164,13 +146,15 @@
 .book-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* ---- practice: the code sheet, the scene, the trial ---- */
-.book-bench { display: flex; flex-direction: column; border: 1px solid var(--bk-line-strong); border-radius: 12px; background: var(--bk-inset); overflow: hidden; }
-.book-bench__bar { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--bk-line); font: 600 13px/1.3 var(--font-sans); color: var(--bk-muted); }
-.book-bench__bar h2 { margin: 0; font: 700 14px/1.3 var(--bk-serif); color: var(--text-strong); }
+.book-bench { display: grid; gap: 12px; }
+/* The sheet is a printed listing the student writes into: the frame of the examples, the language in the corner like a pencil note. */
+.book-bench__sheet { position: relative; border: 1px solid var(--bk-line-strong); border-radius: 10px; background: #fffdf8; overflow: hidden; }
+.book-bench__tag { position: absolute; z-index: 3; top: 6px; right: 14px; font: 500 17px/1 var(--bk-hand); color: var(--bk-accent); pointer-events: none; }
 .book-bench__body { position: relative; height: clamp(320px, 46vh, 540px); }
 .book-bench__body--form { height: auto; padding: 16px; }
-.book-bench__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--bk-line); background: var(--bk-page); }
-.book-bench__status { flex: 1 0 100%; margin: 2px 0 0; font: 400 13px/1.5 var(--font-sans); color: var(--bk-muted); }
+/* The actions are part of the page: the run is an ink stamp, the rest are notes in the margin's handwriting. */
+.book-bench__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; }
+.book-bench__status { flex: 1 0 100%; margin: 2px 0 0; font: italic 400 14px/1.5 var(--bk-serif); color: var(--bk-muted); }
 .book .guide-monaco-preview-host, .book .guide-blockly-preview-host { position: absolute; inset: 0; height: auto; min-height: 0; }
 .book .guide-blockly-preview__placeholder, .book .guide-monaco-preview__placeholder { font-family: var(--font-sans); background: var(--bk-inset); }
 
@@ -185,7 +169,7 @@
 /* ---- help: hint, ready solution, references; one quiet list under the bench ---- */
 .book-help { border: 1px solid var(--bk-line); border-radius: 12px; overflow: hidden; }
 .book-help > * + * { border-top: 1px solid var(--bk-line); }
-.book-help summary, .book-help__row { display: flex; align-items: center; width: 100%; min-height: 44px; padding: 0 16px; border: 0; background: transparent; color: var(--text-strong); font: 600 14px/1.3 var(--font-sans); text-align: left; cursor: pointer; list-style: none; transition: background-color .15s; }
+.book-help summary, .book-help__row { display: flex; align-items: center; width: 100%; min-height: 44px; padding: 0 16px; border: 0; background: transparent; color: var(--text-strong); font: italic 600 16px/1.3 var(--bk-serif); text-align: left; cursor: pointer; list-style: none; transition: background-color .15s; }
 .book-help summary::-webkit-details-marker { display: none; }
 .book-help summary::before { content: '›'; width: 16px; color: var(--bk-muted); transition: transform .15s; }
 .book-help details[open] > summary::before { transform: rotate(90deg); }
@@ -211,54 +195,92 @@
 .book-done__next { flex: 1 1 220px; display: grid; gap: 10px; justify-items: start; }
 .book-stamp { display: grid; place-items: center; width: 132px; height: 132px; border: 4px double var(--pc-danger); border-radius: 50%; color: var(--pc-danger); font: 800 17px/1.1 var(--bk-serif); letter-spacing: .1em; text-transform: uppercase; transform: rotate(-8deg); }
 
-/* ---- a lifted corner marks a page that can be turned; it rises when the pointer comes near ---- */
-.book-curl { position: absolute; z-index: 2; bottom: 0; width: 46px; height: 46px; padding: 0; border: 0; background: none; cursor: pointer; filter: drop-shadow(-2px -2px 3px rgb(0 0 0 / .3)); transition: width .18s ease, height .18s ease, opacity .15s; }
-.book-curl--next { right: 0; }
-.book-curl--back { left: 0; transform: scaleX(-1); }
-.book-curl:hover, .book-curl:focus-visible { width: 68px; height: 68px; outline: none; }
-.book-curl::before { content: ''; position: absolute; inset: 0; background: var(--bk-desk); clip-path: polygon(100% 0, 100% 100%, 0 100%); }
-.book-curl::after { content: ''; position: absolute; inset: 0; background: #e7e0cd; clip-path: polygon(0 0, 100% 0, 0 100%); transition: background-color .15s; }
-.book-curl:focus-visible::after { background: var(--accent-color); }
-.book__sheet[data-turning] .book-curl { opacity: 0; transition: none; }
+/* The lifted corners and the turn of a page live in book-turn.css. */
 
-/* ---- the turn: a leaf of copies of the old pages, swung over the spine (book/turn.ts) ---- */
-.book-turn-layer { position: absolute; inset: 0; z-index: 5; perspective: 2600px; pointer-events: none; }
-.book-turn-under, .book-leaf { position: absolute; top: 0; bottom: 0; width: 50%; }
-.book-turn-under { background: var(--bk-page); overflow: hidden; }
-.book-turn-under--left { left: 0; }
-.book-turn-under--right { right: 0; }
-.book-turn-under > .book-page, .book-face > .book-page { height: 100%; }
-.book-leaf { transform-style: preserve-3d; animation: 760ms cubic-bezier(.45, .05, .25, 1) forwards; }
-.book-leaf--forward { left: 50%; transform-origin: 0 50%; animation-name: book-leaf-forward; }
-.book-leaf--back { left: 0; transform-origin: 100% 50%; animation-name: book-leaf-back; }
-.book-face { position: absolute; inset: 0; overflow: hidden; background: var(--bk-page); backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: 0 0 22px rgb(0 0 0 / .28); }
-.book-face--back { transform: rotateY(180deg); }
-.book-face::after { content: ''; position: absolute; inset: 0; background: #000; opacity: 0; animation: 760ms ease-in-out forwards; }
-.book-face--front::after { animation-name: book-shade-in; }
-.book-face--back::after { animation-name: book-shade-out; }
-@keyframes book-leaf-forward { from { transform: rotateY(0deg); } to { transform: rotateY(-180deg); } }
-@keyframes book-leaf-back { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
-@keyframes book-shade-in { from { opacity: 0; } to { opacity: .32; } }
-@keyframes book-shade-out { from { opacity: .32; } to { opacity: 0; } }
-
-/* ---- narrow containers: one page under the other, chapters in a row ---- */
+/* ---- narrow containers: one page under the other ---- */
 @container lesson (max-width: 1060px) {
     .book__sheet { width: 100%; grid-template-columns: minmax(0, 1fr); }
     .book-page--right { border-left: 0; border-top: 1px solid var(--bk-line-strong); }
     .book__sheet::before { display: none; }
     .book__top { gap: 8px; }
-    .book__lessons { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
     .book__parts { padding: 0 12px; overflow-x: auto; scrollbar-width: none; }
     .book-part { padding: 10px 14px 9px; white-space: nowrap; }
     .book__body { flex-direction: column; }
-    .book__edge { position: static; order: -1; width: auto; margin: 6px 0 0; padding-top: 0; justify-items: stretch; }
-    .book__chapters { flex-direction: row; flex-wrap: wrap; }
-    .book-margin-label--edge { display: none; }
-    .book-tab--chapter, .book-tab--chapter.is-current { width: 40px; height: 32px; min-height: 0; padding: 0; flex-direction: row; }
-    .book-tab--chapter small, .book-tab--chapter em { display: none; }
     .lb__panel { grid-template-columns: minmax(0, 1fr); justify-items: start; }
 }
-@media (prefers-reduced-motion: reduce) { .book *, .book-tab { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .book * { transition: none; } }
 
 /* The next step of a passed check talks of the five-stage walkthrough ("compare with the forecast"); the book has its own next step. */
 .book .guide-verdict__next { display: none; }
+
+/* ---- the actions as drawn pictograms: a rough ring, the sign in it, the caption in the margin's handwriting ---- */
+.book-actions, .book-bench__actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 22px; }
+.book-stamp-btn { display: inline-grid; justify-items: center; gap: 2px; width: 92px; padding: 2px 0 0; border: 0; background: none; color: var(--bk-muted); cursor: pointer; transition: color .15s; }
+.book-stamp-btn[hidden] { display: none; }
+.book-stamp-btn .stamp-glyph { width: 52px; height: 52px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; filter: url(#book-wobble); transition: transform .15s; }
+.book-stamp-btn .stamp-ring { stroke-width: 1.5; fill: transparent; transition: fill .15s; }
+.book-stamp-btn__label { font: 500 18px/1.05 var(--bk-hand); text-align: center; }
+.book-stamp-btn:hover:not(:disabled) { color: var(--bk-ink); }
+.book-stamp-btn:hover:not(:disabled) .stamp-glyph { transform: rotate(-4deg) scale(1.05); }
+.book-stamp-btn:active:not(:disabled) .stamp-glyph { transform: scale(.94); }
+.book-stamp-btn:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; border-radius: 10px; }
+.book-stamp-btn:disabled { opacity: .4; cursor: default; }
+.book-stamp-btn--primary { width: 128px; color: var(--bk-accent); }
+.book-stamp-btn--primary .stamp-glyph { width: 62px; height: 62px; stroke-width: 1.9; }
+.book-stamp-btn--primary .stamp-ring { fill: var(--accent-soft); stroke-width: 1.9; }
+.book-stamp-btn--primary .book-stamp-btn__label { font-size: 20px; font-weight: 700; }
+.book-stamp-btn--primary:hover:not(:disabled) { color: var(--bk-accent); }
+.book-stamp-btn--primary:hover:not(:disabled) .stamp-ring { fill: rgb(255 107 0 / .22); }
+.book-defs { position: absolute; width: 0; height: 0; }
+
+/* ---- the task in a frame: the label on the edge, the goal one sentence to a numbered line ---- */
+.book-assignment { position: relative; margin: 6px 0 0; padding: 22px 22px 16px; border: 1.5px solid var(--bk-ink); border-radius: 4px; background: rgb(255 253 248 / .6); box-shadow: 4px 4px 0 var(--bk-line); }
+.book-assignment__label { position: absolute; top: -13px; left: 18px; margin: 0; padding: 2px 12px; background: var(--bk-ink); color: var(--bk-page); font: 700 13px/1.5 var(--bk-serif); letter-spacing: .12em; text-transform: uppercase; }
+.book-assignment__list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; counter-reset: task; }
+.book-assignment__list li { position: relative; padding-left: 34px; font: 400 18px/1.6 var(--bk-serif); counter-increment: task; }
+.book-assignment__list li::before { content: counter(task); position: absolute; left: 0; top: 2px; display: grid; place-items: center; width: 24px; height: 24px; border: 1.5px solid var(--bk-ink); border-radius: 50%; font: 700 12px/1 var(--font-mono); }
+.book-assignment__text { margin: 0; font: 400 18px/1.6 var(--bk-serif); }
+.book-assignment__note { margin: 12px 0 0; padding-top: 10px; border-top: 1px dashed var(--bk-line-strong); font: italic 400 14.5px/1.55 var(--bk-serif); color: var(--bk-muted); }
+
+/* ---- the paper: a grain and a faint darkening toward the edges, on every page and on the leaf that turns ---- */
+.book { --bk-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='g' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' seed='7'/><feColorMatrix values='0 0 0 0 .42  0 0 0 0 .32  0 0 0 0 .18  0 0 0 .42 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='f' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.012 .02' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .42  0 0 0 0 .2  0 0 0 .17 0'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>"); }
+.book__sheet { background-image: var(--bk-grain); background-color: var(--bk-page); }
+.book__sheet { box-shadow:
+        inset 0 0 70px rgb(140 100 40 / .07),
+        calc(var(--bk-right) * 1px) calc(var(--bk-right) * 1px) 0 var(--bk-edge), calc(var(--bk-right) * 2px) calc(var(--bk-right) * 2px) 0 var(--bk-edge-2, var(--bk-line-strong)),
+        calc(var(--bk-right) * 3px) calc(var(--bk-right) * 3px) 0 var(--bk-edge), calc(var(--bk-right) * 4px) calc(var(--bk-right) * 4px) 0 var(--bk-edge-2, var(--bk-line-strong)),
+        calc(var(--bk-right) * 5px) calc(var(--bk-right) * 5px) 0 var(--bk-cover, var(--bk-edge)), calc(var(--bk-right) * 6px) calc(var(--bk-right) * 6px) 0 var(--bk-cover-2, var(--bk-line-strong)),
+        calc(var(--bk-left) * -1px) calc(var(--bk-left) * 1px) 0 var(--bk-edge), calc(var(--bk-left) * -2px) calc(var(--bk-left) * 2px) 0 var(--bk-edge-2, var(--bk-line-strong)),
+        calc(var(--bk-left) * -3px) calc(var(--bk-left) * 3px) 0 var(--bk-edge), calc(var(--bk-left) * -4px) calc(var(--bk-left) * 4px) 0 var(--bk-edge-2, var(--bk-line-strong)),
+        calc(var(--bk-left) * -5px) calc(var(--bk-left) * 5px) 0 var(--bk-cover, var(--bk-edge)), calc(var(--bk-left) * -6px) calc(var(--bk-left) * 6px) 0 var(--bk-cover-2, var(--bk-line-strong)),
+        0 26px 34px -14px rgb(0 0 0 / .4); }
+
+/* ---- a question answered by a tick: the options are boxes, the tick is drawn with a pencil when chosen ---- */
+.book .ck-question { display: grid; gap: 4px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.book .ck-question + .ck-question { margin-top: 10px; }
+.book .ck-question legend { padding: 0; margin-bottom: 4px; font: 600 17px/1.4 var(--bk-serif); color: var(--bk-ink); }
+.book .ck-option { position: relative; display: flex; align-items: center; gap: 12px; padding: 4px 8px; margin: 0 -8px; border-radius: 8px; cursor: pointer; transition: background-color .15s; }
+.book .ck-option:hover { background: var(--bk-inset); }
+.book .ck-input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.book .ck-box { flex: none; width: 30px; height: 30px; overflow: visible; }
+.book .ck-box svg { width: 100%; height: 100%; overflow: visible; fill: none; stroke-linecap: round; stroke-linejoin: round; filter: url(#book-wobble); }
+.book .ck-frame { stroke: var(--bk-ink); stroke-width: 1.6; }
+.book .ck-tick { stroke: #3c4150; stroke-width: 2.4; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.book .ck-input:checked + .ck-box .ck-tick { animation: ck-pencil .38s cubic-bezier(.3, .7, .2, 1) forwards; }
+.book .ck-input:focus-visible + .ck-box { outline: 2px solid var(--accent-color); outline-offset: 3px; border-radius: 6px; }
+.book .ck-text { font: 400 18px/1.4 var(--bk-serif); }
+.book .ck-input:checked ~ .ck-text { font-weight: 600; }
+@keyframes ck-pencil { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .book .ck-input:checked + .ck-box .ck-tick { animation: none; stroke-dashoffset: 0; } }
+
+/*
+ * The text is printed into the page: the grain lies over the ink as well as under it, the ink bleeds a hair into the
+ * fibres, and the frames and the editor are the page itself, not white cards on it.
+ */
+.book__sheet::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background-image: var(--bk-grain); mix-blend-mode: multiply; opacity: .9; }
+.book-page { color: #232a3a; text-shadow: 0 0 .6px rgb(27 35 51 / .55); }
+.book-listing, .lb__line code, .book-recipe strong { background: rgb(255 253 248 / .35); }
+.book-bench__sheet { background: transparent; }
+.book-assignment { background: transparent; }
+.book .ck-option:hover { background: rgb(120 90 40 / .07); }

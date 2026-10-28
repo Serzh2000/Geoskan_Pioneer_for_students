@@ -151,7 +151,11 @@ function getMonacoLanguage(language: ScriptLanguage): 'lua' | 'python' {
     return language === 'lua' ? 'lua' : 'python';
 }
 
-function getMonacoThemeName(theme: AppTheme): 'pioneer-light' | 'pioneer-dark' {
+/** `paper` is the light theme of the textbook page: the code looks written on it. */
+export type EditorTheme = AppTheme | 'paper';
+
+function getMonacoThemeName(theme: EditorTheme): 'pioneer-light' | 'pioneer-dark' | 'pioneer-paper' {
+    if (theme === 'paper') return 'pioneer-paper';
     return theme === 'dark' ? 'pioneer-dark' : 'pioneer-light';
 }
 
@@ -373,7 +377,16 @@ export function layoutTextEditorInstance(editorInstance: MaybeEditor): void {
     }
 }
 
-export function setTextEditorTheme(theme: AppTheme): void {
+export function setTextEditorTheme(theme: EditorTheme): void {
     setupSyntaxHighlighting(monaco);
     monaco.editor.setTheme(getMonacoThemeName(theme));
+    // On the page the code is a printed listing: looser lines, no highlighted row, room above the first line.
+    const onPaper = theme === 'paper';
+    liveEditorInstance?.updateOptions({
+        lineHeight: onPaper ? 28 : 0,
+        fontSize: onPaper ? 15.5 : EDITOR_FONT_SIZE,
+        renderLineHighlight: onPaper ? 'none' : 'line',
+        padding: onPaper ? { top: 14, bottom: 14 } : { top: 0, bottom: 0 },
+        lineNumbersMinChars: onPaper ? 4 : 5
+    });
 }

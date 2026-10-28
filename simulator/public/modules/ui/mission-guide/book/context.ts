@@ -1,6 +1,7 @@
 import type { BookLesson } from './data.js';
 import type { BookSource } from './source.js';
 import { BOOK_STEPS, STEP_LABELS, type BookStep } from './steps.js';
+import { VOLUME_TITLES } from './volume-marks.js';
 
 /** Where a finished lesson leads, already turned into the markup of its button. */
 export type BookNav = {
@@ -27,7 +28,7 @@ export type BookContext = {
 
 /** The running head of the left page: which lesson and which of its three parts. */
 export function bookHead(source: BookSource, step: BookStep): string {
-    return `${source.label} · ${STEP_LABELS[step]}`;
+    return `Том ${VOLUME_TITLES[source.volume]} · ${source.label} · ${STEP_LABELS[step]}`;
 }
 
 export const PAGES_PER_LESSON = BOOK_STEPS.length * 2;

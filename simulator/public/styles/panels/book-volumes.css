@@ -1,0 +1,68 @@
+/*
+ * The three volumes of the textbook as three books on one shelf: one design language, three bindings. The identity lives in
+ * the object (the cover board under the stacked page edges, the ribbon, the paper of the folder tabs, the running head and
+ * foot, the volume control) and never in fills across the text. Colour is never the only sign: every volume has a drawn mark
+ * (Python a prompt, Lua a crescent, Blockly a brick) and its name written out. Orange stays the next action.
+ * The volume is read from data-book-volume on .book; state in the volume control is still fill.
+ */
+.book[data-book-volume='python'], .book [data-book-track='python'] {
+    --bk-vol: #1d6a5a; --bk-vol-edge: #e2ece6; --bk-vol-edge-2: #a8c6ba; --bk-vol-cover: #3b8a77; --bk-vol-cover-2: #1d6a5a; --bk-vol-tab: #cfd6bf;
+}
+.book[data-book-volume='lua'], .book [data-book-track='lua'] {
+    --bk-vol: #3d4a9c; --bk-vol-edge: #e4e6f2; --bk-vol-edge-2: #aab0d6; --bk-vol-cover: #5967b8; --bk-vol-cover-2: #3d4a9c; --bk-vol-tab: #d1d0cc;
+}
+.book[data-book-volume='blockly'], .book [data-book-track='blockly'] {
+    --bk-vol: #9a2c52; --bk-vol-edge: #f1e2e0; --bk-vol-edge-2: #d6a6ae; --bk-vol-cover: #b9456f; --bk-vol-cover-2: #9a2c52; --bk-vol-tab: #dcccbf;
+}
+
+/* ---- the binding: the block of pages rests on the cover board, which shows under the last edges ---- */
+.book[data-book-volume] .book__sheet { border-color: var(--bk-vol-edge-2); --bk-edge: var(--bk-vol-edge); --bk-edge-2: var(--bk-vol-edge-2); --bk-cover: var(--bk-vol-cover); --bk-cover-2: var(--bk-vol-cover-2); }
+
+/* ---- the marks, drawn with a pen ---- */
+.vol-mark { flex: none; width: 1.2em; height: 1.2em; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---- the ribbon: hangs from the top edge of the sheet beside the gutter; it is not part of a page, so a turning leaf passes over it ---- */
+.book-ribbon {
+    position: absolute; z-index: 1; top: -1px; left: calc(50% + 12px); width: 30px; height: 132px; padding-top: 9px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; color: #fbf8f0;
+    background: linear-gradient(90deg, rgb(0 0 0 / .16), transparent 28%, rgb(255 255 255 / .1) 62%, rgb(0 0 0 / .12)), var(--bk-vol);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 13px), 0 100%);
+}
+.book-ribbon .vol-mark { width: 20px; height: 20px; stroke-width: 2; filter: url(#book-wobble); }
+.book-ribbon__name { writing-mode: vertical-rl; font: 700 21px/1 var(--bk-hand); letter-spacing: .02em; }
+
+/* ---- running head and foot name the volume ---- */
+.book-page--left .book-head { display: flex; align-items: center; gap: 9px; }
+.book-page--left .book-head::before {
+    content: ''; flex: none; width: 15px; height: 15px; background: var(--bk-vol);
+    -webkit-mask: var(--vol-mask) center / contain no-repeat; mask: var(--vol-mask) center / contain no-repeat;
+}
+.book-foot::before { content: var(--vol-name); margin-right: 14px; color: var(--bk-vol); font: 700 17px/1 var(--bk-hand); letter-spacing: .02em; }
+.book[data-book-volume='python'] { --vol-name: 'Python'; --vol-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M4.6 6.4c2.4 1.9 4.6 3.7 6.2 5.7-1.8 2-3.9 3.8-6.3 5.7'/><path d='M12.8 18.1c2.3-.2 4.6-.2 6.8 0'/></svg>"); }
+.book[data-book-volume='lua'] { --vol-name: 'Lua'; --vol-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M16.8 4.6c-5.3.4-9.2 4.1-9.2 8.9 0 4.1 3 7.3 7.3 7.3 1.9 0 3.7-.7 5-1.8-4.7.1-8-3.3-8-7.6 0-2.7 1.1-5.2 4.9-6.8z'/></svg>"); }
+.book[data-book-volume='blockly'] { --vol-name: 'Blockly'; --vol-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M4.6 10.6h4.2c-.7-3.1 3.7-3.5 3.5 0h5.2c.3 2.5.3 5.3 0 8H4.6c-.3-2.7-.3-5.4 0-8z'/><path d='M8.2 14.6h6.4'/></svg>"); }
+
+/* ---- the folder tabs of the lesson are cut from the paper of the volume's binding; the open one is the page ---- */
+.book-part:not(.is-active) { background: var(--bk-vol-tab, #ddd5c0); }
+.book-part:hover:not(.is-active) { background: color-mix(in srgb, var(--bk-vol-tab, #ddd5c0) 62%, #fffdf8); }
+
+/* the pencil note on the bench and the subtitle of the contents carry the name of the volume */
+.book-bench__tag, .book-toc__sub { color: var(--bk-vol); }
+
+/* ---- the volume control: each segment carries its mark; the open one is filled with its own cover colour ---- */
+.book__volumes .pk-seg__btn { gap: 7px; }
+.book__volumes .pk-seg__btn .vol-mark { width: 17px; height: 17px; color: color-mix(in srgb, var(--bk-vol) 62%, var(--text-strong)); }
+.book__volumes .pk-seg__btn.is-active, .book__volumes .pk-seg__btn[aria-selected='true'] { background: var(--bk-vol); color: #fbf8f0; box-shadow: none; }
+.book__volumes .pk-seg__btn.is-active .vol-mark, .book__volumes .pk-seg__btn.is-active small, .book__volumes .pk-seg__btn[aria-selected='true'] small { color: #fbf8f0; }
+.book__volumes .pk-seg__btn.is-active small { opacity: .86; }
+.book__volumes .pk-seg__btn:not(.is-active):hover:not(:disabled) { background: color-mix(in srgb, var(--bk-vol) 16%, transparent); }
+.book__volumes .pk-seg__btn:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 1px; }
+
+/* ---- narrow: one page, the ribbon hangs at the right edge instead of the gutter ---- */
+@container lesson (max-width: 1060px) {
+    .book-ribbon { left: auto; right: 34px; }
+}
+@container lesson (max-width: 560px) {
+    .book__top .book__volumes .pk-seg__btn .pk-seg__name { display: none; }
+    .book__top .book__volumes .pk-seg__btn.is-active .pk-seg__name { display: inline; }
+}

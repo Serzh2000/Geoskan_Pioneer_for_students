@@ -285,7 +285,7 @@ export function layoutEditor(): void {
     );
 }
 
-export function setEditorTheme(theme: 'light' | 'dark'): void {
+export function setEditorTheme(theme: 'light' | 'dark' | 'paper'): void {
     setEditorThemeShell(theme);
 }
 import { migrateLessonLedValues } from '../blockly/legacy-values.js';

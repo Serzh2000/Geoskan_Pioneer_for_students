@@ -2,6 +2,7 @@ import { getWalkthroughTopic } from '../walkthrough/content.js';
 import type { GuideLesson, GuideTextLesson } from '../types.js';
 import type { LessonExample } from './example.js';
 import { courseExample, topicExample } from './examples/index.js';
+import { localize } from './localize.js';
 import type { BookSource } from './source.js';
 
 export type BookFigureKind = 'ledbar' | 'drone';
@@ -47,8 +48,8 @@ export function buildBookLesson(source: BookSource): BookLesson {
     const code = example?.[language]?.trim();
     const own = example && code
         ? {
-            theory: example.theory, code, watch: example.watch,
-            steps: example.steps.flatMap(step => (step[language] ? [{ snippet: step[language]!, text: step.text }] : []))
+            theory: example.theory.map(text => localize(text, language)), code, watch: localize(example.watch, language),
+            steps: example.steps.flatMap(step => (step[language] ? [{ snippet: step[language]!, text: localize(step.text, language) }] : []))
         }
         : null;
     const lighting = source.kind === 'course'

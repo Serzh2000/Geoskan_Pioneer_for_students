@@ -1,7 +1,9 @@
 import { escapeHtml, renderInline } from '../render/shared.js';
 import type { BookContext } from './context.js';
+import { renderStamp } from './glyphs.js';
 import { renderLedbarFigure } from './ledbar.js';
 import { renderListing } from './listing.js';
+import { renderScenePlate } from './scene-plate.js';
 
 /** A printed page: running head, body, page number. */
 export function page(side: 'left' | 'right', head: string, number: number, body: string): string {
@@ -50,15 +52,12 @@ export function renderDemoPages(ctx: BookContext): [string, string] {
         ${renderListing(book.code)}
         <div class="book-watch"><h2 class="book-label">Что смотреть</h2><p class="book-text">${renderInline(book.watch)}</p></div>
         <div class="book-actions">
-            <button type="button" class="btn-primary" data-book-demo>Запустить пример</button>
-            <button type="button" class="btn-secondary" data-book-demo-stop>Остановить и сбросить</button>
+            ${renderStamp('run', 'Запустить пример', 'data-book-demo', true)}
+            ${renderStamp('stop', 'Остановить и сбросить', 'data-book-demo-stop')}
         </div>
         <p class="book-status" role="status" data-book-demo-status>Пример выполнится в сцене справа. Ваш черновик решения не изменится.</p>`);
     const right = page('right', book.chapter, ctx.pages[1], `
-        <figure class="book-figure">
-            <div id="mission-guide-scene-preview-host" class="guide-scene-preview-host book-scene is-active"></div>
-            <figcaption class="book-caption"><b>Рис. ${source.number}б.</b> Пример в симуляторе</figcaption>
-        </figure>
+        ${renderScenePlate(source.number)}
         ${renderTurn(ctx, 'practice', 'К практике')}`);
     return [left, right];
 }
