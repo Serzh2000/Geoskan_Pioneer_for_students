@@ -29,3 +29,19 @@ test('legacy LED solutions survive current Blockly value inputs and are still gr
         window.close();
     }
 });
+
+test('a ledbar with the required 29 lights is accepted, any other count is not (assignments with a ledbar after the first two)', () => {
+    const window = new JSDOM('').window;
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'DOMParser');
+    Object.defineProperty(globalThis, 'DOMParser', { configurable: true, value: window.DOMParser });
+    try {
+        const lesson = getLuaLessonState().lessons.find(item => item.id === 'lua-led-confirm')!;
+        const xml = (count: string) => `<xml><block type="lua_ledbar_new"><value name="COUNT"><shadow type="math_number"><field name="NUM">${count}</field></shadow></value></block></xml>`;
+        expect(evaluateLesson(lesson, lesson.targetBlockIds, xml('29')).solved).toBe(true);
+        expect(evaluateLesson(lesson, lesson.targetBlockIds, xml('30')).solved).toBe(false);
+    } finally {
+        if (original) Object.defineProperty(globalThis, 'DOMParser', original);
+        else Reflect.deleteProperty(globalThis, 'DOMParser');
+        window.close();
+    }
+});

@@ -36,4 +36,14 @@ describe('Blockly lesson presentation', () => {
         const delayed = blocklyPracticeSteps(lessons.find(lesson => lesson.id === 'lua-led-delayed')!).join(' ');
         expect(delayed).toContain('номер **1**');
     });
+
+    test('gives every Python task a build order with the names printed on the blocks', () => {
+        const { lessons } = getPythonLessonState();
+        for (const lesson of lessons) {
+            const steps = blocklyPracticeSteps(lesson);
+            expect(steps.length).toBeGreaterThan(0);
+            expect(steps.join(' ')).toContain('«');
+            expect(steps.join(' ')).not.toMatch(/Подготовить двигатели|Взлететь|Приземлиться|Перейти к точке/);
+        }
+    });
 });

@@ -1,5 +1,6 @@
 import {
     findFirstBlockByType,
+    getFieldValue,
     hasNumericFieldValue,
     parseWorkspaceXml
 } from './xml.js';
@@ -184,7 +185,9 @@ export function evaluateLesson(lesson: GuideLesson, sequenceIds: string[], works
     if (lesson.targetBlockIds.includes('lua_ledbar_new')) {
         const xmlRoot = parseWorkspaceXml(workspaceXml);
         const ledbarBlock = findFirstBlockByType(xmlRoot, 'lua_ledbar_new');
-        if (ledbarBlock && hasNumericFieldValue(ledbarBlock, 'COUNT', 29)) {
+        // An empty slot is generated as 29, so only a number that is present and different is a mistake.
+        const ledCount = ledbarBlock ? getFieldValue(ledbarBlock, 'COUNT') : null;
+        if (ledCount != null && Number(ledCount) !== 29) {
             diagnostics.push({
                 kind: 'error',
                 title: 'Указано неверное количество светодиодов',

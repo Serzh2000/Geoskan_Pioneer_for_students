@@ -490,7 +490,13 @@ export function registerPythonBlocklyDefinitions(): void {
 
     // py_takeoff & py_land
     Blockly.Blocks['py_takeoff'] = Blockly.Blocks['take_off'];
-    pythonGenerator.forBlock['py_takeoff'] = pythonGenerator.forBlock['take_off'];
+    // Alone, the block prepares the motors itself (arm, pause, takeoff). After a preparation block it must send only
+    // takeoff(): a second arm() on a drone that is already armed stops the program (the guided assignments use that order).
+    const takeoffWithPreparation = pythonGenerator.forBlock['take_off'];
+    pythonGenerator.forBlock['py_takeoff'] = (block: any, generator: any) =>
+        block.workspace.getAllBlocks(false).some((other: any) => other.type === 'py_arm' || other.type === 'preflight')
+            ? 'pioneer.takeoff()\n'
+            : takeoffWithPreparation(block, generator);
 
     Blockly.Blocks['py_land'] = Blockly.Blocks['landing'];
     pythonGenerator.forBlock['py_land'] = pythonGenerator.forBlock['landing'];
