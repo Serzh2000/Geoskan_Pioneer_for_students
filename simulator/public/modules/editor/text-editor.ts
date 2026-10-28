@@ -377,6 +377,29 @@ export function layoutTextEditorInstance(editorInstance: MaybeEditor): void {
     }
 }
 
+const PAPER_MIN_HEIGHT = 200;
+let paperFit: monaco.IDisposable | null = null;
+
+/**
+ * On the page the editor is a listing that is as tall as its code: it never scrolls inside, the page grows (and the wheel
+ * scrolls the page). The height of its host follows the content; outside the book the editor keeps its own scroll.
+ */
+function fitToPage(editor: monaco.editor.IStandaloneCodeEditor | null, onPaper: boolean): void {
+    paperFit?.dispose();
+    paperFit = null;
+    editor?.updateOptions({
+        scrollBeyondLastLine: !onPaper,
+        scrollbar: { verticalScrollbarSize: onPaper ? 0 : 10, horizontalScrollbarSize: 10, vertical: onPaper ? 'hidden' : 'auto', handleMouseWheel: !onPaper, alwaysConsumeMouseWheel: !onPaper }
+    });
+    if (!editor || !onPaper) return;
+    const apply = (): void => {
+        const host = editor.getDomNode()?.closest<HTMLElement>('.guide-monaco-preview-host');
+        if (host) host.style.height = `${Math.max(PAPER_MIN_HEIGHT, editor.getContentHeight())}px`;
+    };
+    paperFit = editor.onDidContentSizeChange(apply);
+    apply();
+}
+
 export function setTextEditorTheme(theme: EditorTheme): void {
     setupSyntaxHighlighting(monaco);
     monaco.editor.setTheme(getMonacoThemeName(theme));
@@ -389,4 +412,5 @@ export function setTextEditorTheme(theme: EditorTheme): void {
         padding: onPaper ? { top: 14, bottom: 14 } : { top: 0, bottom: 0 },
         lineNumbersMinChars: onPaper ? 4 : 5
     });
+    fitToPage(liveEditorInstance, onPaper);
 }

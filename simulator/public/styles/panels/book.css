@@ -156,6 +156,9 @@
 .book-bench__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; }
 .book-bench__status { flex: 1 0 100%; margin: 2px 0 0; font: italic 400 14px/1.5 var(--bk-serif); color: var(--bk-muted); }
 .book .guide-monaco-preview-host, .book .guide-blockly-preview-host { position: absolute; inset: 0; height: auto; min-height: 0; }
+/* The code listing is as tall as its code (the height comes from the editor, modules/editor/text-editor.ts): the page grows, nothing scrolls inside. */
+.book .guide-monaco-preview-host { position: relative; inset: auto; height: 320px; }
+.book-bench__body:has(> .guide-monaco-preview-host) { height: auto; }
 .book .guide-blockly-preview__placeholder, .book .guide-monaco-preview__placeholder { font-family: var(--font-sans); background: var(--bk-inset); }
 
 /* ---- the recipe: what to build, in order; the bold values of a step are the numbers to type ---- */
