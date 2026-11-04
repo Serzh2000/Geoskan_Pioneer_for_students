@@ -1,81 +1,111 @@
 /**
- * Интерфейс аккаунта на стартовом экране: кнопки «Войти» и «Регистрация», окно входа, смена пароля и вход в кабинет учителя.
+ * Панель «Аккаунт» в левой рельсе: вход и регистрация формой прямо в панели, профиль со сменой пароля и выходом,
+ * вход в кабинет учителя. Когда вход истёк (два часа без действий), панель открывается сама и просит войти снова.
  */
-import { changePassword, getUser, login, logout, register, onUserChange, type AccountUser } from './account.js';
+import { changePassword, getUser, isSessionExpired, login, logout, onSessionExpired, onUserChange, register, type AccountUser } from './account.js';
 
 const esc = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-type DialogMode = 'login' | 'register' | 'password';
+type View = 'login' | 'register' | 'password';
 
-let bar: HTMLElement;
-let dialog: HTMLElement;
+let host: HTMLElement;
+let railButton: HTMLElement | null = null;
 let openTeacher: () => void = () => undefined;
+let view: View = 'login';
+let lastLogin = '';
 
-function field(name: string, label: string, type = 'text', autocomplete = 'off', hint = ''): string {
+function field(name: string, label: string, type = 'text', autocomplete = 'off', hint = '', value = ''): string {
     return `<label class="auth-field"><span>${label}</span>
-        <input class="auth-input" name="${name}" type="${type}" autocomplete="${autocomplete}" required spellcheck="false">
+        <input class="auth-input" name="${name}" type="${type}" autocomplete="${autocomplete}" value="${esc(value)}" required spellcheck="false">
         ${hint ? `<small>${hint}</small>` : ''}</label>`;
 }
 
-function renderBar(): void {
-    const user = getUser();
-    if (!user) {
-        bar.innerHTML = `
-            <button type="button" class="btn-secondary btn--sm" data-account="login">Войти</button>
-            <button type="button" class="btn-primary btn--sm" data-account="register">Регистрация</button>`;
-    } else {
-        bar.innerHTML = `
-            <span class="account-bar__who"><strong>${esc(user.fullName)}</strong><small>${user.role === 'teacher' ? 'Учитель' : 'Ученик'} · ${esc(user.login)}</small></span>
-            ${user.role === 'teacher' ? '<button type="button" class="btn-primary btn--sm" data-account="teacher">Кабинет учителя</button>' : ''}
-            <button type="button" class="btn-secondary btn--sm" data-account="password">Пароль</button>
-            <button type="button" class="btn-secondary btn--sm" data-account="logout">Выйти</button>`;
-    }
-    bar.querySelectorAll<HTMLElement>('[data-account]').forEach((button) => {
-        button.addEventListener('click', () => {
-            const action = button.dataset.account;
-            if (action === 'login' || action === 'register' || action === 'password') showDialog(action);
-            else if (action === 'teacher') openTeacher();
-            else if (action === 'logout') void logout();
-        });
-    });
+const FORMS: Record<View, () => string> = {
+    login: () => field('login', 'Логин', 'text', 'username', '', lastLogin) + field('password', 'Пароль', 'password', 'current-password'),
+    register: () => field('fullName', 'ФИО', 'text', 'name', 'Фамилия, имя и отчество полностью')
+        + field('login', 'Логин', 'text', 'username', 'Латинские буквы, цифры, точка, дефис, подчёркивание; от 3 символов')
+        + field('loginRepeat', 'Логин ещё раз')
+        + field('password', 'Пароль', 'password', 'new-password', 'Не короче 6 символов')
+        + field('passwordRepeat', 'Пароль ещё раз', 'password', 'new-password'),
+    password: () => field('current', 'Текущий пароль', 'password', 'current-password')
+        + field('password', 'Новый пароль', 'password', 'new-password', 'Не короче 6 символов')
+        + field('passwordRepeat', 'Новый пароль ещё раз', 'password', 'new-password')
+};
+const SUBMIT: Record<View, string> = { login: 'Войти', register: 'Создать аккаунт', password: 'Сменить пароль' };
+
+function initials(user: AccountUser): string {
+    const [first] = user.fullName.trim().split(/\s+/);
+    return (first?.[0] ?? user.login[0] ?? '?').toUpperCase();
 }
 
-function showDialog(mode: DialogMode): void {
-    const titles: Record<DialogMode, string> = { login: 'Вход', register: 'Регистрация ученика', password: 'Смена пароля' };
-    const forms: Record<DialogMode, string> = {
-        login: field('login', 'Логин', 'text', 'username') + field('password', 'Пароль', 'password', 'current-password'),
-        register: field('fullName', 'ФИО', 'text', 'name', 'Фамилия, имя и отчество полностью')
-            + field('login', 'Логин', 'text', 'username', 'Латинские буквы, цифры, точка, дефис, подчёркивание; от 3 символов')
-            + field('loginRepeat', 'Логин ещё раз')
-            + field('password', 'Пароль', 'password', 'new-password', 'Не короче 6 символов')
-            + field('passwordRepeat', 'Пароль ещё раз', 'password', 'new-password'),
-        password: field('current', 'Текущий пароль', 'password', 'current-password')
-            + field('password', 'Новый пароль', 'password', 'new-password', 'Не короче 6 символов')
-            + field('passwordRepeat', 'Новый пароль ещё раз', 'password', 'new-password')
-    };
-    dialog.hidden = false;
-    dialog.innerHTML = `
-        <form class="auth-card" role="dialog" aria-modal="true" aria-labelledby="auth-title" novalidate>
-            <div class="auth-card__head">
-                <h2 id="auth-title">${titles[mode]}</h2>
-                <button type="button" class="quest-hud__icon" data-auth-close aria-label="Закрыть">×</button>
-            </div>
-            ${mode === 'login' || mode === 'register' ? `<div class="pk-seg auth-tabs" role="tablist">
-                <button type="button" class="pk-seg__btn${mode === 'login' ? ' is-active' : ''}" data-auth-tab="login">Вход</button>
-                <button type="button" class="pk-seg__btn${mode === 'register' ? ' is-active' : ''}" data-auth-tab="register">Регистрация</button>
-            </div>` : ''}
-            ${forms[mode]}
+function renderForm(user: AccountUser | null): string {
+    const tabs = user ? '' : `<div class="pk-seg account-tabs" role="tablist">
+            <button type="button" class="pk-seg__btn${view === 'login' ? ' is-active' : ''}" data-account-view="login">Вход</button>
+            <button type="button" class="pk-seg__btn${view === 'register' ? ' is-active' : ''}" data-account-view="register">Регистрация</button>
+        </div>`;
+    return `${tabs}
+        <form class="account-form" novalidate>
+            ${FORMS[view]()}
             <div class="auth-error" role="alert" hidden></div>
-            <div class="auth-actions"><button type="submit" class="btn-primary">${mode === 'login' ? 'Войти' : mode === 'register' ? 'Создать аккаунт' : 'Сменить пароль'}</button></div>
-            ${mode === 'register' ? '<p class="auth-note">Подтверждения почтой нет: запомните логин и пароль. Если забудете, учитель задаст новый.</p>' : ''}
+            <button type="submit" class="btn-primary account-submit">${SUBMIT[view]}</button>
+            ${view === 'register' ? '<p class="auth-note">Подтверждения почтой нет: запомните логин и пароль. Если забудете, учитель задаст новый в своём кабинете.</p>' : ''}
         </form>`;
-    const form = dialog.querySelector('form') as HTMLFormElement;
-    const error = dialog.querySelector('.auth-error') as HTMLElement;
-    const close = () => { dialog.hidden = true; dialog.innerHTML = ''; };
-    dialog.querySelector('[data-auth-close]')?.addEventListener('click', close);
-    dialog.querySelectorAll<HTMLElement>('[data-auth-tab]').forEach((tab) => tab.addEventListener('click', () => showDialog(tab.dataset.authTab as DialogMode)));
+}
+
+function render(): void {
+    const expired = isSessionExpired();
+    const user = expired ? null : getUser();   // истёкший вход для экрана — выход: показываем форму, а не профиль
+    if (railButton) {
+        railButton.classList.toggle('has-alert', expired);
+        railButton.dataset.tooltip = user ? `Аккаунт: ${user.fullName}` : 'Аккаунт';
+    }
+    let body: string;
+    if (!user) {
+        body = `<div class="account-intro">
+                <h3>Войдите, чтобы прогресс сохранялся</h3>
+                <p>Учитель увидит пройденные миссии, а вы продолжите с любого компьютера. Без входа обучение работает, прогресс остаётся в этом браузере.</p>
+            </div>${renderForm(null)}`;
+    } else if (view === 'password') {
+        body = `<button type="button" class="account-back" data-account-view="back">← К профилю</button>
+            <div class="account-intro"><h3>Смена пароля</h3></div>${renderForm(user)}`;
+    } else {
+        const teacher = user.role === 'teacher';
+        body = `<div class="account-profile">
+                <span class="account-avatar" aria-hidden="true">${esc(initials(user))}</span>
+                <span class="account-profile__who"><strong>${esc(user.fullName)}</strong><small>Логин ${esc(user.login)}</small></span>
+                <span class="account-role account-role--${teacher ? 'teacher' : 'student'}">${teacher ? 'Учитель' : 'Ученик'}</span>
+            </div>
+            <div class="account-actions">
+                ${teacher ? '<button type="button" class="btn-primary" data-account="teacher">Кабинет учителя</button>' : ''}
+                <button type="button" class="btn-secondary" data-account="password">Сменить пароль</button>
+                <button type="button" class="btn-secondary" data-account="logout">Выйти</button>
+            </div>
+            <p class="auth-note">${teacher ? 'Здесь вы создаёте учеников, меняете пароли и вручную засчитываете миссии. ' : 'Пройденные миссии сохраняются на сервере. '}Вход действует два часа после последнего действия, потом нужно войти снова.</p>`;
+    }
+    const banner = expired
+        ? `<div class="account-banner" role="status"><strong>Вход закончился</strong>Вы не пользовались симулятором больше двух часов. Войдите снова: всё, что вы прошли, уже сохранено и дойдёт до учителя.</div>`
+        : '';
+    host.innerHTML = `<div class="account">${banner}${body}</div>`;
+    wire();
+}
+
+function wire(): void {
+    host.querySelectorAll<HTMLElement>('[data-account-view]').forEach((button) => button.addEventListener('click', () => {
+        const next = button.dataset.accountView;
+        view = next === 'back' ? 'login' : (next as View);
+        render();
+    }));
+    host.querySelectorAll<HTMLElement>('[data-account]').forEach((button) => button.addEventListener('click', () => {
+        const action = button.dataset.account;
+        if (action === 'password') { view = 'password'; render(); }
+        else if (action === 'teacher') openTeacher();
+        else if (action === 'logout') void logout();
+    }));
+    const form = host.querySelector<HTMLFormElement>('.account-form');
+    if (!form) return;
     // Повторные поля вводятся руками: так ошибка в логине или пароле не копируется в проверку.
     form.querySelectorAll<HTMLInputElement>('input[name$="Repeat"]').forEach((input) => input.addEventListener('paste', (event) => event.preventDefault()));
+    const error = form.querySelector('.auth-error') as HTMLElement;
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const values = Object.fromEntries(new FormData(form).entries()) as Record<string, string>;
@@ -83,13 +113,12 @@ function showDialog(mode: DialogMode): void {
         error.hidden = true;
         submit.disabled = true;
         try {
-            if (mode === 'login') await login(values.login, values.password);
-            else if (mode === 'register') await register({
+            if (view === 'login') { lastLogin = values.login; await login(values.login, values.password); }
+            else if (view === 'register') await register({
                 fullName: values.fullName, login: values.login, loginRepeat: values.loginRepeat,
                 password: values.password, passwordRepeat: values.passwordRepeat
             });
-            else await changePassword(values.current, values.password, values.passwordRepeat);
-            close();
+            else { await changePassword(values.current, values.password, values.passwordRepeat); view = 'login'; render(); }
         } catch (failure) {
             error.textContent = (failure as Error).message;
             error.hidden = false;
@@ -97,21 +126,29 @@ function showDialog(mode: DialogMode): void {
             submit.disabled = false;
         }
     });
-    form.querySelector<HTMLElement>('input')?.focus();
+    if (!getUser() || view === 'password') form.querySelector<HTMLElement>('input')?.focus();
 }
 
-export function initAccountUi(host: HTMLElement, hooks: { openTeacher: () => void }): void {
+/** Панель открывается только когда она закрыта: openPanel переключает, и второй вызов закрыл бы её. */
+function showPanel(): void {
+    if (!document.querySelector('#account-panel.active')) (window as any).openPanel?.('account-panel');
+}
+
+export function initAccountUi(target: HTMLElement, hooks: { openTeacher: () => void }): void {
     openTeacher = hooks.openTeacher;
-    bar = document.createElement('div');
-    bar.className = 'account-bar';
-    host.appendChild(bar);
-    dialog = document.createElement('div');
-    dialog.className = 'auth-overlay';
-    dialog.hidden = true;
-    document.body.appendChild(dialog);
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && !dialog.hidden) { dialog.hidden = true; dialog.innerHTML = ''; }
+    host = target;
+    railButton = document.getElementById('sidebar-account-btn');
+    onUserChange((user: AccountUser | null) => {
+        if (user) lastLogin = user.login;
+        view = 'login';
+        render();
     });
-    onUserChange((_user: AccountUser | null) => renderBar());
-    renderBar();
+    onSessionExpired(() => {
+        const user = getUser();
+        if (user) lastLogin = user.login;
+        view = 'login';
+        render();
+        showPanel();
+    });
+    render();
 }

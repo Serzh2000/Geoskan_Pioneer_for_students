@@ -215,5 +215,5 @@ export async function openTeacherPanel(): Promise<void> {
 }
 
 document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && root && !document.querySelector('.auth-overlay:not([hidden])')) closeTeacherPanel();
+    if (event.key === 'Escape' && root) closeTeacherPanel();
 });

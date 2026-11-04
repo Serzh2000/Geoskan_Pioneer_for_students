@@ -5,7 +5,7 @@ import {
     type StorageLike
 } from '../public/modules/learning/quests.js';
 import { PIONEER_LESSONS } from '../public/modules/ui/mission-guide/lessons/pioneer/catalog.js';
-import { APP_MODE_STORAGE_KEY, loadLastMode, saveLastMode } from '../public/modules/learning/mode.js';
+import { getAppMode, onAppModeChange, setAppMode } from '../public/modules/learning/mode.js';
 
 function memoryStorage(initial: Record<string, string> = {}): StorageLike & { data: Record<string, string> } {
     const data = { ...initial };
@@ -97,14 +97,15 @@ describe('задания режима обучения', () => {
 });
 
 describe('режим приложения', () => {
-    it('запоминает последний выбор и игнорирует мусор', () => {
-        const storage = memoryStorage();
-        expect(loadLastMode(storage)).toBeNull();
-        saveLastMode(storage, 'learning');
-        expect(loadLastMode(storage)).toBe('learning');
-        storage.data[APP_MODE_STORAGE_KEY] = 'start';
-        expect(loadLastMode(storage)).toBeNull();
-        expect(loadLastMode(null)).toBeNull();
+    it('открывается свободным, переключается и сообщает о смене режима', () => {
+        expect(getAppMode()).toBe('free');
+        const seen: string[] = [];
+        const stop = onAppModeChange((mode, previous) => seen.push(`${previous}>${mode}`));
+        setAppMode('learning');
+        setAppMode('learning');
+        setAppMode('free');
+        stop();
+        expect(seen).toEqual(['free>learning', 'learning>free']);
     });
 });
 

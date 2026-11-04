@@ -300,11 +300,10 @@ export function initOnboardingTour(): void {
         return;
     }
     if (seen) return;
-    // The tour waits behind the start screen and only runs in free mode: in learning mode the quest card is the guide.
+    // The tour only runs in free mode: in learning mode the quest card is the guide.
     const startWhenFree = () => window.setTimeout(startOnboardingTour, 900);
     if (getAppMode() === 'free') { startWhenFree(); return; }
     const stop = onAppModeChange((mode) => {
-        if (mode === 'start') return;
         stop();
         if (mode === 'free') startWhenFree();
     });

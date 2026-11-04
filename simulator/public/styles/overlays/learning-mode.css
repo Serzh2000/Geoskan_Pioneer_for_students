@@ -1,47 +1,7 @@
-/* Стартовый экран, кнопка «Меню» и игровой слой режима обучения (modules/learning). Только токены темы. */
+/* Кнопка выхода из обучения и игровой слой режима обучения (modules/learning). Только токены темы. */
 
-/* В обучении нет окна «Учебник»: кнопка скрыта, сам вызов закрыт в controller.ts. */
+/* В обучении кнопка «Обучение» в боковой панели не нужна: выйти можно кнопкой «Выйти из обучения». */
 body[data-app-mode='learning'] #sidebar-guide-btn { display: none; }
-
-.start-screen {
-    position: fixed;
-    inset: 0;
-    z-index: 9000;
-    display: grid;
-    place-items: center;
-    padding: 24px;
-    overflow-y: auto;
-    background:
-        radial-gradient(ellipse at 50% 0%, var(--accent-soft), transparent 60%),
-        var(--bg-color);
-    color: var(--text-color);
-}
-.start-screen[hidden] { display: none; }
-.start-screen__inner { width: min(860px, 100%); display: grid; gap: 20px; }
-.start-screen__brand { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-color-strong); }
-.start-screen__title { margin: 0; font-size: clamp(28px, 4vw, 40px); line-height: 1.1; font-weight: 650; color: var(--text-strong); }
-.start-screen__choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.start-card {
-    display: grid;
-    align-content: start;
-    gap: 10px;
-    padding: 24px;
-    text-align: left;
-    font: inherit;
-    color: var(--text-color);
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    cursor: pointer;
-    box-shadow: var(--shadow-soft);
-    transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
-}
-.start-card:hover, .start-card:focus-visible { transform: translateY(-2px); border-color: var(--accent-color); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow-soft); outline: none; }
-.start-card.is-last { border-color: var(--accent-color); }
-.start-card__icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; color: var(--accent-color-strong); background: var(--accent-soft); }
-.start-card__title { font-size: 22px; font-weight: 650; color: var(--text-strong); }
-.start-card__text { font-size: 15px; line-height: 1.5; color: var(--text-muted); }
-.start-card__note { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--accent-color-strong); }
 
 .mode-menu-btn {
     position: fixed;
@@ -96,8 +56,6 @@ body[data-app-mode='learning'] #sidebar-guide-btn { display: none; }
 .quest-hud.is-dragging { opacity: 0.92; }
 .quest-hud.is-dragging .quest-hud__top { cursor: grabbing; }
 .quest-hud__note { padding: 8px 10px; font-size: 13px; line-height: 1.4; color: var(--text-muted); border: 1px dashed var(--border-strong); border-radius: 10px; }
-.start-screen__choices--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.start-screen__back { justify-self: start; }
 .quest-hud__progress { display: flex; align-items: center; gap: 10px; }
 .quest-hud__bar { flex: 1; height: 8px; border-radius: 999px; background: var(--panel-bg-strong); overflow: hidden; }
 .quest-hud__bar > span { display: block; height: 100%; border-radius: inherit; background: var(--accent-color); transition: width 0.5s ease; }
@@ -173,11 +131,10 @@ body[data-app-mode='learning'] #sidebar-guide-btn { display: none; }
 .quest-map__foot { display: flex; justify-content: flex-end; }
 
 @media (max-width: 760px) {
-    .start-screen__choices, .start-screen__choices--three { grid-template-columns: 1fr; }
     .quest-hud { right: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-    .start-card, .quest-hud__bar > span, .quest-success, .quest-success__card, .quest-success__seal { animation: none; transition: none; }
+    .quest-hud__bar > span, .quest-success, .quest-success__card, .quest-success__seal { animation: none; transition: none; }
 }
 
 /* Одна карточка за раз: сделанный шаг уходит влево, новый въезжает справа. */
@@ -206,15 +163,49 @@ body[data-app-mode='learning'] #sidebar-guide-btn { display: none; }
 @media (prefers-reduced-motion: reduce) { .quest-card, .quest-card--in, .quest-card--in-back { animation: none; } }
 
 /* Аккаунт: панель на стартовом экране, окно входа и кабинет учителя. */
-.account-bar { position: fixed; top: 14px; right: 16px; z-index: 9100; display: none; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-body.has-start-screen .account-bar { display: flex; }
-.account-bar__who { display: grid; text-align: right; line-height: 1.2; margin-right: 4px; color: var(--text-color); }
-.account-bar__who small { color: var(--text-muted); font-size: 12px; }
-.auth-overlay { position: fixed; inset: 0; z-index: 9500; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.5); }
-.auth-overlay[hidden] { display: none; }
-.auth-card { width: min(420px, 100%); max-height: 100%; overflow-y: auto; display: grid; gap: 12px; padding: 20px; color: var(--text-color); background: var(--panel-bg); border: 1px solid var(--border-strong); border-radius: 16px; box-shadow: var(--shadow-card); }
-.auth-card__head { display: flex; align-items: center; justify-content: space-between; }
-.auth-card__head h2 { margin: 0; font-size: 20px; color: var(--text-strong); }
+/* Панель «Аккаунт» в левой рельсе. */
+#sidebar-account-btn { position: relative; }
+#sidebar-account-btn.has-alert::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--danger);
+    box-shadow: 0 0 0 2px var(--panel-bg);
+}
+.account { width: min(440px, 100%); margin: 8px auto 0; display: grid; gap: 18px; }
+.account-intro h3 { margin: 0 0 6px; font-size: 20px; line-height: 1.25; font-weight: 650; color: var(--text-strong); }
+.account-intro p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-muted); }
+.account-tabs { width: 100%; }
+.account-tabs .pk-seg__btn { flex: 1; }
+.account-form { display: grid; gap: 14px; padding: 20px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; }
+.account-submit { width: 100%; justify-content: center; padding-block: 10px; }
+.account-back { justify-self: start; padding: 0; font: inherit; font-size: 13.5px; color: var(--text-muted); background: none; border: 0; cursor: pointer; }
+.account-back:hover { color: var(--accent-color-strong); }
+.account-banner {
+    display: grid;
+    gap: 4px;
+    padding: 12px 14px;
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--text-color);
+    background: color-mix(in srgb, var(--danger) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+    border-radius: 12px;
+}
+.account-banner strong { color: var(--danger); }
+.account-profile { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; padding: 18px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; }
+.account-avatar { display: grid; place-items: center; width: 52px; height: 52px; font-size: 22px; font-weight: 650; color: var(--accent-color-strong); background: var(--accent-soft); border-radius: 50%; }
+.account-profile__who { display: grid; gap: 2px; min-width: 0; }
+.account-profile__who strong { font-size: 16px; color: var(--text-strong); overflow-wrap: anywhere; }
+.account-profile__who small { font-size: 13px; color: var(--text-muted); }
+.account-role { padding: 3px 10px; font-size: 12px; font-weight: 600; border-radius: 999px; background: var(--accent-soft); color: var(--accent-color-strong); }
+.account-role--student { background: var(--panel-bg-strong); color: var(--text-muted); }
+.account-actions { display: grid; gap: 8px; }
+.account-actions .btn-primary, .account-actions .btn-secondary { width: 100%; justify-content: center; padding-block: 10px; }
 .auth-tabs { justify-self: start; }
 .auth-field { display: grid; gap: 4px; font-size: 13px; font-weight: 600; }
 .auth-field small { font-weight: 400; color: var(--text-muted); }
@@ -286,7 +277,6 @@ body.has-start-screen .account-bar { display: flex; }
     .teacher-body { grid-template-columns: 1fr; overflow-y: auto; }
     .teacher-list, .teacher-main { overflow: visible; }
     .teacher-stats { grid-template-columns: 1fr; }
-    .account-bar { left: 12px; justify-content: flex-start; }
 }
 
 /* Подсветка элемента интерфейса на шаге «покажи, где»: рамка и подпись, кликам не мешает. */

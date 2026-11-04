@@ -1,4 +1,5 @@
 /** Аккаунты: регистрация ученика, вход, прогресс и кабинет учителя. */
+import { jest } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import { AccountStore, ensureTeacher, registerAccountRoutes } from '../server/accounts.js';
@@ -122,5 +123,37 @@ describe('прогресс и кабинет учителя', () => {
         const id = (await teacher.get('/api/teacher/students')).body.students[0].id;
         await teacher.patch(`/api/teacher/students/${id}`).send({ password: 'brandnew1' });
         expect((await pupil.get('/api/auth/me')).body.user).toBeNull();
+    });
+});
+
+describe('срок входа: два часа после последнего запроса', () => {
+    const HOUR = 60 * 60 * 1000;
+    afterEach(() => { jest.restoreAllMocks(); });
+
+    test('каждый запрос продлевает вход, без запросов вход заканчивается через два часа', async () => {
+        const { app } = await makeApp();
+        const agent = request.agent(app);
+        await agent.post('/api/auth/register').send(student);
+        const start = Date.now();
+        const now = jest.spyOn(Date, 'now');
+
+        now.mockReturnValue(start + 1.5 * HOUR);
+        expect((await agent.get('/api/auth/me')).body.user.login).toBe('ivanov');
+        now.mockReturnValue(start + 3 * HOUR);   // 1,5 часа после последнего запроса: вход жив
+        expect((await agent.get('/api/auth/me')).body.user.login).toBe('ivanov');
+        now.mockReturnValue(start + 3 * HOUR + 2.1 * HOUR);   // больше двух часов тишины
+        expect((await agent.get('/api/auth/me')).body.user).toBeNull();
+        expect((await agent.get('/api/progress')).status).toBe(401);
+    });
+
+    test('ответ продлевает cookie на два часа, а выход его сбрасывает', async () => {
+        const { app } = await makeApp();
+        const agent = request.agent(app);
+        await agent.post('/api/auth/register').send(student);
+        const me = await agent.get('/api/auth/me');
+        expect(String(me.headers['set-cookie'])).toMatch(/Max-Age=7200/);
+        const out = await agent.post('/api/auth/logout');
+        expect(String(out.headers['set-cookie'])).toMatch(/Max-Age=0\s*$|Max-Age=0;/);
+        expect((await agent.get('/api/auth/me')).body.user).toBeNull();
     });
 });

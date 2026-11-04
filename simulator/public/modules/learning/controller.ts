@@ -1,7 +1,7 @@
 /**
- * Стартовый экран и режим обучения: DOM-слой поверх симулятора.
+ * Режим обучения: DOM-слой поверх симулятора.
  *
- * Свободный режим — прежний симулятор. В режиме обучения поверх экрана лежит одна карточка миссии, и она показывает
+ * Симулятор открывается свободным; в обучение ведёт кнопка «Обучение» в боковой панели (`openLearningMission`). В режиме обучения поверх экрана лежит одна карточка миссии, и она показывает
  * один шаг за раз: вводная → шаг 1 → … → шаг N → проверка полёта. Сделанный шаг уходит, на его месте появляется
  * следующий. Проверка — настоящий полёт: программа запускается в симуляторе, а `runTextLessonCheck` сверяет результат
  * с ожиданием урока. Из свободного режима в миссию ведёт `window.openLearningMission(номер?)`: кнопка в боковой панели
@@ -19,10 +19,10 @@ import { renderApiDocs } from '../ui/api-docs/index.js';
 import { beginLearningCapture, finishLearningCapture } from '../core/learning-journal.js';
 import { runTextLessonCheck } from '../ui/mission-guide/evaluation/text/index.js';
 import { getAcademySceneEvidence, prepareAcademyScene, restoreAcademyScene, academySceneProfile } from '../ui/mission-guide/academy/scene.js';
-import { ACCOUNT_TRACKS, fetchProgress, getLastAuthKind, getUser, onUserChange, reportCompleted, restoreSession } from './account.js';
+import { ACCOUNT_TRACKS, ApiError, fetchProgress, getLastAuthKind, getUser, isSessionExpired, onUserChange, reportCompleted, restoreSession, startKeepAlive } from './account.js';
 import { initAccountUi } from './account-ui.js';
 import { openTeacherPanel } from './teacher-panel.js';
-import { getAppMode, loadLastMode, onAppModeChange, setAppMode, type AppMode } from './mode.js';
+import { getAppMode, onAppModeChange, setAppMode, type AppMode } from './mode.js';
 import {
     buildAcademyQuests, buildQuests, clampStep, completeQuest, countDone, currentQuest, emptyProgress, INTRO_STEP, lastStepIndex,
     loadProgress, nextQuest, QUEST_DRAFT_STORAGE_PREFIX, QUEST_PROGRESS_STORAGE_KEY, questGroups, questStatus,
@@ -61,7 +61,7 @@ const repeatedExperiments = new Map<string, string>();
 let academyParts: { lift?: string; vision?: string } = {};
 
 const el = {} as {
-    start: HTMLElement; hud: HTMLElement; map: HTMLElement; success: HTMLElement; menu: HTMLButtonElement; spot: HTMLElement;
+    hud: HTMLElement; map: HTMLElement; success: HTMLElement; menu: HTMLButtonElement; spot: HTMLElement;
 };
 
 const ICON = {
@@ -96,11 +96,56 @@ function progressKey(forTrack: LearningTrack = track, forScope: string = scope()
     return (forTrack === 'blocks' ? QUEST_PROGRESS_STORAGE_KEY : `${QUEST_PROGRESS_STORAGE_KEY}:${forTrack}`) + forScope;
 }
 
+/**
+ * Зачёты, которые не дошли до сервера (вход закончился, нет связи). Они лежат в очереди у своего ученика и уходят при
+ * следующей синхронизации: иначе список сервера при входе затёр бы то, что ученик успел пройти без связи.
+ */
+const PENDING_KEY = 'pioneer:learning:pending:v1';
+type PendingReport = { track: LearningTrack; id: string };
+
+function loadPending(): PendingReport[] {
+    try {
+        const raw = JSON.parse(storage()?.getItem(PENDING_KEY + scope()) || '[]');
+        return Array.isArray(raw) ? raw.filter((item): item is PendingReport => typeof item?.id === 'string' && ACCOUNT_TRACKS.includes(item.track)) : [];
+    } catch { return []; }
+}
+
+function savePending(list: PendingReport[]): void {
+    try {
+        if (list.length) storage()?.setItem(PENDING_KEY + scope(), JSON.stringify(list));
+        else storage()?.removeItem(PENDING_KEY + scope());
+    } catch { /* без хранилища очередь живёт до перезагрузки */ }
+}
+
+/** Отправляет зачёт ученика на сервер; не вышло (нет связи, вход закончился) — зачёт ждёт в очереди. */
+async function reportCompletion(forTrack: LearningTrack, id: string): Promise<void> {
+    try {
+        await reportCompleted(forTrack, id);
+    } catch (error) {
+        if (error instanceof ApiError && [400, 403, 404].includes(error.status)) return;   // сервер такую миссию не примет
+        const queue = loadPending();
+        if (!queue.some((item) => item.track === forTrack && item.id === id)) savePending([...queue, { track: forTrack, id }]);
+    }
+}
+
+async function flushPending(): Promise<void> {
+    if (isSessionExpired()) return;
+    for (const item of loadPending()) {
+        try {
+            await reportCompleted(item.track, item.id);
+        } catch (error) {
+            if (!(error instanceof ApiError && [400, 403, 404].includes(error.status))) return;   // связи нет: попробуем в следующий раз
+        }
+        savePending(loadPending().filter((other) => !(other.track === item.track && other.id === item.id)));
+    }
+}
+
 /** Зачёт, который выставил сервер (в том числе учитель вручную), главнее локального прогресса. */
 async function syncFromServer(): Promise<void> {
     const user = getUser();
     if (user?.role !== 'student') return;
     try {
+        await flushPending();
         const server = await fetchProgress();
         for (const key of ACCOUNT_TRACKS) {
             const list = questsFor(key);
@@ -111,7 +156,7 @@ async function syncFromServer(): Promise<void> {
         progress = loadProgress(storage(), quests, progressKey());
         if (activeQuest && getAppMode() === 'learning') renderHud();
     } catch {
-        // Нет связи с сервером: остаётся локальный прогресс, он отправится при следующей пройденной миссии.
+        // Нет связи или вход закончился: остаётся локальный прогресс, неотправленные зачёты ждут в очереди.
     }
 }
 
@@ -119,7 +164,7 @@ async function syncFromServer(): Promise<void> {
 async function adoptGuestProgress(): Promise<void> {
     for (const key of ACCOUNT_TRACKS) {
         const guest = loadProgress(storage(), questsFor(key), progressKey(key, ''));
-        for (const id of guest.completed) await reportCompleted(key, id).catch(() => undefined);
+        for (const id of guest.completed) await reportCompletion(key, id);
     }
 }
 
@@ -127,8 +172,7 @@ async function handleUserChange(): Promise<void> {
     if (getUser() && getLastAuthKind() === 'register') await adoptGuestProgress();
     useTrack(track);
     await syncFromServer();
-    if (getAppMode() === 'start') renderStart();
-    else if (getAppMode() === 'learning') {
+    if (getAppMode() === 'learning') {
         const quest = currentQuest(quests, progress);
         if (quest) void openQuest(quest);
     }
@@ -154,85 +198,6 @@ function useTrack(next: LearningTrack): void {
     quests = questsFor(next);
     progress = loadProgress(storage(), quests, progressKey());
     try { storage()?.setItem(TRACK_STORAGE_KEY, next); } catch { /* ignore */ }
-}
-
-/* ---------- Стартовый экран ---------- */
-
-function renderStart(): void {
-    const last = loadLastMode(storage());
-    const done = countDone(questsFor(track), loadProgress(storage(), questsFor(track), progressKey()));
-    const total = questsFor(track).length;
-    const learnNote = done > 0 ? `Продолжить: пройдено ${done} из ${total}` : 'Миссии по шагам: от первой команды до полётных заданий';
-    const card = (mode: 'free' | 'learning', icon: string, title: string, text: string, note: string) => `
-        <button type="button" class="start-card${last === mode ? ' is-last' : ''}" data-start-mode="${mode}">
-            <span class="start-card__icon">${icon}</span>
-            <span class="start-card__title">${title}</span>
-            <span class="start-card__text">${text}</span>
-            <span class="start-card__note">${last === mode ? 'Вы выбирали в прошлый раз · ' : ''}${note}</span>
-        </button>`;
-    el.start.innerHTML = `
-        <div class="start-screen__inner">
-            <div class="start-screen__brand">Pioneer Simulator</div>
-            <h1 class="start-screen__title">С чего начнём?</h1>
-            <div class="start-screen__choices">
-                ${card('free', ICON.free, 'Свободный режим', 'Весь симулятор без ограничений: сцена, редактор и справочник. Пишите и запускайте что угодно.', 'Как раньше')}
-                ${card('learning', ICON.learn, 'Режим обучения', 'Тот же симулятор, но с миссиями на экране. Один шаг за раз: сделали шаг, появился следующий, в конце проверка полёта.', learnNote)}
-            </div>
-        </div>`;
-    el.start.querySelectorAll<HTMLButtonElement>('[data-start-mode]').forEach((button) => {
-        button.addEventListener('click', () => {
-            if (button.dataset.startMode === 'learning') renderTrackStep();
-            else setAppMode('free', storage());
-        });
-    });
-}
-
-/** Второй шаг стартового экрана: чем писать программы. */
-function renderTrackStep(): void {
-    const info: Record<LearningTrack, [string, string]> = {
-        blocks: ['Blockly', 'Программа собирается из блоков. Самый мягкий старт: блоки подсказывают, что можно сделать.'],
-        lua: ['Lua', 'Текстовый код в редакторе, как в прошивке дрона. Миссии Академии: дрон, сигналы, программы, время, полёт.'],
-        python: ['Python', 'Текстовый код с pioneer_sdk. Те же миссии Академии, плюс камера и метки ArUco.']
-    };
-    el.start.innerHTML = `
-        <div class="start-screen__inner">
-            <div class="start-screen__brand">Режим обучения</div>
-            <h1 class="start-screen__title">Чем будете писать программы?</h1>
-            <div class="start-screen__choices start-screen__choices--three">
-                ${(Object.keys(info) as LearningTrack[]).map((key) => {
-                    const total = questsFor(key).length;
-                    const done = countDone(questsFor(key), loadProgress(storage(), questsFor(key), progressKey(key)));
-                    return `
-                <button type="button" class="start-card${track === key ? ' is-last' : ''}" data-start-track="${key}">
-                    <span class="start-card__title">${info[key][0]}</span>
-                    <span class="start-card__text">${info[key][1]}</span>
-                    <span class="start-card__note">${track === key ? 'Выбрано в прошлый раз · ' : ''}пройдено ${done} из ${total}</span>
-                </button>`;
-                }).join('')}
-            </div>
-            <button type="button" class="btn-secondary start-screen__back" data-start-back>← К выбору режима</button>
-        </div>`;
-    el.start.querySelectorAll<HTMLButtonElement>('[data-start-track]').forEach((button) => {
-        button.addEventListener('click', () => {
-            useTrack(button.dataset.startTrack as LearningTrack);
-            setAppMode('learning', storage());
-        });
-    });
-    el.start.querySelector('[data-start-back]')?.addEventListener('click', renderStart);
-    el.start.querySelector<HTMLElement>('.start-card.is-last, .start-card')?.focus();
-}
-
-function showStart(): void {
-    renderStart();
-    el.start.hidden = false;
-    document.body.classList.add('has-start-screen');
-    const focusTarget = el.start.querySelector<HTMLElement>('.start-card.is-last') ?? el.start.querySelector<HTMLElement>('.start-card');
-    window.requestAnimationFrame(() => focusTarget?.focus());
-}
-
-function hideStart(): void {
-    el.start.hidden = true;
-    document.body.classList.remove('has-start-screen');
 }
 
 /* ---------- Редактор и черновики ---------- */
@@ -638,7 +603,7 @@ async function runFlightCheck(quest: Quest): Promise<void> {
         if (result.solved) {
             progress = completeQuest(quests, progress, quest.id);
             persist();
-            if (getUser()?.role === 'student') void reportCompleted(track, quest.id).catch(() => undefined);
+            if (getUser()?.role === 'student') void reportCompletion(track, quest.id);
             try { storage()?.removeItem(draftKey(quest)); } catch { /* ignore */ }
             renderHud();
             showSuccess(quest);
@@ -755,11 +720,9 @@ function applyMode(mode: AppMode, previous: AppMode): void {
         restoreAcademyScene();
     }
     el.hud.hidden = true;
-    el.menu.hidden = mode === 'start';
-    el.menu.innerHTML = `${ICON.home}<span>Меню</span>`;
-    el.menu.title = 'Вернуться на стартовый экран';
-    if (mode === 'start') { showStart(); return; }
-    hideStart();
+    el.menu.hidden = mode !== 'learning';
+    el.menu.innerHTML = `${ICON.home}<span>Выйти из обучения</span>`;
+    el.menu.title = 'Вернуться в свободный симулятор';
     if (mode === 'free') return;
     void syncFromServer().finally(() => {
         const quest = currentQuest(quests, progress);
@@ -775,20 +738,17 @@ function buildDom(): void {
         node.hidden = hidden;
         return node;
     };
-    el.start = make('div', 'start-screen', 'start-screen', false);
-    el.start.setAttribute('role', 'dialog');
-    el.start.setAttribute('aria-label', 'Выбор режима');
     el.hud = make('aside', 'quest-hud', 'quest-hud');
     el.hud.setAttribute('aria-label', 'Текущая миссия');
     el.map = make('div', 'quest-map', 'quest-map');
     el.success = make('div', 'quest-success', 'quest-success');
     el.menu = make('button', 'mode-menu-btn', 'mode-menu-btn') as HTMLButtonElement;
     el.menu.type = 'button';
-    el.menu.setAttribute('aria-label', 'Вернуться на стартовый экран');
-    el.menu.addEventListener('click', () => setAppMode('start', storage()));
+    el.menu.setAttribute('aria-label', 'Выйти из обучения');
+    el.menu.addEventListener('click', () => setAppMode('free'));
     el.spot = make('div', 'quest-spot', 'quest-spot');
     el.spot.setAttribute('aria-hidden', 'true');
-    document.body.append(el.hud, el.spot, el.success, el.map, el.menu, el.start);
+    document.body.append(el.hud, el.spot, el.success, el.map, el.menu);
 }
 
 /** Карточку можно перетащить за заголовок; место запоминается. */
@@ -842,7 +802,7 @@ export function openLearningMission(lesson?: number): void {
         if (quest) void openQuest(quest);
         return;
     }
-    setAppMode('learning', storage());
+    setAppMode('learning');
 }
 
 /** Подключается один раз при запуске, после initUI. */
@@ -850,14 +810,14 @@ export function initLearningMode(): void {
     buildDom();
     useTrack(loadTrack());
     enableHudDrag();
-    initAccountUi(document.body, { openTeacher: () => { void openTeacherPanel(); } });
+    initAccountUi(document.getElementById('account-host') ?? document.body, { openTeacher: () => { void openTeacherPanel(); } });
     onUserChange(() => { void handleUserChange(); });
     void restoreSession();
+    startKeepAlive();
     (window as any).openLearningMission = openLearningMission;
     onAppModeChange(applyMode);
-    document.body.dataset.appMode = 'start';
+    document.body.dataset.appMode = 'free';
     el.menu.hidden = true;
-    showStart();
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') return;
         if (!el.map.hidden) hideMap();

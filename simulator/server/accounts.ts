@@ -34,7 +34,10 @@ type Session = { tokenHash: string; userId: string; expiresAt: number };
 type Data = { users: User[]; sessions: Session[] };
 
 const SESSION_COOKIE = 'pioneer_session';
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+/** Вход действует два часа после последнего запроса: каждый запрос со своим токеном продлевает сессию. */
+export const SESSION_TTL_MS = 2 * 60 * 60 * 1000;
+/** Продление сессии пишется на диск не чаще раза в минуту: перезапуск сервера теряет в худшем случае минуту. */
+const SESSION_SAVE_DELAY_MS = 60 * 1000;
 const QUEST_ID = /^[A-Za-z0-9_-]{1,64}$/;
 const LOGIN = /^[A-Za-z0-9_.-]{3,32}$/;
 
@@ -91,6 +94,7 @@ function parseQuestId(raw: unknown): string {
 export class AccountStore {
     private data: Data = { users: [], sessions: [] };
     private writing: Promise<void> = Promise.resolve();
+    private touchTimer: NodeJS.Timeout | null = null;
 
     constructor(private file: string | null) {
         if (file && fs.existsSync(file)) {
@@ -98,6 +102,9 @@ export class AccountStore {
                 const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
                 this.data = { users: Array.isArray(raw.users) ? raw.users : [], sessions: Array.isArray(raw.sessions) ? raw.sessions : [] };
                 this.data.users.forEach((user) => { user.progress = { ...emptyProgress(), ...user.progress }; });
+                // Сессии, выданные по прежнему сроку, укорачиваются до нынешнего.
+                const limit = Date.now() + SESSION_TTL_MS;
+                this.data.sessions.forEach((session) => { session.expiresAt = Math.min(session.expiresAt, limit); });
             } catch (error) {
                 throw new Error(`Не удалось прочитать файл аккаунтов ${file}: ${(error as Error).message}`);
             }
@@ -173,11 +180,22 @@ export class AccountStore {
         await this.save();
     }
 
+    /** Пользователь по токену; живая сессия продлевается на два часа от этого запроса. */
     userForToken(token: string | undefined): User | undefined {
         if (!token) return undefined;
         const hash = sha256(token);
-        const session = this.data.sessions.find((item) => item.tokenHash === hash && item.expiresAt > Date.now());
-        return session ? this.findById(session.userId) : undefined;
+        const now = Date.now();
+        const session = this.data.sessions.find((item) => item.tokenHash === hash && item.expiresAt > now);
+        if (!session) return undefined;
+        session.expiresAt = now + SESSION_TTL_MS;
+        this.scheduleSave();
+        return this.findById(session.userId);
+    }
+
+    private scheduleSave(): void {
+        if (this.touchTimer || !this.file) return;
+        this.touchTimer = setTimeout(() => { this.touchTimer = null; void this.save(); }, SESSION_SAVE_DELAY_MS);
+        this.touchTimer.unref?.();
     }
 
     authenticate(login: string, password: string): User | undefined {
@@ -253,6 +271,12 @@ export async function ensureTeacher(store: AccountStore, env: NodeJS.ProcessEnv 
 }
 
 export function registerAccountRoutes(app: express.Express, store: AccountStore): void {
+    // Каждый запрос живого входа продлевает и сессию на сервере, и cookie в браузере: два часа отсчитываются от последнего действия.
+    app.use(['/api/auth', '/api/progress', '/api/teacher'], (req, res, next) => {
+        const token = readCookie(req, SESSION_COOKIE);
+        if (token && req.path !== '/logout' && store.userForToken(token)) setSessionCookie(req, res, token, SESSION_TTL_MS);
+        next();
+    });
     const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false, message: { error: 'Слишком много попыток. Подождите несколько минут.' } });
 
     const currentUser = (req: express.Request) => store.userForToken(readCookie(req, SESSION_COOKIE));
