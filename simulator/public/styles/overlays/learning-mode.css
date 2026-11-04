@@ -225,35 +225,66 @@ body.has-start-screen .account-bar { display: flex; }
 .auth-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .auth-note { margin: 0; font-size: 12.5px; color: var(--text-muted); }
 
-.teacher-overlay { position: fixed; inset: 0; z-index: 9400; display: grid; padding: 14px; background: var(--bg-color); }
-.teacher-shell { display: flex; flex-direction: column; gap: 10px; min-height: 0; color: var(--text-color); }
-.teacher-head { display: flex; align-items: center; justify-content: space-between; }
-.teacher-head h2 { margin: 0; font-size: 22px; color: var(--text-strong); }
-.teacher-notice { padding: 8px 12px; font-size: 14px; border-radius: 8px; border: 1px solid var(--success); }
-.teacher-notice--error { border-color: var(--danger); color: var(--danger); }
-.teacher-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(240px, 320px) 1fr; gap: 14px; }
-.teacher-list, .teacher-main { min-height: 0; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 12px; background: var(--panel-bg); padding: 10px; }
-.teacher-list ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
-.teacher-list__tools { display: grid; gap: 6px; }
-.teacher-row { width: 100%; display: grid; gap: 2px; padding: 8px 10px; text-align: left; font: inherit; color: var(--text-color); background: transparent; border: 1px solid transparent; border-radius: 8px; cursor: pointer; }
+.teacher-overlay { position: fixed; inset: 0; z-index: 9400; display: flex; padding: 20px 24px; background: var(--bg-color); overflow: hidden; }
+.teacher-shell { flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; min-height: 0; max-width: 1480px; margin: 0 auto; color: var(--text-color); }
+.teacher-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.teacher-head h2 { margin: 0; font-size: 24px; font-weight: 650; color: var(--text-strong); }
+.teacher-notice { padding: 9px 14px; font-size: 14px; border-radius: 10px; border: 1px solid var(--success); background: color-mix(in srgb, var(--success) 10%, transparent); }
+.teacher-notice--error { border-color: var(--danger); color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.teacher-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 16px; }
+.teacher-list, .teacher-main { min-height: 0; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 14px; background: var(--panel-bg); }
+.teacher-list { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.teacher-main { padding: 20px 22px; }
+.teacher-list__tools { display: grid; gap: 8px; }
+.teacher-list ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.teacher-row { width: 100%; display: grid; gap: 6px; padding: 10px 12px; text-align: left; font: inherit; color: var(--text-color); background: transparent; border: 1px solid transparent; border-radius: 10px; cursor: pointer; transition: background-color 0.12s ease, border-color 0.12s ease; }
+.teacher-row strong { font-size: 14.5px; font-weight: 600; color: var(--text-strong); }
 .teacher-row small { color: var(--text-muted); font-size: 12px; }
-.teacher-row:hover, .teacher-row.is-current { background: var(--card-bg); border-color: var(--border-strong); }
-.teacher-row.is-current { border-color: var(--accent-color); }
-.teacher-empty { padding: 16px; color: var(--text-muted); font-size: 14px; }
-.teacher-card { display: grid; gap: 14px; }
+.teacher-row:hover { background: var(--card-bg); }
+.teacher-row.is-current { background: var(--card-bg); border-color: var(--accent-color); box-shadow: 0 0 0 3px var(--accent-soft); }
+.teacher-empty { display: grid; place-items: center; min-height: 160px; padding: 16px; text-align: center; font-size: 14px; line-height: 1.5; color: var(--text-muted); }
+.teacher-main > .teacher-empty { min-height: 320px; }
+
+.teacher-student { display: grid; gap: 18px; }
+.teacher-student__head h3 { margin: 0; font-size: 24px; font-weight: 650; color: var(--text-strong); }
+.teacher-student__grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }
+.teacher-panelbox { display: grid; gap: 12px; padding: 16px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; }
+.teacher-panelbox > h4 { margin: 0; font-size: 12px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+.teacher-card { display: grid; gap: 12px; max-width: 420px; padding: 18px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; }
 .teacher-card h3 { margin: 0; font-size: 18px; color: var(--text-strong); }
-.teacher-edit { display: grid; gap: 8px; max-width: 460px; }
-.teacher-meta { font-size: 12.5px; color: var(--text-muted); }
-.teacher-danger { color: var(--danger); border-color: var(--danger); }
-.teacher-progress { display: grid; gap: 10px; }
-.teacher-progress__head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.teacher-group h4 { margin: 4px 0 6px; font-size: 14px; color: var(--text-strong); }
+.teacher-meta { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--text-muted); }
+.teacher-danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
+.teacher-danger:hover { border-color: var(--danger); }
+
+.teacher-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.teacher-stat { display: grid; gap: 6px; padding: 12px 14px; text-align: left; font: inherit; color: var(--text-color); background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; transition: border-color 0.12s ease, box-shadow 0.12s ease; }
+.teacher-stat:hover { border-color: var(--border-strong); }
+.teacher-stat.is-active { border-color: var(--accent-color); box-shadow: 0 0 0 3px var(--accent-soft); }
+.teacher-stat__name { font-size: 12px; font-weight: 650; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
+.teacher-stat.is-active .teacher-stat__name { color: var(--accent-color-strong); }
+.teacher-stat__value { font-size: 24px; font-weight: 700; line-height: 1; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+.teacher-stat__value small { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+.teacher-stat__bar { height: 6px; border-radius: 999px; background: var(--panel-bg-strong); overflow: hidden; }
+.teacher-stat__bar i { display: block; height: 100%; border-radius: inherit; background: var(--accent-color); }
+
+.teacher-group { display: grid; gap: 8px; }
+.teacher-group h4 { margin: 6px 0 0; font-size: 14px; font-weight: 650; color: var(--text-strong); text-transform: none; letter-spacing: 0; }
 .teacher-group h4 small { font-weight: 500; color: var(--text-muted); }
-.teacher-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
-.teacher-tile { display: grid; grid-template-columns: 26px 1fr; align-items: center; gap: 8px; padding: 6px 8px; text-align: left; font: inherit; font-size: 13px; color: var(--text-color); background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; }
-.teacher-tile span { display: grid; place-items: center; width: 24px; height: 24px; font-size: 12px; font-weight: 700; border-radius: 50%; border: 1.5px solid var(--border-strong); }
+.teacher-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.teacher-tile { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; gap: 10px; min-height: 44px; padding: 7px 10px; text-align: left; font: inherit; font-size: 13.5px; color: var(--text-color); background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; transition: border-color 0.12s ease, background-color 0.12s ease; }
+.teacher-tile span { display: grid; place-items: center; width: 26px; height: 26px; font-size: 12px; font-weight: 700; color: var(--text-muted); border-radius: 50%; border: 1.5px solid var(--border-strong); }
 .teacher-tile em { font-style: normal; line-height: 1.25; }
+.teacher-tile b { position: absolute; top: 4px; right: 8px; font-size: 10.5px; font-weight: 650; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent-color-strong); }
+.teacher-tile.is-done { background: color-mix(in srgb, var(--success) 9%, var(--panel-bg)); border-color: color-mix(in srgb, var(--success) 45%, transparent); }
 .teacher-tile.is-done span { color: #fff; background: var(--success); border-color: var(--success); }
 .teacher-tile.is-manual { border-color: var(--accent-color); }
 .teacher-tile:hover, .teacher-tile:focus-visible { border-color: var(--accent-color); outline: none; }
-@media (max-width: 760px) { .teacher-body { grid-template-columns: 1fr; overflow-y: auto; } .account-bar { left: 12px; justify-content: flex-start; } }
+
+@media (max-width: 1180px) { .teacher-student__grid { grid-template-columns: 1fr; } }
+@media (max-width: 760px) {
+    .teacher-overlay { padding: 12px; }
+    .teacher-body { grid-template-columns: 1fr; overflow-y: auto; }
+    .teacher-list, .teacher-main { overflow: visible; }
+    .teacher-stats { grid-template-columns: 1fr; }
+    .account-bar { left: 12px; justify-content: flex-start; }
+}

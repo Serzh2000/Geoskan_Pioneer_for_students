@@ -76,33 +76,43 @@ function renderCreate(): string {
 
 function renderStudent(student: StudentDetail): string {
     const quests = questsFor(track);
-    const done = quests.filter((quest) => student.progress[track][quest.id]).length;
     const groups = questGroups(quests).map((group) => `
-        <section class="teacher-group"><h4>${esc(group.label)} <small>${group.quests.filter((quest) => student.progress[track][quest.id]).length}/${group.quests.length}</small></h4>
+        <section class="teacher-group"><h4>${esc(group.label)} <small>${group.quests.filter((quest) => student.progress[track][quest.id]).length} из ${group.quests.length}</small></h4>
             <div class="teacher-tiles">${group.quests.map((quest) => {
                 const completion = student.progress[track][quest.id];
                 const title = completion
                     ? `${esc(quest.title)}: засчитана ${completion.by === 'teacher' ? 'учителем' : 'автоматически'} ${new Date(completion.at).toLocaleString('ru-RU')}. Нажмите, чтобы отменить`
                     : `${esc(quest.title)}: не пройдена. Нажмите, чтобы засчитать`;
                 return `<button type="button" class="teacher-tile${completion ? ' is-done' : ''}${completion?.by === 'teacher' ? ' is-manual' : ''}" data-teacher-toggle="${esc(quest.id)}" aria-pressed="${completion ? 'true' : 'false'}" title="${title}">
-                    <span>${completion ? TICK : quest.number}</span><em>${esc(quest.title)}</em></button>`;
+                    <span>${completion ? TICK : quest.number}</span><em>${esc(quest.title)}</em>${completion?.by === 'teacher' ? '<b>учитель</b>' : ''}</button>`;
             }).join('')}</div></section>`).join('');
+    const stats = ACCOUNT_TRACKS.map((key) => {
+        const total = questsFor(key).length;
+        const count = student.counts[key];
+        return `<button type="button" class="teacher-stat${key === track ? ' is-active' : ''}" data-teacher-track="${key}" aria-pressed="${key === track}">
+            <span class="teacher-stat__name">${TRACK_LABELS[key]}</span>
+            <span class="teacher-stat__value">${count}<small> из ${total}</small></span>
+            <span class="teacher-stat__bar"><i style="width:${Math.round((count / total) * 100)}%"></i></span></button>`;
+    }).join('');
     return `
-        <div class="teacher-card">
-            <form data-teacher-edit class="teacher-edit">
-                <h3>${esc(student.fullName)}</h3>
-                <label class="auth-field"><span>ФИО</span><input class="auth-input" name="fullName" value="${esc(student.fullName)}" required></label>
-                <label class="auth-field"><span>Логин</span><input class="auth-input" name="login" value="${esc(student.login)}" required autocomplete="off"></label>
-                <label class="auth-field"><span>Новый пароль</span><input class="auth-input" name="password" placeholder="Оставьте пустым, чтобы не менять" autocomplete="new-password"><small>Старый пароль показать нельзя: на сервере он хранится в виде хеша.</small></label>
-                <div class="auth-actions"><button type="submit" class="btn-primary btn--sm">Сохранить</button><button type="button" class="btn-secondary btn--sm teacher-danger" data-teacher-delete>Удалить аккаунт</button></div>
-                <div class="teacher-meta">Создан ${new Date(student.createdAt).toLocaleDateString('ru-RU')}</div>
-            </form>
-            <div class="teacher-progress">
-                <div class="teacher-progress__head">
-                    <div class="pk-seg" role="tablist">${ACCOUNT_TRACKS.map((key) => `<button type="button" class="pk-seg__btn${key === track ? ' is-active' : ''}" data-teacher-track="${key}">${TRACK_LABELS[key]} <small>${student.counts[key]}/${questsFor(key).length}</small></button>`).join('')}</div>
-                    <span class="teacher-meta">Пройдено ${done} из ${quests.length}. Оранжевая рамка: зачёт выставил учитель.</span>
+        <div class="teacher-student">
+            <header class="teacher-student__head">
+                <div><h3>${esc(student.fullName)}</h3><div class="teacher-meta">Логин ${esc(student.login)} · создан ${new Date(student.createdAt).toLocaleDateString('ru-RU')}</div></div>
+            </header>
+            <div class="teacher-student__grid">
+                <form data-teacher-edit class="teacher-panelbox teacher-edit">
+                    <h4>Аккаунт</h4>
+                    <label class="auth-field"><span>ФИО</span><input class="auth-input" name="fullName" value="${esc(student.fullName)}" required></label>
+                    <label class="auth-field"><span>Логин</span><input class="auth-input" name="login" value="${esc(student.login)}" required autocomplete="off"></label>
+                    <label class="auth-field"><span>Новый пароль</span><input class="auth-input" name="password" placeholder="Пусто — не менять" autocomplete="new-password"><small>Старый пароль показать нельзя: на сервере хранится только его хеш.</small></label>
+                    <div class="auth-actions"><button type="submit" class="btn-primary btn--sm">Сохранить</button><button type="button" class="btn-secondary btn--sm teacher-danger" data-teacher-delete>Удалить</button></div>
+                </form>
+                <div class="teacher-panelbox teacher-progress">
+                    <h4>Прогресс</h4>
+                    <div class="teacher-stats">${stats}</div>
+                    <p class="teacher-meta">Нажмите на миссию, чтобы засчитать или отменить её вручную. Оранжевая рамка: зачёт выставил учитель.</p>
+                    ${groups}
                 </div>
-                ${groups}
             </div>
         </div>`;
 }
