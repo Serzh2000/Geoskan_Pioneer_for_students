@@ -91,7 +91,13 @@ body[data-app-mode='learning'] #sidebar-guide-btn { display: none; }
 .quest-hud__where { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent-color-strong); }
 .quest-hud__icon { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; font: inherit; font-size: 18px; line-height: 1; color: var(--text-muted); background: transparent; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; }
 .quest-hud__icon:hover { color: var(--text-strong); border-color: var(--border-strong); }
-.quest-hud__view { align-self: start; }
+.quest-hud__view, .quest-hud__track { align-self: start; }
+.quest-hud__top { cursor: grab; user-select: none; touch-action: none; }
+.quest-hud.is-dragging { opacity: 0.92; }
+.quest-hud.is-dragging .quest-hud__top { cursor: grabbing; }
+.quest-hud__note { padding: 8px 10px; font-size: 13px; line-height: 1.4; color: var(--text-muted); border: 1px dashed var(--border-strong); border-radius: 10px; }
+.start-screen__choices--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.start-screen__back { justify-self: start; }
 .quest-hud__progress { display: flex; align-items: center; gap: 10px; }
 .quest-hud__bar { flex: 1; height: 8px; border-radius: 999px; background: var(--panel-bg-strong); overflow: hidden; }
 .quest-hud__bar > span { display: block; height: 100%; border-radius: inherit; background: var(--accent-color); transition: width 0.5s ease; }
@@ -167,7 +173,7 @@ body[data-app-mode='learning'] #sidebar-guide-btn { display: none; }
 .quest-map__foot { display: flex; justify-content: flex-end; }
 
 @media (max-width: 760px) {
-    .start-screen__choices { grid-template-columns: 1fr; }
+    .start-screen__choices, .start-screen__choices--three { grid-template-columns: 1fr; }
     .quest-hud { right: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {

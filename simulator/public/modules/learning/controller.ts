@@ -9,8 +9,8 @@
 import { currentScriptLanguage, setCurrentScriptLanguage } from '../core/state.js';
 import { restartAndRunSimulation } from '../app/simulation-controls.js';
 import {
-    getMainBlocklyWorkspace, loadMainBlocklyJson, loadMainBlocklyXml, serializeWorkspaceXml, setBlocklyEditorEnabled,
-    setEditorLanguage
+    getEditorValue, getMainBlocklyWorkspace, isBlocklyEditorEnabled, loadMainBlocklyJson, loadMainBlocklyXml,
+    serializeWorkspaceXml, setBlocklyEditorEnabled, setEditorLanguage, setEditorValue, syncScriptLanguageSelect
 } from '../editor/index.js';
 import { runTextLessonCheck } from '../ui/mission-guide/evaluation/text/index.js';
 import { getAppMode, loadLastMode, onAppModeChange, setAppMode, type AppMode } from './mode.js';
@@ -36,6 +36,13 @@ let checkToken = 0;
 let feedback: { kind: 'info' | 'error'; title: string; lines: string[] } | null = null;
 let checklistTimer = 0;
 let originalOpenGuide: (() => void) | undefined;
+
+/** Чем ученик пишет программы: блоками или текстом. Задания одни и те же, проверка — по полёту. */
+export type LearningTrack = 'blocks' | 'lua' | 'python';
+const TRACK_STORAGE_KEY = 'pioneer:learning:track:v1';
+const HUD_POS_STORAGE_KEY = 'pioneer:learning:hud-pos:v1';
+const TRACK_LABELS: Record<LearningTrack, string> = { blocks: 'Blockly', lua: 'Lua', python: 'Python' };
+let track: LearningTrack = 'blocks';
 
 const el = {} as {
     start: HTMLElement; hud: HTMLElement; map: HTMLElement; success: HTMLElement; menu: HTMLButtonElement;
@@ -87,8 +94,43 @@ function renderStart(): void {
             </div>
         </div>`;
     el.start.querySelectorAll<HTMLButtonElement>('[data-start-mode]').forEach((button) => {
-        button.addEventListener('click', () => setAppMode(button.dataset.startMode as 'free' | 'learning', storage()));
+        button.addEventListener('click', () => {
+            if (button.dataset.startMode === 'learning') renderTrackStep();
+            else setAppMode('free', storage());
+        });
     });
+}
+
+/** Второй шаг стартового экрана: чем писать программы. */
+function renderTrackStep(): void {
+    const info: Record<LearningTrack, [string, string]> = {
+        blocks: ['Blockly', 'Программа собирается из блоков. Самый мягкий старт: блоки подсказывают, что можно сделать.'],
+        lua: ['Lua', 'Текстовый код в редакторе, как в прошивке дрона. Шаги заданий даны блоками, вы записываете их кодом.'],
+        python: ['Python', 'Текстовый код с pioneer_sdk. Шаги заданий даны блоками, вы записываете их кодом.']
+    };
+    el.start.innerHTML = `
+        <div class="start-screen__inner">
+            <div class="start-screen__brand">Режим обучения</div>
+            <h1 class="start-screen__title">Чем будете писать программы?</h1>
+            <div class="start-screen__choices start-screen__choices--three">
+                ${(Object.keys(info) as LearningTrack[]).map((key) => `
+                <button type="button" class="start-card${track === key ? ' is-last' : ''}" data-start-track="${key}">
+                    <span class="start-card__title">${info[key][0]}</span>
+                    <span class="start-card__text">${info[key][1]}</span>
+                    <span class="start-card__note">${track === key ? 'Выбрано в прошлый раз' : 'Можно сменить прямо в задании'}</span>
+                </button>`).join('')}
+            </div>
+            <button type="button" class="btn-secondary start-screen__back" data-start-back>← К выбору режима</button>
+        </div>`;
+    el.start.querySelectorAll<HTMLButtonElement>('[data-start-track]').forEach((button) => {
+        button.addEventListener('click', () => {
+            track = button.dataset.startTrack as LearningTrack;
+            try { storage()?.setItem(TRACK_STORAGE_KEY, track); } catch { /* ignore */ }
+            setAppMode('learning', storage());
+        });
+    });
+    el.start.querySelector('[data-start-back]')?.addEventListener('click', renderStart);
+    el.start.querySelector<HTMLElement>('.start-card.is-last, .start-card')?.focus();
 }
 
 function showStart(): void {
@@ -106,14 +148,33 @@ function hideStart(): void {
 
 /* ---------- Задание ---------- */
 
+function loadTrack(): LearningTrack {
+    try {
+        const value = storage()?.getItem(TRACK_STORAGE_KEY);
+        return value === 'lua' || value === 'python' ? value : 'blocks';
+    } catch { return 'blocks'; }
+}
+
 function draftKey(quest: Quest): string {
-    return QUEST_DRAFT_STORAGE_PREFIX + quest.id;
+    return QUEST_DRAFT_STORAGE_PREFIX + (track === 'blocks' ? '' : `${track}:`) + quest.id;
+}
+
+/** Урок проходится выбранным способом: «Каждые N сек» в браузерном Python не держит ритм. */
+function trackSupported(quest: Quest): boolean {
+    return track === 'blocks' || !quest.spec.languages || quest.spec.languages.includes(track);
 }
 
 function saveDraft(): void {
-    const workspace = getMainBlocklyWorkspace();
-    if (!workspace || !activeQuest) return;
+    if (!activeQuest) return;
     try {
+        if (track !== 'blocks') {
+            const code = isBlocklyEditorEnabled() ? '' : getEditorValue();
+            if (code.trim()) storage()?.setItem(draftKey(activeQuest), code);
+            else storage()?.removeItem(draftKey(activeQuest));
+            return;
+        }
+        const workspace = getMainBlocklyWorkspace();
+        if (!workspace) return;
         const xml = serializeWorkspaceXml(workspace);
         if (workspace.getAllBlocks(false).length > 1) storage()?.setItem(draftKey(activeQuest), xml);
         else storage()?.removeItem(draftKey(activeQuest));
@@ -122,7 +183,24 @@ function saveDraft(): void {
     }
 }
 
+async function enterTextEditor(language: 'lua' | 'python', code: string): Promise<void> {
+    setCurrentScriptLanguage(language);
+    const select = document.getElementById('script-language-select') as HTMLSelectElement | null;
+    if (select) select.value = language;
+    setBlocklyEditorEnabled(false);
+    await setEditorLanguage(language);
+    await setEditorValue(code);
+    syncScriptLanguageSelect();
+}
+
 async function loadQuestWorkspace(quest: Quest): Promise<void> {
+    if (track !== 'blocks') {
+        let draft: string | null = null;
+        try { draft = storage()?.getItem(draftKey(quest)) ?? null; } catch { draft = null; }
+        const comment = track === 'lua' ? '--' : '#';
+        await enterTextEditor(track, draft ?? `${comment} ${quest.spec.title}: запишите программу здесь\n`);
+        return;
+    }
     setBlocklyEditorEnabled(true);
     let draft: string | null = null;
     try { draft = storage()?.getItem(draftKey(quest)) ?? null; } catch { draft = null; }
@@ -184,7 +262,7 @@ function stopChecklistTimer(): void {
 }
 
 function refreshChecklist(): void {
-    if (!activeQuest || getAppMode() !== 'learning') return;
+    if (!activeQuest || getAppMode() !== 'learning' || track !== 'blocks') return;
     const list = requiredBlockChecklist(activeQuest, usedBlockTypes());
     el.hud.querySelectorAll<HTMLElement>('[data-need]').forEach((item, index) => {
         item.classList.toggle('is-done', Boolean(list[index]?.done));
@@ -197,7 +275,7 @@ function renderHud(): void {
     const done = countDone(quests, progress);
     const percent = Math.round((done / quests.length) * 100);
     const solved = progress.completed.includes(quest.id);
-    const needs = requiredBlockChecklist(quest, usedBlockTypes());
+    const needs = track === 'blocks' ? requiredBlockChecklist(quest, usedBlockTypes()) : [];
     const spec = quest.spec;
     el.hud.hidden = false;
     el.hud.classList.toggle('is-collapsed', hudCollapsed);
@@ -206,8 +284,11 @@ function renderHud(): void {
             <div class="quest-hud__where">Задание ${quest.number} из ${quests.length} · ${esc(QUEST_GROUP_LABELS[quest.group])}</div>
             <button type="button" class="quest-hud__icon" data-quest-collapse aria-label="${hudCollapsed ? 'Развернуть задание' : 'Свернуть задание'}" title="${hudCollapsed ? 'Развернуть' : 'Свернуть'}">${hudCollapsed ? '+' : '−'}</button>
         </div>
+        <div class="quest-hud__track pk-seg" role="group" aria-label="Чем писать программу">
+            ${(Object.keys(TRACK_LABELS) as LearningTrack[]).map((key) => `<button type="button" class="pk-seg__btn${key === track ? ' is-active' : ''}" data-quest-track="${key}">${TRACK_LABELS[key]}</button>`).join('')}
+        </div>
         <div class="quest-hud__view pk-seg" role="group" aria-label="Что показать">
-            <button type="button" class="pk-seg__btn${isEditorVisible() ? ' is-active' : ''}" data-quest-view="blocks">Блоки</button>
+            <button type="button" class="pk-seg__btn${isEditorVisible() ? ' is-active' : ''}" data-quest-view="blocks">${track === 'blocks' ? 'Блоки' : 'Код'}</button>
             <button type="button" class="pk-seg__btn${isEditorVisible() ? '' : ' is-active'}" data-quest-view="scene">Сцена</button>
         </div>
         <div class="quest-hud__progress" role="progressbar" aria-valuemin="0" aria-valuemax="${quests.length}" aria-valuenow="${done}" aria-label="Пройдено заданий">
@@ -222,6 +303,7 @@ function renderHud(): void {
             ${needs.length ? `
             <div class="quest-hud__label">Нужные блоки</div>
             <ul class="quest-hud__needs">${needs.map((need) => `<li data-need class="${need.done ? 'is-done' : ''}"><span class="quest-hud__tick">${ICON.check}</span>${esc(need.label)}</li>`).join('')}</ul>` : ''}
+            ${track !== 'blocks' ? `<div class="quest-hud__note">Шаги даны блоками. Запишите то же самое на ${TRACK_LABELS[track]}: проверяется полёт, а не вид кода.${trackSupported(quest) ? '' : ' <strong>Этот урок только для Lua: блок «Каждые N сек» в браузерном Python не держит ритм.</strong>'}</div>` : ''}
             ${hintOpen ? `<div class="quest-hud__hint"><strong>Подсказка.</strong> ${rich(spec.hint)}</div>` : ''}
             ${feedback ? `<div class="quest-hud__feedback quest-hud__feedback--${feedback.kind}" role="status"><strong>${esc(feedback.title)}</strong>${feedback.lines.map((line) => `<div>${rich(line)}</div>`).join('')}</div>` : ''}
             <div class="quest-hud__actions">
@@ -231,6 +313,9 @@ function renderHud(): void {
             </div>
         </div>
         <button type="button" class="quest-hud__map-btn" data-quest-map>${ICON.map} Карта заданий</button>`;
+    el.hud.querySelectorAll<HTMLElement>('[data-quest-track]').forEach((button) => {
+        button.addEventListener('click', () => { void changeTrack(button.dataset.questTrack as LearningTrack); });
+    });
     el.hud.querySelectorAll<HTMLElement>('[data-quest-view]').forEach((button) => {
         button.addEventListener('click', () => {
             if (button.dataset.questView === 'blocks') showEditorPanel(); else showScene();
@@ -242,14 +327,35 @@ function renderHud(): void {
     el.hud.querySelector('[data-quest-map]')?.addEventListener('click', showMap);
     el.hud.querySelector('[data-quest-check]')?.addEventListener('click', () => { void checkQuest(); });
     el.hud.querySelector('[data-quest-solution]')?.addEventListener('click', () => {
-        void loadMainBlocklyJson(JSON.stringify(spec.solution)).then(() => {
+        void showSolution(quest).then(() => {
             feedback = { kind: 'info', title: 'Решение загружено в редактор', lines: ['Разберите блоки сверху вниз и нажмите «Проверить полёт».'] };
             renderHud();
         });
     });
 }
 
+/** Решение лежит блоками: для Lua и Python оно собирается в код и кладётся в текстовый редактор. */
+async function showSolution(quest: Quest): Promise<void> {
+    await loadMainBlocklyJson(JSON.stringify(quest.spec.solution));
+    if (track === 'blocks') return;
+    setCurrentScriptLanguage(track);
+    await setEditorLanguage(track);
+    const code = getEditorValue();
+    await enterTextEditor(track, code);
+}
+
+async function changeTrack(next: LearningTrack): Promise<void> {
+    if (next === track || !activeQuest) return;
+    saveDraft();
+    track = next;
+    try { storage()?.setItem(TRACK_STORAGE_KEY, track); } catch { /* ignore */ }
+    feedback = null;
+    await loadQuestWorkspace(activeQuest);
+    renderHud();
+}
+
 async function ensureLanguage(quest: Quest): Promise<'lua' | 'python'> {
+    if (track !== 'blocks') return track;
     const allowed = quest.spec.languages;
     if (allowed && !allowed.includes(currentScriptLanguage)) {
         const language = allowed[0];
@@ -264,6 +370,21 @@ async function ensureLanguage(quest: Quest): Promise<'lua' | 'python'> {
 async function checkQuest(): Promise<void> {
     const quest = activeQuest;
     if (!quest || checking) return;
+    if (track !== 'blocks') {
+        const code = isBlocklyEditorEnabled() ? '' : getEditorValue();
+        if (!trackSupported(quest)) {
+            feedback = { kind: 'error', title: 'Этот урок только для Lua', lines: ['Переключитесь на Lua или Blockly: в браузерном Python блок «Каждые N сек» не держит ритм.'] };
+            renderHud();
+            return;
+        }
+        if (!code.split('\n').some((line) => line.trim() && !/^\s*(--|#)/.test(line))) {
+            feedback = { kind: 'error', title: 'Программа пока пустая', lines: [`Запишите программу на ${TRACK_LABELS[track]} в редакторе: команды дрона, как в шагах задания.`] };
+            renderHud();
+            return;
+        }
+        await runFlightCheck(quest);
+        return;
+    }
     const used = usedBlockTypes();
     const body = used.filter((type) => type !== 'pioneer_start');
     if (!used.includes('pioneer_start') || body.length === 0) {
@@ -277,6 +398,10 @@ async function checkQuest(): Promise<void> {
         renderHud();
         return;
     }
+    await runFlightCheck(quest);
+}
+
+async function runFlightCheck(quest: Quest): Promise<void> {
     showScene();
     const token = ++checkToken;
     checking = true;
@@ -441,10 +566,47 @@ function buildDom(): void {
     document.body.append(el.hud, el.success, el.map, el.menu, el.start);
 }
 
+/** Карточку можно перетащить за заголовок; место запоминается. */
+function enableHudDrag(): void {
+    const place = (left: number, top: number) => {
+        el.hud.style.left = `${Math.min(Math.max(0, left), Math.max(0, window.innerWidth - 80))}px`;
+        el.hud.style.top = `${Math.min(Math.max(0, top), Math.max(0, window.innerHeight - 48))}px`;
+        el.hud.style.right = 'auto';
+    };
+    try {
+        const saved = JSON.parse(storage()?.getItem(HUD_POS_STORAGE_KEY) || 'null');
+        if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) place(saved.left, saved.top);
+    } catch { /* ignore */ }
+    el.hud.addEventListener('pointerdown', (event) => {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.quest-hud__top') || target.closest('button')) return;
+        const box = el.hud.getBoundingClientRect();
+        const dx = event.clientX - box.left;
+        const dy = event.clientY - box.top;
+        el.hud.classList.add('is-dragging');
+        const move = (e: PointerEvent) => place(e.clientX - dx, e.clientY - dy);
+        const up = () => {
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', up);
+            el.hud.classList.remove('is-dragging');
+            const now = el.hud.getBoundingClientRect();
+            try { storage()?.setItem(HUD_POS_STORAGE_KEY, JSON.stringify({ left: now.left, top: now.top })); } catch { /* ignore */ }
+        };
+        window.addEventListener('pointermove', move);
+        window.addEventListener('pointerup', up);
+        event.preventDefault();
+    });
+    window.addEventListener('resize', () => {
+        if (el.hud.style.left) { const b = el.hud.getBoundingClientRect(); place(b.left, b.top); }
+    });
+}
+
 /** Подключается один раз при запуске, после initUI: учебник уже повесил openMissionGuideModal. */
 export function initLearningMode(): void {
     buildDom();
     progress = loadProgress(storage(), quests);
+    track = loadTrack();
+    enableHudDrag();
     originalOpenGuide = (window as any).openMissionGuideModal;
     (window as any).openMissionGuideModal = (...args: unknown[]) => {
         if (getAppMode() === 'learning') return;
