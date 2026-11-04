@@ -15,6 +15,7 @@ export const VISION_WAIT = `def wait_for(test,limit=120):
 def go(x,y,z,yaw=None):
     pioneer.go_to_local_point(x,y,z,yaw=yaw)
     wait_for(pioneer.point_reached)
+    time.sleep(1.5)  # пауза: корпус успокаивается, и кадр снят уже на месте
 `;
 export const VISION_DETECTOR = `dictionary=cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250)
 detector=cv2.aruco.ArucoDetector(dictionary)
