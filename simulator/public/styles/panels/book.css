@@ -46,10 +46,6 @@
 .guide-modal.is-book .guide-modal__body { padding: 0; background: var(--panel-bg-strong); }
 .guide-modal.is-book .guide-modal-layout { max-width: none; }
 
-/* ---- the bar: contents, where you are, the lessons around, the language, close (book-nav.css) ---- */
-.book__top { position: sticky; top: 0; z-index: 3; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 16px; max-width: 1560px; margin: 0 auto; padding: 12px 0 0; background: var(--bk-desk); }
-.book__volumes { flex: 0 0 auto; margin-bottom: 4px; }
-.book__volumes .pk-seg__btn { min-height: 34px; padding: 0 14px; font-size: 13px; }
 .book__stage { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
 
 /* ---- the three parts of a lesson: folder tabs on the top edge of the sheet; the open one is the sheet's own paper ---- */
@@ -58,9 +54,7 @@
 .book-part:hover:not(.is-active) { background: #e8e1ce; color: #2c2a22; }
 .book-part.is-active { padding-bottom: 12px; background: var(--bk-page); color: var(--bk-ink); font-weight: 700; cursor: default; }
 .book-part:focus-visible { outline: 2px solid var(--accent-color); outline-offset: -4px; }
-.book-close { margin-bottom: 4px; }
-.book__body { display: flex; align-items: flex-start; max-width: 1560px; margin: 0 auto; }
-.book__foot { max-width: 1560px; margin: 18px auto 0; text-align: right; }
+.book__body { display: flex; align-items: stretch; }
 .book-link { padding: 4px 2px; border: 0; background: none; color: var(--pc-muted); font: 500 13px/1.3 var(--font-sans); cursor: pointer; }
 .book-link:hover { color: var(--text-strong); }
 .book-link:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
@@ -75,7 +69,7 @@
     --bk-right: calc(2.2 - var(--bk-read, .3) * 1.6);
     --bk-edge: #ece6d5;
     position: relative; isolation: isolate; flex: 1 1 auto; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    min-height: max(640px, calc(100dvh - 150px)); border: 1px solid var(--bk-line-strong); border-radius: 6px; background: var(--bk-page); outline: none;
+    min-height: 0; border: 1px solid var(--bk-line-strong); border-radius: 6px; background: var(--bk-page); outline: none;
     box-shadow:
         calc(var(--bk-right) * 1px) calc(var(--bk-right) * 1px) 0 var(--bk-edge), calc(var(--bk-right) * 2px) calc(var(--bk-right) * 2px) 0 var(--bk-line-strong),
         calc(var(--bk-right) * 3px) calc(var(--bk-right) * 3px) 0 var(--bk-edge), calc(var(--bk-right) * 4px) calc(var(--bk-right) * 4px) 0 var(--bk-line-strong),
@@ -122,6 +116,20 @@
 /* ---- the figure ---- */
 .book-figure { display: grid; gap: 10px; margin: 0; }
 .book-caption { font: italic 700 16px/1.4 var(--bk-serif); color: var(--text-strong); }
+
+/* ---- blocks laid on the page: a real Blockly figure on a sheet, like a drawing in a textbook ---- */
+.book-blocks__sheet { position: relative; padding: 0; border: 1px solid var(--bk-line-strong); border-radius: 10px; background: #fffdf8; overflow: hidden; }
+.book-blocks__tag { position: absolute; top: 0; right: 0; z-index: 1; padding: 3px 10px 3px 12px; border-radius: 0 0 0 10px; background: var(--bk-inset); color: var(--bk-muted); font: 600 11px/1.3 var(--font-sans); letter-spacing: .04em; text-transform: uppercase; }
+.book-blocks__canvas { position: relative; width: 100%; min-height: 80px; }
+.book-blocks__loading { margin: 0; padding: 30px 0; text-align: center; font: italic 400 14px/1.5 var(--bk-serif); color: var(--bk-muted); }
+.book-blocks__canvas .blocklySvg { background: transparent; outline: none; }
+.book-blocks__canvas .blocklyMainBackground { fill: transparent; stroke: none; }
+.book-blocks__canvas .blocklyBlockCanvas, .book-blocks__canvas .blocklyBubbleCanvas { pointer-events: none; }
+.book-blocks__code { margin-top: -2px; }
+.book-blocks__code:empty { display: none; }
+/* Code generated from the blocks is long for a route (a state machine in Lua): it takes the room the page has left and scrolls inside its own frame. */
+.book-blocks__code { flex: 1 1 auto; min-height: 7em; display: flex; flex-direction: column; }
+.book-blocks__code .book-listing { flex: 1 1 auto; min-height: 0; overflow: auto; }
 .lb { display: grid; gap: 14px; padding: 16px 16px 14px; border: 2px dashed var(--bk-line-strong); border-radius: 12px; }
 .lb__strip { display: block; width: 100%; height: auto; }
 .lb-board { fill: var(--bk-inset); stroke: var(--bk-muted); stroke-width: 1.3; }
@@ -205,7 +213,6 @@
     .book__sheet { width: 100%; grid-template-columns: minmax(0, 1fr); }
     .book-page--right { border-left: 0; border-top: 1px solid var(--bk-line-strong); }
     .book__sheet::before { display: none; }
-    .book__top { gap: 8px; }
     .book__parts { padding: 0 12px; overflow-x: auto; scrollbar-width: none; }
     .book-part { padding: 10px 14px 9px; white-space: nowrap; }
     .book__body { flex-direction: column; }
@@ -287,3 +294,40 @@
 .book-bench__sheet { background: transparent; }
 .book-assignment { background: transparent; }
 .book .ck-option:hover { background: rgb(120 90 40 / .07); }
+
+/*
+ * The book uses the whole screen instead of a fixed column: the sheet stretches over everything the window has left under
+ * the bar, and wide pages are short pages, so the spread lies on the screen without being turned down the page. Text keeps
+ * a readable measure inside the page; only a window too small for its spread scrolls, and then inside the page.
+ */
+.guide-modal.is-book .guide-modal__body { display: flex; flex-direction: column; overflow: hidden; }
+.guide-modal.is-book .guide-modal-layout { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; flex-direction: column; }
+.book { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 0 clamp(12px, 1.6vw, 32px) 4px; }
+.book__body { flex: 1 1 auto; min-height: 0; }
+.book__stage { min-height: 0; }
+.book__sheet { flex: 1 1 auto; }
+.book-page { min-height: 0; }
+.book-page__body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 2px; }
+.book-page__body > * { width: 100%; max-width: 52rem; margin-inline: auto; }
+
+/* The working sheet takes the height the page has left under the task, so the page needs no scrolling: the workspace is as tall as the screen allows. */
+.book-bench { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.book-bench__sheet { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.book-bench__body { flex: 1 1 auto; height: auto; min-height: 200px; }
+.book-bench__body--form { min-height: 0; }
+.book .guide-monaco-preview-host { position: absolute; inset: 0; height: auto; }
+.book-bench__body:has(> .guide-monaco-preview-host) { min-height: 260px; }
+
+/* On a wide page the task and what to build stand side by side, which leaves the height to the workspace. */
+.book-brief { display: grid; gap: 16px; }
+@container lesson (min-width: 1500px) {
+    .book-brief { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+}
+.book-bench__body { min-height: 260px; }
+.book-page__body { gap: 10px; padding-top: 16px; }
+
+/* The row of the lesson parts: the folder tabs at one end, the lesson arrows, the plain view and close at the other. */
+.book { padding-top: 6px; }
+.book__bar { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.book__bar .book__parts { flex: 1 1 auto; min-width: 0; }
+.book__actions { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding-bottom: 5px; }

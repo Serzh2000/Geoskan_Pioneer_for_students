@@ -46,10 +46,16 @@ function statementCode(generator: Blockly.CodeGenerator, block: Blockly.Block): 
     return typeof code === 'string' ? code : code[0];
 }
 
+// Функции пользователя Blockly кладёт в definitions_ под ключом «%имя». Они
+// должны идти ПОСЛЕ вспомогательных функций блоков (__led_all и т.п.): в Lua
+// тело функции видит только то, что объявлено выше, иначе вызов даёт nil.
+const PROCEDURE_KEY_PREFIX = '%';
+
 function collectDefinitionsText(generator: Blockly.CodeGenerator): string {
     const definitions = (generator as unknown as { definitions_: Record<string, string> }).definitions_;
+    const isProcedure = (key: string) => key.startsWith(PROCEDURE_KEY_PREFIX);
     return Object.keys(definitions)
-        .sort()
+        .sort((a, b) => Number(isProcedure(a)) - Number(isProcedure(b)) || (a < b ? -1 : a > b ? 1 : 0))
         .map((key) => definitions[key])
         .filter(Boolean)
         .join('\n\n');

@@ -15,14 +15,15 @@
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    padding: 8px 0;
+    padding: var(--rail-pad-top) 0;
     z-index: 100;
     flex-shrink: 0;
     /* A short window scrolls the rail; a label a pixel wider than the button is not cut. */
     min-height: 0;
     overflow-x: clip;
     overflow-y: auto;
-    transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.18s ease;
+    /* No width/opacity animation: the rail sits in the flow, so animating its width re-lays out the scene,
+       Blockly and Monaco on every frame (lag) and slides the icons away from the fixed rail toggle. */
 }
 
 /*
@@ -224,11 +225,6 @@ body:not(.is-rail-docked) .workspace-sidebar.is-collapsed {
     .rail-tooltip {
         transition: none;
     }
-}
-
-/* Reserve the disclosure's stable top slot whenever the desktop rail is visible. */
-@media (min-width: 981px) {
-    body.is-rail-docked .sidebar-tabs { padding-top: 56px; }
 }
 
 /* A live connection shows on the tab itself: a dot for the real drone and the gamepad (data-link is set by the panels). */

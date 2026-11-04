@@ -21,8 +21,8 @@ export type Bookmarks = {
     chapter: string;
     /** Which lesson of the chapter is open: «Урок 2 · 2 из 9». */
     place: string;
-    /** The contents panel (hidden until the bar's button opens it). */
-    contents: string;
+    /** The bookmarks of the topics and lessons along the left edge of the sheet. */
+    tabs: string;
     previous: LessonStep;
     next: LessonStep;
 };
@@ -83,7 +83,6 @@ function blocklyChapters(state: GuideLessonState, language: 'lua' | 'python'): T
 
 const TICK = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 8.6l3.4 3.6L13.6 3.4"/></svg>';
 const LOCK = '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.2" y="7" width="9.6" height="6.8" rx="1.4"/><path d="M5.4 7V5.2a2.6 2.6 0 0 1 5.2 0V7"/></svg>';
-const VOLUME_NAMES: Record<BookVolume, string> = { python: 'Python', lua: 'Lua', blockly: 'Blockly' };
 
 function lessonStep(lesson: TabLesson | undefined, direction: 'previous' | 'next'): LessonStep {
     if (!lesson) return { attr: '', label: direction === 'next' ? 'Это последний урок тома' : 'Это первый урок тома', open: false };
@@ -92,31 +91,31 @@ function lessonStep(lesson: TabLesson | undefined, direction: 'previous' | 'next
     return { attr: lesson.open, label: `${word}: ${lesson.label}. ${lesson.title}${locked ? ' (откроется после предыдущего)' : ''}`, open: !locked };
 }
 
-/** The contents: every chapter of the volume as a folded section, the open chapter unfolded. Opens through the same attributes as the tabs did. */
-function renderContents(chapters: TabChapter[], current: TabChapter, activeLesson: TabLesson | undefined, volume: BookVolume): string {
-    const all = chapters.flatMap(chapter => chapter.lessons);
-    const passed = all.filter(lesson => lesson.done).length;
-    const sections = chapters.map(chapter => {
+/**
+ * The bookmarks along the left edge of the sheet: first the topics (chapters) of the volume; choosing a topic turns the
+ * bookmarks into its lessons, with one more bookmark to go back to the topics. Which group shows is switched in the page
+ * (interactions/book.ts), so a lesson of the same topic is one click away without turning back.
+ */
+function renderTopicTabs(chapters: TabChapter[], current: TabChapter, activeLesson: TabLesson | undefined): string {
+    const topics = chapters.map((chapter, index) => {
         const done = chapter.lessons.filter(lesson => lesson.done).length;
+        const label = `${chapter.name}${chapter.python ? ' (Python)' : ''}, пройдено ${done} из ${chapter.lessons.length}`;
+        return `<li><button type="button" class="book-tab book-tab--topic${chapter === current ? ' is-current' : ''}${done === chapter.lessons.length ? ' is-done' : ''}" data-tabs-open="${index}" aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}"><span class="book-tab__tag" aria-hidden="true">${chapter.tag}</span><span class="book-tab__name">${escapeHtml(chapter.name)}</span><span class="book-tab__count" aria-hidden="true">${done}/${chapter.lessons.length}</span></button></li>`;
+    }).join('');
+    const groups = chapters.map((chapter, index) => {
         const rows = chapter.lessons.map(lesson => {
             const active = lesson === activeLesson;
             const state = lesson.done ? ', пройдено' : !lesson.unlocked ? ', откроется после предыдущего' : '';
             const label = `${lesson.label}. ${lesson.title}${state}`;
             const mark = lesson.done ? TICK : !lesson.unlocked ? LOCK : '';
-            return `<li><button type="button" class="book-toc__lesson${active ? ' is-current' : ''}${lesson.done ? ' is-done' : ''}${lesson.unlocked ? '' : ' is-locked'}" ${lesson.open} ${lesson.unlocked ? '' : 'disabled'} ${active ? 'aria-current="page"' : ''} aria-label="${escapeHtml(label)}"><span class="book-toc__num" aria-hidden="true">${lesson.num}</span><span class="book-toc__name">${escapeHtml(lesson.title)}</span><span class="book-toc__dots" aria-hidden="true"></span><span class="book-toc__mark" aria-hidden="true">${mark}</span></button></li>`;
+            return `<li><button type="button" class="book-tab book-tab--lesson${active ? ' is-current' : ''}${lesson.done ? ' is-done' : ''}${lesson.unlocked ? '' : ' is-locked'}" ${lesson.open} ${lesson.unlocked ? '' : 'disabled'} ${active ? 'aria-current="page"' : ''} aria-label="${escapeHtml(label)}" title="${escapeHtml(label)}"><span class="book-tab__tag" aria-hidden="true">${lesson.num}</span><span class="book-tab__name">${escapeHtml(lesson.title)}</span><span class="book-tab__count" aria-hidden="true">${mark}</span></button></li>`;
         }).join('');
-        return `<details class="book-toc__chapter${done === chapter.lessons.length ? ' is-done' : ''}"${chapter === current ? ' open' : ''}><summary><span class="book-toc__tag" aria-hidden="true">${chapter.tag}</span><span class="book-toc__chapter-name">${escapeHtml(chapter.name)}${chapter.python ? ' <small>Python</small>' : ''}</span><span class="book-toc__count" aria-label="пройдено ${done} из ${chapter.lessons.length}">${done}/${chapter.lessons.length}</span></summary><ol class="book-toc__lessons">${rows}</ol></details>`;
+        return `<ul class="book-tabs__group" data-tabs-group="${index}" hidden aria-label="${escapeHtml(chapter.name)}"><li><button type="button" class="book-tab book-tab--back" data-tabs-back aria-label="Назад к темам тома" title="Назад к темам тома"><span class="book-tab__tag" aria-hidden="true">←</span><span class="book-tab__name">Темы</span></button></li>${rows}</ul>`;
     }).join('');
-    return `<section class="book-toc" id="book-toc" role="region" aria-labelledby="book-toc-title" tabindex="-1" hidden>
-        <header class="book-toc__head">
-            <div><h2 class="book-toc__title" id="book-toc-title">Оглавление</h2><p class="book-toc__sub">Том «${VOLUME_NAMES[volume]}» · пройдено ${passed} из ${all.length}</p></div>
-            <button type="button" class="book-toc__close" data-book-toc-close aria-label="Закрыть оглавление"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
-        </header>
-        <div class="book-toc__body">${sections}</div>
-    </section>`;
+    return `<nav class="book-tabs" data-tabs-current="${chapters.indexOf(current)}" aria-label="Темы и уроки тома"><ul class="book-tabs__group" data-tabs-group="topics" aria-label="Темы">${topics}</ul>${groups}</nav>`;
 }
 
-function renderTabs(chapters: TabChapter[], activeId: string, volume: BookVolume): Bookmarks {
+function renderTabs(chapters: TabChapter[], activeId: string): Bookmarks {
     const isActive = (lesson: TabLesson): boolean => activeId === lesson.id || activeId.endsWith(`-${lesson.id}`);
     const current = chapters.find(chapter => chapter.lessons.some(isActive)) ?? chapters[0];
     const position = Math.max(0, current.lessons.findIndex(isActive));
@@ -126,7 +125,7 @@ function renderTabs(chapters: TabChapter[], activeId: string, volume: BookVolume
     return {
         chapter: current.name,
         place: `${lesson.label} · ${position + 1} из ${current.lessons.length}`,
-        contents: renderContents(chapters, current, lesson, volume),
+        tabs: renderTopicTabs(chapters, current, lesson),
         previous: lessonStep(order[at - 1], 'previous'),
         next: lessonStep(order[at + 1], 'next')
     };
@@ -134,15 +133,16 @@ function renderTabs(chapters: TabChapter[], activeId: string, volume: BookVolume
 
 /** Opening goes through the handlers of the lesson buttons, so the same locks apply. */
 export function renderBookmarks(volume: BookVolume, language: 'lua' | 'python', activeId: string): Bookmarks {
-    return renderTabs(volume === 'blockly' ? blocklyChapters(getGuideLessonState(language), language) : courseChapters(language), activeId, volume);
+    return renderTabs(volume === 'blockly' ? blocklyChapters(getGuideLessonState(language), language) : courseChapters(language), activeId);
 }
 
-/** The three volumes of the course. Switching is the same as the tabs of the modal header, which the book hides. */
+/** The three volumes of the course as bookmarks on the right edge of the sheet. Switching is the same as the tabs of the modal header, which the book hides. */
 export function renderVolumes(active: BookVolume, busy: boolean): string {
     const volumes = [
         ['python', 'Python', ACADEMY_LESSONS.length],
         ['lua', 'Lua', ACADEMY_LESSONS.filter(item => item.languages.includes('lua')).length],
         ['blockly', 'Blockly', getGuideLessonState('lua').lessons.length]
     ] as const;
-    return volumes.map(([id, name, count]) => `<button type="button" class="pk-seg__btn${id === active ? ' is-active' : ''}" role="tab" aria-selected="${id === active}" data-book-track="${id}" ${busy ? 'disabled' : ''} aria-label="${name}, ${count} ${id === 'blockly' ? 'заданий' : 'уроков'}" title="Том «${name}»: ${count}">${renderVolumeMark(id)}<span class="pk-seg__name">${name}</span> <small>${count}</small></button>`).join('');
+    const tabs = volumes.map(([id, name, count]) => `<button type="button" class="book-vol${id === active ? ' is-active' : ''}" role="tab" aria-selected="${id === active}" data-book-track="${id}" ${busy ? 'disabled' : ''} aria-label="${name}, ${count} ${id === 'blockly' ? 'заданий' : 'уроков'}" title="Том «${name}»: ${count}">${renderVolumeMark(id)}<span class="book-vol__name">${name}</span></button>`).join('');
+    return `<nav class="book-volumes" role="tablist" aria-label="Язык курса">${tabs}</nav>`;
 }

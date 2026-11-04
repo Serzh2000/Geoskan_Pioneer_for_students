@@ -1,5 +1,6 @@
 import { Blockly, type BlocklyNS } from '../blockly-mode/loader.js';
 import { ensureEditorBlocklyDefinitions } from '../blockly-mode/index.js';
+import { BOUNDED_METRICS_MANAGER, registerBoundedMetricsManager } from './bounded-metrics.js';
 import { applyPioneerTargetToWorkspace } from '../blockly-mode/pioneer/target-support.js';
 import type { ScriptLanguage } from '../../core/state.js';
 
@@ -119,7 +120,9 @@ export function ensureBlocklyWorkspace(
         if (controller.blocklyWorkspace) {
             controller.blocklyWorkspace.updateToolbox(controller.buildMainEditorToolbox(language));
         } else if (controller.blocklyCanvas) {
+            registerBoundedMetricsManager();
             const blocklyWorkspace = Blockly.inject(controller.blocklyCanvas, {
+                plugins: { metricsManager: BOUNDED_METRICS_MANAGER },
                 toolbox: controller.buildMainEditorToolbox(language),
                 scrollbars: true,
                 trashcan: true,

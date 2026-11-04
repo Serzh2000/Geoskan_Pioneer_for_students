@@ -39,6 +39,7 @@ type CheckParams = {
     pending?: boolean;
     /** What the verdict says before the first check, when the page is not the plain lesson page. */
     idleText?: string;
+    inline?: boolean;
 };
 
 /** The verdict and the diagnostics of a Blockly check, shared by the lesson page and the book spread. */
@@ -48,7 +49,7 @@ export function renderCheckParts(params: CheckParams): { verdict: string; diagno
     return {
         verdict: pending
             ? '<div class="guide-verdict guide-verdict--idle" role="status"><h2 class="guide-verdict__title">Программа выполняется</h2><p>Наблюдайте сцену — результат появится после проверки.</p></div>'
-            : renderCheckVerdict(hasChecked, solved, diagnostics.length, launchedWithWarnings, { expected: expectedOutcome, next: folded.next, hasErrors: diagnostics.some(item => item.kind === 'error'), idleText }),
+            : renderCheckVerdict(hasChecked, solved, diagnostics.length, launchedWithWarnings, { expected: expectedOutcome, next: params.inline ? '' : folded.next, hasErrors: diagnostics.some(item => item.kind === 'error'), idleText }),
         diagnostics: hasChecked && !pending ? sortDiagnostics(folded.rest).map(renderDiagnosticCard).join('') : ''
     };
 }
@@ -64,7 +65,7 @@ export function renderCheckStep(params: CheckParams): string {
                 <div class="guide-actions">
                     ${pending
             ? '<button type="button" class="btn-secondary" data-walkthrough-cancel>Остановить проверку</button>'
-            : `<button type="button" class="${hasChecked ? 'btn-secondary' : 'btn-primary'}" data-guide-step="build">${hasChecked ? 'Вернуться к сборке' : 'Перейти к практике'}</button>`}
+            : params.inline ? '' : `<button type="button" class="${hasChecked ? 'btn-secondary' : 'btn-primary'}" data-guide-step="build">${hasChecked ? 'Вернуться к сборке' : 'Перейти к практике'}</button>`}
                     ${hasChecked
             ? `<button type="button" class="btn-secondary" data-guide-check="${escapeHtml(lessonId)}">Перепроверить</button>
                     <button type="button" class="btn-secondary" data-guide-launch="checked" ${hasWorkspaceContent ? '' : 'disabled'}>Перезапустить сцену</button>`
@@ -72,7 +73,7 @@ export function renderCheckStep(params: CheckParams): string {
                 </div>
                 <div class="guide-diagnostics" id="diagnostics-container">${diagnostics}</div>
             </div>
-            ${renderResultScene(previewActive)}
+            ${params.inline ? '' : renderResultScene(previewActive)}
         </div>
     `;
 }

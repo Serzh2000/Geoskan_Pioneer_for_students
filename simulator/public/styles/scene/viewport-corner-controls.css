@@ -40,17 +40,32 @@
     color: var(--pc-accent, var(--accent-color));
 }
 
-/* A fixed disclosure at the application edge, above the rail's tool icons. */
+/*
+ * The rail disclosure is a bookmark tab sticking out of the middle of the left screen edge. It lives in the
+ * container's outer padding (--shell-pad), so it never covers the rail icons or a panel, and it stays put
+ * whether the rail is hidden or shown: click it to pull the rail out, click again to fold it away.
+ */
 .viewport-corner-btn--rail {
-    top: 22px;
-    left: calc(14px + (var(--rail-width) - var(--rail-btn-size)) / 2);
-    width: var(--rail-btn-size);
-    height: var(--rail-btn-size);
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 72px;
+    border-radius: 0 10px 10px 0;
+    border: 1px solid var(--border-color);
+    border-left: 0;
+    background: var(--panel-bg);
+    box-shadow: var(--shadow-soft);
+    transition: width 0.12s ease, background-color 0.16s ease, color 0.16s ease;
 }
+.viewport-corner-btn--rail svg { width: 14px; height: 14px; }
+.viewport-corner-btn--rail:hover { width: 24px; background: linear-gradient(var(--control-bg-hover), var(--control-bg-hover)), var(--panel-bg); }
+/* A tint over the solid panel colour, so the tab never turns see-through over the scene. */
+.viewport-corner-btn--rail.is-active { background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--panel-bg); }
 .viewport-corner-btn--rail .header-rail-toggle__icon--collapse { display: none; }
 .viewport-corner-btn--rail[aria-expanded='true'] .header-rail-toggle__icon--expand { display: none; }
 .viewport-corner-btn--rail[aria-expanded='true'] .header-rail-toggle__icon--collapse { display: block; }
-.viewport-corner-btn--rail:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 3px; }
+.viewport-corner-btn--rail:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
 .viewport-corner-btn--rail:active { background: var(--accent-soft); }
 
 .viewport-run-controls {

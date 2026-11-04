@@ -147,6 +147,7 @@ const HINTS_PY: Record<string, string> = {
 };
 
 export function blocklyPracticeSteps(lesson: GuideLesson): string[] {
+    if (lesson.pioneer) return lesson.pioneer.recipe;
     if (lesson.id.startsWith('lua-')) return STEPS[blocklyTopic(lesson)] || [];
     return STEPS_PY[blocklyTopic(lesson)] || [];
 }
@@ -157,6 +158,8 @@ function blocklyTopic(lesson: GuideLesson): string {
 }
 
 export function blocklyLessonCopy(lesson: GuideLesson): GuideLesson {
+    // Уроки на блоках pioneer_* несут собственные тексты: общие заготовки к ним не относятся.
+    if (lesson.pioneer) return lesson;
     const topic = blocklyTopic(lesson);
     const [summary, intro] = TOPICS[topic] || ['Соберите программу из блоков и проверьте результат на сцене.', 'Соединяйте блоки в порядке выполнения. Для действий по событию используйте вложенные блоки обработчика.'];
     const ledSingle = topic === 'led-single';

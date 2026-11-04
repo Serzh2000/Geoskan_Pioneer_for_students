@@ -365,3 +365,70 @@ orange marks the next action. The task is set in a frame with the label on its e
 (`renderAssignment`). A question is answered by a tick in a box that a pencil draws (`.ck-*`), never by a drop-down. The
 pages have a paper grain that lies over the ink as well as under it (`--bk-grain`, `.book__sheet::after`); frames, the
 plate and the editor (theme `pioneer-paper`, transparent background) are the page itself, not cards on it.
+
+
+## Ordinary textbook practicum · November 2026
+
+The ordinary textbook has two freely selectable screens, owned by
+render/walkthrough.ts: renderPracticum. «Разобраться» shows the explanation and
+lesson objective openly, alongside an optional prediction. It ends with «К практике».
+«Практика» gives the task its own full-width section above the editor and scene;
+the two working surfaces have equal height and share the available width, rather
+than squeezing into two columns beside a third instruction column. Inspection
+lessons put the scene before the answer sheet, including on narrow windows.
+The runtime result, takeaway and explicit completion stay below the working area.
+
+Navigation uses panel-kit.css pk-seg/pk-seg__btn, with a visible selected fill and
+shared focus/disabled states. Reading uses the existing sans font, 18 px lead and
+15 px supporting copy, never a collapsed explanation. Tokens remain runtime-owned.
+Prediction uses native buttons with aria-pressed and never gates practice or
+invalidates a run. The shared renderer and guide-panel.css own the composition.
+The book keeps independent reading/demonstration/practice navigation and styling.
+Screen choice, drafts and inspection answers survive in-app screen switches;
+no page-reload persistence is promised for drafts. Switching disables during runs.
+
+
+Practice density revision: keep title and book switch on one row, compact the task
+and run controls, and reserve equal 260–400 px code/scene frames. Do not show an
+idle result duplicating the task. Actual diagnostics stay visible; the flight
+journal and takeaway are optional disclosures. Reading retains natural spacing.
+
+
+Practicum grouping: explanation and optional prediction are separate peer groups;
+the lesson task and «К практике» share one full-width action group beneath them.
+Practice instructions use one compact tonal band; inspection answers and their
+check/reset controls share one bordered panel. Completion navigation is a flat
+footer. Grouping must preserve the compact code/scene geometry.
+
+
+Inspection scene proportion: on windows taller than 760 px, cap the viewport
+column at 960 px beside the 300 px answer panel and center the pair. Scene height
+is 44vh bounded to 360–500 px. Short windows keep the compact practice geometry.
+
+
+Inspection worksheet revision: renderPracticum uses explicit optional answers slots
+to place a single scene beside a 360 px worksheet. Task, answers, check/reset and
+compact feedback belong to that worksheet; do not spread them over full-width
+bands. Suppress duplicate run banners and flight journals for inspection-only
+lessons. Coding lessons retain their established layout.
+
+
+Reading order is explicitly numbered: 1 Разберитесь, 2 Предположите (optional),
+3 Что нужно сделать. Inspection scene aligns with the lesson content/tab rail;
+the first column uses all remaining space beside the 360 px worksheet, without
+centering or a separate maximum width.
+
+
+The ordinary textbook moves its active lesson header (title, completion mark and
+course/lesson position) into #mission-guide-title after each render. Book view
+restores the generic «Учебник пилота» label. Body starts with the screen switch;
+book-view control shares that row. The original heading ID and course navigation
+ownership remain unchanged.
+
+
+Successful practice now replaces task/editor/scene with a compact review containing
+the verdict, retry, optional journal/takeaway and explicit completion. Failure and
+pending checks retain the workspace. «Вернуться к практике» preserves draft and
+runtime evidence and dismisses only that exact successful result; a later successful
+run opens its review again. A changed source cannot display stale success.
+Book behavior remains independent. The two existing screen switches remain.

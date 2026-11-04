@@ -1,6 +1,6 @@
 /*
- * Drone camera windows (drone/camera-views.ts), stacked under the axis
- * compass. A window's body is a transparent hole: the WebGL canvas draws the
+ * Drone camera windows (drone/camera-views.ts), stacked under the FPS
+ * readout in the top-left corner. A window's body is a transparent hole: the WebGL canvas draws the
  * camera image there. Colours go through --cv-* tokens.
  */
 .scene-camera-views {
@@ -22,15 +22,14 @@
     pointer-events: none;
 }
 
-/* The toggles and the windows that were not dragged: under the compass. */
+/* The toggles and the windows that were not dragged: top-left corner, under the FPS readout (10 + 22 + gap). */
 .scene-camera-views__dock {
     position: absolute;
-    /* Below the compass (14 + 92) and the two scene actions (2 × 32 + gaps). */
-    top: 194px;
-    right: 14px;
+    top: 44px;
+    left: 10px;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 8px;
 }
 
@@ -51,7 +50,7 @@
     pointer-events: auto;
 }
 
-/* ---- the two toggles under the compass */
+/* ---- the two toggles */
 
 .scene-camera-views__toggles {
     display: flex;

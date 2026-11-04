@@ -39,7 +39,8 @@ describe('book lessons', () => {
         for (const source of sources) {
             const book = buildBookLesson(source);
             expect(book.theory.join('')).not.toBe('');
-            expect(book.code).not.toBe('');
+            // The example of a lesson on pioneer blocks is the blocks themselves; their code is built when the page is drawn.
+            if (!(source.lesson as { pioneer?: unknown }).pioneer) expect(book.code).not.toBe('');
             expect(book.watch).not.toBe('');
             // The lighting lessons get the LED strip on the theory page; the demonstration of every lesson is the viewport.
             expect(book.figure).toBe(

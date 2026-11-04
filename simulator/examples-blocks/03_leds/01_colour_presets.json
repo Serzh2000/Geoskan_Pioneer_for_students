@@ -1,0 +1,157 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "pioneer_led_all",
+            "inputs": {
+              "COLOUR": {
+                "block": {
+                  "type": "pioneer_colour_preset",
+                  "fields": {
+                    "PRESET": "красный"
+                  }
+                }
+              }
+            },
+            "next": {
+              "block": {
+                "type": "pioneer_wait",
+                "inputs": {
+                  "SECONDS": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 1
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "pioneer_led_all",
+                    "inputs": {
+                      "COLOUR": {
+                        "block": {
+                          "type": "pioneer_colour_preset",
+                          "fields": {
+                            "PRESET": "зелёный"
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "pioneer_wait",
+                        "inputs": {
+                          "SECONDS": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "pioneer_led_all",
+                            "inputs": {
+                              "COLOUR": {
+                                "block": {
+                                  "type": "pioneer_colour_preset",
+                                  "fields": {
+                                    "PRESET": "синий"
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "pioneer_wait",
+                                "inputs": {
+                                  "SECONDS": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 1
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "pioneer_led_all",
+                                    "inputs": {
+                                      "COLOUR": {
+                                        "block": {
+                                          "type": "pioneer_colour_preset",
+                                          "fields": {
+                                            "PRESET": "белый"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "pioneer_wait",
+                                        "inputs": {
+                                          "SECONDS": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 1
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "pioneer_led_all",
+                                            "inputs": {
+                                              "COLOUR": {
+                                                "block": {
+                                                  "type": "pioneer_colour_preset",
+                                                  "fields": {
+                                                    "PRESET": "выключен"
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [],
+  "workspaceComments": [
+    {
+      "text": "Готовые цвета: все светодиоды по очереди красные, зелёные, синие, белые, потом выключены.",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

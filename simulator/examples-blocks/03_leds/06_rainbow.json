@@ -1,0 +1,133 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "controls_for",
+            "fields": {
+              "VAR": {
+                "id": "var_0_h"
+              }
+            },
+            "inputs": {
+              "FROM": {
+                "block": {
+                  "type": "math_number",
+                  "fields": {
+                    "NUM": 0
+                  }
+                }
+              },
+              "TO": {
+                "block": {
+                  "type": "math_number",
+                  "fields": {
+                    "NUM": 300
+                  }
+                }
+              },
+              "BY": {
+                "block": {
+                  "type": "math_number",
+                  "fields": {
+                    "NUM": 60
+                  }
+                }
+              },
+              "DO": {
+                "block": {
+                  "type": "pioneer_led_all",
+                  "inputs": {
+                    "COLOUR": {
+                      "block": {
+                        "type": "pioneer_colour_hsv",
+                        "inputs": {
+                          "H": {
+                            "block": {
+                              "type": "variables_get",
+                              "fields": {
+                                "VAR": {
+                                  "id": "var_0_h"
+                                }
+                              }
+                            }
+                          },
+                          "S": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 100
+                              }
+                            }
+                          },
+                          "V": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 100
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "next": {
+                    "block": {
+                      "type": "pioneer_wait",
+                      "inputs": {
+                        "SECONDS": {
+                          "block": {
+                            "type": "math_number",
+                            "fields": {
+                              "NUM": 0.8
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "next": {
+              "block": {
+                "type": "pioneer_led_all",
+                "inputs": {
+                  "COLOUR": {
+                    "block": {
+                      "type": "pioneer_colour_preset",
+                      "fields": {
+                        "PRESET": "выключен"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [
+    {
+      "name": "h",
+      "id": "var_0_h"
+    }
+  ],
+  "workspaceComments": [
+    {
+      "text": "Радуга: цвет задаётся оттенком (тон от 0 до 360°), цикл перебирает тон с шагом 60°.",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

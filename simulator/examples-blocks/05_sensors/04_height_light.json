@@ -1,0 +1,182 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "pioneer_preflight",
+            "next": {
+              "block": {
+                "type": "pioneer_takeoff",
+                "next": {
+                  "block": {
+                    "type": "controls_for",
+                    "fields": {
+                      "VAR": {
+                        "id": "var_0_z"
+                      }
+                    },
+                    "inputs": {
+                      "FROM": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 0.5
+                          }
+                        }
+                      },
+                      "TO": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 2
+                          }
+                        }
+                      },
+                      "BY": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 0.5
+                          }
+                        }
+                      },
+                      "DO": {
+                        "block": {
+                          "type": "pioneer_go_to",
+                          "inputs": {
+                            "X": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 0
+                                }
+                              }
+                            },
+                            "Y": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 0
+                                }
+                              }
+                            },
+                            "Z": {
+                              "block": {
+                                "type": "variables_get",
+                                "fields": {
+                                  "VAR": {
+                                    "id": "var_0_z"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "pioneer_led_all",
+                              "inputs": {
+                                "COLOUR": {
+                                  "block": {
+                                    "type": "pioneer_colour_rgb",
+                                    "inputs": {
+                                      "R": {
+                                        "block": {
+                                          "type": "math_arithmetic",
+                                          "fields": {
+                                            "OP": "MULTIPLY"
+                                          },
+                                          "inputs": {
+                                            "A": {
+                                              "block": {
+                                                "type": "pioneer_position",
+                                                "fields": {
+                                                  "AXIS": "Z"
+                                                }
+                                              }
+                                            },
+                                            "B": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 120
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "G": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 50
+                                          }
+                                        }
+                                      },
+                                      "B": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 200
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "pioneer_wait",
+                                  "inputs": {
+                                    "SECONDS": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 0.5
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "pioneer_land"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [
+    {
+      "name": "z",
+      "id": "var_0_z"
+    }
+  ],
+  "workspaceComments": [
+    {
+      "text": "Цвет по высоте: подъём ступенями; чем выше дрон, тем больше в цвете красного. Высота берётся с датчика.",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

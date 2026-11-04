@@ -18,3 +18,5 @@
 .blocklyDropDownDiv .goog-menu, .blocklyWidgetDiv .goog-menu { border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); color: var(--text-color); box-shadow: var(--shadow-soft); font-family: var(--font-sans); }
 .blocklyDropDownDiv .goog-menuitem, .blocklyWidgetDiv .goog-menuitem { padding: 8px 12px; }
 .blocklyHtmlInput { border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-color); font-family: var(--font-mono); }
+/* Заметки на рабочей области (пояснения в примерах) — светло-жёлтые в любой теме, текст на них тёмный. */
+.blockly-editor-canvas textarea.blocklyCommentText { color: #1f2937; font-family: var(--font-sans); }

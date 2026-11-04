@@ -1,0 +1,213 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "pioneer_preflight",
+            "next": {
+              "block": {
+                "type": "pioneer_takeoff",
+                "next": {
+                  "block": {
+                    "type": "controls_for",
+                    "fields": {
+                      "VAR": {
+                        "id": "var_0_i"
+                      }
+                    },
+                    "inputs": {
+                      "FROM": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 1
+                          }
+                        }
+                      },
+                      "TO": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 6
+                          }
+                        }
+                      },
+                      "BY": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 1
+                          }
+                        }
+                      },
+                      "DO": {
+                        "block": {
+                          "type": "controls_if",
+                          "extraState": {
+                            "elseIfCount": 0,
+                            "hasElse": true
+                          },
+                          "inputs": {
+                            "IF0": {
+                              "block": {
+                                "type": "logic_compare",
+                                "fields": {
+                                  "OP": "EQ"
+                                },
+                                "inputs": {
+                                  "A": {
+                                    "block": {
+                                      "type": "math_modulo",
+                                      "inputs": {
+                                        "DIVIDEND": {
+                                          "block": {
+                                            "type": "variables_get",
+                                            "fields": {
+                                              "VAR": {
+                                                "id": "var_0_i"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "DIVISOR": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 2
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "B": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 0
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "DO0": {
+                              "block": {
+                                "type": "pioneer_led_all",
+                                "inputs": {
+                                  "COLOUR": {
+                                    "block": {
+                                      "type": "pioneer_colour_preset",
+                                      "fields": {
+                                        "PRESET": "зелёный"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "ELSE": {
+                              "block": {
+                                "type": "pioneer_led_all",
+                                "inputs": {
+                                  "COLOUR": {
+                                    "block": {
+                                      "type": "pioneer_colour_preset",
+                                      "fields": {
+                                        "PRESET": "красный"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "pioneer_go_to",
+                              "inputs": {
+                                "X": {
+                                  "block": {
+                                    "type": "math_arithmetic",
+                                    "fields": {
+                                      "OP": "MULTIPLY"
+                                    },
+                                    "inputs": {
+                                      "A": {
+                                        "block": {
+                                          "type": "variables_get",
+                                          "fields": {
+                                            "VAR": {
+                                              "id": "var_0_i"
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "B": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 0.3
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "Y": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 0
+                                    }
+                                  }
+                                },
+                                "Z": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 1
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "pioneer_land"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [
+    {
+      "name": "i",
+      "id": "var_0_i"
+    }
+  ],
+  "workspaceComments": [
+    {
+      "text": "Чередование: в чётных шагах свет зелёный, в нечётных красный. Проверка «остаток от деления на 2 равен 0».",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

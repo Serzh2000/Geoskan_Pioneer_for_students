@@ -95,6 +95,15 @@ export function getLearningNote(lesson: Lesson): LearningNote | undefined {
         why: lesson.lessonIntro, question: lesson.academy.teaching.question,
         answer: lesson.academy.teaching.takeaway, experiment: lesson.academy.experiment
     };
+    // Уроки на блоках pioneer_*: пояснение и вопрос для самопроверки несёт сам урок.
+    if ('pioneer' in lesson && lesson.pioneer) {
+        const { question } = lesson.pioneer;
+        return {
+            why: question.device, question: question.question,
+            answer: `${question.choices[question.correct].feedback} ${question.takeaway}`,
+            experiment: 'После успешной проверки поменяйте в своём решении одно число — точку, паузу или цвет — и запустите проверку снова. Сравните, что изменилось в полёте дрона.'
+        };
+    }
     const topic = getTopic(lesson);
     if (topic === 'led-single' && !lesson.id.startsWith('lua')) {
         return {
@@ -110,7 +119,7 @@ export function getLearningNote(lesson: Lesson): LearningNote | undefined {
 export function renderLearningNote(lesson: Lesson, blockly = false): string {
     let note = getLearningNote(lesson);
     if (!note) return '';
-    const authoredQuiz = 'academy' in lesson ? lesson.academy?.teaching : undefined;
+    const authoredQuiz = 'academy' in lesson ? lesson.academy?.teaching : 'pioneer' in lesson ? lesson.pioneer?.question : undefined;
     const quizChoices = authoredQuiz?.choices.map(choice => choice.text) || QUIZ_CHOICES[getTopic(lesson)] || [];
     const correctChoice = authoredQuiz?.correct ?? CORRECT_CHOICE[getTopic(lesson)];
     if (blockly) {
@@ -151,8 +160,9 @@ function renderColorExperiment(lesson: Lesson): string {
 }
 
 export function renderPracticeBrief(lesson: Lesson, steps: string[] = []): string {
-    const list = steps.length
-        ? `<ol class="guide-practice-steps" aria-label="Порядок сборки">${steps.map(step => `<li>${renderInline(step)}</li>`).join('')}</ol>`
+    const authoredSteps = lesson.taskSteps ?? steps;
+    const list = authoredSteps.length
+        ? `<ol class="guide-practice-steps${lesson.taskSteps ? ' guide-practice-steps--cards' : ''}" aria-label="Шаги задания">${authoredSteps.map(step => `<li>${renderInline(step)}</li>`).join('')}</ol>`
         : '';
     return `<div class="guide-practice-brief"><div class="guide-task"><h2>Задача</h2><p>${renderInline(lesson.goal)}</p>${list}</div>
         <details class="pk-disclosure"><summary>Нужна подсказка</summary><p>${renderInline(lesson.builderHint)}</p></details></div>`;

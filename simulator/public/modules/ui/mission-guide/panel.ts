@@ -74,6 +74,8 @@ export function renderMissionGuidePanel(language: ScriptLanguage = 'lua'): void 
     const focusedElement = container.contains(document.activeElement) || document.getElementById('mission-guide-outline')?.contains(document.activeElement)
         ? document.activeElement as HTMLElement : null;
     const focusedAnswer = focusedElement?.dataset.walkthroughAnswer;
+    const inspectionScope = container.dataset.learningView;
+    const inspectionAnswers = [...container.querySelectorAll<HTMLInputElement>('[data-academy-part]:checked')].map(input => ({ name: input.name, value: input.value }));
     const focusedFinish = focusedElement?.hasAttribute('data-walkthrough-finish');
     const outline = document.getElementById('mission-guide-outline');
     if (outline) {
@@ -88,6 +90,18 @@ export function renderMissionGuidePanel(language: ScriptLanguage = 'lua'): void 
     // Authored renderers escape lesson copy; only trusted renderer markup enters this host.
     const sheetBefore = captureSheet(container);
     container.innerHTML = bodyHtml;
+    const modalTitle = document.getElementById('mission-guide-title');
+    const lessonHeader = container.querySelector<HTMLElement>('.guide-lesson-page__header');
+    if (modalTitle) {
+        if (lessonHeader && container.querySelector('.guide-practicum')) {
+            const summary = lessonHeader.querySelector('.guide-lesson-page__summary');
+            if (summary) lessonHeader.after(summary);
+            modalTitle.replaceChildren(lessonHeader);
+        } else {
+            modalTitle.textContent = 'Учебник пилота';
+        }
+    }
+
     playPageTurn(container, sheetBefore);
     if (outline) attachAcademyBindings(outline, lessonLanguage, activeLessonId, renderMissionGuidePanel);
     if (outline) {
@@ -112,9 +126,13 @@ export function renderMissionGuidePanel(language: ScriptLanguage = 'lua'): void 
     const step = container.querySelector<HTMLElement>('.guide-walkthrough, .book')?.dataset.walkthroughStep;
     // The bookmarks replace the contents list while a book spread is open.
     overlay?.querySelector('.guide-modal')?.classList.toggle('is-book', Boolean(container.querySelector('.book')));
-    const view = `${track}:${activeLessonId}:${page}:${step}`;
+    const summaryMode = Boolean(container.querySelector('[data-practicum-result="success"]'));
+    const view = `${track}:${activeLessonId}:${page}:${step}:${summaryMode}`;
     if (previousView !== view) container.scrollTop = 0;
     container.dataset.learningView = view;
+    if (inspectionScope === view) container.querySelectorAll<HTMLInputElement>('[data-academy-part]').forEach(input => {
+        input.checked = inspectionAnswers.some(saved => saved.name === input.name && saved.value === input.value);
+    });
     attachLearningInteractions(container);
     const walkthroughLesson = track === 'blockly'
         ? getActiveLesson(getGuideLessonState(language), language)

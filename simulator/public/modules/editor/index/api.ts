@@ -271,6 +271,36 @@ export async function loadMainBlocklyXml(xml: string): Promise<void> {
     layoutEditor();
 }
 
+// Загружает в редактор блоков готовую программу (JSON-сериализация Blockly) —
+// так открываются примеры из examples-blocks/.
+export async function loadMainBlocklyJson(json: string): Promise<void> {
+    if (!editorIndexState.blocklyEnabled) {
+        setBlocklyEditorEnabled(true);
+    }
+
+    await ensureBlocklyWorkspace(currentScriptLanguage);
+    const workspace = editorIndexState.blocklyWorkspace;
+    if (!workspace) {
+        return;
+    }
+
+    workspace.clear();
+
+    try {
+        Blockly.serialization.workspaces.load(JSON.parse(json), workspace);
+    } catch (error) {
+        console.error('[Editor] Failed to load Blockly example', error);
+    }
+
+    resizeBlocklyWorkspaceViewportSupport(
+        editorIndexState.blocklyCanvasHost,
+        editorIndexState.blocklyCanvas,
+        workspace
+    );
+    scheduleEditorPanelAutofitAutofit('blockly', createEditorAutofitContext(getEditorIndexShellState()));
+    layoutEditor();
+}
+
 export function getSavedEditorDraft(language: ScriptLanguage = currentScriptLanguage): string | null {
     loadEditorIndexSession(getEditorIndexShellState(), getEditorIndexCollections());
     return getSavedEditorDraftFromStorage(getEditorIndexCollections(), currentDroneId, language);

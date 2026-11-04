@@ -1,0 +1,221 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "pioneer_preflight",
+            "next": {
+              "block": {
+                "type": "pioneer_takeoff",
+                "next": {
+                  "block": {
+                    "type": "procedures_callnoreturn",
+                    "extraState": {
+                      "name": "red"
+                    },
+                    "next": {
+                      "block": {
+                        "type": "pioneer_go_to",
+                        "inputs": {
+                          "X": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          },
+                          "Y": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 0
+                              }
+                            }
+                          },
+                          "Z": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "procedures_callnoreturn",
+                            "extraState": {
+                              "name": "green"
+                            },
+                            "next": {
+                              "block": {
+                                "type": "pioneer_go_to",
+                                "inputs": {
+                                  "X": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 1
+                                      }
+                                    }
+                                  },
+                                  "Y": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 1
+                                      }
+                                    }
+                                  },
+                                  "Z": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 1
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "procedures_callnoreturn",
+                                    "extraState": {
+                                      "name": "red"
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "pioneer_wait",
+                                        "inputs": {
+                                          "SECONDS": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 1
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "procedures_callnoreturn",
+                                            "extraState": {
+                                              "name": "off"
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "pioneer_land"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "procedures_defnoreturn",
+        "x": 820,
+        "y": 24,
+        "fields": {
+          "NAME": "red"
+        },
+        "inputs": {
+          "STACK": {
+            "block": {
+              "type": "pioneer_led_all",
+              "inputs": {
+                "COLOUR": {
+                  "block": {
+                    "type": "pioneer_colour_preset",
+                    "fields": {
+                      "PRESET": "красный"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "procedures_defnoreturn",
+        "x": 820,
+        "y": 244,
+        "fields": {
+          "NAME": "green"
+        },
+        "inputs": {
+          "STACK": {
+            "block": {
+              "type": "pioneer_led_all",
+              "inputs": {
+                "COLOUR": {
+                  "block": {
+                    "type": "pioneer_colour_preset",
+                    "fields": {
+                      "PRESET": "зелёный"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "procedures_defnoreturn",
+        "x": 820,
+        "y": 464,
+        "fields": {
+          "NAME": "off"
+        },
+        "inputs": {
+          "STACK": {
+            "block": {
+              "type": "pioneer_led_all",
+              "inputs": {
+                "COLOUR": {
+                  "block": {
+                    "type": "pioneer_colour_preset",
+                    "fields": {
+                      "PRESET": "выключен"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [],
+  "workspaceComments": [
+    {
+      "text": "Свои функции red, green и off переключают свет. Внутри функций ждать нельзя — паузы остаются в основной программе.",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

@@ -9,6 +9,7 @@
     "vite": "vite",
     "build": "npm run sync-examples && vite build && tsc -p tsconfig.server.json",
     "sync-examples": "node tools/sync_lesson_examples.mjs",
+    "examples:blocks": "node tools/block-examples/build.mjs",
     "preview": "vite preview",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "type-check": "tsc --noEmit",

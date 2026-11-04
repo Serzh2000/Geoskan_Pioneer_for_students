@@ -1,0 +1,150 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "controls_repeat_ext",
+            "inputs": {
+              "TIMES": {
+                "block": {
+                  "type": "math_number",
+                  "fields": {
+                    "NUM": 5
+                  }
+                }
+              },
+              "DO": {
+                "block": {
+                  "type": "pioneer_led_all",
+                  "inputs": {
+                    "COLOUR": {
+                      "block": {
+                        "type": "pioneer_colour_rgb",
+                        "inputs": {
+                          "R": {
+                            "block": {
+                              "type": "math_random_int",
+                              "inputs": {
+                                "FROM": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 0
+                                    }
+                                  }
+                                },
+                                "TO": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 255
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "G": {
+                            "block": {
+                              "type": "math_random_int",
+                              "inputs": {
+                                "FROM": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 0
+                                    }
+                                  }
+                                },
+                                "TO": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 255
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "B": {
+                            "block": {
+                              "type": "math_random_int",
+                              "inputs": {
+                                "FROM": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 0
+                                    }
+                                  }
+                                },
+                                "TO": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 255
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "next": {
+                    "block": {
+                      "type": "pioneer_wait",
+                      "inputs": {
+                        "SECONDS": {
+                          "block": {
+                            "type": "math_number",
+                            "fields": {
+                              "NUM": 0.5
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "next": {
+              "block": {
+                "type": "pioneer_led_all",
+                "inputs": {
+                  "COLOUR": {
+                    "block": {
+                      "type": "pioneer_colour_preset",
+                      "fields": {
+                        "PRESET": "выключен"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [],
+  "workspaceComments": [
+    {
+      "text": "Случайный цвет: каждая из трёх составляющих — случайное число от 0 до 255.",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

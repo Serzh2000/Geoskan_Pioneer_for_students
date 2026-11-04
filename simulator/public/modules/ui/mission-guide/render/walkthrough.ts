@@ -3,7 +3,7 @@ import { BLOCK_HELP } from './blockly-copy.js';
 import { BLOCK_LABELS, escapeHtml, renderInline, renderApiFocusItem } from './shared.js';
 import type { GuideApiFocusItem } from '../types.js';
 import { getWalkthroughContent, type WalkthroughLesson } from '../walkthrough/content.js';
-import { getWalkthroughProgress, getWalkthroughResult, isWalkthroughBusy, WALKTHROUGH_STEPS, walkthroughKey } from '../walkthrough/state.js';
+import { shouldShowPracticumSummary, getPracticumScreen, getWalkthroughProgress, getWalkthroughResult, isWalkthroughBusy, WALKTHROUGH_STEPS, walkthroughKey } from '../walkthrough/state.js';
 
 const LABELS = ['Идея', 'Прогноз', 'Практика', 'Результат', 'Разбор'];
 const STEP_HINTS = ['Разберитесь', 'Предскажите', 'Попробуйте', 'Наблюдайте', 'Объясните'];
@@ -27,7 +27,7 @@ function uniqueApiList(items: GuideApiFocusItem[], lead: string): string {
 }
 
 /** Step 1: the idea, what is needed, and today's task, each said once in one reading column. */
-function renderIdea(lesson: WalkthroughLesson, content: ReturnType<typeof getWalkthroughContent>, blockly: boolean): string {
+function renderIdea(lesson: WalkthroughLesson, content: ReturnType<typeof getWalkthroughContent>, blockly: boolean, includeTask = true): string {
     const academy = 'academy' in lesson && lesson.academy;
     const lead = academy ? lesson.summary : content.device;
     const needs = academy ? lesson.builderHint : lesson.lessonIntro;
@@ -38,7 +38,7 @@ function renderIdea(lesson: WalkthroughLesson, content: ReturnType<typeof getWal
     return `<div class="guide-reading guide-reading--idea">
         <p class="guide-lead">${renderInline(lead)}</p>
         ${needsText || rows ? `<section class="guide-needs"><h2>Перед началом</h2>${needsText}${rows}</section>` : ''}
-        <aside class="guide-task"><h2>Сегодня попробуем</h2><p>${renderInline(academy ? lesson.goal : lesson.expectedOutcome)}</p></aside>
+        ${includeTask ? `<aside class="guide-task"><h2>Сегодня попробуем</h2><p>${renderInline(academy ? lesson.goal : lesson.expectedOutcome)}</p></aside>` : ''}
     </div>`;
 }
 
@@ -109,5 +109,53 @@ export function renderWalkthrough(lesson: WalkthroughLesson, language: 'lua' | '
             ${hint ? `<p class="guide-walkthrough__gate">${hint}</p>` : ''}
             ${index < last && state.step !== 'build' ? `<button type="button" class="btn-primary" data-walkthrough-step="${WALKTHROUGH_STEPS[index + 1]}" ${canNext ? '' : 'disabled'}>${state.step === 'check' ? 'Объяснить результат' : state.step === 'device' ? 'К прогнозу' : 'Дальше'}</button>` : ''}
         </div>`}
+    </section>`;
+}
+
+
+/** Two ordinary lesson screens; the book keeps its independent renderer. */
+export function renderPracticum(lesson: WalkthroughLesson, language: 'lua' | 'python', source: string,
+    views: { build: { brief: string; work: string; answers?: string }; check: string; completed: boolean; hasPrevious?: boolean; lessonNav?: { note: string; previous: string; next: string } }): string {
+    const content = getWalkthroughContent(lesson);
+    const key = walkthroughKey(language, lesson.id);
+    const state = getWalkthroughProgress(key, content.correct);
+    const result = getWalkthroughResult(key, source);
+    const busy = isWalkthroughBusy(key);
+    const choice = state.answer === null ? undefined : content.choices[state.answer];
+    const screen = getPracticumScreen(key);
+    const showSummary = screen === 'practice' && shouldShowPracticumSummary(key, source);
+    const pending = busy ? 'disabled' : '';
+    const reading = `<div class="guide-practicum__lesson">
+        <div class="guide-practicum__intro"><h2 class="guide-practicum__block-title"><span class="guide-practicum__number">1</span> Разберитесь</h2>${renderIdea(lesson, content, 'blocks' in lesson, false)}</div>
+        <section class="guide-practicum__prediction" aria-labelledby="practicum-prediction-title">
+            <div class="guide-practicum__prediction-heading"><h2 id="practicum-prediction-title" class="guide-practicum__block-title"><span class="guide-practicum__number">2</span> Предположите</h2><span>Необязательно</span></div>
+            <fieldset class="guide-knowledge-check"><legend>${escapeHtml(content.question)}</legend>
+                <div class="guide-knowledge-check__choices">${content.choices.map((option, i) => `<button type="button" class="btn-secondary" data-practicum-answer="${i}" aria-pressed="${state.answer === i}" ${pending}>${escapeHtml(option.text)}</button>`).join('')}</div>
+                <p>Можно выбрать предположение или сразу перейти к практике.</p>
+                ${choice ? `<p class="guide-practicum__prediction-feedback" role="status">${result?.solved ? escapeHtml(choice.feedback) : 'Предположение сохранено. Проверьте его опытом.'}</p>` : ''}
+            </fieldset>
+        </section>
+        <div class="guide-practicum__reading-actions"><div class="guide-practicum__assignment"><h2 class="guide-practicum__block-title"><span class="guide-practicum__number">3</span> Что нужно сделать</h2><p>${renderInline('academy' in lesson && lesson.academy ? lesson.goal : lesson.expectedOutcome)}</p></div><button type="button" class="btn-primary" data-practicum-screen="practice" ${pending}>К практике</button></div>
+    </div>`;
+    const feedback = `<section class="guide-practicum__result" aria-label="Результат опыта">${result || busy ? views.check : ''}
+        ${result?.solved ? `<details class="pk-disclosure"><summary>Что показал опыт</summary><p>${renderInline(content.takeaway)}</p></details>` : ''}
+        <div class="guide-complete">
+            ${views.completed ? '' : result?.solved ? '<button type="button" class="btn-primary" data-practicum-finish>Завершить урок</button>' : ''}
+            <div class="guide-actions">${views.completed ? views.lessonNav?.next ?? '' : ''}${views.lessonNav?.previous ?? ''}</div>
+        </div>
+    </section>`;
+    const practice = views.build.answers
+        ? `<div class="guide-practicum__observation"><div class="guide-practice__work" tabindex="-1">${views.build.work}</div>
+            <aside class="guide-practicum__worksheet" aria-label="Задание и проверка"><div class="guide-practice__brief">${views.build.brief}</div>
+                <div class="guide-practicum__inspection">${views.build.answers}</div>${feedback}</aside></div>`
+        : `<div class="guide-practicum__workspace"><div class="guide-practice__brief">${views.build.brief}</div>
+            <div class="guide-practicum__experiment"><div class="guide-practice__work" tabindex="-1">${views.build.work}</div>${feedback}</div></div>`;
+    const summary = `<div class="guide-practicum__success">${feedback}<button type="button" class="btn-secondary" data-practicum-resume>Вернуться к практике</button></div>`;
+    return `<section class="guide-practicum guide-walkthrough" ${showSummary ? 'data-practicum-result="success"' : ''} data-walkthrough-step="${screen === 'practice' ? 'build' : 'device'}" data-practicum-screen="${screen}" aria-label="Практикум">
+        <nav class="guide-practicum__screens pk-seg" aria-label="Экраны урока">
+            <button type="button" data-practicum-screen="learn" aria-controls="guide-walkthrough-content" aria-current="${screen === 'learn' ? 'page' : 'false'}" class="pk-seg__btn ${screen === 'learn' ? 'is-active' : ''}" ${pending}>Разобраться</button>
+            <button type="button" data-practicum-screen="practice" aria-controls="guide-walkthrough-content" aria-current="${screen === 'practice' ? 'page' : 'false'}" class="pk-seg__btn ${screen === 'practice' ? 'is-active' : ''}" ${pending}>Практика</button>
+        </nav>
+        <div class="guide-practicum__screen" id="guide-walkthrough-content" tabindex="-1" role="region" aria-label="${screen === 'learn' ? 'Разобраться' : 'Практика'}">${screen === 'learn' ? reading : showSummary ? summary : practice}</div>
     </section>`;
 }

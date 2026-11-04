@@ -1,0 +1,305 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "variables_set",
+            "fields": {
+              "VAR": {
+                "id": "var_0_on"
+              }
+            },
+            "inputs": {
+              "VALUE": {
+                "block": {
+                  "type": "math_number",
+                  "fields": {
+                    "NUM": 0
+                  }
+                }
+              }
+            },
+            "next": {
+              "block": {
+                "type": "pioneer_preflight",
+                "next": {
+                  "block": {
+                    "type": "pioneer_takeoff",
+                    "next": {
+                      "block": {
+                        "type": "pioneer_go_to",
+                        "inputs": {
+                          "X": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          },
+                          "Y": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 0
+                              }
+                            }
+                          },
+                          "Z": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "pioneer_go_to",
+                            "inputs": {
+                              "X": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 1
+                                  }
+                                }
+                              },
+                              "Y": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 1
+                                  }
+                                }
+                              },
+                              "Z": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 1
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "pioneer_go_to",
+                                "inputs": {
+                                  "X": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 0
+                                      }
+                                    }
+                                  },
+                                  "Y": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 0
+                                      }
+                                    }
+                                  },
+                                  "Z": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 1
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "pioneer_every_stop",
+                                    "fields": {
+                                      "NAME": "мигалка"
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "pioneer_led_all",
+                                        "inputs": {
+                                          "COLOUR": {
+                                            "block": {
+                                              "type": "pioneer_colour_preset",
+                                              "fields": {
+                                                "PRESET": "выключен"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "pioneer_land"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "pioneer_every",
+        "x": 820,
+        "y": 24,
+        "fields": {
+          "NAME": "мигалка"
+        },
+        "inputs": {
+          "SECONDS": {
+            "block": {
+              "type": "math_number",
+              "fields": {
+                "NUM": 0.5
+              }
+            }
+          },
+          "DO": {
+            "block": {
+              "type": "controls_if",
+              "extraState": {
+                "elseIfCount": 0,
+                "hasElse": true
+              },
+              "inputs": {
+                "IF0": {
+                  "block": {
+                    "type": "logic_compare",
+                    "fields": {
+                      "OP": "EQ"
+                    },
+                    "inputs": {
+                      "A": {
+                        "block": {
+                          "type": "variables_get",
+                          "fields": {
+                            "VAR": {
+                              "id": "var_0_on"
+                            }
+                          }
+                        }
+                      },
+                      "B": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 0
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "DO0": {
+                  "block": {
+                    "type": "pioneer_led_all",
+                    "inputs": {
+                      "COLOUR": {
+                        "block": {
+                          "type": "pioneer_colour_preset",
+                          "fields": {
+                            "PRESET": "красный"
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "variables_set",
+                        "fields": {
+                          "VAR": {
+                            "id": "var_0_on"
+                          }
+                        },
+                        "inputs": {
+                          "VALUE": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "ELSE": {
+                  "block": {
+                    "type": "pioneer_led_all",
+                    "inputs": {
+                      "COLOUR": {
+                        "block": {
+                          "type": "pioneer_colour_preset",
+                          "fields": {
+                            "PRESET": "выключен"
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "variables_set",
+                        "fields": {
+                          "VAR": {
+                            "id": "var_0_on"
+                          }
+                        },
+                        "inputs": {
+                          "VALUE": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 0
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [
+    {
+      "name": "on",
+      "id": "var_0_on"
+    }
+  ],
+  "workspaceComments": [
+    {
+      "text": "Отдельный блок «Каждые 0.5 сек» (рядом с основной программой) мигает светодиодами сам, пока дрон летает. Основная программа о нём не заботится и в конце его останавливает.",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

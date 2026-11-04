@@ -118,7 +118,34 @@ function getCallbackDiagnostics(sequenceIds: string[], lesson: GuideLesson): Gui
     return diagnostics;
 }
 
+/** Урок на блоках pioneer_*: до запуска проверяется только то, что в цепочке есть нужные блоки; результат решает полёт. */
+function evaluatePioneerLesson(lesson: GuideLesson, sequenceIds: string[]): GuideEvaluation {
+    const spec = lesson.pioneer!;
+    const used = new Set(sequenceIds);
+    if (!used.has('pioneer_start') || sequenceIds.filter((type) => type !== 'pioneer_start').length === 0) {
+        return {
+            solved: false,
+            complete: false,
+            diagnostics: [{
+                kind: 'info',
+                title: 'Рабочая область пока пустая',
+                reason: 'К блоку «Начало программы» ещё не прикреплено ни одной команды.',
+                fix: 'Соберите цепочку под блоком «Начало программы» по шагам из рецепта.'
+            }]
+        };
+    }
+    const diagnostics: GuideDiagnostic[] = spec.requires.filter(([type]) => !used.has(type)).map(([, label]) => ({
+        kind: 'error' as const,
+        title: `Не хватает блока «${label}»`,
+        reason: 'Этот блок нужен заданию: без него программа решит другую задачу.',
+        fix: `Найдите блок «${label}» в наборах слева и добавьте его в цепочку.`
+    }));
+    const solved = diagnostics.length === 0;
+    return { solved, complete: solved, diagnostics: solved ? [solvedDiagnostic(lesson.expectedOutcome)] : diagnostics };
+}
+
 export function evaluateLesson(lesson: GuideLesson, sequenceIds: string[], workspaceXml?: string | null): GuideEvaluation {
+    if (lesson.pioneer) return evaluatePioneerLesson(lesson, sequenceIds);
     if (!sequenceIds.length) {
         return {
             solved: false,

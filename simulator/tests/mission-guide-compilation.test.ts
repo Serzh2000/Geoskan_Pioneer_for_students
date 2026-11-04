@@ -14,7 +14,7 @@ beforeAll(async () => {
 
 test.each(['lua', 'python'] as const)('all ten %s guide solutions compile to executable commands', (language) => {
     const state = language === 'lua' ? getLuaLessonState() : getPythonLessonState();
-    for (const lesson of state.lessons) {
+    for (const lesson of state.lessons.filter((item) => !item.pioneer)) {
         const workspace = new Blockly.Workspace();
         try {
             const root = Blockly.utils.xml.textToDom(buildTargetWorkspaceXml(lesson.id, lesson.targetBlockIds));

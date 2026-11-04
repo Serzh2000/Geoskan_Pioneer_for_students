@@ -1,0 +1,320 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "variables_set",
+            "fields": {
+              "VAR": {
+                "id": "var_1_route"
+              }
+            },
+            "inputs": {
+              "VALUE": {
+                "block": {
+                  "type": "lists_create_with",
+                  "extraState": {
+                    "itemCount": 4
+                  },
+                  "inputs": {
+                    "ADD0": {
+                      "block": {
+                        "type": "lists_create_with",
+                        "extraState": {
+                          "itemCount": 3
+                        },
+                        "inputs": {
+                          "ADD0": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          },
+                          "ADD1": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 0
+                              }
+                            }
+                          },
+                          "ADD2": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "ADD1": {
+                      "block": {
+                        "type": "lists_create_with",
+                        "extraState": {
+                          "itemCount": 3
+                        },
+                        "inputs": {
+                          "ADD0": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          },
+                          "ADD1": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          },
+                          "ADD2": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1.5
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "ADD2": {
+                      "block": {
+                        "type": "lists_create_with",
+                        "extraState": {
+                          "itemCount": 3
+                        },
+                        "inputs": {
+                          "ADD0": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 0
+                              }
+                            }
+                          },
+                          "ADD1": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          },
+                          "ADD2": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "ADD3": {
+                      "block": {
+                        "type": "lists_create_with",
+                        "extraState": {
+                          "itemCount": 3
+                        },
+                        "inputs": {
+                          "ADD0": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 0
+                              }
+                            }
+                          },
+                          "ADD1": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 0
+                              }
+                            }
+                          },
+                          "ADD2": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "next": {
+              "block": {
+                "type": "pioneer_preflight",
+                "next": {
+                  "block": {
+                    "type": "pioneer_takeoff",
+                    "next": {
+                      "block": {
+                        "type": "controls_forEach",
+                        "fields": {
+                          "VAR": {
+                            "id": "var_0_p"
+                          }
+                        },
+                        "inputs": {
+                          "LIST": {
+                            "block": {
+                              "type": "variables_get",
+                              "fields": {
+                                "VAR": {
+                                  "id": "var_1_route"
+                                }
+                              }
+                            }
+                          },
+                          "DO": {
+                            "block": {
+                              "type": "pioneer_go_to",
+                              "inputs": {
+                                "X": {
+                                  "block": {
+                                    "type": "lists_getIndex",
+                                    "fields": {
+                                      "MODE": "GET",
+                                      "WHERE": "FROM_START"
+                                    },
+                                    "inputs": {
+                                      "VALUE": {
+                                        "block": {
+                                          "type": "variables_get",
+                                          "fields": {
+                                            "VAR": {
+                                              "id": "var_0_p"
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "AT": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 1
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "Y": {
+                                  "block": {
+                                    "type": "lists_getIndex",
+                                    "fields": {
+                                      "MODE": "GET",
+                                      "WHERE": "FROM_START"
+                                    },
+                                    "inputs": {
+                                      "VALUE": {
+                                        "block": {
+                                          "type": "variables_get",
+                                          "fields": {
+                                            "VAR": {
+                                              "id": "var_0_p"
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "AT": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 2
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "Z": {
+                                  "block": {
+                                    "type": "lists_getIndex",
+                                    "fields": {
+                                      "MODE": "GET",
+                                      "WHERE": "FROM_START"
+                                    },
+                                    "inputs": {
+                                      "VALUE": {
+                                        "block": {
+                                          "type": "variables_get",
+                                          "fields": {
+                                            "VAR": {
+                                              "id": "var_0_p"
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "AT": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 3
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "pioneer_land"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [
+    {
+      "name": "p",
+      "id": "var_0_p"
+    },
+    {
+      "name": "route",
+      "id": "var_1_route"
+    }
+  ],
+  "workspaceComments": [
+    {
+      "text": "Маршрут — список точек. Цикл «для каждого элемента» берёт точку p и достаёт из неё X, Y и Z.",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

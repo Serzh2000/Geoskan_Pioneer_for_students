@@ -1,6 +1,6 @@
 import { currentDroneId, currentScriptLanguage, drones, type ScriptLanguage } from '../../core/state.js';
-import { examplesSetFor } from '../../core/drone-models.js';
-import { getEditorValue } from '../../editor/index.js';
+import { examplesSetFor, type ExamplesSet } from '../../core/drone-models.js';
+import { getEditorValue, isBlocklyEditorEnabled } from '../../editor/index.js';
 import type { UICallbacks } from '../index.js';
 import { scriptFileName } from '../../shared/funny-names.js';
 
@@ -17,8 +17,21 @@ const LESSON_GROUP_LABELS: Record<string, string> = {
     '06_missions': '06 — Миссии',
     '01_python_basics': '01 — Основы Python',
     '02_pioneer_sdk': '02 — Pioneer SDK',
-    '03_flight_control': '03 — Управление полётом'
+    '03_flight_control': '03 — Управление полётом',
+    '01_start': '01 — Первые шаги',
+    '02_flight': '02 — Фигуры и маршруты',
+    '03_leds': '03 — Светодиоды',
+    '04_logic': '04 — Переменные, условия, циклы',
+    '05_sensors': '05 — Датчики и время',
+    '06_events': '06 — Таймеры и события',
+    '07_projects': '07 — Мини-проекты'
 };
+
+/** Набор примеров редактора: в режиме блоков — готовые наборы блоков, иначе программы выбранного языка. */
+export function currentExamplesSet(): ExamplesSet {
+    if (isBlocklyEditorEnabled()) return 'blocks';
+    return examplesSetFor(drones[currentDroneId]?.model, currentScriptLanguage);
+}
 
 function populateFileOptions(fileSelector: HTMLSelectElement, files: string[]): void {
     const topLevel: string[] = [];
@@ -49,7 +62,7 @@ function populateFileOptions(fileSelector: HTMLSelectElement, files: string[]): 
         for (const file of groupFiles) {
             const opt = document.createElement('option');
             opt.value = file;
-            opt.textContent = file.slice(groupKey.length + 1);
+            opt.textContent = file.slice(groupKey.length + 1).replace(/\.json$/, '');
             optgroup.appendChild(opt);
         }
         fileSelector.appendChild(optgroup);
@@ -76,7 +89,7 @@ export function refreshFileList(language: ScriptLanguage): void {
     delete fileSelector.dataset.state;
     fileSelector.title = 'Выберите пример программы или откройте свой файл';
     // Мини 2 получает свои примеры: программы на pioneer_sdk2.
-    fetch(`/api/files?lang=${examplesSetFor(drones[currentDroneId]?.model, language)}`)
+    fetch(`/api/files?lang=${isBlocklyEditorEnabled() ? 'blocks' : examplesSetFor(drones[currentDroneId]?.model, language)}`)
         .then((res) => {
             if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
             return res.json();

@@ -350,3 +350,222 @@
 @media (forced-colors: active) {
     #mission-guide-overlay :is([aria-current], [aria-selected='true'], .is-active) { outline: 1px solid Highlight; }
 }
+
+
+/* Ordinary textbook: two screens, shared panel tokens and controls. */
+.guide-practicum { display: grid; gap: 24px; min-width: 0; }
+.guide-practicum__screens { width: fit-content; min-width: 280px; }
+.guide-practicum__screens .pk-seg__btn { min-height: 38px; padding-inline: 22px; font-size: 13px; }
+.guide-practicum__screen { min-width: 0; }
+.guide-practicum__lesson { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(280px, 1fr); gap: 32px 48px; align-items: start; }
+.guide-practicum__intro { min-width: 0; }
+.guide-practicum .guide-reading--idea { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; max-width: 720px; }
+.guide-practicum .guide-reading--idea > * { grid-column: auto; grid-row: auto; position: static; }
+.guide-practicum .guide-lead { font-size: 18px; line-height: 1.75; }
+.guide-practicum .guide-task { padding: 18px 20px; background: var(--pk-inset); }
+.guide-practicum__prediction { min-width: 0; padding-top: 4px; }
+.guide-practicum__prediction-heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.guide-practicum__prediction-heading h2 { margin: 0; font-size: 15px; color: var(--text-strong); }
+.guide-practicum__prediction-heading span { font-size: 12px; color: var(--pc-muted); }
+.guide-practicum__prediction fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+.guide-practicum__prediction legend { margin-bottom: 16px; font-size: 15px; font-weight: 600; line-height: 1.6; }
+.guide-practicum__prediction p { font-size: 13px; line-height: 1.65; color: var(--pc-muted); }
+.guide-practicum__prediction .guide-knowledge-check__choices > button { min-height: 48px; padding: 12px 16px; justify-content: flex-start; text-align: left; }
+.guide-practicum__prediction .guide-practicum__prediction-feedback { color: var(--text-strong); }
+.guide-practicum__reading-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding-top: 24px; border-top: 1px solid var(--pk-line); }
+.guide-practicum__reading-actions span { font-size: 13px; color: var(--pc-muted); }
+.guide-practicum__workspace, .guide-practicum__experiment { display: grid; gap: 24px; min-width: 0; }
+.guide-practicum__workspace > .guide-practice__brief { padding-bottom: 24px; border-bottom: 1px solid var(--pk-line); }
+.guide-practicum__workspace .guide-practice-brief { max-width: 960px; }
+.guide-practicum__experiment > .guide-practice__work { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; min-width: 0; }
+.guide-practicum .guide-editor, .guide-practicum .guide-scene-preview-host { width: 100%; height: clamp(320px, 46vh, 520px); }
+.guide-practicum .guide-practice__work > .guide-scene-preview-host:first-child { height: clamp(320px, 46vh, 520px); }
+.guide-practicum .guide-practice__work:not(:has(.guide-editor, .guide-practicum__inspection, .guide-blockly-preview-host)) { grid-template-columns: minmax(0, 1fr); }
+.guide-practicum .guide-practice__work:has(.guide-practicum__inspection) { grid-template-columns: minmax(0, 1fr) 300px; }
+.guide-practicum__inspection { display: grid; gap: 16px; min-width: 0; }
+.guide-practicum__inspection .guide-inspection-questions { border-color: var(--pk-line); }
+.guide-practicum .ck-question { min-width: 0; margin: 0; padding: 0; border: 0; }
+.guide-practicum .ck-option { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 4px 8px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; }
+.guide-practicum .ck-option:hover { background: var(--pk-hover); }
+.guide-practicum .ck-box { display: none; }
+.guide-practicum .ck-input { position: static; opacity: 1; width: 16px; height: 16px; margin: 0; accent-color: var(--accent-color); }
+.guide-practicum .ck-option:has(:checked) { background: var(--accent-soft); }
+.guide-practicum__result { display: grid; gap: 20px; min-width: 0; padding-top: 24px; border-top: 1px solid var(--pk-line); }
+.guide-practicum .guide-result { grid-template-columns: minmax(0, 1fr); }
+.guide-practicum .guide-result__main { max-width: none; }
+.guide-practicum .guide-complete { padding: 0; background: transparent; }
+.guide-practicum .guide-complete:empty, .guide-practicum .guide-actions:empty { display: none; }
+.guide-practicum .guide-practice__work > .guide-result__scene { min-width: 0; }
+.guide-practicum .guide-practice__work > [data-guide-open-editor-fallback] { grid-column: 1 / -1; justify-self: start; }
+@media (max-width: 1100px) {
+    .guide-practicum__lesson { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    .guide-practicum__prediction { border-top: 1px solid var(--pk-line); padding-top: 24px; }
+}
+@media (max-width: 700px) {
+    .guide-practicum__experiment > .guide-practice__work,
+    .guide-practicum .guide-practice__work:has(.guide-practicum__inspection) { grid-template-columns: minmax(0, 1fr); }
+    .guide-practicum__screens { min-width: 0; width: 100%; }
+}
+
+/* Practice is an operating surface: compact context, workspace and inline feedback. */
+.guide-lesson-page:has(.guide-practicum[data-practicum-screen='practice']) { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 16px; }
+.guide-lesson-page:has(.guide-practicum[data-practicum-screen='practice']) > .book-switch { grid-column: 2; grid-row: 1; align-self: start; }
+.guide-lesson-page:has(.guide-practicum[data-practicum-screen='practice']) > .guide-lesson-page__header { grid-column: 1; grid-row: 1; }
+.guide-lesson-page > .guide-practicum[data-practicum-screen='practice'] { grid-column: 1 / -1; gap: 12px; }
+.guide-practicum[data-practicum-screen='practice'] .guide-practicum__workspace,
+.guide-practicum[data-practicum-screen='practice'] .guide-practicum__experiment { gap: 12px; }
+.guide-practicum[data-practicum-screen='practice'] .guide-practice__brief { gap: 8px; padding-bottom: 10px; }
+.guide-practicum[data-practicum-screen='practice'] .guide-practice-brief { grid-template-columns: minmax(0, 1fr) minmax(150px, 210px); gap: 16px; max-width: none; align-items: start; }
+.guide-practicum[data-practicum-screen='practice'] .guide-task { padding: 0; background: transparent; }
+.guide-practicum[data-practicum-screen='practice'] .guide-task h2 { margin: 0 0 4px; font-size: 13px; }
+.guide-practicum[data-practicum-screen='practice'] .guide-task p { margin: 0; font-size: 13px; line-height: 1.55; }
+.guide-practicum[data-practicum-screen='practice'] .guide-editor,
+.guide-practicum[data-practicum-screen='practice'] .guide-scene-preview-host,
+.guide-practicum[data-practicum-screen='practice'] .guide-practice__work > .guide-scene-preview-host:first-child { height: clamp(260px, 34vh, 400px); }
+.guide-practicum[data-practicum-screen='practice'] .guide-inspection-questions { padding: 10px 12px; gap: 8px; }
+.guide-practicum[data-practicum-screen='practice'] .ck-option { min-height: 30px; }
+.guide-practicum__result { gap: 10px; padding-top: 10px; }
+.guide-practicum__result:has(.guide-complete > .guide-actions:empty):not(:has(.guide-result, details, [data-practicum-finish])) { display: none; }
+.guide-practicum__result .guide-verdict { padding: 10px 14px; }
+.guide-practicum__result .guide-verdict__expected { display: none; }
+.guide-practicum__result .guide-result__main { gap: 8px; }
+.guide-practicum__result .guide-complete { gap: 8px; }
+@media (max-width: 700px) {
+    .guide-practicum[data-practicum-screen='practice'] .guide-practice-brief { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+}
+
+/* Group by the learner's action, without adding another row of navigation. */
+.guide-practicum__intro { padding: 20px 24px; border-radius: var(--radius-sm); background: var(--pk-inset); }
+.guide-practicum__prediction { padding: 20px 24px; border: 1px solid var(--pk-line); border-radius: var(--radius-sm); }
+.guide-practicum__reading-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 28px; padding: 18px 24px; border: 0; border-radius: var(--radius-sm); background: var(--pk-inset); align-items: center; }
+.guide-practicum__assignment { max-width: 84ch; }
+.guide-practicum__assignment h2 { margin: 0 0 6px; font: 650 14px/1.4 var(--font-sans); color: var(--pc-accent); }
+.guide-practicum__assignment p { margin: 0; font-size: 14px; line-height: 1.65; }
+.guide-practicum[data-practicum-screen='practice'] .guide-practice__brief { padding: 10px 14px; border: 0; border-radius: var(--radius-sm); background: var(--pk-inset); }
+.guide-practicum__inspection { padding: 12px; border: 1px solid var(--pk-line); border-radius: var(--radius-sm); gap: 10px; }
+.guide-practicum[data-practicum-screen='practice'] .guide-practicum__inspection .guide-inspection-questions { border: 0; padding: 0; }
+.guide-practicum__inspection > .guide-actions { padding-top: 10px; border-top: 1px solid var(--pk-line); }
+.guide-practicum__inspection > .guide-actions > .btn-primary { width: 100%; }
+.guide-practicum .guide-complete { border: 0; border-radius: 0; }
+.guide-practicum .guide-complete > .guide-actions { justify-content: flex-end; }
+@media (max-width: 700px) {
+    .guide-practicum__intro, .guide-practicum__prediction { padding: 16px; }
+    .guide-practicum__reading-actions { grid-template-columns: minmax(0, 1fr); padding: 16px; }
+    .guide-practicum__reading-actions > button { justify-self: start; }
+}
+
+@media (max-height: 760px) and (min-width: 701px) {
+    .guide-practicum__inspection { padding: 10px; gap: 8px; }
+    .guide-practicum[data-practicum-screen='practice'] .guide-practicum__inspection .ck-option { min-height: 26px; padding-block: 2px; }
+}
+
+
+/* Inspection viewport: a taller, bounded figure beside the answer panel. */
+@media (min-width: 701px) and (min-height: 761px) {
+    .guide-practicum .guide-practice__work:has(.guide-practicum__inspection) {
+        grid-template-columns: minmax(0, 960px) 300px;
+        justify-content: center;
+    }
+    .guide-practicum[data-practicum-screen='practice'] .guide-practice__work:has(.guide-practicum__inspection) > .guide-scene-preview-host:first-child {
+        height: clamp(360px, 44vh, 500px);
+    }
+}
+
+/* Inspection is one figure and one worksheet, with feedback beside its answers. */
+.guide-practicum__observation { display: grid; grid-template-columns: minmax(0, 960px) 360px; gap: 24px; align-items: start; max-width: 1344px; margin-inline: auto; }
+.guide-practicum__observation > .guide-practice__work { min-width: 0; }
+.guide-practicum[data-practicum-screen='practice'] .guide-practicum__observation > .guide-practice__work > .guide-scene-preview-host:first-child { height: clamp(320px, calc(100vh - 280px), 560px); }
+.guide-practicum__worksheet { display: grid; gap: 16px; min-width: 0; padding: 16px; background: var(--pk-inset); border-radius: var(--radius-sm); }
+.guide-practicum[data-practicum-screen='practice'] .guide-practicum__worksheet .guide-practice__brief { padding: 0; background: transparent; }
+.guide-practicum[data-practicum-screen='practice'] .guide-practicum__worksheet .guide-practice-brief { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.guide-practicum__worksheet .guide-practicum__inspection { border: 0; border-radius: 0; padding: 0; }
+.guide-practicum__worksheet .guide-inspection-questions > h2 { display: none; }
+.guide-practicum__worksheet .guide-practicum__result { gap: 8px; }
+.guide-practicum__worksheet .guide-verdict { padding: 10px; }
+.guide-practicum__worksheet .guide-verdict__text > p { display: none; }
+.guide-practicum__worksheet .guide-verdict__title { font-size: 14px; }
+.guide-practicum__worksheet .guide-complete .guide-actions { justify-content: stretch; }
+.guide-practicum__worksheet .guide-complete .btn-primary { width: 100%; }
+@media (max-width: 900px) {
+    .guide-practicum__observation { grid-template-columns: minmax(0, 1fr) minmax(270px, 320px); gap: 16px; }
+}
+@media (max-width: 650px) {
+    .guide-practicum__observation { grid-template-columns: minmax(0, 1fr); }
+    .guide-practicum[data-practicum-screen='practice'] .guide-practicum__observation > .guide-practice__work > .guide-scene-preview-host:first-child { height: 300px; }
+}
+
+@media (max-height: 760px) and (min-width: 701px) {
+    .guide-practicum__worksheet { padding: 12px; gap: 8px; }
+    .guide-practicum__worksheet .ck-question { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; }
+    .guide-practicum__worksheet .ck-question legend { margin-bottom: 4px; }
+    .guide-practicum[data-practicum-screen='practice'] .guide-practicum__worksheet .ck-option { padding: 2px 4px; gap: 4px; font-size: 12px; }
+}
+
+
+.guide-modal__body:has(.guide-practicum__observation) { padding-bottom: 8px; }
+
+
+/* Reading numbers communicate the authored order; the scene starts on the content rail. */
+.guide-practicum__block-title { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; font: 650 14px/1.4 var(--font-sans); color: var(--text-strong); }
+.guide-practicum__number { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 24px; width: 24px; height: 24px; border-radius: var(--radius-sm); background: var(--accent-soft); color: var(--pc-accent); font-size: 12px; font-variant-numeric: tabular-nums; }
+.guide-practicum__prediction-heading .guide-practicum__number { color: var(--pc-accent); font-size: 12px; }
+.guide-practicum__assignment .guide-practicum__block-title { margin-bottom: 8px; }
+.guide-practicum__observation { max-width: none; margin-inline: 0; grid-template-columns: minmax(0, 1fr) 360px; }
+@media (max-width: 900px) {
+    .guide-practicum__observation { grid-template-columns: minmax(0, 1fr) minmax(270px, 320px); }
+}
+@media (max-width: 650px) {
+    .guide-practicum__observation { grid-template-columns: minmax(0, 1fr); }
+}
+
+.guide-practicum .guide-practice-steps { display: grid; gap: 8px; margin: 8px 0 0; padding-left: 24px; font-size: 13px; line-height: 1.55; }
+.guide-practicum .guide-practice-steps li::marker { color: var(--pc-accent); font-weight: 700; }
+.guide-practicum .guide-practice-steps li > code { display: table; margin-top: 4px; padding: 3px 8px; }
+
+/* Authored task steps use the available row width, in reading order. */
+.guide-practicum .guide-practice-steps--cards { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 0; counter-reset: task-step; list-style: none; }
+.guide-practicum .guide-practice-steps--cards > li { counter-increment: task-step; min-width: 0; position: relative; padding: 12px 12px 12px 42px; background: var(--panel-bg); border-radius: var(--radius-sm); }
+.guide-practicum .guide-practice-steps--cards > li::before { content: counter(task-step); position: absolute; left: 12px; top: 10px; font: 700 20px/1.3 var(--font-sans); color: var(--pc-accent); }
+.guide-practicum .guide-practice-steps--cards li > code { display: block; padding: 4px 0; white-space: normal; overflow-wrap: anywhere; background: transparent; }
+.guide-practicum .guide-practice-brief:has(.guide-practice-steps--cards) { grid-template-columns: minmax(0, 1fr) 210px; gap: 8px 16px; }
+.guide-practicum .guide-practice-brief:has(.guide-practice-steps--cards) > .guide-task { display: contents; }
+.guide-practicum .guide-practice-brief:has(.guide-practice-steps--cards) > .guide-task > h2 { grid-column: 1; grid-row: 1; }
+.guide-practicum .guide-practice-brief:has(.guide-practice-steps--cards) > .guide-task > p { grid-column: 1; grid-row: 2; }
+.guide-practicum .guide-practice-steps--cards { grid-column: 1 / -1; grid-row: 3; }
+.guide-practicum .guide-practice-brief:has(.guide-practice-steps--cards) > details { grid-column: 2; grid-row: 1 / span 2; justify-self: end; }
+@container lesson (max-width: 1100px) {
+    .guide-practicum .guide-practice-steps--cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container lesson (max-width: 520px) {
+    .guide-practicum .guide-practice-steps--cards { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* The active lesson owns the textbook header; the body starts with its two screens. */
+.guide-modal__title:has(.guide-lesson-page__header) { overflow: hidden; white-space: normal; }
+.guide-modal__title .guide-lesson-page__header { gap: 2px; }
+.guide-modal__title .guide-lesson-page__crumb { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 400; }
+.guide-modal__title .guide-lesson-page__title { font-size: 18px; line-height: 1.2; letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.guide-lesson-page:has(.guide-practicum) { position: relative; }
+.guide-lesson-page:has(.guide-practicum) > .book-switch { position: absolute; top: 0; right: 0; z-index: 1; }
+.guide-lesson-page:has(.guide-practicum) > .guide-practicum { grid-row: 1; }
+.guide-practicum__screens { max-width: calc(100% - 125px); }
+@media (max-width: 560px) {
+    .guide-modal__title .guide-lesson-page__title { font-size: 16px; }
+    .guide-practicum__screens .pk-seg__btn { padding-inline: 10px; }
+    .guide-practicum__screens { min-width: 0; }
+}
+
+.guide-lesson-page:has(.guide-practicum) > .book-switch { width: max-content; white-space: nowrap; }
+
+
+/* A successful experiment replaces the working area with one compact review. */
+.guide-practicum__success { max-width: 860px; display: grid; gap: 16px; }
+.guide-practicum__success > .guide-practicum__result { border: 0; padding: 0; gap: 16px; }
+.guide-practicum__success .guide-result__main { gap: 12px; }
+.guide-practicum__success .guide-complete { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.guide-practicum__success .guide-complete > .btn-primary { width: auto; min-width: 200px; }
+.guide-practicum__success > .btn-secondary { justify-self: start; }
+.guide-lesson-page:has(.guide-practicum) > .book-switch > button { white-space: nowrap; min-width: 112px; }
+.guide-practicum .guide-practice-steps--cards > li { padding-block: 14px; border: 1px solid var(--pk-line); line-height: 1.65; }
+.guide-practicum .guide-practice-steps--cards > li::before { top: 12px; }
+.guide-practicum[data-practicum-screen='practice'] .guide-practice__brief:has(.guide-practice-steps--cards) { padding: 14px 16px; gap: 12px; }

@@ -220,3 +220,41 @@ tracks, keyboard, failure/success, draft return, narrow layout and both themes.
 - Развертывание временно скрывает область кода и сохраняет нормальную высоту.
   Разделитель работает мышью и клавиатурой. Escape из нативного select принадлежит
   его списку; закрытие панели возвращает фокус на кнопку в шапке редактора.
+
+
+## Ordinary practicum override · November 2026
+
+The current user-approved ordinary view supersedes the five-stage navigation above.
+renderPracticum owns the composition for Lua, Python and Blockly; the existing book
+renderer remains independent. Task, editor/inspection scene and runtime feedback
+are simultaneously available. Prediction is optional, may be wrong, and cannot
+invalidate an existing runtime result. Completion remains explicit and requires a
+successful result for the exact current source, but does not require a prediction
+or reflection stage. While running, prediction and duplicate-run controls disable;
+cancel keeps the workspace visible and the draft intact. The scene host occurs
+once per lesson. Narrow windows stack explanation, task, work and result.
+
+
+### Two-screen revision · November 2026
+
+The latest user decision replaces the single workspace with two freely selectable
+screens: «Разобраться» (explanation and optional prediction, «К практике» action)
+and «Практика» (task, editor/scene, inline result and completion). The shared
+renderPracticum owns both. Screen selection is per language/lesson in memory;
+practice drafts, inspection answers and runtime results survive switching.
+Prediction remains optional; switching is disabled during a check. Book navigation
+is unchanged. Practice puts the task above equal-height code and scene surfaces. Inspection lessons show the scene before the answer sheet when stacked.
+
+
+Practice density revision: keep title and book switch on one row, compact the task
+and run controls, and reserve equal 260–400 px code/scene frames. Do not show an
+idle result duplicating the task. Actual diagnostics stay visible; the flight
+journal and takeaway are optional disclosures. Reading retains natural spacing.
+
+
+Successful practice now replaces task/editor/scene with a compact review containing
+the verdict, retry, optional journal/takeaway and explicit completion. Failure and
+pending checks retain the workspace. «Вернуться к практике» preserves draft and
+runtime evidence and dismisses only that exact successful result; a later successful
+run opens its review again. A changed source cannot display stale success.
+Book behavior remains independent. The two existing screen switches remain.

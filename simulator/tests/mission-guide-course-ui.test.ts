@@ -1,5 +1,6 @@
 import { academyCompletedCount, switchGuideTrack } from '../public/modules/ui/mission-guide/course-navigation.js';
 import { renderCourseOutline } from '../public/modules/ui/mission-guide/render/course-outline.js';
+import { getLuaLessonState } from '../public/modules/ui/mission-guide/lessons/catalog/lua.js';
 import { getLuaTextLessonState } from '../public/modules/ui/mission-guide/lessons/catalog/lua-text.js';
 import { getPythonTextLessonState } from '../public/modules/ui/mission-guide/lessons/catalog/python-text.js';
 import { getActiveTextLesson, getActivePracticeTrack, setActiveLessonId, setActivePracticeTrack, setLessonCompleted } from '../public/modules/ui/mission-guide/state.js';
@@ -50,9 +51,11 @@ test('outline exposes current topic, prerequisites and Python-only lessons', () 
     expect(html).toContain('<small>Python</small>');
 });
 
-test('Blockly has a distinct ten-exercise outline and never inherits the 108 denominator', () => {
+test('Blockly has its own outline of the ten assignments and the block lessons and never inherits the 108 denominator', () => {
+    const total = getLuaLessonState().lessons.length;
     const html = renderCourseOutline('blockly', 'lua', '');
-    expect(html).toContain('0 из 10');
+    expect(total).toBeGreaterThanOrEqual(25);
+    expect(html).toContain(`0 из ${total}`);
     expect(html).not.toContain('data-academy-open');
-    expect(html.match(/data-guide-open-lesson=/g)).toHaveLength(10);
+    expect(html.match(/data-guide-open-lesson=/g)).toHaveLength(total);
 });

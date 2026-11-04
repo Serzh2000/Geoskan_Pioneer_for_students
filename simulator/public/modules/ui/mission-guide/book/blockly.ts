@@ -13,7 +13,7 @@ import { getBookStep } from './steps.js';
 function blocklyNav(view: BlocklyView): BookNav {
     const { nextLesson, lessonIndex } = view;
     return {
-        note: nextLesson ? 'Урок пройден. Можно переходить к следующему.' : 'Все десять практикумов Blockly завершены.',
+        note: nextLesson ? 'Урок пройден. Можно переходить к следующему.' : 'Все практикумы Blockly завершены.',
         hasPrevious: lessonIndex > 0,
         nextAttr: nextLesson ? 'data-guide-nav="next"' : '',
         next: nextLesson ? `<button type="button" class="btn-primary" data-guide-nav="next">Дальше: ${escapeHtml(nextLesson.title)} <span aria-hidden="true">→</span></button>` : ''

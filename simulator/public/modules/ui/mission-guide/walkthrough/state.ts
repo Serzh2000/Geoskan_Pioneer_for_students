@@ -128,3 +128,33 @@ export function canCompleteWalkthrough(key: string, correctAnswer: number, sourc
     const state = getWalkthroughProgress(key, correctAnswer);
     return state.step === 'reflect' && state.answer === correctAnswer && Boolean(getWalkthroughResult(key, source)?.solved);
 }
+
+/** Optional predictions never invalidate an experiment or move its editor. */
+export function answerPracticum(key: string, answer: number, correctAnswer: number): void {
+    if (!Number.isInteger(answer) || answer < 0 || answer > 2 || isWalkthroughBusy(key)) return;
+    const state = getWalkthroughProgress(key, correctAnswer);
+    progress.set(key, { ...state, answer });
+    save();
+}
+
+
+export type PracticumScreen = 'learn' | 'practice';
+const practicumScreens = new Map<string, PracticumScreen>();
+export function getPracticumScreen(key: string): PracticumScreen {
+    return practicumScreens.get(key) ?? 'learn';
+}
+export function setPracticumScreen(key: string, screen: PracticumScreen): void {
+    if (!isWalkthroughBusy(key)) practicumScreens.set(key, screen);
+}
+
+
+// Returning to the editor dismisses only this successful run, not future checks.
+const dismissedPracticumResults = new Map<string, GuideEvaluation>();
+export function shouldShowPracticumSummary(key: string, source: string): boolean {
+    const evaluation = getWalkthroughResult(key, source);
+    return Boolean(evaluation?.solved && dismissedPracticumResults.get(key) !== evaluation);
+}
+export function resumePracticumWork(key: string, source: string): void {
+    const evaluation = getWalkthroughResult(key, source);
+    if (evaluation?.solved) dismissedPracticumResults.set(key, evaluation);
+}

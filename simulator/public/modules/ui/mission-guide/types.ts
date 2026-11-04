@@ -1,4 +1,5 @@
 import type { ScriptLanguage } from '../api-docs/sections.js';
+import type { PioneerLessonSpec } from './lessons/pioneer/types.js';
 
 export type GuideMethodLink = {
     label: string;
@@ -95,6 +96,7 @@ export type GuideLesson = {
     badge: string;
     title: string;
     goal: string;
+    taskSteps?: string[];
     summary: string;
     lessonIntro: string;
     expectedOutcome: string;
@@ -118,6 +120,8 @@ export type GuideLesson = {
         diagnostic: GuideDiagnostic;
     }>;
     compile: (sequenceIds: string[], blocks: GuideBlock[]) => string;
+    /** Урок на едином наборе блоков pioneer_*: его проверяет полёт, а не порядок учебных блоков. */
+    pioneer?: PioneerLessonSpec;
 };
 
 export type GuideLessonState = {
@@ -150,6 +154,7 @@ export type GuideTextLesson = {
     badge: string;
     title: string;
     goal: string;
+    taskSteps?: string[];
     summary: string;
     lessonIntro: string;
     expectedOutcome: string;

@@ -19,6 +19,8 @@ type TrialParts = {
     verdict: string;
     diagnostics: string;
     flightRecord?: string;
+    /** Extra rows under the result: the help of a Blockly lesson. */
+    aside?: string;
     pending: boolean;
     completed: boolean;
 };
@@ -35,9 +37,9 @@ function renderHeading(ctx: BookContext): string {
  * The task in a frame, as a textbook sets it: the label on the edge, one sentence of the goal to a numbered line, the
  * rule of the sheet under a thin line. A goal of a single sentence stays a sentence.
  */
-function renderAssignment(goal: string, note = ''): string {
+function renderAssignment(goal: string, note = '', steps?: string[]): string {
     // A dot inside `code` or inside a number (`ap.push`, 1.5) does not end a sentence.
-    const sentences = goal.match(/(?:`[^`]*`|[^.!?`]|[.!?](?!\s|$))+[.!?]+(?=\s|$)/g)?.map(item => item.trim()).filter(Boolean) ?? [goal.trim()];
+    const sentences = steps ?? goal.match(/(?:`[^`]*`|[^.!?`]|[.!?](?!\s|$))+[.!?]+(?=\s|$)/g)?.map(item => item.trim()).filter(Boolean) ?? [goal.trim()];
     const body = sentences.length > 1
         ? `<ol class="book-assignment__list">${sentences.map(item => `<li>${renderInline(item)}</li>`).join('')}</ol>`
         : `<p class="book-assignment__text">${renderInline(goal)}</p>`;
@@ -84,7 +86,7 @@ export function renderCodeTaskPage(ctx: BookContext): string {
     });
     return page('left', ctx.head, ctx.pages[0], `
         ${renderHeading(ctx)}
-        ${renderAssignment(localize(lesson.goal, source.language), practiceNote(source.language, { ...lesson, goal: localize(lesson.goal, source.language) }))}
+        ${renderAssignment(localize(lesson.goal, source.language), practiceNote(source.language, { ...lesson, goal: localize(lesson.goal, source.language) }), lesson.taskSteps)}
         ${renderTerrainPrep(lesson)}
         ${bench}
         ${renderHelp([
@@ -116,21 +118,24 @@ export function renderBlocksTaskPage(ctx: BookContext, view: BlocklyView): strin
     });
     return page('left', ctx.head, ctx.pages[0], `
         ${renderHeading(ctx)}
-        ${renderAssignment(localize(lesson.goal, view.language))}
-        ${renderRecipe(lesson)}
-        ${bench}
-        ${renderHelp([
-            lesson.builderHint ? helpFold('Подсказка', `<p>${renderInline(localize(lesson.builderHint, view.language))}</p>`) : '',
-            helpFold('Готовое решение', `<p>Сначала попробуйте собрать сами. Загрузка решения заменит текущие блоки в редакторе.</p><button type="button" class="btn-secondary btn--sm" data-guide-fill="${escapeHtml(lesson.id)}">Заменить блоки решением</button>`),
-            '<button type="button" class="book-help__row" data-guide-open-editor-fallback>Открыть во весь экран</button>'
-        ].filter(Boolean))}
-        ${renderRunBanner(view.language, lesson.id)}`);
+        <div class="book-brief">${renderAssignment(localize(lesson.goal, view.language))}${renderRecipe(lesson)}</div>
+        ${bench}`);
+}
+
+/** Hint, the ready solution and the full-screen editor: on the right page, where a wide spread has the room, so the workspace keeps the height of the left one. */
+function renderBlocksAside(view: BlocklyView): string {
+    const { lesson } = view;
+    return `${renderHelp([
+        lesson.builderHint ? helpFold('Подсказка', `<p>${renderInline(localize(lesson.builderHint, view.language))}</p>`) : '',
+        helpFold('Готовое решение', `<p>Сначала попробуйте собрать сами. Загрузка решения заменит текущие блоки в редакторе.</p><button type="button" class="btn-secondary btn--sm" data-guide-fill="${escapeHtml(lesson.id)}">Заменить блоки решением</button>`),
+        '<button type="button" class="book-help__row" data-guide-open-editor-fallback>Открыть во весь экран</button>'
+    ].filter(Boolean))}${renderRunBanner(view.language, lesson.id)}`;
 }
 
 /** Page 2 of the practice spread: the scene and the result of the check. */
 function renderTrialPage(ctx: BookContext, parts: TrialParts): string {
     const { source } = ctx;
-    const { verdict, diagnostics, flightRecord, pending, completed } = parts;
+    const { verdict, diagnostics, flightRecord, aside, pending, completed } = parts;
     return page('right', ctx.book.chapter, ctx.pages[1], `
         <figure class="book-figure">
             <div id="mission-guide-scene-preview-host" class="guide-scene-preview-host book-scene is-active"></div>
@@ -141,6 +146,7 @@ function renderTrialPage(ctx: BookContext, parts: TrialParts): string {
             ${flightRecord ? `<details class="book-fold"><summary>Запись полёта</summary>${flightRecord}</details>` : ''}
             <div class="guide-diagnostics" id="diagnostics-container">${diagnostics}</div>
         </section>
+        ${aside ?? ''}
         ${completed ? `<div class="book-done"><div class="book-stamp is-set" aria-hidden="true"><span>Пройдено</span></div><div class="book-done__next"><p class="book-text">${escapeHtml(ctx.nav.note)}</p>${ctx.nav.next}</div></div>` : ''}
         <div class="book-turn">
             <button type="button" class="btn-secondary book-ghost" data-book-step="demo" ${pending ? 'disabled' : ''}><span aria-hidden="true">←</span> К демонстрации</button>
@@ -159,5 +165,5 @@ export function renderBlocksTrialPage(ctx: BookContext, view: BlocklyView): stri
         diagnostics: runtimeResult?.diagnostics || evaluation.diagnostics, launchedWithWarnings, previewActive,
         hasWorkspaceContent, expectedOutcome: lesson.expectedOutcome, pending: checking, idleText: IDLE_TEXT
     });
-    return renderTrialPage(ctx, { verdict, diagnostics, pending: checking, completed: isCompleted });
+    return renderTrialPage(ctx, { verdict, diagnostics, aside: renderBlocksAside(view), pending: checking, completed: isCompleted });
 }

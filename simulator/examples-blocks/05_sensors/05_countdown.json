@@ -1,0 +1,168 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "controls_for",
+            "fields": {
+              "VAR": {
+                "id": "var_0_t"
+              }
+            },
+            "inputs": {
+              "FROM": {
+                "block": {
+                  "type": "math_number",
+                  "fields": {
+                    "NUM": 5
+                  }
+                }
+              },
+              "TO": {
+                "block": {
+                  "type": "math_number",
+                  "fields": {
+                    "NUM": 1
+                  }
+                }
+              },
+              "BY": {
+                "block": {
+                  "type": "math_number",
+                  "fields": {
+                    "NUM": -1
+                  }
+                }
+              },
+              "DO": {
+                "block": {
+                  "type": "text_print",
+                  "inputs": {
+                    "TEXT": {
+                      "block": {
+                        "type": "variables_get",
+                        "fields": {
+                          "VAR": {
+                            "id": "var_0_t"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "next": {
+                    "block": {
+                      "type": "pioneer_led_all",
+                      "inputs": {
+                        "COLOUR": {
+                          "block": {
+                            "type": "pioneer_colour_rgb",
+                            "inputs": {
+                              "R": {
+                                "block": {
+                                  "type": "math_arithmetic",
+                                  "fields": {
+                                    "OP": "MULTIPLY"
+                                  },
+                                  "inputs": {
+                                    "A": {
+                                      "block": {
+                                        "type": "variables_get",
+                                        "fields": {
+                                          "VAR": {
+                                            "id": "var_0_t"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "B": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 50
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "G": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 0
+                                  }
+                                }
+                              },
+                              "B": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 0
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "next": {
+                        "block": {
+                          "type": "pioneer_wait",
+                          "inputs": {
+                            "SECONDS": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 1
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "next": {
+              "block": {
+                "type": "pioneer_preflight",
+                "next": {
+                  "block": {
+                    "type": "pioneer_takeoff",
+                    "next": {
+                      "block": {
+                        "type": "pioneer_land"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [
+    {
+      "name": "t",
+      "id": "var_0_t"
+    }
+  ],
+  "workspaceComments": [
+    {
+      "text": "Обратный отсчёт: переменная убывает от 5 до 1 с шагом −1, потом старт.",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

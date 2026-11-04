@@ -14,10 +14,16 @@ describe('Mission Guide Curriculum', () => {
         const luaState = getLuaLessonState();
         const pythonState = getPythonLessonState();
 
-        expect(luaState.chapters).toHaveLength(3);
-        expect(pythonState.chapters).toHaveLength(3);
-        expect(luaState.lessons).toHaveLength(10);
-        expect(pythonState.lessons).toHaveLength(10);
+        // Три главы старых заданий и четыре главы практикума на блоках pioneer_*.
+        expect(luaState.chapters).toHaveLength(7);
+        expect(pythonState.chapters).toHaveLength(7);
+        expect(luaState.lessons.filter((lesson) => !lesson.pioneer)).toHaveLength(10);
+        expect(pythonState.lessons.filter((lesson) => !lesson.pioneer)).toHaveLength(10);
+        expect(luaState.lessons.filter((lesson) => lesson.pioneer).length).toBeGreaterThanOrEqual(15);
+        for (const state of [luaState, pythonState]) {
+            const chapterIds = new Set(state.chapters.map((chapter) => chapter.id));
+            expect(state.lessons.every((lesson) => chapterIds.has(lesson.chapterId))).toBe(true);
+        }
         expect(luaState.chapters.every((chapter) => chapter.practiceTasks.length > 0)).toBe(true);
         expect(pythonState.chapters.every((chapter) => chapter.theorySections.length > 0)).toBe(true);
     });

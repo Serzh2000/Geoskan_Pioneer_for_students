@@ -88,7 +88,7 @@ export function supportsLanguage(model: DroneModelId | undefined | null, languag
 }
 
 /** Набор примеров редактора: у Мини 2 свои программы на pioneer_sdk2 (/api/files?lang=...). */
-export type ExamplesSet = 'lua' | 'python' | 'python-sdk2';
+export type ExamplesSet = 'lua' | 'python' | 'python-sdk2' | 'blocks';
 
 export function examplesSetFor(model: DroneModelId | undefined | null, language: ScriptLanguage): ExamplesSet {
     if (language === 'lua') return 'lua';

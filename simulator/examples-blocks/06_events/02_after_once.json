@@ -1,0 +1,144 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "pioneer_led_all",
+            "inputs": {
+              "COLOUR": {
+                "block": {
+                  "type": "pioneer_colour_preset",
+                  "fields": {
+                    "PRESET": "красный"
+                  }
+                }
+              }
+            },
+            "next": {
+              "block": {
+                "type": "pioneer_after",
+                "inputs": {
+                  "SECONDS": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 6
+                      }
+                    }
+                  },
+                  "DO": {
+                    "block": {
+                      "type": "pioneer_led_all",
+                      "inputs": {
+                        "COLOUR": {
+                          "block": {
+                            "type": "pioneer_colour_preset",
+                            "fields": {
+                              "PRESET": "зелёный"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "pioneer_preflight",
+                    "next": {
+                      "block": {
+                        "type": "pioneer_takeoff",
+                        "next": {
+                          "block": {
+                            "type": "pioneer_go_to",
+                            "inputs": {
+                              "X": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 1
+                                  }
+                                }
+                              },
+                              "Y": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 0
+                                  }
+                                }
+                              },
+                              "Z": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 1
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "pioneer_go_to",
+                                "inputs": {
+                                  "X": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 1
+                                      }
+                                    }
+                                  },
+                                  "Y": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 1
+                                      }
+                                    }
+                                  },
+                                  "Z": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 1
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "pioneer_land"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [],
+  "workspaceComments": [
+    {
+      "text": "Блок «Через N сек выполнить» срабатывает один раз: через 6 секунд после запуска свет становится зелёным.",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

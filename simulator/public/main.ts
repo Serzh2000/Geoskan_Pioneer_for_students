@@ -5,12 +5,13 @@ import { resetState, resetRuntimeStatePreservePose, drones, currentDroneId, curr
 import { init3D, updateDrone3D, is3DActive, addObject, appendPointToSelectedLinearObject, clearSceneSelection, deleteSelectedObject, finishSelectedLinearObjectEditing, getSelectedSceneObjectId, isSelectedLinearObjectEditingActive, listSceneObjects, focusSceneObjectById, resetDroneToOrigin, resetSelectedSceneObjectTransform, rotateSelectedSceneObjectByDegrees, selectSceneObjectById, toggleMultiSelectObjectById, setSceneObjectTransformMode, getSceneObjectTransformMode, setSelectedObjectTransform, startSelectedLinearObjectEditing, updateSelectedSceneObject, deleteSceneObjectById } from './modules/drone/index.js';
 import { runLuaScript, stopLuaScript } from './modules/lua/index.js';
 import { runPythonScript, stopPythonScript } from './modules/python/index.js';
-import { examplesSetFor, supportsLanguage } from './modules/core/drone-models.js';
+import { supportsLanguage } from './modules/core/drone-models.js';
 /**
  * Main browser entry point for the simulator.
  * Wires together the 3D scene, editor, UI controls, and script runtimes.
  */
-import { initEditor, getEditorValue, layoutEditor, setEditorValue } from './modules/editor/index.js';
+import { initEditor, getEditorValue, layoutEditor, loadMainBlocklyJson, setEditorValue } from './modules/editor/index.js';
+import { currentExamplesSet } from './modules/ui/controls/file-controls.js';
 import { initUI, type UICallbacks } from './modules/ui/index.js';
 import { restoreSceneSession, saveSceneSessionNow, startSceneSessionAutosave } from './modules/app/scene-session.js';
 import { log } from './modules/shared/logging/logger.js';
@@ -293,10 +294,11 @@ function clearSceneObjects() {
 
 async function loadFileContent(path: string) {
     try {
-        const examples = examplesSetFor(drones[currentDroneId]?.model, currentScriptLanguage);
+        const examples = currentExamplesSet();
         const res = await fetch(`/api/file-content?path=${encodeURIComponent(path)}&lang=${examples}`);
         const data = await res.json();
-        setEditorValue(data.content);
+        if (examples === 'blocks') await loadMainBlocklyJson(data.content);
+        else setEditorValue(data.content);
         log(`Файл загружен: ${path}`, 'success');
     } catch {
         log('Ошибка загрузки файла', 'error');

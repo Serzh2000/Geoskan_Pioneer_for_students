@@ -1,0 +1,196 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "pioneer_led_all",
+            "inputs": {
+              "COLOUR": {
+                "block": {
+                  "type": "pioneer_colour_rgb",
+                  "inputs": {
+                    "R": {
+                      "block": {
+                        "type": "math_number",
+                        "fields": {
+                          "NUM": 255
+                        }
+                      }
+                    },
+                    "G": {
+                      "block": {
+                        "type": "math_number",
+                        "fields": {
+                          "NUM": 128
+                        }
+                      }
+                    },
+                    "B": {
+                      "block": {
+                        "type": "math_number",
+                        "fields": {
+                          "NUM": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "next": {
+              "block": {
+                "type": "pioneer_wait",
+                "inputs": {
+                  "SECONDS": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 1
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "pioneer_led_all",
+                    "inputs": {
+                      "COLOUR": {
+                        "block": {
+                          "type": "pioneer_colour_rgb",
+                          "inputs": {
+                            "R": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 160
+                                }
+                              }
+                            },
+                            "G": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 0
+                                }
+                              }
+                            },
+                            "B": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 255
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "pioneer_wait",
+                        "inputs": {
+                          "SECONDS": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "pioneer_led_all",
+                            "inputs": {
+                              "COLOUR": {
+                                "block": {
+                                  "type": "pioneer_colour_rgb",
+                                  "inputs": {
+                                    "R": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 0
+                                        }
+                                      }
+                                    },
+                                    "G": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 220
+                                        }
+                                      }
+                                    },
+                                    "B": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 200
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "pioneer_wait",
+                                "inputs": {
+                                  "SECONDS": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 1
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "pioneer_led_all",
+                                    "inputs": {
+                                      "COLOUR": {
+                                        "block": {
+                                          "type": "pioneer_colour_preset",
+                                          "fields": {
+                                            "PRESET": "выключен"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [],
+  "workspaceComments": [
+    {
+      "text": "Свой цвет из красной, зелёной и синей составляющих (0–255): оранжевый, фиолетовый, бирюзовый.",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

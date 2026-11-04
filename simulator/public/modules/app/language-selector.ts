@@ -121,6 +121,7 @@ export function initScriptLanguageSelector(): void {
                 // Таргет компиляции — текущий currentScriptLanguage: он не
                 // сбрасывается при входе в Blockly и выходе из него.
                 setBlocklyEditorEnabled(true);
+                refreshFileList(currentScriptLanguage);
                 log(`Режим Blockly, таргет: ${currentScriptLanguage.toUpperCase()}`, 'info');
             }
             return;

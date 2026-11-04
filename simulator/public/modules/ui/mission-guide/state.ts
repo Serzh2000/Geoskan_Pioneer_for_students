@@ -149,6 +149,8 @@ export function isLessonUnlocked(state: GuideLessonState, language: ScriptLangua
     const currentIndex = getLessonIndex(state, lessonId);
     if (currentIndex <= 0) return true;
     const previousLesson = state.lessons[currentIndex - 1];
+    // Практикум на блоках pioneer_* открыт с первого урока: его не нужно проходить после старых заданий.
+    if (state.lessons[currentIndex].pioneer && !previousLesson?.pioneer) return true;
     return previousLesson ? isLessonCompleted(language, previousLesson.id) : true;
 }
 

@@ -9,6 +9,7 @@ export {
     initEditor,
     isBlocklyEditorEnabled,
     layoutEditor,
+    loadMainBlocklyJson,
     loadMainBlocklyXml,
     setEditorTheme,
     setBlocklyEditorEnabled,

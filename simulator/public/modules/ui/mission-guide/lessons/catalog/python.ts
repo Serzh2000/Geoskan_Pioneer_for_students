@@ -1,5 +1,6 @@
 import type { GuideLessonState } from '../../types.js';
 import { getGuideChapters } from '../../curriculum.js';
+import { getPioneerBlockLessons, getPioneerChapters } from '../pioneer/lessons.js';
 import { getPythonExpandedLessons } from '../expanded/python.js';
 import { getPythonLedLessons } from '../led/python.js';
 import { getPythonFlightLessons } from '../flight/python.js';
@@ -23,6 +24,7 @@ export function getPythonLessonState(): GuideLessonState {
     ]
         .map((lessonId) => lessonMap.get(lessonId))
         .filter((lesson): lesson is NonNullable<typeof lesson> => Boolean(lesson))
+        .concat(getPioneerBlockLessons('python'))
         .map((lesson, index) => ({
             ...lesson,
             badge: `Задание ${index + 1}`
@@ -33,8 +35,8 @@ export function getPythonLessonState(): GuideLessonState {
         heroEyebrow: 'Python-практикум',
         heroTitle: 'Пошаговые уроки по Python SDK Pioneer',
         heroText: 'Каждый урок сначала объясняет нужные методы SDK, а затем предлагает собрать и проверить рабочую последовательность команд в симуляторе.',
-        heroFlow: '10 уроков: от LED-подсветки к полной полетной миссии',
-        chapters: getGuideChapters('python'),
+        heroFlow: `${lessons.length} заданий: от LED-подсветки к полной полётной миссии и практикум на единых блоках`,
+        chapters: [...getGuideChapters('python'), ...getPioneerChapters('python')],
         lessons
     };
 }

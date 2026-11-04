@@ -1,0 +1,153 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "variables_set",
+            "fields": {
+              "VAR": {
+                "id": "var_0_x"
+              }
+            },
+            "inputs": {
+              "VALUE": {
+                "block": {
+                  "type": "math_number",
+                  "fields": {
+                    "NUM": 0
+                  }
+                }
+              }
+            },
+            "next": {
+              "block": {
+                "type": "pioneer_preflight",
+                "next": {
+                  "block": {
+                    "type": "pioneer_takeoff",
+                    "next": {
+                      "block": {
+                        "type": "controls_whileUntil",
+                        "fields": {
+                          "MODE": "WHILE"
+                        },
+                        "inputs": {
+                          "BOOL": {
+                            "block": {
+                              "type": "logic_compare",
+                              "fields": {
+                                "OP": "LT"
+                              },
+                              "inputs": {
+                                "A": {
+                                  "block": {
+                                    "type": "variables_get",
+                                    "fields": {
+                                      "VAR": {
+                                        "id": "var_0_x"
+                                      }
+                                    }
+                                  }
+                                },
+                                "B": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 2
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "DO": {
+                            "block": {
+                              "type": "math_change",
+                              "fields": {
+                                "VAR": {
+                                  "id": "var_0_x"
+                                }
+                              },
+                              "inputs": {
+                                "DELTA": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 0.5
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "pioneer_go_to",
+                                  "inputs": {
+                                    "X": {
+                                      "block": {
+                                        "type": "variables_get",
+                                        "fields": {
+                                          "VAR": {
+                                            "id": "var_0_x"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "Y": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 0
+                                        }
+                                      }
+                                    },
+                                    "Z": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 1
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "pioneer_land"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [
+    {
+      "name": "x",
+      "id": "var_0_x"
+    }
+  ],
+  "workspaceComments": [
+    {
+      "text": "Цикл «пока»: дрон шагает вперёд по 0.5 м, пока координата x меньше 2.",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

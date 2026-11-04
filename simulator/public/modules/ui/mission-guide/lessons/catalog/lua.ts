@@ -1,5 +1,6 @@
 import type { GuideLessonState } from '../../types.js';
 import { getGuideChapters } from '../../curriculum.js';
+import { getPioneerBlockLessons, getPioneerChapters } from '../pioneer/lessons.js';
 import { getLuaExpandedLessons } from '../expanded/lua.js';
 import { getLuaLedLessons } from '../led/lua.js';
 import { getLuaFlightLessons } from '../flight/lua.js';
@@ -23,6 +24,7 @@ export function getLuaLessonState(): GuideLessonState {
     ]
         .map((lessonId) => lessonMap.get(lessonId))
         .filter((lesson): lesson is NonNullable<typeof lesson> => Boolean(lesson))
+        .concat(getPioneerBlockLessons('lua'))
         .map((lesson, index) => ({
             ...lesson,
             badge: `Задание ${index + 1}`
@@ -33,8 +35,8 @@ export function getLuaLessonState(): GuideLessonState {
         heroEyebrow: 'Lua-практикум',
         heroTitle: 'Пошаговые уроки по Lua API Pioneer',
         heroText: 'Каждый урок сочетает краткий разбор методов Pioneer API, сборку сценария в Blockly и мгновенную проверку результата в симуляторе.',
-        heroFlow: '10 уроков: от LED-команд к полной миссии автопилота',
-        chapters: getGuideChapters('lua'),
+        heroFlow: `${lessons.length} заданий: от LED-команд к полной миссии автопилота и практикум на единых блоках`,
+        chapters: [...getGuideChapters('lua'), ...getPioneerChapters('lua')],
         lessons
     };
 }

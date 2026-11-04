@@ -1,0 +1,218 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "variables_set",
+            "fields": {
+              "VAR": {
+                "id": "var_0_floor"
+              }
+            },
+            "inputs": {
+              "VALUE": {
+                "block": {
+                  "type": "math_number",
+                  "fields": {
+                    "NUM": 0.5
+                  }
+                }
+              }
+            },
+            "next": {
+              "block": {
+                "type": "pioneer_preflight",
+                "next": {
+                  "block": {
+                    "type": "pioneer_takeoff",
+                    "next": {
+                      "block": {
+                        "type": "controls_repeat_ext",
+                        "inputs": {
+                          "TIMES": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 4
+                              }
+                            }
+                          },
+                          "DO": {
+                            "block": {
+                              "type": "pioneer_go_to",
+                              "inputs": {
+                                "X": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 0
+                                    }
+                                  }
+                                },
+                                "Y": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 0
+                                    }
+                                  }
+                                },
+                                "Z": {
+                                  "block": {
+                                    "type": "variables_get",
+                                    "fields": {
+                                      "VAR": {
+                                        "id": "var_0_floor"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "pioneer_led_all",
+                                  "inputs": {
+                                    "COLOUR": {
+                                      "block": {
+                                        "type": "pioneer_colour_rgb",
+                                        "inputs": {
+                                          "R": {
+                                            "block": {
+                                              "type": "math_arithmetic",
+                                              "fields": {
+                                                "OP": "MULTIPLY"
+                                              },
+                                              "inputs": {
+                                                "A": {
+                                                  "block": {
+                                                    "type": "variables_get",
+                                                    "fields": {
+                                                      "VAR": {
+                                                        "id": "var_0_floor"
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "B": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 100
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "G": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 80
+                                              }
+                                            }
+                                          },
+                                          "B": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 255
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "pioneer_wait",
+                                      "inputs": {
+                                        "SECONDS": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 0.5
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "math_change",
+                                          "fields": {
+                                            "VAR": {
+                                              "id": "var_0_floor"
+                                            }
+                                          },
+                                          "inputs": {
+                                            "DELTA": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 0.4
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "pioneer_led_all",
+                            "inputs": {
+                              "COLOUR": {
+                                "block": {
+                                  "type": "pioneer_colour_preset",
+                                  "fields": {
+                                    "PRESET": "выключен"
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "pioneer_land"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [
+    {
+      "name": "floor",
+      "id": "var_0_floor"
+    }
+  ],
+  "workspaceComments": [
+    {
+      "text": "Башенка: дрон поднимается на каждый этаж (одно число в переменной) и мигает светом на каждой высоте.",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

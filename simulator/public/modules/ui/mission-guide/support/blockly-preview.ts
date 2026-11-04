@@ -32,7 +32,12 @@ let lessonBlockTypes: string[] = [];
 
 function applyLessonToolbox(): void {
     const workspace = getMainBlocklyWorkspace();
-    if (!workspace || !Blockly || !lessonBlockTypes.length) return;
+    if (!workspace || !Blockly) return;
+    // Уроки на блоках pioneer_* работают с полным набором блоков редактора, а не с набором «Команды урока».
+    if (!lessonBlockTypes.length) {
+        workspace.updateToolbox(buildMainEditorToolbox(currentScriptLanguage));
+        return;
+    }
     const blocks = [...new Set(lessonBlockTypes)].filter((type) => Blockly.Blocks[type]);
     workspace.updateToolbox(`<xml><category name="Команды урока" colour="#22c55e">${blocks.map((type) => {
         if (type === 'lua_ledbar_new') return '<block type="lua_ledbar_new"><value name="COUNT"><shadow type="math_number"><field name="NUM">29</field></shadow></value></block>';

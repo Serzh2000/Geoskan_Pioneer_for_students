@@ -4,6 +4,7 @@ import { localize } from '../../book/localize.js';
 
 type Language = 'lua' | 'python';
 type Exercise = {
+    taskSteps?: string[];
     task: string; observation: string; hint: string; experiment: string;
     question: string; right: string; wrong: string; feedback: string;
     lua: [starter: string, solution: string]; python: [starter: string, solution: string];
@@ -24,9 +25,15 @@ const exercises: Exercise[] = [
         python: ['# Осмотр аппарата: команд нет.', '# Осмотр аппарата: команд нет.']
     },
     {
-        task: 'В строке-заготовке оставьте знак комментария: <lua>`--`</lua><py>`#`</py>. Слово TODO с двоеточием и весь остальной текст строки удалите. После знака комментария напишите Мой первый опыт без кавычек. Нажмите «Проверить и запустить». Команды двигателям не добавляйте.',
+        task: 'Замените один комментарий и запустите программу.',
+        taskSteps: [
+            'В редакторе «Ваш код» найдите строку: <lua>`-- TODO: замените этот комментарий`</lua><py>`# TODO: замените этот комментарий`</py>',
+            'Удалите эту строку и на её месте напишите: <lua>`-- Мой первый опыт`</lua><py>`# Мой первый опыт`</py>',
+            'Остальные строки оставьте как есть.',
+            'Нажмите «Проверить и запустить». Дрон должен остаться на месте.'
+        ],
         observation: 'Редактор содержит ваш комментарий, запуск прошёл без ошибок, дрон не подготовился и не взлетел.',
-        hint: 'Комментарий начинается с <lua>--</lua><py>#</py>. Комментарий объясняет код человеку и не выполняет действие.',
+        hint: 'Щёлкните по строке с TODO в редакторе. Выделите весь текст этой строки и вместо него введите <lua>`-- Мой первый опыт`</lua><py>`# Мой первый опыт`</py>. Знаки <lua>`--`</lua><py>`#`</py> в начале тоже нужны. Кавычки не добавляйте. Это комментарий: он поясняет программу человеку, но не даёт дрону команд.',
         experiment: 'Измените только текст комментария и повторите. Сравните положение и состояние аппарата.',
         question: 'Изменение текста комментария само запускает двигатели?', right: 'Нет, комментарий не выполняет команд', wrong: 'Да, любое изменение редактора запускает дрон',
         feedback: 'Редактирование и запуск — разные действия. Даже при запуске комментарий остаётся пояснением для человека.',
@@ -121,7 +128,7 @@ export function getDroneAcademyPractices(language: Language): GuideTextLesson[] 
         return {
             id: `${language}-${curriculum.id}`, topicId: curriculum.id, chapterId: curriculum.moduleId,
             badge: `Урок ${curriculum.number}`, title: curriculum.title,
-            goal: exercise.task, summary: curriculum.explanation, lessonIntro: curriculum.explanation,
+            goal: exercise.task, taskSteps: source.taskSteps?.map(step => localize(step, language)), summary: curriculum.explanation, lessonIntro: curriculum.explanation,
             expectedOutcome: exercise.observation, builderHint: exercise.hint,
             starterCode: wrap(starter, language), solutionCode: wrap(solution, language),
             apiFocus: index < 2 ? [{ title: 'Наблюдение и комментарий', summary: exercise.hint }]

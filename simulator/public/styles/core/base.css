@@ -43,6 +43,9 @@
      */
     --rail-width: 72px;
     --rail-btn-size: 40px;
+    /* Outer padding of .container and the rail's top padding: the rail toggle is positioned from these. */
+    --shell-pad: 14px;
+    --rail-pad-top: 8px;
     --panel-header-height: 52px;
     --panel-content-pad: 16px;
     --panel-content-gap: 16px;

@@ -25,6 +25,8 @@ import { gradeFlightAcademy } from '../../academy/evaluation/flight.js';
 import { gradeTelemetryAcademy } from '../../academy/evaluation/telemetry.js';
 import { gradeVisionAcademy } from '../../academy/evaluation/vision.js';
 import { buildFlightTimeline } from './timeline.js';
+import { PIONEER_BY_TOPIC } from '../../lessons/pioneer/catalog.js';
+import { gradePioneerLesson, isFlightFinished } from '../../lessons/pioneer/grade.js';
 
 const DEFAULT_WAIT_MS = 2500;
 
@@ -50,6 +52,9 @@ async function evaluateTextLesson(
     const waitMs = options?.waitMs ?? DEFAULT_WAIT_MS;
     const startedAt = performance.now();
     const droneId = currentDroneId;
+    // Урок на блоках pioneer_*: наблюдение кончается, когда дрон сел (плюс короткая пауза), а не по таймеру.
+    const pioneer = PIONEER_BY_TOPIC[topicId];
+    let finishedAt: number | null = null;
     const samples: DroneSample[] = timelineHolder.samples;
     do {
         if (options?.isCurrent && !options.isCurrent()) break;
@@ -57,6 +62,10 @@ async function evaluateTextLesson(
         if (current) samples.push({ elapsedMs: performance.now() - startedAt, snapshot: current });
         if (current && /ОШИБКА|CRASHED|DISARMED_FALL/.test(current.status || '')) break;
         if (options?.capture && options.doneMessage && hasLearningMessage(options.capture.droneId, options.capture.token, options.doneMessage)) break;
+        if (pioneer && isFlightFinished(pioneer.expect, samples)) {
+            finishedAt ??= performance.now();
+            if (performance.now() - finishedAt > 800) break;
+        }
         const remaining = waitMs - (performance.now() - startedAt);
         if (remaining <= 0) break;
         await wait(Math.min(100, remaining));
@@ -74,6 +83,11 @@ async function evaluateTextLesson(
         if (number <= 63) return gradeFlightAcademy(number, samples, events, options?.activity || { code: '' });
         if (number <= 72) return gradeTelemetryAcademy(number, samples, events, options?.activity || { code: '' });
         if (number <= 108) return gradeVisionAcademy(number, samples, events, options?.activity || { code: '' });
+    }
+
+    if (pioneer) {
+        const diagnostics = gradePioneerLesson(pioneer.expect, samples);
+        return { solved: !diagnostics.some((diagnostic) => diagnostic.kind === 'error'), complete: true, diagnostics };
     }
 
     const grader = TEXT_LESSON_GRADERS[topicId];

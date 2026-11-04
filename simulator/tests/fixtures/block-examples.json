@@ -1,0 +1,1420 @@
+[
+  {
+    "file": "01_start/01_takeoff_land.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "01_start/02_hover.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "01_start/03_fly_up.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        0,
+        0,
+        1.5
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "01_start/04_forward_and_back.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "01_start/05_disarm_after_landing.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        0.5,
+        0.5,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "01_start/06_turn_around.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "02_flight/01_square.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "02_flight/02_square_twice.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "02_flight/03_triangle.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        0.5,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "02_flight/04_rectangle.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        2,
+        0,
+        1
+      ],
+      [
+        2,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "02_flight/05_diamond.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        2,
+        1,
+        1
+      ],
+      [
+        1,
+        2,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "02_flight/06_cross.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        -1,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        -1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "02_flight/07_staircase.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        0.5,
+        0,
+        0.75
+      ],
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1.5,
+        0,
+        1.25
+      ],
+      [
+        2,
+        0,
+        1.5
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "02_flight/08_zigzag.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        0.5,
+        1,
+        1
+      ],
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1.5,
+        1,
+        1
+      ],
+      [
+        2,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "02_flight/09_points_list.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1.5
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "02_flight/10_circle.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        0.13,
+        0.5,
+        1
+      ],
+      [
+        0.5,
+        0.87,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        1.5,
+        0.87,
+        1
+      ],
+      [
+        1.87,
+        0.5,
+        1
+      ],
+      [
+        2,
+        0,
+        1
+      ],
+      [
+        1.87,
+        -0.5,
+        1
+      ],
+      [
+        1.5,
+        -0.87,
+        1
+      ],
+      [
+        1,
+        -1,
+        1
+      ],
+      [
+        0.5,
+        -0.87,
+        1
+      ],
+      [
+        0.13,
+        -0.5,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "02_flight/11_spiral_up.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        0.7,
+        0,
+        0.8
+      ],
+      [
+        0.49,
+        0.49,
+        0.98
+      ],
+      [
+        0,
+        0.7,
+        1.16
+      ],
+      [
+        -0.49,
+        0.49,
+        1.34
+      ],
+      [
+        -0.7,
+        0,
+        1.52
+      ],
+      [
+        -0.49,
+        -0.49,
+        1.7
+      ],
+      [
+        0,
+        -0.7,
+        1.88
+      ],
+      [
+        0.49,
+        -0.49,
+        2.06
+      ],
+      [
+        0.7,
+        0,
+        2.24
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "02_flight/12_turn_while_flying.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "02_flight/13_grid_scan.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        0.5,
+        1
+      ],
+      [
+        0,
+        0.5,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "03_leds/01_colour_presets.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [],
+    "led": [
+      "255,0,0",
+      "0,255,0",
+      "0,0,255",
+      "255,255,255",
+      "0,0,0"
+    ],
+    "lands": false,
+    "seconds": 10
+  },
+  {
+    "file": "03_leds/02_rgb_mix.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [],
+    "led": [
+      "255,128,0",
+      "160,0,255",
+      "0,220,200",
+      "0,0,0"
+    ],
+    "lands": false,
+    "seconds": 10
+  },
+  {
+    "file": "03_leds/03_traffic_light.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [],
+    "led": [
+      "255,0,0",
+      "255,255,0",
+      "0,255,0",
+      "255,0,0",
+      "255,255,0",
+      "0,255,0",
+      "255,0,0",
+      "255,255,0",
+      "0,255,0",
+      "0,0,0"
+    ],
+    "lands": false,
+    "seconds": 30
+  },
+  {
+    "file": "03_leds/04_blink.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [],
+    "led": [
+      "255,255,255",
+      "0,0,0",
+      "255,255,255",
+      "0,0,0",
+      "255,255,255",
+      "0,0,0",
+      "255,255,255",
+      "0,0,0",
+      "255,255,255",
+      "0,0,0"
+    ],
+    "lands": false,
+    "seconds": 15
+  },
+  {
+    "file": "03_leds/05_running_light.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [],
+    "led": [
+      "0,255,0",
+      "0,0,0",
+      "0,255,0",
+      "0,0,0"
+    ],
+    "lands": false,
+    "seconds": 15
+  },
+  {
+    "file": "03_leds/06_rainbow.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [],
+    "led": [
+      "255,0,0",
+      "255,255,0",
+      "0,255,0",
+      "0,255,255",
+      "0,0,255",
+      "255,0,255",
+      "0,0,0"
+    ],
+    "lands": false,
+    "seconds": 15
+  },
+  {
+    "file": "03_leds/07_police.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [],
+    "led": [
+      "255,0,0",
+      "0,0,255",
+      "255,0,0",
+      "0,0,255",
+      "255,0,0",
+      "0,0,255",
+      "255,0,0",
+      "0,0,255",
+      "0,0,0"
+    ],
+    "lands": false,
+    "seconds": 15
+  },
+  {
+    "file": "03_leds/08_flight_colours.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ]
+    ],
+    "led": [
+      "255,255,255",
+      "0,255,0",
+      "255,255,0",
+      "255,0,0",
+      "0,0,0"
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "04_logic/01_variable_height.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1.5
+      ],
+      [
+        1,
+        1,
+        1.5
+      ],
+      [
+        0,
+        0,
+        1.5
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "04_logic/02_side_length.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1.5,
+        0,
+        1
+      ],
+      [
+        1.5,
+        1.5,
+        1
+      ],
+      [
+        0,
+        1.5,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "04_logic/03_if_else.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        2,
+        0,
+        1
+      ]
+    ],
+    "led": [
+      "0,255,0"
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "04_logic/04_alternate_colours.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        0.3,
+        0,
+        1
+      ],
+      [
+        0.6,
+        0,
+        1
+      ],
+      [
+        0.9,
+        0,
+        1
+      ],
+      [
+        1.2,
+        0,
+        1
+      ],
+      [
+        1.5,
+        0,
+        1
+      ],
+      [
+        1.8,
+        0,
+        1
+      ]
+    ],
+    "led": [
+      "255,0,0",
+      "0,255,0",
+      "255,0,0",
+      "0,255,0",
+      "255,0,0",
+      "0,255,0"
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "04_logic/05_while_loop.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        0.5,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1.5,
+        0,
+        1
+      ],
+      [
+        2,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "04_logic/06_signal_function.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ]
+    ],
+    "led": [
+      "255,0,0",
+      "0,255,0",
+      "255,0,0",
+      "0,0,0"
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "04_logic/07_random_colour.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [],
+    "lands": false,
+    "seconds": 15
+  },
+  {
+    "file": "04_logic/08_wait_until.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "04_logic/09_tower.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        0,
+        0,
+        0.5
+      ],
+      [
+        0,
+        0,
+        0.9
+      ],
+      [
+        0,
+        0,
+        1.3
+      ],
+      [
+        0,
+        0,
+        1.7
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "05_sensors/01_print_position.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "05_sensors/02_flight_timer.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "05_sensors/03_battery_check.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "05_sensors/04_height_light.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        0,
+        0,
+        0.5
+      ],
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        1.5
+      ],
+      [
+        0,
+        0,
+        2
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "05_sensors/05_countdown.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [],
+    "led": [
+      "250,0,0",
+      "200,0,0",
+      "150,0,0",
+      "100,0,0",
+      "50,0,0"
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "06_events/01_blink_timer.json",
+    "targets": [
+      "lua"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "led": [
+      "255,0,0",
+      "0,0,0"
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "06_events/02_after_once.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ]
+    ],
+    "led": [
+      "255,0,0",
+      "0,255,0"
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "06_events/03_two_timers.json",
+    "targets": [
+      "lua"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "led": [
+      "0,0,255",
+      "0,0,0"
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "06_events/04_lua_landing_event.json",
+    "targets": [
+      "lua"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ]
+    ],
+    "led": [
+      "255,0,0",
+      "0,255,0"
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "07_projects/01_cargo_delivery.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1.5,
+        0,
+        1
+      ],
+      [
+        1.5,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "led": [
+      "255,255,0",
+      "0,255,0"
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "07_projects/02_patrol.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "led": [
+      "0,255,0",
+      "0,0,255",
+      "0,0,0"
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "07_projects/03_light_show.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        0,
+        0,
+        0.6
+      ],
+      [
+        0,
+        0,
+        1.2
+      ],
+      [
+        0,
+        0,
+        1.8
+      ]
+    ],
+    "led": [
+      "255,0,0",
+      "85,255,0",
+      "0,170,255",
+      "255,0,0",
+      "85,255,0",
+      "0,170,255",
+      "255,0,0",
+      "85,255,0",
+      "0,170,255",
+      "0,0,0"
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "07_projects/04_photo_points.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "lands": true,
+    "seconds": 120
+  },
+  {
+    "file": "07_projects/05_two_cargo_runs.json",
+    "targets": [
+      "lua",
+      "python"
+    ],
+    "points": [
+      [
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "led": [
+      "255,255,0",
+      "0,255,0",
+      "255,255,0",
+      "0,255,0"
+    ],
+    "lands": true,
+    "seconds": 120
+  }
+]

@@ -1,8 +1,7 @@
 import { renderPracticeBrief } from './learning.js';
-import { renderWalkthrough } from './walkthrough.js';
+import { renderPracticum } from './walkthrough.js';
 import { getMissionGuideDraft } from '../support/monaco-preview.js';
 import { ACADEMY_MODULES } from '../academy/catalog.js';
-import { isMissionGuideScenePreviewActive } from '../support/scene-preview.js';
 import { getActiveTextLesson, isLessonCompleted } from '../state.js';
 import type { GuideTextLesson, GuideTextLessonState } from '../types.js';
 import {
@@ -11,62 +10,53 @@ import {
     renderRunBanner
 } from './support.js';
 import { renderLessonHeader } from './shared.js';
-import { renderResultScene } from './check-step.js';
 import { renderTextCheckParts } from './text-check.js';
-import { practiceNote } from './practice-note.js';
 import { renderTerrainPrep } from './terrain-prep.js';
 import { renderInspectionQuestions } from './inspection-questions.js';
 import { describeLessonNav } from './lesson-nav.js';
 import { renderBookGuide, renderBookSwitch } from '../book/render.js';
 import { isBookView } from '../book/view.js';
 
-function renderTextBuildStep(track: 'lua' | 'python', lesson: GuideTextLesson): string {
+function renderTextBuildStep(track: 'lua' | 'python', lesson: GuideTextLesson): { brief: string; work: string; answers?: string } {
     const inspect = lesson.academy?.mode === 'inspect';
     const language = track === 'python' ? 'Python' : 'Lua';
-    const note = practiceNote(track, lesson);
     const terrain = renderTerrainPrep(lesson);
     const questions = inspect ? renderInspectionQuestions() : '';
+    const actions = `<div class="guide-actions">
+                    <button type="button" class="btn-primary" data-guide-text-check>${inspect ? 'Проверить наблюдение' : 'Проверить и запустить'}</button>
+                    ${!inspect && lesson.academy ? '<button type="button" class="btn-secondary" data-guide-text-starter>Вернуть заготовку</button>' : ''}
+                    ${!inspect ? '<button type="button" class="btn-secondary" data-guide-text-undo hidden>Отменить замену</button>' : ''}
+                    <button type="button" class="btn-secondary" data-guide-text-reset>Сбросить проверку</button>
+                </div>`;
     const work = inspect
         ? '<div id="mission-guide-scene-preview-host" class="guide-scene-preview-host pk-device is-active"></div>'
         : `<div class="pk-device guide-editor"><div class="guide-editor__bar"><b>Ваш код</b><span>${language}</span></div>
             <div id="mission-guide-monaco-preview-host" class="guide-monaco-preview-host"><div class="guide-monaco-preview__placeholder">Загружаю редактор…</div></div></div>
             ${lesson.academy ? '<div id="mission-guide-scene-preview-host" class="guide-scene-preview-host pk-device is-active"></div>' : ''}`;
-    return `
-        <div class="guide-practice">
-            <div class="guide-practice__brief">
+    return { brief: `
                 ${renderPracticeBrief(lesson)}
-                <p class="guide-practice__note">${escapeHtml(note)}</p>
-                ${questions}
                 ${terrain}
                 ${lesson.links.length ? `<div class="pk-btn-row">${lesson.links.map(link => `<button type="button" class="btn-secondary btn--sm" data-guide-query="${escapeHtml(link.query)}">${escapeHtml(link.label)}</button>`).join('')}</div>` : ''}
-                <div class="guide-actions">
-                    <button type="button" class="btn-primary" data-guide-text-check>${inspect ? 'Проверить наблюдение' : 'Проверить и запустить'}</button>
-                    ${!inspect && lesson.academy ? '<button type="button" class="btn-secondary" data-guide-text-starter>Вернуть заготовку</button>' : ''}
-                    ${!inspect ? '<button type="button" class="btn-secondary" data-guide-text-undo hidden>Отменить замену</button>' : ''}
-                    <button type="button" class="btn-secondary" data-guide-text-reset>Сбросить проверку</button>
-                </div>
-                <div class="guide-draft-status" role="status" data-guide-draft-status>Черновик этого урока сохраняется при переходах между вкладками.</div>
-                ${renderRunBanner(track, lesson.id)}
-            </div>
-            <div class="guide-practice__work">${work}</div>
-        </div>
-    `;
+                ${inspect ? '' : actions}
+                ${inspect ? '' : renderRunBanner(track, lesson.id)}
+    `, work, answers: inspect ? `${questions}${actions}` : undefined };
 }
 
 function renderTextCheckStep(track: 'lua' | 'python', lesson: GuideTextLesson): string {
-    const { hasChecked, pending, verdict, flightRecord, diagnostics } = renderTextCheckParts(track, lesson);
+    const { hasChecked, pending, verdict, flightRecord, diagnostics } = renderTextCheckParts(track, lesson, 'Выполните задание и запустите проверку. Результат появится здесь.', true);
+    if (lesson.academy?.mode === 'inspect') return `<div class="guide-result"><div class="guide-result__main">${verdict}${pending ? '<button type="button" class="btn-secondary" data-walkthrough-cancel>Остановить проверку</button>' : ''}${diagnostics ? `<div class="guide-diagnostics" id="diagnostics-container">${diagnostics}</div>` : ''}</div></div>`;
     return `
         <div class="guide-result">
             <div class="guide-result__main">
                 ${verdict}
                 <div class="guide-actions">
-                    ${pending ? '<button type="button" class="btn-secondary" data-walkthrough-cancel>Остановить проверку</button>' : `<button type="button" class="${hasChecked ? 'btn-secondary' : 'btn-primary'}" data-guide-step="build">${hasChecked ? 'Вернуться к коду' : 'Перейти к коду'}</button>`}
-                    ${hasChecked && lesson.academy?.mode !== 'inspect' ? '<button type="button" class="btn-secondary" data-guide-text-check>Повторить проверку</button>' : ''}
+                    ${pending ? '<button type="button" class="btn-secondary" data-walkthrough-cancel>Остановить проверку</button>' : ''}
+                    ${hasChecked ? '<button type="button" class="btn-secondary" data-guide-text-check>Повторить проверку</button>' : ''}
                 </div>
-                ${flightRecord}
+${flightRecord ? `<details class="pk-disclosure guide-practicum__journal"><summary>Журнал опыта</summary>${flightRecord}</details>` : ''}
                 <div class="guide-diagnostics" id="diagnostics-container">${diagnostics}</div>
             </div>
-            ${renderResultScene(isMissionGuideScenePreviewActive())}
+            
         </div>
     `;
 }
@@ -93,7 +83,7 @@ export function renderTextGuide(state: GuideTextLessonState, track: 'lua' | 'pyt
                 ${renderBookSwitch()}
                 ${renderLessonHeader(crumb, lesson.title, isCompleted, lesson.academy ? '' : renderInline(lesson.summary))}
 
-                ${renderWalkthrough(lesson, track, getMissionGuideDraft(track, lesson.id, lesson.starterCode), { build: renderTextBuildStep(track, lesson), check: renderTextCheckStep(track, lesson), completed: isCompleted, hasPrevious: Boolean(nav.previous), lessonNav: {
+                ${renderPracticum(lesson, track, getMissionGuideDraft(track, lesson.id, lesson.starterCode), { build: renderTextBuildStep(track, lesson), check: renderTextCheckStep(track, lesson), completed: isCompleted, hasPrevious: Boolean(nav.previous), lessonNav: {
                     note: nav.note,
                     previous: nav.previous ? '<button type="button" class="btn-secondary" data-guide-nav="prev">Предыдущий урок</button>' : '',
                     next: next.replace(' disabled', '').replace('>Следующий урок<', nav.next?.kind === 'lesson' ? `>Дальше: ${escapeHtml(nav.next.lesson.title)}<` : '>Следующий урок<')

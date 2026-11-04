@@ -1,0 +1,158 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "pioneer_led_all",
+            "inputs": {
+              "COLOUR": {
+                "block": {
+                  "type": "pioneer_colour_preset",
+                  "fields": {
+                    "PRESET": "выключен"
+                  }
+                }
+              }
+            },
+            "next": {
+              "block": {
+                "type": "controls_repeat_ext",
+                "inputs": {
+                  "TIMES": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 2
+                      }
+                    }
+                  },
+                  "DO": {
+                    "block": {
+                      "type": "controls_for",
+                      "fields": {
+                        "VAR": {
+                          "id": "var_0_n"
+                        }
+                      },
+                      "inputs": {
+                        "FROM": {
+                          "block": {
+                            "type": "math_number",
+                            "fields": {
+                              "NUM": 0
+                            }
+                          }
+                        },
+                        "TO": {
+                          "block": {
+                            "type": "math_number",
+                            "fields": {
+                              "NUM": 3
+                            }
+                          }
+                        },
+                        "BY": {
+                          "block": {
+                            "type": "math_number",
+                            "fields": {
+                              "NUM": 1
+                            }
+                          }
+                        },
+                        "DO": {
+                          "block": {
+                            "type": "pioneer_led_index",
+                            "inputs": {
+                              "INDEX": {
+                                "block": {
+                                  "type": "variables_get",
+                                  "fields": {
+                                    "VAR": {
+                                      "id": "var_0_n"
+                                    }
+                                  }
+                                }
+                              },
+                              "COLOUR": {
+                                "block": {
+                                  "type": "pioneer_colour_preset",
+                                  "fields": {
+                                    "PRESET": "зелёный"
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "pioneer_wait",
+                                "inputs": {
+                                  "SECONDS": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 0.4
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "pioneer_led_index",
+                                    "inputs": {
+                                      "INDEX": {
+                                        "block": {
+                                          "type": "variables_get",
+                                          "fields": {
+                                            "VAR": {
+                                              "id": "var_0_n"
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "COLOUR": {
+                                        "block": {
+                                          "type": "pioneer_colour_preset",
+                                          "fields": {
+                                            "PRESET": "выключен"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [
+    {
+      "name": "n",
+      "id": "var_0_n"
+    }
+  ],
+  "workspaceComments": [
+    {
+      "text": "Бегущий огонёк: цикл по номерам светодиодов от 0 до 3 зажигает по одному и гасит предыдущий.",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

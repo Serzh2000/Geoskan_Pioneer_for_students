@@ -1,0 +1,266 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "controls_repeat_ext",
+            "inputs": {
+              "TIMES": {
+                "block": {
+                  "type": "math_number",
+                  "fields": {
+                    "NUM": 4
+                  }
+                }
+              },
+              "DO": {
+                "block": {
+                  "type": "pioneer_led_index",
+                  "inputs": {
+                    "INDEX": {
+                      "block": {
+                        "type": "math_number",
+                        "fields": {
+                          "NUM": 0
+                        }
+                      }
+                    },
+                    "COLOUR": {
+                      "block": {
+                        "type": "pioneer_colour_preset",
+                        "fields": {
+                          "PRESET": "красный"
+                        }
+                      }
+                    }
+                  },
+                  "next": {
+                    "block": {
+                      "type": "pioneer_led_index",
+                      "inputs": {
+                        "INDEX": {
+                          "block": {
+                            "type": "math_number",
+                            "fields": {
+                              "NUM": 1
+                            }
+                          }
+                        },
+                        "COLOUR": {
+                          "block": {
+                            "type": "pioneer_colour_preset",
+                            "fields": {
+                              "PRESET": "красный"
+                            }
+                          }
+                        }
+                      },
+                      "next": {
+                        "block": {
+                          "type": "pioneer_led_index",
+                          "inputs": {
+                            "INDEX": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 2
+                                }
+                              }
+                            },
+                            "COLOUR": {
+                              "block": {
+                                "type": "pioneer_colour_preset",
+                                "fields": {
+                                  "PRESET": "синий"
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "pioneer_led_index",
+                              "inputs": {
+                                "INDEX": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 3
+                                    }
+                                  }
+                                },
+                                "COLOUR": {
+                                  "block": {
+                                    "type": "pioneer_colour_preset",
+                                    "fields": {
+                                      "PRESET": "синий"
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "pioneer_wait",
+                                  "inputs": {
+                                    "SECONDS": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 0.3
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "pioneer_led_index",
+                                      "inputs": {
+                                        "INDEX": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 0
+                                            }
+                                          }
+                                        },
+                                        "COLOUR": {
+                                          "block": {
+                                            "type": "pioneer_colour_preset",
+                                            "fields": {
+                                              "PRESET": "синий"
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "pioneer_led_index",
+                                          "inputs": {
+                                            "INDEX": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 1
+                                                }
+                                              }
+                                            },
+                                            "COLOUR": {
+                                              "block": {
+                                                "type": "pioneer_colour_preset",
+                                                "fields": {
+                                                  "PRESET": "синий"
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "next": {
+                                            "block": {
+                                              "type": "pioneer_led_index",
+                                              "inputs": {
+                                                "INDEX": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 2
+                                                    }
+                                                  }
+                                                },
+                                                "COLOUR": {
+                                                  "block": {
+                                                    "type": "pioneer_colour_preset",
+                                                    "fields": {
+                                                      "PRESET": "красный"
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "next": {
+                                                "block": {
+                                                  "type": "pioneer_led_index",
+                                                  "inputs": {
+                                                    "INDEX": {
+                                                      "block": {
+                                                        "type": "math_number",
+                                                        "fields": {
+                                                          "NUM": 3
+                                                        }
+                                                      }
+                                                    },
+                                                    "COLOUR": {
+                                                      "block": {
+                                                        "type": "pioneer_colour_preset",
+                                                        "fields": {
+                                                          "PRESET": "красный"
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "next": {
+                                                    "block": {
+                                                      "type": "pioneer_wait",
+                                                      "inputs": {
+                                                        "SECONDS": {
+                                                          "block": {
+                                                            "type": "math_number",
+                                                            "fields": {
+                                                              "NUM": 0.3
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "next": {
+              "block": {
+                "type": "pioneer_led_all",
+                "inputs": {
+                  "COLOUR": {
+                    "block": {
+                      "type": "pioneer_colour_preset",
+                      "fields": {
+                        "PRESET": "выключен"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [],
+  "workspaceComments": [
+    {
+      "text": "Мигалка спецслужб: первая пара светодиодов красная, вторая синяя — и наоборот.",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}

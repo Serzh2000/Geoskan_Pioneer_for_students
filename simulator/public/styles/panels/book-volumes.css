@@ -47,22 +47,25 @@
 .book-part:hover:not(.is-active) { background: color-mix(in srgb, var(--bk-vol-tab, #ddd5c0) 62%, #fffdf8); }
 
 /* the pencil note on the bench and the subtitle of the contents carry the name of the volume */
-.book-bench__tag, .book-toc__sub { color: var(--bk-vol); }
+.book-bench__tag { color: var(--bk-vol); }
 
-/* ---- the volume control: each segment carries its mark; the open one is filled with its own cover colour ---- */
-.book__volumes .pk-seg__btn { gap: 7px; }
-.book__volumes .pk-seg__btn .vol-mark { width: 17px; height: 17px; color: color-mix(in srgb, var(--bk-vol) 62%, var(--text-strong)); }
-.book__volumes .pk-seg__btn.is-active, .book__volumes .pk-seg__btn[aria-selected='true'] { background: var(--bk-vol); color: #fbf8f0; box-shadow: none; }
-.book__volumes .pk-seg__btn.is-active .vol-mark, .book__volumes .pk-seg__btn.is-active small, .book__volumes .pk-seg__btn[aria-selected='true'] small { color: #fbf8f0; }
-.book__volumes .pk-seg__btn.is-active small { opacity: .86; }
-.book__volumes .pk-seg__btn:not(.is-active):hover:not(:disabled) { background: color-mix(in srgb, var(--bk-vol) 16%, transparent); }
-.book__volumes .pk-seg__btn:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 1px; }
+/* ---- the volumes: bookmarks on the right edge of the sheet; each carries its mark, the open one is filled with its own cover colour ---- */
+.book-volumes { flex: 0 0 40px; align-self: flex-start; margin-top: 44px; display: flex; flex-direction: column; gap: 6px; }
+.book-vol {
+    display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; margin-left: -1px; padding: 12px 0;
+    border: 1px solid var(--bk-vol-edge-2); border-left: 0; border-radius: 0 12px 12px 0; background: var(--bk-vol-tab);
+    color: color-mix(in srgb, var(--bk-vol) 70%, #1b2333); cursor: pointer; transition: background-color .15s, color .15s, transform .15s;
+}
+.book-vol .vol-mark { width: 18px; height: 18px; }
+.book-vol__name { writing-mode: vertical-rl; font: 700 13px/1 var(--font-sans); letter-spacing: .04em; }
+.book-vol:hover:not(:disabled):not(.is-active) { background: color-mix(in srgb, var(--bk-vol-tab) 62%, #fffdf8); transform: translateX(4px); }
+.book-vol.is-active { background: var(--bk-vol); color: #fbf8f0; }
+.book-vol:disabled { cursor: default; opacity: .55; }
+.book-vol:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 1px; }
 
 /* ---- narrow: one page, the ribbon hangs at the right edge instead of the gutter ---- */
 @container lesson (max-width: 1060px) {
     .book-ribbon { left: auto; right: 34px; }
 }
 @container lesson (max-width: 560px) {
-    .book__top .book__volumes .pk-seg__btn .pk-seg__name { display: none; }
-    .book__top .book__volumes .pk-seg__btn.is-active .pk-seg__name { display: inline; }
 }

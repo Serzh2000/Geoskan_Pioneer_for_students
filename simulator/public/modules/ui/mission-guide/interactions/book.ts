@@ -6,6 +6,7 @@ import { getLedbarState, setLedbarState, syncLedbarFigure, type LedbarState } fr
 import { runExample, stopExample } from '../book/demo.js';
 import { liveScene, printScene, settleScene } from '../book/scene-plate.js';
 import { attachCurlPeel } from '../book/curls.js';
+import { mountBookBlocks } from '../book/block-figure.js';
 import { BOOK_STEPS, setBookStep, type BookStep } from '../book/steps.js';
 import { walkthroughKey } from '../walkthrough/state.js';
 import type { WalkthroughLesson } from '../walkthrough/content.js';
@@ -22,29 +23,6 @@ function liveBook(): HTMLElement | null {
     return book && book.getClientRects().length > 0 ? book : null;
 }
 
-function contentsOf(book: HTMLElement): { panel: HTMLElement; toggle: HTMLButtonElement } | null {
-    const panel = book.querySelector<HTMLElement>('#book-toc');
-    const toggle = book.querySelector<HTMLButtonElement>('[data-book-toc-toggle]');
-    return panel && toggle ? { panel, toggle } : null;
-}
-
-function contentsOpen(book: HTMLElement | null): boolean {
-    const parts = book ? contentsOf(book) : null;
-    return Boolean(parts && !parts.panel.hidden);
-}
-
-function setContents(book: HTMLElement, open: boolean, focus: 'panel' | 'toggle' | 'none'): void {
-    const parts = contentsOf(book);
-    if (!parts) return;
-    parts.panel.hidden = !open;
-    parts.toggle.setAttribute('aria-expanded', String(open));
-    if (open && focus === 'panel') {
-        const current = parts.panel.querySelector<HTMLElement>('.book-toc__lesson.is-current');
-        current?.scrollIntoView({ block: 'center' });
-        (current ?? parts.panel).focus({ preventScroll: true });
-    } else if (!open && focus === 'toggle') parts.toggle.focus();
-}
-
 function confirmOpen(): boolean {
     const bar = document.getElementById('mission-guide-close-confirm');
     return Boolean(bar && !bar.hidden);
@@ -56,22 +34,31 @@ function typingTarget(target: EventTarget | null): boolean {
     return Boolean(target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], [role="textbox"], .monaco-editor, .blocklyWidgetDiv, .blocklySvg, .blocklyDropDownDiv'));
 }
 
+/**
+ * Which group of bookmarks the book shows: the topics, or the lessons of one topic. It outlives the redraws of the book,
+ * so after opening a lesson the bookmarks of its topic stay and the next lesson is one click away.
+ */
+let tabsChapter: number | null = null;
+
+function showTabs(book: HTMLElement, chapter: number | null, focus: boolean): void {
+    const nav = book.querySelector<HTMLElement>('.book-tabs');
+    if (!nav) return;
+    const target = chapter !== null && nav.querySelector(`[data-tabs-group="${chapter}"]`) ? String(chapter) : 'topics';
+    nav.querySelectorAll<HTMLElement>('[data-tabs-group]').forEach(group => { group.hidden = group.dataset.tabsGroup !== target; });
+    if (!focus) return;
+    const visible = nav.querySelector<HTMLElement>(`[data-tabs-group="${target}"]`);
+    (visible?.querySelector<HTMLElement>('.is-current:not(:disabled)') ?? visible?.querySelector<HTMLElement>('button:not(:disabled)'))?.focus({ preventScroll: true });
+}
+
 let navigationInstalled = false;
 function installBookNavigation(): void {
     if (navigationInstalled) return;
     navigationInstalled = true;
-    // Capture: the textbook closes on Escape in a bubbling listener unless somebody has already used the key.
     document.addEventListener('keydown', event => {
         const book = liveBook();
-        if (!book || confirmOpen()) return;
-        if (event.key === 'Escape') {
-            if (!contentsOpen(book)) return;
-            event.preventDefault();
-            setContents(book, false, 'toggle');
-            return;
-        }
-        if ((event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') || event.defaultPrevented) return;
-        if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || contentsOpen(book) || typingTarget(event.target) || typingTarget(document.activeElement)) return;
+        if (!book || confirmOpen() || event.defaultPrevented) return;
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || typingTarget(event.target) || typingTarget(document.activeElement)) return;
         const curl = book.querySelector<HTMLButtonElement>(event.key === 'ArrowLeft' ? '.book-curl--back' : '.book-curl--next');
         if (!curl || curl.disabled) return;
         event.preventDefault();
@@ -80,16 +67,16 @@ function installBookNavigation(): void {
     document.addEventListener('click', event => {
         const book = liveBook();
         if (!book || !(event.target instanceof Element)) return;
-        const toggle = event.target.closest('[data-book-toc-toggle]');
-        if (toggle && book.contains(toggle)) {
-            setContents(book, !contentsOpen(book), 'panel');
+        const topic = event.target.closest<HTMLElement>('[data-tabs-open]');
+        if (topic && book.contains(topic)) {
+            tabsChapter = Number(topic.dataset.tabsOpen);
+            showTabs(book, tabsChapter, true);
             return;
         }
-        if (!contentsOpen(book)) return;
-        if (event.target.closest('[data-book-toc-close]')) { setContents(book, false, 'toggle'); return; }
-        const inPanel = event.target.closest('#book-toc');
-        const opens = event.target.closest('.book-toc__lesson:not(:disabled)');
-        if (!inPanel || opens) setContents(book, false, 'none');
+        if (event.target.closest('[data-tabs-back]')) {
+            tabsChapter = null;
+            showTabs(book, null, true);
+        }
     });
 }
 
@@ -97,6 +84,8 @@ function installBookNavigation(): void {
 export function attachBookBindings(container: HTMLElement, track: 'lua' | 'python', lesson: WalkthroughLesson, rerender: RenderMissionGuidePanel): void {
     attachCurlPeel(container);
     installBookNavigation();
+    const openBook = container.querySelector<HTMLElement>('.book');
+    if (openBook) showTabs(openBook, tabsChapter, false);
     container.querySelectorAll<HTMLButtonElement>('[data-book-view]').forEach(button => {
         button.addEventListener('click', () => {
             setBookView(button.dataset.bookView === 'on');
@@ -131,12 +120,19 @@ export function attachBookBindings(container: HTMLElement, track: 'lua' | 'pytho
         });
     });
 
+    // Blocks of a Blockly lesson are drawn onto the page once the page is in the document.
+    void mountBookBlocks(container, track);
     // The demonstration opens with the print of the viewport.
     printScene(container);
     const status = container.querySelector<HTMLElement>('[data-book-demo-status]');
     container.querySelector<HTMLButtonElement>('[data-book-demo]')?.addEventListener('click', event => {
         const code = container.querySelector<HTMLElement>('[data-book-code]')?.textContent ?? '';
         const button = event.currentTarget as HTMLButtonElement;
+        // The code of a block example appears when the blocks are drawn; a click before that has nothing to run yet.
+        if (!code.trim()) {
+            if (status) status.textContent = 'Блоки ещё рисуются. Подождите секунду и нажмите снова.';
+            return;
+        }
         button.disabled = true;
         if (status) status.textContent = 'Запускаю пример…';
         void runExample(track, code).then(started => {

@@ -2,15 +2,17 @@ import { summarizeGuideDiagnostics, logGuideEvent } from '../support/logging.js'
 import { buildGuideEventContext, resetGuideRuntimeView, type GuideInteractionContext } from './context.js';
 import { canLaunchLesson, launchLesson } from './launch.js';
 import { evaluateLesson } from '../evaluation/index.js';
+import { lessonSequence } from '../evaluation/sequence.js';
+import type { GuideLesson } from '../types.js';
 import { runTextLessonCheck } from '../evaluation/text/index.js';
 import { getWalkthroughContent, getWalkthroughTopic } from '../walkthrough/content.js';
 import { beginWalkthroughCheck, finishWalkthroughCheck, resetWalkthroughResult, walkthroughKey } from '../walkthrough/state.js';
 import { WALKTHROUGH_WAIT_MS } from '../walkthrough/runtime.js';
 import {
     buildTargetWorkspaceXml,
-    extractMissionGuideSequence,
     serializeWorkspaceXml,
     getMainBlocklyWorkspace,
+    loadMainBlocklyJson,
     loadMainBlocklyXml,
     setBlocklyEditorEnabled
 } from '../../../editor/index.js';
@@ -23,7 +25,7 @@ import {
 } from '../state.js';
 import { isBookView } from '../book/view.js';
 
-function getMainWorkspaceSnapshot(): {
+function getMainWorkspaceSnapshot(lesson: GuideLesson): {
     sequenceIds: string[];
     workspaceXml: string;
 } | null {
@@ -31,7 +33,7 @@ function getMainWorkspaceSnapshot(): {
     if (!workspace) return null;
 
     return {
-        sequenceIds: extractMissionGuideSequence(workspace),
+        sequenceIds: lessonSequence(workspace, lesson),
         workspaceXml: serializeWorkspaceXml(workspace)
     };
 }
@@ -43,7 +45,7 @@ function executeLessonLaunch(
     emptyWorkspaceMessage = 'Сначала соберите хотя бы минимальную рабочую цепочку в редакторе Blockly.'
 ): boolean {
     const { language, lesson, rerender } = context;
-    const snapshot = getMainWorkspaceSnapshot();
+    const snapshot = getMainWorkspaceSnapshot(lesson);
     const sequenceIds = snapshot ? snapshot.sequenceIds : [];
 
     logGuideEvent('launch_button_clicked', {
@@ -116,7 +118,11 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
     container.querySelectorAll<HTMLElement>('[data-guide-fill]').forEach((element) => {
         element.addEventListener('click', () => {
             logGuideEvent('solution_fill_requested', buildGuideEventContext(context));
-            loadMainBlocklyXml(buildTargetWorkspaceXml(lesson.id, lesson.targetBlockIds)).then(() => {
+            // Уроки на блоках pioneer_* хранят решение как рабочую область Blockly, остальные — как цепочку учебных блоков.
+            const filled = lesson.pioneer
+                ? loadMainBlocklyJson(JSON.stringify(lesson.pioneer.solution))
+                : loadMainBlocklyXml(buildTargetWorkspaceXml(lesson.id, lesson.targetBlockIds));
+            filled.then(() => {
                 setLessonChecked(language, lesson.id, false);
                 resetWalkthroughResult(walkthroughKey(language, lesson.id));
                 setLessonBanner(language, lesson.id, {
@@ -142,7 +148,7 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
             // во время сборки цепочки.
             setBlocklyEditorEnabled(true);
             const lessonIndex = context.state.lessons.findIndex((item) => item.id === lesson.id);
-            mountMissionGuideBlocklyPreview(context.state.lessons.slice(0, lessonIndex + 1).flatMap((item) => item.targetBlockIds));
+            mountMissionGuideBlocklyPreview(lesson.pioneer ? [] : context.state.lessons.slice(0, lessonIndex + 1).flatMap((item) => item.targetBlockIds));
             rerender(language);
             logGuideEvent('open_main_editor_applied', buildGuideEventContext(context), 'success');
         });
@@ -163,7 +169,7 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
 
     container.querySelectorAll<HTMLElement>('[data-guide-check]').forEach((element) => {
         element.addEventListener('click', () => {
-            const snapshot = getMainWorkspaceSnapshot();
+            const snapshot = getMainWorkspaceSnapshot(lesson);
             const sequenceIds = snapshot ? snapshot.sequenceIds : [];
             const workspaceXml = snapshot ? snapshot.workspaceXml : null;
             logGuideEvent('check_clicked', {
@@ -215,7 +221,7 @@ export function attachGuideActionBindings(context: GuideInteractionContext): voi
 
     container.querySelectorAll<HTMLElement>('[data-guide-launch]').forEach((element) => {
         element.addEventListener('click', () => {
-            const snapshot = getMainWorkspaceSnapshot();
+            const snapshot = getMainWorkspaceSnapshot(lesson);
             const evaluation = evaluateLesson(
                 lesson,
                 snapshot ? snapshot.sequenceIds : [],

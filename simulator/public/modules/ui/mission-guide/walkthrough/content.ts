@@ -1,4 +1,5 @@
 import type { GuideLesson, GuideTextLesson } from '../types.js';
+import { PIONEER_LESSONS } from '../lessons/pioneer/catalog.js';
 
 export type WalkthroughLesson = GuideLesson | GuideTextLesson;
 export type TopicContent = {
@@ -16,6 +17,7 @@ export function getWalkthroughTopic(lesson: WalkthroughLesson): string {
 }
 
 export const WALKTHROUGH_TOPICS: Record<string, TopicContent> = {
+    ...Object.fromEntries(PIONEER_LESSONS.map((spec) => [spec.topic, spec.question])),
     'led-single': {
         deviceTitle: 'Сначала познакомимся с подсветкой',
         device: 'На дроне есть светодиоды — маленькие источники света. Они помогают показывать состояние программы. Начнём с подсветки: дрон останется на земле, а результат одной команды сразу будет виден на его корпусе. Цвет складывается из трёх составляющих: красной, зелёной и синей. Это называется RGB.',

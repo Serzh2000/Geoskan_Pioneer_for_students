@@ -9,8 +9,9 @@ import type { GuideLesson } from '../public/modules/ui/mission-guide/types.js';
 const { window } = new JSDOM();
 globalThis.DOMParser = window.DOMParser;
 
-const luaLessons = getLuaLessonState().lessons;
-const pythonLessons = getPythonLessonState().lessons;
+// Уроки на блоках pioneer_* проверяются по полёту: их тесты — в pioneer-block-lessons.test.ts.
+const luaLessons = getLuaLessonState().lessons.filter((lesson) => !lesson.pioneer);
+const pythonLessons = getPythonLessonState().lessons.filter((lesson) => !lesson.pioneer);
 const allLessons = [...luaLessons, ...pythonLessons];
 
 function getLesson(id: string): GuideLesson {

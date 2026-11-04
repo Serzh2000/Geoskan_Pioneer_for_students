@@ -44,6 +44,15 @@ function fallback(source: BookSource): Pick<BookLesson, 'theory' | 'code' | 'ste
 
 export function buildBookLesson(source: BookSource): BookLesson {
     const { lesson, language } = source;
+    // Урок на блоках pioneer_*: пример — это блоки на странице, а код под ними строится из них при показе.
+    const pioneer = (lesson as GuideLesson).pioneer;
+    if (pioneer && source.kind === 'blockly') {
+        return {
+            theory: pioneer.theory, code: '', steps: [], watch: pioneer.watch, authored: true,
+            chapter: source.chapter, kicker: `${source.label} · ${source.chapter}`,
+            figure: 'drone', figureCaption: lesson.title, figureHint: ''
+        };
+    }
     const example = authoredExample(source);
     const code = example?.[language]?.trim();
     const own = example && code

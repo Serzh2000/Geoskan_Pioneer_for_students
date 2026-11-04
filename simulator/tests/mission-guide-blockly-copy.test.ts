@@ -17,6 +17,17 @@ describe('Blockly lesson presentation', () => {
         }
     });
 
+    test('lessons on pioneer blocks keep their own text and recipe', () => {
+        for (const state of [getLuaLessonState(), getPythonLessonState()]) {
+            const lessons = state.lessons.filter(lesson => lesson.pioneer);
+            expect(lessons.length).toBeGreaterThanOrEqual(15);
+            for (const lesson of lessons) {
+                expect(blocklyLessonCopy(lesson)).toBe(lesson);
+                expect(blocklyPracticeSteps(lesson)).toEqual(lesson.pioneer!.recipe);
+            }
+        }
+    });
+
     test('does not mutate the source lesson used by text tracks', () => {
         const lesson = getLuaLessonState().lessons[0];
         const intro = lesson.lessonIntro;
@@ -26,7 +37,7 @@ describe('Blockly lesson presentation', () => {
     });
 
     test('gives every Lua task a concrete build order with exact block names', () => {
-        const { lessons } = getLuaLessonState();
+        const lessons = getLuaLessonState().lessons.filter(lesson => !lesson.pioneer);
         expect(lessons.map(lesson => lesson.id).slice(-2)).toEqual(['lua-landing', 'lua-mission']);
         for (const lesson of lessons) {
             const steps = blocklyPracticeSteps(lesson);
@@ -38,7 +49,7 @@ describe('Blockly lesson presentation', () => {
     });
 
     test('gives every Python task a build order with the names printed on the blocks', () => {
-        const { lessons } = getPythonLessonState();
+        const lessons = getPythonLessonState().lessons.filter(lesson => !lesson.pioneer);
         for (const lesson of lessons) {
             const steps = blocklyPracticeSteps(lesson);
             expect(steps.length).toBeGreaterThan(0);

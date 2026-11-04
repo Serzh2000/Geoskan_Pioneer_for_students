@@ -4,6 +4,8 @@ import { renderStamp } from './glyphs.js';
 import { renderLedbarFigure } from './ledbar.js';
 import { renderListing } from './listing.js';
 import { renderScenePlate } from './scene-plate.js';
+import { renderBlockFigure, renderBlockListingSlot } from './block-figure.js';
+import type { GuideLesson } from '../types.js';
 
 /** A printed page: running head, body, page number. */
 export function page(side: 'left' | 'right', head: string, number: number, body: string): string {
@@ -29,9 +31,30 @@ function renderTurn(ctx: BookContext, target: 'demo' | 'practice', label: string
     return `<div class="book-turn"><span></span><button type="button" class="btn-primary" data-book-step="${target}">${escapeHtml(label)} <span aria-hidden="true">→</span></button></div>`;
 }
 
+/** The example of a Blockly lesson on pioneer blocks: the blocks themselves, laid on the page. */
+function blocksOf(ctx: BookContext): GuideLesson['pioneer'] {
+    return ctx.source.kind === 'blockly' ? (ctx.source.lesson as GuideLesson).pioneer : undefined;
+}
+
+function renderBlockNotes(notes: string[]): string {
+    return `<ol class="book-steps book-steps--notes" aria-label="Пример по частям">${notes.map(note => `<li><span>${renderInline(note)}</span></li>`).join('')}</ol>`;
+}
+
 /** Theory: the fragment the lesson is built for, explained, and the example it is explained with. */
 export function renderTheoryPages(ctx: BookContext): [string, string] {
     const { book, source } = ctx;
+    const pioneer = blocksOf(ctx);
+    if (pioneer) {
+        const key = `${source.lesson.id}:example`;
+        return [page('left', ctx.head, ctx.pages[0], `
+            ${renderHeading(ctx)}
+            ${book.theory.map(text => `<p class="book-text">${renderInline(text)}</p>`).join('')}`),
+        page('right', book.chapter, ctx.pages[1], `
+            <h2 class="book-label">Пример</h2>
+            ${renderBlockFigure(key, pioneer.example, `<b>Рис. ${source.number}.</b> ${escapeHtml(source.lesson.title)}: так выглядят блоки`)}
+            ${renderBlockNotes(pioneer.notes)}
+            ${renderTurn(ctx, 'demo', 'Смотреть пример')}`)];
+    }
     const left = page('left', ctx.head, ctx.pages[0], `
         ${renderHeading(ctx)}
         ${book.theory.map(text => `<p class="book-text">${renderInline(text)}</p>`).join('')}`);
@@ -47,9 +70,11 @@ export function renderTheoryPages(ctx: BookContext): [string, string] {
 /** Demonstration: the example runs in the simulator while the student watches. */
 export function renderDemoPages(ctx: BookContext): [string, string] {
     const { book, source } = ctx;
+    const pioneer = blocksOf(ctx);
+    const example = pioneer ? `${renderBlockFigure(`${source.lesson.id}:demo`, pioneer.example, `<b>Рис. ${source.number}а.</b> Пример: блоки и код, в который они собираются`)}${renderBlockListingSlot(`${source.lesson.id}:demo`)}` : renderListing(book.code);
     const left = page('left', ctx.head, ctx.pages[0], `
         ${renderHeading(ctx)}
-        ${renderListing(book.code)}
+        ${example}
         <div class="book-watch"><h2 class="book-label">Что смотреть</h2><p class="book-text">${renderInline(book.watch)}</p></div>
         <div class="book-actions">
             ${renderStamp('run', 'Запустить пример', 'data-book-demo', true)}

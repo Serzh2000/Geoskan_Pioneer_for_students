@@ -104,14 +104,29 @@ function resolvePythonSdk2ExamplesRoots(): string[] {
     ]);
 }
 
-type ExamplesSet = ScriptLanguage | 'python-sdk2';
+// Block programs (Blockly workspace JSON) for the block editor: examples-blocks/<group>/<name>.json.
+function resolveBlocksExamplesRoots(): string[] {
+    return dedupeExistingPaths([
+        ...(resourcesDir ? [path.join(resourcesDir, 'examples-blocks')] : []),
+        path.join(runtimeDir, 'examples-blocks'),
+        path.join(projectRoot, 'examples-blocks')
+    ]);
+}
+
+type ExamplesSet = ScriptLanguage | 'python-sdk2' | 'blocks';
 
 function parseExamplesSet(value: unknown): ExamplesSet {
-    return value === 'python' || value === 'python-sdk2' ? value : 'lua';
+    return value === 'python' || value === 'python-sdk2' || value === 'blocks' ? value : 'lua';
+}
+
+function examplesExtension(lang: ExamplesSet): string {
+    if (lang === 'lua') return 'lua';
+    return lang === 'blocks' ? 'json' : 'py';
 }
 
 function examplesRootsFor(lang: ExamplesSet, luaRoots: string[], pythonRoots: string[]): string[] {
     if (lang === 'python-sdk2') return resolvePythonSdk2ExamplesRoots();
+    if (lang === 'blocks') return resolveBlocksExamplesRoots();
     return lang === 'python' ? pythonRoots : luaRoots;
 }
 
@@ -203,7 +218,7 @@ function createApp(options: StartServerOptions): express.Express {
     app.get('/api/files', async (req: express.Request, res: express.Response) => {
         const lang = parseExamplesSet(req.query.lang);
         const roots = examplesRootsFor(lang, luaExamplesRoots, pythonExamplesRoots);
-        const extension = lang === 'lua' ? 'lua' : 'py';
+        const extension = examplesExtension(lang);
         console.log(`Listing ${lang} files in:`, roots.join(', '));
 
         try {

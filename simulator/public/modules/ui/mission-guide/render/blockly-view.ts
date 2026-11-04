@@ -1,5 +1,6 @@
 import type { ScriptLanguage } from '../../api-docs/sections.js';
-import { extractMissionGuideSequence, getMainBlocklyWorkspace, serializeWorkspaceXml } from '../../../editor/index.js';
+import { getMainBlocklyWorkspace, serializeWorkspaceXml } from '../../../editor/index.js';
+import { lessonSequence } from '../evaluation/sequence.js';
 import { evaluateLesson } from '../evaluation/index.js';
 import { getLessonBanner, getActiveLesson, getNextLesson, isLessonChecked, isLessonCompleted } from '../state.js';
 import { isMissionGuideBlocklyPreviewActive } from '../support/blockly-preview.js';
@@ -35,7 +36,7 @@ export function getBlocklyView(rawState: GuideLessonState, language: ScriptLangu
     const state = { ...rawState, lessons: rawState.lessons.map(blocklyLessonCopy) };
     const lesson = getActiveLesson(state, language);
     const mainWorkspace = getMainBlocklyWorkspace();
-    const sequenceIds = mainWorkspace ? extractMissionGuideSequence(mainWorkspace) : [];
+    const sequenceIds = mainWorkspace ? lessonSequence(mainWorkspace, lesson) : [];
     const source = mainWorkspace ? serializeWorkspaceXml(mainWorkspace) : '';
     const evaluation = evaluateLesson(lesson, sequenceIds, mainWorkspace ? source : null);
     const key = walkthroughKey(language, lesson.id);
@@ -52,9 +53,9 @@ export function getBlocklyView(rawState: GuideLessonState, language: ScriptLangu
             : !hasChecked
                 ? 'Цепочка собрана, проверка ещё не запускалась'
                 : runtimeResult?.solved
-                    ? 'Проверка пройдена — результат на шаге «Результат»'
+                    ? 'Проверка пройдена — результат ниже'
                     : runtimeResult
-                        ? 'Проверка нашла замечания — они на шаге «Результат»'
+                        ? 'Проверка нашла замечания — они ниже'
                         : 'Цепочка изменилась после проверки — запустите её снова';
     return {
         language, state, lesson, evaluation, source, runtimeResult, hasChecked, previewActive,

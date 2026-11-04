@@ -1,0 +1,123 @@
+{
+  "blocks": {
+    "languageVersion": 0,
+    "blocks": [
+      {
+        "type": "pioneer_start",
+        "x": 24,
+        "y": 24,
+        "next": {
+          "block": {
+            "type": "pioneer_led_all",
+            "inputs": {
+              "COLOUR": {
+                "block": {
+                  "type": "pioneer_colour_preset",
+                  "fields": {
+                    "PRESET": "красный"
+                  }
+                }
+              }
+            },
+            "next": {
+              "block": {
+                "type": "pioneer_preflight",
+                "next": {
+                  "block": {
+                    "type": "pioneer_takeoff",
+                    "next": {
+                      "block": {
+                        "type": "pioneer_go_to",
+                        "inputs": {
+                          "X": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          },
+                          "Y": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 0
+                              }
+                            }
+                          },
+                          "Z": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "pioneer_land",
+                            "next": {
+                              "block": {
+                                "type": "pioneer_wait",
+                                "inputs": {
+                                  "SECONDS": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 1
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "pioneer_on_event",
+        "x": 820,
+        "y": 24,
+        "fields": {
+          "EVENT": "COPTER_LANDED"
+        },
+        "inputs": {
+          "DO": {
+            "block": {
+              "type": "pioneer_led_all",
+              "inputs": {
+                "COLOUR": {
+                  "block": {
+                    "type": "pioneer_colour_preset",
+                    "fields": {
+                      "PRESET": "зелёный"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "variables": [],
+  "workspaceComments": [
+    {
+      "text": "Только Lua: блок «Когда событие от автопилота» зажигает зелёный свет, как только дрон сел (событие COPTER_LANDED).",
+      "x": 480,
+      "y": 24,
+      "width": 300,
+      "height": 150
+    }
+  ]
+}
