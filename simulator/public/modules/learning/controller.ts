@@ -1,34 +1,47 @@
 /**
  * Стартовый экран и режим обучения: DOM-слой поверх симулятора.
  *
- * Свободный режим — прежний симулятор. В режиме обучения поверх сцены лежат: карточка текущего задания (цель,
- * шаги, нужные блоки, подсказка), полоса прогресса, карта заданий и экран успеха. Проверка — настоящий полёт:
- * программа запускается в симуляторе, а `runTextLessonCheck` сверяет траекторию и подсветку с ожиданием урока.
- * Окно «Учебник» в обучении закрыто: кнопка скрыта стилем, а вызовы openMissionGuideModal() игнорируются.
+ * Свободный режим — прежний симулятор. В режиме обучения поверх экрана лежит одна карточка миссии, и она показывает
+ * один шаг за раз: вводная → шаг 1 → … → шаг N → проверка полёта. Сделанный шаг уходит, на его месте появляется
+ * следующий. Проверка — настоящий полёт: программа запускается в симуляторе, а `runTextLessonCheck` сверяет результат
+ * с ожиданием урока. Окно «Учебник» в обучении закрыто: кнопка скрыта стилем, а вызовы openMissionGuideModal() игнорируются.
+ *
+ * Чем писать, выбирает ученик: Blockly (практикум на блоках) или Lua / Python (уроки Академии).
  */
-import { currentScriptLanguage, setCurrentScriptLanguage } from '../core/state.js';
+import { currentDroneId, currentScriptLanguage, setCurrentScriptLanguage } from '../core/state.js';
 import { restartAndRunSimulation } from '../app/simulation-controls.js';
 import {
     getEditorValue, getMainBlocklyWorkspace, isBlocklyEditorEnabled, loadMainBlocklyJson, loadMainBlocklyXml,
     serializeWorkspaceXml, setBlocklyEditorEnabled, setEditorLanguage, setEditorValue, syncScriptLanguageSelect
 } from '../editor/index.js';
+import { beginLearningCapture, finishLearningCapture } from '../core/learning-journal.js';
 import { runTextLessonCheck } from '../ui/mission-guide/evaluation/text/index.js';
+import { getAcademySceneEvidence, prepareAcademyScene, restoreAcademyScene, academySceneProfile } from '../ui/mission-guide/academy/scene.js';
 import { getAppMode, loadLastMode, onAppModeChange, setAppMode, type AppMode } from './mode.js';
 import {
-    buildQuests, completeQuest, countDone, currentQuest, emptyProgress, loadProgress, nextQuest, QUEST_DRAFT_STORAGE_PREFIX,
-    QUEST_GROUP_LABELS, QUEST_GROUP_ORDER, questStatus, requiredBlockChecklist, saveProgress, selectQuest,
+    buildAcademyQuests, buildQuests, clampStep, completeQuest, countDone, currentQuest, emptyProgress, INTRO_STEP, lastStepIndex,
+    loadProgress, nextQuest, QUEST_DRAFT_STORAGE_PREFIX, QUEST_PROGRESS_STORAGE_KEY, questGroups, questStatus,
+    requiredBlockChecklist, saveProgress, selectQuest,
     type Quest, type QuestProgress
 } from './quests.js';
 
-const quests = buildQuests();
+/** Чем ученик пишет программы. Blockly — практикум на блоках, Lua и Python — уроки Академии. */
+export type LearningTrack = 'blocks' | 'lua' | 'python';
+const TRACK_STORAGE_KEY = 'pioneer:learning:track:v1';
+const HUD_POS_STORAGE_KEY = 'pioneer:learning:hud-pos:v1';
+const TRACK_LABELS: Record<LearningTrack, string> = { blocks: 'Blockly', lua: 'Lua', python: 'Python' };
 const EMPTY_PROGRAM = JSON.stringify({ blocks: { languageVersion: 0, blocks: [{ type: 'pioneer_start', x: 40, y: 40 }] } });
 
 function storage(): Storage | null {
     try { return window.localStorage; } catch { return null; }
 }
 
+let track: LearningTrack = 'blocks';
+const questsByTrack: Partial<Record<LearningTrack, Quest[]>> = {};
+let quests: Quest[] = [];
 let progress: QuestProgress = emptyProgress();
 let activeQuest: Quest | null = null;
+let step = INTRO_STEP;
 let hintOpen = false;
 let hudCollapsed = false;
 let checking = false;
@@ -36,13 +49,10 @@ let checkToken = 0;
 let feedback: { kind: 'info' | 'error'; title: string; lines: string[] } | null = null;
 let checklistTimer = 0;
 let originalOpenGuide: (() => void) | undefined;
-
-/** Чем ученик пишет программы: блоками или текстом. Задания одни и те же, проверка — по полёту. */
-export type LearningTrack = 'blocks' | 'lua' | 'python';
-const TRACK_STORAGE_KEY = 'pioneer:learning:track:v1';
-const HUD_POS_STORAGE_KEY = 'pioneer:learning:hud-pos:v1';
-const TRACK_LABELS: Record<LearningTrack, string> = { blocks: 'Blockly', lua: 'Lua', python: 'Python' };
-let track: LearningTrack = 'blocks';
+/** Повторные запуски и частные опыты Академии: часть уроков засчитывается только после нескольких запусков. */
+const experimentTrials = new Map<string, Set<string>>();
+const repeatedExperiments = new Map<string, string>();
+let academyParts: { lift?: string; vision?: string } = {};
 
 const el = {} as {
     start: HTMLElement; hud: HTMLElement; map: HTMLElement; success: HTMLElement; menu: HTMLButtonElement;
@@ -62,21 +72,44 @@ function esc(text: string): string {
     return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/** Текст уроков размечает код обратными кавычками. */
+/** Текст уроков размечает код обратными кавычками и выделение двойными звёздочками. */
 function rich(text: string): string {
     return esc(text).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 }
 
+function progressKey(forTrack: LearningTrack = track): string {
+    return forTrack === 'blocks' ? QUEST_PROGRESS_STORAGE_KEY : `${QUEST_PROGRESS_STORAGE_KEY}:${forTrack}`;
+}
+
+function questsFor(forTrack: LearningTrack): Quest[] {
+    return questsByTrack[forTrack] ??= forTrack === 'blocks' ? buildQuests() : buildAcademyQuests(forTrack);
+}
+
 function persist(): void {
-    saveProgress(storage(), progress);
+    saveProgress(storage(), progress, progressKey());
+}
+
+function loadTrack(): LearningTrack {
+    try {
+        const value = storage()?.getItem(TRACK_STORAGE_KEY);
+        return value === 'lua' || value === 'python' ? value : 'blocks';
+    } catch { return 'blocks'; }
+}
+
+function useTrack(next: LearningTrack): void {
+    track = next;
+    quests = questsFor(next);
+    progress = loadProgress(storage(), quests, progressKey());
+    try { storage()?.setItem(TRACK_STORAGE_KEY, next); } catch { /* ignore */ }
 }
 
 /* ---------- Стартовый экран ---------- */
 
 function renderStart(): void {
     const last = loadLastMode(storage());
-    const done = countDone(quests, progress);
-    const learnNote = done > 0 ? `Продолжить: пройдено ${done} из ${quests.length}` : `${quests.length} заданий: от взлёта до итоговой миссии`;
+    const done = countDone(questsFor(track), loadProgress(storage(), questsFor(track), progressKey()));
+    const total = questsFor(track).length;
+    const learnNote = done > 0 ? `Продолжить: пройдено ${done} из ${total}` : 'Миссии по шагам: от первой команды до полётных заданий';
     const card = (mode: 'free' | 'learning', icon: string, title: string, text: string, note: string) => `
         <button type="button" class="start-card${last === mode ? ' is-last' : ''}" data-start-mode="${mode}">
             <span class="start-card__icon">${icon}</span>
@@ -90,7 +123,7 @@ function renderStart(): void {
             <h1 class="start-screen__title">С чего начнём?</h1>
             <div class="start-screen__choices">
                 ${card('free', ICON.free, 'Свободный режим', 'Весь симулятор без ограничений: сцена, редактор, учебник и справочник. Пишите и запускайте что угодно.', 'Как раньше')}
-                ${card('learning', ICON.learn, 'Режим обучения', 'Тот же симулятор, но с заданиями на экране. Соберите программу из блоков — дрон выполнит её, а проверка засчитает полёт.', learnNote)}
+                ${card('learning', ICON.learn, 'Режим обучения', 'Тот же симулятор, но с миссиями на экране. Один шаг за раз: сделали шаг, появился следующий, в конце проверка полёта.', learnNote)}
             </div>
         </div>`;
     el.start.querySelectorAll<HTMLButtonElement>('[data-start-mode]').forEach((button) => {
@@ -105,27 +138,30 @@ function renderStart(): void {
 function renderTrackStep(): void {
     const info: Record<LearningTrack, [string, string]> = {
         blocks: ['Blockly', 'Программа собирается из блоков. Самый мягкий старт: блоки подсказывают, что можно сделать.'],
-        lua: ['Lua', 'Текстовый код в редакторе, как в прошивке дрона. Шаги заданий даны блоками, вы записываете их кодом.'],
-        python: ['Python', 'Текстовый код с pioneer_sdk. Шаги заданий даны блоками, вы записываете их кодом.']
+        lua: ['Lua', 'Текстовый код в редакторе, как в прошивке дрона. Миссии Академии: дрон, сигналы, программы, время, полёт.'],
+        python: ['Python', 'Текстовый код с pioneer_sdk. Те же миссии Академии, плюс камера и метки ArUco.']
     };
     el.start.innerHTML = `
         <div class="start-screen__inner">
             <div class="start-screen__brand">Режим обучения</div>
             <h1 class="start-screen__title">Чем будете писать программы?</h1>
             <div class="start-screen__choices start-screen__choices--three">
-                ${(Object.keys(info) as LearningTrack[]).map((key) => `
+                ${(Object.keys(info) as LearningTrack[]).map((key) => {
+                    const total = questsFor(key).length;
+                    const done = countDone(questsFor(key), loadProgress(storage(), questsFor(key), progressKey(key)));
+                    return `
                 <button type="button" class="start-card${track === key ? ' is-last' : ''}" data-start-track="${key}">
                     <span class="start-card__title">${info[key][0]}</span>
                     <span class="start-card__text">${info[key][1]}</span>
-                    <span class="start-card__note">${track === key ? 'Выбрано в прошлый раз' : 'Можно сменить прямо в задании'}</span>
-                </button>`).join('')}
+                    <span class="start-card__note">${track === key ? 'Выбрано в прошлый раз · ' : ''}пройдено ${done} из ${total}</span>
+                </button>`;
+                }).join('')}
             </div>
             <button type="button" class="btn-secondary start-screen__back" data-start-back>← К выбору режима</button>
         </div>`;
     el.start.querySelectorAll<HTMLButtonElement>('[data-start-track]').forEach((button) => {
         button.addEventListener('click', () => {
-            track = button.dataset.startTrack as LearningTrack;
-            try { storage()?.setItem(TRACK_STORAGE_KEY, track); } catch { /* ignore */ }
+            useTrack(button.dataset.startTrack as LearningTrack);
             setAppMode('learning', storage());
         });
     });
@@ -146,22 +182,10 @@ function hideStart(): void {
     document.body.classList.remove('has-start-screen');
 }
 
-/* ---------- Задание ---------- */
-
-function loadTrack(): LearningTrack {
-    try {
-        const value = storage()?.getItem(TRACK_STORAGE_KEY);
-        return value === 'lua' || value === 'python' ? value : 'blocks';
-    } catch { return 'blocks'; }
-}
+/* ---------- Редактор и черновики ---------- */
 
 function draftKey(quest: Quest): string {
     return QUEST_DRAFT_STORAGE_PREFIX + (track === 'blocks' ? '' : `${track}:`) + quest.id;
-}
-
-/** Урок проходится выбранным способом: «Каждые N сек» в браузерном Python не держит ритм. */
-function trackSupported(quest: Quest): boolean {
-    return track === 'blocks' || !quest.spec.languages || quest.spec.languages.includes(track);
 }
 
 function saveDraft(): void {
@@ -169,7 +193,7 @@ function saveDraft(): void {
     try {
         if (track !== 'blocks') {
             const code = isBlocklyEditorEnabled() ? '' : getEditorValue();
-            if (code.trim()) storage()?.setItem(draftKey(activeQuest), code);
+            if (code.trim() && code !== activeQuest.lesson?.starterCode) storage()?.setItem(draftKey(activeQuest), code);
             else storage()?.removeItem(draftKey(activeQuest));
             return;
         }
@@ -181,6 +205,10 @@ function saveDraft(): void {
     } catch {
         // Черновик — удобство, не обязанность.
     }
+}
+
+function readDraft(quest: Quest): string | null {
+    try { return storage()?.getItem(draftKey(quest)) ?? null; } catch { return null; }
 }
 
 async function enterTextEditor(language: 'lua' | 'python', code: string): Promise<void> {
@@ -195,32 +223,35 @@ async function enterTextEditor(language: 'lua' | 'python', code: string): Promis
 
 async function loadQuestWorkspace(quest: Quest): Promise<void> {
     if (track !== 'blocks') {
-        let draft: string | null = null;
-        try { draft = storage()?.getItem(draftKey(quest)) ?? null; } catch { draft = null; }
-        const comment = track === 'lua' ? '--' : '#';
-        await enterTextEditor(track, draft ?? `${comment} ${quest.spec.title}: запишите программу здесь\n`);
+        await enterTextEditor(track, readDraft(quest) ?? quest.lesson?.starterCode ?? '');
         return;
     }
     setBlocklyEditorEnabled(true);
-    let draft: string | null = null;
-    try { draft = storage()?.getItem(draftKey(quest)) ?? null; } catch { draft = null; }
+    const draft = readDraft(quest);
     if (draft) {
         try { await loadMainBlocklyXml(draft); return; } catch { /* битый черновик — начинаем с пустой программы */ }
     }
     await loadMainBlocklyJson(EMPTY_PROGRAM);
 }
 
-/** Редактор на весь экран закрывает сцену, поэтому «Блоки» и «Сцена» переключают вид: проверка полёта идёт на сцене. */
+/** Часть уроков Академии идёт на своей местности; ученик не должен готовить её сам. */
+function prepareQuestScene(quest: Quest): void {
+    restoreAcademyScene();
+    const number = quest.lesson?.academy?.number;
+    if (!number || academySceneProfile(number) === 'field') return;
+    prepareAcademyScene(number, 1000 + number);
+}
+
+/** Редактор на весь экран закрывает сцену, поэтому «Код» и «Сцена» переключают вид: проверка полёта идёт на сцене. */
 function showScene(): void {
-    const open = document.getElementById('editor-panel')?.classList.contains('active');
-    if (open) (window as any).closePanel?.();
+    if (document.getElementById('editor-panel')?.classList.contains('active')) (window as any).closePanel?.();
 }
 
 function isEditorVisible(): boolean {
     return Boolean(document.getElementById('editor-panel')?.classList.contains('active'));
 }
 
-/** Редактор должен быть виден рядом со сценой; openPanel — переключатель, поэтому открываем только закрытый. */
+/** openPanel — переключатель, поэтому редактор открываем, только если он закрыт. */
 function showEditorPanel(): void {
     const panel = document.getElementById('editor-panel');
     const panels = document.querySelector<HTMLElement>('.sidebar-panels');
@@ -228,21 +259,24 @@ function showEditorPanel(): void {
     if (!open) (window as any).openPanel?.('editor-panel');
 }
 
-async function openQuest(quest: Quest, options: { keepWork?: boolean } = {}): Promise<void> {
+async function openQuest(quest: Quest): Promise<void> {
     saveDraft();
     checkToken++;
     checking = false;
     activeQuest = quest;
+    step = INTRO_STEP;
     hintOpen = false;
     feedback = null;
+    academyParts = {};
     progress = selectQuest(quests, progress, quest.id);
     persist();
     hideSuccess();
-    renderHud();
+    renderHud('forward');
     showEditorPanel();
-    if (!options.keepWork) await loadQuestWorkspace(quest);
+    prepareQuestScene(quest);
+    try { await loadQuestWorkspace(quest); } catch (error) { console.error("[learning] workspace", error); }
     startChecklistTimer();
-    window.setTimeout(renderHud, 500);
+    window.setTimeout(() => renderHud(), 500);
 }
 
 function usedBlockTypes(): string[] {
@@ -269,94 +303,158 @@ function refreshChecklist(): void {
     });
 }
 
-function renderHud(): void {
+/* ---------- Карточка миссии ---------- */
+
+/** Один шаг за раз: уходящая карточка гаснет, новая выезжает на её место. */
+function goToStep(next: number): void {
+    if (!activeQuest) return;
+    const target = clampStep(activeQuest, next);
+    if (target === step) return;
+    const direction = target > step ? 'forward' : 'back';
+    const card = el.hud.querySelector<HTMLElement>('.quest-card');
+    const apply = () => { step = target; hintOpen = false; feedback = null; renderHud(direction); };
+    if (card && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        card.classList.add(direction === 'forward' ? 'is-leaving' : 'is-leaving-back');
+        window.setTimeout(apply, 160);
+    } else {
+        apply();
+    }
+}
+
+function stepDots(quest: Quest): string {
+    return `<span class="quest-dots" aria-hidden="true">${quest.steps.map((_, index) =>
+        `<i class="${index < step ? 'is-done' : index === step ? 'is-current' : ''}"></i>`).join('')}<i class="${step === lastStepIndex(quest) ? 'is-current' : ''}"></i></span>`;
+}
+
+function renderCard(quest: Quest): string {
+    const hint = hintOpen ? `<div class="quest-hud__hint"><strong>Подсказка.</strong> ${rich(quest.hint)}</div>` : '';
+    const hintButton = `<button type="button" class="btn-secondary" data-quest-hint>${hintOpen ? 'Скрыть подсказку' : 'Подсказка'}</button>`;
+    const solved = progress.completed.includes(quest.id);
+    if (step === INTRO_STEP) {
+        return `
+            <div class="quest-card__label">Миссия ${quest.number} · ${esc(quest.groupLabel)}${solved ? `<span class="quest-hud__badge">${ICON.check} пройдена</span>` : ''}</div>
+            <h2 class="quest-card__title">${esc(quest.title)}</h2>
+            <p class="quest-card__text">${rich(quest.goal)}</p>
+            <div class="quest-card__meta">${quest.steps.length} ${stepsWord(quest.steps.length)} и проверка полёта</div>
+            <div class="quest-hud__actions"><button type="button" class="btn-primary" data-quest-next>Начать миссию</button></div>`;
+    }
+    if (step < lastStepIndex(quest)) {
+        const final = step === lastStepIndex(quest) - 1;
+        return `
+            <div class="quest-card__label">Шаг ${step + 1} из ${quest.steps.length}${stepDots(quest)}</div>
+            <p class="quest-card__step">${rich(quest.steps[step])}</p>
+            ${hint}
+            <div class="quest-hud__actions">
+                <button type="button" class="btn-primary" data-quest-next>${final ? 'Готово, к проверке' : 'Сделал, дальше'}</button>
+                ${hintButton}
+                <button type="button" class="btn-secondary quest-hud__back" data-quest-prev aria-label="Назад">←</button>
+            </div>`;
+    }
+    const needs = track === 'blocks' ? requiredBlockChecklist(quest, usedBlockTypes()) : [];
+    return `
+        <div class="quest-card__label">Проверка полёта${stepDots(quest)}</div>
+        <p class="quest-card__step">Запустите программу: дрон выполнит её, а проверка посмотрит результат на сцене.</p>
+        ${needs.length ? `<ul class="quest-hud__needs">${needs.map((need) => `<li data-need class="${need.done ? 'is-done' : ''}"><span class="quest-hud__tick">${ICON.check}</span>Блок «${esc(need.label)}»</li>`).join('')}</ul>` : ''}
+        ${quest.lesson?.academy?.number === 1 ? academyQuestions() : ''}
+        ${hint}
+        ${feedback ? `<div class="quest-hud__feedback quest-hud__feedback--${feedback.kind}" role="status"><strong>${esc(feedback.title)}</strong>${feedback.lines.map((line) => `<div>${rich(line)}</div>`).join('')}</div>` : ''}
+        <div class="quest-hud__actions">
+            <button type="button" class="btn-primary" data-quest-check ${checking ? 'disabled' : ''}>${checking ? 'Проверяем полёт…' : 'Проверить полёт'}</button>
+            ${hintButton}
+            ${hintOpen ? '<button type="button" class="btn-secondary" data-quest-solution>Показать решение</button>' : ''}
+            <button type="button" class="btn-secondary quest-hud__back" data-quest-prev aria-label="К шагам">←</button>
+        </div>`;
+}
+
+function stepsWord(count: number): string {
+    const last = count % 10;
+    if (count % 100 >= 11 && count % 100 <= 14) return 'шагов';
+    return last === 1 ? 'шаг' : last >= 2 && last <= 4 ? 'шага' : 'шагов';
+}
+
+/** Первый урок Академии — осмотр аппарата: вместо кода два вопроса. */
+function academyQuestions(): string {
+    const group = (part: 'lift' | 'vision', title: string, options: Array<[string, string]>) => `
+        <fieldset class="quest-q"><legend>${title}</legend>${options.map(([value, label]) =>
+            `<label><input type="radio" name="quest-${part}" value="${value}" data-quest-part="${part}"${academyParts[part] === value ? ' checked' : ''}> ${label}</label>`).join('')}</fieldset>`;
+    return group('lift', 'Что создаёт тягу?', [['rotors', 'Винты'], ['camera', 'Камера']])
+        + group('vision', 'Что получает изображение?', [['camera', 'Камера'], ['rotors', 'Винты']]);
+}
+
+function renderHud(direction: 'forward' | 'back' = 'forward'): void {
     const quest = activeQuest;
     if (!quest) { el.hud.hidden = true; return; }
     const done = countDone(quests, progress);
     const percent = Math.round((done / quests.length) * 100);
-    const solved = progress.completed.includes(quest.id);
-    const needs = track === 'blocks' ? requiredBlockChecklist(quest, usedBlockTypes()) : [];
-    const spec = quest.spec;
     el.hud.hidden = false;
     el.hud.classList.toggle('is-collapsed', hudCollapsed);
     el.hud.innerHTML = `
         <div class="quest-hud__top">
-            <div class="quest-hud__where">Задание ${quest.number} из ${quests.length} · ${esc(QUEST_GROUP_LABELS[quest.group])}</div>
-            <button type="button" class="quest-hud__icon" data-quest-collapse aria-label="${hudCollapsed ? 'Развернуть задание' : 'Свернуть задание'}" title="${hudCollapsed ? 'Развернуть' : 'Свернуть'}">${hudCollapsed ? '+' : '−'}</button>
+            <div class="quest-hud__where">Миссия ${quest.number} из ${quests.length} · ${esc(quest.groupLabel)}</div>
+            <button type="button" class="quest-hud__icon" data-quest-collapse aria-label="${hudCollapsed ? 'Развернуть' : 'Свернуть'}" title="${hudCollapsed ? 'Развернуть' : 'Свернуть'}">${hudCollapsed ? '+' : '−'}</button>
         </div>
-        <div class="quest-hud__track pk-seg" role="group" aria-label="Чем писать программу">
-            ${(Object.keys(TRACK_LABELS) as LearningTrack[]).map((key) => `<button type="button" class="pk-seg__btn${key === track ? ' is-active' : ''}" data-quest-track="${key}">${TRACK_LABELS[key]}</button>`).join('')}
-        </div>
-        <div class="quest-hud__view pk-seg" role="group" aria-label="Что показать">
-            <button type="button" class="pk-seg__btn${isEditorVisible() ? ' is-active' : ''}" data-quest-view="blocks">${track === 'blocks' ? 'Блоки' : 'Код'}</button>
-            <button type="button" class="pk-seg__btn${isEditorVisible() ? '' : ' is-active'}" data-quest-view="scene">Сцена</button>
-        </div>
-        <div class="quest-hud__progress" role="progressbar" aria-valuemin="0" aria-valuemax="${quests.length}" aria-valuenow="${done}" aria-label="Пройдено заданий">
+        <div class="quest-hud__progress" role="progressbar" aria-valuemin="0" aria-valuemax="${quests.length}" aria-valuenow="${done}" aria-label="Пройдено миссий">
             <span class="quest-hud__bar"><span style="width:${percent}%"></span></span>
             <span class="quest-hud__count">${done}/${quests.length}</span>
         </div>
         <div class="quest-hud__body">
-            <h2 class="quest-hud__title">${esc(spec.title)}${solved ? `<span class="quest-hud__badge">${ICON.check} пройдено</span>` : ''}</h2>
-            <p class="quest-hud__goal">${rich(spec.goal)}</p>
-            <div class="quest-hud__label">Что сделать</div>
-            <ol class="quest-hud__steps">${spec.recipe.map((step) => `<li>${rich(step)}</li>`).join('')}</ol>
-            ${needs.length ? `
-            <div class="quest-hud__label">Нужные блоки</div>
-            <ul class="quest-hud__needs">${needs.map((need) => `<li data-need class="${need.done ? 'is-done' : ''}"><span class="quest-hud__tick">${ICON.check}</span>${esc(need.label)}</li>`).join('')}</ul>` : ''}
-            ${track !== 'blocks' ? `<div class="quest-hud__note">Шаги даны блоками. Запишите то же самое на ${TRACK_LABELS[track]}: проверяется полёт, а не вид кода.${trackSupported(quest) ? '' : ' <strong>Этот урок только для Lua: блок «Каждые N сек» в браузерном Python не держит ритм.</strong>'}</div>` : ''}
-            ${hintOpen ? `<div class="quest-hud__hint"><strong>Подсказка.</strong> ${rich(spec.hint)}</div>` : ''}
-            ${feedback ? `<div class="quest-hud__feedback quest-hud__feedback--${feedback.kind}" role="status"><strong>${esc(feedback.title)}</strong>${feedback.lines.map((line) => `<div>${rich(line)}</div>`).join('')}</div>` : ''}
-            <div class="quest-hud__actions">
-                <button type="button" class="btn-primary" data-quest-check ${checking ? 'disabled' : ''}>${checking ? 'Проверяем полёт…' : 'Проверить полёт'}</button>
-                <button type="button" class="btn-secondary" data-quest-hint>${hintOpen ? 'Скрыть подсказку' : 'Подсказка'}</button>
-                ${hintOpen ? '<button type="button" class="btn-secondary" data-quest-solution>Показать решение</button>' : ''}
+            <div class="quest-hud__switches">
+                <div class="quest-hud__track pk-seg" role="group" aria-label="Чем писать программу">
+                    ${(Object.keys(TRACK_LABELS) as LearningTrack[]).map((key) => `<button type="button" class="pk-seg__btn${key === track ? ' is-active' : ''}" data-quest-track="${key}">${TRACK_LABELS[key]}</button>`).join('')}
+                </div>
+                <div class="quest-hud__view pk-seg" role="group" aria-label="Что показать">
+                    <button type="button" class="pk-seg__btn${isEditorVisible() ? ' is-active' : ''}" data-quest-view="code">${track === 'blocks' ? 'Блоки' : 'Код'}</button>
+                    <button type="button" class="pk-seg__btn${isEditorVisible() ? '' : ' is-active'}" data-quest-view="scene">Сцена</button>
+                </div>
             </div>
+            <div class="quest-card quest-card--${direction === 'forward' ? 'in' : 'in-back'}" data-card="${step}">${renderCard(quest)}</div>
         </div>
-        <button type="button" class="quest-hud__map-btn" data-quest-map>${ICON.map} Карта заданий</button>`;
-    el.hud.querySelectorAll<HTMLElement>('[data-quest-track]').forEach((button) => {
-        button.addEventListener('click', () => { void changeTrack(button.dataset.questTrack as LearningTrack); });
+        <button type="button" class="quest-hud__map-btn" data-quest-map>${ICON.map} Карта миссий</button>`;
+    const on = (selector: string, handler: (target: HTMLElement) => void) => {
+        el.hud.querySelectorAll<HTMLElement>(selector).forEach((node) => node.addEventListener('click', () => handler(node)));
+    };
+    on('[data-quest-collapse]', () => { hudCollapsed = !hudCollapsed; renderHud(); });
+    on('[data-quest-track]', (node) => { void changeTrack(node.dataset.questTrack as LearningTrack); });
+    on('[data-quest-view]', (node) => {
+        if (node.dataset.questView === 'code') showEditorPanel(); else showScene();
+        window.setTimeout(() => renderHud(), 120);
     });
-    el.hud.querySelectorAll<HTMLElement>('[data-quest-view]').forEach((button) => {
-        button.addEventListener('click', () => {
-            if (button.dataset.questView === 'blocks') showEditorPanel(); else showScene();
-            window.setTimeout(renderHud, 120);
-        });
-    });
-    el.hud.querySelector('[data-quest-collapse]')?.addEventListener('click', () => { hudCollapsed = !hudCollapsed; renderHud(); });
-    el.hud.querySelector('[data-quest-hint]')?.addEventListener('click', () => { hintOpen = !hintOpen; renderHud(); });
-    el.hud.querySelector('[data-quest-map]')?.addEventListener('click', showMap);
-    el.hud.querySelector('[data-quest-check]')?.addEventListener('click', () => { void checkQuest(); });
-    el.hud.querySelector('[data-quest-solution]')?.addEventListener('click', () => {
+    on('[data-quest-map]', showMap);
+    on('[data-quest-next]', () => goToStep(step + 1));
+    on('[data-quest-prev]', () => goToStep(step - 1));
+    on('[data-quest-hint]', () => { hintOpen = !hintOpen; renderHud(); });
+    on('[data-quest-check]', () => { void checkQuest(); });
+    on('[data-quest-solution]', () => {
         void showSolution(quest).then(() => {
-            feedback = { kind: 'info', title: 'Решение загружено в редактор', lines: ['Разберите блоки сверху вниз и нажмите «Проверить полёт».'] };
+            feedback = { kind: 'info', title: 'Решение загружено в редактор', lines: ['Разберите его и нажмите «Проверить полёт».'] };
             renderHud();
         });
     });
+    el.hud.querySelectorAll<HTMLInputElement>('[data-quest-part]').forEach((input) => {
+        input.addEventListener('change', () => { academyParts = { ...academyParts, [input.dataset.questPart as 'lift' | 'vision']: input.value }; });
+    });
 }
 
-/** Решение лежит блоками: для Lua и Python оно собирается в код и кладётся в текстовый редактор. */
 async function showSolution(quest: Quest): Promise<void> {
-    await loadMainBlocklyJson(JSON.stringify(quest.spec.solution));
-    if (track === 'blocks') return;
-    setCurrentScriptLanguage(track);
-    await setEditorLanguage(track);
-    const code = getEditorValue();
-    await enterTextEditor(track, code);
+    if (track === 'blocks') { await loadMainBlocklyJson(JSON.stringify(quest.spec?.solution)); return; }
+    await enterTextEditor(track, quest.lesson?.solutionCode ?? '');
 }
 
 async function changeTrack(next: LearningTrack): Promise<void> {
     if (next === track || !activeQuest) return;
     saveDraft();
-    track = next;
-    try { storage()?.setItem(TRACK_STORAGE_KEY, track); } catch { /* ignore */ }
-    feedback = null;
-    await loadQuestWorkspace(activeQuest);
-    renderHud();
+    checkToken++;
+    checking = false;
+    useTrack(next);
+    const quest = currentQuest(quests, progress);
+    if (quest) await openQuest(quest);
 }
+
+/* ---------- Проверка ---------- */
 
 async function ensureLanguage(quest: Quest): Promise<'lua' | 'python'> {
     if (track !== 'blocks') return track;
-    const allowed = quest.spec.languages;
+    const allowed = quest.spec?.languages;
     if (allowed && !allowed.includes(currentScriptLanguage)) {
         const language = allowed[0];
         setCurrentScriptLanguage(language);
@@ -370,33 +468,27 @@ async function ensureLanguage(quest: Quest): Promise<'lua' | 'python'> {
 async function checkQuest(): Promise<void> {
     const quest = activeQuest;
     if (!quest || checking) return;
-    if (track !== 'blocks') {
+    if (track === 'blocks') {
+        const used = usedBlockTypes();
+        if (!used.includes('pioneer_start') || used.every((type) => type === 'pioneer_start')) {
+            feedback = { kind: 'error', title: 'Программа пока пустая', lines: ['Прикрепите команды под блок «Начало программы» по шагам миссии.'] };
+            renderHud();
+            return;
+        }
+        const missing = requiredBlockChecklist(quest, used).filter((item) => !item.done);
+        if (missing.length) {
+            feedback = { kind: 'error', title: 'Не хватает блоков', lines: missing.map((item) => `Добавьте блок «${item.label}».`) };
+            renderHud();
+            return;
+        }
+    } else {
+        const academy = quest.lesson?.academy;
         const code = isBlocklyEditorEnabled() ? '' : getEditorValue();
-        if (!trackSupported(quest)) {
-            feedback = { kind: 'error', title: 'Этот урок только для Lua', lines: ['Переключитесь на Lua или Blockly: в браузерном Python блок «Каждые N сек» не держит ритм.'] };
+        if (academy?.mode !== 'inspect' && !code.trim()) {
+            feedback = { kind: 'error', title: 'Редактор пуст', lines: ['Напишите программу по шагам миссии и проверьте ещё раз.'] };
             renderHud();
             return;
         }
-        if (!code.split('\n').some((line) => line.trim() && !/^\s*(--|#)/.test(line))) {
-            feedback = { kind: 'error', title: 'Программа пока пустая', lines: [`Запишите программу на ${TRACK_LABELS[track]} в редакторе: команды дрона, как в шагах задания.`] };
-            renderHud();
-            return;
-        }
-        await runFlightCheck(quest);
-        return;
-    }
-    const used = usedBlockTypes();
-    const body = used.filter((type) => type !== 'pioneer_start');
-    if (!used.includes('pioneer_start') || body.length === 0) {
-        feedback = { kind: 'error', title: 'Программа пока пустая', lines: ['Прикрепите команды под блок «Начало программы» по шагам задания.'] };
-        renderHud();
-        return;
-    }
-    const missing = requiredBlockChecklist(quest, used).filter((item) => !item.done);
-    if (missing.length) {
-        feedback = { kind: 'error', title: 'Не хватает блоков', lines: missing.map((item) => `Добавьте блок «${item.label}».`) };
-        renderHud();
-        return;
     }
     await runFlightCheck(quest);
 }
@@ -407,14 +499,33 @@ async function runFlightCheck(quest: Quest): Promise<void> {
     checking = true;
     feedback = null;
     renderHud();
+    const academy = quest.lesson?.academy;
+    const capture = academy ? { droneId: currentDroneId, token: beginLearningCapture(currentDroneId) } : undefined;
     try {
         const language = await ensureLanguage(quest);
+        if (academy?.mode === 'inspect') await setEditorValue(quest.lesson?.starterCode ?? '');
+        const code = isBlocklyEditorEnabled() ? '' : getEditorValue();
+        const trialKey = `${currentDroneId}:${track}:${quest.id}`;
+        if ([54, 107].includes(academy?.number || 0) && repeatedExperiments.get(trialKey) !== code) experimentTrials.delete(trialKey);
         await restartAndRunSimulation();
+        const waitMs = academy ? academy.waitMs ?? (academy.number === 4 ? 1800 : 1200) : quest.spec!.expect.waitMs;
         const result = await runTextLessonCheck(quest.id, {
-            waitMs: quest.spec.expect.waitMs, language, isCurrent: () => token === checkToken
+            waitMs, language, capture, doneMessage: academy?.doneMessage, isCurrent: () => token === checkToken,
+            activity: academy ? {
+                code, lift: academyParts.lift, vision: academyParts.vision,
+                previousRun: repeatedExperiments.get(trialKey) === code,
+                trials: [...(experimentTrials.get(trialKey) || [])], scene: getAcademySceneEvidence()
+            } : undefined
         });
+        if (capture) finishLearningCapture(capture.droneId, capture.token);
         if (token !== checkToken) return;
         checking = false;
+        if (academy && [5, 54, 107].includes(academy.number) && !result.diagnostics.some((item) => item.kind === 'error')) repeatedExperiments.set(trialKey, code);
+        if (result.academyTrial) {
+            const trials = experimentTrials.get(trialKey) || new Set<string>();
+            trials.add(result.academyTrial);
+            experimentTrials.set(trialKey, trials);
+        }
         if (result.solved) {
             progress = completeQuest(quests, progress, quest.id);
             persist();
@@ -426,10 +537,11 @@ async function runFlightCheck(quest: Quest): Promise<void> {
         const errors = result.diagnostics.filter((item) => item.kind === 'error');
         feedback = {
             kind: 'error',
-            title: 'Пока не получилось',
-            lines: (errors.length ? errors : result.diagnostics).slice(0, 3).map((item) => `${item.title}. ${item.fix}`)
+            title: errors.length ? 'Пока не получилось' : 'Почти',
+            lines: (errors.length ? errors : result.diagnostics).slice(0, 3).map((item) => `${item.title}. ${item.fix}`.replace(/«Проверить и запустить»/g, '«Проверить полёт»'))
         };
     } catch {
+        if (capture) finishLearningCapture(capture.droneId, capture.token);
         if (token !== checkToken) return;
         checking = false;
         feedback = { kind: 'error', title: 'Проверка прервалась', lines: ['Запуск или чтение состояния дрона не удались. Попробуйте ещё раз.'] };
@@ -447,14 +559,14 @@ function showSuccess(quest: Quest): void {
     el.success.innerHTML = `
         <div class="quest-success__card" role="dialog" aria-modal="false" aria-labelledby="quest-success-title">
             <div class="quest-success__seal">${ICON.check}</div>
-            <div class="quest-success__kicker">${finished ? 'Все задания пройдены' : 'Задание выполнено'}</div>
-            <h2 id="quest-success-title" class="quest-success__title">${esc(quest.spec.title)}</h2>
-            <p class="quest-success__text">${rich(quest.spec.outcome)}</p>
-            <div class="quest-success__score">Пройдено ${done} из ${quests.length}${next ? ` · открыто: ${esc(next.spec.title)}` : ''}</div>
+            <div class="quest-success__kicker">${finished ? 'Все миссии пройдены' : 'Миссия выполнена'}</div>
+            <h2 id="quest-success-title" class="quest-success__title">${esc(quest.title)}</h2>
+            <p class="quest-success__text">${rich(quest.outcome)}</p>
+            <div class="quest-success__score">Пройдено ${done} из ${quests.length}${next ? ` · открыто: ${esc(next.title)}` : ''}</div>
             <div class="quest-success__actions">
-                ${next ? '<button type="button" class="btn-primary" data-success-next>Следующее задание</button>' : ''}
+                ${next ? '<button type="button" class="btn-primary" data-success-next>Следующая миссия</button>' : ''}
                 <button type="button" class="btn-secondary" data-success-close>${next ? 'Остаться здесь' : 'Закрыть'}</button>
-                <button type="button" class="btn-secondary" data-success-map>Карта заданий</button>
+                <button type="button" class="btn-secondary" data-success-map>Карта миссий</button>
             </div>
         </div>`;
     el.success.querySelector('[data-success-next]')?.addEventListener('click', () => { if (next) void openQuest(next); });
@@ -470,26 +582,25 @@ function hideSuccess(): void {
 
 function showMap(): void {
     const done = countDone(quests, progress);
-    const groups = QUEST_GROUP_ORDER.map((group) => {
-        const items = quests.filter((quest) => quest.group === group);
-        const tiles = items.map((quest) => {
+    const groups = questGroups(quests).map((group) => {
+        const tiles = group.quests.map((quest) => {
             const status = questStatus(quests, progress, quest.id);
             const current = activeQuest?.id === quest.id;
             const mark = status === 'done' ? ICON.check : status === 'locked' ? ICON.lock : String(quest.number);
-            const label = status === 'done' ? 'пройдено' : status === 'locked' ? 'закрыто' : 'доступно';
+            const label = status === 'done' ? 'пройдена' : status === 'locked' ? 'закрыта' : 'доступна';
             return `<li><button type="button" class="quest-tile quest-tile--${status}${current ? ' is-current' : ''}" data-map-quest="${esc(quest.id)}" ${status === 'locked' ? 'disabled' : ''}>
                 <span class="quest-tile__mark">${mark}</span>
-                <span class="quest-tile__name">${esc(quest.spec.title)}</span>
+                <span class="quest-tile__name">${esc(quest.title)}</span>
                 <span class="quest-tile__status">${label}</span></button></li>`;
         }).join('');
-        const groupDone = items.filter((quest) => progress.completed.includes(quest.id)).length;
-        return `<section class="quest-map__group"><h3>${esc(QUEST_GROUP_LABELS[group])} <small>${groupDone}/${items.length}</small></h3><ol class="quest-map__list">${tiles}</ol></section>`;
+        const groupDone = group.quests.filter((quest) => progress.completed.includes(quest.id)).length;
+        return `<section class="quest-map__group"><h3>${esc(group.label)} <small>${groupDone}/${group.quests.length}</small></h3><ol class="quest-map__list">${tiles}</ol></section>`;
     }).join('');
     el.map.hidden = false;
     el.map.innerHTML = `
         <div class="quest-map__card" role="dialog" aria-modal="true" aria-labelledby="quest-map-title">
             <div class="quest-map__head">
-                <div><h2 id="quest-map-title">Карта заданий</h2><div class="quest-map__sub">Пройдено ${done} из ${quests.length}. Следующее задание открывается, когда пройдено предыдущее.</div></div>
+                <div><h2 id="quest-map-title">Карта миссий · ${TRACK_LABELS[track]}</h2><div class="quest-map__sub">Пройдено ${done} из ${quests.length}. Следующая миссия открывается, когда пройдена предыдущая.</div></div>
                 <button type="button" class="quest-hud__icon" data-map-close aria-label="Закрыть карту">${ICON.close}</button>
             </div>
             <div class="quest-map__groups">${groups}</div>
@@ -505,7 +616,7 @@ function showMap(): void {
         });
     });
     el.map.querySelector('[data-map-reset]')?.addEventListener('click', () => {
-        if (!window.confirm('Сбросить весь прогресс заданий? Это нельзя отменить.')) return;
+        if (!window.confirm(`Сбросить весь прогресс миссий (${TRACK_LABELS[track]})? Это нельзя отменить.`)) return;
         progress = emptyProgress();
         quests.forEach((quest) => { try { storage()?.removeItem(draftKey(quest)); } catch { /* ignore */ } });
         persist();
@@ -531,11 +642,12 @@ function applyMode(mode: AppMode, previous: AppMode): void {
         stopChecklistTimer();
         hideSuccess();
         hideMap();
+        restoreAcademyScene();
     }
     el.hud.hidden = true;
     el.menu.hidden = mode === 'start';
     el.menu.innerHTML = `${ICON.home}<span>Меню</span>`;
-    el.menu.title = mode === 'learning' ? 'Вернуться на стартовый экран' : 'Вернуться на стартовый экран и выбрать режим';
+    el.menu.title = 'Вернуться на стартовый экран';
     if (mode === 'start') { showStart(); return; }
     hideStart();
     if (mode === 'free') return;
@@ -556,7 +668,7 @@ function buildDom(): void {
     el.start.setAttribute('role', 'dialog');
     el.start.setAttribute('aria-label', 'Выбор режима');
     el.hud = make('aside', 'quest-hud', 'quest-hud');
-    el.hud.setAttribute('aria-label', 'Текущее задание');
+    el.hud.setAttribute('aria-label', 'Текущая миссия');
     el.map = make('div', 'quest-map', 'quest-map');
     el.success = make('div', 'quest-success', 'quest-success');
     el.menu = make('button', 'mode-menu-btn', 'mode-menu-btn') as HTMLButtonElement;
@@ -604,8 +716,7 @@ function enableHudDrag(): void {
 /** Подключается один раз при запуске, после initUI: учебник уже повесил openMissionGuideModal. */
 export function initLearningMode(): void {
     buildDom();
-    progress = loadProgress(storage(), quests);
-    track = loadTrack();
+    useTrack(loadTrack());
     enableHudDrag();
     originalOpenGuide = (window as any).openMissionGuideModal;
     (window as any).openMissionGuideModal = (...args: unknown[]) => {

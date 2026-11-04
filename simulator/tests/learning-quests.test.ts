@@ -1,6 +1,6 @@
 /** Режим обучения: порядок заданий, открытие по цепочке, прогресс и режим приложения. */
 import {
-    buildQuests, completeQuest, countDone, currentQuest, emptyProgress, firstOpenQuest, loadProgress, nextQuest,
+    buildAcademyQuests, buildQuests, clampStep, completeQuest, INTRO_STEP, lastStepIndex, questGroups, countDone, currentQuest, emptyProgress, firstOpenQuest, loadProgress, nextQuest,
     QUEST_GROUP_ORDER, QUEST_PROGRESS_STORAGE_KEY, questStatus, requiredBlockChecklist, saveProgress, selectQuest,
     type StorageLike
 } from '../public/modules/learning/quests.js';
@@ -23,7 +23,7 @@ describe('задания режима обучения', () => {
     it('берёт все уроки практикума, главы идут flight → light → logic → projects', () => {
         expect(quests).toHaveLength(PIONEER_LESSONS.length);
         expect(quests.map((quest) => quest.number)).toEqual(quests.map((_, i) => i + 1));
-        const groupIndexes = quests.map((quest) => QUEST_GROUP_ORDER.indexOf(quest.group));
+        const groupIndexes = quests.map((quest) => QUEST_GROUP_ORDER.indexOf(quest.groupId as never));
         expect(groupIndexes).toEqual([...groupIndexes].sort((a, b) => a - b));
         expect(new Set(quests.map((quest) => quest.id)).size).toBe(quests.length);
     });
@@ -87,10 +87,10 @@ describe('задания режима обучения', () => {
     });
 
     it('чеклист обязательных блоков отмечает поставленные', () => {
-        const quest = quests.find((item) => item.spec.requires.length > 0)!;
-        const [firstType] = quest.spec.requires[0];
+        const quest = quests.find((item) => item.requires.length > 0)!;
+        const [firstType] = quest.requires[0];
         const list = requiredBlockChecklist(quest, [firstType]);
-        expect(list).toHaveLength(quest.spec.requires.length);
+        expect(list).toHaveLength(quest.requires.length);
         expect(list[0].done).toBe(true);
         expect(requiredBlockChecklist(quest, []).every((item) => !item.done)).toBe(true);
     });
@@ -105,5 +105,32 @@ describe('режим приложения', () => {
         storage.data[APP_MODE_STORAGE_KEY] = 'start';
         expect(loadLastMode(storage)).toBeNull();
         expect(loadLastMode(null)).toBeNull();
+    });
+});
+
+describe('миссии Академии', () => {
+    it('Lua и Python берут уроки Академии по порядку с шагами и главами', () => {
+        const lua = buildAcademyQuests('lua');
+        const python = buildAcademyQuests('python');
+        expect(lua.length).toBeGreaterThan(0);
+        expect(python.length).toBeGreaterThanOrEqual(lua.length);
+        expect(lua.map((quest) => quest.number)).toEqual(lua.map((_, i) => i + 1));
+        expect(new Set(lua.map((quest) => quest.id)).size).toBe(lua.length);
+        expect(lua.every((quest) => quest.steps.length >= 1 && quest.title && quest.source === 'academy')).toBe(true);
+        const groups = questGroups(lua);
+        expect(groups.length).toBeGreaterThan(1);
+        expect(groups.reduce((sum, group) => sum + group.quests.length, 0)).toBe(lua.length);
+        expect(questStatus(lua, emptyProgress(), lua[1].id)).toBe('locked');
+    });
+});
+
+describe('карточки миссии по шагам', () => {
+    it('индекс карточки ограничен вводной и проверкой', () => {
+        const quest = buildQuests()[0];
+        expect(INTRO_STEP).toBe(-1);
+        expect(lastStepIndex(quest)).toBe(quest.steps.length);
+        expect(clampStep(quest, -5)).toBe(INTRO_STEP);
+        expect(clampStep(quest, 99)).toBe(quest.steps.length);
+        expect(clampStep(quest, 1)).toBe(1);
     });
 });

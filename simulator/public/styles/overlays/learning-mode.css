@@ -179,3 +179,28 @@ body[data-app-mode='learning'] #sidebar-guide-btn { display: none; }
 @media (prefers-reduced-motion: reduce) {
     .start-card, .quest-hud__bar > span, .quest-success, .quest-success__card, .quest-success__seal { animation: none; transition: none; }
 }
+
+/* Одна карточка за раз: сделанный шаг уходит влево, новый въезжает справа. */
+.quest-hud__switches { display: flex; flex-wrap: wrap; gap: 6px; }
+.quest-card { display: grid; gap: 10px; padding: 12px 12px 10px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; }
+.quest-card--in { animation: quest-card-in 0.22s ease both; }
+.quest-card--in-back { animation: quest-card-in-back 0.22s ease both; }
+.quest-card.is-leaving { animation: quest-card-out 0.16s ease both; }
+.quest-card.is-leaving-back { animation: quest-card-out-back 0.16s ease both; }
+.quest-card__label { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+.quest-card__title { margin: 0; font-size: 19px; line-height: 1.25; font-weight: 650; color: var(--text-strong); }
+.quest-card__text { margin: 0; font-size: 14.5px; line-height: 1.5; }
+.quest-card__step { margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-strong); }
+.quest-card__meta { font-size: 13px; color: var(--text-muted); }
+.quest-dots { display: inline-flex; gap: 5px; }
+.quest-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--panel-bg-strong); border: 1px solid var(--border-strong); }
+.quest-dots i.is-done { background: var(--success); border-color: var(--success); }
+.quest-dots i.is-current { background: var(--accent-color); border-color: var(--accent-color); }
+.quest-hud__back { margin-left: auto; min-width: 36px; }
+.quest-q { margin: 0; padding: 0; border: 0; display: grid; gap: 4px; font-size: 13.5px; }
+.quest-q legend { padding: 0; font-weight: 600; }
+@keyframes quest-card-in { from { opacity: 0; transform: translateX(24px); } }
+@keyframes quest-card-in-back { from { opacity: 0; transform: translateX(-24px); } }
+@keyframes quest-card-out { to { opacity: 0; transform: translateX(-24px); } }
+@keyframes quest-card-out-back { to { opacity: 0; transform: translateX(24px); } }
+@media (prefers-reduced-motion: reduce) { .quest-card, .quest-card--in, .quest-card--in-back { animation: none; } }
