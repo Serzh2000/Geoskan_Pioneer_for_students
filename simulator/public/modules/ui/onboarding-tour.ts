@@ -8,6 +8,7 @@
  * screen (e.g. the rail on a phone layout) are skipped. The app underneath
  * is inert while the tour runs; keyboard: Enter/→ next, ← back, Esc skip.
  */
+import { getAppMode, onAppModeChange } from '../learning/mode.js';
 
 const TOUR_STORAGE_KEY = 'geoskan_onboarding_tour_v1';
 
@@ -299,6 +300,12 @@ export function initOnboardingTour(): void {
         return;
     }
     if (seen) return;
-    // Let the scene and layout settle so every spotlight lands on its target.
-    window.setTimeout(startOnboardingTour, 900);
+    // The tour waits behind the start screen and only runs in free mode: in learning mode the quest card is the guide.
+    const startWhenFree = () => window.setTimeout(startOnboardingTour, 900);
+    if (getAppMode() === 'free') { startWhenFree(); return; }
+    const stop = onAppModeChange((mode) => {
+        if (mode === 'start') return;
+        stop();
+        if (mode === 'free') startWhenFree();
+    });
 }

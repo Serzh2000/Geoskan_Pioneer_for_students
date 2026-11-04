@@ -26,6 +26,7 @@ import type { AddObjectOptions } from './modules/scene/objects/object-manager.js
 import { resetVehicles, startVehicleSession, stopVehicleSession } from './modules/vehicles/engine.js';
 import { resetWorld, startWorldSession, stopWorldSession } from './modules/world/runtime.js';
 import { setDroneEsp32Attached } from './modules/drone/index.js';
+import { initLearningMode } from './modules/learning/controller.js';
 
 // Global Loop
 
@@ -96,6 +97,9 @@ function init() {
         restoreSceneSession(uiCallbacks);
         startSceneSessionAutosave(uiCallbacks);
     }
+
+    // Start screen and learning mode sit on top of the finished simulator.
+    initLearningMode();
 
     // Start Loop
     startAnimationLoop({

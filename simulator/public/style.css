@@ -21,6 +21,7 @@
 @import url('./styles/panels/book-nav.css');
 @import url('./styles/panels/book-turn.css');
 @import url('./styles/panels/book-volumes.css');
+@import url('./styles/overlays/learning-mode.css');
 @import url('./styles/panels/settings.css');
 @import url('./styles/overlays/hud-and-settings.css');
 @import url('./styles/overlays/hud-and-settings/autopilot-params-modal.css');
