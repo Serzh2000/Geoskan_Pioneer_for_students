@@ -17,6 +17,9 @@ import {
 import { beginLearningCapture, finishLearningCapture } from '../core/learning-journal.js';
 import { runTextLessonCheck } from '../ui/mission-guide/evaluation/text/index.js';
 import { getAcademySceneEvidence, prepareAcademyScene, restoreAcademyScene, academySceneProfile } from '../ui/mission-guide/academy/scene.js';
+import { ACCOUNT_TRACKS, fetchProgress, getLastAuthKind, getUser, onUserChange, reportCompleted, restoreSession } from './account.js';
+import { initAccountUi } from './account-ui.js';
+import { openTeacherPanel } from './teacher-panel.js';
 import { getAppMode, loadLastMode, onAppModeChange, setAppMode, type AppMode } from './mode.js';
 import {
     buildAcademyQuests, buildQuests, clampStep, completeQuest, countDone, currentQuest, emptyProgress, INTRO_STEP, lastStepIndex,
@@ -77,8 +80,55 @@ function rich(text: string): string {
     return esc(text).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
 }
 
-function progressKey(forTrack: LearningTrack = track): string {
-    return forTrack === 'blocks' ? QUEST_PROGRESS_STORAGE_KEY : `${QUEST_PROGRESS_STORAGE_KEY}:${forTrack}`;
+/**
+ * Прогресс ученика с аккаунтом хранится отдельно от гостевого и от других учеников этого же браузера (школьный
+ * компьютер один на всех). Гость и учитель пользуются общим локальным прогрессом.
+ */
+function scope(): string {
+    const user = getUser();
+    return user?.role === 'student' ? `:u:${user.id}` : '';
+}
+
+function progressKey(forTrack: LearningTrack = track, forScope: string = scope()): string {
+    return (forTrack === 'blocks' ? QUEST_PROGRESS_STORAGE_KEY : `${QUEST_PROGRESS_STORAGE_KEY}:${forTrack}`) + forScope;
+}
+
+/** Зачёт, который выставил сервер (в том числе учитель вручную), главнее локального прогресса. */
+async function syncFromServer(): Promise<void> {
+    const user = getUser();
+    if (user?.role !== 'student') return;
+    try {
+        const server = await fetchProgress();
+        for (const key of ACCOUNT_TRACKS) {
+            const list = questsFor(key);
+            const local = loadProgress(storage(), list, progressKey(key));
+            const completed = server[key].filter((id) => list.some((quest) => quest.id === id));
+            saveProgress(storage(), { completed, currentId: local.currentId }, progressKey(key));
+        }
+        progress = loadProgress(storage(), quests, progressKey());
+        if (activeQuest && getAppMode() === 'learning') renderHud();
+    } catch {
+        // Нет связи с сервером: остаётся локальный прогресс, он отправится при следующей пройденной миссии.
+    }
+}
+
+/** После регистрации то, что ученик успел пройти гостем, переходит в его аккаунт. */
+async function adoptGuestProgress(): Promise<void> {
+    for (const key of ACCOUNT_TRACKS) {
+        const guest = loadProgress(storage(), questsFor(key), progressKey(key, ''));
+        for (const id of guest.completed) await reportCompleted(key, id).catch(() => undefined);
+    }
+}
+
+async function handleUserChange(): Promise<void> {
+    if (getUser() && getLastAuthKind() === 'register') await adoptGuestProgress();
+    useTrack(track);
+    await syncFromServer();
+    if (getAppMode() === 'start') renderStart();
+    else if (getAppMode() === 'learning') {
+        const quest = currentQuest(quests, progress);
+        if (quest) void openQuest(quest);
+    }
 }
 
 function questsFor(forTrack: LearningTrack): Quest[] {
@@ -185,7 +235,7 @@ function hideStart(): void {
 /* ---------- Редактор и черновики ---------- */
 
 function draftKey(quest: Quest): string {
-    return QUEST_DRAFT_STORAGE_PREFIX + (track === 'blocks' ? '' : `${track}:`) + quest.id;
+    return QUEST_DRAFT_STORAGE_PREFIX + scope().slice(1) + (track === 'blocks' ? '' : `${track}:`) + quest.id;
 }
 
 function saveDraft(): void {
@@ -529,6 +579,7 @@ async function runFlightCheck(quest: Quest): Promise<void> {
         if (result.solved) {
             progress = completeQuest(quests, progress, quest.id);
             persist();
+            if (getUser()?.role === 'student') void reportCompleted(track, quest.id).catch(() => undefined);
             try { storage()?.removeItem(draftKey(quest)); } catch { /* ignore */ }
             renderHud();
             showSuccess(quest);
@@ -652,8 +703,10 @@ function applyMode(mode: AppMode, previous: AppMode): void {
     hideStart();
     if (mode === 'free') return;
     (window as any).closeMissionGuideModal?.();
-    const quest = currentQuest(quests, progress);
-    if (quest) void openQuest(quest);
+    void syncFromServer().finally(() => {
+        const quest = currentQuest(quests, progress);
+        if (quest) void openQuest(quest);
+    });
 }
 
 function buildDom(): void {
@@ -718,6 +771,9 @@ export function initLearningMode(): void {
     buildDom();
     useTrack(loadTrack());
     enableHudDrag();
+    initAccountUi(document.body, { openTeacher: () => { void openTeacherPanel(); } });
+    onUserChange(() => { void handleUserChange(); });
+    void restoreSession();
     originalOpenGuide = (window as any).openMissionGuideModal;
     (window as any).openMissionGuideModal = (...args: unknown[]) => {
         if (getAppMode() === 'learning') return;

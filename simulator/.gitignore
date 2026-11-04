@@ -22,3 +22,6 @@ __pycache__/
 # Saved/exported third-party web pages and vendor library files (local
 # reference material only; not read by the app, build, or tests)
 /docs/imported/
+
+# Teacher/student accounts (hashed passwords, progress)
+/data/

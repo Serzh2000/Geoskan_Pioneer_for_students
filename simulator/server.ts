@@ -8,6 +8,7 @@ import type { Server } from 'http';
 import path from 'path';
 import { rateLimit } from 'express-rate-limit';
 import { fileURLToPath } from 'url';
+import { AccountStore, ensureTeacher, registerAccountRoutes, resolveAccountsFile } from './server/accounts.js';
 import { registerExternalPythonBridgeRoutes } from './server/external-python-bridge.js';
 import { registerMavlinkBridgeRoutes, stopAllMavlinkBridges } from './server/mavlink-bridge.js';
 import { registerPythonRuntimeRoutes, stopAllLocalPythonRuns } from './server/python-runtime.js';
@@ -208,6 +209,10 @@ function createApp(options: StartServerOptions): express.Express {
     app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS ?? 0));
     app.use(cors(resolveCorsOptions()));
     app.use(express.json({ limit: '10mb' }));
+    // Accounts have their own limiter on the login routes; the shared /api limiter below would throttle progress sync.
+    const accountStore = new AccountStore(resolveAccountsFile(projectRoot));
+    void ensureTeacher(accountStore);
+    registerAccountRoutes(app, accountStore);
     app.use('/api', createSensitiveRouteLimiter());
     app.use(EXTERNAL_BRIDGE_ROUTE_PREFIX, createExternalBridgeLimiter());
 
