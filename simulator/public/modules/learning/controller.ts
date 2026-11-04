@@ -52,13 +52,15 @@ let checkToken = 0;
 let feedback: { kind: 'info' | 'error'; title: string; lines: string[] } | null = null;
 let checklistTimer = 0;
 let originalOpenGuide: (() => void) | undefined;
+/** Шаг с подсветкой засчитывается сам только после того, как ученик дошёл до него. */
+let guideArmed = false;
 /** Повторные запуски и частные опыты Академии: часть уроков засчитывается только после нескольких запусков. */
 const experimentTrials = new Map<string, Set<string>>();
 const repeatedExperiments = new Map<string, string>();
 let academyParts: { lift?: string; vision?: string } = {};
 
 const el = {} as {
-    start: HTMLElement; hud: HTMLElement; map: HTMLElement; success: HTMLElement; menu: HTMLButtonElement;
+    start: HTMLElement; hud: HTMLElement; map: HTMLElement; success: HTMLElement; menu: HTMLButtonElement; spot: HTMLElement;
 };
 
 const ICON = {
@@ -334,15 +336,53 @@ function usedBlockTypes(): string[] {
     return workspace ? workspace.getAllBlocks(false).map((block) => block.type) : [];
 }
 
-/** Чеклист нужных блоков обновляется по мере сборки программы. */
+/** Чеклист нужных блоков и подсветка интерфейса обновляются, пока ученик работает. */
 function startChecklistTimer(): void {
     window.clearInterval(checklistTimer);
-    checklistTimer = window.setInterval(refreshChecklist, 600);
+    checklistTimer = window.setInterval(() => { refreshChecklist(); syncGuide(); }, 300);
 }
 
 function stopChecklistTimer(): void {
     window.clearInterval(checklistTimer);
     checklistTimer = 0;
+    hideSpot();
+}
+
+function hideSpot(): void {
+    el.spot.hidden = true;
+}
+
+/**
+ * Шаг с подсветкой: рамка вокруг нужной кнопки и подпись. Карточка отодвигается, если закрывает цель.
+ * Когда ученик сделал нужное, шаг засчитывается сам и появляется следующая карточка.
+ */
+function syncGuide(): void {
+    const quest = activeQuest;
+    const guide = quest && step >= 0 && step < lastStepIndex(quest) ? quest.guides?.[step] : undefined;
+    if (!quest || !guide || getAppMode() !== 'learning' || el.success.hidden === false) { hideSpot(); return; }
+    const target = guide.target ? document.querySelector<HTMLElement>(guide.target) : null;
+    const rect = target && !target.hidden && target.getClientRects().length ? target.getBoundingClientRect() : null;
+    if (rect && rect.width > 0) {
+        el.spot.hidden = false;
+        el.spot.style.left = `${rect.left - 5}px`;
+        el.spot.style.top = `${rect.top - 5}px`;
+        el.spot.style.width = `${rect.width + 10}px`;
+        el.spot.style.height = `${rect.height + 10}px`;
+        el.spot.dataset.label = guide.label ?? '';
+        el.spot.classList.toggle('is-below', rect.top < 40);
+        const hud = el.hud.getBoundingClientRect();
+        const overlaps = hud.left < rect.right && hud.right > rect.left && hud.top < rect.bottom && hud.bottom > rect.top;
+        if (overlaps && !el.hud.classList.contains('is-dragging')) {
+            el.hud.style.left = `${Math.max(8, rect.left - hud.width - 24)}px`;
+            el.hud.style.right = 'auto';
+        }
+    } else {
+        hideSpot();
+    }
+    if (guide.until && guideArmed && guide.until()) {
+        guideArmed = false;
+        window.setTimeout(() => { if (activeQuest === quest && step < lastStepIndex(quest)) goToStep(step + 1); }, 500);
+    }
 }
 
 function refreshChecklist(): void {
@@ -362,7 +402,14 @@ function goToStep(next: number): void {
     if (target === step) return;
     const direction = target > step ? 'forward' : 'back';
     const card = el.hud.querySelector<HTMLElement>('.quest-card');
-    const apply = () => { step = target; hintOpen = false; feedback = null; renderHud(direction); };
+    const apply = () => {
+        step = target;
+        hintOpen = false;
+        feedback = null;
+        guideArmed = direction === 'forward';
+        if (activeQuest?.guides?.[step]?.inEditor) showEditorPanel();
+        renderHud(direction);
+    };
     if (card && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         card.classList.add(direction === 'forward' ? 'is-leaving' : 'is-leaving-back');
         window.setTimeout(apply, 160);
@@ -728,7 +775,9 @@ function buildDom(): void {
     el.menu.type = 'button';
     el.menu.setAttribute('aria-label', 'Вернуться на стартовый экран');
     el.menu.addEventListener('click', () => setAppMode('start', storage()));
-    document.body.append(el.hud, el.success, el.map, el.menu, el.start);
+    el.spot = make('div', 'quest-spot', 'quest-spot');
+    el.spot.setAttribute('aria-hidden', 'true');
+    document.body.append(el.hud, el.spot, el.success, el.map, el.menu, el.start);
 }
 
 /** Карточку можно перетащить за заголовок; место запоминается. */

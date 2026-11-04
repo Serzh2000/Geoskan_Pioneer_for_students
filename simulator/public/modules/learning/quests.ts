@@ -12,6 +12,7 @@ import type { PioneerGroup, PioneerLessonSpec } from '../ui/mission-guide/lesson
 import { ACADEMY_MODULES } from '../ui/mission-guide/academy/catalog.js';
 import { getAcademyTextPractices } from '../ui/mission-guide/academy/practices/index.js';
 import type { GuideTextLesson } from '../ui/mission-guide/types.js';
+import { GUIDED_STEPS, type GuidedStep } from './guides.js';
 import { localize } from '../ui/mission-guide/book/localize.js';
 
 export const QUEST_GROUP_ORDER: readonly PioneerGroup[] = ['flight', 'light', 'logic', 'projects'];
@@ -47,6 +48,8 @@ export type Quest = {
     source: 'blocks' | 'academy';
     spec?: PioneerLessonSpec;
     lesson?: GuideTextLesson;
+    /** Шаги с подсветкой интерфейса: по одному на шаг из `steps`, если миссию нужно провести за руку. */
+    guides?: GuidedStep[];
 };
 
 export type QuestProgress = {
@@ -85,6 +88,7 @@ export function buildAcademyQuests(language: 'lua' | 'python'): Quest[] {
     const modules = new Map(ACADEMY_MODULES.map((module) => [module.id, module.title]));
     return getAcademyTextPractices(language).map((lesson, index) => {
         const title = modules.get(lesson.chapterId) ?? lesson.chapterId;
+        const guides = GUIDED_STEPS[lesson.topicId]?.(language);
         return {
             id: lesson.topicId,
             number: index + 1,
@@ -93,7 +97,8 @@ export function buildAcademyQuests(language: 'lua' | 'python'): Quest[] {
             groupLabel: title.replace(/^\d+\.\s*/, ''),
             title: lesson.title,
             goal: lesson.summary,
-            steps: (lesson.taskSteps?.length ? lesson.taskSteps : [lesson.goal]).map((step) => localize(step, language)),
+            guides,
+            steps: guides ? guides.map((guide) => guide.text) : (lesson.taskSteps?.length ? lesson.taskSteps : [lesson.goal]).map((step) => localize(step, language)),
             hint: lesson.builderHint,
             outcome: lesson.expectedOutcome,
             requires: [],
