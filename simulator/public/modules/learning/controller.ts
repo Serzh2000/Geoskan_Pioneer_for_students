@@ -14,6 +14,7 @@ import {
     getEditorValue, getMainBlocklyWorkspace, isBlocklyEditorEnabled, loadMainBlocklyJson, loadMainBlocklyXml,
     serializeWorkspaceXml, setBlocklyEditorEnabled, setEditorLanguage, setEditorValue, syncScriptLanguageSelect
 } from '../editor/index.js';
+import { renderApiDocs } from '../ui/api-docs/index.js';
 import { beginLearningCapture, finishLearningCapture } from '../core/learning-journal.js';
 import { runTextLessonCheck } from '../ui/mission-guide/evaluation/text/index.js';
 import { getAcademySceneEvidence, prepareAcademyScene, restoreAcademyScene, academySceneProfile } from '../ui/mission-guide/academy/scene.js';
@@ -271,6 +272,8 @@ async function enterTextEditor(language: 'lua' | 'python', code: string): Promis
     await setEditorLanguage(language);
     await setEditorValue(code);
     syncScriptLanguageSelect();
+    // The reference follows the language of the track, otherwise a Python mission would search the Lua catalog.
+    renderApiDocs(language);
 }
 
 async function loadQuestWorkspace(quest: Quest): Promise<void> {
