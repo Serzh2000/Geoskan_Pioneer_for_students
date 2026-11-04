@@ -1,5 +1,4 @@
 import { currentDroneId, currentScriptLanguage, drones, setCurrentScriptLanguage, type ScriptLanguage } from '../core/state.js';
-import { renderMissionGuidePanel } from '../ui/mission-guide/panel.js';
 import { renderApiDocs } from '../ui/api-docs/index.js';
 import { refreshFileList } from '../ui/controls/file-controls.js';
 import { log } from '../shared/logging/logger.js';
@@ -37,7 +36,6 @@ function applyScriptLanguage(lang: ScriptLanguage): void {
     setEditorLanguage(lang);
     setEditorValue(getSavedEditorDraft(lang) || (lang === 'lua' ? drone.script : drone.pythonScript));
     renderApiDocs(lang);
-    renderMissionGuidePanel(lang);
     refreshFileList(lang);
     syncScriptLanguageSelect();
 }
@@ -100,7 +98,6 @@ export function initScriptLanguageSelector(): void {
             (currentScriptLanguage === 'lua' ? drone.script : drone.pythonScript);
         setEditorValue(initialCode);
         renderApiDocs(currentScriptLanguage);
-        renderMissionGuidePanel(currentScriptLanguage);
     }
 
     window.addEventListener('drone-selection-changed', () => enforceDroneScriptLanguage());
@@ -151,8 +148,7 @@ export function initScriptLanguageSelector(): void {
         const code = getSavedEditorDraft(lang) || (lang === 'lua' ? selectedDrone.script : selectedDrone.pythonScript);
         setEditorValue(code);
         renderApiDocs(lang);
-        renderMissionGuidePanel(lang);
-        refreshFileList(lang);
+            refreshFileList(lang);
         log(`Язык скрипта: ${lang.toUpperCase()}`, 'info');
     });
 }

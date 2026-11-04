@@ -5,7 +5,7 @@
  * State is always communicated by fill: no underlines, edge stripes, gradients or glows.
  */
 
-.sidebar-panel, #mission-guide-overlay, .scene-container {
+.sidebar-panel, .scene-container {
     --pk-raised: var(--control-bg);
     --pk-inset: var(--panel-bg-strong);
     --pk-hover: var(--control-bg-hover);
@@ -129,7 +129,7 @@
 .pk-btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* `hidden` must win over display rules on buttons, rows and chips. */
-.sidebar-panel [hidden], #mission-guide-overlay [hidden], .btn-primary[hidden], .btn-secondary[hidden] { display: none; }
+.sidebar-panel [hidden], .btn-primary[hidden], .btn-secondary[hidden] { display: none; }
 
 /* ---- meter: battery, progress ---- */
 .pk-meter { height: 6px; border-radius: 3px; background: var(--pk-inset); overflow: hidden; }

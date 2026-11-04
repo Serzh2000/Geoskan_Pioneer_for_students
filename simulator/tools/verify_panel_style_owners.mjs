@@ -20,12 +20,6 @@ function visit(file) {
     });
 }
 visit(entry);
-const guideSheet = path.join(root, 'styles/panels/guide-panel.css');
-postcss.parse(fs.readFileSync(guideSheet, 'utf8'), { from: guideSheet }).walkRules(rule => {
-    if (/(?:#gamepad-panel\b|\.(?:gamepad|gp|cm)-|#channel-monitor-panel\b)/.test(rule.selector)) {
-        throw new Error(`Controller selector belongs in styles/gamepad, not guide-panel.css: ${rule.selector}`);
-    }
-});
 // Retired textbook layer stack and theme overrides must never be imported again.
 const forbiddenLayers = [
     'styles/core/theme/dark-foundation/scene-manager.css',

@@ -10,13 +10,13 @@ import { explainLuaSyntaxError } from './lua-errors.js';
 import { code, type NoticeAction, type NoticeText } from './types.js';
 
 /**
- * The textbook lessons that explain the matters a notice is about (academy lesson numbers, mission-guide/academy/catalog.ts):
+ * The Academy missions that explain the matters a notice is about (academy lesson numbers, mission-guide/academy/catalog.ts):
  * 3 "Команда автопилоту" (a command before the one that depends on it), 29 "Отложенный сигнал" (Timer.callLater),
  * 32 "Получаем уведомление" (callback and events), 46 "Подтверждаем точку" (the next point after POINT_REACHED).
  */
 export const GUIDE_LESSON = { command: 3, timer: 29, events: 32, confirmPoint: 46 } as const;
 
-/** A button that opens the textbook at the lesson about this matter. */
+/** A button that opens learning mode at the mission about this matter. */
 export function openLessonAction(lesson: number): NoticeAction {
     return { kind: 'open-guide', label: 'Открыть урок', lesson };
 }

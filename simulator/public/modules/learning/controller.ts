@@ -4,7 +4,8 @@
  * Свободный режим — прежний симулятор. В режиме обучения поверх экрана лежит одна карточка миссии, и она показывает
  * один шаг за раз: вводная → шаг 1 → … → шаг N → проверка полёта. Сделанный шаг уходит, на его месте появляется
  * следующий. Проверка — настоящий полёт: программа запускается в симуляторе, а `runTextLessonCheck` сверяет результат
- * с ожиданием урока. Окно «Учебник» в обучении закрыто: кнопка скрыта стилем, а вызовы openMissionGuideModal() игнорируются.
+ * с ожиданием урока. Из свободного режима в миссию ведёт `window.openLearningMission(номер?)`: кнопка в боковой панели
+ * и кнопки уведомлений об ошибках («Разобрать в уроке 3»).
  *
  * Чем писать, выбирает ученик: Blockly (практикум на блоках) или Lua / Python (уроки Академии).
  */
@@ -52,7 +53,6 @@ let checking = false;
 let checkToken = 0;
 let feedback: { kind: 'info' | 'error'; title: string; lines: string[] } | null = null;
 let checklistTimer = 0;
-let originalOpenGuide: (() => void) | undefined;
 /** Шаг с подсветкой засчитывается сам только после того, как ученик дошёл до него. */
 let guideArmed = false;
 /** Повторные запуски и частные опыты Академии: часть уроков засчитывается только после нескольких запусков. */
@@ -175,7 +175,7 @@ function renderStart(): void {
             <div class="start-screen__brand">Pioneer Simulator</div>
             <h1 class="start-screen__title">С чего начнём?</h1>
             <div class="start-screen__choices">
-                ${card('free', ICON.free, 'Свободный режим', 'Весь симулятор без ограничений: сцена, редактор, учебник и справочник. Пишите и запускайте что угодно.', 'Как раньше')}
+                ${card('free', ICON.free, 'Свободный режим', 'Весь симулятор без ограничений: сцена, редактор и справочник. Пишите и запускайте что угодно.', 'Как раньше')}
                 ${card('learning', ICON.learn, 'Режим обучения', 'Тот же симулятор, но с миссиями на экране. Один шаг за раз: сделали шаг, появился следующий, в конце проверка полёта.', learnNote)}
             </div>
         </div>`;
@@ -639,7 +639,7 @@ async function runFlightCheck(quest: Quest): Promise<void> {
         feedback = {
             kind: 'error',
             title: errors.length ? 'Пока не получилось' : 'Почти',
-            lines: (errors.length ? errors : result.diagnostics).slice(0, 3).map((item) => `${item.title}. ${item.fix}`.replace(/«Проверить и запустить»/g, '«Проверить полёт»'))
+            lines: (errors.length ? errors : result.diagnostics).slice(0, 3).map((item) => `${item.title}. ${item.fix}`)
         };
     } catch {
         if (capture) finishLearningCapture(capture.droneId, capture.token);
@@ -752,7 +752,6 @@ function applyMode(mode: AppMode, previous: AppMode): void {
     if (mode === 'start') { showStart(); return; }
     hideStart();
     if (mode === 'free') return;
-    (window as any).closeMissionGuideModal?.();
     void syncFromServer().finally(() => {
         const quest = currentQuest(quests, progress);
         if (quest) void openQuest(quest);
@@ -818,7 +817,26 @@ function enableHudDrag(): void {
     });
 }
 
-/** Подключается один раз при запуске, после initUI: учебник уже повесил openMissionGuideModal. */
+/**
+ * Открывает режим обучения, из свободного режима или с карточки уведомления. С номером урока Академии открывает именно
+ * его на текущем языке скрипта (уроки с камерой есть только в Python); если миссия ещё закрыта, открывается ближайшая доступная.
+ */
+export function openLearningMission(lesson?: number): void {
+    if (lesson !== undefined) {
+        const language: LearningTrack = lesson > 72 ? 'python' : currentScriptLanguage === 'lua' ? 'lua' : track === 'blocks' ? 'python' : track;
+        useTrack(language);
+        const target = questsFor(language)[lesson - 1];
+        if (target) { progress = selectQuest(quests, progress, target.id); persist(); }
+    }
+    if (getAppMode() === 'learning') {
+        const quest = currentQuest(quests, progress);
+        if (quest) void openQuest(quest);
+        return;
+    }
+    setAppMode('learning', storage());
+}
+
+/** Подключается один раз при запуске, после initUI. */
 export function initLearningMode(): void {
     buildDom();
     useTrack(loadTrack());
@@ -826,11 +844,7 @@ export function initLearningMode(): void {
     initAccountUi(document.body, { openTeacher: () => { void openTeacherPanel(); } });
     onUserChange(() => { void handleUserChange(); });
     void restoreSession();
-    originalOpenGuide = (window as any).openMissionGuideModal;
-    (window as any).openMissionGuideModal = (...args: unknown[]) => {
-        if (getAppMode() === 'learning') return;
-        (originalOpenGuide as ((...a: unknown[]) => void) | undefined)?.(...args);
-    };
+    (window as any).openLearningMission = openLearningMission;
     onAppModeChange(applyMode);
     document.body.dataset.appMode = 'start';
     el.menu.hidden = true;

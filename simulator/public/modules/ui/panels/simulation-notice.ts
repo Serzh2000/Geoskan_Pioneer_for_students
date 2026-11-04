@@ -99,9 +99,7 @@ function runNoticeAction(action: NoticeAction) {
         return;
     }
     if (action.kind === 'open-guide') {
-        const win = window as any;
-        if (action.lesson !== undefined && win.openMissionGuideLesson) win.openMissionGuideLesson(action.lesson);
-        else win.openMissionGuideModal?.();
+        (window as any).openLearningMission?.(action.lesson);
     }
 }
 
@@ -392,7 +390,7 @@ export function initSimulationNotice() {
     centerList?.addEventListener('click', (event) => {
         const target = event.target as HTMLElement | null;
         if (target?.closest('[data-simulation-action="open-mission-guide"]')) {
-            (window as any).openMissionGuideModal?.();
+            (window as any).openLearningMission?.();
         }
     });
 

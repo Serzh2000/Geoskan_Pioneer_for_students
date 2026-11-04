@@ -4,31 +4,16 @@ tags: [ui, скриптинг, контент]
 
 # Mission Guide (`public/modules/ui/mission-guide/`)
 
-Методический движок уроков: показывает теорию, задание, проверяет условия
-выполнения скрипта ученика. По README — «контент уроков (`lessons/`,
-`curriculum/`) пока живёт вперемешку с TS-кодом рендера, а не как отдельные
-данные» — при рефакторинге стоит это разделить.
+Содержание миссий режима обучения и их проверка. Интерфейса здесь нет: бывший учебник-«книга»
+вырезан, миссии показывает карточка режима обучения (`public/modules/learning/`).
 
 ## Структура
 
-- `curriculum.ts`, `curriculum/` — учебный план (последовательность уроков).
-- `lessons.ts`, `lessons/` (+
-  `lessons/expanded/`, `lessons/flight/`, `lessons/led/`) — сам контент уроков,
-  раздельно для Lua и Python, по темам: `flight` (полёт), `led` (LED-матрица),
-  `expanded` (расширенные версии — foundations/mission по языкам).
-- `evaluation/` — проверка условий выполнения задания (связано с
-  [[Lua]] → `mission-guard.ts`).
-- `interactions.ts`, `interactions/` (`actions.ts`, `navigation.ts`) —
-  взаимодействие пользователя с гайдом (кнопки далее/назад, запуск проверки).
-- `render.ts`, `render/` (`navigation.ts`, `results.ts`, `sections.ts`,
-  `support.ts`, `theory.ts`) — отрисовка UI гайда по секциям.
-- `state.ts`, `state/storage.ts` — состояние прогресса ученика + сохранение
-  (вероятно `localStorage`).
-- `modal.ts`, `panel.ts` — контейнеры UI (модалка/панель).
-- `types.ts` — общие типы.
-- `bricks_full.txt` — похоже на дамп/справочник Blockly-блоков для уроков.
+- `academy/catalog.ts` — 108 уроков Академии: главы, цели, терренные профили.
+- `academy/practices/` — миссии для Lua и Python (шаги, подсказка, заготовка, решение, контрольный вопрос).
+- `academy/evaluation/` — проверка полёта по каждой главе; `academy/scene.ts` — подготовка сцены.
+- `evaluation/text/` — общий запуск проверки `runTextLessonCheck` и граферы.
+- `lessons/pioneer/` — 16 блочных миссий (Blockly) и проверка `gradePioneerLesson`.
+- `book/localize.ts` — подстановка `<lua>/<py>` в текстах миссий.
 
-## Связанное
-
-[[Lua]] (`mission-guard.ts` — проверка условий) · [[Python]] · [[Editor]]
-(Blockly-блоки, доступные в уроке) · [[UI обзор]]
+Связь с режимом обучения: [[quests]] строит из этих данных список миссий, `controller.ts` показывает их по шагам.

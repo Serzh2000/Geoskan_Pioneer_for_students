@@ -65,14 +65,14 @@ const STEPS: TourStep[] = [
     },
     {
         target: '#sidebar-guide-btn',
-        title: 'Руководство',
-        text: 'Уроки и миссии по шагам — лучший способ начать.'
+        title: 'Обучение',
+        text: 'Миссии по шагам с проверкой полёта — лучший способ начать.'
     },
     {
         title: 'Всё готово',
-        text: 'Повторить тур можно в «Настройках». Откроем первый урок?',
-        nextLabel: 'Открыть руководство',
-        onNext: () => (window as any).openMissionGuideModal?.()
+        text: 'Повторить тур можно в «Настройках». Откроем первую миссию?',
+        nextLabel: 'Начать обучение',
+        onNext: () => (window as any).openLearningMission?.()
     }
 ];
 
