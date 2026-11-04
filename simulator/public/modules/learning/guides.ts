@@ -28,7 +28,7 @@ const docsText = (): string => document.querySelector<HTMLElement>('#editor-docs
 const found = (language: Language): boolean => {
     const input = document.querySelector<HTMLInputElement>('#api-docs-search');
     if (!input || !input.value.trim()) return false;
-    return language === 'lua' ? /MCE_PREFLIGHT/.test(docsText()) : /arm/.test(docsText());
+    return language === 'lua' ? /MCE_PREFLIGHT/.test(docsText()) : /\barm\b/.test(docsText());
 };
 
 /**
