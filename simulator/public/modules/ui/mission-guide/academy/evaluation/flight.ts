@@ -48,7 +48,7 @@ export function gradeFlightAcademy(number: number, samples: DroneSample[], event
         }
         if (number === 42) {
             const ranges = events.filter(event => event.kind === 'range');
-            const flat = ranges.find(event => near(event.pos, [0, 0, 3]));
+            const flat = ranges.find(event => near(event.pos, [3, 0, 3]));
             const hill = ranges.find(event => near(event.pos, [6, 0, 3]));
             if (!flat || !hill || flat.value === undefined || hill.value === undefined || flat.value - hill.value < .5) fail('Сравните два просвета', 'Нужны реальные измерения дальномера над землёй и над холмом.', 'Читайте Z и дальномер после прибытия в обе точки.');
         }

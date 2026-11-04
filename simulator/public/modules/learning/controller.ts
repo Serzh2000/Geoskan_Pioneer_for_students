@@ -293,7 +293,8 @@ async function loadQuestWorkspace(quest: Quest): Promise<void> {
 function prepareQuestScene(quest: Quest): void {
     restoreAcademyScene();
     const number = quest.lesson?.academy?.number;
-    if (!number || academySceneProfile(number) === 'field') return;
+    // Проверка полёта (миссии с 37) требует учебную сцену, в том числе ровное поле; в ранних миссиях сцену не трогаем.
+    if (!number || (number < 37 && academySceneProfile(number) === 'field')) return;
     prepareAcademyScene(number, 1000 + number);
 }
 
