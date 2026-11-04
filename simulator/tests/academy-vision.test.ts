@@ -15,16 +15,20 @@ test.each(lessons)('$title: solution executes the real cv2 prelude and satisfies
         return evaluation;
     };
     const first = run(lesson.solutionCode);
-    if (number === 83) {
-        expect(first.solved).toBe(false);
-        expect(run(lesson.solutionCode.replace('DICT_4X4_50', 'DICT_6X6_250'), [first.academyTrial!]).solved).toBe(true);
-    } else if (number === 107) {
-        expect(first.solved).toBe(false);
-        expect(run(lesson.solutionCode, [first.academyTrial!], 43).solved).toBe(true);
+    if (number === 107) {
+        expect(first.solved).toBe(true);
+        expect(run(lesson.solutionCode, [], 43).solved).toBe(true);
     } else if (number === 108) {
         expect(first.solved).toBe(false);
         expect(run(lesson.solutionCode.replace('target_id=12\nprint', 'target_id=249\nprint'), [first.academyTrial!]).solved).toBe(true);
     } else expect(first.solved).toBe(true);
+});
+
+test('mission 83 is graded on one run with two detectors', () => {
+    const lesson = lessons.find(item => item.academy!.number === 83)!;
+    const grade = (source: string) => { const outcome = executeAcademyPython(source, { vision: 83, seed: 42 }); return gradeVisionAcademy(83, outcome.samples, outcome.events, { code: source, scene: scene(83) }); };
+    expect(grade(lesson.solutionCode).solved).toBe(true);
+    expect(grade(lesson.solutionCode.replace('DICT_6X6_250', 'DICT_4X4_50')).solved).toBe(false);
 });
 
 test('empty output, stale frames and a landing without visual confirmation fail', () => {

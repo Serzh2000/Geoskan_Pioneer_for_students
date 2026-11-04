@@ -21,7 +21,7 @@ export function gradeDroneAcademy(number: number, samples: DroneSample[], events
     }
     if (number < 3) {
         if (requests.length || last.fsmState !== 'IDLE') diagnostics.push(error('Пока только наблюдаем', 'Подготовка двигателей ещё не входит в этот опыт.', 'Уберите команды аппарату.'));
-        if (number === 1 && (activity.lift !== 'rotors' || activity.vision !== 'camera')) diagnostics.push(error('Различите части аппарата', 'Для зачёта нужны оба назначения: тяга и изображение.', 'Найдите винты и камеру, затем ответьте на два вопроса под сценой.'));
+        if (number === 1 && (activity.lift !== 'rotors' || activity.vision !== 'camera')) diagnostics.push(error('Различите части аппарата', 'Для зачёта нужны оба назначения: тяга и изображение.', 'Найдите винты и камеру, затем ответьте на два вопроса на карточке миссии.'));
         if (number === 2 && !activity.code.split('\n').some(line => /^\s*(--|#)\s*Мой первый опыт\s*$/i.test(line))) diagnostics.push(error('Добавьте свой комментарий', 'В программе пока нет комментария «Мой первый опыт».', 'Строка должна выглядеть ровно так: `# Мой первый опыт` в Python или `-- Мой первый опыт` в Lua. Без слова TODO и без кавычек.'));
     } else if (number === 4) {
         if (requests.length !== 2 || accepted.length !== 1 || rejected.length !== 1 || requests[0] !== accepted[0]) {
@@ -52,7 +52,7 @@ export function gradeDroneAcademy(number: number, samples: DroneSample[], events
         if (!inLog && !inProgram) diagnostics.push(error('Сопоставьте сообщения с командой', `Нужен порядок «${before}» → принятая подготовка → «${after}».`, 'Переставьте print относительно команды. Одно последнее сообщение не подтверждает весь порядок.'));
     }
     if (!diagnostics.length && number === 5 && !activity.previousRun) {
-        return { solved: false, complete: true, diagnostics: [{ kind: 'info', title: 'Первый опыт записан — повторите', reason: 'Подготовка прошла из исходной точки. Теперь нужен второй запуск этой же программы после сброса.', fix: 'Нажмите «Проверить и запустить» ещё раз. Код между запусками не меняйте.' }] };
+        return { solved: false, complete: true, diagnostics: [{ kind: 'info', title: 'Первый опыт записан — повторите', reason: 'Подготовка прошла из исходной точки. Теперь нужен второй запуск этой же программы после сброса.', fix: 'Нажмите «Проверить полёт» ещё раз. Код между запусками не меняйте.' }] };
     }
     const solved = !diagnostics.some(item => item.kind === 'error');
     if (solved) diagnostics.push({ kind: 'success', title: number === 4 ? 'Ожидаемое отклонение подтверждено' : number === 5 ? 'Два опыта совпали' : 'Опыт подтверждён',

@@ -31,3 +31,15 @@ test('loading an interpreter does not consume the lesson delay', () => {
     recordLearningEvent('timed', { kind: 'print', time: 43, text: 'Сигнал' });
     expect(finishLearningCapture('timed', token)[0].time).toBe(1);
 });
+
+test('time lessons keep each track to its own language and have one-action steps', () => {
+    const texts = (lesson: ReturnType<typeof getTimeAcademyPractices>[number]) => [lesson.goal, lesson.builderHint, lesson.expectedOutcome, lesson.academy!.experiment, lesson.academy!.teaching.question,
+        ...lesson.academy!.teaching.choices.map(choice => choice.text), lesson.academy!.teaching.takeaway, ...(lesson.taskSteps || [])].join('\n');
+    for (const lesson of getTimeAcademyPractices('python')) expect({ n: lesson.academy!.number, bad: /Timer\.callLater|callback|Lua|Ev\./.test(texts(lesson)) }).toEqual({ n: lesson.academy!.number, bad: false });
+    for (const lesson of getTimeAcademyPractices('lua')) expect({ n: lesson.academy!.number, bad: /sleep|Python|pioneer\./.test(texts(lesson)) }).toEqual({ n: lesson.academy!.number, bad: false });
+    for (const language of ['lua', 'python'] as const) for (const lesson of getTimeAcademyPractices(language)) {
+        expect(lesson.taskSteps?.length).toBeGreaterThanOrEqual(2);
+        expect(texts(lesson)).not.toMatch(/<\/?(lua|py)>|Подготовить полигон|рабоч|страниц|Проверить и запустить/);
+        expect(lesson.starterCode).toContain('___');
+    }
+});

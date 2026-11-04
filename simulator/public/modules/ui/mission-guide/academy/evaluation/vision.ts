@@ -33,7 +33,7 @@ export function gradeVisionAcademy(number: number, samples: DroneSample[], event
     const fresh = (list: LearningEvent[], count: number) => new Set(list.map(event => event.frameId).filter(Boolean)).size >= count;
     const previousDetection = (event: LearningEvent) => events.slice(0, events.indexOf(event)).filter(item => item.kind === 'detect').pop();
     const scene = activity.scene;
-    if (!scene || scene.number !== number || !scene.intact) fail('Подготовьте полигон урока', 'Нет подготовленной учебной сцены текущего урока.', 'Вернитесь к практике и нажмите «Подготовить полигон».');
+    if (!scene || scene.number !== number || !scene.intact) fail('Подготовьте полигон урока', 'Нет подготовленной учебной сцены текущего урока.', 'Откройте миссию заново: полигон урока готовится при её открытии, затем снова нажмите «Проверить полёт».');
     if (!last || samples.some(sample => /ОШИБКА|CRASHED|DISARMED_FALL/.test(sample.snapshot.status || ''))) fail('Опыт завершился нештатно', 'Нет состояния или произошла ошибка/авария.', 'Исправьте первую ошибку и повторите.');
     if (arms.length !== 1 || !arms[0].accepted || !states.some(event => event.from === 'TAKEOFF_PROCESS' && event.state === 'FLYING_HOVER')) fail('Подготовка и подъём не подтверждены', 'Нужна настоящая подготовка и завершённый взлёт.', 'Сохраните знакомую цепочку arm → takeoff → ожидание.');
     if (!frames.length || frames.some(frame => !frame.frameId || frame.view !== 'bottom' || frame.width !== 640 || frame.height !== 360)) fail('Нужен кадр нижней камеры', 'Не подтверждено чтение выбранного изображения 640×360.', 'Используйте Camera(view="bottom") и get_cv_frame().');
@@ -80,11 +80,12 @@ export function gradeVisionAcademy(number: number, samples: DroneSample[], event
     if ([82, 84, 86, 87, 88, 89].includes(number) && !detects.some(event => visible(event))) fail('Целевая метка не прочитана', 'В детекции нет ID 12.', 'Проверьте свежий кадр, словарь и выбор по ID.');
     if (number === 82 && !hasMessage('ID: 12')) fail('ID не выведен', 'Нужно вывести прочитанный идентификатор.', 'Печатайте int(value[0]) внутри выбора 12.');
     if (number === 83) {
-        trial = detects.length === 1 && detects[0].dictionary === 'DICT_4X4_50' && !detects[0].markers?.length ? 'wrong-dictionary' : detects.length === 1 && detects[0].dictionary === 'DICT_6X6_250' && visible(detects[0]) ? 'right-dictionary' : undefined;
-        if (!trial) fail('Сравните заданные словари', 'Нужен пустой результат 4X4_50 или успешный 6X6_250.', 'Меняйте только имя словаря в текущем опыте.');
-        if (trial === 'right-dictionary' && !activity.trials?.includes('wrong-dictionary')) fail('Сначала проверьте несовпадение', 'Опыт неверного словаря ещё не записан.', 'Начните с DICT_4X4_50, затем замените его на DICT_6X6_250.');
+        const wrong = detects.find(event => event.dictionary === 'DICT_4X4_50'), right = detects.find(event => event.dictionary === 'DICT_6X6_250');
+        if (detects.length !== 2 || !wrong || wrong.markers?.length || !right || !visible(right) || wrong.frameId !== right.frameId) fail('Сравните два словаря на одном кадре', 'Нужен пустой результат DICT_4X4_50 и успешный DICT_6X6_250 для одного и того же кадра.', 'Впишите в детектор good имя словаря, которым нарисованы учебные метки.');
+        const listed = (prefix: string) => (numbers(prefix)[0]?.values || []).sort().join(',');
+        if (listed('Чужой словарь:') !== '' || !numbers('Чужой словарь:').length || !right || listed('Свой словарь:') !== (right.markers || []).map(marker => marker.id).sort().join(',')) fail('Списки не совпали с детекторами', 'Печатайте результат каждого детектора под своей подписью.', 'Сначала «Чужой словарь:» (пусто), затем «Свой словарь:» (найденные ID).');
     }
-    if ([83, 84].includes(number)) {
+    if (number === 84) {
         const actual = numbers('Найдены:')[0]?.values;
         const expected = detects[0]?.markers?.map(marker => marker.id) || [];
         if (!actual || [...actual].sort().join(',') !== [...expected].sort().join(',')) fail('Список ID не совпал с детектором', 'Печатайте результат текущего распознавания.', 'Не подставляйте ожидаемые ID вручную.');
@@ -148,7 +149,11 @@ export function gradeVisionAcademy(number: number, samples: DroneSample[], event
         return lost > 0 && sequence.slice(lost + 1).some(Boolean) && hasMessage('Потеряна') && hasMessage('Восстановлена') && speeds.some(zero);
     };
     if (number === 106 && (!recovered() || detects.length > 4)) fail('Восстановление не подтверждено', 'Нужны обнаружение, потеря, остановка и новое обнаружение в пределах попыток.', 'Ограничьте поиск, обновляя кадр на каждой попытке.');
-    if (number === 107 && scene) trial = `seed-${scene.seed}`;
+    if (number === 107 && scene) {
+        // Метка этой карты сдвинута (см. prepareAcademyScene): посадка по запомненным координатам (0.6; 0.3) не попала бы в неё.
+        const targetX = .4 + scene.seed % 7 * .1, targetY = .2 + scene.seed % 5 * .1;
+        if (!last || Math.hypot(last.pos.x - targetX, last.pos.y - targetY) > .35) fail('Посадка не над меткой этой карты', 'Дрон сел вдали от метки 12 на текущей карте.', 'Не записывайте координаты метки в код: наводитесь по новым кадрам и садитесь после подтверждённого центра.');
+    }
     if (number === 108) {
         const target = numbers('Цель миссии:')[0]?.values[0];
         trial = target === 12 ? 'mission-success' : target === 249 ? 'mission-timeout' : undefined;
@@ -159,7 +164,7 @@ export function gradeVisionAcademy(number: number, samples: DroneSample[], event
     if (number < 73 || number > 108) fail('Неизвестный урок', 'Нет проверки этого номера.', 'Выберите урок камеры, ArUco или миссий.');
     if (diagnostics.length) return { solved: false, complete: Boolean(last), diagnostics };
     const collected = new Set([...(activity.trials || []), ...(trial ? [trial] : [])]);
-    const pending = number === 83 ? !collected.has('right-dictionary') : number === 107 ? [...collected].filter(value => value.startsWith('seed-')).length < 2 : number === 108 ? !collected.has('mission-timeout') : false;
-    if (pending) return { solved: false, complete: true, academyTrial: trial, diagnostics: [{ kind: 'info', title: 'Опыт подтверждён — осталось сравнение', reason: number === 83 ? 'Теперь проверьте правильный словарь.' : number === 107 ? 'Повторите ту же миссию на другом seed.' : 'Теперь проверьте отсутствующий ID 249.', fix: 'Измените только указанный параметр и выполните ещё одну проверку.' }] };
+    const pending = number === 108 ? !collected.has('mission-timeout') : false;
+    if (pending) return { solved: false, complete: true, academyTrial: trial, diagnostics: [{ kind: 'info', title: 'Опыт подтверждён — осталось сравнение', reason: 'Теперь проверьте отсутствующий ID 249.', fix: 'Измените только указанный параметр и выполните ещё одну проверку.' }] };
     return { solved: true, complete: true, academyTrial: trial, diagnostics: [{ kind: 'success', title: 'Наблюдение и миссия подтверждены', reason: 'Проверены реальные кадры, детекции, вычисления и действия текущего урока.', fix: 'Объясните, какое новое наблюдение разрешало каждый следующий шаг.' }] };
 }

@@ -7,6 +7,8 @@ export type AcademyCodeExercise = {
     question: string; right: string; wrong: string; feedback: string;
     lua: string; python: string; luaAnswer: string; pythonAnswer: string;
     waitMs?: number;
+    /** Шаги карточки миссии, если задание удобнее показать по одному действию; в тексте допустимы <lua>/<py>. */
+    taskSteps?: string[];
 };
 
 export function compileAcademyExercise(exercise: AcademyCodeExercise, language: 'lua' | 'python'): GuideTextLesson {
@@ -17,10 +19,15 @@ export function compileAcademyExercise(exercise: AcademyCodeExercise, language: 
         : `from pioneer_sdk import Pioneer\nimport time\n\npioneer = Pioneer(simulator=True)\n\n${code}\n`;
     const correct = exercise.number % 2;
     // The task and the hint may carry <lua>/<py> passages: each track keeps only its own.
-    exercise = { ...exercise, task: localize(exercise.task, language), hint: localize(exercise.hint, language) };
+    exercise = {
+        ...exercise, task: localize(exercise.task, language), hint: localize(exercise.hint, language), observation: localize(exercise.observation, language),
+        experiment: localize(exercise.experiment, language), question: localize(exercise.question, language),
+        right: localize(exercise.right, language), wrong: localize(exercise.wrong, language), feedback: localize(exercise.feedback, language)
+    };
     return {
         id: `${language}-${lesson.id}`, topicId: lesson.id, chapterId: lesson.moduleId,
         badge: `Урок ${lesson.number}`, title: lesson.title, goal: exercise.task,
+        taskSteps: exercise.taskSteps?.map(step => localize(step, language)),
         summary: lesson.explanation, lessonIntro: `${lesson.explanation} ${exercise.hint}`,
         expectedOutcome: exercise.observation, builderHint: exercise.hint,
         starterCode: wrap(body), solutionCode: wrap(body.split('___').join(language === 'lua' ? exercise.luaAnswer : exercise.pythonAnswer)),

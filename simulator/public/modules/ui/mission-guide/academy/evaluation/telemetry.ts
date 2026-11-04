@@ -17,8 +17,10 @@ export function gradeTelemetryAcademy(number: number, samples: DroneSample[], ev
     if (!flight && (arms.length || last?.fsmState !== 'IDLE' || samples.some(sample => Math.abs(sample.snapshot.pos.z) > .15))) fail('Сейчас отлаживаем решение без полёта', 'В этом опыте аппарат должен оставаться IDLE.', 'Уберите arm и полётные команды.');
     const printNumbers = (prefix: string) => messages.filter(event => event.text?.startsWith(prefix)).map(event => ({ event, values: (event.text!.slice(prefix.length).match(/[-+]?\d*\.?\d+(?:e[-+]?\d+)?/gi) || []).map(Number) }));
     if ([64, 72].includes(number)) {
-        const reports = printNumbers('Положение:');
-        if (reads.length < 3 || reports.length !== 3) fail('Не хватает измеренных этапов', 'Нужны три чтения и три отчёта положения.', 'Читайте положение заново на каждом этапе.');
+        const labels = number === 72 ? ['Старт:', 'Прибытие:', 'После посадки:'] : ['Положение:'];
+        const reports = labels.flatMap(label => printNumbers(label)).sort((a, b) => events.indexOf(a.event) - events.indexOf(b.event));
+        if (reads.length < 3 || reports.length !== 3) fail('Не хватает измеренных этапов', 'Нужны три чтения и три отчёта положения.', number === 72 ? 'Подпишите три измерения: «Старт:», «Прибытие:», «После посадки:».' : 'Читайте положение заново на каждом этапе.');
+        else if (number === 72 && !reports.every(({ event }, i) => event.text?.startsWith(labels[i]))) fail('Этапы отчёта перепутаны', 'Подписи должны идти по порядку: старт, прибытие, после посадки.', 'Выводите каждое измерение со своей подписью на своём этапе.');
         reports.forEach(({ event, values }) => {
             const read = events.slice(0, events.indexOf(event)).filter(item => item.kind === 'position').pop();
             if (!read?.pos || values.length !== 3 || [read.pos.x, read.pos.y, read.pos.z].some((value, i) => Math.abs(value - values[i]) > .001)) fail('Отчёт не совпал с измерением', 'В строке положения должны быть три только что прочитанные компоненты.', 'Печатайте переменные чтения, а не заранее известную цель.');
@@ -54,7 +56,7 @@ export function gradeTelemetryAcademy(number: number, samples: DroneSample[], ev
     }
     if (number === 71) {
         const success = messages.find(event => event.text === 'Цель достигнута');
-        const timeout = messages.find(event => event.text === 'тайм-аут');
+        const timeout = messages.find(event => event.text?.startsWith('тайм-аут') && event.text.length > 'тайм-аут'.length + 2);
         if (!success || !timeout || timeout.time < .8 || events.indexOf(success) > events.indexOf(timeout) || reads.length < 2 || !reads.some(event => event.time >= .8) || !messages.some(event => event.text === 'Опыт завершён')) fail('Два исхода не подтверждены', 'Нужны новое положение, успех у старта и тайм-аут недостижимой цели после секунды.', 'Разделите условия результата и истечения срока.');
     }
     if (number < 64 || number > 72) fail('Неизвестный урок', 'Номер не относится к телеметрии.', 'Выберите урок текущего раздела.');

@@ -81,7 +81,7 @@ export function gradeSignalsCode(number: number, samples: DroneSample[], events:
         if (trial === 'true' && !activity.trials?.includes('false')) fail('Начните с ложного флага', 'Ветка false ещё не проверена.', 'Сначала задайте ready=false/False, затем true/True.');
     }
     if (number === 23) {
-        const match = messages.length === 1 ? /^h:([123])$/.exec(messages[0]) : null;
+        const match = messages.length === 1 ? /^h:\s?([123])$/.exec(messages[0]) : null;
         trial = match ? `height-${match[1]}` : undefined;
         if (!match) fail('Укажите проверяемое значение', 'В журнале нужна одна запись h:1, h:2 или h:3.', 'Печатайте переменную height и меняйте её между опытами.');
         else checkFinal(0, match[1] === '3' ? green : red);

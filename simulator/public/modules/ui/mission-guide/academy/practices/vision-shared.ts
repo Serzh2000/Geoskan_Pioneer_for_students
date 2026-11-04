@@ -42,7 +42,7 @@ export function visionBootstrap(detector = false, selection = false): string {
 import time, math, cv2
 
 pioneer=Pioneer(simulator=True)
-# view="bottom" is a simulator extension selecting its lower camera.
+# view="bottom" — расширение симулятора: выбирает нижнюю камеру.
 camera=Camera(view="bottom")
 ${VISION_WAIT}
 ${detector ? VISION_DETECTOR : ''}

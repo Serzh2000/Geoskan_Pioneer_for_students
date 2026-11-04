@@ -15,7 +15,7 @@ export function gradeFlightAcademy(number: number, samples: DroneSample[], event
     const last = samples[samples.length - 1]?.snapshot;
     if (!spec || !last) return { solved: false, complete: false, diagnostics: [{ kind: 'error', title: 'Нет наблюдений урока', reason: 'Не найдены задание или аппарат.', fix: 'Повторите после загрузки сцены.' }] };
     const scene = activity.scene;
-    if (!scene || !scene.intact || scene.number !== number) fail('Подготовьте учебный полигон', 'В сцене нет полигона текущего урока в исходном положении.', 'Вернитесь к практике и нажмите «Подготовить полигон».');
+    if (!scene || !scene.intact || scene.number !== number) fail('Подготовьте учебный полигон', 'В сцене нет полигона текущего урока в исходном положении.', 'Откройте урок заново: учебная сцена готовится автоматически и не должна сдвигаться.');
     if (samples.some(sample => /ОШИБКА|CRASHED|DISARMED_FALL/.test(sample.snapshot.status || ''))) fail('Есть ошибка или столкновение', 'Миссия не завершилась штатно.', 'Исправьте первую ошибку или участок пути с недостаточным запасом.');
     if (events.some(event => event.kind === 'print' && /тайм-аут/.test(event.text || ''))) fail('Истекло время ожидания', 'Не пришло подтверждение очередного этапа.', 'Проверьте команду, её параметры и условие перехода.');
     const arms = events.filter(event => event.kind === 'arm');
@@ -23,7 +23,7 @@ export function gradeFlightAcademy(number: number, samples: DroneSample[], event
     const prints = events.filter(event => event.kind === 'print');
     if (number === 55) {
         if (arms.length || last.fsmState !== 'IDLE') fail('Сейчас исследуем карту', 'Для сравнения seed полёт не требуется.', 'Оставьте сообщение без arm.');
-        if (!scene || scene.sameSeedRepeats < 2 || !prints.some(event => event.text === 'Карта повторяется')) fail('Сравнение двух карт не выполнено', 'Нужны две подготовки одного seed и результат наблюдения.', 'Подготовьте тот же seed ещё раз, осмотрите карту и запустите сообщение.');
+        if (!prints.some(event => event.text === 'Карта повторяется')) fail('Вывод о карте не получен', 'Программа должна вывести строку «Карта повторяется».', 'Впишите вместо ___ фразу из ожидаемого результата и запустите программу.');
     } else {
         if (arms.length !== 1 || !arms[0].accepted) fail('Нужна одна подготовка', 'Запуск должен начинаться одним принятым arm.', 'Сохраните arm перед ожиданием и взлётом.');
         const takeoff = transitions.find(event => event.state === 'TAKEOFF_PROCESS');
@@ -63,7 +63,6 @@ export function gradeFlightAcademy(number: number, samples: DroneSample[], event
             if (!read || !near(read.pos, [0, 0, 1]) || Math.abs((read.yaw || 0) - Math.PI / 2) > .15) fail('Курс ещё не достигнут', 'Нужно повернуться на π/2, сохранив положение.', 'Задайте yaw в радианах и дайте корпусу повернуться перед измерением.');
         }
         if (number === 46 && !prints.some(event => event.text === 'Прибыл' && events.indexOf(event) > events.indexOf(reached[0]))) fail('Сообщение не подтвердило прибытие', '«Прибыл» должно следовать за настоящим достижением точки.', 'Перенесите сообщение в ветку завершения маршрута.');
-        if (number === 62 && (!scene || scene.differentSeeds < 2)) fail('Новая карта ещё не проверена', 'Нужны две подготовки с разными seed.', 'Измените seed, подготовьте снова и осмотрите новый полигон.');
     }
     if (!prints.some(event => event.text === 'Опыт завершён')) fail('Опыт ещё не завершён', 'Не выполнена заключительная ветка программы.', 'Дождитесь всех этапов и проверьте конечное условие.');
     if (diagnostics.length) return { solved: false, complete: true, diagnostics };

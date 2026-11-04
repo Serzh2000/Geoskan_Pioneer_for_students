@@ -36,7 +36,7 @@ export function gradeTimeAcademy(number: number, samples: DroneSample[], events:
     }
     if (number === 30) {
         sequence([blue, green]);
-        if (!lights[0] || lights[0].time < .8 || lights[0].time > 1.6 || !lights[1] || lights[1].time < 1.8 || lights[1].time > 2.7) fail('Проверьте начало отсчёта', 'Первый сигнал нужен около t=1, второй около t=2.', 'Lua: независимые интервалы 1 и 2. Python: две последовательные паузы по 1.');
+        if (!lights[0] || lights[0].time < .8 || lights[0].time > 1.6 || !lights[1] || lights[1].time < 1.8 || lights[1].time > 2.7) fail('Проверьте начало отсчёта', 'Первый сигнал нужен около секунды от старта, второй — около двух секунд от старта.', 'Проверьте, сколько секунд проходит от старта до каждого сигнала: времена не должны складываться лишний раз.');
     }
     if (number === 31) {
         sequence([blue, off, blue, off, blue, off]);
