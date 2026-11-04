@@ -600,6 +600,14 @@ async function runFlightCheck(quest: Quest): Promise<void> {
     checking = true;
     feedback = null;
     renderHud();
+    // Длинные маршруты идут минуты: счётчик секунд показывает, что проверка не зависла.
+    const startedAt = Date.now();
+    const timer = window.setInterval(() => {
+        if (!checking || token !== checkToken) { window.clearInterval(timer); return; }
+        const button = el.hud.querySelector<HTMLButtonElement>('[data-quest-check]');
+        const seconds = Math.round((Date.now() - startedAt) / 1000);
+        if (button && seconds >= 5) button.textContent = `Проверяем полёт… ${seconds} с`;
+    }, 1000);
     const academy = quest.lesson?.academy;
     const capture = academy ? { droneId: currentDroneId, token: beginLearningCapture(currentDroneId) } : undefined;
     try {

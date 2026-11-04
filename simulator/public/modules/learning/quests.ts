@@ -83,6 +83,26 @@ export function buildQuests(specs: readonly PioneerLessonSpec[] = PIONEER_LESSON
     }));
 }
 
+/**
+ * Задание без заготовленных шагов делится по предложениям: на карточке один шаг — одно действие.
+ * Точка внутри числа (0.3) или кода в обратных кавычках предложение не разрывает.
+ */
+export function splitIntoSteps(text: string): string[] {
+    const hidden = text.replace(/`[^`]*`/g, (code) => code.replace(/\./g, '\u0001'));
+    const parts = hidden.split(/(?<=[.!?])\s+(?=[А-ЯЁA-Z«])/).map((part) => part.split('\u0001').join('.').trim()).filter(Boolean);
+    // Совсем короткая фраза («Сцена — гоночная трасса.») не шаг: она присоединяется к соседней.
+    const steps: string[] = [];
+    let carry = '';
+    for (const part of parts) {
+        const joined = carry ? `${carry} ${part}` : part;
+        if (joined.length < 40) { carry = joined; continue; }
+        steps.push(joined);
+        carry = '';
+    }
+    if (carry) steps.length ? steps[steps.length - 1] += ` ${carry}` : steps.push(carry);
+    return steps.length ? steps : [text];
+}
+
 /** Миссии Академии для одного языка: главы по порядку, шаги — из задания урока (если шагов нет, шаг один). */
 export function buildAcademyQuests(language: 'lua' | 'python'): Quest[] {
     const modules = new Map(ACADEMY_MODULES.map((module) => [module.id, module.title]));
@@ -98,7 +118,7 @@ export function buildAcademyQuests(language: 'lua' | 'python'): Quest[] {
             title: lesson.title,
             goal: lesson.summary,
             guides,
-            steps: guides ? guides.map((guide) => guide.text) : (lesson.taskSteps?.length ? lesson.taskSteps : [lesson.goal]).map((step) => localize(step, language)),
+            steps: guides ? guides.map((guide) => guide.text) : lesson.taskSteps?.length ? lesson.taskSteps.map((step) => localize(step, language)) : splitIntoSteps(localize(lesson.goal, language)),
             hint: lesson.builderHint,
             outcome: lesson.expectedOutcome,
             requires: [],

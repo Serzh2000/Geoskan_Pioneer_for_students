@@ -76,3 +76,20 @@ describe('lua mission validation', () => {
         expect(issues).toEqual([]);
     });
 });
+
+describe('blocking Lua issues', () => {
+    test('the bounded __advance loop of block programs is not a hang, a user while-true without sleep still is', async () => {
+        const { collectLuaBlockingIssues } = await import('../public/modules/app/script-execution-notice/lua-validation.js');
+        const generated = [
+            'local __state = "__s0"', 'local action = {}', '',
+            'local function __advance()', '    local steps = 0', '    while true do',
+            '        local current = action[__state]', '        if current == nil then return end',
+            '        local nextState = current()', '        if nextState == nil then return end',
+            '        __state = nextState', '        steps = steps + 1', '        if steps > 100000 then',
+            '            error("loop")', '        end', '    end', 'end', '', '__advance()'
+        ].join('\n');
+        expect(collectLuaBlockingIssues(generated)).toEqual([]);
+        expect(collectLuaBlockingIssues('while true do\n  print(1)\nend').length).toBe(1);
+        expect(collectLuaBlockingIssues(generated + '\nwhile true do\n  print(1)\nend').length).toBe(1);
+    });
+});

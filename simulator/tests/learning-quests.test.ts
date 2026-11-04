@@ -1,6 +1,6 @@
 /** Режим обучения: порядок заданий, открытие по цепочке, прогресс и режим приложения. */
 import {
-    buildAcademyQuests, buildQuests, clampStep, completeQuest, INTRO_STEP, lastStepIndex, questGroups, countDone, currentQuest, emptyProgress, firstOpenQuest, loadProgress, nextQuest,
+    buildAcademyQuests, buildQuests, clampStep, splitIntoSteps, completeQuest, INTRO_STEP, lastStepIndex, questGroups, countDone, currentQuest, emptyProgress, firstOpenQuest, loadProgress, nextQuest,
     QUEST_GROUP_ORDER, QUEST_PROGRESS_STORAGE_KEY, questStatus, requiredBlockChecklist, saveProgress, selectQuest,
     type StorageLike
 } from '../public/modules/learning/quests.js';
@@ -121,6 +121,23 @@ describe('миссии Академии', () => {
         expect(groups.length).toBeGreaterThan(1);
         expect(groups.reduce((sum, group) => sum + group.quests.length, 0)).toBe(lua.length);
         expect(questStatus(lua, emptyProgress(), lua[1].id)).toBe('locked');
+    });
+});
+
+describe('разбиение задания на шаги', () => {
+    it('делит по предложениям, не рвёт числа и склеивает короткие фразы', () => {
+        const steps = splitIntoSteps('Сцена — гоночная трасса. Снимите кадр над точкой (0.6, 0.3, 3) и выведите размер. Затем сместитесь на 0.3 метра по оси X и снимите второй кадр.');
+        expect(steps).toEqual(['Сцена — гоночная трасса. Снимите кадр над точкой (0.6, 0.3, 3) и выведите размер.', 'Затем сместитесь на 0.3 метра по оси X и снимите второй кадр.']);
+        expect(splitIntoSteps('Одна фраза.')).toEqual(['Одна фраза.']);
+    });
+
+    it('у всех миссий Академии шаги короткие, а длинное задание больше не одна простыня', () => {
+        for (const language of ['lua', 'python'] as const) {
+            for (const quest of buildAcademyQuests(language)) {
+                expect(quest.steps.length).toBeGreaterThanOrEqual(1);
+                expect(quest.steps.every((step) => step.trim().length > 0)).toBe(true);
+            }
+        }
     });
 });
 

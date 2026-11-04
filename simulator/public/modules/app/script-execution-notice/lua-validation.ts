@@ -187,7 +187,9 @@ export function collectLuaBlockingIssues(code: string): string[] {
     const normalized = (code || '').toLowerCase();
     const issues: string[] = [];
 
-    const whileTrueBodies = [...normalized.matchAll(/\bwhile\s+true\s+do\b([\s\S]*?)\bend\b/g)];
+    // `__advance` — часть кода, который собирают блоки «Повторить»: цикл ограничен счётчиком шагов и выходит через return.
+    const checked = normalized.replace(/local function __advance\(\)[\s\S]*?\n\s*end\s*\n\s*end\s*\n/, '');
+    const whileTrueBodies = [...checked.matchAll(/\bwhile\s+true\s+do\b([\s\S]*?)\bend\b/g)];
     if (whileTrueBodies.some((match) => !/\bsleep\s*\(/.test(match[1] || ''))) {
         issues.push(
             'Цикл `while true do` без `sleep(...)` не отдаёт управление симулятору, и программа зависнет. Добавьте внутрь цикла `sleep(0.1)`.'

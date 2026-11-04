@@ -59,7 +59,8 @@ pioneer.arm(); pioneer.takeoff()
 wait_for(lambda:pioneer.get_autopilot_state()=="MISSION")
 ${number === 64 ? reportPython : number === 72 ? 'print("___: 1,1,1")' : ''}
 pioneer.go_to_local_point(${number === 64 ? '___,0,1' : p})
-${poll ? `deadline=time.monotonic()+60
+${poll ? `time.sleep(0.3)  # флаг прибытия от прошлой точки успевает сброситься
+deadline=time.monotonic()+60
 while not pioneer.point_reached() and time.monotonic()<deadline:
     x,y,z=pioneer.get_local_position_lps()
     ${watch}
