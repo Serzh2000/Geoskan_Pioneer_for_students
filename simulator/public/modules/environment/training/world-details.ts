@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import { createMissionAsset } from '../obstacles/mission-assets.js';
 import { batchStaticMeshes, flatPolygon } from './world-surfaces.js';
-import { distanceToWater } from './world-plan.js';
+import { GROUND_LAYER_Z, type GroundLayer } from '../ground/layers.js';
+import { yardsOf } from './yards.js';
+import { distanceToWater, trainingHeightAt } from './world-plan.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { distanceToPath } from './geography.js';
 import { createLandscapeAsset } from './landscape-assets.js';
@@ -33,8 +35,8 @@ export function addWorldDetails(group: THREE.Group, layout: TrainingLayout): voi
         const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, d, h), material);
         mesh.position.set(x, y, z + h / 2); detail.add(mesh); return mesh;
     };
-    const rect = (x: number, y: number, width: number, depth: number, color: number, z = .02) => {
-        const mesh = flatPolygon([{x:x-width/2,y:y-depth/2},{x:x+width/2,y:y-depth/2},{x:x+width/2,y:y+depth/2},{x:x-width/2,y:y+depth/2}],color,z);
+    const rect = (x: number, y: number, width: number, depth: number, color: number, layer: GroundLayer = 'field') => {
+        const mesh = flatPolygon([{x:x-width/2,y:y-depth/2},{x:x+width/2,y:y-depth/2},{x:x+width/2,y:y+depth/2},{x:x-width/2,y:y+depth/2}],color,GROUND_LAYER_Z[layer],layer);
         detail.add(mesh);
     };
     for (const district of layout.districts) {
@@ -43,17 +45,17 @@ export function addWorldDetails(group: THREE.Group, layout: TrainingLayout): voi
             for (let i = 0; i < 4; i++) {
                 const px = x - width * .36 + i * width * .24, py = y - depth * .22;
                 if (distanceToWater(layout, { x:px, y:py }) < width * .13 + 2) continue;
-                rect(px,py,width*.20,depth*.48,[0x9c9456,0x7e8c4f,0xaaa27c,0x777b46][i]);
-                for (let row = 0; row < 8; row++) rect(px-width*.09+row*width*.025,py,.10,depth*.47,0x62633d,.026);
+                rect(px,py,width*.20,depth*.48,[0x9c9456,0x7e8c4f,0xaaa27c,0x777b46][i],'field');
+                for (let row = 0; row < 8; row++) rect(px-width*.09+row*width*.025,py,.10,depth*.47,0x62633d,'yard');
             }
         } else if (kind === 'neighborhood') {
-            rect(x,y,width,depth,0x92988a,.013);
+            rect(x,y,width,depth,0x92988a,'fill');
             // Sidewalks, a shared playground and courtyard parking.
-            rect(x,y+3.2,width,1.1,0xbfbcae,.021); rect(x,y-3.2,width,1.1,0xbfbcae,.021);
+            rect(x,y+3.2,width,1.1,0xbfbcae,'strip'); rect(x,y-3.2,width,1.1,0xbfbcae,'strip');
             const court=findPlace(district,7,4);
             if(court) {
                 const courtX=court.x,courtY=court.y;
-                rect(courtX,courtY,7,4,0x917861,.027);
+                rect(courtX,courtY,7,4,0x917861,'court');
                 box(courtX,courtY,.03,.9,.9,1.5,wood);
                 for (const dx of [-1.8,1.8]) box(courtX+dx,courtY,.03,.15,.15,1.7,dark);
                 box(courtX,courtY,1.65,3.7,.14,.14,dark);
@@ -61,7 +63,7 @@ export function addWorldDetails(group: THREE.Group, layout: TrainingLayout): voi
             for (let slot=0;slot<6;slot++) {
                 const px=x-width*.40+slot*2.3, py=y-depth*.43;
                 if(!clear(px,py,2,3.2)) continue;
-                rect(px,py,2,3.2,0x737b7c,.022);
+                rect(px,py,2,3.2,0x737b7c,'parking');
                 box(px+1,py,.028,.035,3.2,.003,white);
                 if (slot % 3 === 0) {
                     const car = createMissionAsset('Car');
@@ -69,7 +71,7 @@ export function addWorldDetails(group: THREE.Group, layout: TrainingLayout): voi
                 }
             }
         } else if (kind === 'industry') {
-            rect(x,y,width,depth,0x939489,.016);
+            rect(x,y,width,depth,0x939489,'fill');
             for (let i=0;i<4;i++) {
                 const cx=x+width*.28, cy=y-depth*.35+i*2;
                 if(!clear(cx,cy,5,1.5)) continue;
@@ -85,18 +87,18 @@ export function addWorldDetails(group: THREE.Group, layout: TrainingLayout): voi
             }
         }
     }
-    for (const prop of layout.objects.filter(p => p.type==='house')) {
-        // A plot in the house's own frame (front = local -Y toward the street, any heading): paved yard, side and rear
-        // fences and a hedge; the front stays open.
-        const { x, y } = prop, r = prop.rotation ?? 0, c = Math.cos(r), s = Math.sin(r);
+    // A yard is drawn only where it fits (yards.ts): clear of roads, water, neighbours and the neighbours' yards. The fence and
+    // the hedge follow the yard's own size, so nothing sticks out onto the street any more.
+    for (const yard of yardsOf(layout)) {
+        const prop = yard.prop, { x, y } = prop, r = prop.rotation ?? 0, c = Math.cos(r), s = Math.sin(r), k = yard.scale, h = 4.4 * k;
         const world = (lx: number, ly: number) => ({ x: x + lx * c - ly * s, y: y + lx * s + ly * c });
-        detail.add(flatPolygon([world(-4.5,-4.5), world(4.5,-4.5), world(4.5,4.5), world(-4.5,4.5)], 0x8b966c, .016));
-        const part = (lx: number, ly: number, z: number, w: number, d: number, h: number, material: THREE.Material) => {
-            const p = world(lx, ly), mesh = box(p.x, p.y, z, w, d, h, material); mesh.rotation.z = r;
+        detail.add(flatPolygon(yard.poly, 0x8b966c, GROUND_LAYER_Z.yard, 'yard'));
+        const part = (lx: number, ly: number, z: number, w: number, d: number, hh: number, material: THREE.Material) => {
+            const p = world(lx, ly), mesh = box(p.x, p.y, z, w, d, hh, material); mesh.rotation.z = r;
         };
-        part(-4.4, 0, .03, .08, 8.8, .6, wood); part(4.4, 0, .03, .08, 8.8, .6, wood);
-        part(0, 4.4, .03, 8.8, .08, .6, wood);
-        part(3.4, 2.2, .02, .7, 2.8, .5, foliage);
+        part(-h, 0, .03, .08, 2 * h, .6, wood); part(h, 0, .03, .08, 2 * h, .6, wood);
+        part(0, h, .03, 2 * h, .08, .6, wood);
+        if (k > .7) part(3.4 * k, 2.2 * k, .02, .7, 2.8 * k, .5, foliage);
     }
     addOverpasses(detail, layout);
     for (const bridge of layout.bridges.filter(b => b.kind !== 'overpass')) {
@@ -135,21 +137,23 @@ export function addWorldDetails(group: THREE.Group, layout: TrainingLayout): voi
 }
 
 /** Lamps line the avenue and the town streets; they are decor, so they never block the lesson corridor. */
+/** Lamps in the whole map: merged by material with the rest of the detail layer, so they cost vertices, not draw calls. */
+const LAMP_LIMIT = 140;
 function addStreetLamps(detail: THREE.Group, layout: TrainingLayout, clear: (x: number, y: number, w: number, d: number) => boolean): void {
     const lamp = createLandscapeAsset('StreetLamp');
     let count = 0;
     for (const route of layout.paths.filter(p => p.kind === 'road' && p.id !== 'station-road')) {
-        for (let i = 1; i < route.points.length && count < 48; i++) {
+        for (let i = 1; i < route.points.length && count < LAMP_LIMIT; i++) {
             const a = route.points[i - 1], b = route.points[i], length = Math.hypot(b.x - a.x, b.y - a.y);
             if (length < 20) continue;
             const angle = Math.atan2(b.y - a.y, b.x - a.x), spacing = route.id === 'avenue' ? 24 : 18;
-            for (let along = spacing / 2; along < length - 4 && count < 48; along += spacing) {
+            for (let along = spacing / 2; along < length - 4 && count < LAMP_LIMIT; along += spacing) {
                 const side = (Math.floor(along / spacing) % 2 ? 1 : -1);
                 const x = a.x + Math.cos(angle) * along - Math.sin(angle) * side * (route.width / 2 + 1.1);
                 const y = a.y + Math.sin(angle) * along + Math.cos(angle) * side * (route.width / 2 + 1.1);
                 if (Math.abs(x) < 9 || !clear(x, y, .5, .5) || Math.abs(x) > layout.size / 2 - 5 || Math.abs(y) > layout.size / 2 - 5) continue;
                 const post = lamp.clone(true);
-                post.position.set(x, y, 0);
+                post.position.set(x, y, trainingHeightAt(layout, x, y));
                 // The lamp head points to -Y in the model; turn it over the carriageway.
                 post.rotation.z = side > 0 ? angle : angle + Math.PI;
                 detail.add(post); count++;

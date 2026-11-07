@@ -19,10 +19,12 @@ export function closeDeadEnds(env: Env): void {
             if (roads.some(o => o !== road && distanceToPath(e, o.points) < .6)) continue;
             const owner = roadOwner.get(road.id);
             const hit = book.nearestRoad(e, roads.filter(o => o !== road && (!owner || roadOwner.get(o.id) !== owner)));
-            if (hit && hit.distance > 5 && hit.distance < 150 && book.add({ id: `join-${++n}`, kind: 'road', hierarchy: 'street', width: ROAD_WIDTH.link, points: [e, hit.point], label: 'Улица' })) { book.stitch(); continue; }
+            // A join that doubles back along the street it leaves (its middle lies on that street) is a second layer of asphalt, not a link.
+            const mid = hit ? { x: (e.x + hit.point.x) / 2, y: (e.y + hit.point.y) / 2 } : e;
+            if (hit && hit.distance > 5 && hit.distance < 150 && distanceToPath(mid, road.points) > road.width / 2 + 2 && book.add({ id: `join-${++n}`, kind: 'road', hierarchy: 'street', width: ROAD_WIDTH.link, points: [e, hit.point], label: 'Улица' })) { book.stitch(); continue; }
             const prev = road.points[end === 0 ? 1 : road.points.length - 2], d = Math.hypot(e.x - prev.x, e.y - prev.y) || 1, out = { x: (e.x - prev.x) / d, y: (e.y - prev.y) / d };
-            const c = { x: e.x + out.x * 7, y: e.y + out.y * 7 };
-            const ring = Array.from({ length: 13 }, (_, k) => { const a = Math.atan2(-out.y, -out.x) + k / 12 * Math.PI * 2; return { x: c.x + Math.cos(a) * 7, y: c.y + Math.sin(a) * 7 }; });
+            const c = { x: e.x + out.x * 10, y: e.y + out.y * 10 };
+            const ring = Array.from({ length: 13 }, (_, k) => { const a = Math.atan2(-out.y, -out.x) + k / 12 * Math.PI * 2; return { x: c.x + Math.cos(a) * 10, y: c.y + Math.sin(a) * 10 }; });
             if (book.add({ id: `turn-${++n}`, kind: 'road', hierarchy: 'street', width: ROAD_WIDTH.link, points: ring, label: 'Разворотный круг' })) book.stitch(); else dbg('dead:turn-failed:' + road.id);
         }
     }
@@ -36,11 +38,18 @@ export function addSidewalks(env: Env, s: Settlement): void {
         const road = book.get(id);
         if (!road || (road.hierarchy !== 'arterial' && road.hierarchy !== 'collector') || id.includes('ring0') || polylineLength(road.points) < 70) continue;
         for (const side of [1, -1]) {
+            // A ring road is closed (first vertex = last): its tangent at the seam is taken across it, or the pavement's two
+            // ends would overlap and cross.
+            const n = road.points.length, closed = Math.hypot(road.points[0].x - road.points[n - 1].x, road.points[0].y - road.points[n - 1].y) < .01;
             const off = road.width / 2 + 1.6, pts = road.points.map((p, i) => {
-                const a = road.points[Math.max(0, i - 1)], b = road.points[Math.min(road.points.length - 1, i + 1)], d = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+                const a = road.points[i > 0 ? i - 1 : closed ? n - 2 : 0], b = road.points[i < n - 1 ? i + 1 : closed ? 1 : n - 1], d = Math.hypot(b.x - a.x, b.y - a.y) || 1;
                 return { x: p.x - (b.y - a.y) / d * off * side, y: p.y + (b.x - a.x) / d * off * side };
             });
-            book.add({ id: `walk-${id}-${side > 0 ? 'a' : 'b'}`, kind: 'footpath', width: 1.6, points: pts, label: 'Тротуар' });
+            if (closed) pts[n - 1] = { ...pts[0] };
+            // On the inside of a tight bend the offset curve folds over itself (a loop, a "bow tie"): drop the vertices that fell
+            // closer to the carriageway than the offset, then the loop is gone and the pavement runs smoothly round the corner.
+            const clean = pts.filter((p, i) => i === 0 || i === pts.length - 1 || distanceToPath(p, road.points) > off * .94);
+            book.add({ id: `walk-${id}-${side > 0 ? 'a' : 'b'}`, kind: 'footpath', width: 1.6, points: clean, label: 'Тротуар' });
         }
         s.sidewalks.add(id);
     }
@@ -77,4 +86,38 @@ export function addPromenade(env: Env, sk: Skeleton): void {
     });
     // Where it would touch the water or a road the book rejects it.
     ctx.book.add({ id: 'riverside-walk', kind: 'footpath', width: 1.4, points: pts, label: 'Береговая прогулочная дорожка' });
+}
+
+/**
+ * Turning area at every loose end of a street: an asphalt disc (drawn by world-surfaces) that houses and props keep clear of.
+ * Two passes. `planTurnarounds` runs before houses and reserves the disc at the ends of real streets (not lanes and stubs shorter
+ * than 40 m), so frontage keeps clear of them. `finishTurnarounds` runs when everything is placed and gives every remaining
+ * loose end the largest disc that fits between the objects that stand there (never smaller than the road itself): a lane end
+ * must not push apartment blocks out of a quarter. The radius is 4.2 m (3.4 m for lanes and links) at most.
+ */
+export function planTurnarounds(env: Env): void { env.layout.turnarounds = []; turnarounds(env, true); }
+export function finishTurnarounds(env: Env): void { turnarounds(env, false); }
+
+function turnarounds(env: Env, reserve: boolean): void {
+    const { ctx, layout, half } = env;
+    const list = layout.turnarounds ?? (layout.turnarounds = []);
+    for (const road of layout.paths.filter(p => p.kind === 'road')) {
+        if (/^turn-/.test(road.id)) continue;
+        const major = road.hierarchy !== 'lane' && road.hierarchy !== 'link' && polylineLength(road.points) >= 40;
+        if (reserve && !major) continue;
+        for (const end of [road.points[0], road.points[road.points.length - 1]]) {
+            if (Math.abs(end.x) > half - 12 || Math.abs(end.y) > half - 12) continue;
+            if (layout.paths.some(o => o !== road && o.kind !== 'rail' && distanceToPath(end, o.points) < .6)) continue;
+            if (list.some(t => Math.hypot(t.x - end.x, t.y - end.y) < 1.5)) continue;
+            const wanted = road.hierarchy === 'lane' || road.hierarchy === 'link' ? 3.4 : 4.2, least = road.width / 2 + .4;
+            let r = wanted;
+            const blocked = (rr: number) => ctx.probe.distance(end, rr + 1) < rr + 1
+                || ctx.index.some(end.x, end.y, rr + 32, o => Math.hypot(o.x - end.x, o.y - end.y) < o.radius + rr + .3)
+                || layout.paths.some(o => o !== road && o.kind !== 'rail' && distanceToPath(end, o.points) < rr + o.width / 2 - .2 && distanceToPath(end, o.points) > .6);
+            while (r > least && blocked(r)) r -= .4;
+            r = Math.max(least, r);
+            list.push({ x: end.x, y: end.y, r: +r.toFixed(2), roadId: road.id });
+            if (reserve) ctx.reserved.push({ x: end.x, y: end.y, r: r + .5 });
+        }
+    }
 }

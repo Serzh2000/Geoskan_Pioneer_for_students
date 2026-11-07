@@ -129,6 +129,26 @@ function fpvCubeHasCollision(cube: THREE.Object3D, samples: THREE.Vector3[]) {
     return false;
 }
 
+/**
+ * Дом, который сам описал свою твёрдую форму (`userData.collisionBoxes`: коробки в его локальных координатах), проверяется по ним,
+ * а не по габаритам мешей: у скатной крыши над карнизом нет невидимой стены. Масштаб и поворот учитывает worldToLocal.
+ */
+const localProbe = new THREE.Vector3();
+function boxesHit(obj: THREE.Object3D, samples: THREE.Vector3[]): boolean {
+    const boxes = obj.userData.collisionBoxes as Array<[number, number, number, number, number, number]>;
+    obj.updateWorldMatrix(true, false);
+    const scale = obj.getWorldScale(new THREE.Vector3());
+    const reach = DRONE_COLLISION_RADIUS / Math.max(.001, Math.min(Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z)));
+    for (const sample of samples) {
+        localProbe.copy(sample); obj.worldToLocal(localProbe);
+        for (const b of boxes) {
+            if (localProbe.x > b[0] - reach && localProbe.x < b[3] + reach && localProbe.y > b[1] - reach && localProbe.y < b[4] + reach
+                && localProbe.z > b[2] - reach && localProbe.z < b[5] + reach) return true;
+        }
+    }
+    return false;
+}
+
 /** ignore - меш, который не считается препятствием (опора, с которой дрон взлетает). */
 export function obstacleHasCollision(obj: THREE.Object3D, samples: THREE.Vector3[], ignore: THREE.Object3D | null = null) {
     if (isGateObject(obj)) {
@@ -138,6 +158,7 @@ export function obstacleHasCollision(obj: THREE.Object3D, samples: THREE.Vector3
         return fpvCubeHasCollision(obj, samples);
     }
     if (shouldSkipCollisionForObject(obj)) return false;
+    if (obj.userData?.collisionBoxes) return obj.visible && boxesHit(obj, samples);
 
     const nested: THREE.Object3D[] = [];
     obj.traverse((node) => {
@@ -177,6 +198,7 @@ function meshesHit(node: THREE.Object3D, samples: THREE.Vector3[], ignore: THREE
             if (farProbe.distanceTo(samples[0]) > FAR_PROP_DISTANCE) continue;
         }
         if (hasCustomCollisionShape(child) || shouldSkipCollisionForObject(child)) continue;
+        if (child.userData.collisionBoxes) { if (boxesHit(child, samples)) return true; continue; }
         if ((child as THREE.Mesh).isMesh && meshBlocks(child as THREE.Mesh, samples)) return true;
         if (meshesHit(child, samples, ignore)) return true;
     }

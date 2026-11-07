@@ -2,7 +2,8 @@ import { insidePolygon, pointAtLength, polylineLength, type Point2 } from './geo
 import type { TrainingProp } from './layout.js';
 import type { Cell } from './patterns.js';
 import { MODEL_FOOTPRINTS, residentialNeighbors } from './settlement-policy.js';
-import { APARTMENT_COLORS, centrality, lessonOrPark } from './town-sites.js';
+import { BLOCK_SPECS, HOUSE_SPECS } from '../obstacles/buildings/city-specs.js';
+import { centrality, lessonOrPark } from './town-sites.js';
 import { dbg } from './world-context.js';
 import { clamp, rank, type Env, type Settlement } from './world-env.js';
 import type { WorldPath } from './world-plan.js';
@@ -11,7 +12,15 @@ import type { WorldPath } from './world-plan.js';
  * Houses along the streets: each one set back from the carriageway, its front (local -Y) turned to the street. Apartments
  * stand toward the middle of a place and houses toward its rim; an industrial estate gets warehouses instead.
  */
-const R = { apartment: 5.21, house: 4.6 } as const;
+const R = { house: 4.6 } as const;
+
+/** Какой тип многоэтажки поставить: башни и современные дома ближе к центру, кирпичные и панельные к окраине; соседний не повторяется. */
+function pickBlock(c: number, last: number, random: () => number): number {
+    const w = BLOCK_SPECS.map((s, i) => i === last ? 0 : s.style === 'tower' ? (c > .5 ? 2 * c : 0) : s.style === 'modern' ? .5 + c : s.style === 'brick' ? 1.2 * (1 - c) + .2 : s.style === 'stalin' ? .8 : 1);
+    let roll = random() * w.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < w.length; i++) { roll -= w[i]; if (roll <= 0) return i; }
+    return 0;
+}
 
 export function frontage(env: Env, s: Settlement): void {
     const { ctx } = env, { book, random } = ctx, dense = ctx.density;
@@ -21,6 +30,7 @@ export function frontage(env: Env, s: Settlement): void {
         const lane = road.hierarchy === 'lane', walks = s.sidewalks.has(road.id), total = polylineLength(road.points);
         const [s0, s1] = road.id === s.main && s.range ? s.range : [0, total];
         for (const side of [1, -1]) {
+            let lastBlock = -1, lastHouse = -1, fails = 0;
             let pos = s0 + 3 + random() * 4;
             while (pos < s1 - 3) {
                 const { p, tangent } = pointAtLength(road.points, pos);
@@ -30,20 +40,35 @@ export function frontage(env: Env, s: Settlement): void {
                 const c = centrality(s, p);
                 // Beyond the built-up area a street thins out into gardens.
                 const beyond = c <= 0 && s.kind !== 'village';
-                const pApartment = s.kind === 'village' ? 0 : s.kind === 'city' ? clamp((c - .1) * 2.4 + urbanBias, 0, .97) : clamp((c - .25) * 1.9 + urbanBias, 0, .97);
+                const pApartment = s.kind === 'village' ? 0 : s.kind === 'city' ? clamp((c - .1) * 2.4 + urbanBias + .3, 0, .97) : clamp((c - .25) * 1.9 + urbanBias + .45, 0, .97);
                 const apartment = s.style !== 'industrial' && (!lane || (s.kind === 'city' && c > .3)) && random() < pApartment;
                 const roll = random();
                 const industrial: TrainingProp['type'] | null = s.style !== 'industrial' ? null : roll < .7 ? 'warehouse' : roll < .88 ? 'containers' : roll < .94 ? 'silo' : 'solar';
-                const scale = industrial === 'warehouse' ? .72 : apartment ? 1.5 : 1;
-                const radius = industrial ? (MODEL_FOOTPRINTS[industrial] ?? 4) * scale : apartment ? R.apartment : R.house;
-                const skip = apartment ? .02 : .03 + (1 - dense) * .14 + (beyond ? .25 : 0);
+                const scale = industrial === 'warehouse' ? .72 : 1;
+                const block = apartment ? pickBlock(c, lastBlock, random) : -1;
+                const radius = industrial ? (MODEL_FOOTPRINTS[industrial] ?? 4) * scale : apartment ? BLOCK_SPECS[block].radius : R.house;
+                const skip = apartment ? .02 : .02 + (1 - dense) * .1 + (beyond ? .2 : 0);
                 if (random() < skip) { dbg('front:skip'); pos += radius * 2 + 1; continue; }
                 const setback = apartment ? 1.2 + random() * 1.8 : 1.4 + random() * (s.kind === 'village' ? 4.5 : 2.8);
-                const off = road.width / 2 + (walks ? 2.4 : 0) + .6 + radius + setback;
-                const prop: TrainingProp = { type: industrial ?? (apartment ? 'building' : 'house'), x: p.x + nrm.x * off, y: p.y + nrm.y * off, scale, radius, rotation: Math.atan2(-nrm.x, nrm.y) };
-                if (apartment) { prop.floors = Math.round(clamp(3 + c * 11 + (random() - .5) * 4, 3, 12)); prop.color = ctx.pick(APARTMENT_COLORS); }
-                if (ctx.add(prop, .6, industrial ? `district-${s.id}` : undefined)) { dbg('front:ok'); pos += radius * 2 + (apartment ? .6 + random() * .8 : industrial ? 1.5 + random() * 4 : 1 + random() * 2.6); }
-                else { dbg('front:fail'); pos += 2.5; }
+                // Участок не вместил выбранный дом: пробуем типы поменьше (по размеру участка), а не пропускаем участок.
+                const attempts = apartment ? [block, ...BLOCK_SPECS.map((_, i) => i).filter(i => i !== block && BLOCK_SPECS[i].radius < BLOCK_SPECS[block].radius).sort((i, j) => BLOCK_SPECS[j].radius - BLOCK_SPECS[i].radius), ...(fails >= 1 ? [-1] : [])] : [-1];
+                let placed: TrainingProp | null = null;
+                for (const pick of attempts) {
+                    const spec = pick >= 0 ? BLOCK_SPECS[pick] : null, r = spec ? spec.radius : industrial ? radius : R.house;
+                    const off = road.width / 2 + (walks ? 2.4 : 0) + .6 + r + setback;
+                    const prop: TrainingProp = { type: industrial ?? (spec ? 'building' : 'house'), x: p.x + nrm.x * off, y: p.y + nrm.y * off, scale, radius: r, rotation: Math.atan2(-nrm.x, nrm.y) };
+                    if (spec) {
+                        prop.variant = pick; prop.floors = Math.round(clamp(spec.minFloors + (spec.maxFloors - spec.minFloors) * clamp(c * .8 + random() * .4 - .1, 0, 1), spec.minFloors, spec.maxFloors));
+                        prop.color = ctx.pick(spec.palette);
+                    } else if (!industrial) {
+                        // Частные дома: четыре формы и своя краска; соседний по улице не повторяет форму.
+                        let variant = Math.floor(random() * HOUSE_SPECS.length); if (variant === lastHouse) variant = (variant + 1) % HOUSE_SPECS.length;
+                        prop.variant = variant; prop.color = ctx.pick(HOUSE_SPECS[variant].palette);
+                    }
+                    if (ctx.add(prop, .6, industrial ? `district-${s.id}` : undefined)) { placed = prop; break; }
+                }
+                if (placed) { fails = 0; if (placed.type === 'building') lastBlock = placed.variant!; else if (!industrial) lastHouse = placed.variant!; dbg('front:ok'); pos += placed.radius * 2 + (placed.type === 'building' ? .6 + random() * .8 : industrial ? 1.5 + random() * 4 : 1 + random() * 2.6); }
+                else { dbg('front:fail'); fails++; pos += 2.5; }
             }
         }
     }

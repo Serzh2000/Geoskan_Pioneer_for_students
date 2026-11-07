@@ -1,7 +1,7 @@
 import { ObjectIndex, PathIndex, WaterProbe, seededRandom, type Box } from './geography.js';
 import type { TrainingLayout, TrainingProp } from './layout.js';
 import { RoadBook } from './road-network.js';
-import { canPlaceModel, districtAt, reserveFootprint } from './settlement-policy.js';
+import { canPlaceModel, districtAt, nearestDistrict, reserveFootprint } from './settlement-policy.js';
 import type { District } from './world-plan.js';
 
 /** Shared state and the placement contract of one generated map. Pure: no rendering, no randomness except the seed. */
@@ -54,7 +54,7 @@ export function createContext(layout: TrainingLayout, density: number, m: 1 | -1
         },
         add(p, gap = 1.2, districtId) {
             if (!ctx.fits(p, gap, districtId)) return false;
-            const id = districtId ?? p.districtId ?? districtAt(layout, p)?.id;
+            const id = districtId ?? p.districtId ?? districtAt(layout, p)?.id ?? nearestDistrict(layout, p)?.id;
             if (id) p.districtId = id;
             layout.objects.push(p);
             return true;

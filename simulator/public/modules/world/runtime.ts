@@ -11,8 +11,12 @@ import { findPoliceSite, findStationSite, lineBreakWorkPoint, planIncidents, pla
 import { createFireCrew, createPoliceCrew, createRepairCrew, type Crew, type CrewState, type PoliceCrew } from './crews.js';
 import { buildRoadGraph, findRoute, overpassLift } from './roads.js';
 import { createTraffic, type EmergencyVehicle, type Traffic, type TrafficAgent } from './traffic.js';
-import { createCar, createPoliceCar } from './car-model.js';
+import { createPoliceCar } from './car-model.js';
+import { createFleet, type Fleet, type FleetCar } from './car-fleet.js';
 import { createSignalLights, type SignalLights } from './signal-lights.js';
+import { createRoadMarks, type RoadMarks } from './road-marks.js';
+import { createCrowd, createCrowdView, type Crowd, type CrowdView, type Vehicle } from './pedestrians.js';
+import { drones } from '../core/state.js';
 import { createWorldServices, type Responder, type ServiceEvent, type WorldServices } from './services.js';
 
 /*
@@ -22,14 +26,15 @@ import { createWorldServices, type Responder, type ServiceEvent, type WorldServi
  * always yields the same station site, burning building and torn wire.
  */
 /** An ambient car: the mesh follows the pose of its agent in traffic.ts, which does the driving. */
-type CarRun = { mesh: THREE.Object3D; agent: TrafficAgent };
+type CarRun = { car: FleetCar; agent: TrafficAgent };
 type World = {
     key: string; terrain: THREE.Group; root: THREE.Group; layout: TrainingLayout; services: WorldServices;
-    meshes: Map<Responder, THREE.Object3D>; cars: CarRun[]; traffic: Traffic | null; lights: SignalLights | null; rotors: THREE.Object3D[];
+    meshes: Map<Responder, THREE.Object3D>; cars: CarRun[]; fleet: Fleet | null; traffic: Traffic | null; lights: SignalLights | null; marks: RoadMarks | null; rotors: THREE.Object3D[];
     plane: { mesh: THREE.Object3D; track: Point2[]; lengths: number[]; total: number; s: number } | null;
     fire: { flames: THREE.Group; light: THREE.PointLight } | null;
     wire: { intact: THREE.Object3D | null; broken: THREE.Object3D | null; sparks: THREE.Object3D } | null;
     crews: Crew[]; policeCrew: PoliceCrew | null; crewState: CrewState;
+    crowd: Crowd; crowdView: CrowdView;
 };
 
 let world: World | null = null;
@@ -58,7 +63,6 @@ function sampleAt(points: Point2[], lengths: number[], s: number): { x: number; 
     return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, heading: Math.atan2(b.y - a.y, b.x - a.x) };
 }
 
-const buildCar = createCar;
 const buildPolice = createPoliceCar;
 
 function buildFlames(): { flames: THREE.Group; light: THREE.PointLight } {
@@ -84,6 +88,9 @@ function teardown() {
     if (!world) return;
     world.services.dispose();
     world.lights?.dispose();
+    world.crowdView.dispose();
+    world.fleet?.dispose();
+    world.marks?.dispose();
     world.root.parent?.remove(world.root);
     world.root.traverse(node => {
         const mesh = node as THREE.Mesh;
@@ -121,7 +128,13 @@ function build(terrain: THREE.Group): World {
     if (policeSite) homes.police = parkAt(policeSite, -2.4, 8);
     const stationDoor = policeSite ? (() => { const f = { x: Math.sin(policeSite.rotation), y: -Math.cos(policeSite.rotation) }; return { x: policeSite.x + f.x * 6.2 + Math.cos(policeSite.rotation) * 6, y: policeSite.y + f.y * 6.2 + Math.sin(policeSite.rotation) * 6 }; })() : undefined;
 
-    const services = createWorldServices({ incidents, homes, route });
+    // Pedestrians (pedestrians.ts); emergency vehicles wait for anyone on a crossing in front of them.
+    const traffic = createTraffic(layout.paths, { seed: layout.seed });
+    const crowd = createCrowd(layout, { seed: layout.seed, signals: traffic.signals });
+    const services = createWorldServices({ incidents, homes, route, hold: responder => {
+        const hx = Math.cos(responder.heading), hy = Math.sin(responder.heading);
+        return crowd.onRoad().some(w => { const dx = w.x - responder.x, dy = w.y - responder.y, along = dx * hx + dy * hy; return along > -1 && along < 9 && Math.abs(dx * hy - dy * hx) < 2.6; });
+    } });
     const meshes = new Map<Responder, THREE.Object3D>();
     for (const responder of services.responders) {
         const mesh = responder.kind === 'fire' ? createLandscapeAsset('FireTruck') : responder.kind === 'repair' ? createLandscapeAsset('RepairTruck') : buildPolice();
@@ -133,18 +146,20 @@ function build(terrain: THREE.Group): World {
     }
 
     // Ambient traffic (traffic.ts): cars drive routes over the road network, in their own lane, turning at junctions.
-    const traffic = createTraffic(layout.paths, { seed: layout.seed });
-    const cars: CarRun[] = traffic.agents.map(agent => {
-        const mesh = buildCar(CAR_COLORS[agent.id % CAR_COLORS.length]);
-        mesh.userData.collidable = false;
-        mesh.scale.setScalar(agent.scale);
-        root.add(mesh);
-        return { mesh, agent };
-    });
+    // All the cars are instanced meshes of one fleet (car-fleet.ts): a handful of draw calls instead of seven per car.
+    const cars: CarRun[] = traffic.agents.map(agent => ({ agent, car: { id: agent.id, kind: agent.kind, x: agent.x, y: agent.y, z: 0, heading: agent.heading, scale: agent.scale, speed: agent.speed } }));
+    const fleet = cars.length ? createFleet(cars.map(c => c.car), CAR_COLORS) : null;
+    if (fleet) root.add(fleet.group);
 
     // Traffic lights at the junctions the cars obey (signals.ts); two instanced meshes for the whole map.
     const lights = createSignalLights(traffic.signals, (x, y) => trainingHeightAt(layout, x, y));
     root.add(lights.group);
+    // Stop lines, zebras and their signs at the same junctions.
+    const marks = createRoadMarks(traffic.signals.heads, (x, y) => trainingHeightAt(layout, x, y));
+    root.add(marks.group);
+
+    const crowdView = createCrowdView(crowd, (x, y) => trainingHeightAt(layout, x, y));
+    root.add(crowdView.group);
 
     const rotors: THREE.Object3D[] = [];
     terrain.traverse(node => { if (node.userData?.spin) rotors.push(node); });
@@ -210,7 +225,7 @@ function build(terrain: THREE.Group): World {
         else if (responder.kind === 'repair') crews.push(createRepairCrew(host));
         else { policeCrew = createPoliceCrew(host); crews.push(policeCrew); }
     }
-    const built: World = { key: `${terrain.uuid}:${layout.seed}:${layout.profile}`, terrain, root, layout, services, meshes, cars, traffic, lights, rotors, plane, fire, wire, crews, policeCrew, crewState };
+    const built: World = { key: `${terrain.uuid}:${layout.seed}:${layout.profile}`, terrain, root, layout, services, meshes, cars, fleet, traffic, lights, marks, rotors, plane, fire, wire, crews, policeCrew, crewState, crowd, crowdView };
     services.onEvent(event => onServiceEvent(built, event));
     return built;
 }
@@ -252,18 +267,28 @@ function place(mesh: THREE.Object3D, layout: TrainingLayout, x: number, y: numbe
 }
 
 const emergencyOnRoad: EmergencyVehicle[] = [];
+const vehicles: Vehicle[] = [];
 
 function driveTraffic(w: World, dt: number) {
     if (!w.traffic) return;
     // Crews that are out of their station are obstacles for the cars (they stop for them and make room).
     emergencyOnRoad.length = 0;
     for (const responder of w.services.responders) if (responder.state !== 'idle') emergencyOnRoad.push(responder);
-    w.traffic.update(dt, emergencyOnRoad);
+    // People first: they look at the cars of the previous frame, the cars then stop for those already on a crossing.
+    vehicles.length = 0;
+    for (const { agent } of w.cars) vehicles.push({ x: agent.x, y: agent.y, heading: agent.heading, speed: agent.speed, length: agent.length, width: agent.modelWidth * agent.scale });
+    for (const r of emergencyOnRoad) vehicles.push({ x: r.x, y: r.y, heading: r.heading, speed: (r as Responder).state === 'driving' || (r as Responder).state === 'returning' ? (r as Responder).speed : 0, length: 6, siren: true });
+    const drone = Object.values(drones)[0];
+    const focus = drone ? { x: drone.pos.x, y: drone.pos.y } : null;
+    w.crowd.update(dt, vehicles, focus);
+    w.crowdView.update(dt, focus);
+    w.traffic.update(dt, emergencyOnRoad, w.crowd.onRoad());
     w.lights?.update();
-    for (const { mesh, agent } of w.cars) {
-        mesh.scale.setScalar(agent.scale);
-        place(mesh, w.layout, agent.x, agent.y, agent.heading, GROUND + overpassLift(w.layout.bridges, agent.roadId, agent.x, agent.y));
+    for (const { car, agent } of w.cars) {
+        car.x = agent.x; car.y = agent.y; car.heading = agent.heading; car.scale = agent.scale; car.speed = agent.speed;
+        car.z = trainingHeightAt(w.layout, agent.x, agent.y) + GROUND + overpassLift(w.layout.bridges, agent.roadId, agent.x, agent.y);
     }
+    w.fleet?.update(w.cars.map(c => c.car), dt);
 }
 
 function animate(w: World, dt: number) {
@@ -291,7 +316,13 @@ function animate(w: World, dt: number) {
         const target = moving ? EMERGENCY_LANE : 0;
         const lane = (laneOffset.get(responder) ?? 0) + (target - (laneOffset.get(responder) ?? 0)) * Math.min(1, dt * 2.5);
         laneOffset.set(responder, lane);
-        place(mesh, layout, responder.x + Math.sin(responder.heading) * lane, responder.y - Math.cos(responder.heading) * lane, responder.heading);
+        const px = responder.x + Math.sin(responder.heading) * lane, py = responder.y - Math.cos(responder.heading) * lane;
+        const wheels = mesh.userData.wheels as THREE.Object3D[] | undefined;
+        if (wheels) {
+            const moved = Math.hypot(px - mesh.position.x, py - mesh.position.y) * (Math.cos(responder.heading) * (px - mesh.position.x) + Math.sin(responder.heading) * (py - mesh.position.y) >= 0 ? 1 : -1);
+            if (Math.abs(moved) < 5) for (const wheel of wheels) wheel.rotation.y += moved / (mesh.userData.wheelRadius as number);
+        }
+        place(mesh, layout, px, py, responder.heading);
     }
 
     for (const crew of w.crews) crew.update(dt);

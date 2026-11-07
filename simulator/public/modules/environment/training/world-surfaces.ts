@@ -2,17 +2,23 @@ import * as THREE from 'three';
 import { batchStaticMeshes } from '../obstacles/batching.js';
 import { createRoadMesh, createRailwayMesh, type MarkingGap } from '../obstacles/linear.js';
 import { analyzeRoads, crossPolylines, overpassLift, overpassSpans, roadAnchors, type RoadPlan } from '../../world/roads.js';
-import { distanceToWater, trainingHeightAt } from './world-plan.js';
+import { GROUND_LAYER_Z, layerMaterial, type GroundLayer } from '../ground/layers.js';
+import { buildSurroundings, buildTerrain } from './terrain-mesh.js';
 import type { TrainingLayout } from './layout.js';
 import type { Point2 } from './geography.js';
 
 export { batchStaticMeshes };
 
-export function flatPolygon(points: Point2[], color: number, z: number): THREE.Mesh {
+/**
+ * Плоский слой земли по многоугольнику. `layer` задаёт и высоту, и порядок отрисовки (ground/layers.ts); материал общий
+ * для всех заплаток одного цвета и слоя. Без `layer` берётся высота `z` и слой по ближайшей высоте.
+ */
+export function flatPolygon(points: Point2[], color: number, z: number, layer?: GroundLayer, roughness = .9): THREE.Mesh {
     const shape = new THREE.Shape();
     shape.moveTo(points[0].x, points[0].y);
     points.slice(1).forEach(p => shape.lineTo(p.x, p.y)); shape.closePath();
-    const mesh = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshStandardMaterial({ color, roughness: .9, side: THREE.DoubleSide }));
+    const rank = layer ?? (Object.entries(GROUND_LAYER_Z).filter(([name]) => name !== 'terrain').sort((a, b) => Math.abs(a[1] - z) - Math.abs(b[1] - z))[0][0] as GroundLayer);
+    const mesh = new THREE.Mesh(new THREE.ShapeGeometry(shape), layerMaterial(color, rank, roughness, { side: THREE.DoubleSide }));
     mesh.position.z = z; mesh.receiveShadow = true; mesh.userData.collidable = false;
     return mesh;
 }
@@ -27,22 +33,8 @@ function riverOutline(points: Point2[], width: number): Point2[] {
 }
 
 export function addWorldSurfaces(group: THREE.Group, layout: TrainingLayout): void {
-    const resolution = layout.landforms.length ? 96 : 1, geometry = new THREE.PlaneGeometry(layout.size, layout.size, resolution, resolution);
-    const position = geometry.attributes.position, colors: number[] = [];
-    const grass = new THREE.Color(0x7a8962), bank = new THREE.Color(0xb5a487), dry = new THREE.Color(0x939073);
-    for (let i = 0; i < position.count; i++) {
-        const x = position.getX(i), y = position.getY(i), height = trainingHeightAt(layout, x, y);
-        position.setZ(i, height + .006);
-        const noise = (Math.sin(x * .19 + layout.seed % 13) * Math.cos(y * .17) + 1) / 2;
-        const color = grass.clone().lerp(dry, noise * .25 + Math.min(.4, height / 15));
-        if (distanceToWater(layout, { x, y }) < 2) color.lerp(bank, .8);
-        colors.push(color.r, color.g, color.b);
-    }
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); geometry.computeVertexNormals();
-    const ground = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, side: THREE.DoubleSide }));
-    ground.name = 'Рельеф местности'; ground.receiveShadow = true;
-    ground.userData.trainingGround = layout;
-    group.add(ground);
+    group.add(buildTerrain(layout));
+    group.add(buildSurroundings(layout, riverOutline, (points, color, z, layer) => flatPolygon(points, color, z, layer, layer === 'water' ? .26 : .9)));
 
     for (const water of layout.water) {
         const points = water.kind === 'river' ? riverOutline(water.points, water.width) : water.points;
@@ -50,11 +42,9 @@ export function addWorldSurfaces(group: THREE.Group, layout: TrainingLayout): vo
         const cy = points.reduce((sum, p) => sum + p.y, 0) / points.length;
         const banks = water.kind === 'river' ? riverOutline(water.points, water.width + 2)
             : points.map(p => ({ x: cx + (p.x - cx) * 1.08, y: cy + (p.y - cy) * 1.08 }));
-        const shore = flatPolygon(banks, 0xaf9e79, .012); shore.name = 'Берег'; group.add(shore);
-        const surface = flatPolygon(points, water.kind === 'river' ? 0x527c80 : 0x487582, .024);
+        const shore = flatPolygon(banks, 0xaf9e79, GROUND_LAYER_Z.shore, 'shore'); shore.name = 'Берег'; group.add(shore);
+        const surface = flatPolygon(points, water.kind === 'river' ? 0x527c80 : 0x487582, GROUND_LAYER_Z.water, 'water', .26);
         surface.name = water.kind === 'river' ? 'Река' : 'Озеро';
-        (surface.material as THREE.MeshStandardMaterial).roughness = .26;
-        (surface.material as THREE.MeshStandardMaterial).metalness = .15;
         group.add(surface);
     }
     const plan = analyzeRoads(layout.paths), spans = overpassSpans(layout.paths, layout.bridges);
@@ -91,22 +81,19 @@ export function addWorldSurfaces(group: THREE.Group, layout: TrainingLayout): vo
                 points.push(new THREE.Vector3(x, y, z));
             }
         }
-        const feature = route.kind === 'rail' ? createRailwayMesh({ points }) : createRoadMesh({ points, roadWidth: route.width, markingGaps: roadIndex >= 0 ? gapsOf(roadIndex) : [] });
+        const feature = route.kind === 'rail' ? createRailwayMesh({ points })
+            : createRoadMesh({ points, roadWidth: route.width, markingGaps: roadIndex >= 0 ? gapsOf(roadIndex) : [], roadStyle: route.kind === 'footpath' ? 'path' : 'road' });
         feature.userData.label = route.label; feature.userData.worldPathId = route.id;
-        if (route.kind === 'footpath') {
-            // Pedestrian approaches overlap road edges; a low curb prevents coplanar flicker.
-            feature.position.z = .045;
-            feature.traverse(node => {
-                if (node instanceof THREE.Mesh && !Array.isArray(node.material)) (node.material as THREE.MeshStandardMaterial).color.set(0xb6aa8c);
-            });
-        }
+        // Дорожка лежит на 4 см выше дороги (поперечный переход читается как переход, а не как слой под асфальтом); порядок
+        // отрисовки задаёт слой 'path' (ground/layers.ts), поэтому зазор по Z больше не держит кадр сам.
+        if (route.kind === 'footpath') feature.position.z = .04;
         batchStaticMeshes(feature); group.add(feature);
     }
     addJunctionSurfaces(group, layout, plan, spans);
 }
 
-const patchAsphalt = new THREE.MeshStandardMaterial({ color: 0x303b40, roughness: .96, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
-const patchShoulder = new THREE.MeshStandardMaterial({ color: 0x858b89, roughness: .94, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+const patchAsphalt = layerMaterial(0x303b40, 'patchAsphalt', .96);
+const patchShoulder = layerMaterial(0x858b89, 'patchShoulder', .94);
 const crossingMaterial = new THREE.MeshStandardMaterial({ color: 0x2a3135, roughness: .97 });
 
 /**
@@ -116,7 +103,7 @@ function addJunctionSurfaces(group: THREE.Group, layout: TrainingLayout, plan: R
     const surfaces = new THREE.Group();
     surfaces.name = 'Перекрёстки'; surfaces.userData.collidable = false;
     const disc = (x: number, y: number, r: number, material: THREE.Material, z: number) => {
-        const mesh = new THREE.Mesh(new THREE.CircleGeometry(r, 28), material);
+        const mesh = new THREE.Mesh(new THREE.CircleGeometry(r, r > 3 ? 40 : 28), material);
         mesh.position.set(x, y, z); mesh.receiveShadow = true; mesh.userData.collidable = false;
         surfaces.add(mesh);
     };
@@ -124,8 +111,11 @@ function addJunctionSurfaces(group: THREE.Group, layout: TrainingLayout, plan: R
         for (const anchor of roadAnchors(plan, index)) {
             if (anchor.junction >= 0) continue;
             const p = anchor.free === 0 ? road.points[0] : road.points[road.points.length - 1];
-            disc(p.x, p.y, road.width / 2 + .2, patchShoulder, .0305);
-            disc(p.x, p.y, road.width / 2, patchAsphalt, .0375);
+            // A loose street end is a turning area (layout.turnarounds, kept clear of houses), not a bare rounded cap.
+            const turn = (layout.turnarounds ?? []).find(t => Math.hypot(t.x - p.x, t.y - p.y) < 1.5);
+            const r = Math.max(road.width / 2, turn?.r ?? 0);
+            disc(p.x, p.y, r + .2, patchShoulder, GROUND_LAYER_Z.patchShoulder);
+            disc(p.x, p.y, r, patchAsphalt, GROUND_LAYER_Z.patchAsphalt);
         }
     });
     batchStaticMeshes(surfaces);

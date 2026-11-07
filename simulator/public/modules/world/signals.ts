@@ -31,6 +31,8 @@ export interface SignalHead {
     /** Direction of travel of the lane (rad, +X is 0): the lamps face the opposite way. */
     heading: number;
     lane: number; group: number; node: number; roadId: string;
+    /** The stop line: the lane's own line at the place where a waiting car stops, and the width of the lane. */
+    stop: { x: number; y: number }; laneWidth: number; stopBack: number;
 }
 export interface Signal { node: number; x: number; y: number; groups: number; offset: number; cycle: number; heads: SignalHead[] }
 
@@ -41,6 +43,8 @@ export interface Signals {
     /** State for the cars on this lane, or null when the junction at its end has no signal. */
     stateOfLane(lane: number): SignalState | null;
     stateOfGroup(signal: Signal, group: number): SignalState;
+    /** What the group will show `seconds` from now (the cycle is fixed, so this is exact). */
+    stateAfter(signal: Signal, group: number, seconds: number): SignalState;
 }
 
 /** State of group `group` at time `t` (seconds into the cycle of `groups` slots). */
@@ -91,7 +95,8 @@ export function createSignals(nodes: ReadonlyArray<SignalNode>): Signals {
             const side = lane.width / 4 + 1.1;
             const head: SignalHead = {
                 x: stop.x + Math.sin(stop.heading) * side, y: stop.y - Math.cos(stop.heading) * side,
-                heading: stop.heading, lane: lane.laneIndex, group, node: index, roadId: lane.roadId
+                heading: stop.heading, lane: lane.laneIndex, group, node: index, roadId: lane.roadId,
+                stop: { x: stop.x, y: stop.y }, laneWidth: lane.width, stopBack: lane.stopBack
             };
             signal.heads.push(head); heads.push(head);
             laneSignal.set(lane.laneIndex, { signal, group });
@@ -116,6 +121,7 @@ export function createSignals(nodes: ReadonlyArray<SignalNode>): Signals {
             const entry = laneSignal.get(lane);
             return entry ? states.get(entry.signal)![entry.group] : null;
         },
-        stateOfGroup(signal, group) { return states.get(signal)![group]; }
+        stateOfGroup(signal, group) { return states.get(signal)![group]; },
+        stateAfter(signal, group, seconds) { return stateAt(clock + signal.offset + seconds, group, signal.groups); }
     };
 }

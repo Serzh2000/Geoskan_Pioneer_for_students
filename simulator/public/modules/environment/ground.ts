@@ -72,7 +72,12 @@ export function createGround(_scene: THREE.Scene, envGroup: THREE.Group) {
         map: groundTexture,
         roughness: 0.96,
         metalness: 0.02,
-        color: 0xffffff
+        color: 0xffffff,
+        // Плита - самый нижний слой (ранг -1 в ground/layers.ts): отодвинута назад, чтобы рельеф карты (z = 0.006) и все
+        // слои арены лежали над ней на любой дальности камеры, а не только пока хватает точности буфера глубины.
+        polygonOffset: true,
+        polygonOffsetFactor: 1,
+        polygonOffsetUnits: 1
     });
     const ground = new THREE.Mesh(groundGeom, groundMaterial);
     ground.receiveShadow = true;

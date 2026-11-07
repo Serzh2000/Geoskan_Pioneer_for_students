@@ -67,7 +67,7 @@ describe('lane geometry', () => {
         for (let width = 2.6; width <= 6.01; width += .2) {
             const scale = carScaleFor(width);
             expect(MODEL_WIDTH * scale).toBeLessThanOrEqual(Math.max(width / 2 - .45, MODEL_WIDTH * .5 + 1e-9));
-            expect(scale).toBeLessThanOrEqual(.85);
+            expect(scale).toBeLessThanOrEqual(1);
         }
         expect(speedLimitFor(3.4)).toBeLessThan(speedLimitFor(6));
     });
@@ -98,7 +98,7 @@ function simulate(traffic: Traffic, plan: ReturnType<typeof analyzeRoads>, secon
         traffic.agents.forEach((a, k) => {
             travelled[k] += Math.hypot(a.x - last[k].x, a.y - last[k].y); last[k] = { x: a.x, y: a.y };
             // Whole car on the carriageway along a lane; at a junction corner or a U-turn its middle must be.
-            if (a.seg.isConn ? i % 3 === 0 : true) worstOffRoad = Math.max(worstOffRoad, distanceToRoads(plan, a, a.seg.isConn ? undefined : a.roadId) + (a.seg.isConn ? 0 : MODEL_WIDTH * a.scale / 2));
+            if (a.seg.isConn ? i % 3 === 0 : true) worstOffRoad = Math.max(worstOffRoad, distanceToRoads(plan, a, a.seg.isConn ? undefined : a.roadId) + (a.seg.isConn ? 0 : a.modelWidth * a.scale / 2));
             maxSpeed = Math.max(maxSpeed, a.speed);
             roads.add(a.roadId);
             if (straight && !a.seg.isConn) {

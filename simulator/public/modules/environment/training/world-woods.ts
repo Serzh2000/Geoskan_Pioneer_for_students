@@ -7,6 +7,8 @@ import type { Landform } from './world-plan.js';
  * Trees and small things between the buildings: park and street trees, gardens, woods of the seed's own shapes, rocks on the
  * hills, a water tower and greenhouses in a village. Planted last, within a budget, into whatever room the roads and houses left.
  */
+const hash = (x: number, y: number) => { const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453; return n - Math.floor(n); };
+
 export function plantWorld(ctx: Ctx, settlements: Settlement[], hills: Landform[]): void {
     const { layout, size, half, random } = ctx, profile = layout.profile, f = size / 600;
     const forest = profile === 'forest', budget = forest ? 1900 : profile === 'city' ? 950 : profile === 'hills' ? 800 : 850;
@@ -14,8 +16,15 @@ export function plantWorld(ctx: Ctx, settlements: Settlement[], hills: Landform[
     let planted = 0;
     const tree = (x: number, y: number, deciduous: boolean, gap = .6): boolean => {
         const scale = 1.5 + random() * 1.8;
-        if (!ctx.add({ type: 'tree', x, y, scale, radius: .65 * scale, variant: deciduous ? 1 : 0 }, gap)) return false;
+        // Species from the position, not from the random stream: the rest of the layout stays the same for a seed.
+        const h = hash(x, y), variant = deciduous ? (h < .6 ? 1 : h < .8 ? 2 : 5) : (h < .72 ? 0 : 3);
+        if (!ctx.add({ type: 'tree', x, y, scale: variant === 2 ? scale * .85 : scale, radius: (variant === 2 ? .45 : .65) * scale, variant }, gap)) return false;
         planted++; return true;
+    };
+    // Shrubs are not counted in the tree budget and never push a tree out: they take what is left beside the houses and the verges.
+    const shrub = (x: number, y: number, h: number): void => {
+        const scale = 1.3 + h * 1.1;
+        ctx.add({ type: 'tree', x, y, scale, radius: .4 * scale, variant: 4 }, .3);
     };
     // Parks and squares: trees between the paths.
     for (const d of layout.districts.filter(q => q.kind === 'park')) {
@@ -39,6 +48,11 @@ export function plantWorld(ctx: Ctx, settlements: Settlement[], hills: Landform[
     for (const house of layout.objects.filter(p => p.type === 'house' && random() < .35)) {
         const back = { x: -Math.sin(house.rotation ?? 0), y: Math.cos(house.rotation ?? 0) }, side = random() < .5 ? 1 : -1;
         tree(house.x + back.x * 9.5 + back.y * side * 3 * 1.2, house.y + back.y * 9.5 - back.x * side * 3 * 1.2, random() < .6, .4);
+    }
+    // Hedges and shrubs: by the front of most houses, and along the verge of a town street.
+    for (const house of layout.objects.filter(p => p.type === 'house')) {
+        const h = hash(house.x, house.y), front = { x: Math.sin(house.rotation ?? 0), y: -Math.cos(house.rotation ?? 0) }, side = { x: -front.y, y: front.x };
+        if (h < .7) for (const k of [-1, 1]) shrub(house.x + front.x * 5.6 + side.x * k * 2.6, house.y + front.y * 5.6 + side.y * k * 2.6, hash(house.y, house.x + k));
     }
     // Woods: dense clumps (spruce and mixed) of the seed's own shapes, then a thin scatter; nothing on farm land or in town.
     const woods = Array.from({ length: forest ? 7 + Math.floor(random() * 3) : 3 + Math.floor(random() * 4) }, () => ({ x: ctx.range(-half + 20, half - 20), y: ctx.range(-half + 20, half - 20), rx: ctx.range(forest ? 45 : 26, forest ? 115 : 62), ry: ctx.range(forest ? 35 : 20, forest ? 85 : 48), a: random() * Math.PI }));

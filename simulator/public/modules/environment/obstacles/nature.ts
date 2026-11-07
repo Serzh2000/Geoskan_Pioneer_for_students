@@ -4,6 +4,12 @@ import { createParkBenchMesh, createParkLampMesh, createParkPlanterMesh } from '
 
 const bark = () => new THREE.MeshStandardMaterial({ color: 0x675b4c, roughness: 0.96 });
 const foliage = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: 0.94 });
+/** The foot of a trunk: a short cone that widens into the ground, so the tree stands on roots and not on a stick. */
+function rootFlare(radius: number) {
+    const flare = new THREE.Mesh(new THREE.CylinderGeometry(radius * 1.05, radius * 2.1, 0.16, 10), bark());
+    flare.rotation.x = Math.PI / 2; flare.position.z = 0.08;
+    return flare;
+}
 const noise = (i: number) => { const n = Math.sin(i * 127.1 + 13.7) * 43758.5453; return n - Math.floor(n); };
 
 export function createBushMesh(scale = 1) {
@@ -64,6 +70,7 @@ export function createFirTreeMesh() {
     const group = setCommonMeta(new THREE.Group(), 'Ель', { collidableRadius: 0.5 });
     const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.065, 1.6, 10), bark());
     trunk.rotation.x = Math.PI / 2; trunk.position.z = 0.8; group.add(trunk);
+    group.add(rootFlare(0.065));
     const materials = [foliage(0x3e6255), foliage(0x4b6b58), foliage(0x567560)];
     for (let i = 0; i < 6; i++) {
         const radius = 0.48 * (1 - i / 7);
@@ -87,6 +94,7 @@ export function createTreeMesh(scale = 1) {
     const group = setCommonMeta(new THREE.Group(), 'Дерево', { collidableRadius: 0.7 * scale });
     const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.1, 1.2, 10), bark());
     trunk.rotation.x = Math.PI / 2; trunk.position.z = 0.6; group.add(trunk);
+    group.add(rootFlare(0.1));
     const geometry = new THREE.IcosahedronGeometry(0.42, 2);
     const materials = [foliage(0x627951), foliage(0x73855d), foliage(0x526d51)];
     for (let i = 0; i < 7; i++) {
@@ -125,6 +133,76 @@ export function createParkPatch(width: number, depth: number) {
     lampB.position.set(width * 0.44, -depth * 0.42, propZ);
     group.add(lampB);
 
+    applyShadows(group);
+    return group;
+}
+
+/** Poplar: a tall, narrow column of leaves on a short trunk. */
+export function createPoplarMesh() {
+    const group = setCommonMeta(new THREE.Group(), 'Тополь', { collidableRadius: 0.4 });
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.07, 0.9, 8), bark());
+    trunk.rotation.x = Math.PI / 2; trunk.position.z = 0.45; group.add(trunk);
+    group.add(rootFlare(0.07));
+    const geometry = new THREE.IcosahedronGeometry(0.3, 2);
+    const materials = [foliage(0x5f7a4c), foliage(0x6c8a52), foliage(0x56724a)];
+    for (let i = 0; i < 6; i++) {
+        const lobe = new THREE.Mesh(geometry, materials[i % 3]);
+        const k = 1 - Math.abs(i - 2.5) * 0.09;
+        lobe.position.set(Math.cos(i * 2.1) * 0.05, Math.sin(i * 2.1) * 0.05, 0.85 + i * 0.32);
+        lobe.scale.set(0.8 * k, 0.8 * k, 1.25); group.add(lobe);
+    }
+    applyShadows(group);
+    return group;
+}
+
+/** Pine: a long bare trunk and a few flat, ragged tufts of needles at the top. */
+export function createPineMesh() {
+    const group = setCommonMeta(new THREE.Group(), 'Сосна', { collidableRadius: 0.45 });
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.06, 1.7, 8), new THREE.MeshStandardMaterial({ color: 0x6b4a33, roughness: 0.95 }));
+    trunk.rotation.x = Math.PI / 2; trunk.position.z = 0.85; group.add(trunk);
+    const flare = rootFlare(0.06); (flare.material as THREE.MeshStandardMaterial).color.set(0x6b4a33); group.add(flare);
+    const geometry = new THREE.IcosahedronGeometry(0.28, 1);
+    const needles = [foliage(0x4d6b45), foliage(0x59784d)];
+    for (let i = 0; i < 5; i++) {
+        const tuft = new THREE.Mesh(geometry, needles[i % 2]);
+        const angle = i * 2.4, r = i === 4 ? 0 : 0.22;
+        tuft.position.set(Math.cos(angle) * r, Math.sin(angle) * r, 1.55 + (i === 4 ? 0.42 : i * 0.1));
+        tuft.scale.set(1.15, 1.15, 0.55); group.add(tuft);
+    }
+    applyShadows(group);
+    return group;
+}
+
+/** Wide, low maple: the oak's shape with a flatter, broader crown on a thicker trunk. */
+export function createMapleMesh() {
+    const group = setCommonMeta(new THREE.Group(), 'Клён', { collidableRadius: 0.8 });
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.12, 0.9, 10), bark());
+    trunk.rotation.x = Math.PI / 2; trunk.position.z = 0.45; group.add(trunk);
+    group.add(rootFlare(0.12));
+    const geometry = new THREE.IcosahedronGeometry(0.4, 2);
+    const materials = [foliage(0x7b8f4a), foliage(0x8a9a52), foliage(0x6a8446)];
+    for (let i = 0; i < 8; i++) {
+        const crown = new THREE.Mesh(geometry, materials[i % 3]);
+        const angle = i * 2.4 + 0.5, r = 0.18 + (i % 3) * 0.14;
+        crown.position.set(Math.cos(angle) * r, Math.sin(angle) * r, 0.95 + noise(i + 3) * 0.3);
+        crown.scale.set(1.0, 1.0, 0.75); group.add(crown);
+    }
+    applyShadows(group);
+    return group;
+}
+
+/** Shrub: a low clump of leaf lobes (about half a metre at scale 1). */
+export function createShrubMesh() {
+    const group = setCommonMeta(new THREE.Group(), 'Куст', { collidableRadius: 0.4 });
+    const geometry = new THREE.IcosahedronGeometry(0.22, 1);
+    const materials = [foliage(0x5d7a47), foliage(0x6b8651)];
+    for (let i = 0; i < 6; i++) {
+        const lobe = new THREE.Mesh(geometry, materials[i % 2]);
+        const angle = i * 2.4;
+        const height = 0.8 + noise(i + 50) * 0.3;            // the lobe rests on the ground: its lowest point is z = 0.01
+        lobe.position.set(Math.cos(angle) * 0.17 * (i ? 1 : 0), Math.sin(angle) * 0.17 * (i ? 1 : 0), 0.22 * height + 0.01 + noise(i + 40) * 0.05);
+        lobe.scale.set(1, 1, height); group.add(lobe);
+    }
     applyShadows(group);
     return group;
 }

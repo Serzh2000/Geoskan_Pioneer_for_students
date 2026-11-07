@@ -6,6 +6,7 @@ import {
     type Person, type PoseMode
 } from './actors.js';
 import type { Incident, Responder } from './services.js';
+import { Gait, Mover, RUN_SPEED, WALK_SPEED, type Solid } from './walkers.js';
 
 /*
  * Choreography of the three crews. Each one reads the progress of its work phase from the service
@@ -48,15 +49,66 @@ function behind(truck: Responder, distance: number, side = 0): Point2 {
     return { x: truck.x - c * distance - s * side, y: truck.y - s * distance + c * side };
 }
 
+
+/** Things a person walks around, not through (radii are conservative envelopes of the meshes, hence the 0.85). */
+const SOLID_TYPES: ReadonlySet<string> = new Set(['tree', 'building', 'house', 'warehouse', 'station', 'water-tower', 'barn', 'silo', 'church', 'fire-station',
+    'police-station', 'school', 'hospital', 'restaurant', 'mall', 'office', 'gas-station', 'hangar', 'greenhouse', 'power-pylon', 'containers', 'rocks', 'solar', 'gantry-crane']);
+export const SOLID_SHRINK = .85;
+export function solidsOf(layout: Pick<TrainingLayout, 'objects'>): Solid[] {
+    return layout.objects.filter(o => SOLID_TYPES.has(o.type)).map(o => ({ x: o.x, y: o.y, r: o.radius * SOLID_SHRINK + .06 }));
+}
+/** The nearest point outside every solid (a door in the wall of a building is reached from the pavement in front of it). */
+function outsideSolids(point: Point2, solids: ReadonlyArray<Solid>): Point2 {
+    let { x, y } = point;
+    for (let pass = 0; pass < 3; pass++) for (const s of solids) {
+        const dx = x - s.x, dy = y - s.y, d = Math.hypot(dx, dy);
+        if (d < s.r) { const k = s.r / (d || 1); x = d ? s.x + dx * k : s.x + s.r; y = d ? s.y + dy * k : s.y; }
+    }
+    return { x, y };
+}
+
+/**
+ * One actor of a crew: the figure, the body that carries it (a Mover) and whether it is on show. Showing a hidden actor
+ * puts it down at the given spot (a door of the vehicle); from then on it only ever walks.
+ */
+class Actor {
+    readonly mover: Mover;
+    shown = false;
+    constructor(readonly person: Person, ground: (x: number, y: number) => number, solids: ReadonlyArray<Solid>) {
+        this.mover = new Mover(person, ground); this.mover.solids = solids;
+    }
+    get x() { return this.mover.x; }
+    get y() { return this.mover.y; }
+    show(on: boolean, spawn: Point2, heading: number) {
+        if (on && !this.shown) this.mover.reset(spawn.x, spawn.y, heading);
+        this.shown = on; this.person.root.visible = on;
+    }
+    /** Walk or run to `goal` and face `face` there; `pace` fixes the speed, otherwise the actor runs when far behind. */
+    go(dt: number, goal: Point2, o: { face?: number; still?: PoseMode; carry?: boolean; pace?: number } = {}) {
+        if (!this.shown) return;
+        const far = Math.hypot(goal.x - this.mover.x, goal.y - this.mover.y);
+        this.mover.drive(dt, goal, { ...o, pace: o.pace ?? (far > 4 ? RUN_SPEED : WALK_SPEED) });
+    }
+    /** Scripted pose that moves itself (a brawl): the figure is placed directly, but never faster than a person can go. */
+    scripted(dt: number, point: Point2, heading: number, mode: PoseMode, speed: number) {
+        const m = this.mover;
+        m.x = point.x; m.y = point.y; m.heading = heading; m.speed = 0;
+        m.z = m.ground(point.x, point.y);
+        placePerson(this.person, point.x, point.y, m.z, heading);
+        poseNow(this.person, mode, dt, speed);
+    }
+}
+
 // ------------------------------------------------------------------------------------------------- fire
 
 export function createFireCrew(host: CrewHost): Crew {
     const { root, responder } = host;
-    const crew = [createPerson('firefighter', 1), createPerson('firefighter', 2), createPerson('firefighter', 3)];
+    const solids = solidsOf(host.layout);
+    const crew = [1, 2, 3].map(seed => new Actor(createPerson('firefighter', seed), host.groundAt, solids));
     const hose = createHose();
     const jet = new THREE.Mesh(new THREE.CylinderGeometry(.1, .32, 1, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0xa8dcff, transparent: true, opacity: .6, depthWrite: false }));
     jet.visible = false; jet.userData.collidable = false;
-    crew.forEach(person => { person.root.visible = false; root.add(person.root); });
+    crew.forEach(actor => { actor.person.root.visible = false; root.add(actor.person.root); });
     root.add(hose, jet);
     let lastHoseKey = '';
 
@@ -64,30 +116,29 @@ export function createFireCrew(host: CrewHost): Crew {
         update(dt) {
             const incident = responder.state === 'working' ? responder.workIncident : null;
             if (!incident || incident.kind !== 'fire') {
-                crew.forEach(person => { person.root.visible = false; }); hose.visible = false; jet.visible = false; lastHoseKey = '';
+                crew.forEach(actor => { actor.show(false, responder, 0); }); hose.visible = false; jet.visible = false; lastHoseKey = '';
                 host.state.fireScale = 1;
                 return;
             }
             const p = progress(responder), truck: Point2 = responder;
             const target: Point2 = { x: incident.x, y: incident.y };
             const fromFire = { x: truck.x - target.x, y: truck.y - target.y }, d = Math.hypot(fromFire.x, fromFire.y) || 1;
-            const nozzle: Point2 = { x: target.x + fromFire.x / d * 9, y: target.y + fromFire.y / d * 9 };
+            const nozzle: Point2 = outsideSolids({ x: target.x + fromFire.x / d * 9, y: target.y + fromFire.y / d * 9 }, solids);
             const exit = behind(responder, 3.6);
-            const extend = smooth(between(p, .02, .26)), retract = smooth(between(p, .84, .98));
-            const u = extend * (1 - retract);                       // how far the head of the hose has gone
-            const head = lerpPoint(exit, nozzle, u);
-            const spraying = p >= .26 && p < .84;
+            const extend = smooth(between(p, .02, .26)), retract = smooth(between(p, .76, .97));
+            const u = extend * (1 - retract);                       // how far the head of the hose is meant to be
+            const scriptHead = lerpPoint(exit, nozzle, u);
+            const spraying = p >= .26 && p < .76;
             const [a, b, c] = crew;
-            const at = (person: Person, point: Point2, heading: number, mode: PoseMode, speed: number) => {
-                person.root.visible = p > .005 && p < .985;
-                placePerson(person, point.x, point.y, host.groundAt(point.x, point.y), heading);
-                poseNow(person, mode, dt, speed);
-            };
-            const moving = extend > 0 && extend < 1 || retract > 0 && retract < 1;
-            const going = headingTo(exit, nozzle), heading = retract > 0 ? going + Math.PI : going;
-            at(a, head, spraying ? headingTo(head, target) : heading, spraying ? 'carry' : 'carry', spraying ? 0 : 1.2);
-            at(b, lerpPoint(exit, nozzle, u * .5), spraying ? headingTo(nozzle, target) : heading, moving ? 'walk' : 'carry', moving ? 1.1 : 0);
-            at(c, lerpPoint(exit, nozzle, 0.06), spraying ? headingTo(exit, nozzle) : heading, 'work', spraying ? .5 : 0);
+            const on = p > .005 && p < .985;
+            // They climb out of the cab on the far side of the engine and chase the hose head, the second man half way.
+            const door = (i: number) => behind(responder, -.6, 1.7 + i * .8);
+            const facing = headingTo(exit, nozzle);
+            crew.forEach((actor, i) => actor.show(on, door(i), facing));
+            a.go(dt, scriptHead, { face: spraying ? headingTo(a, target) : facing, still: 'carry', carry: true });
+            b.go(dt, lerpPoint(exit, nozzle, u * .5), { face: spraying ? headingTo(b, target) : facing, still: 'idle' });
+            c.go(dt, lerpPoint(exit, nozzle, .06), { face: spraying ? facing : headingTo(c, nozzle), still: spraying ? 'work' : 'idle' });
+            const head: Point2 = a.shown ? { x: a.x, y: a.y } : scriptHead;
 
             // The hose lies in a gentle S from the engine to the nozzle man and follows him on the way out and back.
             const points: THREE.Vector3[] = [];
@@ -97,8 +148,9 @@ export function createFireCrew(host: CrewHost): Crew {
                 const x = base.x + side.x / sl * bend, y = base.y + side.y / sl * bend;
                 points.push(new THREE.Vector3(x, y, host.groundAt(x, y) + (i === 6 ? 1.35 : .09)));
             }
-            const key = `${Math.round(u * 60)}`;
-            if (key !== lastHoseKey) { lastHoseKey = key; updateHose(hose, u > .02 ? points : []); }
+            const hoseLength = Math.hypot(head.x - exit.x, head.y - exit.y);
+            const key = `${Math.round(hoseLength * 6)}`;
+            if (key !== lastHoseKey) { lastHoseKey = key; updateHose(hose, hoseLength > .5 ? points : []); }
 
             jet.visible = spraying;
             if (spraying) {
@@ -108,13 +160,13 @@ export function createFireCrew(host: CrewHost): Crew {
                 jet.position.copy(from.clone().add(to).multiplyScalar(.5));
                 jet.scale.set(1, length, 1);
                 jet.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
-                (jet.material as THREE.MeshBasicMaterial).opacity = .5 + .15 * Math.sin(performance.now() / 60);
+                (jet.material as THREE.MeshBasicMaterial).opacity = .5 + .15 * Math.sin(p * 400);
             }
             // The fire dies down while the jet is on it.
             // Leave visible embers until the service actually reports the fire resolved.
-            host.state.fireScale = Math.max(.08, 1 - smooth(between(p, .3, .82)));
+            host.state.fireScale = Math.max(.08, 1 - smooth(between(p, .3, .74)));
         },
-        dispose() { crew.forEach(person => person.root.removeFromParent()); hose.removeFromParent(); jet.removeFromParent(); hose.geometry.dispose(); }
+        dispose() { crew.forEach(actor => actor.person.root.removeFromParent()); hose.removeFromParent(); jet.removeFromParent(); hose.geometry.dispose(); }
     };
 }
 
@@ -123,18 +175,21 @@ export function createFireCrew(host: CrewHost): Crew {
 export function createRepairCrew(host: CrewHost): Crew {
     const { root, responder } = host;
     const ladder = createLadder();
-    const climber = createPerson('worker', 4), mate = createPerson('worker', 5);
+    const solids = solidsOf(host.layout);
+    const climber = createPerson('worker', 4), mateActor = new Actor(createPerson('worker', 5), host.groundAt, solids), mate = mateActor.person;
+    const climbGait = new Gait(climber);
     [climber, mate].forEach(person => { person.root.visible = false; root.add(person.root); });
     root.add(ladder.group);
     const torch = new THREE.Mesh(new THREE.IcosahedronGeometry(.18, 0), new THREE.MeshBasicMaterial({ color: 0xfff2ab }));
     torch.userData.collidable = false; torch.name = 'Сварка провода'; torch.visible = false; root.add(torch);
-    const base = new THREE.Vector3(), direction = new THREE.Vector3();
+    const base = new THREE.Vector3(), direction = new THREE.Vector3(), lastOn = new THREE.Vector3();
+    let climberShown = false;
 
     return {
         update(dt) {
             const incident = responder.state === 'working' ? responder.workIncident : null;
             if (!incident || incident.kind !== 'line-break') {
-                ladder.group.visible = false; climber.root.visible = false; mate.root.visible = false; torch.visible = false;
+                ladder.group.visible = false; climber.root.visible = false; climberShown = false; mateActor.show(false, responder, 0); torch.visible = false;
                 host.state.wireFixed = false;
                 return;
             }
@@ -148,7 +203,7 @@ export function createRepairCrew(host: CrewHost): Crew {
             const reach = Math.hypot(target.x - pivot.x, target.y - pivot.y);
             const targetZ = target.z;
             const fullLength = Math.hypot(reach, targetZ - baseZ) + .4;
-            const raise = smooth(between(p, .02, .22)) * (1 - smooth(between(p, .88, .99)));
+            const raise = smooth(between(p, .02, .22)) * (1 - smooth(between(p, .9, .99)));
             const length = fullLength * (.2 + .8 * raise) * (p > .005 && p < .995 ? 1 : 0);
             const pitchFull = Math.atan2(targetZ - baseZ, reach), pitch = lerp(.12, pitchFull, raise);
             const azimuth = headingTo(pivot, target);
@@ -156,20 +211,24 @@ export function createRepairCrew(host: CrewHost): Crew {
             setLadder(ladder, base, direction, length);
 
             // One worker climbs to the wire, works with a torch and comes back; the other waits at the foot.
-            const climb = smooth(between(p, .22, .42)) * (1 - smooth(between(p, .76, .9)));
+            const climb = smooth(between(p, .12, .44)) * (1 - smooth(between(p, .56, .88)));
             const along = Math.max(0, climb * (fullLength - .8));
             const on = base.clone().addScaledVector(direction, along);
-            climber.root.visible = p > .02 && p < .97;
+            const showClimber = p > .02 && p < .97;
+            climber.root.visible = showClimber;
             placePerson(climber, on.x, on.y, on.z + .05, azimuth);
-            const working = p >= .42 && p < .76;
-            torch.visible = working && Math.sin(climber.phase * 4) > -.25;
+            // His legs climb as fast as he rises: the stride follows the ground (the ladder) he covers.
+            const climbSpeed = showClimber && climberShown ? on.distanceTo(lastOn) / dt : 0;
+            lastOn.copy(on); climberShown = showClimber;
+            const working = p >= .44 && p < .56;
+            torch.visible = working && Math.sin(p * 600) > -.25;
             torch.position.set(target.x, target.y, target.z);
-            poseNow(climber, working ? 'work' : climb > 0 && climb < 1 ? 'walk' : 'idle', dt, working ? 1 : .8);
-            const foot = behind(responder, -.2, 2.2);
-            mate.root.visible = p > .02 && p < .97;
-            placePerson(mate, foot.x, foot.y, host.groundAt(foot.x, foot.y), headingTo(foot, incident));
-            poseNow(mate, p < .2 ? 'walk' : 'idle', dt, .6);
-            host.state.wireFixed = p > .7;
+            climbGait.update(dt, climbSpeed, working ? 'work' : 'idle');
+            // The mate climbs down from the cab, steps to the foot of the ladder and watches it.
+            const foot = outsideSolids(behind(responder, -.2, 2.2), solids);
+            mateActor.show(showClimber, behind(responder, -.6, 1.3), headingTo(foot, incident));
+            mateActor.go(dt, foot, { face: headingTo(foot, incident), pace: WALK_SPEED });
+            host.state.wireFixed = p > .5;
         },
         dispose() { ladder.group.removeFromParent(); climber.root.removeFromParent(); mate.root.removeFromParent(); torch.removeFromParent(); torch.geometry.dispose(); }
     };
@@ -181,63 +240,64 @@ export type PoliceCrew = Crew & { capturePrisoner(incident: Incident): void; del
 
 export function createPoliceCrew(host: CrewHost): PoliceCrew {
     const { root, responder } = host;
-    const officers = [createPerson('police', 6), createPerson('police', 7)];
-    const thief = createPerson('thief', 8); giveSack(thief);
-    const fighterA = createPerson('fighter', 9), fighterB = createPerson('fighter', 10);
+    const solids = solidsOf(host.layout);
+    const mk = (role: 'police' | 'thief' | 'fighter', seed: number) => new Actor(createPerson(role, seed), host.groundAt, solids);
+    const officers = [mk('police', 6), mk('police', 7)];
+    const thief = mk('thief', 8); giveSack(thief.person);
+    const fighterA = mk('fighter', 9), fighterB = mk('fighter', 10);
     const everyone = [...officers, thief, fighterA, fighterB];
-    everyone.forEach(person => { person.root.visible = false; root.add(person.root); });
-    let delivery: { actors: Person[]; from: Point2; to: Point2; t: number } | null = null;
-    let prisoner: Person | null = null;
+    everyone.forEach(actor => { actor.person.root.visible = false; root.add(actor.person.root); });
+    let delivery: { actors: Actor[]; goals: Point2[]; time: number } | null = null;
+    let prisoner: Actor | null = null;
     let chase: { incident: Incident; start: Point2; end: Point2 } | null = null;
+    let patrol = { end: 1, wait: 1.2 };
     let clock = 0;
-
-    const ground = (point: Point2) => host.groundAt(point.x, point.y);
-    const put = (person: Person, point: Point2, heading: number, mode: PoseMode, dt: number, speed = 1) => {
-        placePerson(person, point.x, point.y, ground(point), heading);
-        poseNow(person, mode, dt, speed);
-    };
+    const carDoor = (side: number): Point2 => behind(responder, -1, side * 2);
 
     function burglary(incident: Incident, dt: number) {
         const prop = host.propAt(incident.x, incident.y);
         const r = prop?.radius ?? 4.7, rot = prop?.rotation ?? 0;
         const front = { x: Math.sin(rot), y: -Math.cos(rot) }, side = { x: Math.cos(rot), y: Math.sin(rot) };
         const doorway: Point2 = { x: incident.x + front.x * (r + 1.1), y: incident.y + front.y * (r + 1.1) };
-        const pointOnFront = (s: number): Point2 => ({ x: doorway.x + side.x * s, y: doorway.y + side.y * s });
+        const pointOnFront = (s: number): Point2 => outsideSolids({ x: doorway.x + side.x * s, y: doorway.y + side.y * s }, solids);
         const working = responder.state === 'working' && responder.workIncident === incident;
         const p = working ? progress(responder) : 0;
-        thief.root.visible = !incident.resolved && incident.active;
-        if (!thief.root.visible) return;
+        const show = !incident.resolved && incident.active && (!working || p < .93);
+        thief.show(show, pointOnFront(0), Math.atan2(side.y, side.x));
         if (!working) {
-            // Before anyone arrives: creeping along the wall with the sack, ducking now and then.
-            const s = Math.sin(clock * .6) * 3.2, heading = Math.cos(clock * .6) >= 0 ? Math.atan2(side.y, side.x) : Math.atan2(-side.y, -side.x);
-            put(thief, pointOnFront(s), heading, Math.sin(clock * 1.7) > .6 ? 'crouch' : 'walk', dt, .6);
+            if (!show) return;
+            // Before anyone arrives: creeping along the wall with the sack, stopping at each end to look round.
+            const goal = pointOnFront(patrol.end * 3.2);
+            if (Math.hypot(goal.x - thief.x, goal.y - thief.y) < .25) {
+                patrol.wait -= dt;
+                if (patrol.wait <= 0) patrol = { end: -patrol.end, wait: 1.5 + (Math.floor(clock) % 3) };
+                thief.go(dt, goal, { still: patrol.wait > .6 ? 'crouch' : 'idle', face: Math.atan2(front.y, front.x), pace: .9 });
+            } else thief.go(dt, goal, { pace: .9 });
             return;
         }
-        // Police arrive: he bolts along the wall, is caught, handcuffed and walked to the car.
+        // Police arrive: he bolts along the wall away from the car, is caught, handcuffed and walked to the car.
         if (chase?.incident !== incident) {
-            const sideSign = Math.sign(Math.sin(clock * .6) || 1);
-            chase = { incident, start: { x: thief.root.position.x, y: thief.root.position.y }, end: pointOnFront(-8 * sideSign) };
+            const ends = [pointOnFront(-8), pointOnFront(8)];
+            const far = ends.sort((x, y) => Math.hypot(y.x - responder.x, y.y - responder.y) - Math.hypot(x.x - responder.x, x.y - responder.y))[0];
+            chase = { incident, start: { x: thief.x, y: thief.y }, end: far };
         }
         const car: Point2 = responder, catchPoint = chase.end;
-        const runT = between(p, .08, .4), escort = smooth(between(p, .6, .9));
+        const runT = between(p, .06, .34), escort = smooth(between(p, .52, .88));
         const start = chase.start;
         const spot = escort > 0 ? lerpPoint(catchPoint, car, escort) : lerpPoint(start, catchPoint, smooth(runT));
-        const phase: PoseMode = p < .08 ? 'crouch' : p < .4 ? 'run' : p < .6 ? 'handsUp' : 'walk';
-        if (p >= .5) { giveCuffs(thief); prisoner = thief; } else removeCuffs(thief);
-        thief.root.visible = p < .93;
-        put(thief, spot, escort > 0 ? headingTo(spot, car) : headingTo(start, catchPoint), p >= .5 && p < .6 ? 'cuffed' : phase, dt, 1.2);
+        if (p >= .4) { giveCuffs(thief.person); prisoner = thief; } else removeCuffs(thief.person);
+        const still: PoseMode = p < .06 ? 'crouch' : p >= .44 && p < .52 ? 'cuffed' : p < .52 ? 'handsUp' : 'idle';
+        // (the suspect gets into the car just before the officers are done, but they keep walking until they are)
+        thief.go(dt, spot, { face: headingTo(start, catchPoint), still, pace: p < .34 ? RUN_SPEED : WALK_SPEED });
         // Officers: out of the car, running after him, flanking him on the walk back.
-        const [o1, o2] = officers;
-        for (const [i, officer] of [o1, o2].entries()) {
+        officers.forEach((officer, i) => {
             const side2 = i === 0 ? 1.1 : -1.1;
-            const out = behind(responder, -1, side2 * 2);
-            const chase = lerpPoint(out, { x: spot.x + side.x * side2 * .9, y: spot.y + side.y * side2 * .9 }, smooth(between(p, .02, .42)));
-            const flank = escort > 0 ? lerpPoint(chase, { x: lerp(spot.x, car.x, 0) + side2 * .9, y: spot.y }, 1) : chase;
-            const where = p < .6 ? chase : { x: flank.x, y: flank.y };
-            officer.root.visible = p > .01 && p < .96;
-            const mode: PoseMode = p < .42 ? 'run' : p < .6 ? 'idle' : 'walk';
-            put(officer, where, headingTo(where, p < .6 ? spot : car), mode, dt, 1.2);
-        }
+            const out = carDoor(side2 / 1.1);
+            const chasing = lerpPoint(out, { x: spot.x + side.x * side2 * .9, y: spot.y + side.y * side2 * .9 }, smooth(between(p, .02, .34)));
+            const where = p < .52 ? chasing : { x: spot.x + side2 * .9, y: spot.y };
+            officer.show(p > .01 && p < .96, out, headingTo(out, spot));
+            officer.go(dt, where, { face: headingTo(where, p < .52 ? spot : car), still: 'idle' });
+        });
     }
 
     function fight(incident: Incident, dt: number) {
@@ -245,37 +305,41 @@ export function createPoliceCrew(host: CrewHost): PoliceCrew {
         const working = responder.state === 'working' && responder.workIncident === incident;
         const p = working ? progress(responder) : 0;
         const show = !incident.resolved && incident.active;
-        fighterA.root.visible = show; fighterB.root.visible = show;
-        if (!show) return;
         // Two men lunging at each other; the brawl drifts a little.
         const lunge = .5 + .35 * Math.sin(clock * 5);
         const orbit = clock * .35;
         const dir = { x: Math.cos(orbit), y: Math.sin(orbit) };
         let a: Point2 = { x: centre.x - dir.x * lunge, y: centre.y - dir.y * lunge }, b: Point2 = { x: centre.x + dir.x * lunge, y: centre.y + dir.y * lunge };
-        let modeA: PoseMode = 'fight', modeB: PoseMode = 'fight';
-        const car: Point2 = responder;
-        const [o1, o2] = officers;
-        if (working) {
-            const apart = smooth(between(p, .25, .5));
-            a = lerpPoint(a, { x: centre.x - dir.x * 1.8, y: centre.y - dir.y * 1.8 }, apart);
-            b = lerpPoint(b, { x: centre.x + dir.x * 2.4, y: centre.y + dir.y * 2.4 }, apart);
-            modeA = p < .2 ? 'fight' : p < .6 ? 'handsUp' : 'walk'; modeB = p < .2 ? 'fight' : p < .6 ? 'handsUp' : 'walk';
-            const escort = smooth(between(p, .6, .9));
-            a = escort > 0 ? lerpPoint(a, car, escort) : a;
-            b = p > .65 ? lerpPoint(b, { x: b.x + dir.x * 14, y: b.y + dir.y * 14 }, smooth(between(p, .65, .95))) : b;
-            if (p >= .45) { giveCuffs(fighterA); prisoner = fighterA; } else removeCuffs(fighterA);
-            if (p >= .45 && p < .6) modeA = 'cuffed';
-            fighterA.root.visible = p < .93; fighterB.root.visible = p < .96;
-            const out1 = behind(responder, -1, 2), out2 = behind(responder, -1, -2);
-            const near1 = lerpPoint(out1, { x: a.x - dir.y * 1.1, y: a.y + dir.x * 1.1 }, smooth(between(p, .02, .25)));
-            const near2 = lerpPoint(out2, { x: b.x + dir.y * 1.1, y: b.y - dir.x * 1.1 }, smooth(between(p, .02, .25)));
-            const w1 = escort > 0 ? { x: a.x - dir.y * 1.1, y: a.y + dir.x * 1.1 } : near1;
-            officers.forEach(o => { o.root.visible = p > .01 && p < .96; });
-            put(o1, w1, headingTo(w1, escort > 0 ? car : a), p < .25 ? 'run' : escort > 0 ? 'walk' : 'idle', dt, 1.2);
-            put(o2, near2, headingTo(near2, b), p < .25 ? 'run' : p > .65 ? 'walk' : 'idle', dt, 1.2);
+        fighterA.show(show && (!working || p < .93), a, headingTo(a, b)); fighterB.show(show && (!working || p < .96), b, headingTo(b, a));
+        if (!show) return;
+        if (!working) {
+            fighterA.scripted(dt, a, headingTo(a, b), 'fight', 1.3);
+            fighterB.scripted(dt, b, headingTo(b, a), 'fight', 1.3);
+            return;
         }
-        put(fighterA, a, headingTo(a, b), modeA, dt, 1.3);
-        put(fighterB, b, headingTo(b, a), modeB, dt, 1.3);
+        const car: Point2 = responder;
+        const apart = smooth(between(p, .2, .4));
+        const aTo = lerpPoint(a, { x: centre.x - dir.x * 1.8, y: centre.y - dir.y * 1.8 }, apart);
+        const bTo = lerpPoint(b, { x: centre.x + dir.x * 2.4, y: centre.y + dir.y * 2.4 }, apart);
+        const escort = smooth(between(p, .52, .88));
+        a = escort > 0 ? lerpPoint(aTo, car, escort) : aTo;
+        b = p > .55 ? lerpPoint(bTo, { x: bTo.x + dir.x * 14, y: bTo.y + dir.y * 14 }, smooth(between(p, .55, .94))) : bTo;
+        if (p >= .4) { giveCuffs(fighterA.person); prisoner = fighterA; } else removeCuffs(fighterA.person);
+        // The brawl goes on until the officers are on them; then the men are pulled apart and walk, they do not slide.
+        if (p < .2) {
+            fighterA.scripted(dt, a, headingTo(a, b), 'fight', 1.3);
+            fighterB.scripted(dt, b, headingTo(b, a), 'fight', 1.3);
+        } else {
+            fighterA.go(dt, a, { still: p >= .4 && p < .52 ? 'cuffed' : 'handsUp', face: headingTo(a, b), pace: escort > 0 ? WALK_SPEED : undefined });
+            fighterB.go(dt, b, { still: 'handsUp', face: headingTo(b, a), pace: p > .55 ? WALK_SPEED : undefined });
+        }
+        const out1 = carDoor(1), out2 = carDoor(-1);
+        const near1 = lerpPoint(out1, { x: a.x - dir.y * 1.1, y: a.y + dir.x * 1.1 }, smooth(between(p, .02, .22)));
+        const near2 = lerpPoint(out2, { x: b.x + dir.y * 1.1, y: b.y - dir.x * 1.1 }, smooth(between(p, .02, .22)));
+        const w1 = escort > 0 ? { x: a.x - dir.y * 1.1, y: a.y + dir.x * 1.1 } : near1;
+        officers.forEach((o, i) => o.show(p > .01 && p < .96, i === 0 ? out1 : out2, headingTo(i === 0 ? out1 : out2, centre)));
+        officers[0].go(dt, w1, { face: headingTo(w1, escort > 0 ? car : a), still: 'idle' });
+        officers[1].go(dt, near2, { face: headingTo(near2, b), still: 'idle' });
     }
 
     return {
@@ -285,38 +349,48 @@ export function createPoliceCrew(host: CrewHost): PoliceCrew {
             const burglaryIncident = incidents.find(i => i.kind === 'burglary');
             const fightIncident = incidents.find(i => i.kind === 'fight');
             const policeActive = responder.state === 'working' && responder.workIncident;
-            if (!policeActive) officers.forEach(o => { o.root.visible = false; });
-            if (burglaryIncident) burglary(burglaryIncident, dt); else thief.root.visible = false;
-            if (fightIncident) fight(fightIncident, dt); else { fighterA.root.visible = false; fighterB.root.visible = false; }
+            if (!policeActive && !delivery) officers.forEach(o => { o.show(false, responder, 0); });
+            if (burglaryIncident) burglary(burglaryIncident, dt); else thief.show(false, responder, 0);
+            if (fightIncident) fight(fightIncident, dt); else { fighterA.show(false, responder, 0); fighterB.show(false, responder, 0); }
             if (responder.state === 'returning' && responder.prisoner && prisoner && !delivery) {
                 // The same arrested actor rides in the rear seat, following the car's actual pose.
                 const c = Math.cos(responder.heading), s = Math.sin(responder.heading);
-                placePerson(prisoner, responder.x - c * .65 - s * .3, responder.y - s * .65 + c * .3,
+                prisoner.mover.heading = responder.heading;
+                placePerson(prisoner.person, responder.x - c * .65 - s * .3, responder.y - s * .65 + c * .3,
                     host.truck.position.z + .05, responder.heading);
-                poseNow(prisoner, 'sit', dt, 0);
-                prisoner.root.visible = true;
+                poseNow(prisoner.person, 'sit', dt, 0);
+                prisoner.shown = true; prisoner.person.root.visible = true;
             }
             if (delivery) {
-                delivery.t += dt / 4.5;
-                const t = clamp01(delivery.t);
-                delivery.actors.forEach((person, i) => {
-                    const spot = lerpPoint(delivery!.from, delivery!.to, t);
-                    put(person, { x: spot.x + (i - 1) * .7, y: spot.y }, headingTo(delivery!.from, delivery!.to), 'walk', dt, 1);
-                    person.root.visible = t < .97;
+                delivery.time += dt;
+                let done = true;
+                delivery.actors.forEach((actor, i) => {
+                    const goal = delivery!.goals[i];
+                    const left = actor.mover.drive(dt, goal, { pace: WALK_SPEED, still: 'idle', face: headingTo(actor, goal) });
+                    if ((left > .4 && !actor.mover.blocked) || actor.mover.speed > .1) done = false;
                 });
-                if (delivery.t >= 1) { delivery.actors.forEach(person => { person.root.visible = false; }); removeCuffs(delivery.actors[1]); delivery = null; prisoner = null; }
+                if (done || delivery.time > 60) {
+                    delivery.actors.forEach(actor => actor.show(false, responder, 0));
+                    removeCuffs(delivery.actors[1].person); delivery = null; prisoner = null;
+                }
             }
         },
         capturePrisoner(incident) {
             prisoner = incident.kind === 'fight' ? fighterA : incident.kind === 'burglary' ? thief : null;
-            if (prisoner) giveCuffs(prisoner);
+            if (prisoner) giveCuffs(prisoner.person);
         },
         deliverPrisoner() {
             if (!host.stationDoor || !prisoner) return;
-            const from: Point2 = { x: responder.x, y: responder.y };
-            giveCuffs(prisoner);
-            delivery = { actors: [officers[0], prisoner, officers[1]], from, to: host.stationDoor, t: 0 };
+            const door = outsideSolids(host.stationDoor, solids);
+            giveCuffs(prisoner.person);
+            // The officers get out of the car on both sides and the prisoner from the rear seat; they walk to the door together.
+            const seat = { x: prisoner.person.root.position.x, y: prisoner.person.root.position.y };
+            officers[0].show(true, carDoor(1), responder.heading); officers[1].show(true, carDoor(-1), responder.heading);
+            prisoner.shown = false; prisoner.show(true, seat, responder.heading);
+            const toDoor = headingTo(responder, door), nx = -Math.sin(toDoor), ny = Math.cos(toDoor);
+            delivery = { actors: [officers[0], prisoner, officers[1]], time: 0,
+                goals: [-1, 0, 1].map(k => outsideSolids({ x: door.x + nx * k * .8, y: door.y + ny * k * .8 }, solids)) };
         },
-        dispose() { everyone.forEach(person => person.root.removeFromParent()); }
+        dispose() { everyone.forEach(actor => actor.person.root.removeFromParent()); }
     };
 }

@@ -6,7 +6,7 @@ import { finishTown, frontage } from './town-frontage.js';
 import { createContext, hashString, seededRandom } from './world-context.js';
 import { clamp, rank, type Env, type Settlement, type Skeleton } from './world-env.js';
 import { planExtras, planPower } from './world-extras.js';
-import { addOverpass, addPromenade, addSidewalks, closeDeadEnds } from './world-network.js';
+import { addOverpass, addPromenade, addSidewalks, closeDeadEnds, finishTurnarounds, planTurnarounds } from './world-network.js';
 import { createPlacers } from './world-places.js';
 import type { WaterBody } from './world-plan.js';
 
@@ -122,6 +122,7 @@ export function buildWorld(layout: TrainingLayout, density: number): TrainingLay
     if (isCity && ctx.hasRail) addOverpass(env, sk, citySettlement);
     addPromenade(env, sk);
     ctx.rebuildPaths();
+    planTurnarounds(env);
     if (ctx.hasRail) ctx.add({ type: 'station', x: xs, y: size * .34, scale: .85, radius: 6.4, rotation: 0 }, .5);
     extras.powerLine();
 
@@ -137,5 +138,6 @@ export function buildWorld(layout: TrainingLayout, density: number): TrainingLay
     extras.vegetation(settlements);
     layout.landforms.push(...extras.landforms());
     verifyCivic(env);
+    finishTurnarounds(env);
     return layout;
 }

@@ -50,6 +50,8 @@ export function createWorldServices(options: {
     homes: Partial<Record<ResponderKind, Point2 & { heading?: number }>>;
     route: (from: Point2, to: Point2) => Point2[] | null;
     speed?: number;
+    /** True while something (a person on the crossing ahead) keeps the vehicle from moving on. */
+    hold?: (responder: Responder) => boolean;
 }): WorldServices {
     const listeners: Array<(event: ServiceEvent) => void> = [];
     const emit = (event: ServiceEvent) => listeners.forEach(listener => listener(event));
@@ -99,6 +101,7 @@ export function createWorldServices(options: {
     }
 
     function drive(responder: Responder, dt: number): boolean {
+        if (options.hold?.(responder)) return false;
         let budget = responder.speed * dt;
         while (budget > 0 && responder.leg < responder.route.length) {
             const to = responder.route[responder.leg];

@@ -13,6 +13,8 @@
     "preview": "vite preview",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "type-check": "tsc --noEmit",
+    "check:maps": "node tools/check-map-generation.mjs --seeds=30",
+    "test:maps": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/map-generation-audit.test.ts",
     "lint": "eslint . --ext .ts --max-warnings=464",
     "docs:functions": "node tools/generate_functions_reference_index.mjs"
   },

@@ -53,11 +53,41 @@ export class RoadBook {
             if (!spec.crossRail && kind !== 'rail' && rails.some(r => distanceToPath(s, r.points) < r.width / 2 + width / 2 + 4)) return false;
         }
         if (water && (!spec.bridge || water * step > 90)) return false;
+        if (kind === 'road' && this.runsAlongRoad(samples, width)) return false;
         if (!spec.crossRail && kind !== 'rail') {
             for (const r of rails) for (let i = 1; i < r.points.length; i++) for (let k = 1; k < points.length; k++)
                 if (segmentCrossing(points[k - 1], points[k], r.points[i - 1], r.points[i])) return false;
         }
         return true;
+    }
+
+    /**
+     * True when a new road lies on top of an existing one for more than 6 m: two carriageways drawn over each other (a double
+     * layer of asphalt). Parallel means within 20 degrees; a crossing or a T-junction is not. The first and last 3 m of the
+     * candidate are ignored: that is where it joins the network.
+     */
+    private runsAlongRoad(samples: Point2[], width: number): boolean {
+        const roads = this.roads(), reach = width / 2 + 4;
+        // Bounding boxes first: most roads are nowhere near the candidate.
+        const boxes = roads.map(o => o.points.reduce((b, q) => ({ x0: Math.min(b.x0, q.x), x1: Math.max(b.x1, q.x), y0: Math.min(b.y0, q.y), y1: Math.max(b.y1, q.y) }), { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity }));
+        let run = 0;
+        for (let i = 1; i < samples.length - 1; i++) {
+            const p = samples[i], q = samples[i + 1], len = Math.hypot(q.x - p.x, q.y - p.y) || 1;
+            const fromStart = (i - 1) * 2.5, fromEnd = (samples.length - 1 - i) * 2.5;
+            let overlapping = false;
+            if (fromStart > 3 && fromEnd > 3) for (const [k, o] of roads.entries()) {
+                const box = boxes[k], margin = reach + o.width / 2;
+                if (p.x < box.x0 - margin || p.x > box.x1 + margin || p.y < box.y0 - margin || p.y > box.y1 + margin) continue;
+                const hit = nearestOnPath(p, o.points);
+                if (hit.distance >= (width + o.width) / 2 * .8) continue;
+                const a = o.points[hit.segment], b = o.points[hit.segment + 1];
+                const dot = Math.abs(((q.x - p.x) * (b.x - a.x) + (q.y - p.y) * (b.y - a.y)) / (len * (Math.hypot(b.x - a.x, b.y - a.y) || 1)));
+                if (dot > .94) { overlapping = true; break; }
+            }
+            run = overlapping ? run + len : 0;
+            if (run > 6) return true;
+        }
+        return false;
     }
 
     add(spec: RoadSpec): WorldPath | null {
@@ -114,7 +144,8 @@ export class RoadBook {
             for (const item of list) path.points.splice(item.seg + 1, 0, { x: item.p.x, y: item.p.y });
         }
         // 3. Drop zero-length duplicates.
-        for (const road of roads) road.points = road.points.filter((p, i) => i === 0 || Math.hypot(p.x - road.points[i - 1].x, p.y - road.points[i - 1].y) > .05);
+        // A vertex closer than 25 cm to its neighbour only makes a kink in the fillet (the last vertex stays: it is the road end).
+        for (const road of roads) road.points = road.points.filter((p, i, all) => i === 0 || Math.hypot(p.x - all[i - 1].x, p.y - all[i - 1].y) > (i === all.length - 1 ? .05 : .25));
     }
 
     /** Groups of roads that share vertices (one group = one connected network). */

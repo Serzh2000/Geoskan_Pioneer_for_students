@@ -44,15 +44,21 @@ export function detachObjectFromGroupPreservingWorldTransform(
     object.scale.copy(worldScale);
 }
 
+/**
+ * Освобождает геометрии, материалы и текстуры объекта. Раньше текстуры не освобождались: каждая перегенерация учебной карты
+ * оставляла в памяти листы ArUco и площадку (+5 текстур за раз, после 10 перегенераций +50). Общие текстуры
+ * (`userData.shared`, например бесшовная трава и асфальт карты) остаются: они живут столько же, сколько приложение.
+ */
 export function disposeObjectHierarchyResources(object: THREE.Object3D) {
+    const disposeMaterial = (material: THREE.Material) => {
+        for (const value of Object.values(material)) if (value instanceof THREE.Texture && !value.userData?.shared) value.dispose();
+        material.dispose();
+    };
     object.traverse((child: any) => {
         if (!child.isMesh) return;
         if (child.geometry) child.geometry.dispose();
         if (!child.material) return;
-        if (Array.isArray(child.material)) {
-            child.material.forEach((material: THREE.Material) => material.dispose());
-            return;
-        }
-        child.material.dispose();
+        if (Array.isArray(child.material)) child.material.forEach(disposeMaterial);
+        else disposeMaterial(child.material);
     });
 }

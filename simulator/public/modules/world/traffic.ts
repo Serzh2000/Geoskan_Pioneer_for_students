@@ -1,6 +1,7 @@
 import { seededRandom, type Point2 } from '../environment/training/geography.js';
 import { analyzeRoads, projectOnPolyline, roadAnchors, subPolyline, type RoadLike, type RoadPlan } from './roads.js';
 import { createSignals, type Signals } from './signals.js';
+import { VEHICLES, vehicleKindFor, type VehicleKind } from './vehicle-kinds.js';
 
 /*
  * Ambient road traffic, pure logic (no THREE). The road plan from roads.ts becomes a lane network: every stretch of
@@ -27,8 +28,8 @@ const OVERRIDE_AFTER = 25;  // s a car waits for a permit before it goes anyway 
 const MAX_CARS = 48;
 
 /** Car scale that lets a car of the model's size fit a lane of the road (half its width) with a margin on both sides. */
-export function carScaleFor(roadWidth: number): number {
-    return Math.max(.5, Math.min(.85, (roadWidth / 2 - .5) / MODEL_WIDTH));
+export function carScaleFor(roadWidth: number, modelWidth: number = MODEL_WIDTH): number {
+    return Math.max(.5, Math.min(1, (roadWidth / 2 - .45) / modelWidth));
 }
 /** Free-flow speed of a road: narrow streets are slow. */
 export function speedLimitFor(roadWidth: number): number {
@@ -37,7 +38,7 @@ export function speedLimitFor(roadWidth: number): number {
 
 type Seg = {
     id: number; isConn: boolean; roadId: string; width: number;
-    xs: Float64Array; ys: Float64Array; cum: Float64Array; cap: Float64Array; n: number; length: number; vmax: number; scale: number;
+    xs: Float64Array; ys: Float64Array; cum: Float64Array; cap: Float64Array; n: number; length: number; vmax: number; scale: number; room: number;
     occ: TrafficAgent[];
     /** Distance before the end of a lane where a waiting car stops, so that it stays clear of the paths through the junction. */
     stopBack: number;
@@ -54,6 +55,8 @@ export interface TrafficAgent {
     /** Pose of the car: position, heading (rad, +X forward) and the scale the model should have. */
     x: number; y: number; heading: number; scale: number; speed: number;
     roadId: string; length: number;
+    /** Which model to draw, and its real width (m, at scale 1): `scale` makes it fit its lane. */
+    kind: VehicleKind; modelWidth: number;
     // internals
     seg: Seg; s: number; idx: number; route: Seg[]; ri: number; permits: Seg[]; requested: Seg | null; wait: number;
     factor: number; lateral: number; targetHeading: number;
@@ -63,7 +66,8 @@ export interface Traffic {
     agents: TrafficAgent[]; network: TrafficNetwork;
     /** The traffic lights of the controlled junctions (none when the traffic was created without them). */
     signals: Signals;
-    update(dt: number, emergency?: ReadonlyArray<EmergencyVehicle>): void;
+    /** `walkers`: people on a crossing; cars stop for them. */
+    update(dt: number, emergency?: ReadonlyArray<EmergencyVehicle>, walkers?: ReadonlyArray<Point2>): void;
 }
 
 const dist = (a: Point2, b: Point2) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -141,7 +145,7 @@ function makeSeg(id: number, points: Point2[], isConn: boolean, roadId: string, 
         const curvature = turn / ((l1 + l2) / 2);
         cap[i] = Math.min(vmax, Math.max(2.4, Math.sqrt(A_LAT / curvature)));
     }
-    return { id, isConn, roadId, width, xs, ys, cum, cap, n, length: cum[n - 1], vmax, scale: carScaleFor(width), occ: [], stopBack: 0,
+    return { id, isConn, roadId, width, xs, ys, cum, cap, n, length: cum[n - 1], vmax, scale: carScaleFor(width), room: width / 2 - .45, occ: [], stopBack: 0,
         from: -1, to: -1, edge: -1, laneIndex: -1, outConns: [], node: -1, fromLane: null, toLane: null, kind: 'straight' };
 }
 
@@ -286,7 +290,9 @@ export function buildTrafficNetwork(plan: RoadPlan): TrafficNetwork {
 
 // ------------------------------------------------------------------ routing
 
-function planRoute(net: TrafficNetwork, start: Seg, random: () => number): Seg[] {
+/** Heavy vehicles (lorries, buses) only take lanes of roads at least `minWidth` wide. */
+export const HEAVY_MIN_ROAD = 4.7;
+function planRoute(net: TrafficNetwork, start: Seg, random: () => number, minWidth = 0): Seg[] {
     const n = net.lanes.length;
     const cost = new Float64Array(n).fill(Infinity), prev = new Int32Array(n).fill(-1), done = new Uint8Array(n);
     cost[start.laneIndex] = 0;
@@ -296,7 +302,9 @@ function planRoute(net: TrafficNetwork, start: Seg, random: () => number): Seg[]
         if (current < 0) break;
         done[current] = 1;
         for (const conn of net.lanes[current].outConns) {
-            const next = conn.toLane!, penalty = conn.kind === 'uturn' ? 40 : conn.kind === 'left' ? 4 : 0;
+            const next = conn.toLane!;
+            if (next.width < minWidth) continue;
+            const penalty = conn.kind === 'uturn' ? 40 : conn.kind === 'left' ? 4 : 0;
             const c = cost[current] + conn.length + next.length + penalty;
             if (c < cost[next.laneIndex]) { cost[next.laneIndex] = c; prev[next.laneIndex] = current; }
         }
@@ -307,7 +315,7 @@ function planRoute(net: TrafficNetwork, start: Seg, random: () => number): Seg[]
     for (let i = 0; i < n; i++) if (i !== start.laneIndex && cost[i] < Infinity && cost[i] >= wanted) pool.push(i);
     if (!pool.length) {
         // A lone stretch: drive to its end, turn round and come back.
-        const conn = start.outConns[0];
+        const conn = start.outConns.find(c => c.toLane!.width >= minWidth);
         return conn ? [start, conn.toLane!] : [start];
     }
     const goal = pool[Math.floor(random() * pool.length)];
@@ -386,9 +394,10 @@ export function createTraffic(paths: RoadLike[], options: { seed?: number; count
         if (lane.length < 9) continue;
         const s = lane.length * (.15 + .7 * random());
         if (lane.occ.some(o => Math.abs(o.s - s) < 14)) continue;
-        const route = planRoute(net, lane, random);
-        const scale = lane.scale;
-        const agent: TrafficAgent = { id: agents.length, x: 0, y: 0, heading: 0, scale, speed: lane.vmax * .5, roadId: lane.roadId, length: MODEL_LENGTH * scale,
+        const kind = vehicleKindFor(agents.length, lane.width), spec = VEHICLES[kind];
+        const route = planRoute(net, lane, random, VEHICLES[kind].heavy ? HEAVY_MIN_ROAD : 0);
+        const scale = Math.max(.5, Math.min(1, lane.room / spec.width));
+        const agent: TrafficAgent = { id: agents.length, x: 0, y: 0, heading: 0, scale, speed: lane.vmax * .5, roadId: lane.roadId, length: spec.length * scale, kind, modelWidth: spec.width,
             seg: lane, s, idx: 0, route, ri: 0, permits: [], requested: null, wait: 0, factor: .85 + random() * .25, lateral: 0, targetHeading: 0 };
         lane.occ.push(agent); place(agent); agent.heading = agent.targetHeading;
         agents.push(agent);
@@ -461,7 +470,7 @@ export function createTraffic(paths: RoadLike[], options: { seed?: number; count
     };
 
 
-    const step = (a: TrafficAgent, dt: number, emergency: ReadonlyArray<EmergencyVehicle>) => {
+    const step = (a: TrafficAgent, dt: number, emergency: ReadonlyArray<EmergencyVehicle>, walkers: ReadonlyArray<Point2>) => {
         const seg = a.seg;
         let target = seg.vmax * a.factor, maxMove = Infinity;
         target = Math.min(target, bendLimit(a));
@@ -482,7 +491,7 @@ export function createTraffic(paths: RoadLike[], options: { seed?: number; count
             const along = dx * gx + dy * gy;
             if (along <= 0 || along > 9) continue;
             const side = dx * gy - dy * gx;
-            if (Math.abs(side) > (a.scale + b.scale) * MODEL_WIDTH / 2 * .75) continue;
+            if (Math.abs(side) > (a.scale * a.modelWidth + b.scale * b.modelWidth) / 2 * .75) continue;
             const same = Math.cos(b.heading - a.heading) > .5;
             if (!same && b.id > a.id && b.speed >= .5) continue;     // a moving car with the higher number gives way to me
             const room = Math.max(0, along - a.length / 2 - (same ? b.length / 2 : .9) - .4);
@@ -529,7 +538,19 @@ export function createTraffic(paths: RoadLike[], options: { seed?: number; count
             if (along > 0 && along < 11) { target = Math.min(target, Math.sqrt(2 * BRAKE * Math.max(0, along - 5))); maxMove = Math.min(maxMove, Math.max(0, along - 4.5)); shift = Math.max(shift, .35); }
             else if (along <= 0 && along > -26 && Math.cos(angleDiff(a.heading, e.heading)) > .3) { target = Math.min(target, 3.2); shift = Math.max(shift, .45); }
         }
-        a.lateral += (Math.min(shift, Math.max(0, seg.width / 4 - a.scale * MODEL_WIDTH / 2 - .1)) - a.lateral) * Math.min(1, dt * 3);
+        // People on a crossing: stop in front of them. In the corridor of the car, and anyone close to its nose, wherever it points.
+        for (const w of walkers) {
+            const dx = w.x - a.x, dy = w.y - a.y;
+            if (dx > 24 || dx < -24 || dy > 24 || dy < -24) continue;
+            const along = dx * hx + dy * hy, side = Math.abs(dx * hy - dy * hx), half = a.scale * a.modelWidth / 2 + 3.2;
+            const near = Math.hypot(dx, dy) < a.length / 2 + 2.4 && along > -a.length / 2;
+            if ((along > 0 && along < 18 && side < half) || near) {
+                const room = Math.max(0, along - a.length / 2 - 3.3);
+                target = Math.min(target, Math.sqrt(2 * BRAKE * room));
+                maxMove = Math.min(maxMove, near ? 0 : Math.max(0, along - a.length / 2 - 2.6));
+            }
+        }
+        a.lateral += (Math.min(shift, Math.max(0, seg.width / 4 - a.scale * a.modelWidth / 2 - .1)) - a.lateral) * Math.min(1, dt * 3);
 
         const accel = Math.max(-7, Math.min(ACCEL, (target - a.speed) * 1.8));
         a.speed = Math.max(0, a.speed + accel * dt);
@@ -544,7 +565,7 @@ export function createTraffic(paths: RoadLike[], options: { seed?: number; count
                 if (net.nodes[cur.node].inside.includes(a)) removeFrom(net.nodes[cur.node].inside, a);
                 if (a.permits[0] === cur) a.permits.shift();
                 a.ri++;
-                if (a.ri >= a.route.length - 1) { a.route = planRoute(net, lane, random); a.ri = 0; }
+                if (a.ri >= a.route.length - 1) { a.route = planRoute(net, lane, random, VEHICLES[a.kind].heavy ? HEAVY_MIN_ROAD : 0); a.ri = 0; }
                 enter(a, lane, a.s - cur.length);
             } else {
                 const next = a.route[a.ri + 1];
@@ -554,19 +575,21 @@ export function createTraffic(paths: RoadLike[], options: { seed?: number; count
             }
         }
         // Scale follows the narrowest road ahead.
-        a.scale += (a.seg.scale - a.scale) * Math.min(1, dt * 2);
-        a.length = MODEL_LENGTH * a.scale;
+        // Shrinks quickly on entering a narrower road (the car must not hang over the kerb), grows back slowly.
+        const fit = Math.max(.5, Math.min(1, a.seg.room / a.modelWidth));
+        a.scale += (fit - a.scale) * Math.min(1, dt * (fit < a.scale ? 12 : 2));
+        a.length = VEHICLES[a.kind].length * a.scale;
         place(a);
         a.heading += angleDiff(a.heading, a.targetHeading) * Math.min(1, dt * 14);
     };
 
     return {
         agents, network: net, signals,
-        update(dt, emergency = []) {
+        update(dt, emergency = [], walkers = []) {
             dt = Math.min(dt, .1);
             if (dt <= 0) return;
             signals.update(dt);
-            for (const a of agents) step(a, dt, emergency);
+            for (const a of agents) step(a, dt, emergency, walkers);
         }
     };
 }

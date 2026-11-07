@@ -3,6 +3,8 @@ import { ScenePathPoint, SceneObjectOptions } from './types.js';
 import { setCommonMeta, applyShadows, clearGeneratedChildren } from './utils.js';
 import { batchStaticMeshes } from './batching.js';
 import { OBJECT_TYPE } from '../../shared/object-types.js';
+import { applyGroundLayer } from '../ground/layers.js';
+import { asphaltTexture, pavingTexture, TILE_ASPHALT, TILE_PAVING } from '../ground/surface-textures.js';
 
 function toPointList(points?: ScenePathPoint[]) {
     if (points && points.length >= 2) {
@@ -47,9 +49,10 @@ function buildOrientedCylinder(radius: number, length: number, material: THREE.M
 }
 
 /** Continuous ribbon, sampled by distance: no overlapping discs or coplanar seams. */
-function buildRibbon(curve: THREE.CatmullRomCurve3, width: number, offset: number, z: number, material: THREE.Material, skip?: (p: THREE.Vector3) => boolean) {
-    const count = Math.max(32, Math.ceil(curve.getLength() * 5));
-    const vertices: number[] = [], indices: number[] = [], hidden: boolean[] = [];
+function buildRibbon(curve: THREE.CatmullRomCurve3, width: number, offset: number, z: number, material: THREE.Material, skip?: (p: THREE.Vector3) => boolean, uvTile = 0) {
+    const length = curve.getLength();
+    const count = Math.max(32, Math.ceil(length * 5));
+    const vertices: number[] = [], indices: number[] = [], hidden: boolean[] = [], uvs: number[] = [];
     for (let i = 0; i <= count; i++) {
         const t = curve.closed && i === count ? 0 : i / count;
         const p = curve.getPointAt(t), tangent = curve.getTangentAt(t);
@@ -58,6 +61,8 @@ function buildRibbon(curve: THREE.CatmullRomCurve3, width: number, offset: numbe
         for (const side of [-1, 1]) {
             const v = p.clone().addScaledVector(normal, offset + side * width / 2);
             vertices.push(v.x, v.y, v.z + z);
+            // Текстура в метрах: поперёк - расстояние от оси, вдоль - пройденный путь (шов замкнутой ленты не рвётся: i, а не t).
+            if (uvTile) uvs.push((offset + side * width / 2) / uvTile, (i / count) * length / uvTile);
         }
         if (i > 0 && !(hidden[i - 1] || hidden[i])) {
             const n = (i - 1) * 2;
@@ -66,6 +71,7 @@ function buildRibbon(curve: THREE.CatmullRomCurve3, width: number, offset: numbe
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    if (uvTile) geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
     const mesh = new THREE.Mesh(geometry, material);
@@ -96,26 +102,35 @@ export function rebuildLinearFeature(group: THREE.Group) {
     // Rails/sleepers follow physical distance, not the number of editing handles.
     const segmentCount = Math.max(32, Math.ceil(curve.getLength() * 2));
 
-    if (featureKind === 'road') {
+    if (featureKind === 'road' && group.userData.roadStyle === 'path') {
+        // Пешеходная дорожка и тротуар: гладкая лента с тёмной каймой, без разметки и обочины (раньше это была копия дороги:
+        // бежевый асфальт с тире и белыми линиями, которые просвечивали сквозь дорожку).
+        const width = Number(group.userData.roadWidth) || 1.6;
+        const kerb = applyGroundLayer(new THREE.MeshStandardMaterial({ color: 0xa79c80, roughness: 0.96 }), 'marking');
+        const surface = applyGroundLayer(new THREE.MeshStandardMaterial({ color: 0xc9bd9c, roughness: 0.95, map: pavingTexture() }), 'path');
+        group.add(buildRibbon(curve, width + 0.24, 0, 0.003, kerb));
+        group.add(buildRibbon(curve, width, 0, 0.007, surface, undefined, surface.map ? TILE_PAVING : 0));
+    } else if (featureKind === 'road') {
         const width = Number(group.userData.roadWidth) || 3.2;
-        const shoulderMaterial = new THREE.MeshStandardMaterial({ color: 0x858b89, roughness: 0.94 });
-        const asphaltMaterial = new THREE.MeshStandardMaterial({ color: 0x303b40, roughness: 0.96 });
-        const markingMaterial = new THREE.MeshStandardMaterial({ color: 0xe0dfce, roughness: 0.85 });
+        const shoulderMaterial = applyGroundLayer(new THREE.MeshStandardMaterial({ color: 0x858b89, roughness: 0.94 }), 'shoulder');
+        const asphaltMaterial = applyGroundLayer(new THREE.MeshStandardMaterial({ color: 0x303b40, roughness: 0.96, map: asphaltTexture() }), 'asphalt');
+        const markingMaterial = applyGroundLayer(new THREE.MeshStandardMaterial({ color: 0xe0dfce, roughness: 0.85 }), 'marking');
         // Junctions and level crossings are covered by their own asphalt: no lines run through them.
         const gaps = (group.userData.markingGaps ?? []) as MarkingGap[];
         const inGap = (p: THREE.Vector3) => gaps.some(g => (p.x - g.x) * (p.x - g.x) + (p.y - g.y) * (p.y - g.y) < g.r * g.r);
         group.add(buildRibbon(curve, width + 0.4, 0, 0.025, shoulderMaterial));
-        group.add(buildRibbon(curve, width, 0, 0.035, asphaltMaterial));
+        group.add(buildRibbon(curve, width, 0, 0.035, asphaltMaterial, undefined, asphaltMaterial.map ? TILE_ASPHALT : 0));
         for (const side of [-1, 1]) {
-            group.add(buildRibbon(curve, 0.045, side * (width / 2 - 0.12), 0.039, markingMaterial, gaps.length ? inGap : undefined));
+            // Реальная разметка: краевая линия 12 см, осевая - штрих 0.9 м через 3 м, тоже 12 см (раньше 4.5 и 5.5 см: нитка на дороге).
+            group.add(buildRibbon(curve, 0.12, side * (width / 2 - 0.2), 0.039, markingMaterial, gaps.length ? inGap : undefined));
         }
         const length = curve.getLength();
-        for (let distance = 0.4; distance + 0.6 < length; distance += 1.8) {
+        for (let distance = 0.6; distance + 0.9 < length; distance += 3.0) {
             const p0 = curve.getPointAt(distance / length);
-            const p1 = curve.getPointAt((distance + 0.6) / length);
+            const p1 = curve.getPointAt((distance + 0.9) / length);
             if (gaps.length && (inGap(p0) || inGap(p1))) continue;
             p0.z += 0.04; p1.z += 0.04;
-            group.add(buildOrientedBox(p0.distanceTo(p1), 0.055, 0.002, markingMaterial, p0, p1));
+            group.add(buildOrientedBox(p0.distanceTo(p1), 0.12, 0.002, markingMaterial, p0, p1));
         }
     } else {
         const ballastMaterial = new THREE.MeshStandardMaterial({ color: 0x8b7355, roughness: 0.95, metalness: 0.01 });
@@ -166,7 +181,7 @@ export function rebuildLinearFeature(group: THREE.Group) {
 /** A disc of road where the markings stop (a junction or a level crossing). */
 export type MarkingGap = { x: number; y: number; r: number };
 
-export function createRoadMesh(options: SceneObjectOptions & { markingGaps?: MarkingGap[] } = {}) {
+export function createRoadMesh(options: SceneObjectOptions & { markingGaps?: MarkingGap[]; roadStyle?: 'road' | 'path' } = {}) {
     const group = setCommonMeta(new THREE.Group(), OBJECT_TYPE.ROAD, {
         supportsPoints: true,
         points: toPointList(options.points),
@@ -174,6 +189,7 @@ export function createRoadMesh(options: SceneObjectOptions & { markingGaps?: Mar
         featureKind: 'road',
         roadWidth: options.roadWidth ?? 3.2,
         markingGaps: options.markingGaps ?? [],
+        roadStyle: options.roadStyle ?? 'road',
         collidableRadius: 1.75
     });
     rebuildLinearFeature(group);

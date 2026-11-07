@@ -57,7 +57,14 @@ export function placeBest(env: Env, s: Settlement, req: SiteRequest): TrainingPr
         const all = book.roads();
         for (const c of req.cells === 'any' ? s.cells.filter(k => k.pts.length === 4 && !s.parks.includes(k) && !s.plazas.includes(k) && k !== s.lessonCell) : s.civic ?? []) {
             const hit = book.nearestRoad({ x: c.cx, y: c.cy }, all);
-            if (hit) sites.push({ x: c.cx, y: c.cy, rotation: Math.atan2(hit.point.x - c.cx, -(hit.point.y - c.cy)), road: hit.path, s: 0 });
+            if (!hit) continue;
+            // The building stands at the street side of its block, set back from the carriageway like the frontage sites, not in
+            // the middle of a big block 30-40 m from any road (a church or school with no access).
+            const dx = c.cx - hit.point.x, dy = c.cy - hit.point.y, d = Math.hypot(dx, dy) || 1;
+            const walks = env.roadOwner.get(hit.path.id)?.sidewalks.has(hit.path.id);
+            const k = Math.min(d, hit.path.width / 2 + (walks ? 2.4 : 0) + .6 + radius + (req.extra ?? 1.5));
+            const x = hit.point.x + dx / d * k, y = hit.point.y + dy / d * k;
+            sites.push({ x, y, rotation: Math.atan2(hit.point.x - x, -(hit.point.y - y)), road: hit.path, s: 0 });
         }
     }
     if (sites.length > (req.samples ?? 500)) sites = sites.sort(() => random() - .5).slice(0, req.samples ?? 500);

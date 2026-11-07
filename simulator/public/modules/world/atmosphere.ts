@@ -190,8 +190,8 @@ function applySeason(group: THREE.Group) {
             material.roughness = state.season === 'winter' ? .55 : .26;
         }
         const mesh = node as THREE.InstancedMesh;
-        if (mesh.isInstancedMesh && /tree|рощи|деревья/i.test(name)) {
-            const leafy = name === 'tree-collisions-1' || name === 'Лиственные деревья';
+        if (mesh.isInstancedMesh && /tree|рощи|деревья|Тополя|Сосны|Кусты|Клёны/i.test(name)) {
+            const leafy = /^tree-collisions-[1245]$/.test(name) || /^(Лиственные деревья|Тополя|Кусты|Клёны)$/.test(name);
             const material = mesh.material as THREE.MeshStandardMaterial;
             let info = trunkOrLeaf.get(material);
             if (!info) { info = { base: material.color.getHex(), kind: greenish(material.color) ? (leafy ? 'leaf' : 'fir') : 'other' }; trunkOrLeaf.set(material, info); }

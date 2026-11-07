@@ -31,7 +31,11 @@ export function updateCamera(
     const desiredFov = mode === 'fpv' ? 75 : 50;
     // Centimetre road/yard layers need more depth precision when viewing a whole district.
     // Close drone cameras keep their short near plane so the airframe remains visible.
-    const desiredNear = mode === 'fpv' || mode === 'drone' ? .025 : Math.max(.025, camera.position.z * .01);
+    // Плоскость near растёт с высотой камеры (FPV) или с расстоянием до дрона (вид «Дрон»), но не выше 0.3 м: при фиксированных
+    // 0.025 шаг 24-битной глубины на 150-300 м около 6-20 см, и плоские слои карты (асфальт, разметка, заливки) мерцали.
+    // У самой земли (камера ниже 2.5 м) остаётся 0.025: корпус дрона и маркеры рядом не обрезаются.
+    const nearBase = mode === 'drone' && droneMesh ? camera.position.distanceTo(droneMesh.position) : camera.position.z;
+    const desiredNear = mode === 'fpv' || mode === 'drone' ? Math.min(.3, Math.max(.025, nearBase * .01)) : Math.max(.025, camera.position.z * .01);
     if (camera.fov !== desiredFov || camera.near !== desiredNear) {
         camera.fov = desiredFov;
         camera.near = desiredNear;

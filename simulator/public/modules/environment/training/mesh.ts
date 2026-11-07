@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createFirTreeMesh, createHillMesh } from '../obstacles/nature.js';
-import { createApartmentBuildingMesh } from '../obstacles/buildings.js';
+import { createCityBlockMesh, createCityHouseMesh } from '../obstacles/buildings/city-blocks.js';
+import { ROOF_COLORS } from '../obstacles/buildings/city-specs.js';
 import { createPylonMesh } from '../obstacles/competition.js';
 import { createArucoMarkerMesh } from '../obstacles/markers.js';
 import { createStyledLandingPad } from '../obstacles/pads.js';
@@ -42,8 +43,8 @@ export function createTrainingTerrain(profile: TrainingProfile = 'field', seed =
             : prop.type in KIT_V2 ? createLandscapeAsset(KIT_V2[prop.type])
             : prop.type === 'tree' ? createFirTreeMesh()
             : prop.type === 'hill' ? createHillMesh()
-                : prop.type === 'building' ? createApartmentBuildingMesh({ floors: prop.floors ?? 5, building: { bodyColor: prop.color } })
-                    : prop.type === 'house' ? createLandscapeAsset('Cottage')
+                : prop.type === 'building' ? createCityBlockMesh({ variant: prop.variant, floors: prop.floors, color: prop.color, seed: (layout.seed + slot) % 6 })
+                    : prop.type === 'house' ? createCityHouseMesh({ variant: prop.variant, color: prop.color, roofColor: ROOF_COLORS[(slot * 31 + (prop.variant ?? 0)) % ROOF_COLORS.length], seed: (layout.seed + slot) % 6 })
                         : prop.type === 'station' ? createLandscapeAsset('Station')
                             : prop.type === 'warehouse' ? createLandscapeAsset('Warehouse')
                                 : prop.type === 'water-tower' ? createLandscapeAsset('WaterTower')

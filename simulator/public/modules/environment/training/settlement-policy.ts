@@ -1,12 +1,13 @@
 import type { TrainingLayout, TrainingProp } from './layout.js';
 import type { District } from './world-plan.js';
+import { MIN_BLOCK_RADIUS } from '../obstacles/buildings/city-specs.js';
 
 type PropType = TrainingProp['type'];
 type RepeatRule = { cap: number; separation: number };
 
 /** Conservative XY envelopes measured from the vendored meshes, centred on their actual origin. */
 export const MODEL_FOOTPRINTS: Partial<Record<PropType, number>> = {
-    building: 3.47, house: 4.55, station: 7.66, warehouse: 8.62, 'water-tower': 3.19,
+    building: MIN_BLOCK_RADIUS, house: 4.55, station: 7.66, warehouse: 8.62, 'water-tower': 3.19,
     barn: 7.79, silo: 3.68, 'radio-mast': 2.83, containers: 4.16, solar: 6.25,
     greenhouse: 6.8, 'bus-stop': 2.79, hay: 3.66, rocks: 4.59, 'power-pylon': 5.72,
     hangar: 13.73, windsock: 2.7, church: 7.99, 'gas-station': 10.90,
@@ -82,4 +83,15 @@ export function residentialNeighbors(layout: TrainingLayout, point: { x: number;
 export function districtAt(layout: TrainingLayout, point: { x: number; y: number }): District | undefined {
     // More specific districts (parks, freight yards, residential blocks) override the city envelope.
     return [...layout.districts].reverse().find(d => Math.abs(point.x - d.x) <= d.width / 2 && Math.abs(point.y - d.y) <= d.depth / 2);
+}
+
+/** The nearest settled district within `reach` metres of its edge: a house on an avenue between two districts still belongs to one. */
+export function nearestDistrict(layout: TrainingLayout, point: { x: number; y: number }, reach = 70): District | undefined {
+    let best: District | undefined, bestD = reach;
+    for (const d of layout.districts) {
+        if (d.kind === 'park' || d.kind === 'neighborhood') continue;
+        const dist = Math.hypot(Math.max(Math.abs(point.x - d.x) - d.width / 2, 0), Math.max(Math.abs(point.y - d.y) - d.depth / 2, 0));
+        if (dist < bestD) { bestD = dist; best = d; }
+    }
+    return best;
 }
