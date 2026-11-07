@@ -4,7 +4,7 @@ import { drones, currentDroneId, simSettings } from '../../core/state.js';
 import { updateTransformModeDecorations } from '../interaction/transform.js';
 import { isTransformableObject } from './object-catalog.js';
 import { getCameraMode } from '../core/camera-mode-state.js';
-import { shouldSnapToGrid } from './placement.js';
+import { isMarkerSceneObject, isSurfaceSeatable, mayFloat, shouldSnapToGrid } from './placement.js';
 import { ROTATION_SNAP_DEGREES } from './placement-geometry.js';
 import { MODE_SIZES } from '../core/transform-controls-style-helpers.js';
 
@@ -93,7 +93,8 @@ export function activateTransformMode(mode: TransformMode, target: THREE.Object3
     transformControl.size = MODE_SIZES[mode];
     transformControl.showX = true;
     transformControl.showY = true;
-    transformControl.showZ = true;
+    // Standing objects cannot be lifted: no vertical handle for them (allowAirborne objects, markers and non-seatable ones keep it).
+    transformControl.showZ = !(mode === 'translate' && isSurfaceSeatable(target) && !mayFloat(target) && !isMarkerSceneObject(target));
     transformControl.setSpace(mode === 'scale' ? 'local' : 'world');
     transformControl.setTranslationSnap(null);
     transformControl.setScaleSnap(null);

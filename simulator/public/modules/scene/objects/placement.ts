@@ -133,7 +133,12 @@ export function isMarkerSceneObject(object: THREE.Object3D) {
 export function isSurfaceSeatable(object: THREE.Object3D | null | undefined): object is THREE.Object3D {
     if (!object || !object.userData?.draggable) return false;
     const data = object.userData;
-    return !data.presetName && !data.supportsPoints && !data.vehicle && data.type !== 'group';
+    return !data.presetName && !data.supportsPoints && !data.vehicle;
+}
+
+/** An object may hang above the surface only if it says so (`userData.allowAirborne`); by default nothing floats. */
+export function mayFloat(object: THREE.Object3D | null | undefined): boolean {
+    return object?.userData?.allowAirborne === true;
 }
 
 /** A marker lying flat must not sink into the training relief (snapMarkerToSurface only knows the z = 0 plane). */

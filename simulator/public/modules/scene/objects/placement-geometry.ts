@@ -82,6 +82,16 @@ export function pivotZAboveSurface(pivotZ: number, bottomZ: number, surfaceZ: nu
     return bottomZ < surfaceZ ? pivotZ + (surfaceZ - bottomZ) : pivotZ;
 }
 
+/**
+ * Pivot height while an object is dragged. Objects never hang in the air: whatever the pointer does
+ * (a pull along Z included), the bottom stays on the surface. Only an object that is explicitly
+ * allowed to float (`allowAirborne`) keeps the lifted height, still never below the surface.
+ */
+export function draggedPivotZ(allowAirborne: boolean, resting: boolean, pivotZ: number, bottomZ: number, topZ: number, surfaceZ: number): number {
+    if (allowAirborne && !resting) return pivotZAboveSurface(pivotZ, bottomZ, surfaceZ);
+    return seatedPivotZ(pivotZ, bottomZ, topZ, surfaceZ);
+}
+
 export function isRestingOnSurface(pivotZ: number, bottomZ: number, topZ: number, surfaceZ: number): boolean {
     return Math.abs(seatedPivotZ(pivotZ, bottomZ, topZ, surfaceZ) - pivotZ) <= RESTING_TOLERANCE;
 }

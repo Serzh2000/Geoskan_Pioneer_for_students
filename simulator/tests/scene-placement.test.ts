@@ -4,6 +4,7 @@ import {
     GRID_SNAP_STEP,
     applyFlatObjectDepthOffset,
     collectGroundSurfaces,
+    draggedPivotZ,
     isGridSnapActive,
     isRestingOnSurface,
     keepObjectBottomAboveSurface,
@@ -70,6 +71,22 @@ describe('grid snapping', () => {
         expect(snapAngleRadians(deg(37), true)).toBeCloseTo(deg(30));
         expect(snapAngleRadians(deg(38), true)).toBeCloseTo(deg(45));
         expect(snapAngleRadians(deg(37), false)).toBeCloseTo(deg(37));
+    });
+});
+
+describe('nothing hangs in the air', () => {
+    test('a pull along Z leaves an ordinary object standing on the surface', () => {
+        // Dragged 5 m up from the ground (bottom 5, top 7): the bottom goes back onto the surface.
+        expect(draggedPivotZ(false, false, 5, 5, 7, 0)).toBe(0);
+        // On a 3 m hill the same pull ends on the hill.
+        expect(draggedPivotZ(false, false, 5, 5, 7, 3)).toBe(3);
+        // An X/Y move of a standing object still follows the relief.
+        expect(draggedPivotZ(false, true, 0, 0, 2, 3)).toBe(3);
+    });
+
+    test('only an object that is explicitly allowed to float keeps its height, never below the surface', () => {
+        expect(draggedPivotZ(true, false, 5, 5, 7, 0)).toBe(5);
+        expect(draggedPivotZ(true, false, -1, -1, 1, 0)).toBe(0);
     });
 });
 

@@ -10,16 +10,16 @@ import {
     isMarkerSceneObject,
     isSurfaceSeatable,
     keepMarkerAboveGround,
+    mayFloat,
     measureFootprint,
     seatOnGround,
     shouldSnapToGrid,
     snapPointToGrid
 } from '../objects/placement.js';
 import {
+    draggedPivotZ,
     isRestingOnSurface,
     keepObjectBottomAboveSurface,
-    pivotZAboveSurface,
-    seatedPivotZ,
     verticalExtent
 } from '../objects/placement-geometry.js';
 
@@ -124,16 +124,14 @@ function constrainDraggedHeight(session: DragSession) {
     const pivotZ = target.position.z;
     const bottom = pivotZ + session.bottomOffset;
     const top = pivotZ + session.topOffset;
-    target.position.z = session.resting && !session.axis.includes('Z')
-        ? seatedPivotZ(pivotZ, bottom, top, surfaceZ)
-        : pivotZAboveSurface(pivotZ, bottom, surfaceZ);
+    target.position.z = draggedPivotZ(mayFloat(target), session.resting && !session.axis.includes('Z'), pivotZ, bottom, top, surfaceZ);
 }
 
 /** End of a drag: a standing object stands on the surface again (rotation/scale may have moved its bottom). */
 function finishDragSession(session: DragSession) {
     const target = session.target;
     if (!session.seatable || !target.parent) return;
-    if (session.resting && !(session.mode === 'translate' && session.axis.includes('Z'))) {
+    if (!mayFloat(target) || (session.resting && !(session.mode === 'translate' && session.axis.includes('Z')))) {
         seatOnGround(target);
     } else {
         const position = target.getWorldPosition(new THREE.Vector3());
