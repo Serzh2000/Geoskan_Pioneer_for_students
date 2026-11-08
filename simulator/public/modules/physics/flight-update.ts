@@ -11,7 +11,8 @@ import {
     beginDisarmedFall
 } from './events.js';
 import {
-    MANUAL_TAKEOFF_THROTTLE
+    MANUAL_TAKEOFF_THROTTLE,
+    NON_COLLIDABLE_TYPES
 } from './constants.js';
 import { bodyPlanarToWorld, worldPlanarToBody } from './frames.js';
 import {
@@ -81,10 +82,17 @@ function updateManualFlight(simState: DroneState, dt: number, getObstacles: Obst
     const throttleInput = normalizeThrottle(simState.rcChannels[2]);
     const yawInput = applyDeadzone(clampStick(simState.rcChannels[3]));
 
-    const roll = Math.max(-1, Math.min(1, rollInput * config.manual.attScale));
-    const pitch = Math.max(-1, Math.min(1, pitchInput * config.manual.attScale));
+    // Чувствительность по крену/тангажу задают масштабы режима (attScale - только
+    // Stabilize, velScale - Althold/Loiter), поэтому сам стик здесь не масштабируется:
+    // иначе attScale применялся бы дважды (к вводу и к максимальной скорости).
+    const roll = rollInput;
+    const pitch = pitchInput;
     const yaw = Math.max(-1, Math.min(1, yawInput * (config.manual.yawScale / 3)));
-    const throttleCentered = config.manual.throttleMode === 0 ? throttleInput : Math.max(0, Math.min(1, (throttleInput - 0.5) * 2));
+    // Режим 0 - стик без пружины, середина = удержание высоты: мёртвая зона у
+    // середины, чтобы дрейф оси геймпада не уводил дрон вверх/вниз.
+    const throttleCentered = config.manual.throttleMode === 0
+        ? 0.5 + applyDeadzone((throttleInput - 0.5) * 2) / 2
+        : Math.max(0, Math.min(1, (throttleInput - 0.5) * 2));
     const throttle = Math.max(0, Math.min(1, throttleCentered));
 
     let maxBodySpeed: number;
@@ -121,6 +129,9 @@ function updateManualFlight(simState: DroneState, dt: number, getObstacles: Obst
         let terrainAlt = 0;
         const obstacles = getObstacles();
         for (const obj of obstacles) {
+            // Плита земли (и прочие плоские непроходимые слои) лежит в начале координат:
+            // без этого у старта нельзя было опуститься ниже 0.5 м.
+            if (obj.userData?.collidable === false || NON_COLLIDABLE_TYPES.has(String(obj.userData?.type || obj.name || ''))) continue;
             if (
                 obj.position.z < simState.pos.z
                 && Math.abs(obj.position.x - simState.pos.x) < 0.5
@@ -157,9 +168,12 @@ function updateManualFlight(simState: DroneState, dt: number, getObstacles: Obst
             Math.min(PHYSICS_TUNING.LOITER_VISUAL_TILT_LIMIT, nextBodyRightSpeed * PHYSICS_TUNING.LOITER_VISUAL_TILT_GAIN)
         );
     } else {
-        const tiltGain = targetTiltLimit / Math.max(0.001, maxBodySpeed);
-        simState.orientation.pitch = Math.max(-targetTiltLimit, Math.min(targetTiltLimit, nextBodyForwardSpeed * tiltGain));
-        simState.orientation.roll = Math.max(-targetTiltLimit, Math.min(targetTiltLimit, nextBodyRightSpeed * tiltGain));
+        const tiltLimit = simState.flightMode === 'STABILIZE'
+            ? targetTiltLimit * Math.min(1, config.manual.attScale * 2)
+            : targetTiltLimit;
+        const tiltGain = tiltLimit / Math.max(0.001, maxBodySpeed);
+        simState.orientation.pitch = Math.max(-tiltLimit, Math.min(tiltLimit, nextBodyForwardSpeed * tiltGain));
+        simState.orientation.roll = Math.max(-tiltLimit, Math.min(tiltLimit, nextBodyRightSpeed * tiltGain));
     }
 
     simState.target_pos = { ...simState.pos };
@@ -232,6 +246,9 @@ function resolveTimedGoTo(simState: DroneState): TimedGoToStep | null {
     };
 }
 
+// Доля aMax, которую позиционный контур закладывает на торможение (остальное - запас на отставание по скорости).
+const BRAKING_ACCEL_SHARE = 0.5;
+
 function updateAutoFlight(simState: DroneState, dt: number) {
     const config = getAutopilotRuntimeConfig();
     const kp = Math.max(1.2, Math.min(6.5, 2.4 + config.tuning.xyRateKp * 18));
@@ -278,8 +295,12 @@ function updateAutoFlight(simState: DroneState, dt: number) {
 
     const errX = setpoint.x - simState.pos.x;
     const errY = setpoint.y - simState.pos.y;
-    const desiredVx = Math.max(-planarVelocityLimit, Math.min(planarVelocityLimit, manualActive ? manual!.x : feedForward.x + errX * kp));
-    const desiredVy = Math.max(-planarVelocityLimit, Math.min(planarVelocityLimit, manualActive ? manual!.y : feedForward.y + errY * kp));
+    // Скорость по ошибке не больше той, с которой дрон успевает затормозить с ускорением aMax:
+    // иначе при больших vMax он проскакивал точку (при 5 м/с - на метр и больше).
+    const brakeCap = (err: number) => Math.sqrt(2 * BRAKING_ACCEL_SHARE * config.mission.aMax * Math.abs(err));
+    const feedback = (err: number) => Math.sign(err) * Math.min(Math.abs(err) * kp, brakeCap(err));
+    const desiredVx = Math.max(-planarVelocityLimit, Math.min(planarVelocityLimit, manualActive ? manual!.x : feedForward.x + feedback(errX)));
+    const desiredVy = Math.max(-planarVelocityLimit, Math.min(planarVelocityLimit, manualActive ? manual!.y : feedForward.y + feedback(errY)));
     let ax = (desiredVx - simState.vel.x) * kd;
     let ay = (desiredVy - simState.vel.y) * kd;
     const accelMagnitude = Math.hypot(ax, ay);

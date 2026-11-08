@@ -149,6 +149,24 @@ function boxesHit(obj: THREE.Object3D, samples: THREE.Vector3[]): boolean {
     return false;
 }
 
+/** Первое тело живого мира (люди, машины), которого касается дрон на пути `samples`; радиус дрона учитывается. */
+export function worldSolidHit(solids: readonly import('../world/runtime.js').WorldSolid[], samples: THREE.Vector3[]) {
+    const r = DRONE_COLLISION_RADIUS;
+    for (const solid of solids) {
+        const cos = Math.cos(solid.heading), sin = Math.sin(solid.heading);
+        for (const sample of samples) {
+            if (sample.z < solid.z0 - r || sample.z > solid.z1 + r) continue;
+            const dx = sample.x - solid.x, dy = sample.y - solid.y;
+            if (solid.round) {
+                if (Math.hypot(dx, dy) < solid.halfLength + r) return solid;
+            } else if (Math.abs(dx * cos + dy * sin) < solid.halfLength + r && Math.abs(-dx * sin + dy * cos) < solid.halfWidth + r) {
+                return solid;
+            }
+        }
+    }
+    return null;
+}
+
 /** ignore - меш, который не считается препятствием (опора, с которой дрон взлетает). */
 export function obstacleHasCollision(obj: THREE.Object3D, samples: THREE.Vector3[], ignore: THREE.Object3D | null = null) {
     if (isGateObject(obj)) {
@@ -211,6 +229,9 @@ function meshesHit(node: THREE.Object3D, samples: THREE.Vector3[], ignore: THREE
 const FLAT_SURFACE_MAX_TOP = 0.08;
 // Насколько дрон должен уйти в склон, чтобы это было столкновением, а не касанием земли.
 const TERRAIN_PENETRATION = 0.05;
+// Крона начинается на этой доле высоты дерева; ниже неё проходит только ствол.
+const TREE_CANOPY_BASE = 0.3;
+const TREE_TRUNK_RADIUS = 0.25;
 
 function meshBlocks(mesh: THREE.Mesh, samples: THREE.Vector3[]): boolean {
     if (mesh.userData.trainingGround) {
@@ -228,13 +249,18 @@ function meshBlocks(mesh: THREE.Mesh, samples: THREE.Vector3[]): boolean {
         });
     }
     if (mesh.userData.trainingTrees) {
-        const trees = mesh.userData.trainingTrees as Array<{x:number;y:number;z:number;radius:number;height:number}>;
+        const trees = mesh.userData.trainingTrees as Array<{x:number;y:number;z:number;radius:number;height:number;variant?:number}>;
         const scale = mesh.getWorldScale(new THREE.Vector3());
         const radius = DRONE_COLLISION_RADIUS / Math.max(.001, Math.min(scale.x, scale.y, scale.z));
         return samples.some(sample => {
             const local = mesh.worldToLocal(sample.clone());
-            return trees.some(tree => local.z >= tree.z - radius && local.z <= tree.z + tree.height + radius
-                && Math.hypot(local.x - tree.x, local.y - tree.y) <= tree.radius + radius);
+            return trees.some(tree => {
+                if (local.z < tree.z - radius || local.z > tree.z + tree.height + radius) return false;
+                // Под кроной - только ствол: цилиндр радиуса кроны от самой земли был невидимой стеной под деревом. Кусты (4) без ствола.
+                const underCanopy = tree.variant !== 4 && local.z - tree.z < tree.height * TREE_CANOPY_BASE;
+                const reach = underCanopy ? Math.min(tree.radius, TREE_TRUNK_RADIUS) : tree.radius;
+                return Math.hypot(local.x - tree.x, local.y - tree.y) <= reach + radius;
+            });
         });
     }
     const material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;

@@ -61,7 +61,7 @@ export function addWorldVegetation(group: THREE.Group, layout: TrainingLayout): 
         if (!trees.length) continue;
         const species = SPECIES[variant], template = species.make();
         template.updateWorldMatrix(true, true);
-        const treeData = trees.map(p => ({ x: p.x, y: p.y, z: trainingHeightAt(layout, p.x, p.y), radius: p.radius, height: species.height * p.scale }));
+        const treeData = trees.map(p => ({ x: p.x, y: p.y, z: trainingHeightAt(layout, p.x, p.y), radius: p.radius, height: species.height * p.scale, variant }));
         // Interleaved order: drawing only the first N instances (low graphics tiers) thins the forest evenly.
         const order = trees.map((_, i) => i).sort((a, b) => ((a * 0.6180339887) % 1) - ((b * 0.6180339887) % 1));
         const matrix = new THREE.Matrix4(), rotation = new THREE.Quaternion();

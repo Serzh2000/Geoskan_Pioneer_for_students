@@ -8,16 +8,28 @@ import {
 } from './events.js';
 import { supportHeightBelow, terrainHeightAt } from './ground.js';
 
+// Высота падения - от высшей точки полёта над землёй, а не от прошлого шага физики:
+// шаг 1/120 с даёт сантиметры, и порог GROUND_IMPACT_MIN_HEIGHT никогда не пропускал удар.
+const apexZ = new WeakMap<DroneState, number>();
+
+function trackApex(simState: DroneState): number {
+    const apex = Math.max(apexZ.get(simState) ?? simState.pos.z, simState.pos.z);
+    apexZ.set(simState, apex);
+    return apex;
+}
+
 function stopDroneAtGround(simState: DroneState) {
     setDroneFsmState(simState, 'IDLE');
     simState.vel = { x: 0, y: 0, z: 0 };
     simState.target_pos = { ...simState.pos };
     simState.target_alt = simState.pos.z;
+    apexZ.delete(simState);
 }
 
 // Земля под дроном - рельеф карты (physics/ground.ts), а не плоскость z = 0.
 export function resolveGroundContact(simState: DroneState, id: string, prevPos: Vector3) {
     const ground = terrainHeightAt(simState.pos.x, simState.pos.y);
+    const apex = trackApex(simState);
     if (simState.pos.z > ground) return;
 
     const verticalImpactSpeed = Math.max(0, -simState.vel.z);
@@ -28,7 +40,7 @@ export function resolveGroundContact(simState: DroneState, id: string, prevPos: 
     );
 
     simState.pos.z = ground;
-    const fallHeight = prevPos.z - ground;
+    const fallHeight = apex - ground;
 
     if (shouldCrashOnGroundImpact(fallHeight, verticalImpactSpeed, totalImpactSpeed)) {
         applyCrashState(
@@ -57,6 +69,7 @@ export function updateDisarmedFallState(simState: DroneState, id: string, dt: nu
     simState.pos.z += simState.vel.z * dt;
 
     const ground = terrainHeightAt(simState.pos.x, simState.pos.y);
+    const apex = trackApex(simState);
     if (simState.pos.z > ground) return;
 
     const verticalImpactSpeed = Math.max(0, -impactVel.z);
@@ -67,14 +80,15 @@ export function updateDisarmedFallState(simState: DroneState, id: string, dt: nu
     );
     simState.pos.z = ground;
 
-    if (shouldCrashOnGroundImpact(prevPos.z - ground, verticalImpactSpeed, totalImpactSpeed)) {
+    if (shouldCrashOnGroundImpact(apex - ground, verticalImpactSpeed, totalImpactSpeed)) {
+        apexZ.delete(simState);
         simState.status = 'CRASHED';
         simState.running = false;
         simState.target_pos = { ...simState.pos };
         simState.target_alt = ground;
         simState.vel = { x: 0, y: 0, z: 0 };
         log(
-            `[Physics] Дрон ${id} разрушен при ударе о землю: h=${prevPos.z.toFixed(2)}м, vz=${verticalImpactSpeed.toFixed(2)}м/с, v=${totalImpactSpeed.toFixed(2)}м/с.`,
+            `[Physics] Дрон ${id} разрушен при ударе о землю: h=${(apex - ground).toFixed(2)}м, vz=${verticalImpactSpeed.toFixed(2)}м/с, v=${totalImpactSpeed.toFixed(2)}м/с.`,
             'warn'
         );
         triggerLuaCallback(id, 16);
@@ -83,7 +97,7 @@ export function updateDisarmedFallState(simState: DroneState, id: string, dt: nu
 
     stopDroneAtGround(simState);
     log(
-        `[Physics] Дрон ${id} безопасно отключен после падения: h=${prevPos.z.toFixed(2)}м, vz=${verticalImpactSpeed.toFixed(2)}м/с.`,
+        `[Physics] Дрон ${id} безопасно отключен после падения: h=${(apex - ground).toFixed(2)}м, vz=${verticalImpactSpeed.toFixed(2)}м/с.`,
         'info'
     );
 }

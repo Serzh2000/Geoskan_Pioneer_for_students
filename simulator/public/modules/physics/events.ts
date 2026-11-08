@@ -10,7 +10,8 @@ import { supportObjectBelow, terrainHeightAt } from './ground.js';
 const LIFTOFF_SUPPORT_BAND = 0.3;
 import { log } from '../shared/logging/logger.js';
 import { shouldDispatchLuaEvent } from '../lua/mission-guard.js';
-import { obstacleHasCollision, sampleSegmentPoints } from './collisions.js';
+import { obstacleHasCollision, sampleSegmentPoints, worldSolidHit } from './collisions.js';
+import { worldSolidsNear } from '../world/runtime.js';
 
 export const AIRBORNE_ALTITUDE_EPSILON = 0.1;
 export const GROUND_IMPACT_MIN_HEIGHT = 0.5;
@@ -71,7 +72,7 @@ export function applyCrashState(simState: DroneState, id: string, reason: string
     
     // Останавливаем вращение и инерцию при сильном ударе, 
     // но даем упасть если это произошло в воздухе (логика в physics.ts)
-    if (simState.pos.z < 0.1) {
+    if (simState.pos.z - terrainHeightAt(simState.pos.x, simState.pos.y) < 0.1) {
         simState.vel = { x: 0, y: 0, z: 0 };
     }
     
@@ -115,6 +116,17 @@ export function checkPhysicsEvents(simState: DroneState, prevPos: { x: number; y
             }
             simState.pos = { ...prevPos };
             applyCrashState(simState, id, `столкновение с объектом "${obj.userData.type}"`);
+            return;
+        }
+    }
+
+    // Люди и движущиеся машины живого мира: не часть сцены мешей, проверяются отдельно.
+    if (isNotJustTakingOff) {
+        const solids = worldSolidsNear(simState.pos.x, simState.pos.y, 14);
+        const hit = solids.length ? worldSolidHit(solids, samples) : null;
+        if (hit) {
+            simState.pos = { ...prevPos };
+            applyCrashState(simState, id, hit.round ? 'столкновение с человеком' : 'столкновение с машиной');
             return;
         }
     }

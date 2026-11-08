@@ -17,6 +17,7 @@ import { createSignalLights, type SignalLights } from './signal-lights.js';
 import { createRoadMarks, type RoadMarks } from './road-marks.js';
 import { createCrowd, createCrowdView, type Crowd, type CrowdView, type Vehicle } from './pedestrians.js';
 import { drones } from '../core/state.js';
+import { VEHICLES } from './vehicle-kinds.js';
 import { createWorldServices, type Responder, type ServiceEvent, type WorldServices } from './services.js';
 
 /*
@@ -347,6 +348,43 @@ function animate(w: World, dt: number) {
         if (w.wire.broken) w.wire.broken.visible = down;
         w.wire.sparks.visible = down && Math.sin(phase * 17) > 0;
     }
+}
+
+/** Твёрдое тело живого мира для физики дрона: ориентированная коробка (или цилиндр, если round) от z0 до z1. */
+export interface WorldSolid { x: number; y: number; z0: number; z1: number; heading: number; halfLength: number; halfWidth: number; round: boolean }
+
+const PERSON_HEIGHT = 1.8;
+const PERSON_RADIUS = .25;
+const RESPONDER_SIZE = { length: 6, width: 2.6, height: 3 };
+const solidsOut: WorldSolid[] = [];
+
+/**
+ * Что в живом мире можно задеть: машины потока, аварийные машины и люди (они сами `collidable = false` для обхода сцены мешей,
+ * поэтому физика берёт их отсюда). Только в радиусе `range` от точки; массив общий, его нельзя хранить между вызовами.
+ */
+export function worldSolidsNear(x: number, y: number, range: number): readonly WorldSolid[] {
+    solidsOut.length = 0;
+    if (!running || !world) return solidsOut;
+    const w = world;
+    const near = (px: number, py: number, extra: number) => Math.abs(px - x) < range + extra && Math.abs(py - y) < range + extra;
+    for (const { car } of w.cars) {
+        const spec = VEHICLES[car.kind];
+        if (!near(car.x, car.y, spec.length)) continue;
+        solidsOut.push({ x: car.x, y: car.y, z0: car.z, z1: car.z + spec.height * car.scale, heading: car.heading,
+            halfLength: spec.length * car.scale / 2, halfWidth: spec.width * car.scale / 2, round: false });
+    }
+    for (const r of w.services.responders) {
+        if (r.state === 'idle' || !near(r.x, r.y, RESPONDER_SIZE.length)) continue;
+        const z = trainingHeightAt(w.layout, r.x, r.y);
+        solidsOut.push({ x: r.x, y: r.y, z0: z, z1: z + RESPONDER_SIZE.height, heading: r.heading,
+            halfLength: RESPONDER_SIZE.length / 2, halfWidth: RESPONDER_SIZE.width / 2, round: false });
+    }
+    for (const p of w.crowd.peds) {
+        if (p.asleep || p.state === 'inside' || !near(p.x, p.y, 1)) continue;
+        const z = trainingHeightAt(w.layout, p.x, p.y);
+        solidsOut.push({ x: p.x, y: p.y, z0: z, z1: z + PERSON_HEIGHT, heading: p.heading, halfLength: PERSON_RADIUS, halfWidth: PERSON_RADIUS, round: true });
+    }
+    return solidsOut;
 }
 
 /** Per-frame hook (physics loop). Does nothing until a program is running. */
