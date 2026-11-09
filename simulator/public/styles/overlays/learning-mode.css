@@ -52,6 +52,9 @@ body[data-app-mode='learning'] #sidebar-guide-btn { display: none; }
 .quest-hud__icon { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; font: inherit; font-size: 18px; line-height: 1; color: var(--text-muted); background: transparent; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; }
 .quest-hud__icon:hover { color: var(--text-strong); border-color: var(--border-strong); }
 .quest-hud__view, .quest-hud__track { align-self: start; }
+/* Five tracks do not fit one line: labels keep their full width and wrap onto the next row instead of overlapping. */
+.quest-hud__track { flex-wrap: wrap; max-width: 100%; }
+.quest-hud__track .pk-seg__btn { flex: 0 0 auto; min-width: max-content; padding-inline: 10px; }
 .quest-hud__top { cursor: grab; user-select: none; touch-action: none; }
 .quest-hud.is-dragging { opacity: 0.92; }
 .quest-hud.is-dragging .quest-hud__top { cursor: grabbing; }

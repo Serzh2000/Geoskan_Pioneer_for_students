@@ -50,6 +50,8 @@ function syncLanguageOptionsForDrone(langSelect: HTMLSelectElement): void {
     const pythonOnly = !supportsLanguage(model, 'lua');
     for (const option of Array.from(langSelect.options)) {
         const blocked = pythonOnly && option.value !== 'python' && option.value !== 'blockly';
+        // У Мини 2 блоки называются Bricks (как в программе Geoscan), у Базового - Blockly.
+        if (option.value === 'blockly') option.textContent = pythonOnly ? 'Bricks' : 'Blockly';
         option.disabled = blocked;
         option.title = blocked ? `${droneModelProfile(model).title} программируется на Python и блоками, без Lua` : '';
     }
