@@ -1,0 +1,166 @@
+\section{Блоки Pioneer Bricks: программа без кода}
+\label{sec:bricks}
+
+\begin{infobox}[Цели главы]
+\begin{itemize}
+    \item Понимать, что такое Pioneer Bricks и где запускается блочная программа.
+    \item Собирать программы для Пионера Мини~2 из блоков: светодиоды, датчики, полёт, камера, нейросети.
+    \item Читать код, который Bricks генерирует из блоков, и связывать блоки с вызовами \texttt{pioneer\_sdk2} и \texttt{pioneer\_rknn}.
+    \item Знать ограничения версии Bricks~2.3.0 и уметь их обходить.
+\end{itemize}
+\end{infobox}
+
+\begin{missionbox}[Блоки в симуляторе]
+В симуляторе у Пионера Мини~2 доступен набор блоков по образцу Bricks (редактор $\to$ \ui{Мини 2} $\to$ язык Blockly). Часть блоков с камерой и нейросетями в симуляторе упрощена или доступна только на дроне, поэтому программы этой главы целиком запускаются на борту, а в симуляторе удобно отрабатывать полётные блоки и логику.
+\end{missionbox}
+
+\subsection{Что такое Pioneer Bricks}
+
+Предыдущие главы были про текстовые программы на Python, которые работают на самом дроне. Но программировать можно и без текста. \textbf{Pioneer Bricks} --- официальная среда визуального программирования Геоскана, построенная на Google Blockly. Программа собирается из цветных блоков, как пазл: блок «Взлёт» нельзя вставить туда, где нужно число, а блок с числом --- туда, где нужна команда. Синтаксических ошибок, которые мучают новичка в тексте (забытая скобка, неверный отступ), в блоках просто не бывает.
+
+Главное для нас: Bricks не изобретает свой язык. При сохранении он \emph{генерирует программу на Python}, которая использует те же библиотеки \texttt{pioneer\_sdk2} и \texttt{pioneer\_rknn}, что и главы~\ref{sec:sdk2} и~\ref{sec:rknn}. Поэтому Bricks --- удобная ступень перед текстом: любой блок можно «раскрыть» и увидеть, какой вызов за ним стоит. Глава написана по версии \textbf{Bricks 2.3.0}; все десять проектов проверены на Пионере Мини~2 (Pioneer~OS 1.0.0, \texttt{pioneer\_sdk2} 0.16.0, \texttt{pioneer\_rknn} 1.10.0).
+
+\paragraph{Где это запускается.} Bricks работает на борту Мини~2, как и среда Pioneer Code. Подключитесь к Wi-Fi дрона и откройте в браузере главное меню Pioneer Code (\texttt{http://10.42.0.1:9090}), в нём пункт «Pioneer Bricks», либо сразу \texttt{http://10.42.0.1:2020}. Программа выполняется на дроне, а не в браузере.
+
+\begin{alertbox}[Кнопка «Вжух» запускает программу на дроне]
+Кнопка \ui{Вжух} в правом верхнем углу редактора \emph{выполняет} программу на дроне. Если в ней есть блоки из категории «Полёт» (\emph{Предполётная подготовка}, \emph{Взлёт}, \emph{Лететь в…}), дрон запустит двигатели и взлетит. Перед нажатием проверьте программу, площадку и людей вокруг; кнопка \ui{Стоп} рядом прерывает выполнение. Правила безопасности те же, что в главе~\ref{sec:sdk2}: пульт в руках, свободная площадка, аварийная остановка под рукой.
+\end{alertbox}
+
+Из десяти проектов главы полётный только пятый, он помечен отдельно. Остальные выполняются при выключенных двигателях: дрон стоит на земле. Пока блоки категории «Полёт» не нужны, не добавляйте их в программу.
+
+\subsection{Проекты и редактор}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/bricks/b00_projects.png}
+\caption{Стартовая страница Bricks: «Создать проект», «Импорт проекта» и список проектов на дроне}\label{fig:bricks-projects}
+\end{figure}
+
+Проекты хранятся на дроне в папке \texttt{/usr/local/bin/pioneer-bricks/static/save/<имя>/}: файл \texttt{<имя>.xml} --- блоки, \texttt{<имя>.py} --- сгенерированный Python (появляется после сохранения). Кнопки «скачать» и «загрузить» в редакторе экспортируют и импортируют проект целиком, так проекты переносят между дронами. К главе приложены десять готовых проектов --- файлы \texttt{.xml} в папке \texttt{examples/python-onboard/bricks/}: нажмите «Импорт проекта» и выберите файл.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/bricks/u01_svetodiody.png}
+\caption{Редактор Bricks с проектом первого задания}\label{fig:bricks-editor}
+\end{figure}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.3\linewidth}X@{}}
+\toprule
+\textbf{Элемент} & \textbf{Назначение} \\
+\midrule
+Палитра слева & категории блоков; щелчок открывает список, блок перетаскивается на рабочее поле \\
+Рабочее поле & программа; выполнение начинается с неудаляемого блока «Начало программы» и идёт сверху вниз \\
+Изогнутые стрелки & отменить / повторить действие \\
+Дискета & «Сохранить» / «Сохранить как»: сохраняет блоки \emph{и} генерирует Python \\
+Стрелки вниз / вверх & экспорт проекта в файл / импорт \\
+Жук & режим отладки \\
+\ui{Стоп} / \ui{Вжух} & остановить / \textbf{запустить программу на дроне} \\
+Справа внизу & центрирование, масштаб, корзина (перетащите блок в неё, чтобы удалить) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+При запуске под полем появляются панели «Вывод программы» (то, что печатают блоки «напечатать») и «Просмотр изображений» (окна, в которые программа отправляет кадры блоком «Демонстрация изображения»). Те же окна открываются в браузере по адресу \texttt{http://10.42.0.1:8889/<имя окна>/}, как у \verb|ImageViewer| в главе~\ref{sec:sdk2}.
+
+\subsection{Блоки по категориям}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.27\linewidth}X@{}}
+\toprule
+\textbf{Категория} & \textbf{Что внутри} \\
+\midrule
+Текст, Логика, Циклы, Математика & стандартные блоки Blockly: строки и печать, «если / иначе», сравнения, повторения, арифметика --- то же, что в главах про основы Python \\
+Функции, Переменные, Массивы & свои функции, переменные (\emph{присвоить}, \emph{получить}), списки \\
+\textbf{Полёт} & предполётная подготовка (запуск двигателей), взлёт, посадка, полёт в точку, ожидание точки, скорости, курс \\
+\textbf{Модули} & сервопривод камеры, захват, Ranger, светодиоды, дальномер, ориентация, координаты и скорости \\
+\textbf{Камера} & получить кадр, показать в окне, сохранить фото, размер, поворот, отражение, обрезка, рисование \\
+\textbf{ИИ} & модель (Yolo, YoloPose, PaddleOCR), поиск объектов и поз, распознавание текста \\
+\textbf{Компьютерное зрение} & маркеры ArUco, координаты и размер объекта, размытие, Кэнни, цветовые и бинарные маски, контуры \\
+Прочее & пауза «Заснуть на», время, выбор цвета, угла, точки \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Содержимое палитр, специфичных для дрона, показано на рис.~\ref{fig:bricks-palettes} и~\ref{fig:bricks-palettes2}.
+
+\begin{figure}[p]
+\centering
+\begin{minipage}[t]{0.49\textwidth}\centering
+\includegraphics[width=\linewidth]{images/bricks/cat_08.png}
+\par\smallskip{\sffamily\small Полёт}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\textwidth}\centering
+\includegraphics[width=\linewidth]{images/bricks/cat_09.png}
+\par\smallskip{\sffamily\small Модули}
+\end{minipage}
+
+\medskip
+\begin{minipage}[t]{0.49\textwidth}\centering
+\includegraphics[width=\linewidth]{images/bricks/cat_10.png}
+\par\smallskip{\sffamily\small Камера}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\textwidth}\centering
+\includegraphics[width=\linewidth]{images/bricks/cat_11.png}
+\par\smallskip{\sffamily\small ИИ}
+\end{minipage}
+\caption{Палитры блоков для дрона}\label{fig:bricks-palettes}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\begin{minipage}[t]{0.32\textwidth}\centering
+\includegraphics[width=\linewidth]{images/bricks/cat_03.png}
+\par\smallskip{\sffamily\small Циклы}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.32\textwidth}\centering
+\includegraphics[width=\linewidth]{images/bricks/cat_12.png}
+\par\smallskip{\sffamily\small Компьютерное зрение}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.32\textwidth}\centering
+\includegraphics[width=\linewidth]{images/bricks/cat_13.png}
+\par\smallskip{\sffamily\small Прочее}
+\end{minipage}
+\caption{Ещё три палитры}\label{fig:bricks-palettes2}
+\end{figure}
+
+\subsection{Во что превращаются блоки}
+
+Сгенерированный файл всегда устроен одинаково: импорты и создание объектов (\verb|Pioneer()|, камеры, \verb|ImageViewer|, модели), затем \emph{тело программы} внутри \verb|try|, а в \verb|finally| --- безопасное завершение. Вот полный файл самой короткой программы (проект~3 ниже). Это та же схема «подключение $\to$ \verb|try| $\to$ \verb|finally|», что вы писали руками в главе~\ref{sec:sdk2}:
+
+\begin{codefile}[python]{python-onboard/bricks/python/full_u03_telemetriya.py}
+\end{codefile}
+
+В остальных листингах главы показано только тело программы; оно вставляется внутрь \verb|try|. Таблица соответствия основных блоков:
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.36\linewidth}X@{}}
+\toprule
+\textbf{Блок} & \textbf{Python (\texttt{pioneer\_sdk2} / \texttt{pioneer\_rknn})} \\
+\midrule
+Предполётная подготовка / Взлёт / Посадка & \verb|pioneer.arm()| / \verb|pioneer.takeoff()| / \verb|pioneer.land()| \\
+Лететь в локальные координаты & \verb|pioneer.go_to_local_point(x, y, z, yaw, time)| \\
+Ожидать достижения точки & \verb|while not pioneer.point_reached(): pass| \\
+Установить цвет всех светодиодов & \verb|pioneer.led_control(255, r, g, b)|; цвет из вида \texttt{\#RRGGBB} переводится в доли 0..1 \\
+Установить цвет светодиода с номером & \verb|pioneer.led_control(i, r, g, b)| \\
+Получить данные от датчика расстояния & \verb|pioneer.get_dist_sensor_data()| \\
+Задать поворот сервопривода & \verb|servo.set_angle(angle=...)| \\
+Получить кадр с основной камеры & \verb|cam_main.get_cv_frame()| \\
+Демонстрация изображения в окно & \verb|iv.imshow(name=..., frame=...)|, окно \texttt{:8889/<имя>/} \\
+Сохранить в файл кадр & \verb|cv2.imwrite(путь, кадр)|, путь \texttt{/mnt/media/photos/<имя>.jpg} \\
+Инициализация ИИ модели Yolo & \verb|Yolo(model_name="yolov8n")| \\
+Заснуть на & \verb|sleep(секунды)| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{hintbox}[Смотрите на сгенерированный код]
+Если программа из блоков ведёт себя неожиданно, откройте её \texttt{.py}-файл (в среде Pioneer Code, папка проекта Bricks): по коду почти всегда видно, в чём дело. А когда блоков станет тесно, переходите к программам на Python из глав~\ref{sec:sdk2} и~\ref{sec:rknn}: те же задачи решаются там короче и гибче.
+\end{hintbox}
+
+\subsection{Безопасное завершение}
+
+В \verb|finally| каждой программы, которая использует \verb|pioneer|, Bricks вызывает \verb|pioneer.land()|, останавливает камеры и закрывает окна просмотра. Что бы ни случилось внутри (ошибка в блоке, нажатие \ui{Стоп}, пропавший кадр), дрон в конце садится. Это защита от «зависшего» в воздухе дрона --- то самое правило «посадка в \verb|finally|», которое в главе~\ref{sec:sdk2} вы соблюдали вручную. Здесь оно встроено, но рассчитывать только на него не нужно: полётную программу всё равно заканчивайте явным блоком «Посадка», а пульт держите в руках.
+
+\input{chapters/python-onboard/03a_bricks_projects.tex}
+\input{chapters/python-onboard/03b_bricks_limits.tex}

@@ -1,7 +1,7 @@
-ap.push(Ev.MCE_PREFLIGHT)                 -- безопасная предстартовая подготовка
-Timer.callLater(1, function()             -- отложить действие на 1 секунду
-  ap.push(Ev.ENGINES_ARM)                 -- команда запуска двигателей (без взлёта)
-end)
+ap.push(Ev.MCE_PREFLIGHT)                 -- подготовка (arm): моторы запускаются, дрон стоит
 
-function callback(event)
+function callback(event)                   -- обработчик событий
+  if event == Ev.ENGINES_STARTED then      -- автопилот подтвердил подготовку
+    print("Моторы запущены")
+  end
 end

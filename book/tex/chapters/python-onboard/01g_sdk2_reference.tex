@@ -1,0 +1,285 @@
+\subsection{Справочник команд}
+
+Справочник собран по сборнику примеров Pioneer Code (0.16.0), исходникам и описанию \texttt{pioneer\_sdk2} 0.11.0; в столбце «Симулятор» --- что поддерживает модель Мини~2 в симуляторе (по его справочнику). Метка «нет» означает: в справочнике симулятора метода нет, программа с ним может не работать. Везде, где метод возвращает «\verb|None|», это значит «нет данных или ошибка». Если не сказано иного, \verb|pioneer| --- объект \verb|Pioneer|.
+
+\subsubsection*{Соединение и время}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.43\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{0.13\linewidth}@{}}
+\toprule
+\textbf{Метод} & \textbf{Что делает} & \textbf{Симулятор} \\
+\midrule
+\verb|Pioneer(serial=None,| \verb|tcp="127.0.0.1:20556",| \verb|baudrate=57600,| \verb|wait_callback=True,| \verb|safety_command=True,| \verb|logger=True)| & подключиться к автопилоту (serial \emph{или} tcp) & да \\
+\verb|connect()| & установить соединение; конструктор вызывает сам & автоматически \\
+\verb|close_connection()| & закрыть соединение & да \\
+\verb|set_logger(value=True)| & включить или выключить журнал библиотеки & да \\
+\verb|reboot_board()| & перезагрузить плату, закрыть соединение, ждать 5~с; \verb|bool| & нет \\
+\verb|time()| & время автопилота, с (от начала GPS-эпохи); \verb|float| или \verb|None| & нет \\
+\verb|uptime()| & секунд с момента идентификации в навигации; \verb|int| или \verb|None| & да \\
+\verb|flight_time()| & секунд с начала полёта; \verb|float| или \verb|None| & да \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Полёт}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.43\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{0.13\linewidth}@{}}
+\toprule
+\textbf{Метод} & \textbf{Что делает} & \textbf{Симулятор} \\
+\midrule
+\verb|arm(timeout=5, retries=0)| & запустить моторы и ждать \verb|ENGINES_STARTED|; \verb|bool| & да \\
+\verb|disarm()| & выключить моторы немедленно; \verb|bool| & да \\
+\verb|takeoff()| & взлететь и ждать \verb|TAKEOFF_COMPLETE|; \verb|bool| & да \\
+\verb|land()| & сесть и ждать \verb|COPTER_LANDED|; \verb|bool| & да \\
+\verb|go_to_local_point(x, y, z,| \verb|yaw=None, time=0)| & лететь в точку, м; курс в градусах; не ждёт & да \\
+\verb|go_to_local_point_body_fixed(x, y, z,| \verb|yaw=None, time=0)| & лететь на смещение от текущего положения & да \\
+\verb|go_to_global_point(latitude,| \verb|longitude, altitude, yaw=0)| & лететь в точку GPS: градусы, градусы, м над уровнем моря; только навигация GPS & нет \\
+\verb|go_to_global_point_relative(| \verb|latitude_offset, longitude_offset,| \verb|altitude_offset, yaw=0)| & лететь в точку GPS по смещению от текущего положения & нет \\
+\verb|point_reached()| & \verb|True| один раз после прибытия & да \\
+\verb|point_deceleration()| & \verb|True| один раз, когда дрон тормозит перед точкой & да \\
+\verb|set_manual_speed(vx, vy, vz,| \verb|yaw_rate, interval=1.0)| & скорость, м/с и рад/с, на \verb|interval| секунд; \verb|yaw_rate| не больше 1.82 & да \\
+\verb|set_manual_speed_body_fixed(vx,| \verb|vy, vz, yaw_rate, interval=1.0)| & то же в осях дрона & да \\
+\verb|set_yaw(yaw)| & повернуться на курс в градусах; \verb|bool| & да \\
+\verb|rtl()| & вернуться домой, не ждёт; \verb|bool| & да \\
+\verb|get_fly_state()| & \verb|FlyState|: \verb|ON_LAND|, \verb|ARMED| или \verb|IN_SKY| & да \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{События, подсветка, груз}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.43\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{0.13\linewidth}@{}}
+\toprule
+\textbf{Метод} & \textbf{Что делает} & \textbf{Симулятор} \\
+\midrule
+\verb|subscribe(callback,| \verb|event=Event.ALL)| & вызывать \verb|callback(event)| при событии & да \\
+\verb|unsubscribe(callback,| \verb|event=Event.ALL)| & отписаться; аргументы те же, что при подписке & да \\
+\verb|led_control(led_id=255,| \verb|r=0, g=0, b=0)| & цвет светодиодов, 0..1; \verb|bool| & да, два светодиода \\
+\verb|grab_close(movement_time=0,| \verb|velocity=20)| & закрыть захват Мини~2; скорость 0..100 \% (по умолчанию 20 в 0.16, 100 в 0.11.0) & да \\
+\verb|grab_open(movement_time=0,| \verb|velocity=20)| & открыть захват & да \\
+\verb|grab_stop()| & остановить захват & да \\
+\verb|cargo_set(grab)| & магнитный захват Базового Пионера: \verb|True| включить, \verb|False| выключить & нет \\
+\verb|cargo_grab()| & включить магнит & нет \\
+\verb|cargo_release()| & выключить магнит & нет \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Датчики}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.43\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{0.13\linewidth}@{}}
+\toprule
+\textbf{Метод} & \textbf{Что делает} & \textbf{Симулятор} \\
+\midrule
+\verb|get_battery_status()| & (напряжение В, температура) или \verb|None| & да \\
+\verb|get_accel()| & ускорение (x, y, z) & да \\
+\verb|get_gyro()| & угловая скорость (x, y, z), рад/с & да \\
+\verb|get_mag()| & магнитометр (x, y, z) & да, модель \\
+\verb|get_orientation()| & (крен, тангаж, рыскание), градусы & да \\
+\verb|get_altitude()| & высота, м & да \\
+\verb|get_dist_sensor_data()| & дальномер вниз, м & да \\
+\verb|get_optical_data()| & (поток x, поток y, дальность м) & да \\
+\verb|get_ranger_data()| & (право, лево, вперёд, назад, сверху/снизу), м; пять \verb|None|, если модуля нет & да, до 4~м \\
+\verb|get_motors_rpm()| & список из четырёх чисел, обороты & да \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Навигация и параметры}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.43\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{0.13\linewidth}@{}}
+\toprule
+\textbf{Метод} & \textbf{Что делает} & \textbf{Симулятор} \\
+\midrule
+\verb|get_nav_system(update=False)| & \verb|NavSystem|: \verb|GPS|, \verb|LPS| или \verb|OPT| & да (LPS) \\
+\verb|get_nav_status_lps()| & \verb|NavStatus| локальной навигации & да \\
+\verb|get_local_position_lps()| & (x, y, z), м & да \\
+\verb|get_local_velocity_lps()| & (vx, vy, vz), м/с & да \\
+\verb|get_local_yaw_lps()| & курс, градусы, $-180\ldots180$ & да \\
+\verb|get_nav_status_gps()| & \verb|NavStatus| GPS & нет \\
+\verb|get_global_position_gps()| & (широта, долгота, высота) & нет \\
+\verb|get_global_velocity_gps()| & (север, восток, вертикаль), м/с & нет \\
+\verb|get_satellites_count()| & (спутники GPS, спутники ГЛОНАСС) & нет \\
+\verb|get_param(name, update=False)| & параметр автопилота или \verb|None| & \verb|None| всегда \\
+\verb|set_param(name, value)| & записать параметр; \verb|bool| & нет \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Пульт RC}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.43\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{0.13\linewidth}@{}}
+\toprule
+\textbf{Метод} & \textbf{Что делает} & \textbf{Симулятор} \\
+\midrule
+\verb|send_rc_channels(channel_1=0,| \verb|channel_2=0, channel_3=0,| \verb|channel_4=0, channel_5=1,| \verb|channel_6=0, channel_7=1,| \verb|channel_8=0)| & отправить значения каналов, $-1\ldots1$; отправлять постоянно & через пульт или эмуляцию \\
+\verb|get_rc_channel()| & значение канала пульта, целое, или \verb|None| & через пульт или эмуляцию \\
+\verb|set_rc_trigger(callback)| & вызывать \verb|callback(value)| при смене значения канала & через пульт или эмуляцию \\
+\verb|rc_sdk1_to_sdk2(channel_1=0,| \verb|channel_2=0, channel_3=0,| \verb|channel_4=0, channel_5=2000)| & перевод каналов SDK~1 в SDK~2; в 0.11.0 считает с ошибкой & нет \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Камера и сервопривод}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.43\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{0.13\linewidth}@{}}
+\toprule
+\textbf{Класс и метод} & \textbf{Что делает} & \textbf{Симулятор} \\
+\midrule
+\verb|Camera(camera_type=| \verb|CameraType.MAIN)| & открыть камеру: \verb|MAIN| (передняя), \verb|OPT| (нижняя) & да \\
+\verb|camera.get_cv_frame(timeout=5.0)| & кадр numpy BGR; \verb|TimeoutError| при отсутствии кадра & да \\
+\verb|camera.stop()| & остановить захват & да \\
+\verb|ImageViewer()| & создать показ кадров & да, окно \\
+\verb|viewer.imshow(name, frame, fps=30)| & отправить кадр в поток \verb|name| & да \\
+\verb|viewer.close()| & закрыть все потоки & да \\
+\verb|ServoCamera()| & подключиться к сервоприводу камеры & да \\
+\verb|servo.set_angle(angle,| \verb|priority=ServoPriority.LOW)| & наклон камеры, $-80\ldots30^\circ$ & да \\
+\verb|RecorderControl()| & служба записи видео и фото (только Мини~2); по Pioneer Code 0.16 & нет \\
+\verb|recorder.get_camera_recording_configs(| \verb|camera_type)| & режимы записи камеры (ширина, высота, fps) & нет \\
+\verb|recorder.start_recording(camera_type,| \verb|config, output_dir)| & начать запись видео (по умолчанию \texttt{/mnt/media/videos/}) & нет \\
+\verb|recorder.stop_recording(camera_type)| & закончить запись & нет \\
+\verb|recorder.take_photo(file_name,| \verb|camera_type, config, output_dir)| & сохранить фото (\texttt{.jpg}, \texttt{.jpeg}, \texttt{.png}) & нет \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Перечисления}
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily\raggedright\arraybackslash}p{0.2\linewidth} X@{}}
+\toprule
+\textrm{\textbf{Имя}} & \textbf{Значения} \\
+\midrule
+Event & \verb|ALL|, \verb|COPTER_LANDED|, \verb|LOW_VOLTAGE1|, \verb|LOW_VOLTAGE2|, \verb|POINT_REACHED|, \verb|POINT_DECELERATION|, \verb|TAKEOFF_COMPLETE|, \verb|ENGINES_STARTED|, \verb|SHOCK|, \verb|LOW_CHARGE| (в 0.16 ещё \verb|DISARM|) \\
+FlyState & \verb|ON_LAND|, \verb|ARMED|, \verb|IN_SKY| \\
+NavSystem & \verb|GPS|, \verb|LPS|, \verb|OPT| \\
+NavStatus & \verb|NO_DATA|, \verb|CANNOT|, \verb|LOW|, \verb|OK| \\
+CameraType & \verb|MAIN|, \verb|OPT| (набор зависит от платы) \\
+ServoPriority & \verb|HIGH|, \verb|MEDIUM|, \verb|LOW| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{taskbox}[Справочник в деле]
+Не глядя в примеры, по одной таблице справочника напишите программу: \verb|arm| с проверкой, \verb|takeoff|, точка $(0, 1, 1)$ с курсом $90^\circ$, \verb|rtl()|. Печатайте \verb|get_local_yaw_lps()| после каждого этапа.
+\expected{дрон долетает до точки носом вдоль $+Y$ (курс около 90), затем сам возвращается в точку взлёта и садится.}
+\end{taskbox}
+
+\subsection{Типичные ошибки}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.38\linewidth} >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Что случилось} & \textbf{Почему и что делать} \\
+\midrule
+\verb|takeoff()| без \verb|arm()| бросил \verb|RuntimeError| & пропущен этап: сначала \verb|arm()| и проверка его результата \\
+Программа зависла на \verb|land()| & дрон уже на земле или посадка не завершилась; \verb|land()| ждёт события без тайм-аута. Зовите его только в воздухе \\
+Дрон после \verb|SHOCK| не выполняет команды & SDK считает, что дрон сел (\verb|ON_LAND|); решайте сами: \verb|land()| или новый \verb|arm()| \\
+Дрон не повернулся при \verb|yaw_rate=2.0| & значение больше 1.82 SDK отбросил молча \\
+Цвет слишком яркий или не тот & в SDK~2 цвет 0..1, не 0..255 \\
+\verb|point_reached()| сразу \verb|True| & остался флаг от предыдущей точки; опрашивайте каждую точку \\
+\verb|get_*| вернул \verb|None| & нет датчика или данных; проверяйте результат перед распаковкой \\
+Метод GPS или груза ничего не делает, пишет «не поддерживается» & нужной аппаратуры нет на борту: \verb|cargo_*| --- Базовый Пионер, \verb|grab_*| и \verb|ServoCamera| --- Мини~2 \\
+\verb|get_param| вернул \verb|None| & нет такого параметра или параметры недоступны (в симуляторе всегда) \\
+RC-каналы игнорируются & не выставлены параметры \texttt{SensorMux\_rc} и \texttt{Copter\_man\_rcMode*}, или каналы отправляются с перерывами \\
+Нет потока \verb|ImageViewer| & драйвер камеры не gstreamer или неверное имя потока в адресе (\texttt{stream not found}) \\
+Программа после камеры не завершается & не вызван \verb|camera.stop()| \\
+\verb|get_cv_frame| всегда \verb|TimeoutError| & завис сервис видео: \verb|sudo systemctl restart media-server| \\
+Дрон раскачивается при слежении & слишком большой коэффициент $K_p$ --- уменьшите вдвое \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Карта примеров: симулятор или дрон}
+
+Файлы лежат в каталоге \texttt{examples/python-onboard/pioneer\_sdk2/} и в симуляторе в списке примеров Мини~2. Столбец «Симулятор» построен по справочнику симулятора (какие методы он поддерживает); сами программы в симуляторе при написании главы не запускались, проверяйте их в нём.
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily\raggedright\arraybackslash}p{0.34\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{0.22\linewidth}@{}}
+\toprule
+\textrm{\textbf{Файл}} & \textbf{Тема} & \textbf{Симулятор} \\
+\midrule
+sdk2\_01\_connect & подключение, телеметрия, LED & да \\
+sdk2\_02\_takeoff\_land & взлёт, посадка, finally & да \\
+sdk2\_03\_square & квадрат по точкам & да \\
+sdk2\_04\_events & подписка на события & да \\
+sdk2\_05\_manual\_speed & скорость & да \\
+sdk2\_06\_camera\_stream & камера, ImageViewer & да, окно \\
+sdk2\_07\_servo\_camera & наклон камеры & да \\
+sdk2\_08\_sensors & все датчики & да \\
+sdk2\_09\_safe\_start & навигация, состояние & да \\
+02\_led\_effects & эффекты LED & да \\
+03\_arm\_disarm\_safe & безопасный запуск & да \\
+04\_takeoff\_hover\_land & шаблон программы & да \\
+05\_square\_mission & миссия-список точек & да \\
+06\_body\_fixed\_moves & смещения от дрона & да \\
+07\_circle\_face\_center & окружность, курс в центр & да \\
+08\_manual\_speed & повтор команды скорости & да \\
+09\_events & ожидание событий & да \\
+10\_telemetry\_logger & журнал в CSV & зависит от записи файлов \\
+10b\_plot\_log & график журнала & компьютер \\
+11\_params\_context & параметры автопилота & нет (параметров нет) \\
+12\_rc\_ramp, 13\_rc\_trigger\_modes & виртуальный пульт & через пульт или эмуляцию \\
+14a\_camera\_stream, 14\_camera\_osd & видео, OSD & да, окно \\
+15\_servo\_panorama & серия снимков & да; сохранение файлов зависит от версии \\
+16\_recorder\_mission & RecorderControl & нет, только дрон \\
+17\_delivery\_grab & груз захватом & да \\
+18\_color\_tracking\_yaw & слежение за цветом & возможно, нужен красный предмет \\
+19\_aruco\_distance, 20\_aruco\_follow & ArUco & нет, нужны data.yml и cv2.aruco \\
+21\_patrol\_project & проект-патруль & частично \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Задания к главе}
+
+\begin{taskbox}[Телеметрия до Ctrl+C]
+Подключитесь к дрону и раз в секунду печатайте напряжение батареи и высоту по дальномеру, пока не нажата \key{Ctrl}+\key{C}; соединение закройте в \verb|finally|.
+\expected{строки идут раз в секунду, после \texttt{Ctrl+C} программа печатает «Соединение закрыто» без трассировки ошибки.}
+\end{taskbox}
+
+\begin{taskbox}[Квадрат с камерой]
+Мини-проект. Дрон облетает квадрат, а программа показывает в браузере видео с камеры с подписью: номер вершины, к которой летит дрон, и напряжение батареи. Ожидание точки и показ кадров идут в одном цикле.
+\expected{видео не замирает во время перелётов, подпись меняется при отправке каждой вершины; после четвёртой вершины дрон садится.}
+\end{taskbox}
+
+\begin{taskbox}[Осторожный разведчик]
+Мини-проект. Дрон проверяет навигацию (\verb|OK|) и батарею, взлетает и летит вдоль стены короткими шагами скорости, пока \verb|get_ranger_data()| показывает впереди больше 0.7~м. В обработчике \verb|LOW_VOLTAGE1| поднимается флаг; при флаге или препятствии дрон разворачивается \verb|set_yaw| на $180^\circ$, возвращается \verb|rtl()| и ждёт посадки по \verb|get_fly_state()|. Подпись на видео: расстояние до препятствия и напряжение.
+\expected{при чистой трассе дрон летит до конца отрезка и возвращается; при препятствии или флаге батареи --- сразу разворот и возврат, программа завершается посадкой и закрывает камеру, \texttt{ImageViewer} и соединение.}
+\end{taskbox}
+
+\subsection*{Итоги}
+\begin{itemize}
+    \item \texttt{pioneer\_sdk2} работает на борту дрона; программа копируется по \texttt{scp} и запускается по SSH.
+    \item \verb|arm()|, \verb|takeoff()|, \verb|land()| ждут окончания действия; \verb|go_to_local_point| --- нет, ждите \verb|point_reached()|.
+    \item SDK~2 ведёт автомат ON\_LAND $\to$ ARMED $\to$ IN\_SKY: команда прошлого этапа игнорируется, пропуск этапа --- \verb|RuntimeError|. Состояние читает \verb|get_fly_state()|.
+    \item Курс --- градусы, цвет --- 0..1, скорость держится \verb|interval| секунд, \verb|yaw_rate| --- рад/с, не больше 1.82.
+    \item Точки бывают локальные (\verb|go_to_local_point|, с вариантом «от дрона») и глобальные по GPS (\verb|go_to_global_point|); \verb|rtl()| не ждёт посадки.
+    \item События --- через \verb|subscribe|; обработчик только ставит флаг.
+    \item Датчики возвращают \verb|None|, когда данных нет; навигацию проверяйте через \verb|NavSystem| и \verb|NavStatus| до \verb|arm()|.
+    \item Параметры автопилота читаются и пишутся через \verb|get_param| и \verb|set_param|; старое значение возвращайте.
+    \item Груз: \verb|cargo_*| --- магнит Базового, \verb|grab_*| --- захват Мини~2; скорость захвата задавайте явно.
+    \item Пульт RC: \verb|send_rc_channels| нужно слать постоянно; \verb|rc_sdk1_to_sdk2| на 0.11.0 считает неверно.
+    \item Видео --- \verb|Camera| $\to$ \verb|ImageViewer| $\to$ браузер; запись и фото --- \verb|RecorderControl| (только Мини~2, в симуляторе нет). Наклон камеры Мини~2 --- \verb|ServoCamera().set_angle(angle)|, от $-80$ до $30^\circ$.
+    \item В симуляторе Мини~2 добавляется на панели \ui{Рой}; GPS, параметры, перезагрузка и \verb|cargo_*| там недоступны.
+\end{itemize}
+
+\begin{missionbox}[Миссии симулятора к главе]
+Режим \ui{Обучение} содержит трек «\ui{Мини 2 · SDK2}»: 37 миссий с проверкой полёта, которые сами выбирают или создают дрон Пионер Мини~2 и открывают редактор Python с шаблоном \texttt{pioneer\_sdk2}. Миссии идут по разделам главы: «Подключение и жизненный цикл» (миссии 1--2), «Взлёт и посадка» (3--6), «Системы координат» и «Полёт по точкам» (7--12), «События» (13--15), «Полёт со скоростью» (16--18), «Датчики», «Навигация» и «Параметры» (19--22), «Подсветка» (23--25), «Груз» (26--27), «Пульт RC» (28--29), «Камера и видео» (30--32), «Наклон камеры» и «Запись» (33--34), «ArUco» (35--36) и итоговый патруль (37). В трек не вошли полёт по GPS, возврат \verb|rtl()|, слежение за цветом и нейросети: в симуляторе их нельзя проверить по полёту.
+\end{missionbox}

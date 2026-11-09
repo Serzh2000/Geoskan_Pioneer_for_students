@@ -1,0 +1,8 @@
+print('Высота по дальномеру, м: ' + str(pioneer.get_dist_sensor_data()))
+pioneer.led_control(255, *[c / 255 for c in hex_to_bgr("#ff0000")][::-1])
+sleep(1)
+pioneer.led_control(255, *[c / 255 for c in hex_to_bgr("#00ff00")][::-1])
+sleep(1)
+pioneer.led_control(255, *[c / 255 for c in hex_to_bgr("#0000ff")][::-1])
+sleep(1)
+pioneer.led_control(255, *[c / 255 for c in hex_to_bgr("#000000")][::-1])

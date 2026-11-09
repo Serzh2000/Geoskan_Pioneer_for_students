@@ -66,3 +66,8 @@ print(5 == "5") # False
 # Чему равно `bool(1)`? А `bool(0)`?
 print(bool(1)) # True
 print(bool(0)) # False
+
+# Задание урока «Проверка безопасности»
+# Полёт разрешён, если ветер слабее 5 м/с. Проверяем ниже порога, на пороге и выше.
+for wind_speed in [4, 5, 7]:
+    print(wind_speed, wind_speed < 5)    # 4 True / 5 False / 7 False

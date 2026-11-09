@@ -110,3 +110,10 @@ def full_name(first, last):
     return f"{last} {first}"
 
 print(full_name("Ivan", "Petrov"))
+
+# Задание урока «Конвертер»
+def celsius_to_fahrenheit(c):
+    return c * 1.8 + 32
+
+for c in [0, 100, -40]:
+    print(c, celsius_to_fahrenheit(c))     # 0 32.0 / 100 212.0 / -40 -40.0

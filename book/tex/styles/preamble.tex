@@ -8,11 +8,11 @@
 
 % Font Configuration: Using standard Windows fonts for compatibility
 % Ligatures=TeX enables standard TeX ligatures (-- for en-dash, etc.)
-\setmainfont{Times New Roman}[
+\setmainfont{Cambria}[
     Ligatures=TeX,
     Scale=1.0
 ]
-\setsansfont{Arial}[
+\setsansfont{Segoe UI}[
     Ligatures=TeX,
     Scale=MatchLowercase
 ]
@@ -30,8 +30,8 @@
 % --- Paragraphs & Spacing (GOST) ---
 \usepackage{indentfirst} % Indent first paragraph of sections
 \usepackage{setspace}
-\onehalfspacing % 1.5 line spacing
-\setlength{\parindent}{1.25cm} % Standard GOST indent
+\setstretch{1.22} % плотнее полуторного: лучше читается и на экране, и в печати
+\setlength{\parindent}{1.0cm}
 \setlength{\parskip}{0pt} % No extra space between paragraphs
 
 % --- Mathematics ---
@@ -109,17 +109,21 @@
 \setkomafont{pagenumber}{\sffamily\bfseries\color{GeoskanBlue}}
 
 % --- Typography & Section Styling (KOMA-Script) ---
-% Section (Level 1) - Left aligned, bold, 14pt+
-\setkomafont{section}{\sffamily\Large\bfseries\color{GeoskanBlue}}
-% Subsection (Level 2)
-\setkomafont{subsection}{\sffamily\large\bfseries\color{GeoskanDarkBlue}}
-% Subsubsection (Level 3)
-\setkomafont{subsubsection}{\sffamily\normalsize\bfseries\color{GeoskanOrange}}
-% Paragraph (Level 4)
-\setkomafont{paragraph}{\sffamily\bfseries\color{GeoskanDarkBlue}}
-
-% Customizing Section Numbering format if needed
-% \renewcommand*{\sectionformat}{\color{GeoskanBlue}\thesection\autodot\enskip}
+% Глава (section): крупный номер и название, под ней линия; каждая глава начинается с новой страницы.
+\setkomafont{section}{\sffamily\fontsize{22}{27}\selectfont\bfseries\color{GeoskanDarkBlue}}
+\renewcommand*{\sectionformat}{\color{GeoskanOrange}\thesection\enskip}
+\RedeclareSectionCommand[beforeskip=0pt,afterskip=1.2em]{section}
+\AddToHook{cmd/section/before}{\clearpage}
+\setkomafont{subsection}{\sffamily\Large\bfseries\color{GeoskanBlue}}
+\setkomafont{subsubsection}{\sffamily\large\bfseries\color{GeoskanDarkBlue}}
+\setkomafont{paragraph}{\sffamily\bfseries\color{GeoskanOrange}}
+\RedeclareSectionCommand[beforeskip=1.6em plus .3em,afterskip=.7em]{subsection}
+\RedeclareSectionCommand[beforeskip=1.2em plus .2em,afterskip=.5em]{subsubsection}
+% Часть: отдельная страница с крупной надписью.
+\setkomafont{part}{\sffamily\fontsize{34}{40}\selectfont\bfseries\color{GeoskanDarkBlue}}
+\setkomafont{partnumber}{\sffamily\fontsize{16}{20}\selectfont\bfseries\color{GeoskanOrange}}
+\renewcommand*{\partformat}{\MakeUppercase{Часть}~\thepart}
+\setcounter{tocdepth}{2}
 
 % --- Lists & Tables ---
 \usepackage{enumitem}
@@ -130,6 +134,7 @@
 \setlist[description]{font=\bfseries\color{GeoskanDarkBlue}, itemsep=0pt, parsep=0pt}
 
 \usepackage{booktabs} % Professional table rules
+\renewcommand{\arraystretch}{1.25}
 \usepackage{tabularx} % Auto-width tables
 \usepackage{multirow}
 \usepackage{caption} 
@@ -355,18 +360,33 @@
     shadow={2mm}{-2mm}{0mm}{black!10}
 }
 
-% 4. Task Box (NO FRAMES - Just numbered text)
-% Нумерация заданий — внутри главы (\section): «Задание 4.3», а не сквозная по книге.
+% 4. Задание после урока: рамка с номером «Задание 3.2», название и текст.
+% Внутри: \expected{что должно получиться} и \mission{Lua}{10--12} (связь с миссиями симулятора).
 \newcounter{taskcounter}[section]
 \renewcommand{\thetaskcounter}{\thesection.\arabic{taskcounter}}
+\definecolor{TaskTeal}{RGB}{0, 128, 128}
+\NewDocumentEnvironment{taskbox}{O{}}{%
+    \refstepcounter{taskcounter}%
+    \begin{tcolorbox}[
+        enhanced, breakable, colback=GeoskanOrange!6!white, colframe=GeoskanOrange,
+        boxrule=0.5pt, leftrule=4pt, arc=2mm, outer arc=2mm, top=3.5mm, bottom=2mm,
+        before skip=1em, after skip=1em,
+        title={\sffamily\bfseries\small \faPen\ ЗАДАНИЕ \thetaskcounter\ifstrempty{#1}{}{\ \textperiodcentered\ #1}},
+        coltitle=GeoskanOrange!70!black, fonttitle=\sffamily\bfseries\small,
+        attach boxed title to top left={xshift=4mm, yshift=-3mm},
+        boxed title style={colback=white, colframe=white, boxrule=0pt}
+    ]\noindent\ignorespaces
+}{\end{tcolorbox}}
+\newcommand{\expected}[1]{\par\smallskip\noindent{\sffamily\small\bfseries\color{TaskTeal}\faCheckCircle\ Что должно получиться:} #1\par}
+\newcommand{\mission}[2]{\par\smallskip\noindent{\sffamily\small\bfseries\color{GeoskanBlue}\faGamepad\ В симуляторе:} миссии #1 №\,#2 в панели \ui{Обучение}.\par}
 
-\newenvironment{taskbox}[1][]{%
-    \par\bigskip% Vertical space before
-    \refstepcounter{taskcounter}% Increment
-    \noindent\textbf{\large\sffamily\color{GeoskanBlue} Задание \thetaskcounter\ifstrempty{#1}{}{: #1}}% Title
-    \par\medskip\noindent\ignorespaces% Space after title and start text
-}{%
-    \par\bigskip% Vertical space after
+% Врезка в начале главы: какие миссии симулятора закрепляют её материал.
+\newtcolorbox{missionbox}[1][Миссии симулятора]{
+    enhanced, colback=TaskTeal!6!white, colframe=TaskTeal, coltitle=TaskTeal, boxrule=0.5pt, leftrule=4pt, arc=2mm,
+    title={\sffamily\bfseries \faGamepad\ #1}, fonttitle=\sffamily\bfseries,
+    attach boxed title to top left={xshift=4mm, yshift=-3mm},
+    boxed title style={colback=white, colframe=white, boxrule=0pt},
+    breakable, top=4mm, shadow={2mm}{-2mm}{0mm}{black!10}
 }
 
 % 5. Hint Box (Orange)
