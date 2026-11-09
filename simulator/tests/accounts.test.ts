@@ -2,7 +2,7 @@
 import { jest } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
-import { AccountStore, ensureTeacher, registerAccountRoutes } from '../server/accounts.js';
+import { AccountStore, EXPECTED_USER_HEADER, ensureTeacher, registerAccountRoutes } from '../server/accounts.js';
 
 async function makeApp() {
     const store = new AccountStore(null);
@@ -89,7 +89,7 @@ describe('прогресс и кабинет учителя', () => {
         expect(list.body.students[0].counts.lua).toBe(1);
 
         await teacher.put(`/api/teacher/students/${id}/progress`).send({ track: 'blocks', questId: 'bk-takeoff-land', done: true });
-        expect((await pupil.get('/api/progress')).body.progress).toEqual({ blocks: ['bk-takeoff-land'], lua: ['academy-001'], python: [] });
+        expect((await pupil.get('/api/progress')).body.progress).toEqual({ blocks: ['bk-takeoff-land'], lua: ['academy-001'], python: [], sdk2: [], bricks: [] });
         const detail = await teacher.get(`/api/teacher/students/${id}`);
         expect(detail.body.student.progress.blocks['bk-takeoff-land'].by).toBe('teacher');
 
@@ -155,5 +155,68 @@ describe('срок входа: два часа после последнего �
         const out = await agent.post('/api/auth/logout');
         expect(String(out.headers['set-cookie'])).toMatch(/Max-Age=0\s*$|Max-Age=0;/);
         expect((await agent.get('/api/auth/me')).body.user).toBeNull();
+    });
+});
+
+describe('один браузер, два ученика', () => {
+    const second = { fullName: 'Петров Пётр', login: 'petrov', loginRepeat: 'petrov', password: 'secret2', passwordRepeat: 'secret2' };
+
+    test('зачёт вкладки первого ученика не записывается тому, кто вошёл в соседней вкладке', async () => {
+        const { app } = await makeApp();
+        // Один браузер: у вкладок общая cookie, поэтому и один агент.
+        const browser = request.agent(app);
+        const first = await browser.post('/api/auth/register').send(student);
+        const firstId = first.body.user.id;
+        const another = await browser.post('/api/auth/register').send(second);
+        const secondId = another.body.user.id;
+
+        // Первая вкладка всё ещё считает, что она Иванов.
+        const stale = await browser.post('/api/progress/complete').set(EXPECTED_USER_HEADER, firstId).send({ track: 'lua', questId: 'academy-001' });
+        expect(stale.status).toBe(401);
+        expect((await browser.get('/api/progress').set(EXPECTED_USER_HEADER, firstId)).status).toBe(401);
+
+        // Зачёт не ушёл никому: у Петрова (чья сейчас сессия) он не появился.
+        expect((await browser.get('/api/progress').set(EXPECTED_USER_HEADER, secondId)).body.progress.lua).toEqual([]);
+        // Вторая вкладка работает как обычно, как и страница, которая ничего не сообщает (прежние клиенты).
+        expect((await browser.post('/api/progress/complete').set(EXPECTED_USER_HEADER, secondId).send({ track: 'lua', questId: 'academy-002' })).status).toBe(200);
+        expect((await browser.get('/api/progress')).status).toBe(200);
+    });
+
+    test('вход другого человека в этом браузере виден по /api/auth/me', async () => {
+        const { app } = await makeApp();
+        const browser = request.agent(app);
+        const first = await browser.post('/api/auth/register').send(student);
+        await browser.post('/api/auth/register').send(second);
+        const me = await browser.get('/api/auth/me');
+        expect(me.body.user.id).not.toBe(first.body.user.id);
+    });
+});
+
+describe('треки Мини 2 (sdk2, bricks)', () => {
+    test('зачёт миссий новых треков принимается, неизвестный трек отклоняется', async () => {
+        const { app } = await makeApp();
+        const pupil = request.agent(app);
+        await pupil.post('/api/auth/register').send(student);
+        expect((await pupil.post('/api/progress/complete').send({ track: 'sdk2', questId: 'sdk2-connect' })).status).toBe(200);
+        expect((await pupil.post('/api/progress/complete').send({ track: 'bricks', questId: 'bricks-first-flight' })).status).toBe(200);
+        expect((await pupil.post('/api/progress/complete').send({ track: 'mini3', questId: 'x' })).status).toBe(400);
+        expect((await pupil.post('/api/progress/complete').send({ track: 'sdk2', questId: 'плохой id!' })).status).toBe(400);
+        const progress = (await pupil.get('/api/progress')).body.progress;
+        expect(progress.sdk2).toEqual(['sdk2-connect']);
+        expect(progress.bricks).toEqual(['bricks-first-flight']);
+        expect(progress.python).toEqual([]);
+    });
+
+    test('учитель ставит зачёт на новом треке и видит счётчики', async () => {
+        const { app } = await makeApp();
+        const pupil = request.agent(app);
+        await pupil.post('/api/auth/register').send(student);
+        const { agent: teacher } = await login(app, 'teacher', 'teacher-pass');
+        const id = (await teacher.get('/api/teacher/students')).body.students[0].id;
+        await teacher.put(`/api/teacher/students/${id}/progress`).send({ track: 'sdk2', questId: 'sdk2-takeoff-land', done: true, note: 'Молодец' });
+        const list = (await teacher.get('/api/teacher/students')).body.students[0];
+        expect(list.counts).toEqual({ blocks: 0, lua: 0, python: 0, sdk2: 1, bricks: 0 });
+        const overview = (await teacher.get('/api/teacher/overview')).body.students[0];
+        expect(overview.done.sdk2).toEqual(['sdk2-takeoff-land']);
     });
 });

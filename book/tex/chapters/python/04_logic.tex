@@ -22,9 +22,7 @@
 \begin{codefile}[python]{python/01_python_basics/04_logic.py}
 \end{codefile}
 
-\begin{taskbox}[Проверка безопасности]
-Создайте переменную \texttt{wind\_speed = 7}. Напишите логическое выражение, которое возвращает \texttt{True}, если скорость ветра меньше 5 м/с.
-\end{taskbox}
+Сравнение с порогом проверяют на трёх значениях: ниже порога, ровно на пороге и выше. Ошибка «\texttt{<} вместо \texttt{<=}» видна только на самом пороге.
 
 \subsubsection*{Задачи для самостоятельного решения}
 
@@ -45,3 +43,9 @@
     \item Равны ли число 5 и строка "5"?
     \item Чему равно \texttt{bool(1)}? А \texttt{bool(0)}?
 \end{enumerate}
+
+\begin{taskbox}[Проверка безопасности]
+Полёт разрешён, если скорость ветра \texttt{wind\_speed} меньше 5~м/с. Проверьте выражение на значениях 4, 5 и 7 и выведите для каждого значение и результат сравнения.
+\expected{\texttt{4 True}, \texttt{5 False}, \texttt{7 False}. Решение --- в конце файла \texttt{examples/python-answers/04\_logic\_answers.py}.}
+\mission{Python}{23}
+\end{taskbox}

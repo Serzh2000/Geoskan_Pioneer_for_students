@@ -24,22 +24,22 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         direction: 'to-autopilot'
     },
     'ap.goToPoint': {
-        desc: 'Полет в глобальные координаты (GPS).',
+        desc: 'Полёт в глобальные координаты (GPS). Широту и долготу задают целыми числами: градусы, умноженные на 10^7. В симуляторе одна единица равна 1 см на земле, точка старта: 600859810, 304206500.',
         syntax: 'ap.goToPoint(lat, lon, alt)',
         params: 'lat (широта * 10^7), lon (долгота * 10^7), alt (метры)',
         returns: 'nil',
-        example: 'ap.goToPoint(600859810, 304206500, 50)',
+        example: '-- старт симулятора: широта 60.0859810, долгота 30.4206500 (в единицах 10^-7 градуса)\nap.goToPoint(600859810 + 1000, 304206500, 2)  -- на 10 м к северу от старта, высота 2 м',
         kind: 'Method',
         insertText: 'goToPoint(${1:lat}, ${2:lon}, ${3:alt})',
         aliases: ['gps точка', 'глобальная точка', 'координаты gps'],
         direction: 'to-autopilot'
     },
     'ap.updateYaw': {
-        desc: 'Установка угла рыскания (курса).',
+        desc: 'Установка угла рыскания (курса). Угол задают в радианах: 90° = math.pi / 2.',
         syntax: 'ap.updateYaw(angle)',
         params: 'angle (радианы)',
         returns: 'nil',
-        example: 'ap.updateYaw(Math.PI / 2)',
+        example: 'ap.updateYaw(math.pi / 2)  -- повернуться на 90 градусов',
         kind: 'Method',
         insertText: 'updateYaw(${1:angle})',
         aliases: ['курс', 'рыскание', 'yaw', 'поворот'],
@@ -47,7 +47,7 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
     },
 
     'Timer.callLater': {
-        desc: 'Выполнение функции через задержку.',
+        desc: 'Выполнение функции через задержку. На настоящем дроне одновременно работает не больше 16 таймеров (callAt, callLater, callAtGlobal, Timer.new): лишние не запустятся.',
         syntax: 'Timer.callLater(delay, func)',
         params: 'delay (секунды), func (функция)',
         returns: 'nil',
@@ -56,21 +56,21 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         insertText: 'callLater(${1:delay}, function()\n\t${2}\nend)'
     },
     'Timer.new': {
-        desc: 'Создание циклического таймера.',
+        desc: 'Создание циклического таймера. На настоящем дроне одновременно работает не больше 16 таймеров (callAt, callLater, callAtGlobal, Timer.new): лишние не запустятся.',
         syntax: 'Timer.new(period, func)',
         params: 'period (секунды), func (функция)',
         returns: 'Timer object',
-        example: 'local t = Timer.new(1, function() ... end)',
+        example: 'local count = 0\nlocal timer = Timer.new(1, function()\n    count = count + 1\n    print("тик", count)\nend)\ntimer:start()',
         kind: 'Method',
         insertText: 'new(${1:period}, function()\n\t${2}\nend)'
     },
-    'Timer.start': { desc: 'Запуск таймера.', syntax: 'timer:start()', kind: 'Method', insertText: 'start()' },
-    'Timer.stop': { desc: 'Остановка таймера.', syntax: 'timer:stop()', kind: 'Method', insertText: 'stop()' },
-    'Timer.callAt': { desc: 'Вызов функции в определенное локальное время.', syntax: 'Timer.callAt(time, func)', kind: 'Method', insertText: 'callAt(${1:time}, function()\n\t${2}\nend)' },
-    'Timer.callAtGlobal': { desc: 'Вызов функции в глобальное время.', syntax: 'Timer.callAtGlobal(time, func)', kind: 'Method', insertText: 'callAtGlobal(${1:time}, function()\n\t${2}\nend)' },
+    'Timer.start': { desc: 'Запуск таймера, созданного через Timer.new. Пока таймер не запущен, функция не вызывается.', syntax: 'timer:start()', example: 'local timer = Timer.new(1, function() print("тик") end)\ntimer:start()', kind: 'Method', insertText: 'start()' },
+    'Timer.stop': { desc: 'Остановка таймера: после вызова функция больше не вызывается. Остановить таймер можно изнутри его же функции.', syntax: 'timer:stop()', example: 'local count = 0\nlocal timer\ntimer = Timer.new(1, function()\n    count = count + 1\n    print("тик", count)\n    if count == 3 then timer:stop() end\nend)\ntimer:start()', kind: 'Method', insertText: 'stop()' },
+    'Timer.callAt': { desc: 'Вызвать функцию один раз в заданный момент локального времени. Момент отсчитывается так же, как time() (с момента включения коптера), поэтому «через 2 секунды» — это time() + 2.', syntax: 'Timer.callAt(time, func)', example: 'Timer.callAt(time() + 2, function()\n    print("прошло две секунды")\nend)', kind: 'Method', insertText: 'callAt(${1:time}, function()\n\t${2}\nend)' },
+    'Timer.callAtGlobal': { desc: 'Вызвать функцию один раз в заданный момент глобального времени навигационной системы (time() + deltaTime()), общего для всех дронов. Так дроны стартуют вместе.', syntax: 'Timer.callAtGlobal(time, func)', example: 'Timer.callAtGlobal(time() + deltaTime() + 2, function()\n    print("глобальное время наступило")\nend)', kind: 'Method', insertText: 'callAtGlobal(${1:time}, function()\n\t${2}\nend)' },
 
     'Ledbar.new': {
-        desc: 'Инициализация светодиодной ленты.',
+        desc: 'Инициализация светодиодной ленты — группы светодиодов, которыми управляют по номеру (индексу, счёт с 0). count — сколько светодиодов в ленте; в учебных заготовках это 29.',
         syntax: 'Ledbar.new(count)',
         params: 'count (число светодиодов)',
         returns: 'Ledbar object',
@@ -99,7 +99,7 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         insertText: 'fromHSV(${1:h}, ${2:s}, ${3:v})'
     },
     'Ledbar:set': {
-        desc: 'Установка цвета светодиода.',
+        desc: 'Установка цвета светодиода. index — номер светодиода (счёт с 0). r, g, b — красный, зелёный и синий каналы цвета, каждый число от 0 (канал выключен) до 1 (максимум); все три в 0 — светодиод погашен, все три в 1 — белый. Новая команда на тот же светодиод заменяет прежний цвет.',
         syntax: 'leds:set(index, r, g, b, [w])',
         params: 'index (0..N-1), r,g,b (0-1), w (0-1, опц.)',
         returns: 'nil',
@@ -126,7 +126,7 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         kind: 'Method',
         insertText: 'lpsVelocity()'
     },
-    'Sensors.lpsYaw': { desc: 'Угол рыскания в локальной системе координат.', syntax: 'Sensors.lpsYaw()', returns: 'yaw (радианы)', kind: 'Method', insertText: 'lpsYaw()' },
+    'Sensors.lpsYaw': { desc: 'Угол рыскания в локальной системе координат.', syntax: 'Sensors.lpsYaw()', returns: 'yaw (радианы)', example: 'local yaw = Sensors.lpsYaw()\nprint("курс, рад:", yaw)', kind: 'Method', insertText: 'lpsYaw()' },
     'Sensors.orientation': {
         desc: 'Получение углов ориентации (Эйлер).',
         syntax: 'Sensors.orientation()',
@@ -136,10 +136,10 @@ export const luaApiDocsFlight: Record<string, ApiDoc> = {
         kind: 'Method',
         insertText: 'orientation()'
     },
-    'Sensors.altitude': { desc: 'Высота по барометру.', syntax: 'Sensors.altitude()', returns: 'alt (метры)', kind: 'Method', insertText: 'altitude()' },
-    'Sensors.accel': { desc: 'Ускорение по осям.', syntax: 'Sensors.accel()', returns: 'ax, ay, az (м/с²)', kind: 'Method', insertText: 'accel()' },
-    'Sensors.gyro': { desc: 'Угловая скорость.', syntax: 'Sensors.gyro()', returns: 'gx, gy, gz (рад/с)', kind: 'Method', insertText: 'gyro()' },
-    'Sensors.rc': { desc: 'Значения каналов пульта РУ.', syntax: 'Sensors.rc()', returns: 'ch1, ch2, ch3, ch4, ...', kind: 'Method', insertText: 'rc()' },
+    'Sensors.altitude': { desc: 'Высота по барометру.', syntax: 'Sensors.altitude()', returns: 'alt (метры)', example: 'local alt = Sensors.altitude()\nprint("высота по барометру, м:", alt)', kind: 'Method', insertText: 'altitude()' },
+    'Sensors.accel': { desc: 'Ускорение по осям.', syntax: 'Sensors.accel()', returns: 'ax, ay, az (м/с²)', example: 'local ax, ay, az = Sensors.accel()\nprint("ускорение:", ax, ay, az)', kind: 'Method', insertText: 'accel()' },
+    'Sensors.gyro': { desc: 'Угловая скорость.', syntax: 'Sensors.gyro()', returns: 'gx, gy, gz (рад/с)', example: 'local gx, gy, gz = Sensors.gyro()\nprint("угловая скорость:", gx, gy, gz)', kind: 'Method', insertText: 'gyro()' },
+    'Sensors.rc': { desc: 'Значения каналов пульта РУ.', syntax: 'Sensors.rc()', returns: 'ch1, ch2, ch3, ch4, ...', example: 'local ch1, ch2, ch3, ch4 = Sensors.rc()\nprint("каналы пульта:", ch1, ch2, ch3, ch4)', kind: 'Method', insertText: 'rc()' },
     'Sensors.battery': {
         desc: 'Напряжение батареи.',
         syntax: 'Sensors.battery()',

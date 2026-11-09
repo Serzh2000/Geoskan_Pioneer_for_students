@@ -2,7 +2,7 @@
  * Панель «Аккаунт» в левой рельсе: вход и регистрация формой прямо в панели, профиль со сменой пароля и выходом,
  * вход в кабинет учителя. Когда вход истёк (два часа без действий), панель открывается сама и просит войти снова.
  */
-import { changePassword, getUser, isSessionExpired, login, logout, onSessionExpired, onUserChange, register, type AccountUser } from './account.js';
+import { changePassword, getUser, isSessionExpired, login, logout, onProfileChange, onSessionExpired, onUserChange, register, type AccountUser } from './account.js';
 
 const esc = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -11,6 +11,10 @@ type View = 'login' | 'register' | 'password';
 let host: HTMLElement;
 let railButton: HTMLElement | null = null;
 let openTeacher: () => void = () => undefined;
+let openCabinet: () => void = () => undefined;
+
+/** Одна понятная строка о том, что хранится: показывается при входе, регистрации и в профиле. */
+const PRIVACY = 'Ваш код и результаты проверок видит только ваш учитель, и сохраняются они только после входа в аккаунт.';
 let view: View = 'login';
 let lastLogin = '';
 
@@ -49,6 +53,7 @@ function renderForm(user: AccountUser | null): string {
             <div class="auth-error" role="alert" hidden></div>
             <button type="submit" class="btn-primary account-submit">${SUBMIT[view]}</button>
             ${view === 'register' ? '<p class="auth-note">Подтверждения почтой нет: запомните логин и пароль. Если забудете, учитель задаст новый в своём кабинете.</p>' : ''}
+            ${view === 'login' || view === 'register' ? `<p class="auth-privacy">${PRIVACY}</p>` : ''}
         </form>`;
 }
 
@@ -75,12 +80,14 @@ function render(): void {
                 <span class="account-profile__who"><strong>${esc(user.fullName)}</strong><small>Логин ${esc(user.login)}</small></span>
                 <span class="account-role account-role--${teacher ? 'teacher' : 'student'}">${teacher ? 'Учитель' : 'Ученик'}</span>
             </div>
+            ${user.mustChangePassword ? '<div class="account-banner" role="status"><strong>Временный пароль</strong>Учитель выдал вам пароль. Смените его на свой, кнопка ниже.</div>' : ''}
             <div class="account-actions">
-                ${teacher ? '<button type="button" class="btn-primary" data-account="teacher">Кабинет учителя</button>' : ''}
+                ${teacher ? '<button type="button" class="btn-primary" data-account="teacher">Кабинет учителя</button>' : '<button type="button" class="btn-primary" data-account="cabinet">Мой кабинет</button>'}
                 <button type="button" class="btn-secondary" data-account="password">Сменить пароль</button>
                 <button type="button" class="btn-secondary" data-account="logout">Выйти</button>
             </div>
-            <p class="auth-note">${teacher ? 'Здесь вы создаёте учеников, меняете пароли и вручную засчитываете миссии. ' : 'Пройденные миссии сохраняются на сервере. '}Вход действует два часа после последнего действия, потом нужно войти снова.</p>`;
+            <p class="auth-note">${teacher ? 'В кабинете вы ведёте классы, видите, кто застрял, и вручную засчитываете миссии. ' : 'В кабинете виден весь прогресс, история проверок и достижения. '}Вход действует два часа после последнего действия, потом нужно войти снова.</p>
+            ${teacher ? '' : `<p class="auth-privacy">${PRIVACY}</p>`}`;
     }
     const banner = expired
         ? `<div class="account-banner" role="status"><strong>Вход закончился</strong>Вы не пользовались симулятором больше двух часов. Войдите снова: всё, что вы прошли, уже сохранено и дойдёт до учителя.</div>`
@@ -99,6 +106,7 @@ function wire(): void {
         const action = button.dataset.account;
         if (action === 'password') { view = 'password'; render(); }
         else if (action === 'teacher') openTeacher();
+        else if (action === 'cabinet') openCabinet();
         else if (action === 'logout') void logout();
     }));
     const form = host.querySelector<HTMLFormElement>('.account-form');
@@ -134,8 +142,9 @@ function showPanel(): void {
     if (!document.querySelector('#account-panel.active')) (window as any).openPanel?.('account-panel');
 }
 
-export function initAccountUi(target: HTMLElement, hooks: { openTeacher: () => void }): void {
+export function initAccountUi(target: HTMLElement, hooks: { openTeacher: () => void; openCabinet: () => void }): void {
     openTeacher = hooks.openTeacher;
+    openCabinet = hooks.openCabinet;
     host = target;
     railButton = document.getElementById('sidebar-account-btn');
     onUserChange((user: AccountUser | null) => {
@@ -143,6 +152,7 @@ export function initAccountUi(target: HTMLElement, hooks: { openTeacher: () => v
         view = 'login';
         render();
     });
+    onProfileChange(() => render());
     onSessionExpired(() => {
         const user = getUser();
         if (user) lastLogin = user.login;

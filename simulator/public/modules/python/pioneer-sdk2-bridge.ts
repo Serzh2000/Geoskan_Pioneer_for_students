@@ -127,6 +127,15 @@ export function installSdk2RuntimeAPI(w: Record<string, unknown>) {
         return true;
     };
 
+    // Магнитный захват груза cargo_set: есть только у Базового Пионера.
+    w.pioneer2_cargo = (id: string, grab: unknown) => {
+        checkCancelled(id);
+        const d = getDroneOrDefault(id);
+        if (!droneModelProfile(d.model).cargo) return false;
+        d.magnetGripper.active = Boolean(grab);
+        return true;
+    };
+
     w.pioneer2_camera_tilt = (id: string, degrees: unknown) => {
         checkCancelled(id);
         const d = getDroneOrDefault(id);

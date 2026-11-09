@@ -1,5 +1,6 @@
 import type { GuideTextLesson } from '../../types.js';
 import { ACADEMY_LESSONS } from '../catalog.js';
+import { explainerFor } from '../explainers.js';
 
 export type VisionExercise = {
     number: number; task: string; hint: string; observation: string; experiment: string;
@@ -57,14 +58,15 @@ go(0,0,3)
 export function compileVisionExercise(exercise: VisionExercise): GuideTextLesson {
     const lesson = ACADEMY_LESSONS[exercise.number - 1];
     const correct = exercise.number % 2;
+    const explain = explainerFor(lesson.number, 'python');
     const source = exercise.code + '\nprint("Опыт завершён")\n';
     return { id: `python-${lesson.id}`, topicId: lesson.id, chapterId: lesson.moduleId,
         badge: `Урок ${lesson.number}`, title: lesson.title, goal: exercise.task,
-        summary: lesson.explanation, lessonIntro: `${lesson.explanation} ${exercise.hint}`, expectedOutcome: exercise.observation,
+        summary: explain, lessonIntro: `${explain} ${exercise.hint}`, expectedOutcome: exercise.observation,
         builderHint: exercise.hint, starterCode: source, solutionCode: source.split('___').join(exercise.answer),
         apiFocus: [{ title: lesson.concept, summary: exercise.hint }], links: [{ label: 'Камера и ArUco', query: 'Camera get_cv_frame cv2 aruco' }, ...(exercise.number >= 92 ? [{ label: 'Скорость дрона', query: 'set_manual_speed' }] : [])],
         academy: { number: lesson.number, mode: 'code', waitMs: 420000, doneMessage: 'Опыт завершён', hints: [exercise.hint], experiment: exercise.experiment,
-            teaching: { deviceTitle: lesson.title, device: `${lesson.explanation} ${exercise.hint} В этих уроках Camera(view="bottom") выбирает нижнюю камеру симулятора. Параметр view — расширение симулятора; при переносе на аппарат источник камеры настраивается под его оборудование. Распознавание здесь моделируется по видимости, перекрытиям и проекции меток, поэтому опыт учит обработке результатов API, а не качеству настоящего OpenCV на шумных фотографиях.`,
+            teaching: { deviceTitle: lesson.title, device: `${explain} ${exercise.hint} В этих уроках Camera(view="bottom") выбирает нижнюю камеру симулятора. Параметр view — расширение симулятора; при переносе на аппарат источник камеры настраивается под его оборудование. Распознавание здесь моделируется по видимости, перекрытиям и проекции меток, поэтому опыт учит обработке результатов API, а не качеству настоящего OpenCV на шумных фотографиях.`,
                 question: exercise.question.includes('?') ? exercise.question : `${exercise.question.replace(/…$/, '')}?`, correct, choices: (correct ? [exercise.wrong, exercise.right] : [exercise.right, exercise.wrong]).map((text, index) => ({ text, feedback: `${index === correct ? 'Верно. ' : 'Попробуйте снова. '}${exercise.feedback}` })),
                 takeaway: exercise.feedback } }
     };

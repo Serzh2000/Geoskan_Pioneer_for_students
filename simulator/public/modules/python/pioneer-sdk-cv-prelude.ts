@@ -1,6 +1,8 @@
 // Питоновская часть заглушки cv2 и работа с кадрами живут отдельно от pioneer_sdk:
 // это самый объёмный кусок прелюдии, и держать его в одном файле с Pioneer/Camera
 // значит упираться в лимит длины файла на каждой правке камеры.
+import { PIONEER_CV_EXTRA_PRELUDE } from './pioneer-sdk-cv-extra-prelude.js';
+
 export const PIONEER_CV_PRELUDE = `
 _np_module = None
 _np_checked = False
@@ -98,21 +100,6 @@ class SimCvFrame:
                 self.data[offset:offset+3]=bytes(value)
         return None
 
-class _CvNode:
-    def mat(self):
-        return None
-
-class _CvFileStorage:
-    def __init__(self, path, mode):
-        self.path = path
-        self.mode = mode
-
-    def getNode(self, name):
-        return _CvNode()
-
-    def release(self):
-        return None
-
 class _ArucoDictionary:
     def __init__(self, name):
         self.name = name
@@ -202,7 +189,7 @@ class _ArucoNamespace:
         return _aruco_detect(dictionary, image)
 
     @staticmethod
-    def drawDetectedMarkers(frame, corners, ids=None):
+    def drawDetectedMarkers(frame, corners, ids=None, *args, **kwargs):
         for marker in corners:
             points=marker[0]
             for i in range(4):
@@ -214,7 +201,6 @@ cv2.IMREAD_COLOR = 1
 cv2.FILE_STORAGE_READ = 0
 cv2.error = Exception
 cv2.aruco = _ArucoNamespace()
-cv2.FileStorage = _CvFileStorage
 
 def _cv2_imshow(name, frame):
     if frame is None: return None
@@ -244,7 +230,7 @@ def _cv2_imshow(name, frame):
         }
     return js.pioneer_cv_imshow(name, payload)
 
-def _cv2_line(frame, start, end, color, thickness=1):
+def _cv2_line(frame, start, end, color, thickness=1, *args, **kwargs):
     x0,y0=[int(round(float(v))) for v in start]
     x1,y1=[int(round(float(v))) for v in end]
     steps=max(abs(x1-x0),abs(y1-y0),1)
@@ -253,7 +239,7 @@ def _cv2_line(frame, start, end, color, thickness=1):
         if 0<=y<frame.shape[0] and 0<=x<frame.shape[1]: frame[y,x]=color
     return frame
 
-def _cv2_circle(frame, center, radius, color, thickness=1):
+def _cv2_circle(frame, center, radius, color, thickness=1, *args, **kwargs):
     x,y=[int(round(float(v))) for v in center]
     radius=max(1,int(radius))
     for dy in range(-radius,radius+1):
@@ -336,6 +322,9 @@ cv2.circle = _cv2_circle
 cv2.line = _cv2_line
 cv2.destroyAllWindows = _cv2_destroy_all_windows
 cv2.waitKey = lambda delay=0: int(js.pioneer_cv_wait_key(delay))
-cv2.solvePnP = lambda *args, **kwargs: (False, None, None)
+${PIONEER_CV_EXTRA_PRELUDE}
 sys.modules['cv2'] = cv2
+# import cv2.aruco: подмодуль должен быть настоящим модулем, а не только атрибутом.
+cv2.__path__ = []
+sys.modules['cv2.aruco'] = cv2.aruco
 `;

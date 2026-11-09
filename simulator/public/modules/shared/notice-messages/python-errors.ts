@@ -148,6 +148,15 @@ const RUNTIME_ENTRIES: DictionaryEntry[] = [
         })
     },
     {
+        id: 'py.runtime.rknnForBasic',
+        test: /pioneer_rknn - библиотека Пионера Мини 2/,
+        build: (_m, { line }) => ({
+            title: 'pioneer_rknn - только для Мини 2',
+            message: `${atLine(line)} подключается ${code('pioneer_rknn')} - нейросети на борту Пионера Мини 2, а выбран другой дрон. Добавьте дрон «Пионер Мини 2» на панели «Рой».`,
+            example: 'from pioneer_rknn import Yolo\nfrom pioneer_sdk2 import Pioneer'
+        })
+    },
+    {
         id: 'py.runtime.nameError',
         test: /NameError: name '([^']+)' is not defined/,
         build: (m, { line }) => ({

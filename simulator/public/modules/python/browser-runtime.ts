@@ -15,7 +15,7 @@ import { droneModelProfile } from '../core/drone-models.js';
 
 // get_cv_frame собирает настоящий numpy-массив, но подгрузить пакет можно только из async-кода,
 // а сам вызов в скрипте синхронный. Поэтому решение принимается по исходнику до запуска.
-const NUMPY_DEPENDENT_SOURCE = /\bnumpy\b|\bget_cv_frame\b/;
+const NUMPY_DEPENDENT_SOURCE = /\bnumpy\b|\bget_cv_frame\b|\bpioneer_rknn\b/;
 
 type ActivePythonRun = {
     token: symbol;
@@ -60,15 +60,18 @@ __sim_validation_result
 
 // Пионер Мини 2 программируется только через pioneer_sdk2, Базовый - через
 // pioneer_sdk. Импорт чужой библиотеки ловится до запуска, с номером строки.
-const SDK_IMPORT = /^[ \t]*(?:from|import)[ \t]+(pioneer_sdk2?)\b/gm;
+const SDK_IMPORT = /^[ \t]*(?:from|import)[ \t]+(pioneer_sdk2?|pioneer_rknn)\b/gm;
 
 export function checkPythonSdkForDrone(droneId: string, code: string): void {
     const profile = droneModelProfile(drones[droneId]?.model);
     for (const match of code.matchAll(SDK_IMPORT)) {
         const library = match[1];
-        if (library === profile.pythonSdk) continue;
+        // pioneer_rknn (нейросети на борту) идёт в комплекте с pioneer_sdk2: она есть только у Мини 2.
+        if (library === profile.pythonSdk || (library === 'pioneer_rknn' && profile.pythonSdk === 'pioneer_sdk2')) continue;
         const line = code.slice(0, match.index ?? 0).split('\n').length;
-        const message = profile.pythonSdk === 'pioneer_sdk2'
+        const message = library === 'pioneer_rknn'
+            ? `pioneer_rknn - библиотека Пионера Мини 2 (нейросети на борту). Для дрона «${profile.title}» её нет: добавьте дрон «Пионер Мини 2» на панели «Рой».`
+            : profile.pythonSdk === 'pioneer_sdk2'
             ? `${profile.title} программируется через pioneer_sdk2: from pioneer_sdk2 import Pioneer`
             : `${library} - библиотека Пионера Мини 2. Для дрона «${profile.title}» используйте pioneer_sdk или добавьте дрон «Пионер Мини 2».`;
         throw createScriptFailureError('runtime', message, { line, column: null, details: match[0].trim() });
@@ -143,21 +146,62 @@ class __SimAsyncify(ast.NodeTransformer):
     def __init__(self):
         self.user_functions = set()
         self.user_methods = set()
+        # Функции без ожиданий внутри остаются обычными: их зовут из lambda и генераторов списков
+        # (там await недопустим), например вспомогательные функции блоков Bricks.
+        self.sync_functions = set()
+        # from time import sleep: sleep(1) без префикса time.
+        self.sleep_names = set()
         self.awaitable_attrs = {"start", "join", "wait", "stop"}
         self.maybe_awaitable_attrs = {"arm", "takeoff", "land", "get_cv_frame"}
 
     def collect(self, tree):
+        functions = {}
         for node in tree.body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 self.user_functions.add(node.name)
+                functions[node.name] = node
             elif isinstance(node, ast.ClassDef):
                 for part in node.body:
                     if isinstance(part, (ast.FunctionDef, ast.AsyncFunctionDef)) and part.name != "__init__":
                         self.user_methods.add(part.name)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module == "time":
+                for alias in node.names:
+                    if alias.name == "sleep":
+                        self.sleep_names.add(alias.asname or alias.name)
+        awaiting = set(name for name, node in functions.items() if isinstance(node, ast.AsyncFunctionDef))
+        changed = True
+        while changed:
+            changed = False
+            for name, node in functions.items():
+                if name not in awaiting and self.needs_async(node, awaiting):
+                    awaiting.add(name)
+                    changed = True
+        self.sync_functions = set(functions) - awaiting
+        self.user_functions -= self.sync_functions
+
+    def is_str_receiver(self, node):
+        return isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Constant)
+
+    def needs_async(self, function, awaiting):
+        for node in ast.walk(function):
+            if isinstance(node, ast.While):
+                return True
+            if not isinstance(node, ast.Call):
+                continue
+            func = node.func
+            if isinstance(func, ast.Name) and (func.id in self.sleep_names or func.id in awaiting):
+                return True
+            if isinstance(func, ast.Attribute) and not self.is_str_receiver(node):
+                if isinstance(func.value, ast.Name) and func.value.id == "time" and func.attr == "sleep":
+                    return True
+                if func.attr in self.user_methods or func.attr in self.awaitable_attrs or func.attr in self.maybe_awaitable_attrs:
+                    return True
+        return False
 
     def visit_FunctionDef(self, node):
         node = self.generic_visit(node)
-        if node.name == "__init__":
+        if node.name == "__init__" or node.name in self.sync_functions:
             return node
         return ast.AsyncFunctionDef(
             name=node.name,
@@ -196,39 +240,83 @@ class __SimAsyncify(ast.NodeTransformer):
             )
             return ast.Await(value=awaited_sleep)
 
+        if isinstance(node.func, ast.Name) and node.func.id in self.sleep_names:
+            return ast.Await(value=ast.Call(
+                func=ast.Attribute(value=ast.Name(id="asyncio", ctx=ast.Load()), attr="sleep", ctx=ast.Load()),
+                args=[self.visit(arg) for arg in node.args],
+                keywords=[ast.keyword(arg=kw.arg, value=self.visit(kw.value)) for kw in node.keywords]
+            ))
+
         node = self.generic_visit(node)
         should_await = False
         if isinstance(node.func, ast.Name) and node.func.id in self.user_functions:
             should_await = True
-        elif isinstance(node.func, ast.Attribute) and (
-            node.func.attr in self.user_methods
-            or node.func.attr in self.awaitable_attrs
-        ):
+        elif isinstance(node.func, ast.Attribute) and node.func.attr in self.user_methods:
             should_await = True
 
         if should_await:
             return ast.Await(value=node)
-        if isinstance(node.func, ast.Attribute) and node.func.attr in self.maybe_awaitable_attrs:
+        # Метод библиотеки может быть и корутиной (Thread.join у SDK), и обычной функцией (str.join):
+        # решает __sim_await на месте.
+        if (
+            isinstance(node.func, ast.Attribute)
+            and not self.is_str_receiver(node)
+            and (node.func.attr in self.awaitable_attrs or node.func.attr in self.maybe_awaitable_attrs)
+        ):
             return ast.Await(value=ast.Call(func=ast.Name(id="__sim_await", ctx=ast.Load()), args=[node], keywords=[]))
         return node
 
-__sim_tree = ast.parse(__sim_source, "<user-script>", "exec")
-__sim_transformer = __SimAsyncify()
-__sim_transformer.collect(__sim_tree)
-__sim_body = __sim_transformer.visit(__sim_tree).body
-__sim_module = ast.Module(
-    body=[
-        ast.AsyncFunctionDef(
-            name="__user_main",
-            args=ast.arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[]),
-            body=__sim_body if __sim_body else [ast.Pass()],
-            decorator_list=[]
-        )
-    ],
-    type_ignores=[]
-)
-ast.fix_missing_locations(__sim_module)
-exec(compile(__sim_module, "<user-script>", "exec"), globals(), globals())
+class __SimDropAnnotations(ast.NodeTransformer):
+    # \`x: int = 1\` на верхнем уровне нельзя совмещать с \`global x\`: это обычное присваивание.
+    # Вложенные функции, классы и lambda не трогаем: у них своя область видимости.
+    def visit_FunctionDef(self, node):
+        return node
+
+    visit_AsyncFunctionDef = visit_FunctionDef
+    visit_ClassDef = visit_FunctionDef
+    visit_Lambda = visit_FunctionDef
+
+    def visit_AnnAssign(self, node):
+        if not isinstance(node.target, ast.Name):
+            return node
+        if node.value is None:
+            return ast.copy_location(ast.Pass(), node)
+        return ast.copy_location(ast.Assign(targets=[node.target], value=node.value), node)
+
+def __sim_load(code_text):
+    # Программа выполняется как обычный скрипт: её переменные верхнего уровня - глобальные переменные
+    # собственного словаря (так их видит и меняет \`global x\` в функциях и обработчиках событий).
+    # Тело программы лежит в корутине __user_main только ради await; все имена, которые оно связывает,
+    # объявлены в ней global, поэтому локальных переменных у __user_main нет.
+    import symtable
+    tree = ast.parse(code_text, "<user-script>", "exec")
+    top_names = sorted(
+        sym.get_name() for sym in symtable.symtable(code_text, "<user-script>", "exec").get_symbols()
+        if sym.is_local() and not sym.get_name().startswith("__sim_")
+    )
+    tree = __SimDropAnnotations().visit(tree)
+    transformer = __SimAsyncify()
+    transformer.collect(tree)
+    body = transformer.visit(tree).body
+    if top_names:
+        body.insert(0, ast.Global(names=top_names))
+    module = ast.Module(
+        body=[
+            ast.AsyncFunctionDef(
+                name="__user_main",
+                args=ast.arguments(posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[]),
+                body=body if body else [ast.Pass()],
+                decorator_list=[]
+            )
+        ],
+        type_ignores=[]
+    )
+    ast.fix_missing_locations(module)
+    user_globals = {"__name__": "__main__", "__builtins__": builtins, "asyncio": asyncio, "__sim_await": __sim_await}
+    exec(compile(module, "<user-script>", "exec"), user_globals)
+    return user_globals["__user_main"]
+
+__user_main = __sim_load(__sim_source)
 
 try:
     await __user_main()

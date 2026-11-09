@@ -1,6 +1,7 @@
 import type { GuideTextLesson } from '../../types.js';
 import { ACADEMY_LESSONS } from '../catalog.js';
 import { localize } from '../../book/localize.js';
+import { explainerFor } from '../explainers.js';
 
 type Language = 'lua' | 'python';
 type Exercise = {
@@ -17,7 +18,7 @@ const exercises: Exercise[] = [
         task: 'Осмотрите дрон кнопками вида X, Y и Z. Укажите, какая часть создаёт тягу и какая получает изображение. Программу пока не пишем.',
         taskSteps: [
             'Осмотрите дрон кнопками вида X, Y и Z.',
-            'Выберите на карточке миссии, какая часть создаёт тягу и какая получает изображение. Программу пока не пишем.'
+            'Дойдите до последней карточки миссии и выберите там: какая часть создаёт тягу и какая получает изображение. Программу пока не пишем.'
         ],
         observation: 'Дрон остаётся на земле. Вы отличаете винты, создающие тягу, от камеры, получающей изображение.',
         hint: 'Кнопки X, Y, Z меняют точку наблюдения. Вращение обзорной камеры не является командой аппарату.',
@@ -45,7 +46,7 @@ const exercises: Exercise[] = [
         python: ['# TODO: замените этот комментарий', '# Мой первый опыт']
     },
     {
-        task: 'Добавьте одну команду подготовки двигателей (её называют arm). После неё автопилот переходит в состояние PREFLIGHT: двигатели готовы, дрон стоит на земле. Запустите программу и сравните состояние до и после. Команду взлёта пока не добавляйте.',
+        task: 'Добавьте одну команду подготовки двигателей (её называют arm): <lua>`ap.push(Ev.MCE_PREFLIGHT)`</lua><py>`pioneer.arm()`</py>. После неё автопилот переходит в состояние <lua>PREFLIGHT</lua><py>ARMED (`pioneer.get_autopilot_state()` вернёт строку "ARMED")</py>: двигатели готовы, дрон стоит на земле. Запустите программу и сравните состояние до и после. Команду взлёта пока не добавляйте.',
         observation: 'Принята ровно одна команда подготовки. Состояние стало PREFLIGHT, высота осталась около нуля.',
         hint: '<lua>Нужна команда ap.push(Ev.MCE_PREFLIGHT). Пустую функцию callback оставляем: автопилот вызывает её при событиях, пока она нам не нужна.</lua><py>Нужна команда pioneer.arm().</py>',
         experiment: 'Нажмите «Проверить полёт» ещё раз с той же программой. Проверьте, что подготовка снова начинается на земле.',
@@ -58,7 +59,7 @@ const exercises: Exercise[] = [
         task: 'Отправьте подготовку двигателей дважды и посмотрите, как симулятор отреагирует на вторую.',
         taskSteps: [
             '<lua>Вместо первого TODO впишите команду подготовки двигателей: она уйдёт в начале программы.</lua><py>Вместо TODO вызовите arm() один раз.</py>',
-            '<lua>Вместо второго TODO впишите ту же команду. Он стоит в функции callback: автопилот вызывает её при событиях, а ENGINES_STARTED значит «двигатели подготовлены».</lua><py>Следующей строкой вызовите arm() ещё раз.</py>',
+            '<lua>Вместо второго TODO впишите ту же команду. Это место внутри функции callback: автопилот вызывает её при событиях, а ENGINES_STARTED значит «двигатели подготовлены».</lua><py>Следующей строкой вызовите arm() ещё раз.</py>',
             'Нажмите «Проверить полёт» и найдите в журнале сообщение о конфликте: команда не подходит текущему состоянию аппарата.'
         ],
         observation: 'Первая подготовка принята. Вторая отклонена: в журнале появится сообщение «FSM-конфликт» — команда не подходит текущему состоянию, аппарат уже подготовлен. Дрон остался на земле: повторная подготовка не стала взлётом.',
@@ -74,8 +75,8 @@ const exercises: Exercise[] = [
         task: 'Напишите одну команду подготовки вместо TODO. Нажмите «Проверить полёт». Каждая проверка сама сбрасывает аппарат перед запуском. Затем снова нажмите «Проверить полёт», не меняя код.',
         taskSteps: [
             'Вместо TODO напишите одну команду подготовки двигателей.',
-            'Нажмите «Проверить полёт». Каждая проверка сама сбрасывает аппарат перед запуском.',
-            'Не меняя код, нажмите «Проверить полёт» ещё раз и сравните два запуска.'
+            'Нажмите «Проверить полёт». Каждая проверка сама сбрасывает аппарат перед запуском. Проверка ответит «Почти: первый опыт записан» — так и должно быть, нужен второй запуск.',
+            'Не меняя в коде ни одного символа, нажмите «Проверить полёт» ещё раз и сравните два запуска.'
         ],
         observation: 'Два отдельных запуска из исходной точки приняли по одной подготовке; высота и состояние одинаковы.',
         hint: 'Не меняйте код между двумя запусками: сброс перед каждым делает начальные условия одинаковыми, поэтому результаты можно сравнивать.',
@@ -89,7 +90,7 @@ const exercises: Exercise[] = [
         task: 'Выведите «До arm», затем подготовьте двигатели и выведите «После arm». Проверим порядок записей и фактическую подготовку.',
         taskSteps: [
             'Строка с «До arm» уже есть. Вместо первого TODO напишите команду подготовки двигателей.',
-            'Вместо второго TODO выведите сообщение «После arm».',
+            'Вместо второго TODO командой print выведите текст `После arm` (кавычки «» печатать не нужно: они только выделяют текст в задании).',
             'Нажмите «Проверить полёт» и сравните порядок записей в журнале.'
         ],
         observation: 'Журнал содержит обе строки в заданном порядке. Подготовка действительно принята; дрон остаётся на земле.',
@@ -125,9 +126,9 @@ const exercises: Exercise[] = [
     {
         task: 'Выведите «Начинаю подготовку». Затем подготовьте двигатели одной командой. После неё выведите «Команда отправлена». Команды взлёта в программе быть не должно.',
         taskSteps: [
-            'Выведите сообщение «Начинаю подготовку».',
+            'Командой print выведите текст `Начинаю подготовку` (кавычки «» печатать не нужно).',
             'Подготовьте двигатели одной командой. Команды взлёта в программе быть не должно.',
-            'Выведите сообщение «Команда отправлена» и нажмите «Проверить полёт».'
+            'Командой print выведите текст `Команда отправлена` и нажмите «Проверить полёт».'
         ],
         observation: 'Обе записи появились вокруг команды, одна подготовка принята, взлёта и движения не было.',
         hint: 'Сначала сообщение print, затем команда подготовки, затем второе сообщение. Высоту мы пока не задаём.',
@@ -153,12 +154,13 @@ export function getDroneAcademyPractices(language: Language): GuideTextLesson[] 
             right: localize(source.right, language), wrong: localize(source.wrong, language), feedback: localize(source.feedback, language)
         };
         const curriculum = ACADEMY_LESSONS[index];
+        const explain = explainerFor(curriculum.number, language);
         const [starter, solution] = exercise[language];
         const command = language === 'lua' ? ARM : PY_ARM;
         return {
             id: `${language}-${curriculum.id}`, topicId: curriculum.id, chapterId: curriculum.moduleId,
             badge: `Урок ${curriculum.number}`, title: curriculum.title,
-            goal: exercise.task, taskSteps: source.taskSteps?.map(step => localize(step, language)), summary: curriculum.explanation, lessonIntro: curriculum.explanation,
+            goal: exercise.task, taskSteps: source.taskSteps?.map(step => localize(step, language)), summary: explain, lessonIntro: explain,
             expectedOutcome: exercise.observation, builderHint: exercise.hint,
             starterCode: wrap(starter, language), solutionCode: wrap(solution, language),
             apiFocus: index < 2 ? [{ title: 'Наблюдение и комментарий', summary: exercise.hint }]
@@ -167,7 +169,7 @@ export function getDroneAcademyPractices(language: Language): GuideTextLesson[] 
             links: index < 2 ? [] : [{ label: 'Справочник подготовки', query: language === 'lua' ? 'ap.push MCE_PREFLIGHT' : 'pioneer.arm arm' }],
             academy: { number: curriculum.number, mode: index === 0 ? 'inspect' : 'code', hints: [exercise.hint], experiment: exercise.experiment,
                 teaching: { deviceTitle: curriculum.title,
-                    device: `${curriculum.explanation} Тема урока: ${curriculum.concept.toLowerCase()}.`,
+                    device: `${explain} Тема урока: ${curriculum.concept.toLowerCase()}.`,
                     question: exercise.question, correct: index % 2,
                     choices: (index % 2 ? [exercise.wrong, exercise.right] : [exercise.right, exercise.wrong]).map((text, choice) => ({ text,
                         feedback: `${choice === index % 2 ? 'Верно. ' : 'Попробуйте ещё раз. '}${exercise.feedback}` })),

@@ -3,8 +3,8 @@
  * на каких языках его программируют и какая Python-библиотека ему доступна.
  *
  * Пионер Базовый — Lua (автопилот) и Python через pioneer_sdk.
- * Пионер Мини 2 — только Python и только pioneer_sdk2: программа работает
- * на его бортовом компьютере, Lua-скриптов автопилота у него нет.
+ * Пионер Мини 2 — Python на pioneer_sdk2 и блоки Pioneer Bricks (они тоже собирают Python):
+ * программа работает на его бортовом компьютере, Lua-скриптов автопилота у него нет.
  */
 import type { ScriptLanguage } from './state-types.js';
 
@@ -88,9 +88,14 @@ export function supportsLanguage(model: DroneModelId | undefined | null, languag
 }
 
 /** Набор примеров редактора: у Мини 2 свои программы на pioneer_sdk2 (/api/files?lang=...). */
-export type ExamplesSet = 'lua' | 'python' | 'python-sdk2' | 'blocks';
+export type ExamplesSet = 'lua' | 'python' | 'python-sdk2' | 'blocks' | 'blocks-bricks';
 
 export function examplesSetFor(model: DroneModelId | undefined | null, language: ScriptLanguage): ExamplesSet {
     if (language === 'lua') return 'lua';
     return droneModelProfile(model).pythonSdk === 'pioneer_sdk2' ? 'python-sdk2' : 'python';
+}
+
+/** Набор примеров редактора блоков: у Мини 2 - проекты Pioneer Bricks (.xml), у остальных - программы из pioneer_* (.json). */
+export function blocksExamplesSetFor(model: DroneModelId | undefined | null): ExamplesSet {
+    return droneModelProfile(model).id === 'pioneer-mini2' ? 'blocks-bricks' : 'blocks';
 }

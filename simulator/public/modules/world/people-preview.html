@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Люди: просмотр моделей</title>
+<style>html,body{margin:0;background:#9fb4c4;overflow:hidden}canvas{display:block}#hud{position:fixed;left:8px;top:8px;font:12px monospace;color:#012;background:#fff8;padding:4px}</style></head>
+<body><div id="hud"></div>
+<script type="module">
+// Отладочная страница: все роли x позы, камера задаётся из консоли/скриншотов. Не часть приложения.
+import * as THREE from 'three';
+import { createPerson, poseNow, placePerson, giveSack, giveCuffs } from './actors.ts';
+
+const ROLES = ['civilian', 'firefighter', 'police', 'worker', 'thief', 'fighter'];
+const POSES = ['idle', 'walk', 'run', 'work', 'fight', 'handsUp', 'cuffed', 'sit', 'carry', 'crouch'];
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight); renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x9fb4c4);
+const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, .05, 400); camera.up.set(0, 0, 1);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x556655, 1.1));
+const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(-6, -8, 14); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, far: 80 });
+scene.add(sun);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshStandardMaterial({ color: 0x6e7d68, roughness: 1 }));
+ground.receiveShadow = true; scene.add(ground);
+
+const people = [];
+const group = new THREE.Group(); scene.add(group);
+function build(opts = {}) {
+    group.clear(); people.length = 0;
+    const roles = opts.roles || ROLES, poses = opts.poses || POSES, gap = opts.gap || 1.6;
+    roles.forEach((role, r) => poses.forEach((pose, c) => {
+        const person = createPerson(role, opts.seed ?? (r * 10 + c + 1));
+        if (role === 'thief') giveSack(person);
+        if (pose === 'cuffed') giveCuffs(person);
+        placePerson(person, c * gap, -r * gap, 0, opts.heading ?? 0);
+        group.add(person.root); people.push({ person, pose, role });
+    }));
+    return people.length;
+}
+function step(seconds, dt = 1 / 60) {
+    const V = { walk: 1.4, run: 3.6, carry: 1.2 };
+    for (let t = 0; t < seconds; t += dt) people.forEach(e => {
+        const v = window.NOMOVE ? 0 : (V[e.pose] || 0), r = e.person.root;
+        if (v) { e.x = (e.x ?? r.position.x) + v * dt; placePerson(e.person, e.x, r.position.y, 0, 0); }
+        poseNow(e.person, e.pose, dt, 1);
+    });
+}
+function cam(pos, target, fov = 40) {
+    camera.fov = fov; camera.position.set(...pos); camera.lookAt(...target); camera.updateProjectionMatrix();
+    renderer.render(scene, camera);
+}
+function bench(frames = 120) {
+    const t0 = performance.now();
+    for (let i = 0; i < frames; i++) { step(1 / 60, 1 / 60); renderer.render(scene, camera); }
+    renderer.getContext().finish();
+    return (performance.now() - t0) / frames;
+}
+window.P = { THREE, scene, camera, renderer, build, step, cam, bench, people, group, createPerson, poseNow, placePerson, ROLES, POSES };
+build(); step(1.3);
+cam([8, -20, 12], [8, -4, 1], 45);
+document.getElementById('hud').textContent = renderer.info.render.calls + ' draw calls, ' + people.length + ' people';
+</script></body></html>

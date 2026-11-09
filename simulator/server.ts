@@ -9,6 +9,8 @@ import path from 'path';
 import { rateLimit } from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import { AccountStore, ensureTeacher, registerAccountRoutes, resolveAccountsFile } from './server/accounts.js';
+import { AttemptLog, resolveAttemptsFile } from './server/attempts.js';
+import { MetricsLog, resolveMetricsFile } from './server/metrics.js';
 import { registerExternalPythonBridgeRoutes } from './server/external-python-bridge.js';
 import { registerMavlinkBridgeRoutes, stopAllMavlinkBridges } from './server/mavlink-bridge.js';
 import { registerPythonRuntimeRoutes, stopAllLocalPythonRuns } from './server/python-runtime.js';
@@ -101,7 +103,8 @@ function resolvePythonSdk2ExamplesRoots(): string[] {
         ...(resourcesDir ? [path.join(resourcesDir, 'examples-python-sdk2')] : []),
         path.join(runtimeDir, 'examples-python-sdk2'),
         path.join(projectRoot, 'examples-python-sdk2'),
-        path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'pioneer_sdk2')
+        path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'pioneer_sdk2'),
+        path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'pioneer_rknn')
     ]);
 }
 
@@ -114,20 +117,31 @@ function resolveBlocksExamplesRoots(): string[] {
     ]);
 }
 
-type ExamplesSet = ScriptLanguage | 'python-sdk2' | 'blocks';
+// Projects of Pioneer Bricks (Blockly XML) for the Mini 2 block editor: examples-blocks-mini2/<group>/<name>.xml.
+function resolveBricksExamplesRoots(): string[] {
+    return dedupeExistingPaths([
+        ...(resourcesDir ? [path.join(resourcesDir, 'examples-blocks-mini2')] : []),
+        path.join(runtimeDir, 'examples-blocks-mini2'),
+        path.join(projectRoot, 'examples-blocks-mini2')
+    ]);
+}
+
+type ExamplesSet = ScriptLanguage | 'python-sdk2' | 'blocks' | 'blocks-bricks';
 
 function parseExamplesSet(value: unknown): ExamplesSet {
-    return value === 'python' || value === 'python-sdk2' || value === 'blocks' ? value : 'lua';
+    return value === 'python' || value === 'python-sdk2' || value === 'blocks' || value === 'blocks-bricks' ? value : 'lua';
 }
 
 function examplesExtension(lang: ExamplesSet): string {
     if (lang === 'lua') return 'lua';
+    if (lang === 'blocks-bricks') return 'xml';
     return lang === 'blocks' ? 'json' : 'py';
 }
 
 function examplesRootsFor(lang: ExamplesSet, luaRoots: string[], pythonRoots: string[]): string[] {
     if (lang === 'python-sdk2') return resolvePythonSdk2ExamplesRoots();
     if (lang === 'blocks') return resolveBlocksExamplesRoots();
+    if (lang === 'blocks-bricks') return resolveBricksExamplesRoots();
     return lang === 'python' ? pythonRoots : luaRoots;
 }
 
@@ -210,9 +224,10 @@ function createApp(options: StartServerOptions): express.Express {
     app.use(cors(resolveCorsOptions()));
     app.use(express.json({ limit: '10mb' }));
     // Accounts have their own limiter on the login routes; the shared /api limiter below would throttle progress sync.
-    const accountStore = new AccountStore(resolveAccountsFile(projectRoot));
+    const accountsFile = resolveAccountsFile(projectRoot);
+    const accountStore = new AccountStore(accountsFile);
     void ensureTeacher(accountStore);
-    registerAccountRoutes(app, accountStore);
+    registerAccountRoutes(app, accountStore, new AttemptLog(resolveAttemptsFile(accountsFile)), new MetricsLog(resolveMetricsFile(accountsFile)));
     app.use('/api', createSensitiveRouteLimiter());
     app.use(EXTERNAL_BRIDGE_ROUTE_PREFIX, createExternalBridgeLimiter());
 

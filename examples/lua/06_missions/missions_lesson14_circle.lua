@@ -27,7 +27,7 @@ circleTimer = Timer.new(0.1, function()
   if state ~= "CIRCLE" then return end     -- лишний тик после stop() не должен затереть возврат в центр
   angle = (angle + step) % 360
   local rad = math.rad(angle)
-  ap.updateYaw(rad + math.pi / 2)          -- нос по касательной к окружности
+  ap.updateYaw(rad)                        -- курс 0 = нос вдоль +Y, курс = угол точки: нос по касательной
   ap.goToLocalPoint(r * math.cos(rad), r * math.sin(rad), height)
 end)
 

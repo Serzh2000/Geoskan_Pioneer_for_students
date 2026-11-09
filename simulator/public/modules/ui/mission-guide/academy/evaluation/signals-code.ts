@@ -9,6 +9,13 @@ function close(color: { r: number; g: number; b: number } | undefined, rgb: RGB)
     return Boolean(color && [color.r, color.g, color.b].every((value, i) => Number.isFinite(value) && Math.abs(value - rgb[i]) < 3));
 }
 
+/** Что делать после первого из нескольких опытов: ученик не должен гадать, какой запуск следующий. */
+const NEXT_TRIAL: Record<string, string> = {
+    green: 'Теперь замените числа так, чтобы LED 0 стал чистым синим, и снова нажмите «Проверить полёт».',
+    white: 'Теперь поставьте на все три канала половину максимума и снова нажмите «Проверить полёт».',
+    false: 'Теперь поменяйте только флаг ready на true и снова нажмите «Проверить полёт».'
+};
+
 export function gradeSignalsCode(number: number, samples: DroneSample[], events: LearningEvent[], activity: DroneAcademyActivity): GuideEvaluation {
     const last = samples[samples.length - 1]?.snapshot;
     const diagnostics: GuideDiagnostic[] = [];
@@ -97,6 +104,9 @@ export function gradeSignalsCode(number: number, samples: DroneSample[], events:
     if (diagnostics.length) return { solved: false, complete: true, diagnostics };
     const collected = new Set([...(activity.trials || []), ...(trial ? [trial] : [])]);
     const missing = needs.filter(value => !collected.has(value));
-    if (missing.length) return { solved: false, complete: true, academyTrial: trial, diagnostics: [{ kind: 'info', title: 'Опыт записан — проверьте следующий случай', reason: `Подтверждено ${needs.length - missing.length} из ${needs.length} случаев.`, fix: 'Вернитесь к коду и измените только параметр по условию задания. Предыдущие верные наблюдения сохранены в этой сессии.' }] };
+    const next = missing[0]?.startsWith('height-')
+        ? `Осталось проверить: height = ${missing.map(value => value.slice('height-'.length)).join(' и ')}. Поменяйте в коде только это число и снова нажмите «Проверить полёт».`
+        : NEXT_TRIAL[trial ?? ''] ?? 'Вернитесь к коду и измените только параметр по условию задания.';
+    if (missing.length) return { solved: false, complete: true, academyTrial: trial, diagnostics: [{ kind: 'info', title: 'Опыт записан — проверьте следующий случай', reason: `Подтверждено ${needs.length - missing.length} из ${needs.length} случаев.`, fix: `${next} Подтверждённые опыты сохранены.` }] };
     return { solved: true, complete: true, academyTrial: trial, diagnostics: [{ kind: 'success', title: 'Все случаи подтверждены', reason: 'Реальные LED-команды, сообщения и итоговое состояние совпали с заданием.', fix: 'Сравните результат с прогнозом и объясните изученную идею.' }] };
 }

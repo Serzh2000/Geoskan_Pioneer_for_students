@@ -24,12 +24,14 @@ export type LearningEvent = {
 function copyEvent(event: LearningEvent): LearningEvent {
     return { ...event, ...(event.color ? { color: { ...event.color } } : {}), ...(event.pos ? { pos: { ...event.pos } } : {}), ...(event.target ? { target: { ...event.target } } : {}), ...(event.markers ? { markers: event.markers.map(marker => ({ id: marker.id, corners: marker.corners.map(point => [...point] as [number, number]) })) } : {}), ...(event.velocity ? { velocity: { ...event.velocity } } : {}), ...(event.point ? { point: { ...event.point } } : {}) };
 }
-const captures = new Map<string, { token: number; events: LearningEvent[]; origin?: number }>();
+/** Сколько последних событий хранит запуск; миссиям Мини 2 нужно больше (подсветка пишет событие на каждый светодиод платы). */
+const DEFAULT_MAX_EVENTS = 512;
+const captures = new Map<string, { token: number; events: LearningEvent[]; origin?: number; limit: number }>();
 let serial = 0;
 
-export function beginLearningCapture(droneId: string): number {
+export function beginLearningCapture(droneId: string, limit: number = DEFAULT_MAX_EVENTS): number {
     const token = ++serial;
-    captures.set(droneId, { token, events: [] });
+    captures.set(droneId, { token, events: [], limit });
     return token;
 }
 
@@ -37,7 +39,7 @@ export function recordLearningEvent(droneId: string, event: LearningEvent): void
     const capture = captures.get(droneId);
     if (!capture) return;
     capture.events.push(copyEvent({ ...event, time: event.time - (capture.origin || 0) }));
-    if (capture.events.length > 512) capture.events.splice(0, capture.events.length - 512);
+    if (capture.events.length > capture.limit) capture.events.splice(0, capture.events.length - capture.limit);
 }
 
 export function markLearningRunStarted(droneId: string, simulationTime: number): void {

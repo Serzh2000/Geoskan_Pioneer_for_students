@@ -7,6 +7,8 @@ export type ApiCategoryId =
     | 'timers'
     | 'sensors'
     | 'camera'
+    | 'ai'
+    | 'bricks'
     | 'leds'
     | 'control'
     | 'peripherals'
@@ -46,6 +48,14 @@ const categoryMeta: Record<ApiCategoryId, { title: string; description: string }
     camera: {
         title: 'Камера',
         description: 'Съемка, видеопоток и доступ к кадрам симулятора.'
+    },
+    ai: {
+        title: 'Нейросети (RKNN)',
+        description: 'pioneer_rknn: детекция, сегментация, поза и распознавание текста на нейропроцессоре Пионера Мини 2.'
+    },
+    bricks: {
+        title: 'Блоки Bricks',
+        description: 'Блоки Pioneer Bricks для Пионера Мини 2 и Python, который они генерируют.'
     },
     leds: {
         title: 'LED и индикация',
@@ -103,6 +113,8 @@ function getScopeLabel(name: string, language: ScriptLanguage): string {
 function classifyEntry(name: string, language: ScriptLanguage): ApiCategoryId {
     const lowerName = name.toLowerCase();
 
+    if (name === 'Bricks' || name.startsWith('Bricks.')) return 'bricks';
+    if (/^(Yolo|YoloSeg|YoloPose|PaddleOCR|ModelContainer|ModelRegistry|DetectBox)(.|$)/.test(name)) return 'ai';
     if (name.startsWith('Ev.')) return 'events';
     if (name.startsWith('Vehicle')) return 'vehicles';
     if (name.startsWith('ap.')) return 'autopilot';
@@ -190,6 +202,8 @@ export function buildSections(docs: Record<string, ApiDoc>, language: ScriptLang
         'timers',
         'sensors',
         'camera',
+        'ai',
+        'bricks',
         'leds',
         'control',
         'peripherals',

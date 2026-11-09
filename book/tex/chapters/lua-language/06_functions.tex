@@ -27,12 +27,14 @@ end
 
 Мы только определяем её --- глобально, без \verb|local|, ровно с таким именем. Когда произойдёт событие, автопилот сам вызовет \verb|callback| и передаст номер события. Что с ним делать, разбирают главы~\ref{sec:leds} и~\ref{sec:missions}; пока запомните: \textbf{в каждой программе, которая командует автопилотом, есть \texttt{callback}}, даже пустой. Программам, которые только зажигают светодиоды, он не нужен.
 
-\subsubsection*{Задачи для самостоятельного решения}
+\begin{taskbox}[Свои функции]
 \begin{enumerate}
-  \item Напишите функцию \verb|square(x)|, возвращающую квадрат числа; проверьте на 5.
-  \item Напишите \verb|isEven(n)|, возвращающую \verb|true| для чётных чисел.
-  \item Напишите \verb|clamp(v, lo, hi)|, ограничивающую \verb|v| диапазоном \verb|[lo, hi]|.
-  \item Напишите \verb|toRadians(deg)| и проверьте, что \verb|toRadians(180)| равно \verb|math.pi|.
-  \item Напишите \verb|polar(r, deg)|, возвращающую две координаты \verb|x, y| точки окружности радиуса \verb|r| под углом \verb|deg| градусов.
-  \item Напишите функцию \verb|describeBattery(v)|: ниже 3.5~В --- \verb|"critical"|, ниже 3.8 --- \verb|"low"|, иначе \verb|"ok"|.
+  \item Напишите функцию \verb|signal()| без параметров, которая печатает \verb|"зелёный"|, и вызовите её один раз.
+  \item Напишите \verb|report(brightness)|, печатающую \verb|"яркость: "| и переданное значение. Вызовите её с 0.25 и с 0.5.
+  \item Напишите \verb|square(x)| и \verb|isEven(n)|; напечатайте \verb|square(5)|, \verb|isEven(7)|.
+  \item Напишите \verb|clamp(v, lo, hi)|, ограничивающую \verb|v| диапазоном \verb|[lo, hi]|; проверьте на \verb|clamp(1.7, 0, 1)| и \verb|clamp(-3, 0, 1)|.
+  \item Напишите \verb|polar(r, deg)|, возвращающую \textbf{два} значения \verb|x, y| точки окружности радиуса \verb|r| под углом \verb|deg| градусов; напечатайте \verb|polar(2, 90)|.
 \end{enumerate}
+\expected{1) одна строка \texttt{зелёный}; 2) \texttt{яркость: 0.25} и \texttt{яркость: 0.5}; 3) \texttt{25} и \texttt{false}; 4) \texttt{1} и \texttt{0}; 5) два числа: первое очень близко к нулю (около \texttt{1.2e-16}, погрешность вычислений), второе \texttt{2.0}.}
+\mission{Lua}{25--26}
+\end{taskbox}

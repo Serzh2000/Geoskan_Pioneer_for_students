@@ -2,6 +2,8 @@ import { Blockly, type BlocklyNS } from '../blockly-mode/loader.js';
 import { ensureEditorBlocklyDefinitions } from '../blockly-mode/index.js';
 import { BOUNDED_METRICS_MANAGER, registerBoundedMetricsManager } from './bounded-metrics.js';
 import { applyPioneerTargetToWorkspace } from '../blockly-mode/pioneer/target-support.js';
+import { applyBricksDroneOnly } from '../blockly-mode/bricks/drone-only.js';
+import { currentBlocklyModelId } from '../blockly-mode/bricks/model.js';
 import type { ScriptLanguage } from '../../core/state.js';
 
 export type BlocklyWorkspaceController = {
@@ -23,7 +25,7 @@ export type BlocklyWorkspaceController = {
     // Ключ хранения XML воркспейса — фаза 7 плана: один Blockly-воркспейс на
     // дрона (`${droneId}:blockly`), не зависит от языка компиляции, в отличие
     // от getEditorStateKey (текстовые черновики остаются per-язык).
-    getBlocklyStateKey: () => string;
+    getBlocklyStateKey: (model?: string | null) => string;
     textDraftByKey: Map<string, string>;
     blocklyWorkspaceXmlByKey: Map<string, string>;
     persistEditorSession: () => void;
@@ -40,11 +42,16 @@ export type BlocklyWorkspaceController = {
 // isStarterLuaScript отдельно используется текстовым редактором (autofit.ts)
 // для авто-разворота панели — это другая, не связанная с Blockly, функция.
 
+// Модель дрона, чьи блоки сейчас на поле. Блоки Базового (pioneer_*) и Мини 2 (Bricks) хранятся под
+// разными ключами, а модель дрона может смениться раньше, чем поле перезагрузится: сохранять нужно
+// под ключом той модели, чьи блоки там лежат. undefined - поле ещё ничего не загружало.
+let loadedBlocklyModel: string | null | undefined;
+
 export function saveBlocklyWorkspaceState(controller: BlocklyWorkspaceController): void {
     if (!controller.blocklyWorkspace) return;
 
     const xml = Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(controller.blocklyWorkspace));
-    controller.blocklyWorkspaceXmlByKey.set(controller.getBlocklyStateKey(), xml);
+    controller.blocklyWorkspaceXmlByKey.set(controller.getBlocklyStateKey(loadedBlocklyModel), xml);
     controller.persistEditorSession();
 }
 
@@ -58,6 +65,8 @@ export function loadBlocklyWorkspace(
     const savedXml = controller.blocklyWorkspaceXmlByKey.get(key);
     const workspaceXml = savedXml || controller.createStarterWorkspaceXml(language);
 
+    // До clear(): события очистки не должны сохранить пустое поле под ключом новой модели.
+    loadedBlocklyModel = currentBlocklyModelId();
     controller.blocklyWorkspace.clear();
 
     if (workspaceXml) {
@@ -72,6 +81,8 @@ export function loadBlocklyWorkspace(
     // Пересчитываем disabled-блоки под таргет ПОСЛЕ загрузки XML (фаза 6):
     // сохранённый workspace мог быть создан в другом языке компиляции.
     applyPioneerTargetToWorkspace(controller.blocklyWorkspace, language);
+    // Блоки Мини 2 «только на дроне» (нет функции OpenCV в симуляторе) отключаются так же.
+    applyBricksDroneOnly(controller.blocklyWorkspace);
 
     if (workspaceXml) {
         saveBlocklyWorkspaceState(controller);
@@ -81,6 +92,19 @@ export function loadBlocklyWorkspace(
 
     controller.resizeBlocklyWorkspaceViewport();
     controller.scheduleBlocklyAutofit();
+}
+
+// Смена модели дрона при включённом Blockly: у Базового блоки pioneer_*, у Мини 2 - Bricks. Блоки прежней
+// модели сохраняются под её ключом, на поле загружаются блоки новой (или её стартовая программа), тулбокс меняется.
+export function switchBlocklyModel(controller: BlocklyWorkspaceController, language: ScriptLanguage): boolean {
+    if (!controller.blocklyWorkspace) return false;
+    const model = currentBlocklyModelId();
+    if (loadedBlocklyModel !== undefined && (loadedBlocklyModel ?? null) === (model ?? null)) return false;
+
+    saveBlocklyWorkspaceState(controller);
+    controller.blocklyWorkspace.updateToolbox(controller.buildMainEditorToolbox(language));
+    loadBlocklyWorkspace(controller, language);
+    return true;
 }
 
 // Смена языка при включённом Blockly (фаза 7, §9 открытый вопрос 5): workspace

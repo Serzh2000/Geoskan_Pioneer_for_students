@@ -14,7 +14,8 @@
 Взлёт           & \texttt{ap.push(Ev.MCE\_TAKEOFF)} & \texttt{pioneer.takeoff()} \\
 Точка           & \texttt{ap.goToLocalPoint(x, y, z)} & \texttt{pioneer.go\_to\_local\_point(x=, y=, z=, yaw=)} \\
 Ждать точку     & \texttt{if event == Ev.POINT\_REACHED} & \texttt{while not pioneer.point\_reached(): time.sleep(0.1)} \\
-Курс            & \texttt{ap.updateYaw(рад)} & \texttt{yaw=} в \texttt{go\_to\_local\_point} \\
+Курс            & \texttt{ap.updateYaw(рад)} & \texttt{yaw=} (рад) в \texttt{go\_to\_local\_point}; текущий --- \texttt{pioneer.get\_yaw()} \\
+Скорость        & --- (только точки) & \texttt{pioneer.set\_manual\_speed(vx, vy, vz, yaw\_rate)}, повторять каждые 0,1~с \\
 Посадка         & \texttt{ap.push(Ev.MCE\_LANDING)} & \texttt{pioneer.land()} \\
 Выключить моторы & \texttt{ap.push(Ev.ENGINES\_DISARM)} & \texttt{pioneer.disarm()} \\
 Пауза           & \texttt{Timer.callLater(t, f)} & \texttt{time.sleep(t)} \\
@@ -23,7 +24,9 @@
 Позиция         & \texttt{Sensors.lpsPosition()} & \texttt{pioneer.get\_local\_position\_lps()} \\
 Дальномер       & \texttt{Sensors.range()} & \texttt{pioneer.get\_dist\_sensor\_data()} \\
 Батарея         & \texttt{Sensors.battery()} & \texttt{pioneer.get\_battery\_status()} \\
-Кадр камеры     & \texttt{camera.requestMakeShot()} & \texttt{Camera().get\_cv\_frame()} \\
+Камера          & \texttt{camera.requestMakeShot()} (снимок) & \texttt{Camera().get\_cv\_frame()} (кадр OpenCV); нижняя камера симулятора --- \texttt{Camera(view="bottom")} \\
+Метки ArUco     & --- & \texttt{cv2.aruco.ArucoDetector(словарь).detectMarkers(frame)} \\
+Состояние       & \texttt{event} в \texttt{callback} & \texttt{pioneer.get\_autopilot\_state()} \\
 Вывод           & \texttt{print(...)} & \texttt{print(...)} \\
 Завершение      & --- & \texttt{pioneer.close\_connection()} \\
 \bottomrule

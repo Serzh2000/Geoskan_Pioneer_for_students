@@ -15,7 +15,10 @@ config: {"seconds": 30,
          "armFails": true,                      # моторы не запускаются
          "yolo": [[t0, t1, class_id, score]],   # что видит Yolo
          "pose": [[t0, t1, "up" | "down"]],     # что видит YoloPose
-         "ocr":  [[t0, t1, "текст", score]]}    # что читает PaddleOCR
+         "ocr":  [[t0, t1, "текст", score]],    # что читает PaddleOCR
+         "rc8":  [[t, значение]]}               # положение тумблера SWA (8 канал) с момента t
+Программа запускается в текущей папке (тест даёт пустую временную): файлы, которые она создала,
+попадают в трассу строками "file <имя> <первая строка>".
 Последняя строка вывода - JSON с событиями после маркера @@TRACE@@.
 """
 import enum
@@ -58,8 +61,21 @@ def record_once(what):
             record(what)
 
 
+_files_before = set(os.listdir('.'))
+
+
+def record_new_files():
+    for name in sorted(set(os.listdir('.')) - _files_before):
+        if os.path.isdir(name):
+            record('dir ' + name)
+            continue
+        with open(name, encoding='utf-8', errors='replace') as f:
+            record('file %s %s' % (name, f.readline().strip()))
+
+
 def dump_and_exit(code=0):
     with _lock:
+        record_new_files()
         sys.stdout.write('\n@@TRACE@@' + json.dumps(events, ensure_ascii=False) + '\n')
         sys.stdout.flush()
     os._exit(code)
@@ -87,6 +103,9 @@ fake_time.time = now
 fake_time.monotonic = now
 fake_time.perf_counter = now
 fake_time.sleep = sleep
+fake_time.strftime = _real_time.strftime
+fake_time.localtime = _real_time.localtime
+fake_time.gmtime = _real_time.gmtime
 sys.modules['time'] = fake_time
 
 
@@ -106,7 +125,38 @@ class Event(enum.Enum):
     LOW_CHARGE = 10
 
 
+class NavSystem(enum.Enum):
+    GPS = 0
+    LPS = 1
+    OPT = 2
+
+
+class NavStatus(enum.Enum):
+    NO_DATA = 0
+    CANNOT = 1
+    LOW = 2
+    OK = 3
+
+
+# Параметры автопилота, как в pioneer-sdk2-module.ts: остальных get_param не знает.
+PARAMS = {
+    'Flight_com_navSystem': 1.0, 'Copter_com_takeoffAlt': 0.4, 'Copter_man_rcMode0': 0.0,
+    'Copter_man_rcMode1': 0.0, 'Copter_man_rcMode2': 0.0, 'Copter_flyWithoutRc': 0.0, 'SensorMux_rc': 0.0,
+}
+PARAMS_LOCKED = ('Flight_com_navSystem',)
+RC_PARAMS = {
+    'Copter_man_rcMode0': 6.0, 'Copter_man_rcMode1': 3.0, 'Copter_man_rcMode2': 3.0,
+    'Copter_flyWithoutRc': 1.0, 'SensorMux_rc': 2.0,
+}
+
 ON_LAND, ARMED, IN_SKY = 'ON_LAND', 'ARMED', 'IN_SKY'
+
+
+class FlyState(enum.Enum):
+    ON_LAND = 0
+    ARMED = 1
+    IN_SKY = 2
+
 _CYCLE = [ON_LAND, ARMED, IN_SKY]
 _ALLOWED = {ON_LAND: 'arm', ARMED: 'takeoff', IN_SKY: 'flight'}
 
@@ -123,6 +173,13 @@ class Drone:
         self.move_time = 0.0
         self.yaw = 0.0
         self.leds = ['0,0,0'] * TRACKED_LEDS
+        self.decel_sent = True
+        self.takeoff_at = None
+
+    def progress(self):
+        if self.target is None:
+            return 1.0
+        return 1.0 if self.move_time <= 0 else min(1.0, (now() - self.move_since) / self.move_time)
 
     def update(self):
         if self.target is None:
@@ -149,23 +206,49 @@ class Pioneer:
         self._watchers = []
         self._closed = False
         self._low_sent = False
+        self._rc_callback = None
+        self._rc_seen = 0
+        self._params = dict(PARAMS)
+        self._rc_label = None
+        self._rc_last = [0.0] * 4
+        self._rc_ignored = False
         threading.Thread(target=self._tick, daemon=True).start()
 
     # служебный поток: движение к точке и события автопилота
     def _tick(self):
         while not self._closed:
             with _lock:
+                slowing = drone.target is not None and drone.move_time > 0 and not drone.decel_sent and drone.progress() >= 0.8
+                if slowing:
+                    drone.decel_sent = True
                 reached = drone.update()
                 low_at = config.get('lowVoltageAt')
                 low = low_at is not None and not self._low_sent and now() >= low_at
                 if low:
                     self._low_sent = True
+            if slowing:
+                self._fire(Event.POINT_DECELERATION)
             if reached:
                 self._fire(Event.POINT_REACHED)
+            self._poll_rc()
             if low:
                 record('event LOW_VOLTAGE1')
                 self._fire(Event.LOW_VOLTAGE1)
             sleep(0.05)
+
+    def _rc_now(self):
+        value = 0
+        for t, v in config.get('rc8') or []:
+            if now() >= t:
+                value = v
+        return value
+
+    def _poll_rc(self):
+        value = self._rc_now()
+        if value != self._rc_seen:
+            self._rc_seen = value
+            if self._rc_callback is not None:
+                self._rc_callback(value)
 
     def _fire(self, ev):
         self._flags[ev].set()
@@ -194,7 +277,7 @@ class Pioneer:
         raise RuntimeError('Команда запрещена')
 
     def get_fly_state(self):
-        return self._state
+        return FlyState[self._state]
 
     def arm(self, timeout=5, retries=0):
         if not self._check('arm'):
@@ -223,6 +306,7 @@ class Pioneer:
         sleep(2)
         with _lock:
             drone.pos[2] = Drone.TAKEOFF_ALT
+            drone.takeoff_at = now()
         self._fire(Event.TAKEOFF_COMPLETE)
         self._flags[Event.TAKEOFF_COMPLETE].clear()
         return True
@@ -254,6 +338,7 @@ class Pioneer:
                 record('yaw ' + fmt(drone.yaw))
             drone.move_from = list(drone.pos)
             drone.target = target
+            drone.decel_sent = False
             drone.move_since = now()
             drone.move_time = max(0.0, math.dist(drone.pos, target) - 0.15) / Drone.SPEED_MPS
             self._flags[Event.POINT_REACHED].clear()
@@ -267,7 +352,139 @@ class Pioneer:
         return False
 
     def point_deceleration(self):
+        return drone.target is not None and drone.move_time > 0 and drone.progress() >= 0.8
+
+    def go_to_local_point_body_fixed(self, x, y, z, yaw=None, time=0):
+        """x - вправо, y - вперёд, z - вверх от корпуса; yaw - поворот в градусах от текущего курса."""
+        if not self._check('flight'):
+            return False
+        with _lock:
+            drone.update()
+            record('body %s,%s,%s' % (fmt(float(x)), fmt(float(y)), fmt(float(z))))
+            rad = math.radians(drone.yaw)
+            dx = float(y) * math.cos(rad) + float(x) * math.sin(rad)
+            dy = float(y) * math.sin(rad) - float(x) * math.cos(rad)
+            target = [drone.pos[0] + dx, drone.pos[1] + dy, drone.pos[2] + float(z)]
+            if yaw is not None and abs(float(yaw)) > 1e-3:
+                drone.yaw += float(yaw)
+                record('turn %s' % fmt(float(yaw)))
+            drone.move_from = list(drone.pos)
+            drone.target = target
+            drone.decel_sent = False
+            drone.move_since = now()
+            drone.move_time = max(0.0, math.dist(drone.pos, target) - 0.15) / Drone.SPEED_MPS
+            self._flags[Event.POINT_REACHED].clear()
+        return None
+
+    def set_logger(self, value=True):
+        pass
+
+    def flight_time(self):
+        if self._state == IN_SKY and drone.takeoff_at is not None:
+            return round(now() - drone.takeoff_at, 1)
+        return 0.0
+
+    def rtl(self):
+        record('rtl')
+        with _lock:
+            drone.update()
+            drone.move_from = list(drone.pos)
+            drone.target = [0.0, 0.0, drone.pos[2]]
+            drone.decel_sent = False
+            drone.move_since = now()
+            drone.move_time = max(0.0, math.dist(drone.pos, drone.target) - 0.15) / Drone.SPEED_MPS
+        return True
+
+    # --- датчики ---------------------------------------------------------------
+    def get_accel(self):
+        return (0.0, 0.0, 9.81)
+
+    def get_gyro(self):
+        return (0.0, 0.0, 0.0)
+
+    def get_mag(self):
+        return (0.2, 0.0, -0.45)
+
+    def get_orientation(self):
+        return (0.0, 0.0, round(math.degrees(drone.yaw), 2))
+
+    def get_altitude(self):
+        return round(drone.pos[2], 3)
+
+    def get_optical_data(self):
+        return (0.0, 0.0, drone.pos[2])
+
+    def get_local_velocity_lps(self):
+        return (0.0, 0.0, 0.0)
+
+    def get_ranger_data(self):
+        return (None, None, None, None, None)      # модуля Ranger нет
+
+    def get_motors_rpm(self):
+        return [0.0] * 4 if self._state == ON_LAND else [21000.0] * 4
+
+    def get_nav_system(self, update=False):
+        return NavSystem.LPS
+
+    def get_nav_status_lps(self):
+        return NavStatus.CANNOT if config.get('navNotReady') else NavStatus.OK
+
+    # --- параметры автопилота (как в pioneer-sdk2-module.ts) -----------------------
+    def get_param(self, name, update=False):
+        return self._params.get(name)
+
+    def set_param(self, name, value):
+        if name in self._params and name not in PARAMS_LOCKED:
+            self._params[name] = float(value)
+            record('param %s=%s' % (name, fmt(float(value))))
+            return True
         return False
+
+    # --- виртуальный пульт --------------------------------------------------------
+    def send_rc_channels(self, channel_1=0, channel_2=0, channel_3=0, channel_4=0,
+                         channel_5=1, channel_6=0, channel_7=1, channel_8=0):
+        sticks = [float(channel_1), float(channel_2), float(channel_3), float(channel_4)]
+        if any(abs(v) > 1 for v in sticks):
+            record('error rc: стик вне -1..1')
+        # Резкий скачок стика = резкий манёвр: плавный профиль не должен прыгать больше чем на 0.1.
+        if any(abs(a - b) > 0.1 for a, b in zip(sticks, self._rc_last)):
+            record('error rc: стик прыгнул больше чем на 0.1 за такт')
+        self._rc_last = sticks
+        listens = all(self._params.get(k) == v for k, v in RC_PARAMS.items())
+        names = ['roll', 'pitch', 'throttle', 'yaw']
+        moving = [n for n, v in zip(names, sticks) if abs(v) > 1e-9]
+        if moving and not (listens and self._state == IN_SKY):
+            if not self._rc_ignored:
+                self._rc_ignored = True
+                record('ignored rc: автопилот не слушает пульт (параметры или не в воздухе)')
+            return True
+        label = 'rc ' + ('+'.join(moving) if moving else 'neutral')
+        if label != self._rc_label:
+            self._rc_label = label
+            record(label)
+        return True
+
+    def get_rc_channel(self):
+        return self._rc_now()
+
+    def set_rc_trigger(self, callback):
+        self._rc_callback = callback
+
+    # --- захват -----------------------------------------------------------------
+    def _grab(self, name, movement_time, velocity):
+        if not 0 <= velocity <= 100:
+            raise ValueError('Скорость должна быть в диапазоне от 0 до 100 включительно')
+        record('grab %s' % name)
+        return True
+
+    def grab_open(self, movement_time=0, velocity=20):
+        return self._grab('open', movement_time, velocity)
+
+    def grab_close(self, movement_time=0, velocity=20):
+        return self._grab('close', movement_time, velocity)
+
+    def grab_stop(self):
+        return True
 
     def set_manual_speed(self, vx, vy, vz, yaw_rate, interval=1.0):
         if not self._check('flight'):
@@ -370,6 +587,42 @@ class ServoCamera:
         return True
 
 
+class RecorderControl:
+    """Запись и фото основной/нижней камеры (режимы - как в pioneer-sdk2-module.ts)."""
+    CONFIGS = {CameraType.MAIN: [(1280, 720, 30), (640, 360, 30)], CameraType.OPT: [(640, 480, 30)]}
+
+    def __init__(self):
+        self._recording = {}
+
+    def get_camera_recording_configs(self, camera_type=CameraType.MAIN):
+        return list(self.CONFIGS[camera_type])
+
+    def _config(self, camera_type, config):
+        if config is not None and tuple(config) not in self.CONFIGS[camera_type]:
+            record('error режим записи не поддерживается: %s' % (config,))
+
+    def start_recording(self, camera_type=CameraType.MAIN, config=None, output_dir='/mnt/media/videos'):
+        self._config(camera_type, config)
+        if self._recording.get(camera_type):
+            record('error запись уже идёт')
+        self._recording[camera_type] = True
+        record('rec start %s' % camera_type.name)
+        return True
+
+    def stop_recording(self, camera_type=CameraType.MAIN):
+        if not self._recording.pop(camera_type, False):
+            return False
+        record('rec stop %s' % camera_type.name)
+        return True
+
+    def take_photo(self, file_name, camera_type=CameraType.MAIN, config=None, output_dir='/mnt/media/photos'):
+        if not str(file_name).lower().endswith(('.jpg', '.jpeg', '.png')):
+            record('error фото: имя файла без расширения изображения')
+        self._config(camera_type, config)
+        record('photo %s' % file_name)
+        return True
+
+
 sdk2 = types.ModuleType('pioneer_sdk2')
 sdk2.Pioneer = Pioneer
 sdk2.Event = Event
@@ -378,6 +631,7 @@ sdk2.CameraType = CameraType
 sdk2.ImageViewer = ImageViewer
 sdk2.ServoCamera = ServoCamera
 sdk2.ServoPriority = ServoPriority
+sdk2.RecorderControl = RecorderControl
 sys.modules['pioneer_sdk2'] = sdk2
 
 
@@ -482,6 +736,11 @@ cv2.cvtColor = lambda image, code: image.copy()
 cv2.rectangle = lambda image, p1, p2, *args, **kwargs: record_once('rect %d,%d-%d,%d' % (*p1, *p2))
 cv2.putText = lambda image, text, *args, **kwargs: record_once('text ' + text) if not text.startswith('640x480') else None
 cv2.circle = lambda *args, **kwargs: None
+cv2.line = lambda *args, **kwargs: None
+cv2.LINE_AA = 16
+cv2.addWeighted = lambda a, alpha, b, beta, gamma, dst=None: dst if dst is not None else a
+cv2.imwrite = lambda name, image: (record('imwrite %s' % name), True)[1]
+cv2.vconcat = lambda images: np.vstack(images)
 sys.modules['cv2'] = cv2
 
 

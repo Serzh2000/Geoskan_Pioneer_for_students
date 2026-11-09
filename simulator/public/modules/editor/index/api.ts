@@ -1,4 +1,4 @@
-import { currentDroneId, currentScriptLanguage, setCurrentScriptLanguage, type ScriptLanguage } from '../../core/state.js';
+import { currentDroneId, currentScriptLanguage, drones, setCurrentScriptLanguage, type ScriptLanguage } from '../../core/state.js';
 import { Blockly, type BlocklyNS } from '../blockly-mode/loader.js';
 import {
     buildMainEditorToolbox,
@@ -23,8 +23,10 @@ import {
     ensureBlocklyWorkspace as ensureBlocklyWorkspaceController,
     loadBlocklyWorkspace as loadBlocklyWorkspaceController,
     retargetBlocklyWorkspace as retargetBlocklyWorkspaceController,
-    saveBlocklyWorkspaceState as saveBlocklyWorkspaceStateController
+    saveBlocklyWorkspaceState as saveBlocklyWorkspaceStateController,
+    switchBlocklyModel as switchBlocklyModelController
 } from '../blockly/workspace-controller.js';
+import { setBlocklyModelProvider } from '../blockly-mode/bricks/model.js';
 import { setBlocklyEditorEnabled as setBlocklyEditorEnabledController } from '../blockly/toggle-controller.js';
 import {
     createEditorAutofitContext,
@@ -50,6 +52,9 @@ import {
 } from './shell.js';
 import { editorIndexState, getEditorIndexCollections, getEditorIndexShellState } from './state.js';
 import { beginTemporaryDocument, restoreTemporaryDocument } from './temporary-document.js';
+
+// Какой набор блоков у редактора, решает модель текущего дрона: Мини 2 - Bricks, остальные - pioneer_*.
+setBlocklyModelProvider(() => drones[currentDroneId]?.model);
 
 export function beginTemporaryEditorDocument(): void {
     if (editorIndexState.blocklyEnabled) saveBlocklyWorkspaceState();
@@ -138,7 +143,7 @@ function getEditorControllers() {
     });
 }
 
-function saveBlocklyWorkspaceState(): void {
+export function saveBlocklyWorkspaceState(): void {
     saveBlocklyWorkspaceStateController(getEditorControllers().workspaceController);
 }
 
@@ -146,8 +151,15 @@ function loadBlocklyWorkspace(language: ScriptLanguage = currentScriptLanguage):
     loadBlocklyWorkspaceController(getEditorControllers().workspaceController, language);
 }
 
-function ensureBlocklyWorkspace(language: ScriptLanguage = currentScriptLanguage): Promise<void> {
+export function ensureBlocklyWorkspace(language: ScriptLanguage = currentScriptLanguage): Promise<void> {
     return ensureBlocklyWorkspaceController(getEditorControllers().workspaceController, language);
+}
+
+// Смена модели дрона при включённом Blockly: тулбокс и блоки на поле заменяются набором новой модели.
+// Блоки прежней модели остаются в её собственном хранилище и вернутся при обратном переключении.
+export function syncBlocklyWithDroneModel(): boolean {
+    if (!editorIndexState.blocklyEnabled || !editorIndexState.blocklyWorkspace) return false;
+    return switchBlocklyModelController(getEditorControllers().workspaceController, currentScriptLanguage);
 }
 
 // Смена языка при включённом Blockly не трогает workspace (фаза 7 плана) —

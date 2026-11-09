@@ -94,6 +94,8 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
                 ? 'Остановите программу, чтобы сменить модель.'
                 : MODEL_HINTS[model];
         }
+        // Переключатель в шапке редактора показывает ту же модель.
+        window.dispatchEvent(new CustomEvent('drone-model-changed'));
     }
 
     /**
@@ -401,6 +403,12 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
             const model = button?.dataset.droneModel;
             if (!button || button.disabled || !model || !(model in DRONE_MODELS)) return;
             setDroneModel(currentDroneId, model as DroneModelId);
+        });
+
+        // Запрос смены модели из шапки редактора (editor-model-switch.ts).
+        window.addEventListener('drone-model-request', (event) => {
+            const model = (event as CustomEvent<{ model?: string }>).detail?.model;
+            if (model && model in DRONE_MODELS) setDroneModel(currentDroneId, model as DroneModelId);
         });
 
         dom.delBtn?.addEventListener('click', () => {

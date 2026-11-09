@@ -5,6 +5,8 @@
  */
 import { apiDocs, pythonApiDocs } from '../../docs/api-docs.js';
 import { pythonSdk2ApiDocs } from '../../docs/python-sdk2-api-docs.js';
+import { pythonRknnApiDocs } from '../../docs/python-rknn-api-docs.js';
+import { bricksBlocksApiDocs } from '../../docs/bricks-blocks-docs.js';
 import { currentDroneId, drones } from '../../core/state.js';
 import { droneModelProfile } from '../../core/drone-models.js';
 
@@ -83,6 +85,11 @@ function destroyPreviews(): void {
 
 function renderToolbar(language: ScriptLanguage, sections: ApiSection[], totalCount: number): string {
     const label = language === 'lua' ? 'Lua' : `Python · ${pythonSdkOfCurrentDrone()}`;
+    // Справочник зависит от модели дрона: pioneer_sdk2 показывается только для Мини 2.
+    const mini2 = language === 'python' && pythonSdkOfCurrentDrone() === 'pioneer_sdk2';
+    const modelBadge = mini2
+        ? '<span class="api-model-badge api-model-badge--mini2" title="Эти методы есть только у Пионера Мини 2. Для Базового выберите модель в шапке редактора.">Только Пионер Мини 2</span>'
+        : '<span class="api-model-badge" title="Для Пионера Мини 2 переключите модель в шапке редактора.">Пионер Базовый</span>';
     const escapedQuery = escapeHtml(uiState.query);
     const chips = [
         { id: 'all' as const, title: 'Все', count: totalCount },
@@ -91,7 +98,7 @@ function renderToolbar(language: ScriptLanguage, sections: ApiSection[], totalCo
 
     return `
         <div class="api-toolbar">
-            <div class="api-toolbar__intro"><strong>Каталог ${label}</strong><span>Методы, события и примеры</span></div>
+            <div class="api-toolbar__intro"><strong>Каталог ${label}</strong>${modelBadge}<span>Методы, события и примеры</span></div>
             <div class="api-searchbar">
             <div class="api-search">
                 <svg class="api-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -391,7 +398,7 @@ export function renderApiDocs(
     uiState.language = language;
 
     const docs = language === 'python'
-        ? (pythonSdkOfCurrentDrone() === 'pioneer_sdk2' ? pythonSdk2ApiDocs : pythonApiDocs)
+        ? (pythonSdkOfCurrentDrone() === 'pioneer_sdk2' ? { ...pythonSdk2ApiDocs, ...pythonRknnApiDocs, ...bricksBlocksApiDocs } : pythonApiDocs)
         : apiDocs;
     const sections = buildSections(docs, language, uiState.query);
     const totalEntries = sections.reduce((count, section) => count + section.entries.length, 0);

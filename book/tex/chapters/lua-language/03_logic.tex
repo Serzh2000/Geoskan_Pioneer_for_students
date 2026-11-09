@@ -13,12 +13,15 @@
     \item Строки сравниваются лексикографически: \verb|"a" < "b"| истинно.
 \end{itemize}
 
-\subsubsection*{Задачи для самостоятельного решения}
+\begin{taskbox}[Да или нет]
 \begin{enumerate}
   \item Для \verb|voltage = 3.4| и \verb|temp = 85| напечатайте «сигнал опасности»: \verb|voltage < 3.5 or temp > 80|.
-  \item Напишите предикат «индекс чётный» для \verb|i = 7|: \verb|i % 2 == 0|.
-  \item Выберите максимум из \verb|a| и \verb|b| одной строкой через \verb|and/or|.
-  \item Инвертируйте булеву переменную \verb|on| и напечатайте её до и после.
+  \item Напечатайте предикат «индекс чётный» для \verb|i = 7|: \verb|i % 2 == 0|.
+  \item Для \verb|a = 3|, \verb|b = 8| выберите максимум одной строкой через \verb|and/or|.
+  \item Напечатайте булеву переменную \verb|on = true| до и после \verb|on = not on|.
   \item Проверьте закон де Моргана: напечатайте \verb|not (p and q)| и \verb|(not p) or (not q)| для всех четырёх сочетаний \verb|p|, \verb|q|.
-  \item Напишите условие «\verb|t| не \verb|nil| и у \verb|t| есть поле \verb|value|».
+  \item Напишите условие «\verb|t| не \verb|nil| и у \verb|t| есть поле \verb|value|» и проверьте его для \verb|t = nil| и \verb|t = {value = 5}|.
 \end{enumerate}
+\expected{1) \texttt{true}; 2) \texttt{false}; 3) \texttt{8} (запись \texttt{a > b and a or b}); 4) \texttt{true}, затем \texttt{false}; 5) в каждой из четырёх строк два одинаковых значения, \texttt{false false} --- только для \texttt{p = true, q = true}; 6) для \texttt{nil} условие ложно и ошибки нет, для таблицы --- истинно.}
+\mission{Lua}{23}
+\end{taskbox}

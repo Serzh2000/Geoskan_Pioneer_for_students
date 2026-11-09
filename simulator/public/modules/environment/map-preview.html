@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Карта: просмотр генерации</title>
+<style>html,body{margin:0;background:#f5f6f8;overflow:hidden}canvas{display:block}#hud{position:fixed;left:8px;top:8px;font:12px monospace;color:#012;background:#fff8;padding:4px;white-space:pre}</style></head>
+<body><div id="hud"></div>
+<script type="module">
+// Отладочная страница аудита генерации карты (не часть приложения): те же рендерер, туман, свет и земля, что в симуляторе,
+// камера и seed задаются из консоли / автоматизации: MP.load('city', 3); MP.look([0,-60,40],[0,0,0]); await MP.shot('a.png').
+import * as THREE from 'three';
+import { setupEnvironment, createSceneObjectByType, envGroup as _eg } from './index.ts';
+import * as env from './index.ts';
+import { disposeObjectHierarchyResources } from '../scene/objects/object-manager-support.ts';
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight); renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap; renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xf5f6f8); scene.fog = new THREE.FogExp2(0xf5f6f8, .008);
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, .025, 300); camera.up.set(0, 0, 1);
+setupEnvironment(scene);
+let current = null;
+
+const MP = {
+    scene, camera, renderer, THREE,
+    load(profile, seed, size) {
+        if (current) { env.envGroup.remove(current); disposeObjectHierarchyResources(current); }
+        const t = performance.now();
+        current = createSceneObjectByType('training-' + profile, { trainingSeed: seed });
+        const ms = performance.now() - t;
+        env.envGroup.add(current); MP.layout = current.userData.trainingLayout;
+        return { ms: Math.round(ms), objects: MP.layout.objects.length };
+    },
+    /** Камера как в приложении: near растёт с высотой (scene/core/camera.ts), far как в DroneOrbitControls. */
+    look(p, t, opts = {}) {
+        camera.position.set(...p); camera.up.set(0, 0, 1); camera.lookAt(...t);
+        camera.near = opts.near ?? Math.max(.025, p[2] * .01); camera.far = opts.far ?? 1800; camera.fov = opts.fov ?? 50;
+        renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+        renderer.info.reset(); renderer.render(scene, camera);
+        const i = renderer.info.render; document.getElementById('hud').textContent = `${i.calls} calls, ${Math.round(i.triangles)} tris`;
+        return { calls: i.calls, triangles: Math.round(i.triangles) };
+    },
+    stats() { return { ...renderer.info.memory, calls: renderer.info.render.calls, triangles: Math.round(renderer.info.render.triangles) }; },
+    /** Кадр с 16-битным буфером глубины (в 256 раз грубее обычного): слои, порядок которых держится только на точности, мерцают уже вблизи. */
+    async shotLowDepth(name, bits = 16) {
+        const w = innerWidth, h = innerHeight;
+        const rt = new THREE.WebGLRenderTarget(w, h, { depthBuffer: true });
+        rt.depthTexture = new THREE.DepthTexture(w, h, bits === 16 ? THREE.UnsignedShortType : THREE.UnsignedIntType);
+        const old = renderer.getRenderTarget(); renderer.setRenderTarget(rt); renderer.render(scene, camera);
+        const buf = new Uint8Array(w * h * 4); renderer.readRenderTargetPixels(rt, 0, 0, w, h, buf); renderer.setRenderTarget(old); rt.dispose(); rt.depthTexture.dispose();
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const ctx = cv.getContext('2d'); const img = ctx.createImageData(w, h);
+        for (let y = 0; y < h; y++) img.data.set(buf.subarray((h - 1 - y) * w * 4, (h - y) * w * 4), y * w * 4);
+        ctx.putImageData(img, 0, 0);
+        const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+        await fetch('http://localhost:3999/' + name, { method: 'POST', body: blob }); return blob.size;
+    },
+    async shot(name) {
+        const blob = await new Promise(r => renderer.domElement.toBlob(r, 'image/png'));
+        await fetch('http://localhost:3999/' + name, { method: 'POST', body: blob }); return blob.size;
+    }
+};
+window.MP = MP; window.ready = true;
+</script></body></html>

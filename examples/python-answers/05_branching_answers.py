@@ -125,3 +125,14 @@ if b > m:
 if c > m:
     m = c
 print(m)
+
+# Задание урока «Светофор»
+color = "yellow"
+if color == "red":
+    print("Стоп")
+elif color == "yellow":
+    print("Приготовиться")
+elif color == "green":
+    print("Ехать")
+else:
+    print("Неизвестный цвет")              # Приготовиться

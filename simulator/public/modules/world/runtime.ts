@@ -387,6 +387,21 @@ export function worldSolidsNear(x: number, y: number, range: number): readonly W
     return solidsOut;
 }
 
+/** Машина потока для «зрения» pioneer_rknn: класс COCO (car / bus / truck), положение, курс и габариты. */
+export interface WorldTrafficCar { id: number; cls: 'car' | 'bus' | 'truck'; x: number; y: number; z: number; heading: number; length: number; width: number; height: number }
+
+/** Машины потока: у них нет отдельных объектов сцены (инстансы), поэтому камере дрона их отдают отсюда. Пусто, пока программа не запущена. */
+export function worldTrafficCars(): WorldTrafficCar[] {
+    if (!running || !world) return [];
+    return world.cars.map(({ car }) => {
+        const spec = VEHICLES[car.kind];
+        return {
+            id: car.id, cls: car.kind === 'bus' ? 'bus' : car.kind === 'truck' ? 'truck' : 'car', x: car.x, y: car.y, z: car.z, heading: car.heading,
+            length: spec.length * car.scale, width: spec.width * car.scale, height: spec.height * car.scale
+        };
+    });
+}
+
 /** Per-frame hook (physics loop). Does nothing until a program is running. */
 export function updateWorld(dt: number) {
     if (!running) return;

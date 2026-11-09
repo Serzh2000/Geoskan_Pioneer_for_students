@@ -1,6 +1,6 @@
 import { currentDroneId, currentScriptLanguage, drones, type ScriptLanguage } from '../../core/state.js';
-import { examplesSetFor, type ExamplesSet } from '../../core/drone-models.js';
-import { getEditorValue, isBlocklyEditorEnabled } from '../../editor/index.js';
+import { blocksExamplesSetFor, examplesSetFor, type ExamplesSet } from '../../core/drone-models.js';
+import { exportMainBricksProject, getEditorValue, isBlocklyEditorEnabled } from '../../editor/index.js';
 import type { UICallbacks } from '../index.js';
 import { scriptFileName } from '../../shared/funny-names.js';
 
@@ -24,12 +24,14 @@ const LESSON_GROUP_LABELS: Record<string, string> = {
     '04_logic': '04 — Переменные, условия, циклы',
     '05_sensors': '05 — Датчики и время',
     '06_events': '06 — Таймеры и события',
-    '07_projects': '07 — Мини-проекты'
+    '07_projects': '07 — Мини-проекты',
+    bricks: 'Pioneer Bricks (проекты из блоков)'
 };
 
 /** Набор примеров редактора: в режиме блоков — готовые наборы блоков, иначе программы выбранного языка. */
 export function currentExamplesSet(): ExamplesSet {
-    if (isBlocklyEditorEnabled()) return 'blocks';
+    // Мини 2 - проекты Bricks (.xml), остальные модели - блоки pioneer_* (.json).
+    if (isBlocklyEditorEnabled()) return blocksExamplesSetFor(drones[currentDroneId]?.model);
     return examplesSetFor(drones[currentDroneId]?.model, currentScriptLanguage);
 }
 
@@ -62,7 +64,7 @@ function populateFileOptions(fileSelector: HTMLSelectElement, files: string[]): 
         for (const file of groupFiles) {
             const opt = document.createElement('option');
             opt.value = file;
-            opt.textContent = file.slice(groupKey.length + 1).replace(/\.json$/, '');
+            opt.textContent = file.slice(groupKey.length + 1).replace(/\.(json|xml)$/, '');
             optgroup.appendChild(opt);
         }
         fileSelector.appendChild(optgroup);
@@ -89,7 +91,7 @@ export function refreshFileList(language: ScriptLanguage): void {
     delete fileSelector.dataset.state;
     fileSelector.title = 'Выберите пример программы или откройте свой файл';
     // Мини 2 получает свои примеры: программы на pioneer_sdk2.
-    fetch(`/api/files?lang=${isBlocklyEditorEnabled() ? 'blocks' : examplesSetFor(drones[currentDroneId]?.model, language)}`)
+    fetch(`/api/files?lang=${isBlocklyEditorEnabled() ? blocksExamplesSetFor(drones[currentDroneId]?.model) : examplesSetFor(drones[currentDroneId]?.model, language)}`)
         .then((res) => {
             if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
             return res.json();
@@ -144,6 +146,30 @@ export function initFileControls(callbacks: UICallbacks, language: ScriptLanguag
             reader.readAsText(file);
         });
     }
+
+    // Проект Pioneer Bricks (.xml) сохраняется только из редактора блоков Мини 2.
+    const bricksBtn = document.getElementById('download-bricks-btn') as HTMLButtonElement | null;
+    const syncBricksButton = () => {
+        if (!bricksBtn) return;
+        const show = isBlocklyEditorEnabled() && blocksExamplesSetFor(drones[currentDroneId]?.model) === 'blocks-bricks';
+        bricksBtn.style.display = show ? '' : 'none';
+    };
+    syncBricksButton();
+    window.addEventListener('drone-selection-changed', syncBricksButton);
+    window.addEventListener('drone-model-changed', syncBricksButton);
+    // Режим Blockly переключается тем же списком языка; его обработчик отрабатывает раньше этой проверки.
+    document.getElementById('script-language-select')?.addEventListener('change', () => window.setTimeout(syncBricksButton, 0));
+    bricksBtn?.addEventListener('click', () => {
+        const project = exportMainBricksProject(scriptFileName('xml').replace(/\.xml$/, ''));
+        if (!project) return;
+        const blob = new Blob([project.xml], { type: 'application/xml' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = project.fileName;
+        link.click();
+        URL.revokeObjectURL(url);
+    });
 
     const downloadBtn = document.getElementById('download-code-btn') as HTMLButtonElement | null;
     downloadBtn?.addEventListener('click', () => {

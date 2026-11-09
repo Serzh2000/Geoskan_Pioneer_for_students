@@ -1,10 +1,14 @@
 import { installJsRuntimeAPI } from './pioneer-js-bridge.js';
 import { PIONEER_CV_PRELUDE } from './pioneer-sdk-cv-prelude.js';
 import { PIONEER_SDK2_PRELUDE } from './pioneer-sdk2-module.js';
+import { PIONEER_RKNN_PRELUDE } from './pioneer-rknn-module.js';
 
 const PIONEER_SDK_PRELUDE = `
 import asyncio, inspect, sys, types
+import hashlib as _hashlib
 import js
+
+_WIFI_STATE = {}
 
 m = types.ModuleType('pioneer_sdk')
 ${PIONEER_CV_PRELUDE}
@@ -88,6 +92,25 @@ class Pioneer:
         self.connection_method = connection_method
         self.device = device
         self.baud = baud
+        self._logger = bool(logger)
+        self._log_connection = bool(log_connection)
+
+    def log(self, msg, msg_type=None):
+        # Как в настоящем SDK: сообщения библиотеки печатаются с именем дрона, если логирование включено.
+        if msg_type == "connection" and not self._log_connection:
+            return
+        if msg_type != "connection" and not self._logger:
+            return
+        if msg_type is None:
+            print(f"[{self.name}] {msg}")
+        else:
+            print(f"[{self.name}] <{msg_type}> {msg}")
+
+    def set_logger(self, value=True):
+        self._logger = bool(value)
+
+    def set_log_connection(self, value=True):
+        self._log_connection = bool(value)
 
     def connected(self):
         return True
@@ -134,6 +157,17 @@ class Pioneer:
     def get_autopilot_state(self):
         return js.pioneer_get_autopilot_state(self._id)
 
+    def get_preflight_state(self):
+        # Настоящий SDK отдаёт словарь битов предстартовой проверки из автопилота: ненулевое значение значит «флаг поднят».
+        # В симуляторе проблем с батареей, навигацией и зоной нет, а UavStartAllowed поднят, пока моторы выключены.
+        ready = js.pioneer_get_autopilot_state(self._id) == 'DISARMED'
+        return {'BatteryLow': 0, 'NavSystem': 0, 'Area': 0, 'Attitude': 0, 'RcExpected': 0, 'RcMode': 0,
+                'RcUnexpected': 0, 'UavStartAllowed': 128 if ready else 0}
+
+    def get_autopilot_version(self):
+        # [flight_sw_version, board_version, flight_custom_version]; в симуляторе это постоянные значения.
+        return [16909056, 1, [0, 0, 0, 0, 0, 0, 0, 0]]
+
     # get_yaw и cargo_* есть только в pioneer_sdk 0.6.1 с GitFlic, и там они
     # работают лишь при Pioneer(simulator=True), иначе NotImplementedError.
     def get_yaw(self, get_last_received=True):
@@ -155,8 +189,117 @@ class Pioneer:
         flow_x, flow_y, quality = js.pioneer_get_optical_flow(self._id).to_py()
         return flow_x, flow_y, int(quality)
 
+    def get_optical_data(self, get_last_received=False):
+        # Имя и формат настоящего SDK (сообщение OPTICAL_FLOW_RAD): интегральные значения за 20 мс, расстояние и качество.
+        # Это те же данные, что отдаёт get_optical_flow(), в виде словаря.
+        flow_x, flow_y, quality = self.get_optical_flow()
+        interval = 0.02
+        distance = js.pioneer_get_dist_sensor_data(self._id)
+        return {'integration_time_us': 20000, 'integrated_x': flow_x * interval, 'integrated_y': flow_y * interval,
+                'distance': distance, 'integrated_xgyro': 0.0, 'integrated_ygyro': 0.0, 'integrated_zgyro': 0.0,
+                'temperature': 0, 'quality': quality}
+
     def led_control(self, led_id=255, r=0, g=0, b=0):
         return bool(js.pioneer_led_control(self._id, led_id, r, g, b))
+
+    def reboot_board(self):
+        # Перезагрузка полётного контроллера: моторы выключаются, как после disarm().
+        self.log('sending REBOOT_BOARD ...')
+        return bool(js.pioneer_disarm(self._id))
+
+    def lua_script_upload(self, lua_source):
+        # На дроне скрипт записывается в память автопилота, а запускается командой lua_script_control('Start').
+        js.pioneer_lua_script_upload(self._id, str(lua_source))
+        self.log('Lua-скрипт загружен на дрон (в симуляторе: сохранён как скрипт этого дрона)')
+
+    def raspberry_poweroff(self):
+        self.log('sending RPi_POWEROFF ...')
+        return True
+
+    def raspberry_reboot(self):
+        self.log('sending RPi_REBOOT ...')
+        return True
+
+    def raspberry_led_custom(self, mode=1, timer=0, color1=(0, 0, 0), color2=(0, 0, 0)):
+        # Светодиоды Raspberry Pi на виртуальном дроне отсутствуют: команда принимается и не меняет сцену.
+        for color in (color1, color2):
+            if len(color) != 3:
+                raise ValueError("color1 и color2 должны быть кортежами из трёх чисел (r, g, b).")
+        self.log(f'sending RPi_LED mode={mode} timer={timer} ...')
+        return True
+
+    def raspberry_start_capture(self, interval=0.1, total_images=0, sequence_number=0):
+        self.log('sending RPi_START_CAPTURE ...')
+        return True
+
+    def raspberry_stop_capture(self):
+        self.log('sending RPi_STOP_CAPTURE ...')
+        return True
+
+    # Wi-Fi модуль ESP32 на борту: в симуляторе настройки хранятся в памяти страницы, как у настоящей платы после
+    # включения. Сети нет, поэтому подключение к чужой точке доступа всегда «успешно».
+    def _wifi(self):
+        state = _WIFI_STATE.get(self._id)
+        if state is None:
+            state = _WIFI_STATE[self._id] = {'ap_ssid': 'Pioneer_sim', 'ap_password': '12345678', 'sta_ssid': None, 'sta_password': None}
+        return state
+
+    @staticmethod
+    def _wifi_ascii(value, limit, what):
+        try:
+            return str(value).encode('ascii')[:limit].decode('ascii')
+        except UnicodeEncodeError:
+            raise ValueError(f"{what}: допустимы только ASCII-символы (латиница, цифры, знаки)")
+
+    @staticmethod
+    def _wifi_digest(password):
+        # Настоящая плата отдаёт пароль только в виде MD5-хеша.
+        return None if password is None else _hashlib.md5(password.encode('ascii')).hexdigest()
+
+    def send_sta_connect(self, ssid, password):
+        state = self._wifi()
+        state['sta_ssid'] = self._wifi_ascii(ssid, 32, 'ssid')
+        state['sta_password'] = self._wifi_ascii(password, 64, 'password')
+
+    def send_sta_disconnect(self):
+        state = self._wifi()
+        state['sta_ssid'] = None
+        state['sta_password'] = None
+
+    def send_ap_ssid(self, ssid):
+        self._wifi()['ap_ssid'] = self._wifi_ascii(ssid, 32, 'ssid')
+
+    def send_ap_password(self, password):
+        self._wifi()['ap_password'] = self._wifi_ascii(password, 64, 'password')
+
+    def receive_wifi_config_ap(self, blocking=True, timeout=0.3):
+        state = self._wifi()
+        return types.SimpleNamespace(ssid=state['ap_ssid'], password=self._wifi_digest(state['ap_password']))
+
+    def ap_set_ssid(self, ssid):
+        self.send_ap_ssid(ssid)
+        return True
+
+    def ap_set_password(self, password):
+        self.send_ap_password(password)
+        return True
+
+    def sta_connect(self, ssid, password):
+        self.send_sta_connect(ssid, password)
+        self.log(f'STA подключена к «{ssid}» (в симуляторе сети нет, подключение условное)')
+        return True
+
+    def sta_disconnect(self):
+        self.send_sta_disconnect()
+        return True
+
+    def try_get_sta_status(self):
+        state = self._wifi()
+        return state['sta_ssid'], self._wifi_digest(state['sta_password'])
+
+    def try_get_ap_status(self):
+        state = self._wifi()
+        return state['ap_ssid'], self._wifi_digest(state['ap_password'])
 
     def send_rc_channels(self, channel_1=0xFF, channel_2=0xFF, channel_3=0xFF, channel_4=0xFF, channel_5=0xFF, channel_6=0xFF, channel_7=0xFF, channel_8=0xFF):
         return bool(js.pioneer_send_rc_channels(
@@ -171,8 +314,13 @@ class Pioneer:
             channel_8
         ))
 
-    def lua_script_control(self, command):
-        return bool(js.pioneer_lua_script_control(self._id, command))
+    def lua_script_control(self, state='Stop', command=None):
+        # В настоящем SDK аргумент называется state и принимает 'Start' или 'Stop'; command оставлен для старых программ.
+        value = state if command is None else command
+        if str(value).lower() not in ('start', 'stop'):
+            raise ValueError(f"Argument 'state' must be one of the following values: 'Stop', 'Start'. But your value is '{value}'.")
+        return bool(js.pioneer_lua_script_control(self._id, value))
+
 
 class Camera:
     def __init__(self, timeout=0.5, ip='192.168.4.1', port=None, video_buffer_size=65000, log_connection=True, view='front'):
@@ -220,9 +368,13 @@ class Camera:
             return _remember_frame(numpy.frombuffer(raw, dtype=numpy.uint8).reshape((height, width, 3)).copy(), frame.frameId)
         return _remember_frame(SimCvFrame({"connected": True, "drone_id": self._id}, raw, width, height), frame.frameId)
 
+# pioneer_sdk2 ниже выполняется в том же пространстве имён и подменяет имя Camera своим классом (для Мини 2),
+# поэтому VideoStream держит ссылку на камеру первого SDK, а не ищет её по имени при вызове.
+_SdkCamera = Camera
+
 class VideoStream:
     def __init__(self, *args, **kwargs):
-        self.camera = Camera(*args, **kwargs)
+        self.camera = _SdkCamera(*args, **kwargs)
         self.running = False
 
     async def start(self):
@@ -283,5 +435,7 @@ export async function installPioneerSdkModule(pyodide: any) {
     pyodide.runPython(PIONEER_SDK_PRELUDE);
     // pioneer_sdk2 (Пионер Мини 2) строится поверх классов первого SDK.
     pyodide.runPython(PIONEER_SDK2_PRELUDE);
+    // pioneer_rknn (нейросети Мини 2) - «зрение» симулятора по сцене.
+    pyodide.runPython(PIONEER_RKNN_PRELUDE);
     (window as any).__pioneer_sdk_installed = true;
 }

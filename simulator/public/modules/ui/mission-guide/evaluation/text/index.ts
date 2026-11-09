@@ -23,8 +23,13 @@ import { gradeSignalsCode } from '../../academy/evaluation/signals-code.js';
 import { gradeTimeAcademy } from '../../academy/evaluation/time.js';
 import { gradeFlightAcademy } from '../../academy/evaluation/flight.js';
 import { gradeTelemetryAcademy } from '../../academy/evaluation/telemetry.js';
+import { gradeSdkExtrasAcademy } from '../../academy/evaluation/sdk-extras.js';
+import { gradeSdkPythonAcademy } from '../../academy/evaluation/sdk-python.js';
+import { gradeLuaExtrasAcademy } from '../../academy/evaluation/lua-extras.js';
 import { gradeVisionAcademy } from '../../academy/evaluation/vision.js';
 import { buildFlightTimeline } from './timeline.js';
+import { gradeSdk2Mission, isSdk2Mission } from '../../mini2/sdk2-missions.js';
+import { gradeBricksMission, isBricksMission } from '../../mini2/bricks-missions.js';
 import { PIONEER_BY_TOPIC } from '../../lessons/pioneer/catalog.js';
 import { gradePioneerLesson, isFlightFinished } from '../../lessons/pioneer/grade.js';
 
@@ -74,6 +79,18 @@ async function evaluateTextLesson(
     } while (true);
     const snapshot = samples[samples.length - 1]?.snapshot || null;
 
+    // Миссии трека «Мини 2 · SDK2»: проверка сверяет журнал запуска с ожиданием миссии.
+    if (isSdk2Mission(topicId)) {
+        const events = options?.capture ? finishLearningCapture(options.capture.droneId, options.capture.token) : [];
+        return gradeSdk2Mission(topicId, samples, events);
+    }
+
+    // Миссии трека «Мини 2 · Bricks»: блоки собираются в Python, проверка сверяет журнал запуска.
+    if (isBricksMission(topicId)) {
+        const events = options?.capture ? finishLearningCapture(options.capture.droneId, options.capture.token) : [];
+        return gradeBricksMission(topicId, samples, events);
+    }
+
     if (/^academy-\d{3}$/.test(topicId)) {
         const events = options?.capture ? finishLearningCapture(options.capture.droneId, options.capture.token) : [];
         const number = Number(topicId.slice(-3));
@@ -83,6 +100,9 @@ async function evaluateTextLesson(
         if (number <= 63) return gradeFlightAcademy(number, samples, events, options?.activity || { code: '' });
         if (number <= 72) return gradeTelemetryAcademy(number, samples, events, options?.activity || { code: '' });
         if (number <= 108) return gradeVisionAcademy(number, samples, events, options?.activity || { code: '' });
+        if (number <= 110) return gradeSdkExtrasAcademy(number, samples, events);
+        if (number <= 124) return gradeSdkPythonAcademy(number, samples, events);
+        if (number <= 145) return gradeLuaExtrasAcademy(number, samples, events);
     }
 
     if (pioneer) {

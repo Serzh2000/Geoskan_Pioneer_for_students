@@ -13,7 +13,8 @@ try:
         # рамки строк и варианты текста
         boxes, results = ocr.run(frame)
         words = []
-        for variants in results:
+        # без текста библиотека возвращает (None, None)
+        for variants in results or []:
             # первый вариант - самый вероятный
             text, score = variants[0]
             if score > 0.6:

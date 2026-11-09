@@ -10,13 +10,14 @@ import { supportsLanguage } from './modules/core/drone-models.js';
  * Main browser entry point for the simulator.
  * Wires together the 3D scene, editor, UI controls, and script runtimes.
  */
-import { initEditor, getEditorValue, layoutEditor, loadMainBlocklyJson, setEditorValue } from './modules/editor/index.js';
+import { initEditor, getEditorValue, layoutEditor, loadMainBlocklyJson, loadMainBricksProject, setEditorValue } from './modules/editor/index.js';
 import { currentExamplesSet } from './modules/ui/controls/file-controls.js';
 import { initUI, type UICallbacks } from './modules/ui/index.js';
 import { restoreSceneSession, saveSceneSessionNow, startSceneSessionAutosave } from './modules/app/scene-session.js';
 import { log } from './modules/shared/logging/logger.js';
 import { resetScriptExecutionNoticeState, showScenarioValidationNotice, showScriptFailureNotice, validateScenarioBeforeLaunch, wireMissionNotices } from './modules/app/script-execution-notice.js';
-import { configureSimulationControls } from './modules/app/simulation-controls.js';
+import { configureSimulationControls, restartAndRunSimulation } from './modules/app/simulation-controls.js';
+import { getAppMode } from './modules/learning/mode.js';
 import { initScriptLanguageSelector } from './modules/app/language-selector.js';
 import { initThemeToggle } from './modules/app/theme-toggle.js';
 import { registerGlobalErrorHandler } from './modules/app/global-error.js';
@@ -44,11 +45,21 @@ function init() {
 
     // Initialize UI with callbacks
     const uiCallbacks: UICallbacks = {
-        onRun: startSimulation,
+        // В обучении каждый запуск начинается со сброса, как и «Проверить полёт»: после прошлого опыта дрон остаётся
+        // подготовленным (PREFLIGHT), и повторный arm() в верном коде падал бы с «invalid transition».
+        onRun: () => (getAppMode() === 'learning' ? restartAndRunSimulation() : startSimulation()),
         onStop: stopSimulation,
         onRestart: resetSimulation,
         onFileSelect: loadFileContent,
         onLocalFileLoad: (name, content) => {
+            // Проект Pioneer Bricks (.xml) открывается в редакторе блоков Мини 2, остальное - текстом программы.
+            if (/\.xml$/i.test(name)) {
+                loadMainBricksProject(content).then(
+                    (title) => log(`Проект Bricks открыт: ${title || name}`, 'success'),
+                    (error: unknown) => log(error instanceof Error ? error.message : 'Не удалось открыть проект Bricks', 'error')
+                );
+                return;
+            }
             setEditorValue(content);
             log(`Локальный файл загружен: ${name}`, 'success');
         },
@@ -302,6 +313,7 @@ async function loadFileContent(path: string) {
         const res = await fetch(`/api/file-content?path=${encodeURIComponent(path)}&lang=${examples}`);
         const data = await res.json();
         if (examples === 'blocks') await loadMainBlocklyJson(data.content);
+        else if (examples === 'blocks-bricks') await loadMainBricksProject(data.content);
         else setEditorValue(data.content);
         log(`Файл загружен: ${path}`, 'success');
     } catch {

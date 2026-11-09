@@ -5,11 +5,7 @@
 \begin{codefile}[python]{python/01_python_basics/05_branching.py}
 \end{codefile}
 
-Обратите внимание на отступы (4 пробела) — они обязательны в Python и обозначают блоки кода.
-
-\begin{taskbox}[Светофор]
-Напишите программу, которая принимает цвет светофора (\texttt{"red"}, \texttt{"yellow"}, \texttt{"green"}) и выводит действие (\texttt{"Стоп"}, \texttt{"Приготовиться"}, \texttt{"Ехать"}).
-\end{taskbox}
+Обратите внимание на отступы (4 пробела) — они обязательны в Python и обозначают блоки кода. У каждой ветки должен быть понятный результат: если ветка \texttt{else} ничего не печатает, по выводу не отличить «условие ложно» от «программа сюда не дошла».
 
 \subsubsection*{Задачи для самостоятельного решения}
 
@@ -27,6 +23,12 @@
     \item Дана строка \texttt{s = ""}. Если она пустая (длина 0), напишите "Пусто".
     \item \texttt{weight = 80}. < 50 — "Легкий", 50-100 — "Средний", > 100 — "Тяжелый".
     \item \texttt{armed = True}, \texttt{ready = False}. Если оба \texttt{True} — "Взлет", иначе "Ждать".
-    \item \texttt{login = "admin"}. Если не равен "admin", вывести "Ошибка".
+    \item \texttt{login = "user"}. Если не равен "admin", вывести "Ошибка".
     \item \texttt{a=5, b=2, c=8}. Найдите самое большое число из трех через \texttt{if}.
 \end{enumerate}
+
+\begin{taskbox}[Светофор]
+В переменной \texttt{color} записан цвет светофора: \texttt{"red"}, \texttt{"yellow"} или \texttt{"green"}. Выведите действие: \texttt{Стоп}, \texttt{Приготовиться} или \texttt{Ехать}, а для любого другого значения --- \texttt{Неизвестный цвет}. Проверьте все четыре ветки, меняя значение переменной.
+\expected{при \texttt{color = "yellow"} --- \texttt{Приготовиться}, при \texttt{"blue"} --- \texttt{Неизвестный цвет}. Решение --- в конце файла \texttt{examples/python-answers/05\_branching\_answers.py}.}
+\mission{Python}{22}
+\end{taskbox}

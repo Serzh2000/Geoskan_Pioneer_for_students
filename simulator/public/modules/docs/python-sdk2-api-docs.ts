@@ -4,6 +4,9 @@ import type { ApiDoc } from './api-docs-types.js';
  * Справочник pioneer_sdk2 - библиотеки Пионера Мини 2 (PyPI pioneer-sdk2
  * 0.16). Источник истины - исходники библиотеки, не документация:
  * у grab_* скорость по умолчанию 20, курс в градусах, цвет 0..1.
+ * Методы RC, GPS, параметров и груза описаны по pioneer_sdk2 0.11.0 (PyPI),
+ * RC-каналы, Camera, RecorderControl - ещё и по сборнику SDK2 (проверен на
+ * дроне с pioneer_sdk2 0.16.0). Значения Event 0.16 в сборнике не приведены.
  * Где симулятор ведёт себя иначе, чем дрон, это сказано в описании.
  */
 
@@ -13,11 +16,11 @@ function method([desc, syntax, params, returns, example, insertText, aliases]: E
     return { desc, syntax, params, returns, example, insertText, kind, ...(aliases ? { aliases } : {}) };
 }
 
-const ORDER_NOTE = ' Порядок проверяется: на земле разрешён arm(), с запущенными моторами - takeoff(), в воздухе - полётные команды. Команда прошлого этапа игнорируется (False), пропуск этапа - RuntimeError.';
+const ORDER_NOTE = ' Порядок проверяется (только при wait_callback=True и safety_command=True): на земле разрешён arm(), с запущенными моторами - takeoff(), в воздухе - полётные команды. Команда прошлого этапа игнорируется (False), команда следующего или любого другого этапа - RuntimeError.';
 
 export const pythonSdk2ApiDocs: Record<string, ApiDoc> = {
     'Pioneer': method([
-        'Подключение к автопилоту Пионера Мини 2. На борту дрона адрес по умолчанию верный (TCP 127.0.0.1:20556). wait_callback и safety_command включают ожидание событий и контроль порядка команд.',
+        'Подключение к автопилоту Пионера Мини 2. На борту дрона адрес по умолчанию верный (TCP 127.0.0.1:20556); в симуляторе serial и tcp не используются. wait_callback и safety_command включают ожидание событий и контроль порядка команд.',
         'Pioneer(serial=None, tcp="127.0.0.1:20556", baudrate=57600, wait_callback=True, safety_command=True, logger=True)',
         'serial или tcp - канал к автопилоту; logger=True печатает ход команд («-> ARM», «Моторы запущены»)',
         'объект Pioneer',
@@ -273,7 +276,7 @@ export const pythonSdk2ApiDocs: Record<string, ApiDoc> = {
         'get_motors_rpm()'
     ]),
     'Pioneer.get_nav_system': method([
-        'Текущая система навигации: NavSystem.GPS, LPS или OPT (в симуляторе - LPS).',
+        'Текущая система навигации: NavSystem.GPS, LPS или OPT; читается из параметра Flight_com_navSystem (в симуляторе - LPS).',
         'pioneer.get_nav_system(update=False) -> NavSystem',
         'update - перечитать параметр из автопилота',
         'NavSystem',
@@ -331,10 +334,10 @@ export const pythonSdk2ApiDocs: Record<string, ApiDoc> = {
         'grab_stop()'
     ]),
     'Pioneer.get_param': method([
-        'Прочитать параметр автопилота по имени (в симуляторе параметров нет: None).',
-        'pioneer.get_param(name, update=False)',
-        'name - имя параметра',
-        'значение или None',
+        'Значение параметра автопилота по имени. Первый вызов (и вызов с update=True) печатает «-> Загрузка словаря автопилота ...». Нет такого параметра - None. В симуляторе известны только Flight_com_navSystem (1.0 - LPS), Copter_com_takeoffAlt и параметры RC из send_rc_channels. update=True читает значение заново; для знакомых имён результат тот же.',
+        'pioneer.get_param(name, update=False) -> float',
+        'name - имя параметра; update - перечитать словарь параметров',
+        'число или None',
         'pioneer.get_param("Flight_com_navSystem")',
         'get_param("${1:name}")'
     ]),
@@ -354,6 +357,173 @@ export const pythonSdk2ApiDocs: Record<string, ApiDoc> = {
         'try:\n    ...\nfinally:\n    pioneer.close_connection()',
         'close_connection()'
     ]),
+    'Pioneer.connect': method([
+        'Устанавливает соединение с автопилотом. Pioneer() делает это сам, вызывать connect() вручную не нужно. В симуляторе ничего не делает.',
+        'pioneer.connect()',
+        'нет',
+        'None',
+        'pioneer.connect()',
+        'connect()'
+    ]),
+    'Pioneer.time': method([
+        'Время работы автопилота в секундах с начала GPS-эпохи (6 января 1980). В симуляторе - начало эпохи плюс время работы симуляции.',
+        'pioneer.time() -> float',
+        'нет',
+        'секунды или None при ошибке',
+        'print(pioneer.time())',
+        'time()'
+    ]),
+    'Pioneer.reboot_board': method([
+        'Перезагрузка основной платы дрона. Для Мини 2 перезагрузка запрещена: печатает «Перезагрузка платы Pioneer Mini 2 запрещена» и возвращает False. В симуляторе всегда так.',
+        'pioneer.reboot_board() -> bool',
+        'нет',
+        'True, если перезагрузка разрешена и выполнена, иначе False',
+        'if not pioneer.reboot_board():\n    print("Перезагрузка запрещена")',
+        'reboot_board()'
+    ]),
+    'Pioneer.go_to_global_point': method([
+        'Полёт в точку по координатам GPS. Работает только при системе навигации GPS. У Мини 2 в симуляторе навигация LPS (локальная), поэтому как на дроне без GPS: порядок команд проверяется, затем печатается «Команда может быть выполнена только когда установлена система навигации GPS» и возвращается False. Для полёта в симуляторе используйте go_to_local_point.' + ORDER_NOTE,
+        'pioneer.go_to_global_point(latitude, longitude, altitude, yaw=0) -> bool',
+        'latitude, longitude - градусы; altitude - метры над уровнем моря; yaw - градусы',
+        'True, если команда отправлена, иначе False',
+        'if not pioneer.go_to_global_point(55.7512, 37.6184, 120):\n    pioneer.go_to_local_point(1, 0, 1)',
+        'go_to_global_point(latitude=${1:55.0}, longitude=${2:37.0}, altitude=${3:100}, yaw=${4:0})',
+        ['gps', 'глобальная точка', 'широта', 'долгота']
+    ]),
+    'Pioneer.go_to_global_point_relative': method([
+        'Полёт на смещение от текущей точки в градусах широты и долготы. Только при навигации GPS. В симуляторе (LPS) - как go_to_global_point: печатает пояснение и возвращает False.' + ORDER_NOTE,
+        'pioneer.go_to_global_point_relative(latitude_offset, longitude_offset, altitude_offset, yaw=0) -> bool',
+        'latitude_offset, longitude_offset - градусы; altitude_offset - метры; yaw - градусы',
+        'True, если команда отправлена, иначе False',
+        'pioneer.go_to_global_point_relative(0.0001, 0.0001, 0)',
+        'go_to_global_point_relative(latitude_offset=${1:0.0001}, longitude_offset=${2:0.0001}, altitude_offset=${3:0}, yaw=${4:0})'
+    ]),
+    'Pioneer.get_global_position_gps': method([
+        'Широта, долгота (градусы) и высота (м) по GPS. В симуляторе GPS-модуля нет: печатает «Модуль навигации не установлен» и возвращает None, как дрон без GNSS.',
+        'pioneer.get_global_position_gps() -> (lat, lon, alt)',
+        'нет',
+        'кортеж или None (в симуляторе всегда None)',
+        'position = pioneer.get_global_position_gps()\nif position is None:\n    print("GPS нет")',
+        'get_global_position_gps()',
+        ['gps', 'координаты gps']
+    ]),
+    'Pioneer.get_global_velocity_gps': method([
+        'Скорость по GPS: северная, восточная и вертикальная, м/с. В симуляторе GPS нет: возвращает None.',
+        'pioneer.get_global_velocity_gps() -> (north, east, down)',
+        'нет',
+        'кортеж или None (в симуляторе всегда None)',
+        'print(pioneer.get_global_velocity_gps())',
+        'get_global_velocity_gps()'
+    ]),
+    'Pioneer.get_satellites_count': method([
+        'Число видимых спутников GPS и ГЛОНАСС. В симуляторе GPS нет: возвращает None.',
+        'pioneer.get_satellites_count() -> (gps, glonass)',
+        'нет',
+        'кортеж или None (в симуляторе всегда None)',
+        'print(pioneer.get_satellites_count())',
+        'get_satellites_count()',
+        ['спутники']
+    ]),
+    'Pioneer.get_nav_status_gps': method([
+        'Качество GPS-навигации: NavStatus.NO_DATA, CANNOT, LOW или OK. В симуляторе GPS нет: возвращает None.',
+        'pioneer.get_nav_status_gps() -> NavStatus',
+        'нет',
+        'NavStatus или None (в симуляторе всегда None)',
+        'print(pioneer.get_nav_status_gps())',
+        'get_nav_status_gps()'
+    ]),
+    'Pioneer.set_param': method([
+        'Записать параметр автопилота. Если параметра нет - печатает «Установка параметра ... не удалась» и возвращает False. В симуляторе известны только параметры RC из README (Copter_man_rcMode0, Copter_man_rcMode1, Copter_man_rcMode2, Copter_flyWithoutRc, SensorMux_rc); Copter_com_takeoffAlt (высота взлёта, 0.4 м по умолчанию); Flight_com_navSystem читается, но не меняется: навигация симулятора всегда LPS. Значение запоминается до конца программы и, кроме RC-набора, не влияет на полёт и не меняет параметры автопилота в панели настроек симулятора.',
+        'pioneer.set_param(name, value) -> bool',
+        'name - имя параметра; value - число',
+        'True, если параметр записан, иначе False',
+        'pioneer.set_param("Copter_flyWithoutRc", 1)',
+        'set_param("${1:name}", ${2:1})',
+        ['параметр', 'настройка автопилота']
+    ]),
+    'Pioneer.send_rc_channels': method([
+        'Отправляет значения RC-каналов (как с пульта). Автопилот слушает их, если выставлены параметры: Copter_man_rcMode0=6, Copter_man_rcMode1=3, Copter_man_rcMode2=3, Copter_flyWithoutRc=1, SensorMux_rc=2. На борту RC нужно отправлять постоянно, чтобы не пропала связь. Значения от -1 до 1: канал 1 - правый стик вправо (1) / влево (-1); канал 2 - правый стик назад (1) / вперёд (-1); канал 3 - левый стик вверх (1) / вниз (-1); канал 4 - левый стик влево (1) / вправо (-1); каналы 5-8 - тумблеры пульта: 5 - SWC (0/1/2), 6 - SWD (0/2), 7 - SWB (0/1/2), 8 - SWA (0/2). В симуляторе, когда параметры выставлены и дрон в воздухе, каналы 1-4 дают скорость в осях дрона (до 1 м/с, вверх до 0.5 м/с) на 0.5 с; без параметров вызов только запоминает каналы.',
+        'pioneer.send_rc_channels(channel_1=0, channel_2=0, channel_3=0, channel_4=0, channel_5=1, channel_6=0, channel_7=1, channel_8=0) -> bool',
+        'channel_1..channel_4 - стики, числа от -1 до 1; channel_5..channel_8 - тумблеры (положение 0, 1 или 2)',
+        'True, если команда отправлена',
+        'pioneer.set_param("Copter_man_rcMode0", 6)\npioneer.set_param("Copter_man_rcMode1", 3)\npioneer.set_param("Copter_man_rcMode2", 3)\npioneer.set_param("Copter_flyWithoutRc", 1)\npioneer.set_param("SensorMux_rc", 2)\nfor _ in range(20):\n    pioneer.send_rc_channels(channel_2=-0.5)   # вперёд\n    time.sleep(0.1)',
+        'send_rc_channels(channel_1=${1:0}, channel_2=${2:0}, channel_3=${3:0}, channel_4=${4:0})',
+        ['rc', 'пульт', 'стики', 'каналы']
+    ]),
+    'Pioneer.rc_sdk1_to_sdk2': method([
+        'Пересчёт значений RC-каналов pioneer_sdk (1000..2000) в значения для send_rc_channels. Формула в pioneer_sdk2 0.11.0 именно такая: channel_1 = channel_4 - 3, channel_2 = channel_3 - 3, channel_3 = (новый channel_1) - 3, channel_4 = (новый channel_2) - 3; режим 2000 даёт 1, иначе 0. Симулятор повторяет её как есть.',
+        'pioneer.rc_sdk1_to_sdk2(channel_1=0, channel_2=0, channel_3=0, channel_4=0, channel_5=2000) -> tuple',
+        'channel_1..channel_4 - значения каналов pioneer_sdk; channel_5 - канал режима (2000 - включён)',
+        'кортеж из 5 значений',
+        'ch1, ch2, ch3, ch4, ch5 = pioneer.rc_sdk1_to_sdk2(1500, 1500, 1500, 1500, 2000)',
+        'rc_sdk1_to_sdk2(${1:1500}, ${2:1500}, ${3:1500}, ${4:1500}, ${5:2000})'
+    ]),
+    'Pioneer.get_rc_channel': method([
+        'Читает значение RC-канала автопилота (поле, которое настроено для платы). Это восьмой канал, тумблер SWA: положение 0, 1 или 2. В симуляторе пульта нет: 0, а после send_rc_channels - значение channel_8.',
+        'pioneer.get_rc_channel() -> int',
+        'нет',
+        'число или None при ошибке',
+        'print(pioneer.get_rc_channel())',
+        'get_rc_channel()'
+    ]),
+    'Pioneer.set_rc_trigger': method([
+        'Вызывает функцию, когда меняется значение RC-канала (get_rc_channel). Проверка раз в 0.1 с; первый раз функция вызывается сразу с текущим значением. Функция получает новое значение. Ошибка внутри функции печатается как «-> Ошибка при чтении поля или вызове колбэка».',
+        'pioneer.set_rc_trigger(callback)',
+        'callback(value) - функция',
+        'None',
+        'def on_rc(value):\n    print("RC:", value)\n\npioneer.set_rc_trigger(on_rc)',
+        'set_rc_trigger(${1:on_rc})',
+        ['триггер', 'rc']
+    ]),
+    'Pioneer.cargo_set': method([
+        'Включает (True) или выключает (False) магнитный захват груза. Модуль есть только у Базового Пионера: у Мини 2 (и в симуляторе) печатает «-> Модуль магнитного захвата груза не поддерживается» и возвращает False. Для Мини 2 берите grab_close / grab_open.',
+        'pioneer.cargo_set(grab) -> bool',
+        'grab - True включить, False выключить',
+        'True, если команда выполнена, иначе False',
+        'if not pioneer.cargo_set(True):\n    pioneer.grab_close()',
+        'cargo_set(${1:True})',
+        ['магнит', 'груз']
+    ]),
+    'Pioneer.cargo_grab': method([
+        'Включает магнитный захват груза (то же, что cargo_set(True)). У Мини 2 не поддерживается: False.',
+        'pioneer.cargo_grab() -> bool',
+        'нет',
+        'bool',
+        'pioneer.cargo_grab()',
+        'cargo_grab()'
+    ]),
+    'Pioneer.cargo_release': method([
+        'Выключает магнитный захват груза (то же, что cargo_set(False)). У Мини 2 не поддерживается: False.',
+        'pioneer.cargo_release() -> bool',
+        'нет',
+        'bool',
+        'pioneer.cargo_release()',
+        'cargo_release()'
+    ]),
+    'NavSystem': method([
+        'Системы навигации: GPS (ГНСС), LPS (локальная, «Локус»), OPT (оптическая). Возвращается из get_nav_system(); в симуляторе - LPS. Импорт: from pioneer_sdk2.piosdk2 import NavSystem.',
+        'from pioneer_sdk2.piosdk2 import NavSystem',
+        'NavSystem.GPS, LPS, OPT',
+        'Enum',
+        'if pioneer.get_nav_system() == NavSystem.LPS:\n    print("Локальная навигация")',
+        'NavSystem.${1:LPS}'
+    ], 'Enum'),
+    'NavStatus': method([
+        'Состояние навигации: NO_DATA (нет данных с модуля), CANNOT (позицию оценить нельзя), LOW (малое доверие), OK (успешная оценка). Возвращается из get_nav_status_lps() и get_nav_status_gps(). Импорт: from pioneer_sdk2.piosdk2 import NavStatus.',
+        'from pioneer_sdk2.piosdk2 import NavStatus',
+        'NavStatus.NO_DATA, CANNOT, LOW, OK',
+        'Enum',
+        'if pioneer.get_nav_status_lps() == NavStatus.OK:\n    pioneer.arm()',
+        'NavStatus.${1:OK}'
+    ], 'Enum'),
+    'ServoPriority': method([
+        'Приоритет команды сервопривода камеры: HIGH, MEDIUM, LOW (по умолчанию LOW). Передаётся вторым аргументом в ServoCamera.set_angle.',
+        'from pioneer_sdk2 import ServoPriority',
+        'ServoPriority.HIGH, MEDIUM, LOW',
+        'Enum',
+        'servo.set_angle(-30, ServoPriority.HIGH)',
+        'ServoPriority.${1:LOW}'
+    ], 'Enum'),
     'Event': method([
         'События автопилота для subscribe: ALL, ENGINES_STARTED, TAKEOFF_COMPLETE, POINT_DECELERATION, POINT_REACHED, COPTER_LANDED, DISARM, LOW_VOLTAGE1 (заряда хватит вернуться), LOW_VOLTAGE2 (автопилот начал аварийную посадку), SHOCK (сильный удар), LOW_CHARGE.',
         'from pioneer_sdk2 import Event',
@@ -381,7 +551,7 @@ export const pythonSdk2ApiDocs: Record<string, ApiDoc> = {
         ['камера', 'видео']
     ], 'Class'),
     'Camera.get_cv_frame': method([
-        'Следующий кадр - массив numpy с цветами BGR. Нет кадра timeout секунд - TimeoutError.',
+        'Следующий кадр - массив numpy с цветами BGR (30 кадров в секунду). Нет кадра timeout секунд - TimeoutError; на всякий случай проверяйте и кадр на None. После поворота ServoCamera в очереди могут быть старые кадры: пропустите несколько.',
         'camera.get_cv_frame(timeout=5.0) -> numpy.ndarray',
         'timeout - секунды',
         'кадр BGR',
@@ -390,7 +560,7 @@ export const pythonSdk2ApiDocs: Record<string, ApiDoc> = {
         ['кадр', 'изображение']
     ]),
     'Camera.stop': method([
-        'Остановить захват кадров. Ставьте в finally.',
+        'Остановить захват кадров. Ставьте в finally; на дроне без stop() программа после конца кода не завершается.',
         'camera.stop()',
         'нет',
         'None',
@@ -421,6 +591,55 @@ export const pythonSdk2ApiDocs: Record<string, ApiDoc> = {
         'None',
         'viewer.close()',
         'close()'
+    ]),
+    'CameraType': method([
+        'Тип камеры для Camera и RecorderControl: CameraType.MAIN - основная передняя камера, CameraType.OPT - нижняя камера оптической навигации. Импорт: from pioneer_sdk2 import CameraType.',
+        'from pioneer_sdk2 import CameraType',
+        'CameraType.MAIN, CameraType.OPT',
+        'Enum',
+        'camera = Camera(camera_type=CameraType.OPT)',
+        'CameraType.${1:MAIN}'
+    ], 'Enum'),
+    'RecorderControl': method([
+        'Запись видео и фото камеры в галерею дрона (только Мини 2). На дроне видео попадает в /mnt/media/videos/, фото в /mnt/media/photos/; их видно в галерее Pioneer Code. В симуляторе библиотека проверяет аргументы, ведёт состояние записи и печатает, что сделала, но файлы не создаёт.',
+        'RecorderControl()',
+        'нет',
+        'объект RecorderControl',
+        'from pioneer_sdk2 import RecorderControl, CameraType\nrecorder = RecorderControl()',
+        'RecorderControl()',
+        ['запись видео', 'фото', 'галерея']
+    ], 'Class'),
+    'RecorderControl.get_camera_recording_configs': method([
+        'Режимы записи камеры: список (ширина, высота, fps). Любой элемент можно передать в start_recording и take_photo. В симуляторе - свои режимы: у MAIN 1280x720 и 640x360 при 30 fps, у OPT 640x480.',
+        'recorder.get_camera_recording_configs(camera_type=CameraType.MAIN) -> list',
+        'camera_type - CameraType.MAIN или OPT',
+        'список режимов',
+        'configs = recorder.get_camera_recording_configs(CameraType.MAIN)\nconfig = configs[0] if configs else None',
+        'get_camera_recording_configs(CameraType.${1:MAIN})'
+    ]),
+    'RecorderControl.start_recording': method([
+        'Начать видеозапись. Запись идёт параллельно с полётом; остановите её stop_recording в finally. config=None - первый доступный режим. Повторный запуск при идущей записи - RuntimeError.',
+        'recorder.start_recording(camera_type=CameraType.MAIN, config=None, output_dir="/mnt/media/videos")',
+        'camera_type - камера; config - режим из get_camera_recording_configs; output_dir - папка на дроне',
+        'True, если запись началась',
+        'recorder.start_recording(CameraType.MAIN, config)',
+        'start_recording(CameraType.${1:MAIN})'
+    ]),
+    'RecorderControl.stop_recording': method([
+        'Остановить видеозапись камеры. Если запись не шла - False.',
+        'recorder.stop_recording(camera_type=CameraType.MAIN)',
+        'camera_type - камера',
+        'True, если запись остановлена',
+        'recorder.stop_recording(CameraType.MAIN)',
+        'stop_recording(CameraType.${1:MAIN})'
+    ]),
+    'RecorderControl.take_photo': method([
+        'Сделать фото. Имя файла - непустое, с расширением .jpg, .jpeg или .png, иначе ValueError. На дроне ошибка камеры - RuntimeError.',
+        'recorder.take_photo(file_name, camera_type=CameraType.MAIN, config=None, output_dir="/mnt/media/photos")',
+        'file_name - имя файла; camera_type - камера; config - режим; output_dir - папка на дроне',
+        'True, если фото сделано',
+        'recorder.take_photo("point_1.jpg", CameraType.MAIN, config)',
+        'take_photo("${1:photo.jpg}", CameraType.${2:MAIN})'
     ]),
     'ServoCamera': method([
         'Сервопривод наклона передней камеры Мини 2. При создании проверяет, что он есть на борту. Импорт: from pioneer_sdk2 import ServoCamera, ServoPriority.',

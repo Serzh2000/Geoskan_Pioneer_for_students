@@ -38,16 +38,31 @@ const targets = [
         label: 'Pioneer Mini 2 examples (pioneer_sdk2)',
         source: path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'pioneer_sdk2'),
         dest: path.join(projectRoot, 'examples-python-sdk2')
+    },
+    {
+        // Нейросети на борту Мини 2 лежат в той же папке примеров, что и pioneer_sdk2.
+        label: 'Pioneer Mini 2 neural-network examples (pioneer_rknn)',
+        source: path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'pioneer_rknn'),
+        dest: path.join(projectRoot, 'examples-python-sdk2'),
+        // board-only: примеры, которые в браузере не запустить (потоки с очередями, torch, своя модель) - они только в книге.
+        filter: (src) => !src.split(path.sep).includes('board-only')
+    },
+    {
+        // Проекты Pioneer Bricks (Blockly XML) для редактора блоков Мини 2; Python к ним строит сам редактор.
+        label: 'Pioneer Bricks projects (Mini 2 block editor)',
+        source: path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'bricks'),
+        dest: path.join(projectRoot, 'examples-blocks-mini2', 'bricks'),
+        filter: (src) => fs.statSync(src).isDirectory() ? path.basename(src) !== 'python' : src.endsWith('.xml')
     }
 ];
 
-for (const { label, source, dest } of targets) {
+for (const { label, source, dest, filter } of targets) {
     if (!fs.existsSync(source)) {
         console.warn(`[sync-examples] Skipping ${label}: source not found at ${source}`);
         continue;
     }
 
     fs.mkdirSync(dest, { recursive: true });
-    fs.cpSync(source, dest, { recursive: true });
+    fs.cpSync(source, dest, { recursive: true, ...(filter ? { filter } : {}) });
     console.log(`[sync-examples] Copied ${label}: ${source} -> ${dest}`);
 }

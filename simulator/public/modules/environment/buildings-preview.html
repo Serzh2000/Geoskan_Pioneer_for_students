@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Здания: просмотр моделей</title>
+<style>html,body{margin:0;background:#9fb4c4;overflow:hidden}canvas{display:block}#hud{position:fixed;left:8px;top:8px;font:12px monospace;color:#012;background:#fff8;padding:4px;white-space:pre}</style></head>
+<body><div id="hud"></div>
+<script type="module">
+// Отладочная страница аудита зданий: город целиком и галерея всех типов, камера задаётся из консоли. Не часть приложения.
+import * as THREE from 'three';
+import { createTrainingTerrain } from './training/mesh.ts';
+import { createLandscapeAsset } from './training/landscape-assets.ts';
+import { createApartmentBuildingMesh } from './obstacles/buildings.ts';
+import { createCityBlockMesh, createCityHouseMesh } from './obstacles/buildings/city-blocks.ts';
+import { BLOCK_SPECS, HOUSE_SPECS, ROOF_COLORS } from './obstacles/buildings/city-specs.ts';
+
+const q = new URLSearchParams(location.search);
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(innerWidth, innerHeight); renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xa9c3d6);
+scene.fog = new THREE.Fog(0xa9c3d6, 300, 900);
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, .1, 1500); camera.up.set(0, 0, 1);
+const hemi = new THREE.HemisphereLight(0xdfe9f5, 0x55604a, 1.0); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff1d6, 2.4); sun.position.set(-60, -80, 120); sun.castShadow = true;
+sun.shadow.mapSize.set(4096, 4096); sun.shadow.bias = -0.0004; sun.shadow.normalBias = .05;
+scene.add(sun); scene.add(sun.target);
+function shadowBox(cx, cy, r) {
+    sun.target.position.set(cx, cy, 0); sun.position.set(cx - r * .5, cy - r * .7, r * 1.1);
+    Object.assign(sun.shadow.camera, { left: -r, right: r, top: r, bottom: -r, near: 1, far: r * 4 });
+    sun.shadow.camera.updateProjectionMatrix();
+}
+shadowBox(0, 0, 60);
+
+let root = new THREE.Group(); scene.add(root);
+const stats = () => {
+    let meshes = 0, tris = 0, instanced = 0;
+    root.traverse(n => { if (n.isMesh && n.visible) { meshes++; const g = n.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3 * (n.isInstancedMesh ? n.count : 1); if (n.isInstancedMesh) instanced++; } });
+    return { meshes, tris: Math.round(tris), instanced };
+};
+function look(p, t, fov = 55) {
+    camera.fov = fov; camera.position.set(...p); camera.lookAt(...t); camera.updateProjectionMatrix();
+    renderer.info.reset(); renderer.render(scene, camera);
+    const i = renderer.info.render;
+    document.getElementById('hud').textContent = `${i.calls} calls, ${Math.round(i.triangles)} tris`;
+    return { calls: i.calls, triangles: i.triangles };
+}
+function night(on) {
+    scene.background.set(on ? 0x0a1020 : 0xa9c3d6); scene.fog.color.copy(scene.background);
+    hemi.intensity = on ? .12 : 1; sun.intensity = on ? .05 : 2.4; window.B.isNight = !!on;
+    scene.traverse(n => { if (n.isMesh) { for (const m of [].concat(n.material)) m.userData.nightOn?.(!!on); } });
+}
+function clearRoot() { root.traverse(n => { if (n.isMesh) n.geometry.dispose?.(); }); scene.remove(root); root = new THREE.Group(); scene.add(root); }
+const flatGround = (size = 400) => { const g = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshStandardMaterial({ color: 0x7f8c6c, roughness: 1 })); g.receiveShadow = true; root.add(g); return g; };
+
+/** Галерея: по одному зданию каждого типа в ряд на плоской земле. */
+async function gallery(names, gap = 40) {
+    clearRoot(); flatGround(); const out = [];
+    let x = 0;
+    for (const name of names) {
+        let obj;
+        if (name.startsWith('apt')) { const [, f, c] = name.split(':'); obj = createApartmentBuildingMesh({ floors: +f || 9, building: { bodyColor: c ? parseInt(c, 16) : undefined } }); obj.scale.setScalar(1.5); }
+        else if (name.startsWith('blk:')) { const [, v, f, c, sd] = name.split(':'); obj = createCityBlockMesh({ variant: +v, floors: +f, color: c ? parseInt(c, 16) : BLOCK_SPECS[+v].palette[0], seed: +(sd || 1) }); }
+        else if (name.startsWith('hse:')) { const [, v, c, sd] = name.split(':'); obj = createCityHouseMesh({ variant: +v, color: c ? parseInt(c, 16) : HOUSE_SPECS[+v].palette[0], roofColor: ROOF_COLORS[+(sd || 0) % ROOF_COLORS.length], seed: +(sd || 1) }); }
+        else obj = createLandscapeAsset(name);
+        obj.position.set(x, 0, 0); root.add(obj);
+        const box = new THREE.Box3().setFromObject(obj); out.push({ name, x, min: box.min.toArray().map(v => +v.toFixed(2)), max: box.max.toArray().map(v => +v.toFixed(2)) });
+        x += gap;
+    }
+    return out;
+}
+async function city(seed = 7, profile = 'city') {
+    clearRoot(); const t = createTrainingTerrain(profile, seed); root.add(t); window.B.terrain = t; return t.userData.trainingLayout;
+}
+window.CAM = (x, y, z, tx, ty, tz, fov = 60) => { shadowBox(tx, ty, Math.max(40, Math.hypot(x - tx, y - ty) * 1.2)); return look([x, y, z], [tx, ty, tz], fov); };
+window.B = { THREE, scene, camera, renderer, root: () => root, look, night, gallery, city, stats, shadowBox, createTrainingTerrain, createLandscapeAsset, createApartmentBuildingMesh, flatGround };
+
+import { trainingHeightAt } from './training/world-plan.ts';
+const BUILD = new Set(['building','house','warehouse','station','barn','hangar','church','gas-station','fire-station','police-station','school','hospital','restaurant','mall','office','greenhouse','water-tower','silo','containers','gantry-crane','radio-mast','solar']);
+/** Посадка и габариты каждого здания города: ориентированный контур в мировых координатах + высоты рельефа под углами. */
+async function audit(seed, profile = 'city') {
+    const L = await city(seed, profile); const T = window.B.terrain; const items = [];
+    T.updateMatrixWorld(true);
+    for (const o of T.children) {
+        if (o.userData.presetSlot === undefined) continue;
+        const p = L.objects[o.userData.presetSlot]; if (!BUILD.has(p.type)) continue;
+        const inv = o.matrixWorld.clone().invert(); const box = new THREE.Box3();
+        o.traverse(n => { if (n.isMesh && !n.userData.lodProxy && n.visible !== false) { n.geometry.computeBoundingBox(); box.union(n.geometry.boundingBox.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, n.matrixWorld))); } });
+        const c = o.rotation.z, co = Math.cos(c), si = Math.sin(c), s = o.scale.x;
+        const corner = (lx, ly) => ({ x: o.position.x + (lx * co - ly * si) * s, y: o.position.y + (lx * si + ly * co) * s });
+        const poly = [corner(box.min.x, box.min.y), corner(box.max.x, box.min.y), corner(box.max.x, box.max.y), corner(box.min.x, box.max.y)];
+        items.push({ type: p.type, slot: o.userData.presetSlot, poly, hs: poly.map(q => trainingHeightAt(L, q.x, q.y)), h0: trainingHeightAt(L, o.position.x, o.position.y), zmin: box.min.z * s, zmax: box.max.z * s, pos: [o.position.x, o.position.y, o.position.z], floors: p.floors });
+    }
+    return { L, items };
+}
+function check({ L, items }) {
+    const out = { overlap: [], road: [], slope: [], floatz: [] };
+    const axes = p => [0, 1].map(i => ({ x: -(p[i + 1].y - p[i].y), y: p[i + 1].x - p[i].x }));
+    const proj = (p, ax) => { let mn = 1e9, mx = -1e9; for (const q of p) { const d = q.x * ax.x + q.y * ax.y; mn = Math.min(mn, d); mx = Math.max(mx, d); } return [mn, mx]; };
+    const sat = (A, B) => { for (const ax of [...axes(A), ...axes(B)]) { const l = Math.hypot(ax.x, ax.y) || 1, n = { x: ax.x / l, y: ax.y / l }; const [a0, a1] = proj(A, n), [b0, b1] = proj(B, n); if (a1 <= b0 || b1 <= a0) return false; } return true; };
+    const segDist = (p, a, b) => { const dx = b.x - a.x, dy = b.y - a.y, t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy || 1))); return Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy); };
+    const segSeg = (a, b, c, d) => { const o = (p, q, r) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x); return o(a, b, c) * o(a, b, d) < 0 && o(c, d, a) * o(c, d, b) < 0; };
+    const inside = (pt, poly) => { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) if ((poly[i].y > pt.y) !== (poly[j].y > pt.y) && pt.x < (poly[j].x - poly[i].x) * (pt.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x) c = !c; return c; };
+    const pathDist = (poly, pts) => { let best = 1e9; for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i]; for (let k = 0; k < 4; k++) { const e0 = poly[k], e1 = poly[(k + 1) % 4]; if (segSeg(a, b, e0, e1)) return 0; best = Math.min(best, segDist(e0, a, b), segDist(a, e0, e1), segDist(b, e0, e1)); } if (inside(a, poly)) return 0; } return best; };
+    for (let i = 0; i < items.length; i++) {
+        const a = items[i];
+        for (let j = i + 1; j < items.length; j++) { const b = items[j]; if (Math.hypot(a.pos[0] - b.pos[0], a.pos[1] - b.pos[1]) > 70) continue; if (sat(a.poly, b.poly)) out.overlap.push(`${a.type}#${a.slot}~${b.type}#${b.slot}`); }
+        for (const p of L.paths) { if (!['road', 'rail', 'footpath'].includes(p.kind)) continue; const d = pathDist(a.poly, p.points); if (d < p.width / 2 - .01) out.road.push(`${a.type}#${a.slot} ${p.id} d=${d.toFixed(2)} lim=${(p.width / 2).toFixed(1)}`); }
+        if (Math.max(...a.hs) - Math.min(...a.hs) > .5) out.slope.push(`${a.type}#${a.slot} slope=${(Math.max(...a.hs) - Math.min(...a.hs)).toFixed(2)}`);
+        if (Math.abs(a.pos[2] - a.h0) > .1) out.floatz.push(`${a.type}#${a.slot} z=${a.pos[2].toFixed(2)} h=${a.h0.toFixed(2)}`);
+        if (Math.abs(a.zmin) > .1) out.floatz.push(`${a.type}#${a.slot} localzmin=${a.zmin.toFixed(2)}`);
+    }
+    return out;
+}
+window.B.audit = audit; window.B.check = check;
+
+/** До правки: на месте новых домов старые (Многоэтажка-GLB в масштабе 1.5 и Блендер-Cottage), для сравнения числа вызовов отрисовки. */
+async function swapOld(seed = 7) {
+    const L = await city(seed, 'city'); const T = window.B.terrain;
+    for (const o of [...T.children]) {
+        if (o.userData.presetSlot === undefined) continue; const p = L.objects[o.userData.presetSlot]; let n = null;
+        if (p.type === 'building') { n = createApartmentBuildingMesh({ floors: p.floors ?? 5, building: { bodyColor: p.color } }); n.scale.setScalar(1.5); }
+        else if (p.type === 'house') n = createLandscapeAsset('Cottage');
+        if (!n) continue; n.position.copy(o.position); n.rotation.z = o.rotation.z; n.userData.presetSlot = o.userData.presetSlot; T.remove(o); T.add(n);
+    }
+    await new Promise(r => setTimeout(r, 4000)); return L;
+}
+function measure() {
+    const out = {};
+    for (const [name, a] of Object.entries({ over: [0, -260, 330, 0, 0, 0, 60], mid: [-151, -60, 40, -151, -15, 5, 60], street: [-165, 35, 5, -170, 46, 2.5, 75], top: [-151, -15, 40, -151, -15, 0, 70] })) { const r = window.CAM(...a); out[name] = [r.calls, Math.round(r.triangles / 1000) + 'k']; }
+    return out;
+}
+window.B.swapOld = swapOld; window.B.measure = measure;
+</script></body></html>

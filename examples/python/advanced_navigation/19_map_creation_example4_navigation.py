@@ -23,7 +23,7 @@ def fly_mission(drone, markers_map):
     drone.takeoff()
     
     # Пример: летим к маркеру с ID 0, затем к ID 24 (если они есть)
-    target_ids = [0, 4, 24, 20, 0] # Углы сетки 5x5
+    target_ids = [0, 9, 99, 90, 0]  # углы сетки 10x10 из 19_map_creation_example3_builder.py
     
     for target_id in target_ids:
         if target_id in markers_map:
@@ -44,11 +44,12 @@ def fly_mission(drone, markers_map):
 
     print("Миссия завершена, посадка.")
     drone.land()
+    time.sleep(5)  # ждём, пока дрон действительно сядет
 
 if __name__ == "__main__":
     # Загружаем карту
     try:
-        markers_map = load_map("../../data/maps/clever_map.yaml")
+        markers_map = load_map("maps/field_map.yaml")
         print(f"Загружено {len(markers_map)} маркеров.")
         
         # Подключаемся к дрону

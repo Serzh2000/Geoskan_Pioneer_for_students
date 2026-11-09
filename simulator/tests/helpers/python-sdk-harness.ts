@@ -38,6 +38,10 @@ export type PythonScenario = {
     // только для run_onboard.py
     lowVoltageAt?: number;
     armFails?: boolean;
+    /** get_nav_status_lps() отвечает «не готова». */
+    navNotReady?: boolean;
+    /** Положение тумблера SWA (8-й канал пульта) с момента t: [[t, значение]]. */
+    rc8?: Array<[number, number]>;
     yolo?: Array<[number, number, number, number]>;
     pose?: Array<[number, number, 'up' | 'down']>;
     ocr?: Array<[number, number, string, number]>;
@@ -55,6 +59,8 @@ export function runPythonScenario(code: string, scenario: PythonScenario, runner
         const result = spawnSync(python, [RUNNERS[runner], scriptPath, configPath], {
             encoding: 'utf8',
             timeout: 60_000,
+            // Программы пишут файлы (логи, снимки) в текущую папку - это временная папка запуска.
+            cwd: dir,
             env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
         });
         const marker = result.stdout.lastIndexOf('@@TRACE@@');

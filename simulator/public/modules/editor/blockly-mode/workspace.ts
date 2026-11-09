@@ -1,5 +1,7 @@
 import type { ScriptLanguage } from '../../core/state.js';
 import { getBlocklyGenerator, type BlocklyNS } from './loader.js';
+import { isBricksModelActive } from './bricks/model.js';
+import { BRICKS_STARTER_XML } from './bricks/starter.js';
 
 const LUA_RAW_CODE_BLOCK = 'lua_raw_code';
 const PY_RAW_CODE_BLOCK = 'py_raw_code';
@@ -79,6 +81,8 @@ export function createRawCodeWorkspaceXml(language: ScriptLanguage, code: string
 // workspace-controller.ts, использовавший его для Lua-only проверки, удалён).
 export function createStarterWorkspaceXml(language: ScriptLanguage): string {
     void language; // см. комментарий выше — параметр сохранён ради сигнатуры вызывающего кода
+    // Пионер Мини 2: блоки Bricks («Начало программы» -> «Предполётная подготовка» -> «Взлет» -> «Посадка»).
+    if (isBricksModelActive()) return BRICKS_STARTER_XML;
     return `
         <xml xmlns="https://developers.google.com/blockly/xml">
             <block type="pioneer_start" x="32" y="32">

@@ -3,6 +3,7 @@ import { apiDocs, evConstants, pythonApiDocs } from '../../../docs/api-docs.js';
 import { luaStdlibDocs } from '../../../docs/lua-stdlib-docs.js';
 import { pythonStdlibDocs } from '../../../docs/python-stdlib-docs.js';
 import { pythonSdk2ApiDocs } from '../../../docs/python-sdk2-api-docs.js';
+import { pythonRknnApiDocs } from '../../../docs/python-rknn-api-docs.js';
 import { currentDroneId, drones } from '../../../core/state.js';
 import { droneModelProfile } from '../../../core/drone-models.js';
 import {
@@ -33,7 +34,7 @@ const PYTHON_CORE_OWNERS = new Set(['Pioneer', 'Camera']);
 export const LUA_DOC_TABLE: Record<string, ApiDoc> = { ...apiDocs, ...luaStdlibDocs };
 export const PYTHON_DOC_TABLE: Record<string, ApiDoc> = { ...pythonApiDocs, ...pythonStdlibDocs };
 /** Пионер Мини 2: pioneer_sdk2 вместо pioneer_sdk. */
-export const PYTHON_SDK2_DOC_TABLE: Record<string, ApiDoc> = { ...pythonSdk2ApiDocs, ...pythonStdlibDocs };
+export const PYTHON_SDK2_DOC_TABLE: Record<string, ApiDoc> = { ...pythonSdk2ApiDocs, ...pythonRknnApiDocs, ...pythonStdlibDocs };
 const PYTHON_SDK2_CORE_KEYS = new Set(['Pioneer.arm', 'Pioneer.takeoff', 'Pioneer.land', 'Pioneer.go_to_local_point', 'Pioneer.point_reached', 'Pioneer.subscribe', 'Pioneer.led_control']);
 
 function currentDroneUsesSdk2(): boolean {

@@ -242,6 +242,23 @@ export const LUA_SETUP_SCRIPT = `
             end
             return result
         end
+        -- Timer.callAt / Timer.callAtGlobal: момент задаётся по часам, а не задержкой. Прошедший момент даёт немедленный вызов.
+        -- Глобальное время навигации — это time() + deltaTime(), как в официальной документации.
+        function Timer.callAt(moment, callback)
+            local location = __diag_location(2)
+            __diag_record("Timer.callAt", location, __diag_format_args(moment, callback))
+            __ensure_number("Timer.callAt(time)", moment, location)
+            __ensure_function("Timer.callAt(callback)", callback, location)
+            return Timer.callLater(math.max(moment - js_sys_time(), 0), callback)
+        end
+
+        function Timer.callAtGlobal(moment, callback)
+            local location = __diag_location(2)
+            __diag_record("Timer.callAtGlobal", location, __diag_format_args(moment, callback))
+            __ensure_number("Timer.callAtGlobal(time)", moment, location)
+            __ensure_function("Timer.callAtGlobal(callback)", callback, location)
+            return Timer.callLater(math.max(moment - (js_sys_time() + js_sys_deltaTime()), 0), callback)
+        end
         camera = {
             requestMakeShot = js_camera_requestMakeShot,
             checkRequestShot = js_camera_checkRequestShot,
