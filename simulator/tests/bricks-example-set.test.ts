@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { compileBricksXml } from './helpers/bricks-fixtures.js';
+import { runMini2Program, withMini2Python } from './helpers/mini2-runtime.js';
 
 const ROOT = path.resolve(process.cwd(), 'examples-blocks-mini2');
 const FILES = fs.readdirSync(ROOT, { withFileTypes: true })
@@ -25,5 +26,16 @@ describe('Bricks: примеры редактора Мини 2', () => {
         expect(python).toMatch(/try:/);
         const indents = python.split('\n').filter((line) => /^\t/.test(line));
         expect(indents).toEqual([]);
+    });
+
+    // Программа выполняется на настоящих pioneer_sdk2 и cv2 симулятора; ошибка Python — провал.
+    const runnable = withMini2Python;
+    // Папка bricks/ — проекты из учебника: бесконечные циклы и нейросети, их запускает bricks-runtime.test.ts.
+    FILES.filter((file) => !file.startsWith('bricks/')).forEach((file) => {
+        runnable(`${file}: выполняется без ошибок`, () => {
+            const xml = fs.readFileSync(path.join(ROOT, file), 'utf8');
+            const result = runMini2Program(compileBricksXml(xml), { seconds: 300, markers: true });
+            expect(result.error).toBeNull();
+        });
     });
 });
