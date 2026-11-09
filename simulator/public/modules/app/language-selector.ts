@@ -9,6 +9,7 @@ import {
     setBlocklyEditorEnabled,
     setEditorLanguage,
     setEditorValue,
+    syncBlocklyWithDroneModel,
     syncScriptLanguageSelect
 } from '../editor/index.js';
 
@@ -41,34 +42,47 @@ function applyScriptLanguage(lang: ScriptLanguage): void {
 }
 
 /**
- * Пионер Мини 2 программируется только на Python (pioneer_sdk2): у него
- * недоступны Lua и Blockly (блоки собирают программу для pioneer_sdk).
+ * Пионер Мини 2 программируется на Python (pioneer_sdk2) и блоками Bricks, которые тоже собирают
+ * Python; Lua у него нет. Blockly у Мини 2 - собственный набор блоков (editor/blockly-mode/bricks).
  */
 function syncLanguageOptionsForDrone(langSelect: HTMLSelectElement): void {
     const model = drones[currentDroneId]?.model;
     const pythonOnly = !supportsLanguage(model, 'lua');
     for (const option of Array.from(langSelect.options)) {
-        const blocked = pythonOnly && option.value !== 'python';
+        const blocked = pythonOnly && option.value !== 'python' && option.value !== 'blockly';
         option.disabled = blocked;
-        option.title = blocked ? `${droneModelProfile(model).title} программируется только на Python` : '';
+        option.title = blocked ? `${droneModelProfile(model).title} программируется на Python и блоками, без Lua` : '';
     }
 }
 
-/** После смены дрона: язык, которого нет у его модели, меняется на язык модели. */
+/** После смены дрона: язык, которого нет у его модели, меняется на язык модели, а блоки - на набор модели. */
 export function enforceDroneScriptLanguage(): void {
     const langSelect = document.getElementById('script-language-select') as HTMLSelectElement | null;
     if (langSelect) syncLanguageOptionsForDrone(langSelect);
     const drone = drones[currentDroneId];
     if (!drone) return;
     const profile = droneModelProfile(drone.model);
-    const blocklyBlocked = !supportsLanguage(drone.model, 'lua') && isBlocklyEditorEnabled();
-    if (supportsLanguage(drone.model, currentScriptLanguage) && !blocklyBlocked) {
+    const blocklyOn = isBlocklyEditorEnabled();
+    // Редактор блоков остаётся открытым: у Базового на поле блоки pioneer_*, у Мини 2 - Bricks,
+    // у каждой модели свои, сохранённые отдельно.
+    if (blocklyOn) syncBlocklyWithDroneModel();
+    if (supportsLanguage(drone.model, currentScriptLanguage)) {
         // Справочник и примеры Python у Мини 2 свои (pioneer_sdk2).
         renderApiDocs(currentScriptLanguage);
         refreshFileList(currentScriptLanguage);
         return;
     }
-    applyScriptLanguage(profile.languages[0]);
+    if (blocklyOn) {
+        // Таргет блоков - язык модели; сами блоки не пересоздаются.
+        const language = profile.languages[0];
+        setCurrentScriptLanguage(language);
+        setEditorLanguage(language);
+        renderApiDocs(language);
+        refreshFileList(language);
+        syncScriptLanguageSelect();
+    } else {
+        applyScriptLanguage(profile.languages[0]);
+    }
     log(`${profile.title}: язык программы - ${profile.languages[0] === 'python' ? 'Python (pioneer_sdk2)' : profile.languages[0]}`, 'info');
 }
 
@@ -107,8 +121,8 @@ export function initScriptLanguageSelector(): void {
         const selectedDrone = drones[currentDroneId];
         if (!selectedDrone) return;
         const profile = droneModelProfile(selectedDrone.model);
-        if (!supportsLanguage(selectedDrone.model, 'lua') && langSelect.value !== 'python') {
-            log(`${profile.title} программируется только на Python (pioneer_sdk2).`, 'warn');
+        if (!supportsLanguage(selectedDrone.model, 'lua') && langSelect.value !== 'python' && langSelect.value !== 'blockly') {
+            log(`${profile.title} программируется на Python (pioneer_sdk2) и блоками Bricks, без Lua.`, 'warn');
             syncScriptLanguageSelect();
             return;
         }

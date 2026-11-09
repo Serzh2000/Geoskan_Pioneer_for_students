@@ -17,6 +17,7 @@
 @import url('./styles/layout/scene-host.css');
 @import url('./styles/panels/api-docs.css');
 @import url('./styles/overlays/learning-mode.css');
+@import url('./styles/overlays/cabinet.css');
 @import url('./styles/panels/settings.css');
 @import url('./styles/overlays/hud-and-settings.css');
 @import url('./styles/overlays/hud-and-settings/autopilot-params-modal.css');

@@ -21,6 +21,7 @@ import { initCameraModeUI } from './controls/camera-mode.js';
 import { initSceneHotbar } from './scene-hotbar/index.js';
 import { initEditorTerminal } from './panels/editor-terminal.js';
 import { initEditorDocs } from './panels/editor-docs.js';
+import { initEditorModelSwitch } from './panels/editor-model-switch.js';
 import { initEditorDroneUpload } from './panels/editor-drone-upload.js';
 import { initDroneLinkPanel } from './panels/drone-link-panel.js';
 import { initRailStatus } from './panels/rail-status.js';
@@ -124,6 +125,7 @@ export function initUI(callbacks: UICallbacks) {
     initSceneHotbar();
     initEditorTerminal(callbacks.onEditorResize);
     initEditorDocs();
+    initEditorModelSwitch();
     initEditorDroneUpload();
     initDroneLinkPanel();
     initRailStatus();

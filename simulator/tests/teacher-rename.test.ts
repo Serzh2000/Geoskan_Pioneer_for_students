@@ -1,0 +1,21 @@
+import express from 'express';
+import request from 'supertest';
+import { AccountStore, ensureTeacher, registerAccountRoutes } from '../server/accounts.js';
+test('учитель меняет ФИО ученика, логин и прогресс остаются', async () => {
+    const store = new AccountStore(null);
+    await ensureTeacher(store, { TEACHER_LOGIN: 'teacher', TEACHER_PASSWORD: 'teacher-pass' } as NodeJS.ProcessEnv);
+    const app = express(); app.use(express.json()); registerAccountRoutes(app, store);
+    const pupil = request.agent(app);
+    const reg = await pupil.post('/api/auth/register').send({ fullName: 'Иванов Иван', login: 'ivanov', loginRepeat: 'ivanov', password: 'secret1', passwordRepeat: 'secret1' });
+    await pupil.post('/api/progress/complete').send({ track: 'python', questId: 'academy-001' });
+    const teacher = request.agent(app);
+    await teacher.post('/api/auth/login').send({ login: 'teacher', password: 'teacher-pass' });
+    const id = reg.body.user.id;
+    const res = await teacher.patch(`/api/teacher/students/${id}`).send({ fullName: '  Иванов   Пётр  ' });
+    expect(res.status).toBe(200);
+    expect(res.body.student).toMatchObject({ fullName: 'Иванов Пётр', login: 'ivanov' });
+    expect(Object.keys(res.body.student.progress.python)).toEqual(['academy-001']);
+    expect((await teacher.patch(`/api/teacher/students/${id}`).send({ fullName: ' ' })).status).toBe(400);
+    expect((await pupil.patch(`/api/teacher/students/${id}`).send({ fullName: 'Хакер Хакеров' })).status).toBe(403);
+    expect((await pupil.get('/api/auth/me')).body.user.fullName).toBe('Иванов Пётр');
+});

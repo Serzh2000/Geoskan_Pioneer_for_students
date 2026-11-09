@@ -70,7 +70,7 @@ export const luaApiDocsEvents: Record<string, ApiDoc> = {
         syntax: 'Ev.TAKEOFF_COMPLETE',
         params: '-',
         returns: 'число',
-        example: 'if event == Ev.TAKEOFF_COMPLETE then ...',
+        example: 'function callback(event)\n    if event == Ev.TAKEOFF_COMPLETE then\n        print("взлёт завершён")\n        ap.goToLocalPoint(1, 0, 1, 3)\n    end\nend',
         aliases: ['взлет завершен', 'достиг высоты взлета', 'takeoff complete'],
         direction: 'from-autopilot'
     },
@@ -79,7 +79,7 @@ export const luaApiDocsEvents: Record<string, ApiDoc> = {
         syntax: 'Ev.COPTER_LANDED',
         params: '-',
         returns: 'число',
-        example: 'if event == Ev.COPTER_LANDED then ...',
+        example: 'function callback(event)\n    if event == Ev.COPTER_LANDED then\n        print("посадка завершена")\n    end\nend',
         aliases: ['посадка завершена', 'приземлился', 'сел', 'landed'],
         direction: 'from-autopilot'
     },
@@ -88,7 +88,7 @@ export const luaApiDocsEvents: Record<string, ApiDoc> = {
         syntax: 'Ev.LOW_VOLTAGE1',
         params: '-',
         returns: 'число',
-        example: 'if event == Ev.LOW_VOLTAGE1 then ...',
+        example: 'function callback(event)\n    if event == Ev.LOW_VOLTAGE1 then\n        print("низкий заряд: возвращаемся домой")\n        ap.goToLocalPoint(0, 0, 1.5, 5)\n    end\nend',
         aliases: ['низкий заряд', 'низкое напряжение', 'battery warning'],
         direction: 'from-autopilot'
     },
@@ -97,7 +97,7 @@ export const luaApiDocsEvents: Record<string, ApiDoc> = {
         syntax: 'Ev.LOW_VOLTAGE2',
         params: '-',
         returns: 'число',
-        example: 'if event == Ev.LOW_VOLTAGE2 then ...',
+        example: 'function callback(event)\n    if event == Ev.LOW_VOLTAGE2 then\n        print("критический заряд: садимся")\n        ap.push(Ev.MCE_LANDING)\n    end\nend',
         aliases: ['критический заряд', 'критическое напряжение', 'battery critical'],
         direction: 'from-autopilot'
     },
@@ -106,7 +106,7 @@ export const luaApiDocsEvents: Record<string, ApiDoc> = {
         syntax: 'Ev.POINT_REACHED',
         params: '-',
         returns: 'число',
-        example: 'if event == Ev.POINT_REACHED then ...',
+        example: 'function callback(event)\n    if event == Ev.POINT_REACHED then\n        print("точка достигнута")\n        ap.push(Ev.MCE_LANDING)\n    end\nend',
         aliases: ['точка достигнута', 'долетел до точки', 'прибыл в точку', 'point reached'],
         direction: 'from-autopilot'
     },
@@ -115,7 +115,7 @@ export const luaApiDocsEvents: Record<string, ApiDoc> = {
         syntax: 'Ev.ENGINES_STARTED',
         params: '-',
         returns: 'число',
-        example: 'if event == Ev.ENGINES_STARTED then ...',
+        example: 'function callback(event)\n    if event == Ev.ENGINES_STARTED then\n        ap.push(Ev.MCE_TAKEOFF)\n    end\nend',
         aliases: ['двигатели запущены', 'motors started'],
         direction: 'from-autopilot'
     },
@@ -124,7 +124,7 @@ export const luaApiDocsEvents: Record<string, ApiDoc> = {
         syntax: 'Ev.POINT_DECELERATION',
         params: '-',
         returns: 'число',
-        example: 'if event == Ev.POINT_DECELERATION then ...',
+        example: 'function callback(event)\n    if event == Ev.POINT_DECELERATION then\n        print("дрон тормозит у точки")\n    end\nend',
         aliases: ['торможение перед точкой', 'замедление', 'deceleration'],
         direction: 'from-autopilot'
     },
@@ -133,7 +133,7 @@ export const luaApiDocsEvents: Record<string, ApiDoc> = {
         syntax: 'Ev.SYNC_START',
         params: '-',
         returns: 'число',
-        example: 'if event == Ev.SYNC_START then ...',
+        example: 'function callback(event)\n    if event == Ev.SYNC_START then\n        print("получен сигнал синхронного старта")\n        ap.push(Ev.MCE_PREFLIGHT)\n    end\nend',
         aliases: ['синхронный старт', 'sync start'],
         direction: 'from-autopilot'
     },
@@ -142,7 +142,7 @@ export const luaApiDocsEvents: Record<string, ApiDoc> = {
         syntax: 'Ev.SHOCK',
         params: '-',
         returns: 'число',
-        example: 'if event == Ev.SHOCK then ...',
+        example: 'function callback(event)\n    if event == Ev.SHOCK then\n        print("удар или сильная вибрация")\n    end\nend',
         aliases: ['удар', 'столкновение', 'авария', 'shock'],
         direction: 'from-autopilot'
     },
@@ -151,7 +151,7 @@ export const luaApiDocsEvents: Record<string, ApiDoc> = {
         syntax: 'Ev.CONTROL_FAIL',
         params: '-',
         returns: 'число',
-        example: 'if event == Ev.CONTROL_FAIL then ...',
+        example: 'function callback(event)\n    if event == Ev.CONTROL_FAIL then\n        print("угол наклона слишком большой")\n        ap.push(Ev.MCE_LANDING)\n    end\nend',
         aliases: ['потеря управления', 'ошибка управления', 'control fail'],
         direction: 'from-autopilot'
     },
@@ -160,7 +160,7 @@ export const luaApiDocsEvents: Record<string, ApiDoc> = {
         syntax: 'Ev.ENGINE_FAIL',
         params: '-',
         returns: 'число',
-        example: 'if event == Ev.ENGINE_FAIL then ...',
+        example: 'function callback(event)\n    if event == Ev.ENGINE_FAIL then\n        print("отказ двигателя")\n    end\nend',
         aliases: ['отказ мотора', 'поломка двигателя', 'engine fail'],
         direction: 'from-autopilot'
     }

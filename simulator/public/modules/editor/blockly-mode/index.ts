@@ -7,6 +7,13 @@ import { buildPioneerToolbox } from './pioneer/toolbox.js';
 import { compilePioneerWorkspace as compilePioneerWorkspaceCode } from './pioneer/targets/compile.js';
 import { registerPioneerBlocks } from './pioneer/blocks/index.js';
 import { compileMainEditorWorkspace as compileLegacyWorkspace } from './workspace.js';
+import {
+    buildBricksToolbox,
+    compileBricksWorkspace,
+    isBricksBlockType,
+    isBricksModelActive,
+    registerBricksBlocks
+} from './bricks/index.js';
 
 // Реэкспорт для тестов и для buildMainEditorToolbox/compileMainEditorWorkspace
 // ниже: с фазы 7 это и есть система главного тулбокса/компилятора редактора,
@@ -460,6 +467,8 @@ export function ensureEditorBlocklyDefinitions(): Promise<void> {
 // основной тулбокс использует pioneer_*. Для учебных workspace ниже
 // сохранён совместимый путь компиляции.
             registerPioneerBlocks();
+            // Блоки Bricks (Пионер Мини 2): свои типы блоков, у Базового ничего не меняют.
+            registerBricksBlocks();
         });
     }
     return definitionsLoadPromise;
@@ -472,13 +481,22 @@ export function ensureEditorBlocklyDefinitions(): Promise<void> {
 // сессий/уроков. Учебник предоставляет их отдельным тулбоксом и компилирует
 // совместимым генератором, пока не пройдёт миграция.
 export function buildMainEditorToolbox(language: ScriptLanguage): string {
+    // Пионер Мини 2 - блоки Bricks (генерируют Python на pioneer_sdk2), остальные модели - pioneer_*.
+    if (isBricksModelActive()) return buildBricksToolbox();
     return buildPioneerToolbox(language);
 }
 
 export function compileMainEditorWorkspace(language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg): string {
+    // Набор выбирается по самим блокам, а не по модели: при переключении модели в workspace на
+    // мгновение остаются блоки прежней модели, и их нельзя собирать чужим генератором.
+    const blocks = workspace.getAllBlocks(false);
+    if (blocks.some((block) => isBricksBlockType(block.type))
+        || (isBricksModelActive() && !blocks.some((block) => block.type.startsWith('pioneer_')))) {
+        return compileBricksWorkspace(workspace);
+    }
     // Existing guided lessons and saved workspaces still contain teaching blocks.
     // Passing them to the pioneer-only compiler silently produced an empty program.
-    if (workspace.getAllBlocks(false).some((block) => /^(lua_|py_)/.test(block.type))) {
+    if (blocks.some((block) => /^(lua_|py_)/.test(block.type))) {
         return compileLegacyWorkspace(language, workspace);
     }
     return compilePioneerWorkspaceCode(workspace, language);

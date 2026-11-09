@@ -16,8 +16,10 @@ export {
     setEditorLanguage,
     setEditorValue,
     revealEditorStart,
+    syncBlocklyWithDroneModel,
     syncScriptLanguageSelect
 } from './index/api.js';
+export { exportMainBricksProject, loadMainBricksProject } from './index/bricks-api.js';
 export {
     buildTargetWorkspaceXml,
     extractMissionGuideSequence,

@@ -36,7 +36,7 @@ export type EditorIndexControllerDeps = {
     isStarterLuaScript: BlocklyWorkspaceController['isStarterLuaScript'];
     getTextEditorValue: () => string;
     getEditorStateKey: (language: ScriptLanguage) => string;
-    getBlocklyStateKey: () => string;
+    getBlocklyStateKey: (model?: string | null) => string;
     resizeBlocklyWorkspaceViewport: () => void;
     ensureBlocklyResizeTracking: () => void;
     scheduleBlocklyAutofit: () => void;

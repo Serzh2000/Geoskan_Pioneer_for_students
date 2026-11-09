@@ -1,4 +1,5 @@
-import { currentDroneId, currentScriptLanguage, DEFAULT_LUA_SCRIPT, type ScriptLanguage } from '../../core/state.js';
+import { currentDroneId, currentScriptLanguage, DEFAULT_LUA_SCRIPT, drones, type ScriptLanguage } from '../../core/state.js';
+import { blocklyStateKeySuffix } from '../blockly-mode/bricks/model.js';
 import {
     createEditorShell as createEditorShellDom,
     fallbackEditor as mountFallbackEditor,
@@ -54,8 +55,11 @@ export function getEditorStateKey(language: ScriptLanguage = currentScriptLangua
     return getEditorStateKeyDom(currentDroneId, language);
 }
 
-export function getBlocklyStateKey(): string {
-    return getBlocklyWorkspaceStateKeyDom(currentDroneId);
+// Блоки Базового и Мини 2 хранятся раздельно: у Мини 2 ключ с суффиксом (`:bricks`), у Базового прежний.
+// model не передан - модель текущего дрона; передана - явная (workspace прежней модели при её смене).
+export function getBlocklyStateKey(model?: string | null): string {
+    const resolved = model === undefined ? drones[currentDroneId]?.model : model;
+    return getBlocklyWorkspaceStateKeyDom(currentDroneId) + blocklyStateKeySuffix(resolved);
 }
 
 export function syncEditorModeVisibility(): void {

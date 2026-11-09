@@ -45,11 +45,20 @@ export type Quest = {
     outcome: string;
     /** Блоки, без которых блочная миссия не засчитывается: [тип блока, имя для ученика]. */
     requires: Array<[string, string]>;
-    source: 'blocks' | 'academy';
+    source: 'blocks' | 'academy' | 'sdk2' | 'bricks';
+    /** Трек «Мини 2 · SDK2»: Python на pioneer_sdk2, дрон Пионер Мини 2. */
+    sdk2?: { waitMs: number; doneMessage: string; scene?: 'markers' };
+    /** Трек «Мини 2 · Bricks»: блоки Pioneer Bricks, дрон Пионер Мини 2. */
+    bricks?: import('./bricks-quests.js').BricksQuestInfo;
     spec?: PioneerLessonSpec;
     lesson?: GuideTextLesson;
     /** Шаги с подсветкой интерфейса: по одному на шаг из `steps`, если миссию нужно провести за руку. */
     guides?: GuidedStep[];
+    /**
+     * Номера шагов (с нуля), на которых ученика просят запустить проверку, не дожидаясь последней карточки: миссии из
+     * нескольких опытов («сначала зелёный, затем синий»). На такой карточке есть своя кнопка «Проверить полёт».
+     */
+    checkSteps?: number[];
 };
 
 export type QuestProgress = {
@@ -99,16 +108,28 @@ export function splitIntoSteps(text: string): string[] {
         steps.push(joined);
         carry = '';
     }
-    if (carry) steps.length ? steps[steps.length - 1] += ` ${carry}` : steps.push(carry);
+    if (carry) {
+        if (steps.length) steps[steps.length - 1] += ` ${carry}`;
+        else steps.push(carry);
+    }
     return steps.length ? steps : [text];
 }
 
 /** Миссии Академии для одного языка: главы по порядку, шаги — из задания урока (если шагов нет, шаг один). */
+/** Шаг, который сам просит запустить проверку: на его карточке должна быть кнопка, а не только на последней. */
+const RUN_CHECK_STEP = /Проверить полёт|Проверить наблюдение|запустите проверку|запустите её ещё раз|нажмите «Проверить/i;
+
+/** Шаги, кроме последнего (за ним и так идёт карточка проверки), в которых сказано запустить проверку. */
+export function findCheckSteps(steps: string[]): number[] {
+    return steps.flatMap((step, index) => (index < steps.length - 1 && RUN_CHECK_STEP.test(step) ? [index] : []));
+}
+
 export function buildAcademyQuests(language: 'lua' | 'python'): Quest[] {
     const modules = new Map(ACADEMY_MODULES.map((module) => [module.id, module.title]));
     return getAcademyTextPractices(language).map((lesson, index) => {
         const title = modules.get(lesson.chapterId) ?? lesson.chapterId;
         const guides = GUIDED_STEPS[lesson.topicId]?.(language);
+        const steps = guides ? guides.map((guide) => guide.text) : lesson.taskSteps?.length ? lesson.taskSteps.map((step) => localize(step, language)) : splitIntoSteps(localize(lesson.goal, language));
         return {
             id: lesson.topicId,
             number: index + 1,
@@ -118,7 +139,8 @@ export function buildAcademyQuests(language: 'lua' | 'python'): Quest[] {
             title: lesson.title,
             goal: lesson.summary,
             guides,
-            steps: guides ? guides.map((guide) => guide.text) : lesson.taskSteps?.length ? lesson.taskSteps.map((step) => localize(step, language)) : splitIntoSteps(localize(lesson.goal, language)),
+            steps,
+            checkSteps: findCheckSteps(steps),
             hint: lesson.builderHint,
             outcome: lesson.expectedOutcome,
             requires: [],

@@ -31,7 +31,8 @@ export function academySceneProfile(number: number): TrainingProfile | 'race-tra
     if ([59, 103].includes(number)) return 'urban';
     if ([60, 105].includes(number)) return 'industrial';
     if ([55, 63, 107, 108].includes(number)) return 'mixed';
-    return number >= 73 ? 'markers' : 'field';
+    // Уроки 109 и далее — команды SDK и датчики без меток: ровное поле.
+    return number >= 73 && number <= 108 ? 'markers' : 'field';
 }
 
 export function restoreAcademyScene(): void {
@@ -61,7 +62,7 @@ export function prepareAcademyScene(number: number, seed: number): boolean {
             terrain.add(prop);
         }
     }
-    if (number >= 73 && !builtin) {
+    if (number >= 73 && number <= 108 && !builtin) {
         terrain.children.filter(child => child.userData.markerDictionary).forEach(marker => { terrain.remove(marker); disposeTerrain(marker); });
         const far = [101, 102, 105].includes(number);
         const targetX = number >= 107 ? .4 + seed % 7 * .1 : .6;

@@ -12,29 +12,41 @@
 import { currentDroneId, currentScriptLanguage, setCurrentScriptLanguage } from '../core/state.js';
 import { restartAndRunSimulation } from '../app/simulation-controls.js';
 import {
-    getEditorValue, getMainBlocklyWorkspace, isBlocklyEditorEnabled, loadMainBlocklyJson, loadMainBlocklyXml,
+    exportMainBricksProject, getEditorValue, getMainBlocklyWorkspace, isBlocklyEditorEnabled, loadMainBlocklyJson, loadMainBlocklyXml, loadMainBricksProject,
     serializeWorkspaceXml, setBlocklyEditorEnabled, setEditorLanguage, setEditorValue, syncScriptLanguageSelect
 } from '../editor/index.js';
 import { renderApiDocs } from '../ui/api-docs/index.js';
 import { beginLearningCapture, finishLearningCapture } from '../core/learning-journal.js';
 import { runTextLessonCheck } from '../ui/mission-guide/evaluation/text/index.js';
+import { ACADEMY_LESSONS } from '../ui/mission-guide/academy/catalog.js';
 import { getAcademySceneEvidence, prepareAcademyScene, restoreAcademyScene, academySceneProfile } from '../ui/mission-guide/academy/scene.js';
-import { ACCOUNT_TRACKS, ApiError, fetchProgress, getLastAuthKind, getUser, isSessionExpired, onUserChange, reportCompleted, restoreSession, startKeepAlive } from './account.js';
+import { ACCOUNT_TRACKS, TRACK_NAMES, type AccountTrack, ApiError, fetchProgress, getLastAuthKind, getUser, isSessionExpired, onUserChange, reportAttempt, reportCompleted, restoreSession, startKeepAlive, trackEvent } from './account.js';
 import { initAccountUi } from './account-ui.js';
 import { openTeacherPanel } from './teacher-panel.js';
+import { openStudentCabinet } from './student-cabinet.js';
 import { getAppMode, onAppModeChange, setAppMode, type AppMode } from './mode.js';
+import { buildTrackQuests, isMini2Track } from './tracks.js';
+import { ensureBasicDrone, ensureMini2Drone } from './mini2-drone.js';
+import { missingBricksBlocks } from '../ui/mission-guide/mini2/bricks-missions.js';
 import {
-    buildAcademyQuests, buildQuests, clampStep, completeQuest, countDone, currentQuest, emptyProgress, INTRO_STEP, lastStepIndex,
+    clampStep, completeQuest, countDone, currentQuest, emptyProgress, INTRO_STEP, lastStepIndex,
     loadProgress, nextQuest, QUEST_DRAFT_STORAGE_PREFIX, QUEST_PROGRESS_STORAGE_KEY, questGroups, questStatus,
     requiredBlockChecklist, saveProgress, selectQuest,
     type Quest, type QuestProgress
 } from './quests.js';
 
 /** Чем ученик пишет программы. Blockly — практикум на блоках, Lua и Python — уроки Академии. */
-export type LearningTrack = 'blocks' | 'lua' | 'python';
+export type LearningTrack = AccountTrack;
 const TRACK_STORAGE_KEY = 'pioneer:learning:track:v1';
+/** Сколько событий запуска хранит журнал для миссий Мини 2: длинные программы с подсветкой дают больше пятисот. */
+const MINI2_EVENT_LIMIT = 4096;
 const HUD_POS_STORAGE_KEY = 'pioneer:learning:hud-pos:v1';
-const TRACK_LABELS: Record<LearningTrack, string> = { blocks: 'Blockly', lua: 'Lua', python: 'Python' };
+/** Короткие подписи для переключателя в карточке; полные названия треков — TRACK_NAMES. */
+const TRACK_LABELS: Record<LearningTrack, string> = { blocks: 'Blockly', lua: 'Lua', python: 'Python', sdk2: 'Мини 2 · Python', bricks: 'Мини 2 · блоки' };
+/** Треки, где программа собирается из блоков (редактор Blockly): практикум Базового и Bricks Мини 2. */
+const isBlockTrack = (value: LearningTrack): boolean => value === 'blocks' || value === 'bricks';
+/** Язык текстового редактора трека: Lua только у трека Lua, остальные треки пишут на Python. */
+const textLanguage = (): 'lua' | 'python' => (track === 'lua' ? 'lua' : 'python');
 const EMPTY_PROGRAM = JSON.stringify({ blocks: { languageVersion: 0, blocks: [{ type: 'pioneer_start', x: 40, y: 40 }] } });
 
 function storage(): Storage | null {
@@ -48,6 +60,8 @@ let progress: QuestProgress = emptyProgress();
 let activeQuest: Quest | null = null;
 let step = INTRO_STEP;
 let hintOpen = false;
+/** Когда открыта текущая миссия: для анонимной метрики (сколько времени ушло, где ушли). */
+let questOpenedAt = 0;
 let hudCollapsed = false;
 let checking = false;
 let checkToken = 0;
@@ -179,7 +193,7 @@ async function handleUserChange(): Promise<void> {
 }
 
 function questsFor(forTrack: LearningTrack): Quest[] {
-    return questsByTrack[forTrack] ??= forTrack === 'blocks' ? buildQuests() : buildAcademyQuests(forTrack);
+    return questsByTrack[forTrack] ??= buildTrackQuests(forTrack);
 }
 
 function persist(): void {
@@ -189,7 +203,7 @@ function persist(): void {
 function loadTrack(): LearningTrack {
     try {
         const value = storage()?.getItem(TRACK_STORAGE_KEY);
-        return value === 'lua' || value === 'python' ? value : 'blocks';
+        return (ACCOUNT_TRACKS as readonly string[]).includes(value ?? '') ? value as LearningTrack : 'blocks';
     } catch { return 'blocks'; }
 }
 
@@ -209,6 +223,13 @@ function draftKey(quest: Quest): string {
 function saveDraft(): void {
     if (!activeQuest) return;
     try {
+        if (track === 'bricks') {
+            const exported = exportMainBricksProject(activeQuest.bricks?.name ?? activeQuest.id);
+            const workspace = getMainBlocklyWorkspace();
+            if (exported && workspace && workspace.getAllBlocks(false).length > 1) storage()?.setItem(draftKey(activeQuest), exported.xml);
+            else storage()?.removeItem(draftKey(activeQuest));
+            return;
+        }
         if (track !== 'blocks') {
             const code = isBlocklyEditorEnabled() ? '' : getEditorValue();
             if (code.trim() && code !== activeQuest.lesson?.starterCode) storage()?.setItem(draftKey(activeQuest), code);
@@ -229,6 +250,17 @@ function readDraft(quest: Quest): string | null {
     try { return storage()?.getItem(draftKey(quest)) ?? null; } catch { return null; }
 }
 
+/** Редактор блоков Bricks на дроне Мини 2: проект загружается из XML (черновик ученика, шаблон миссии или эталон). */
+async function enterBricksEditor(xml: string): Promise<void> {
+    setCurrentScriptLanguage('python');
+    const select = document.getElementById('script-language-select') as HTMLSelectElement | null;
+    if (select) select.value = 'python';
+    setBlocklyEditorEnabled(true);
+    await loadMainBricksProject(xml);
+    syncScriptLanguageSelect();
+    renderApiDocs('python');
+}
+
 async function enterTextEditor(language: 'lua' | 'python', code: string): Promise<void> {
     setCurrentScriptLanguage(language);
     const select = document.getElementById('script-language-select') as HTMLSelectElement | null;
@@ -242,8 +274,16 @@ async function enterTextEditor(language: 'lua' | 'python', code: string): Promis
 }
 
 async function loadQuestWorkspace(quest: Quest): Promise<void> {
+    if (track === 'bricks') {
+        const draft = readDraft(quest);
+        try { await enterBricksEditor(draft ?? quest.bricks?.starterXml ?? ''); return; } catch (error) {
+            console.error('[learning] bricks workspace', error);
+            await enterBricksEditor(quest.bricks?.starterXml ?? '');
+            return;
+        }
+    }
     if (track !== 'blocks') {
-        await enterTextEditor(track, readDraft(quest) ?? quest.lesson?.starterCode ?? '');
+        await enterTextEditor(textLanguage(), readDraft(quest) ?? quest.lesson?.starterCode ?? '');
         return;
     }
     setBlocklyEditorEnabled(true);
@@ -257,6 +297,9 @@ async function loadQuestWorkspace(quest: Quest): Promise<void> {
 /** Часть уроков Академии идёт на своей местности; ученик не должен готовить её сам. */
 function prepareQuestScene(quest: Quest): void {
     restoreAcademyScene();
+    // Миссии Мини 2 с метками ArUco идут на учебной сцене с метками на полу (та же, что у уроков про метки в Академии).
+    const mini2Scene = quest.sdk2?.scene ?? quest.bricks?.scene;
+    if (mini2Scene === 'markers') { prepareAcademyScene(82, 1082); return; }
     const number = quest.lesson?.academy?.number;
     // Проверка полёта (миссии с 37) требует учебную сцену, в том числе ровное поле; в ранних миссиях сцену не трогаем.
     if (!number || (number < 37 && academySceneProfile(number) === 'field')) return;
@@ -280,7 +323,16 @@ function showEditorPanel(): void {
     if (!open) (window as any).openPanel?.('editor-panel');
 }
 
+/** Ушли с непройденной миссии: в метрику уходит, сколько секунд на ней провели. */
+function noteQuestLeft(): void {
+    if (activeQuest && questOpenedAt) trackEvent('quest_leave', { track, questId: activeQuest.id, value: Math.round((Date.now() - questOpenedAt) / 1000) });
+    questOpenedAt = 0;
+}
+
 async function openQuest(quest: Quest): Promise<void> {
+    noteQuestLeft();
+    trackEvent('quest_open', { track, questId: quest.id });
+    questOpenedAt = Date.now();
     saveDraft();
     checkToken++;
     checking = false;
@@ -295,6 +347,8 @@ async function openQuest(quest: Quest): Promise<void> {
     renderHud('forward');
     showEditorPanel();
     prepareQuestScene(quest);
+    // Дрон под трек: треки Мини 2 идут на Пионере Мини 2, остальные на Базовом.
+    if (isMini2Track(track)) ensureMini2Drone(); else ensureBasicDrone();
     try { await loadQuestWorkspace(quest); } catch (error) { console.error("[learning] workspace", error); }
     startChecklistTimer();
     window.setTimeout(() => renderHud(), 500);
@@ -355,7 +409,7 @@ function syncGuide(): void {
 }
 
 function refreshChecklist(): void {
-    if (!activeQuest || getAppMode() !== 'learning' || track !== 'blocks') return;
+    if (!activeQuest || getAppMode() !== 'learning' || !isBlockTrack(track)) return;
     const list = requiredBlockChecklist(activeQuest, usedBlockTypes());
     el.hud.querySelectorAll<HTMLElement>('[data-need]').forEach((item, index) => {
         item.classList.toggle('is-done', Boolean(list[index]?.done));
@@ -406,17 +460,23 @@ function renderCard(quest: Quest): string {
     }
     if (step < lastStepIndex(quest)) {
         const final = step === lastStepIndex(quest) - 1;
+        // Миссии из нескольких опытов: шаг «Нажмите «Проверить полёт»» должен давать эту кнопку сразу, а результат опыта
+        // показываться на этой же карточке. Иначе ученик пройдёт шаг, ничего не запустив, и зачёт увидит только последний опыт.
+        const runsCheck = Boolean(quest.checkSteps?.includes(step));
+        const result = runsCheck && feedback ? `<div class="quest-hud__feedback quest-hud__feedback--${feedback.kind}" role="status"><strong>${esc(feedback.title)}</strong>${feedback.lines.map((line) => `<div>${rich(line)}</div>`).join('')}</div>` : '';
         return `
             <div class="quest-card__label">Шаг ${step + 1} из ${quest.steps.length}${stepDots(quest)}</div>
             <p class="quest-card__step">${rich(quest.steps[step])}</p>
             ${hint}
+            ${result}
             <div class="quest-hud__actions">
-                <button type="button" class="btn-primary" data-quest-next>${final ? 'Готово, к проверке' : 'Сделал, дальше'}</button>
+                ${runsCheck ? `<button type="button" class="btn-primary" data-quest-check ${checking ? 'disabled' : ''}>${checking ? 'Проверяем полёт…' : 'Проверить полёт'}</button>` : ''}
+                <button type="button" class="${runsCheck ? 'btn-secondary' : 'btn-primary'}" data-quest-next>${final ? 'Готово, к проверке' : runsCheck ? 'Дальше' : 'Сделал, дальше'}</button>
                 ${hintButton}
                 <button type="button" class="btn-secondary quest-hud__back" data-quest-prev aria-label="Назад">←</button>
             </div>`;
     }
-    const needs = track === 'blocks' ? requiredBlockChecklist(quest, usedBlockTypes()) : [];
+    const needs = isBlockTrack(track) ? requiredBlockChecklist(quest, usedBlockTypes()) : [];
     return `
         <div class="quest-card__label">Проверка полёта${stepDots(quest)}</div>
         <p class="quest-card__step">Запустите программу: дрон выполнит её, а проверка посмотрит результат на сцене.</p>
@@ -465,11 +525,11 @@ function renderHud(direction: 'forward' | 'back' = 'forward'): void {
         </div>
         <div class="quest-hud__body">
             <div class="quest-hud__switches">
-                <div class="quest-hud__track pk-seg" role="group" aria-label="Чем писать программу">
+                <div class="quest-hud__track pk-seg" role="group" aria-label="Чем писать программу" style="flex-wrap:wrap">
                     ${(Object.keys(TRACK_LABELS) as LearningTrack[]).map((key) => `<button type="button" class="pk-seg__btn${key === track ? ' is-active' : ''}" data-quest-track="${key}">${TRACK_LABELS[key]}</button>`).join('')}
                 </div>
                 <div class="quest-hud__view pk-seg" role="group" aria-label="Что показать">
-                    <button type="button" class="pk-seg__btn${isEditorVisible() ? ' is-active' : ''}" data-quest-view="code">${track === 'blocks' ? 'Блоки' : 'Код'}</button>
+                    <button type="button" class="pk-seg__btn${isEditorVisible() ? ' is-active' : ''}" data-quest-view="code">${isBlockTrack(track) ? 'Блоки' : 'Код'}</button>
                     <button type="button" class="pk-seg__btn${isEditorVisible() ? '' : ' is-active'}" data-quest-view="scene">Сцена</button>
                 </div>
             </div>
@@ -488,7 +548,7 @@ function renderHud(direction: 'forward' | 'back' = 'forward'): void {
     on('[data-quest-map]', showMap);
     on('[data-quest-next]', () => goToStep(step + 1));
     on('[data-quest-prev]', () => goToStep(step - 1));
-    on('[data-quest-hint]', () => { hintOpen = !hintOpen; renderHud(); });
+    on('[data-quest-hint]', () => { hintOpen = !hintOpen; if (hintOpen && activeQuest) trackEvent('hint_open', { track, questId: activeQuest.id }); renderHud(); });
     on('[data-quest-check]', () => { void checkQuest(); });
     on('[data-quest-solution]', () => {
         void showSolution(quest).then(() => {
@@ -503,7 +563,8 @@ function renderHud(direction: 'forward' | 'back' = 'forward'): void {
 
 async function showSolution(quest: Quest): Promise<void> {
     if (track === 'blocks') { await loadMainBlocklyJson(JSON.stringify(quest.spec?.solution)); return; }
-    await enterTextEditor(track, quest.lesson?.solutionCode ?? '');
+    if (track === 'bricks') { await enterBricksEditor(quest.bricks?.solutionXml ?? ''); return; }
+    await enterTextEditor(textLanguage(), quest.lesson?.solutionCode ?? '');
 }
 
 async function changeTrack(next: LearningTrack): Promise<void> {
@@ -511,6 +572,7 @@ async function changeTrack(next: LearningTrack): Promise<void> {
     saveDraft();
     checkToken++;
     checking = false;
+    trackEvent('track_switch', { detail: next });
     useTrack(next);
     const quest = currentQuest(quests, progress);
     if (quest) await openQuest(quest);
@@ -519,6 +581,7 @@ async function changeTrack(next: LearningTrack): Promise<void> {
 /* ---------- Проверка ---------- */
 
 async function ensureLanguage(quest: Quest): Promise<'lua' | 'python'> {
+    if (track === 'bricks' || track === 'sdk2') return 'python';
     if (track !== 'blocks') return track;
     const allowed = quest.spec?.languages;
     if (allowed && !allowed.includes(currentScriptLanguage)) {
@@ -534,7 +597,20 @@ async function ensureLanguage(quest: Quest): Promise<'lua' | 'python'> {
 async function checkQuest(): Promise<void> {
     const quest = activeQuest;
     if (!quest || checking) return;
-    if (track === 'blocks') {
+    if (track === 'bricks') {
+        const used = usedBlockTypes();
+        if (!used.includes('bricks_start_block') || used.every((type) => type === 'bricks_start_block')) {
+            feedback = { kind: 'error', title: 'Программа пока пустая', lines: ['Прикрепите команды под блок «Начало программы» по шагам миссии.'] };
+            renderHud();
+            return;
+        }
+        const missing = missingBricksBlocks({ requires: quest.requires, minCounts: quest.bricks?.minCounts }, used);
+        if (missing.length) {
+            feedback = { kind: 'error', title: 'Не хватает блоков', lines: missing };
+            renderHud();
+            return;
+        }
+    } else if (track === 'blocks') {
         const used = usedBlockTypes();
         if (!used.includes('pioneer_start') || used.every((type) => type === 'pioneer_start')) {
             feedback = { kind: 'error', title: 'Программа пока пустая', lines: ['Прикрепите команды под блок «Начало программы» по шагам миссии.'] };
@@ -574,7 +650,8 @@ async function runFlightCheck(quest: Quest): Promise<void> {
         if (button && seconds >= 5) button.textContent = `Проверяем полёт… ${seconds} с`;
     }, 1000);
     const academy = quest.lesson?.academy;
-    const capture = academy ? { droneId: currentDroneId, token: beginLearningCapture(currentDroneId) } : undefined;
+    const mini2 = quest.sdk2 ?? quest.bricks;
+    const capture = academy || mini2 ? { droneId: currentDroneId, token: beginLearningCapture(currentDroneId, mini2 ? MINI2_EVENT_LIMIT : undefined) } : undefined;
     try {
         const language = await ensureLanguage(quest);
         if (academy?.mode === 'inspect') await setEditorValue(quest.lesson?.starterCode ?? '');
@@ -582,9 +659,9 @@ async function runFlightCheck(quest: Quest): Promise<void> {
         const trialKey = `${currentDroneId}:${track}:${quest.id}`;
         if ([54, 107].includes(academy?.number || 0) && repeatedExperiments.get(trialKey) !== code) experimentTrials.delete(trialKey);
         await restartAndRunSimulation();
-        const waitMs = academy ? academy.waitMs ?? (academy.number === 4 ? 1800 : 1200) : quest.spec!.expect.waitMs;
+        const waitMs = mini2 ? mini2.waitMs : academy ? academy.waitMs ?? (academy.number === 4 ? 1800 : 1200) : quest.spec!.expect.waitMs;
         const result = await runTextLessonCheck(quest.id, {
-            waitMs, language, capture, doneMessage: academy?.doneMessage, isCurrent: () => token === checkToken,
+            waitMs, language, capture, doneMessage: mini2?.doneMessage ?? academy?.doneMessage, isCurrent: () => token === checkToken,
             activity: academy ? {
                 code, lift: academyParts.lift, vision: academyParts.vision,
                 previousRun: repeatedExperiments.get(trialKey) === code,
@@ -595,12 +672,17 @@ async function runFlightCheck(quest: Quest): Promise<void> {
         if (token !== checkToken) return;
         checking = false;
         if (academy && [5, 54, 107].includes(academy.number) && !result.diagnostics.some((item) => item.kind === 'error')) repeatedExperiments.set(trialKey, code);
+        if (getUser()?.role === 'student') {
+            void reportAttempt({ track, questId: quest.id, solved: result.solved, titles: result.diagnostics.filter((item) => item.kind !== 'success').map((item) => item.title), code });
+        }
         if (result.academyTrial) {
             const trials = experimentTrials.get(trialKey) || new Set<string>();
             trials.add(result.academyTrial);
             experimentTrials.set(trialKey, trials);
         }
         if (result.solved) {
+            trackEvent('quest_done', { track, questId: quest.id, value: questOpenedAt ? Math.round((Date.now() - questOpenedAt) / 1000) : 0 });
+            questOpenedAt = 0;
             progress = completeQuest(quests, progress, quest.id);
             persist();
             if (getUser()?.role === 'student') void reportCompletion(track, quest.id);
@@ -656,6 +738,7 @@ function hideSuccess(): void {
 }
 
 function showMap(): void {
+    trackEvent('map_open');
     const done = countDone(quests, progress);
     const groups = questGroups(quests).map((group) => {
         const tiles = group.quests.map((quest) => {
@@ -675,7 +758,7 @@ function showMap(): void {
     el.map.innerHTML = `
         <div class="quest-map__card" role="dialog" aria-modal="true" aria-labelledby="quest-map-title">
             <div class="quest-map__head">
-                <div><h2 id="quest-map-title">Карта миссий · ${TRACK_LABELS[track]}</h2><div class="quest-map__sub">Пройдено ${done} из ${quests.length}. Следующая миссия открывается, когда пройдена предыдущая.</div></div>
+                <div><h2 id="quest-map-title">Карта миссий · ${TRACK_NAMES[track]}</h2><div class="quest-map__sub">Пройдено ${done} из ${quests.length}. Следующая миссия открывается, когда пройдена предыдущая.</div></div>
                 <button type="button" class="quest-hud__icon" data-map-close aria-label="Закрыть карту">${ICON.close}</button>
             </div>
             <div class="quest-map__groups">${groups}</div>
@@ -691,7 +774,7 @@ function showMap(): void {
         });
     });
     el.map.querySelector('[data-map-reset]')?.addEventListener('click', () => {
-        if (!window.confirm(`Сбросить весь прогресс миссий (${TRACK_LABELS[track]})? Это нельзя отменить.`)) return;
+        if (!window.confirm(`Сбросить весь прогресс миссий (${TRACK_NAMES[track]})? Это нельзя отменить.`)) return;
         progress = emptyProgress();
         quests.forEach((quest) => { try { storage()?.removeItem(draftKey(quest)); } catch { /* ignore */ } });
         persist();
@@ -711,6 +794,7 @@ function hideMap(): void {
 
 function applyMode(mode: AppMode, previous: AppMode): void {
     if (previous === 'learning') {
+        noteQuestLeft();
         saveDraft();
         checkToken++;
         checking = false;
@@ -719,6 +803,7 @@ function applyMode(mode: AppMode, previous: AppMode): void {
         hideMap();
         restoreAcademyScene();
     }
+    trackEvent('mode_enter', { detail: mode });
     el.hud.hidden = true;
     el.menu.hidden = mode !== 'learning';
     el.menu.innerHTML = `${ICON.home}<span>Выйти из обучения</span>`;
@@ -792,11 +877,28 @@ function enableHudDrag(): void {
  */
 export function openLearningMission(lesson?: number): void {
     if (lesson !== undefined) {
-        const language: LearningTrack = lesson > 72 ? 'python' : currentScriptLanguage === 'lua' ? 'lua' : track === 'blocks' ? 'python' : track;
+        // Язык берётся из каталога: камера и SDK — только Python, датчики/таймеры/связь Lua — только Lua, остальное на обоих.
+        const available = ACADEMY_LESSONS[lesson - 1]?.languages ?? ['lua', 'python'];
+        const preferred: LearningTrack = currentScriptLanguage === 'lua' ? 'lua' : track === 'blocks' ? 'python' : track;
+        const language: LearningTrack = (available as string[]).includes(preferred) ? preferred : available[0] === 'lua' ? 'lua' : 'python';
         useTrack(language);
-        const target = questsFor(language)[lesson - 1];
+        // Номер урока глобальный, а в линии одного языка миссии идут подряд без пропусков: ищем по номеру, а не по месту в списке.
+        const target = questsFor(language).find(quest => quest.lesson?.academy?.number === lesson);
         if (target) { progress = selectQuest(quests, progress, target.id); persist(); }
     }
+    if (getAppMode() === 'learning') {
+        const quest = currentQuest(quests, progress);
+        if (quest) void openQuest(quest);
+        return;
+    }
+    setAppMode('learning');
+}
+
+/** Открывает миссию из личного кабинета: нужный язык, нужная миссия (закрытая заменяется ближайшей доступной). */
+export function openQuestById(forTrack: LearningTrack, questId: string): void {
+    useTrack(forTrack);
+    progress = selectQuest(quests, progress, questId);
+    persist();
     if (getAppMode() === 'learning') {
         const quest = currentQuest(quests, progress);
         if (quest) void openQuest(quest);
@@ -810,7 +912,10 @@ export function initLearningMode(): void {
     buildDom();
     useTrack(loadTrack());
     enableHudDrag();
-    initAccountUi(document.getElementById('account-host') ?? document.body, { openTeacher: () => { void openTeacherPanel(); } });
+    initAccountUi(document.getElementById('account-host') ?? document.body, {
+        openTeacher: () => { void openTeacherPanel(); },
+        openCabinet: () => { void openStudentCabinet({ openQuest: openQuestById }); }
+    });
     onUserChange(() => { void handleUserChange(); });
     void restoreSession();
     startKeepAlive();

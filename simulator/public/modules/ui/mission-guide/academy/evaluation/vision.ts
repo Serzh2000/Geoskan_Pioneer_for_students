@@ -159,12 +159,13 @@ export function gradeVisionAcademy(number: number, samples: DroneSample[], event
         trial = target === 12 ? 'mission-success' : target === 249 ? 'mission-timeout' : undefined;
         if (!trial) fail('Укажите проверяемый исход', 'Проверяем ID 12 и отсутствующий ID 249 отдельными запусками.', 'Меняйте target_id и сохраняйте отчёт цели миссии.');
         if (trial === 'mission-success' && (!recovered() || !stableBefore(landing))) fail('Полная успешная ветка не подтверждена', 'Нужны потеря, восстановление, устойчивое наведение и посадка.', 'Не пропускайте этапы итоговой миссии.');
-        if (trial === 'mission-timeout' && (!hasMessage('Поиск истёк') || detects.some(event => visible(event, 249)) || ![0, 1, -1].every(y => detects.some(event => near(event, 0, y, 3))) || !activity.trials?.includes('mission-success') || aligned)) fail('Неуспешный исход не подтверждён', 'После успешного опыта проверьте ограниченный поиск 249 без ложного наведения.', 'Проверьте все сектора, завершите поиск и вернитесь для посадки.');
+        if (trial === 'mission-timeout' && !activity.trials?.includes('mission-success')) fail('Сначала засчитайте ID 12', 'Запуск с target_id=12 ещё не засчитан в этой сессии.', 'Верните `target_id=12`, нажмите «Проверить полёт», затем замените на 249 и проверьте снова.');
+        if (trial === 'mission-timeout' && (!hasMessage('Поиск истёк') || detects.some(event => visible(event, 249)) || ![0, 1, -1].every(y => detects.some(event => near(event, 0, y, 3))) || aligned)) fail('Неуспешный исход не подтверждён', 'После успешного опыта проверьте ограниченный поиск 249 без ложного наведения.', 'Проверьте все сектора, завершите поиск и вернитесь для посадки.');
     }
     if (number < 73 || number > 108) fail('Неизвестный урок', 'Нет проверки этого номера.', 'Выберите урок камеры, ArUco или миссий.');
     if (diagnostics.length) return { solved: false, complete: Boolean(last), diagnostics };
     const collected = new Set([...(activity.trials || []), ...(trial ? [trial] : [])]);
     const pending = number === 108 ? !collected.has('mission-timeout') : false;
-    if (pending) return { solved: false, complete: true, academyTrial: trial, diagnostics: [{ kind: 'info', title: 'Опыт подтверждён — осталось сравнение', reason: 'Теперь проверьте отсутствующий ID 249.', fix: 'Измените только указанный параметр и выполните ещё одну проверку.' }] };
+    if (pending) return { solved: false, complete: true, academyTrial: trial, diagnostics: [{ kind: 'info', title: 'Запуск с ID 12 засчитан — остался ID 249', reason: 'Теперь проверьте отсутствующий ID 249.', fix: 'Замените в коде `target_id=12` на `target_id=249` и снова нажмите «Проверить полёт».' }] };
     return { solved: true, complete: true, academyTrial: trial, diagnostics: [{ kind: 'success', title: 'Наблюдение и миссия подтверждены', reason: 'Проверены реальные кадры, детекции, вычисления и действия текущего урока.', fix: 'Объясните, какое новое наблюдение разрешало каждый следующий шаг.' }] };
 }

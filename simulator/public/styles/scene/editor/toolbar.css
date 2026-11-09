@@ -44,6 +44,12 @@
     transition: background-color .12s, border-color .12s;
 }
 #editor-panel .editor-toolbar__select:hover:not(:disabled) { background-color: var(--ed-hover); }
+/* Model switch (Basic / Mini 2): sits before the language picker, Mini 2 gets its own accent so the mode is obvious. */
+#editor-panel .editor-model-seg { flex: 0 0 auto; height: var(--ed-h); padding: 2px; border: 1px solid var(--ed-line); border-radius: var(--ed-r); background: var(--ed-raised); }
+#editor-panel .editor-model-seg .pk-seg__btn { min-height: 0; height: 100%; padding: 0 10px; font-size: 12.5px; }
+#editor-panel .editor-model-seg .pk-seg__btn.is-active { background: var(--pc-accent, var(--ed-accent)); color: #fff; box-shadow: none; }
+#editor-panel .editor-model-seg .pk-seg__btn:disabled:not(.is-active) { opacity: .5; cursor: not-allowed; }
+#editor-panel .editor-model-seg[data-model='pioneer-mini2'] .pk-seg__btn.is-active { background: #2f7de1; }
 #editor-panel .editor-toolbar__select--lang { flex: 0 0 84px; width: 84px; min-width: 84px; color: var(--pc-accent, var(--ed-accent)); }
 #editor-panel #file-selector { flex: 1 1 80px; width: auto; max-width: 320px; min-width: 80px; font-weight: 500; color: var(--ed-text); }
 /* Examples come from the API server; when it is not running the field says so and stays quiet. */

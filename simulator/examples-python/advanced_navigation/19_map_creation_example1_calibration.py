@@ -1,9 +1,12 @@
 #!/usr/bin/python3
 
 """
-Performs camera calibration using checkerboard pattern. Saves calibration
-values into a file.
-More: https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html
+Калибровка камеры по шахматной доске: матрица камеры и коэффициенты
+дисторсии сохраняются в data.yml (узлы mtx и dist).
+Нужна полная библиотека OpenCV (pip install opencv-contrib-python) и настоящая
+камера - дрона или компьютера. Камера симулятора - идеальная модель без
+дисторсии, калибровать её не нужно.
+Подробнее: https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html
 """
 
 import cv2
@@ -14,9 +17,7 @@ from pioneer_sdk import Camera
 
 
 def get_images_from_folder(folder_name, file_type="*.jpg"):
-    """
-    Retreive images from a directory using a provided path (`folder_name`)
-    """
+    """Загрузить снимки доски из папки `folder_name`."""
     images_list = glob.glob(folder_name + "/" + file_type)
     images = []
     for fname in images_list:
@@ -26,9 +27,7 @@ def get_images_from_folder(folder_name, file_type="*.jpg"):
 
 
 def get_images_from_drone_camera(camera, save=False):
-    """
-    Retreive images from a drone's camera
-    """
+    """Снимать кадры с камеры дрона: клавиша 1 - сохранить кадр, Esc или q - закончить."""
     images = []
     print("Press '1' to take frame\nPress ESC or 'q' to finish")
     while True:
@@ -49,9 +48,7 @@ def get_images_from_drone_camera(camera, save=False):
 
 
 def get_images_from_computer_camera(capture, save=False):
-    """
-    Retreive images using the PC's camera device
-    """
+    """То же с веб-камерой компьютера (cv2.VideoCapture)."""
     images = []
     print("Press '1' to take frame\nPress ESC or 'q' to finish")
     while True:
@@ -71,24 +68,21 @@ def get_images_from_computer_camera(capture, save=False):
 
 
 def calibrate(images):
-    # Defining the dimensions of checkerboard
+    # Число ВНУТРЕННИХ углов доски: 6 x 9 углов - это доска 7 x 10 клеток
     CHECKERBOARD = (6, 9)
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
-    # Creating vector to store vectors of 3D points for each checkerboard image
-    objpoints = []
-    # Creating vector to store vectors of 2D points for each checkerboard image
-    imgpoints = []
+    objpoints = []  # 3D-координаты углов доски (в клетках) для каждого снимка
+    imgpoints = []  # те же углы на изображении, пиксели
 
-    # Defining the world coordinates for 3D points
+    # Углы доски в её собственной системе: (0,0,0), (1,0,0), ... - доска плоская, z = 0
     objp = np.zeros((1, CHECKERBOARD[0] * CHECKERBOARD[1], 3), np.float32)
     objp[0, :, :2] = np.mgrid[0 : CHECKERBOARD[0], 0 : CHECKERBOARD[1]].T.reshape(-1, 2)
 
-    # Extracting path of individual image stored in a given directory
+    gray = None
     for img in images:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        # Find the chess board corners
-        # If desired number of corners are found in the image then ret = true
+        # ret = True, если найдены все углы доски
         ret, corners = cv2.findChessboardCorners(
             gray,
             CHECKERBOARD,
@@ -99,12 +93,12 @@ def calibrate(images):
 
         if ret == True:
             objpoints.append(objp)
-            # refining pixel coordinates for given 2d points.
+            # Уточняем положение углов до долей пикселя
             corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria)
 
             imgpoints.append(corners2)
 
-            # Draw and display the corners
+            # Показываем найденные углы
             img = cv2.drawChessboardCorners(img, CHECKERBOARD, corners2, ret)
 
         cv2.imshow("img", img)
@@ -112,29 +106,32 @@ def calibrate(images):
 
     cv2.destroyAllWindows()
 
+    if len(objpoints) < 10:
+        raise RuntimeError("Доска найдена на %d снимках, нужно хотя бы 10" % len(objpoints))
+
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
         objpoints, imgpoints, gray.shape[::-1], None, None
     )
+    # ret - средняя ошибка репроекции в пикселях: хорошая калибровка - меньше 1
+    print("Снимков с доской:", len(objpoints))
+    print("Ошибка репроекции, пиксели: %.3f" % ret)
 
     return mtx, dist
 
 
 def save_coefficients(mtx, dist, path):
-    """Save the camera matrix and the distortion coefficients to given path/file."""
+    """Сохранить матрицу камеры и коэффициенты дисторсии в файл."""
     cv_file = cv2.FileStorage(path, cv2.FILE_STORAGE_WRITE)
     cv_file.write("mtx", mtx)
     cv_file.write("dist", dist)
-    # note you *release* you don't close() a FileStorage object
     cv_file.release()
 
 
 def load_coefficients(path):
-    """Loads camera matrix and distortion coefficients."""
-    # FILE_STORAGE_READ
+    """Прочитать матрицу камеры и коэффициенты дисторсии из файла."""
     cv_file = cv2.FileStorage(path, cv2.FILE_STORAGE_READ)
 
-    # note we also have to specify the type to retrieve other wise we only get a
-    # FileNode object back instead of a matrix
+    # .mat() превращает узел файла в матрицу numpy
     camera_matrix = cv_file.getNode("mtx").mat()
     dist_coeffs = cv_file.getNode("dist").mat()
 
@@ -163,7 +160,7 @@ def main():
     ```
     """
 
-    # Acquire images from the drone's camera
+    # Снимки с камеры дрона
     camera = Camera()
     images = get_images_from_drone_camera(camera)
 

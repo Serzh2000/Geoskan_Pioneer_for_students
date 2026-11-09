@@ -1,6 +1,10 @@
             <div id="editor-panel" class="sidebar-panel active">
                 <div class="panel-header panel-header--editor">
                     <div class="panel-header__lead editor-toolbar">
+                        <div id="editor-model-seg" class="pk-seg editor-model-seg" role="radiogroup" aria-label="Модель дрона">
+                            <button type="button" class="pk-seg__btn" role="radio" aria-checked="false" data-editor-drone-model="pioneer-basic" title="Пионер Базовый: Lua, Python (pioneer_sdk) и Blockly">Базовый</button>
+                            <button type="button" class="pk-seg__btn" role="radio" aria-checked="false" data-editor-drone-model="pioneer-mini2" title="Пионер Мини 2: Python (pioneer_sdk2) и блоки Pioneer Bricks, программа работает на борту">Мини 2</button>
+                        </div>
                         <select id="script-language-select" class="btn-secondary editor-toolbar__select editor-toolbar__select--lang" title="Язык скрипта" aria-label="Язык скрипта">
                             <option value="lua">Lua</option>
                             <option value="python">Python</option>
@@ -17,7 +21,7 @@
                             aria-label="Открыть файл с компьютера">
                             <svg class="editor-toolbar__icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19l2.757 -7.351a1 1 0 0 1 .936 -.649h12.307a1 1 0 0 1 .986 1.164l-.996 5.211a2 2 0 0 1 -1.964 1.625h-14.026a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v2"/></svg><span class="editor-toolbar__label">Открыть файл</span>
                         </button>
-                        <input type="file" id="file-input" style="display:none" accept=".lua,.py">
+                        <input type="file" id="file-input" style="display:none" accept=".lua,.py,.xml">
                         <button
                             type="button"
                             id="download-code-btn"
@@ -25,6 +29,15 @@
                             title="Скачать текущий код в файл"
                             aria-label="Скачать текущий код в файл">
                             <svg class="editor-toolbar__icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 11l5 5l5 -5"/><path d="M12 4l0 12"/></svg><span class="editor-toolbar__label">Скачать код</span>
+                        </button>
+                        <button
+                            type="button"
+                            id="download-bricks-btn"
+                            class="btn-secondary editor-toolbar__btn"
+                            style="display:none"
+                            title="Скачать блоки в формате проекта Pioneer Bricks (.xml): его можно открыть в Bricks на дроне"
+                            aria-label="Скачать проект Pioneer Bricks">
+                            <svg class="editor-toolbar__icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16v4H4z"/><path d="M6 11v6a1 1 0 0 0 1 1h10a1 1 0 0 0 1 -1v-6"/><path d="M12 12v4"/></svg><span class="editor-toolbar__label">Проект Bricks</span>
                         </button>
                         <button
                             type="button"

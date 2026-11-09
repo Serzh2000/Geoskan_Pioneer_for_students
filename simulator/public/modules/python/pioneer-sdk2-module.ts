@@ -53,6 +53,30 @@ _CYCLE = [FlyState.ON_LAND, FlyState.ARMED, FlyState.IN_SKY]
 _ALLOWED = {FlyState.ON_LAND: "arm", FlyState.ARMED: "takeoff", FlyState.IN_SKY: "flight"}
 _FLYING = ("FLYING_HOVER", "FLYING_MOVING")
 
+# Параметры автопилота, которые известны симулятору (get_param / set_param).
+# Имена - из README pioneer_sdk2 0.11.0 (раздел «Управление RC-каналами» и
+# get_nav_system) и примера 11 из сборника SDK2 (Copter_com_takeoffAlt);
+# значения по умолчанию - симулятора. Остальных параметров настоящего
+# автопилота здесь нет: get_param вернёт None, set_param - False. Значения
+# живут до конца программы и не меняют полёт, кроме RC-набора (см. send_rc_channels):
+# настройки автопилота в панели симулятора set_param не трогает.
+_PARAMS = {
+    "Flight_com_navSystem": 1.0,
+    "Copter_com_takeoffAlt": 0.4,
+    "Copter_man_rcMode0": 0.0,
+    "Copter_man_rcMode1": 0.0,
+    "Copter_man_rcMode2": 0.0,
+    "Copter_flyWithoutRc": 0.0,
+    "SensorMux_rc": 0.0,
+}
+# Навигация симулятора всегда LPS: этот параметр менять нельзя.
+_PARAMS_LOCKED = ("Flight_com_navSystem",)
+# Набор из README, при котором автопилот слушает send_rc_channels.
+_RC_PARAMS = {
+    "Copter_man_rcMode0": 6.0, "Copter_man_rcMode1": 3.0, "Copter_man_rcMode2": 3.0,
+    "Copter_flyWithoutRc": 1.0, "SensorMux_rc": 2.0,
+}
+
 def _base_print(text):
     # Мимо пузыря над дроном: так печатает сама библиотека, а не программа.
     getattr(_builtins, "__sim_base_print", print)(text)
@@ -93,11 +117,18 @@ class Pioneer:
         self._target = None
         self._decel_sent = False
         self._grab_closed = False
+        self._param_values = dict(_PARAMS)
+        self._params_loaded = False
+        self._nav_system = None
+        self._rc_channels = [0, 0, 0, 0, 1, 0, 1, 0]
+        self._rc_value = 0
+        self.field_watcher = []
         fsm = str(_js.pioneer2_snapshot(self._id).to_py()[0])
         self._state = FlyState.IN_SKY if fsm in _FLYING else (FlyState.ARMED if fsm == "PREFLIGHT" else FlyState.ON_LAND)
         self.__print_log("Соединение установлено")
         self.__print_log("Класс Пионер инициализирован")
         self._watcher = _bg_task(self._watch())
+        self._field_watcher_task = _bg_task(self._field_watch())
 
     def __print_log(self, message):
         if self._logger:
@@ -157,6 +188,24 @@ class Pioneer:
                 self._fire(Event.LOW_VOLTAGE2)
             prev = fsm
             await _asyncio.sleep(0.05)
+
+    # Как _field_watcher_loop настоящего SDK: раз в 0.1 с читает поле и зовёт
+    # колбэк, когда значение изменилось (первое чтение отличается от None).
+    async def _field_watch(self):
+        while not self._closed:
+            if _js.py_is_cancelled(self._id):
+                return
+            for watcher in list(self.field_watcher):
+                try:
+                    current = self._rc_value
+                    if current != watcher["last_value"]:
+                        result = watcher["callback"](current)
+                        if _inspect.isawaitable(result):
+                            _bg_task(result)
+                        watcher["last_value"] = current
+                except Exception as e:
+                    self.__print_log(f"-> Ошибка при чтении поля или вызове колбэка: {e}")
+            await _asyncio.sleep(0.1)
 
     async def _wait_flag(self, ev, timeout=None, give_up=None):
         waited = 0.0
@@ -287,12 +336,24 @@ class Pioneer:
         new_yaw = None if yaw is None else _math.degrees(cur_yaw) + float(yaw)
         self._go(px + wx, py + wy, pz + float(z), new_yaw, time)
 
+    # Как в SDK: сначала проверка порядка команд, потом система навигации.
+    # У симулятора навигация LPS, поэтому полёт по GPS-координатам невозможен.
     def go_to_global_point(self, latitude, longitude, altitude, yaw=0):
-        self.__print_log("Команда может быть выполнена только когда установлена система навигации GPS")
+        if not self.__check_allowed("flight"):
+            self.__print_log("Команда полета в точку проигнорирована: коптер еще не в воздухе")
+            return False
+        if self.get_nav_system() != NavSystem.GPS:
+            self.__print_log("Команда может быть выполнена только когда установлена система навигации GPS")
+            return False
         return False
 
     def go_to_global_point_relative(self, latitude_offset, longitude_offset, altitude_offset, yaw=0):
-        self.__print_log("Команда может быть выполнена только когда установлена система навигации GPS")
+        if not self.__check_allowed("flight"):
+            self.__print_log("Команда полета в точку проигнорирована: коптер еще не в воздухе")
+            return False
+        if self.get_nav_system() != NavSystem.GPS:
+            self.__print_log("Команда может быть выполнена только когда установлена система навигации GPS")
+            return False
         return False
 
     def point_reached(self):
@@ -388,7 +449,9 @@ class Pioneer:
         return round((deg + 180.0) % 360.0 - 180.0, 2)
 
     def get_nav_system(self, update=False):
-        return NavSystem.LPS
+        if self._nav_system is None or update:
+            self._nav_system = NavSystem(int(self.get_param("Flight_com_navSystem", update)))
+        return self._nav_system
 
     def get_nav_status_lps(self):
         return NavStatus.OK
@@ -416,17 +479,70 @@ class Pioneer:
     def get_ranger_data(self):
         return tuple(round(float(v), 3) for v in _js.pioneer2_ranger(self._id).to_py())
 
+    # Словарь параметров, как у SDK, грузится при первом обращении (или update=True).
+    def __load_params(self):
+        self.__print_log("-> Загрузка словаря автопилота ...")
+        self._params_loaded = True
+
     def get_param(self, name, update=False):
-        self.__print_log(f"-> Параметр {name} не найден")
+        if not self._params_loaded or update:
+            self.__load_params()
+        if name in self._param_values:
+            return self._param_values[name]
         return None
 
     def set_param(self, name, value):
+        try:
+            if not self._params_loaded:
+                self.__load_params()
+            if name in self._param_values and name not in _PARAMS_LOCKED:
+                self.__print_log(f"-> Установка параметра: {name} {value}")
+                self._param_values[name] = float(value)
+                return True
+        except Exception:
+            pass
         self.__print_log(f"-> Установка параметра {name} не удалась")
         return False
 
     def reboot_board(self):
-        self.__print_log("Перезагрузка платы Mini2 запрещена")
+        self.__print_log("Перезагрузка платы Pioneer Mini 2 запрещена")
         return False
+
+    # ---- RC-каналы ----------------------------------------------------------
+    def rc_sdk1_to_sdk2(self, channel_1=0, channel_2=0, channel_3=0, channel_4=0, channel_5=2000):
+        # Формула из pioneer_sdk2 0.11.0 повторена как есть, вместе с её особенностями:
+        # 1500 / 500 считается первым, а каналы 3 и 4 берут уже пересчитанные 1 и 2.
+        channel_1 = channel_4 - 1500 / 500
+        channel_2 = channel_3 - 1500 / 500
+        channel_3 = channel_1 - 1500 / 500
+        channel_4 = channel_2 - 1500 / 500
+        if channel_5 == 2000:
+            channel_5 = 1
+        else:
+            channel_5 = 0
+        return channel_1, channel_2, channel_3, channel_4, channel_5
+
+    def send_rc_channels(self, channel_1=0, channel_2=0, channel_3=0, channel_4=0,
+                         channel_5=1, channel_6=0, channel_7=1, channel_8=0):
+        ch = [channel_1 * 32760, channel_2 * 32760, channel_3 * 32760, channel_4 * 32760,
+              channel_5 * 32767, channel_6 * 32767, channel_7 * 32767, channel_8 * 32767]
+        ch = [int(x) for x in ch]
+        self._rc_channels = ch
+        # get_rc_channel читает восьмой канал (тумблер SWA): положение 0 / 1 / 2.
+        self._rc_value = int(round(channel_8))
+        # Автопилот слушает RC только при наборе параметров из README и в воздухе.
+        listens = all(self._param_values.get(k) == v for k, v in _RC_PARAMS.items())
+        if listens and self._state == FlyState.IN_SKY:
+            # Канал 1: 1 - вправо; канал 2: -1 - вперёд; канал 3: 1 - вверх; канал 4: 1 - влево.
+            yaw_rate = max(-1.82, min(1.82, ch[3] / 32760.0))
+            self._speed(ch[0] / 32760.0, -ch[1] / 32760.0, 0.5 * ch[2] / 32760.0, yaw_rate, 0.5, True)
+        return True
+
+    def get_rc_channel(self):
+        return self._rc_value
+
+    def set_rc_trigger(self, callback):
+        self.field_watcher.append({"callback": callback, "last_value": None})
 
     # ---- подсветка и полезная нагрузка -------------------------------------
     def led_control(self, led_id=255, r=0., g=0., b=0.):
@@ -451,8 +567,11 @@ class Pioneer:
         return True
 
     def cargo_set(self, grab):
-        self.__print_log("-> Модуль магнитного захвата груза не поддерживается")
-        return False
+        # Магнитный захват груза - у Базового Пионера; у Мини 2 его нет.
+        if not bool(_js.pioneer2_cargo(self._id, bool(grab))):
+            self.__print_log("-> Модуль магнитного захвата груза не поддерживается")
+            return False
+        return True
 
     def cargo_grab(self):
         return self.cargo_set(True)
@@ -493,6 +612,61 @@ class ImageViewer:
     def close(self):
         return _sys.modules["cv2"].destroyAllWindows()
 
+class RecorderControl:
+    """Запись видео и фото камеры в галерею дрона. В симуляторе файлы не создаются:
+    библиотека проверяет аргументы, ведёт состояние записи и печатает, что сделала бы."""
+    # Режимы записи основной и нижней камеры: (ширина, высота, fps).
+    _CONFIGS = {
+        CameraType.MAIN: [(1280, 720, 30), (640, 360, 30)],
+        CameraType.OPT: [(640, 480, 30)],
+    }
+
+    def __init__(self):
+        _check_model(str(_js.SIM_DRONE_ID))
+        self._recording = {}
+
+    @staticmethod
+    def _camera_type(camera_type):
+        if not isinstance(camera_type, CameraType):
+            raise ValueError("camera_type - CameraType.MAIN или CameraType.OPT")
+        return camera_type
+
+    def get_camera_recording_configs(self, camera_type=CameraType.MAIN):
+        return list(self._CONFIGS[self._camera_type(camera_type)])
+
+    def _config(self, camera_type, config):
+        configs = self._CONFIGS[camera_type]
+        if config is None:
+            return configs[0]
+        if tuple(config) not in configs:
+            raise ValueError("Режим записи не поддерживается камерой: " + str(config))
+        return tuple(config)
+
+    def start_recording(self, camera_type=CameraType.MAIN, config=None, output_dir="/mnt/media/videos"):
+        camera_type = self._camera_type(camera_type)
+        config = self._config(camera_type, config)
+        if self._recording.get(camera_type):
+            raise RuntimeError("Запись уже идёт")
+        self._recording[camera_type] = True
+        _sim_note(f"запись {camera_type.name} {config[0]}x{config[1]} {config[2]} fps -> {output_dir} (файл в симуляторе не создаётся).")
+        return True
+
+    def stop_recording(self, camera_type=CameraType.MAIN):
+        camera_type = self._camera_type(camera_type)
+        if not self._recording.pop(camera_type, False):
+            return False
+        _sim_note(f"запись {camera_type.name} остановлена.")
+        return True
+
+    def take_photo(self, file_name, camera_type=CameraType.MAIN, config=None, output_dir="/mnt/media/photos"):
+        camera_type = self._camera_type(camera_type)
+        name = str(file_name or "")
+        if not name.strip() or not name.lower().endswith((".jpg", ".jpeg", ".png")):
+            raise ValueError("file_name: непустое имя с расширением .jpg, .jpeg или .png")
+        self._config(camera_type, config)
+        _sim_note(f"фото {name} -> {output_dir} (файл в симуляторе не создаётся).")
+        return True
+
 class ServoPriority(_enum.Enum):
     HIGH = 0
     MEDIUM = 1
@@ -521,7 +695,7 @@ class ConfigException(Exception):
 # а FlyState, NavSystem и NavStatus - только в pioneer_sdk2.piosdk2.
 for _name, _value in {
     "Pioneer": Pioneer, "Event": Event,
-    "Camera": Camera, "CameraType": CameraType, "ImageViewer": ImageViewer,
+    "Camera": Camera, "CameraType": CameraType, "ImageViewer": ImageViewer, "RecorderControl": RecorderControl,
     "ServoCamera": ServoCamera, "ServoPriority": ServoPriority, "ConfigException": ConfigException
 }.items():
     setattr(_sdk2, _name, _value)

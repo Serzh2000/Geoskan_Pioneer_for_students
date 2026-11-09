@@ -402,3 +402,8 @@
 /* Мелкий текст на светлой теме: чуть темнее приглушённого, чтобы держать контраст 4.5:1. */
 #api-docs .api-chip:not(.is-active),
 #api-docs .api-code__label { color: color-mix(in srgb, var(--text-muted) 72%, var(--text-strong)); }
+
+/* Метка модели дрона у каталога: Мини 2 выделена, чтобы не путать pioneer_sdk и pioneer_sdk2. */
+#api-docs .api-model-badge { flex: none; padding: 2px 9px; font-size: 11.5px; font-weight: 650; color: var(--pc-muted); background: color-mix(in srgb, var(--pc-muted) 12%, transparent); border: 1px solid color-mix(in srgb, var(--pc-muted) 35%, transparent); border-radius: 999px; }
+#api-docs .api-model-badge--mini2 { color: #5da2f2; background: color-mix(in srgb, #2f7de1 16%, transparent); border-color: color-mix(in srgb, #2f7de1 55%, transparent); }
+#api-docs .api-toolbar__intro { flex-wrap: wrap; }

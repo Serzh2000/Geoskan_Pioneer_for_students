@@ -38,6 +38,7 @@ import {
 } from './pioneer-js-bridge-camera.js';
 import { installCvRuntimeAPI } from './pioneer-js-bridge-cv.js';
 import { installSdk2RuntimeAPI } from './pioneer-sdk2-bridge.js';
+import { installRknnRuntimeAPI } from './pioneer-rknn-bridge.js';
 import { droneModelProfile } from '../core/drone-models.js';
 
 // Python scripts run synchronously between asyncio yields, same as a Lua chunk between
@@ -52,6 +53,7 @@ export function installJsRuntimeAPI() {
     const w = window as any;
     installCvRuntimeAPI(w);
     installSdk2RuntimeAPI(w);
+    installRknnRuntimeAPI(w);
 
     w.py_is_cancelled = (id: string) => Boolean(cancelledRuns[id]);
     w.pioneer_input = (promptText: string) => {
@@ -356,6 +358,13 @@ export function installJsRuntimeAPI() {
             return true;
         }
         return false;
+    };
+
+    // pioneer_sdk.lua_script_upload(): скрипт записывается в память дрона; запускает его lua_script_control('Start').
+    w.pioneer_lua_script_upload = (id: string, source: unknown) => {
+        if (w.py_is_cancelled(id)) throw new Error('PYTHON_CANCELLED');
+        getDroneOrDefault(id).script = String(source ?? '');
+        return true;
     };
 
     w.pioneer_close_connection = (id: string) => {

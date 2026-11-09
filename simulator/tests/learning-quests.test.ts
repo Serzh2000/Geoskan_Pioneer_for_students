@@ -1,6 +1,6 @@
 /** Режим обучения: порядок заданий, открытие по цепочке, прогресс и режим приложения. */
 import {
-    buildAcademyQuests, buildQuests, clampStep, splitIntoSteps, completeQuest, INTRO_STEP, lastStepIndex, questGroups, countDone, currentQuest, emptyProgress, firstOpenQuest, loadProgress, nextQuest,
+    buildAcademyQuests, buildQuests, clampStep, findCheckSteps, splitIntoSteps, completeQuest, INTRO_STEP, lastStepIndex, questGroups, countDone, currentQuest, emptyProgress, firstOpenQuest, loadProgress, nextQuest,
     QUEST_GROUP_ORDER, QUEST_PROGRESS_STORAGE_KEY, questStatus, requiredBlockChecklist, saveProgress, selectQuest,
     type StorageLike
 } from '../public/modules/learning/quests.js';
@@ -150,5 +150,28 @@ describe('карточки миссии по шагам', () => {
         expect(clampStep(quest, -5)).toBe(INTRO_STEP);
         expect(clampStep(quest, 99)).toBe(quest.steps.length);
         expect(clampStep(quest, 1)).toBe(1);
+    });
+});
+
+describe('шаги, которые просят запустить проверку', () => {
+    // Раньше кнопка «Проверить полёт» была только на последней карточке: на шаге «Нажмите «Проверить полёт»» её не было,
+    // ученик проходил шаг, ничего не запустив, и в зачёт попадал только последний из нескольких опытов.
+    test('findCheckSteps находит шаги с запуском проверки и не трогает последний шаг', () => {
+        expect(findCheckSteps(['Впишите значение.', 'Нажмите «Проверить полёт».', 'Замените и снова нажмите «Проверить полёт».'])).toEqual([1]);
+        expect(findCheckSteps(['Один шаг: нажмите «Проверить полёт».'])).toEqual([]);
+        expect(findCheckSteps(['Проверьте, что кадр не пустой.', 'Впишите None.'])).toEqual([]);
+    });
+
+    test.each(['lua', 'python'] as const)('в миссиях Академии (%s) каждый шаг с «Проверить полёт» получает кнопку', (language) => {
+        const quests = buildAcademyQuests(language);
+        for (const quest of quests) {
+            quest.steps.forEach((text, index) => {
+                const asks = /Проверить полёт/.test(text) && index < quest.steps.length - 1;
+                expect({ id: quest.id, index, button: quest.checkSteps?.includes(index) ?? false }).toEqual({ id: quest.id, index, button: asks || (quest.checkSteps?.includes(index) ?? false) });
+                if (asks) expect(quest.checkSteps).toContain(index);
+            });
+        }
+        // миссия 12 («сначала зелёный, затем синий») — именно такая
+        expect(quests[11].checkSteps).toEqual([1]);
     });
 });
