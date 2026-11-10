@@ -25,3 +25,6 @@ __pycache__/
 
 # Teacher/student accounts (hashed passwords, progress)
 /data/
+
+# Pyodide (среда Python) скачивается скриптом scripts/fetch-pyodide.cjs
+/public/vendor/pyodide/

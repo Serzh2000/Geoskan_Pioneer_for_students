@@ -5,17 +5,6 @@ let pyodideInstance: any = null;
 let pyodideLoadPromise: Promise<any> | null = null;
 let numpyLoadPromise: Promise<boolean> | null = null;
 
-function loadScript(src: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-        const el = document.createElement('script');
-        el.src = src;
-        el.async = true;
-        el.onload = () => resolve();
-        el.onerror = (e) => reject(e);
-        document.head.appendChild(el);
-    });
-}
-
 /** Рантайм Python уже загружен: первый запуск программы тянет Pyodide (десятки мегабайт) и занимает до минуты. */
 export const isPyodideReady = (): boolean => pyodideInstance !== null;
 
@@ -25,15 +14,27 @@ export async function ensurePyodide(): Promise<any> {
 
     pyodideLoadPromise = (async () => {
         log('[Python] Загрузка рантайма (Pyodide)...', 'info');
-        const pyodideUrl = 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js';
-        const indexURL = 'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/';
-
-        if (!(window as any).loadPyodide) {
-            await loadScript(pyodideUrl);
+        // Сначала своя копия рядом с приложением (public/vendor/pyodide, её кладёт scripts/fetch-pyodide.cjs): работает без
+        // интернета и быстрее. Если её нет или она не открылась, берём CDN.
+        const sources = [
+            new URL('vendor/pyodide/', document.baseURI).href,
+            'https://cdn.jsdelivr.net/pyodide/v0.26.2/full/'
+        ];
+        let lastError: unknown = null;
+        for (const indexURL of sources) {
+            try {
+                // ES-модуль, а не тег script: dev-сервер Vite дописывает в классические .js из public свой import и ломает их.
+                const { loadPyodide } = await import(/* @vite-ignore */ `${indexURL}pyodide.mjs`);
+                if (typeof loadPyodide !== 'function') throw new Error(`${indexURL}pyodide.mjs не загрузился`);
+                pyodideInstance = await loadPyodide({ indexURL });
+                break;
+            } catch (error) {
+                lastError = error;
+                console.warn(`[Python] Источник ${indexURL} недоступен, пробую следующий.`, error);
+            }
         }
+        if (!pyodideInstance) throw lastError instanceof Error ? lastError : new Error('Pyodide недоступен');
 
-        const loadPyodide = (window as any).loadPyodide;
-        pyodideInstance = await loadPyodide({ indexURL });
         await installPioneerSdkModule(pyodideInstance);
 
         log('[Python] Рантайм готов.', 'success');
