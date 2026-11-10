@@ -6,12 +6,13 @@
  * Названия миссий берутся из тех же списков, что и в режиме обучения.
  */
 import {
-    ACCOUNT_TRACKS, teacherApi,
+    ACCOUNT_TRACKS, teacherApi, viewAsStudent,
     type AccountTrack, type AttemptRecord, type BulkCredentials, type CabinetData, type MetricsSummary, type Overview, type OverviewStudent,
     type QuestStats, type StuckStudent, type FailedAttempt, type StudentDetail
 } from './account.js';
 import { renderMedal, renderRankBadge, rankFor } from './achievement-art.js';
 import { ago, downloadText, esc, fmtDate, fmtDateTime, fmtDuration, groupTheme, ICON, initials, plural, renderCalendar, TRACK_LABELS, trapFocus, completedChapters, computeAchievements } from './cabinet-kit.js';
+import { openOwnCabinet } from './account-ui.js';
 import { questGroups } from './quests.js';
 import { createQuestCache, trackTotals } from './tracks.js';
 import {
@@ -338,6 +339,7 @@ function renderStudent(): string {
                     <button type="submit" class="cab-btn cab-btn--primary cab-btn--sm">Сохранить</button>
                 </form>
                 <div class="cab-block cabt-danger-zone">
+                    <button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="view-as" title="Открыть обучение и кабинет глазами ученика. Пароль не нужен, ничего не сохраняется.">${ICON.eye}<span>Смотреть как ученик</span></button>
                     <button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="reset-one">${ICON.key}<span>Выдать новый пароль</span></button>
                     <button type="button" class="cab-btn cab-btn--ghost cab-btn--sm cab-danger" data-act="delete-student">Удалить аккаунт</button>
                 </div>
@@ -602,6 +604,16 @@ async function handleAction(node: HTMLElement): Promise<void> {
                 await refresh();
                 modal = { kind: 'credentials', title: 'Новые пароли', rows, skipped: [] };
                 render();
+            });
+            return;
+        }
+        case 'view-as': {
+            if (!student) return;
+            const target = student;
+            await guard(async () => {
+                await viewAsStudent(target.id);
+                closeTeacherPanel();
+                openOwnCabinet();
             });
             return;
         }

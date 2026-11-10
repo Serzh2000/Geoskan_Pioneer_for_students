@@ -220,3 +220,66 @@ describe('треки Мини 2 (sdk2, bricks)', () => {
         expect(overview.done.sdk2).toEqual(['sdk2-takeoff-land']);
     });
 });
+
+describe('просмотр от имени ученика', () => {
+    async function setup() {
+        const { app, store } = await makeApp();
+        const pupil = request.agent(app);
+        await pupil.post('/api/auth/register').send(student);
+        const { agent: teacher } = await login(app, 'teacher', 'teacher-pass');
+        const id = (await teacher.get('/api/teacher/students')).body.students[0].id as string;
+        return { app, store, teacher, id };
+    }
+
+    test('учитель входит как ученик без пароля и возвращается в свой аккаунт', async () => {
+        const { teacher, id } = await setup();
+        const view = await teacher.post(`/api/teacher/students/${id}/view`);
+        expect(view.status).toBe(200);
+        expect(view.body.user).toMatchObject({ role: 'student', login: 'ivanov', viewAs: { teacherName: expect.any(String) } });
+        expect(JSON.stringify(view.body)).not.toMatch(/hash|salt|secret1/);
+        const me = await teacher.get('/api/auth/me');
+        expect(me.body.user).toMatchObject({ login: 'ivanov', viewAs: expect.any(Object) });
+        expect((await teacher.get('/api/me/cabinet')).status).toBe(200);
+        const back = await teacher.post('/api/auth/view-exit');
+        expect(back.body.user).toMatchObject({ role: 'teacher', login: 'teacher' });
+        expect((await teacher.get('/api/teacher/students')).status).toBe(200);
+    });
+
+    test('в режиме просмотра ничего не меняется: зачёты, попытки, имя и пароль ученика', async () => {
+        const { app, teacher, id, store } = await setup();
+        await teacher.post(`/api/teacher/students/${id}/view`);
+        await teacher.post('/api/progress/complete').send({ track: 'blocks', questId: 'bk-takeoff-land' });
+        await teacher.post('/api/learning/attempt').send({ track: 'blocks', questId: 'bk-takeoff-land', solved: true, titles: [], code: 'x' });
+        expect((await teacher.patch('/api/auth/profile').send({ fullName: 'Другое Имя' })).status).toBe(403);
+        expect((await teacher.post('/api/auth/password').send({ current: 'secret1', password: 'new-pass1', passwordRepeat: 'new-pass1' })).status).toBe(403);
+        expect(Object.keys(store.findById(id)!.progress.blocks)).toEqual([]);
+        expect(store.findById(id)!.fullName).toBe('Иванов Иван');
+        // Пароль ученика по-прежнему подходит.
+        expect((await login(app, 'ivanov', 'secret1')).res.status).toBe(200);
+    });
+
+    test('в режиме просмотра нет прав учителя, а вход как ученик доступен только учителю', async () => {
+        const { app, teacher, id } = await setup();
+        const pupil = request.agent(app);
+        await pupil.post('/api/auth/login').send({ login: 'ivanov', password: 'secret1' });
+        expect((await pupil.post(`/api/teacher/students/${id}/view`)).status).toBe(403);
+        await teacher.post(`/api/teacher/students/${id}/view`);
+        expect((await teacher.get('/api/teacher/students')).status).toBe(403);
+        expect((await teacher.post(`/api/teacher/students/${id}/view`)).status).toBe(403);
+    });
+
+    test('выход из режима просмотра кнопкой «Выйти» возвращает учителя, а просмотр не отмечает ученика «в сети»', async () => {
+        const { teacher, id, store } = await setup();
+        const before = store.findById(id)!.lastActiveAt ?? 0;
+        await teacher.post(`/api/teacher/students/${id}/view`);
+        await teacher.get('/api/progress');
+        expect(store.findById(id)!.lastActiveAt ?? 0).toBe(before);
+        await teacher.post('/api/auth/logout');
+        expect((await teacher.get('/api/auth/me')).body.user).toMatchObject({ role: 'teacher' });
+    });
+
+    test('просмотр без режима просмотра: выход отклоняется', async () => {
+        const { teacher } = await setup();
+        expect((await teacher.post('/api/auth/view-exit')).status).toBe(400);
+    });
+});

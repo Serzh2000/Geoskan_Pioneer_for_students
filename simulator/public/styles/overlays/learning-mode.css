@@ -227,3 +227,10 @@ body[data-app-mode='learning'] #sidebar-guide-btn { display: none; }
 .quest-spot[data-label='']::after { display: none; }
 @keyframes quest-spot-pulse { 50% { box-shadow: 0 0 0 8px var(--accent-soft), 0 0 30px rgba(255, 107, 0, 0.6); } }
 @media (prefers-reduced-motion: reduce) { .quest-spot { animation: none; } }
+
+/* Teacher is viewing as a student: a bar that says whose screen this is and how to leave. */
+.view-as-banner { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 3000; display: flex; align-items: center; gap: 12px; max-width: calc(100vw - 24px); padding: 8px 8px 8px 16px; font-size: 13px; line-height: 1.35; color: #fff; background: var(--accent-color-strong, #c2410c); border-radius: 999px; box-shadow: 0 6px 24px rgba(0, 0, 0, .28); }
+.view-as-banner b { font-weight: 700; }
+.view-as-banner__exit { flex: none; padding: 6px 14px; font: 600 13px/1.2 var(--font-sans, inherit); color: var(--accent-color-strong, #c2410c); background: #fff; border: 0; border-radius: 999px; cursor: pointer; }
+.view-as-banner__exit:hover { background: #ffe9dc; }
+@media (max-width: 640px) { .view-as-banner { flex-direction: column; border-radius: 16px; text-align: center; padding: 10px 14px; } }

@@ -2,7 +2,7 @@
  * Панель «Аккаунт» в левой рельсе: вход и регистрация формой прямо в панели, профиль со сменой пароля и выходом,
  * вход в кабинет учителя. Когда вход истёк (два часа без действий), панель открывается сама и просит войти снова.
  */
-import { changePassword, getUser, isSessionExpired, login, logout, onProfileChange, onSessionExpired, onUserChange, register, type AccountUser } from './account.js';
+import { changePassword, exitStudentView, getUser, isSessionExpired, login, logout, onProfileChange, onSessionExpired, onUserChange, register, type AccountUser } from './account.js';
 
 const esc = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -142,12 +142,32 @@ function showPanel(): void {
     if (!document.querySelector('#account-panel.active')) (window as any).openPanel?.('account-panel');
 }
 
+/** Полоса сверху, пока учитель смотрит от имени ученика: видно, чей это экран, и есть выход. */
+function renderViewBanner(user: AccountUser | null): void {
+    document.getElementById('view-as-banner')?.remove();
+    document.body.classList.toggle('is-view-as', Boolean(user?.viewAs));
+    if (!user?.viewAs) return;
+    const bar = document.createElement('div');
+    bar.id = 'view-as-banner';
+    bar.className = 'view-as-banner';
+    bar.setAttribute('role', 'status');
+    bar.innerHTML = `<span>Вы смотрите глазами ученика <b>${esc(user.fullName)}</b>. Зачёты и попытки не сохраняются.</span><button type="button" class="view-as-banner__exit">Вернуться к себе</button>`;
+    bar.querySelector('button')!.addEventListener('click', () => { void exitStudentView(); });
+    document.body.appendChild(bar);
+}
+
+/** Открывает личный кабинет текущего пользователя (нужно учителю после входа от имени ученика). */
+export function openOwnCabinet(): void {
+    openCabinet();
+}
+
 export function initAccountUi(target: HTMLElement, hooks: { openTeacher: () => void; openCabinet: () => void }): void {
     openTeacher = hooks.openTeacher;
     openCabinet = hooks.openCabinet;
     host = target;
     railButton = document.getElementById('sidebar-account-btn');
     onUserChange((user: AccountUser | null) => {
+        renderViewBanner(user);
         if (user) lastLogin = user.login;
         view = 'login';
         render();
