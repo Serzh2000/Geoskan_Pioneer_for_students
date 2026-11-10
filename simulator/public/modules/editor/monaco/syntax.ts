@@ -37,7 +37,7 @@ export function setupSyntaxHighlighting(monaco: any) {
                 [/\b(Ev)\b/, "constant"],
 
                 // Comments
-                [/--\[\[[\s\S]*?(?:\]\]|$)/, 'comment'],
+                [/--\[\[/, { token: 'comment', next: '@blockComment' }],
                 [/--.*$/, "comment"],
 
                 // Strings
@@ -59,6 +59,12 @@ export function setupSyntaxHighlighting(monaco: any) {
                         '@default': 'identifier'
                     }
                 }]
+            ],
+            // Блочный комментарий --[[ ... ]] идёт через много строк до закрывающих скобок.
+            blockComment: [
+                [/[^\]]+/, 'comment'],
+                [/\]\]/, { token: 'comment', next: '@pop' }],
+                [/\]/, 'comment']
             ]
         }
     });
@@ -105,14 +111,27 @@ export function setupSyntaxHighlighting(monaco: any) {
                 [/#.*$/, 'comment'],
                 
                 // Strings (single/double quotes + simple triple quotes)
-                [/""".*?"""/, 'string'],
-                [/'''[\s\S]*?'''/, 'string'],
+                [/[rRbBuUfF]{0,2}"""/, { token: 'string', next: '@tripleDouble' }],
+                [/[rRbBuUfF]{0,2}'''/, { token: 'string', next: '@tripleSingle' }],
                 [/"([^"\\]|\\.)*"/, 'string'],
                 [/'([^'\\]|\\.)*'/, 'string'],
                 
                 // Numbers
                 [/\d*\.\d+([eE][-+]?\d+)?/, "number.float"],
                 [/\d+([eE][-+]?\d+)?/, "number"]
+            ],
+            // Текст в тройных кавычках (docstring) идёт через много строк: цифры и скобки внутри не раскрашиваются как код.
+            tripleDouble: [
+                [/[^"\\]+/, 'string'],
+                [/\\./, 'string'],
+                [/"""/, { token: 'string', next: '@pop' }],
+                [/"/, 'string']
+            ],
+            tripleSingle: [
+                [/[^'\\]+/, 'string'],
+                [/\\./, 'string'],
+                [/'''/, { token: 'string', next: '@pop' }],
+                [/'/, 'string']
             ]
         }
     });
