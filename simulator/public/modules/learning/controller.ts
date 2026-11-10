@@ -25,8 +25,10 @@ import { initAccountUi } from './account-ui.js';
 import { openTeacherPanel } from './teacher-panel.js';
 import { openStudentCabinet } from './student-cabinet.js';
 import { getAppMode, onAppModeChange, setAppMode, type AppMode } from './mode.js';
-import { buildTrackQuests, isMini2Track } from './tracks.js';
-import { ensureBasicDrone, ensureMini2Drone } from './mini2-drone.js';
+import { buildTrackQuests } from './tracks.js';
+import { applyLearningDrone, ensureMini2Drone } from './mini2-drone.js';
+import { CHOICE_BY_ID, choiceForTrack, loadStoredChoice, saveStoredChoice, type Choice } from './track-choice.js';
+import { showTrackPicker, type PickerProgress } from './track-picker.js';
 import { missingBricksBlocks } from '../ui/mission-guide/mini2/bricks-missions.js';
 import {
     clampStep, completeQuest, countDone, currentQuest, emptyProgress, INTRO_STEP, lastStepIndex,
@@ -209,8 +211,13 @@ function loadTrack(): LearningTrack {
     } catch { return 'blocks'; }
 }
 
+/** Вариант «дрон + язык» текущей линии миссий; меняется только в окне выбора (или ссылкой из кабинета на другую линию). */
+let choice: Choice = choiceForTrack('blocks', null);
+
 function useTrack(next: LearningTrack): void {
     track = next;
+    choice = choiceForTrack(next, choice.track === next ? choice.id : loadStoredChoice(storage()));
+    saveStoredChoice(storage(), choice.id);
     quests = questsFor(next);
     progress = loadProgress(storage(), quests, progressKey());
     try { storage()?.setItem(TRACK_STORAGE_KEY, next); } catch { /* ignore */ }
@@ -352,7 +359,7 @@ async function openQuest(quest: Quest): Promise<void> {
     showEditorPanel();
     prepareQuestScene(quest);
     // Дрон под трек: треки Мини 2 идут на Пионере Мини 2, остальные на Базовом.
-    if (isMini2Track(track)) ensureMini2Drone(); else ensureBasicDrone();
+    applyLearningDrone(choice.model, choice.sdk);
     try { await loadQuestWorkspace(quest); } catch (error) { console.error("[learning] workspace", error); }
     startChecklistTimer();
     window.setTimeout(() => renderHud(), 500);
@@ -529,9 +536,10 @@ function renderHud(direction: 'forward' | 'back' = 'forward'): void {
         </div>
         <div class="quest-hud__body">
             <div class="quest-hud__switches">
-                <div class="quest-hud__track pk-seg" role="group" aria-label="Чем писать программу" style="flex-wrap:wrap">
-                    ${(Object.keys(TRACK_LABELS) as LearningTrack[]).map((key) => `<button type="button" class="pk-seg__btn${key === track ? ' is-active' : ''}" data-quest-track="${key}">${TRACK_LABELS[key]}</button>`).join('')}
-                </div>
+                <button type="button" class="quest-hud__mode" data-quest-choice title="Выбрать другого дрона или другой язык" aria-label="Сейчас: ${esc(choiceLabel(choice))}. Сменить">
+                    <span class="quest-hud__mode-text"><small>Учимся</small><strong>${esc(choiceLabel(choice))}</strong></span>
+                    <span class="quest-hud__mode-change">Сменить</span>
+                </button>
                 <div class="quest-hud__view pk-seg" role="group" aria-label="Что показать">
                     <button type="button" class="pk-seg__btn${isEditorVisible() ? ' is-active' : ''}" data-quest-view="code">${track === 'bricks' ? 'Bricks' : isBlockTrack(track) ? 'Блоки' : 'Код'}</button>
                     <button type="button" class="pk-seg__btn${isEditorVisible() ? '' : ' is-active'}" data-quest-view="scene">Сцена</button>
@@ -544,7 +552,7 @@ function renderHud(direction: 'forward' | 'back' = 'forward'): void {
         el.hud.querySelectorAll<HTMLElement>(selector).forEach((node) => node.addEventListener('click', () => handler(node)));
     };
     on('[data-quest-collapse]', () => { hudCollapsed = !hudCollapsed; renderHud(); });
-    on('[data-quest-track]', (node) => { void changeTrack(node.dataset.questTrack as LearningTrack); });
+    on('[data-quest-choice]', () => { void chooseTrack(false); });
     on('[data-quest-view]', (node) => {
         if (node.dataset.questView === 'code') showEditorPanel(); else showScene();
         window.setTimeout(() => renderHud(), 120);
@@ -571,15 +579,36 @@ async function showSolution(quest: Quest): Promise<void> {
     await enterTextEditor(textLanguage(), quest.lesson?.solutionCode ?? '');
 }
 
-async function changeTrack(next: LearningTrack): Promise<void> {
-    if (next === track || !activeQuest) return;
-    saveDraft();
-    checkToken++;
-    checking = false;
-    trackEvent('track_switch', { detail: next });
-    useTrack(next);
-    const quest = currentQuest(quests, progress);
-    if (quest) await openQuest(quest);
+/** «Дрон · язык» одной строкой: «Мини 2 · Bricks», «Базовый · Lua». */
+function choiceLabel(value: Choice): string {
+    return `${value.model === 'pioneer-mini2' ? 'Мини 2' : 'Базовый'} · ${value.title}`;
+}
+
+/** Сколько миссий пройдено на каждом варианте окна выбора (линия одна, поэтому у двух вариантов SDK 2 цифры общие). */
+function pickerProgress(): PickerProgress {
+    const result: PickerProgress = {};
+    for (const key of Object.keys(CHOICE_BY_ID) as Array<keyof typeof CHOICE_BY_ID>) {
+        const list = questsFor(CHOICE_BY_ID[key].track);
+        result[key] = { done: loadProgress(storage(), list, progressKey(CHOICE_BY_ID[key].track)).completed.length, total: list.length };
+    }
+    return result;
+}
+
+/** Окно выбора. Возвращает false, если окно закрыли, ничего не выбрав. */
+async function chooseTrack(entering: boolean): Promise<boolean> {
+    const picked = await showTrackPicker({ current: choice.id, progress: pickerProgress(), entering });
+    if (!picked) return false;
+    if (picked.id !== choice.id) {
+        saveDraft();
+        checkToken++;
+        checking = false;
+        trackEvent('track_switch', { detail: picked.id });
+        choice = picked;
+        useTrack(picked.track);
+        const quest = currentQuest(quests, progress);
+        if (quest && !entering) await openQuest(quest);
+    }
+    return true;
 }
 
 /* ---------- Проверка ---------- */
@@ -819,10 +848,16 @@ function applyMode(mode: AppMode, previous: AppMode): void {
     el.menu.innerHTML = `${ICON.home}<span>Выйти из обучения</span>`;
     el.menu.title = 'Вернуться в свободный симулятор';
     if (mode === 'free') return;
-    void syncFromServer().finally(() => {
-        const quest = currentQuest(quests, progress);
-        if (quest) void openQuest(quest);
-    });
+    void enterLearning();
+}
+
+/** Вход в обучение: сначала «Что будем изучать?», потом миссия; закрыли окно без выбора - возвращаемся в симулятор. */
+async function enterLearning(): Promise<void> {
+    const chosen = await chooseTrack(true);
+    if (!chosen) { setAppMode('free'); return; }
+    await syncFromServer();
+    const quest = currentQuest(quests, progress);
+    if (quest) void openQuest(quest);
 }
 
 function buildDom(): void {

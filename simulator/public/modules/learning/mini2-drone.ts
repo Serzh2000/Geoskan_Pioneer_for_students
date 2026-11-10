@@ -4,7 +4,7 @@
  * Программы и Lua-скрипты других дронов не трогаются.
  */
 import { currentDroneId, drones } from '../core/state.js';
-import { droneModelProfile, type DroneModelId } from '../core/drone-models.js';
+import { droneModelProfile, droneSdk, type DroneModelId, type PythonSdkId } from '../core/drone-models.js';
 
 function selectDrone(id: string): boolean {
     const row = document.querySelector<HTMLElement>(`.pk-row[data-drone-id="${CSS.escape(id)}"]`);
@@ -28,6 +28,19 @@ export function ensureDroneModel(model: DroneModelId): boolean {
     const add = document.getElementById(model === 'pioneer-mini2' ? 'add-mini2-btn' : 'add-drone-btn');
     if (add) add.click();
     return droneModelProfile(drones[currentDroneId]?.model).id === model;
+}
+
+/**
+ * Ставит дрону то, что выбрал ученик в окне «Что будем изучать?»: модель и библиотеку Python (SDK 1 или SDK 2).
+ * Язык редактора меняет сам контроллер обучения; здесь только дрон, и только если он отличается от нужного.
+ */
+export function applyLearningDrone(model: DroneModelId, sdk: PythonSdkId): boolean {
+    const ok = ensureDroneModel(model);
+    if (droneSdk(drones[currentDroneId]) !== sdk && !drones[currentDroneId]?.running) {
+        // Тот же запрос, что шлёт переключатель «Язык программы» в панели «Рой»: он выставляет pioneer_sdk / pioneer_sdk2 дрону.
+        window.dispatchEvent(new CustomEvent('drone-language-request', { detail: { choice: sdk === 'pioneer_sdk2' ? 'python-sdk2' : 'python-sdk1' } }));
+    }
+    return ok;
 }
 
 export const ensureMini2Drone = (): boolean => ensureDroneModel('pioneer-mini2');
