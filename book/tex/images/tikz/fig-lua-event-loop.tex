@@ -1,0 +1,12 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\node[forange, text width=34mm, minimum height=14mm] (prog) at (0,0) {\textbf{Ваша программа}\ \texttt{ap.push(...)}};
+\node[fgrey, text width=34mm, minimum height=14mm] (ap) at (5.5,0) {\textbf{Автопилот}\ выполняет команду};
+\node[fblue, text width=34mm, minimum height=14mm] (cb) at (11,0) {\textbf{\texttt{callback(event)}}\ сравнивает с \texttt{Ev.ИМЯ}};
+\draw[fcmd] (prog) -- node[flab, above=1pt] {команда} (ap);
+\draw[fev] (ap) -- node[flab, above=1pt] {событие} (cb);
+\draw[fcmd] (cb.south) -- ++(0,-1.0) coordinate (b) -| (prog.south);
+\node[flab] at ($(prog.south |- b)!0.5!(b)$) {в обработчике отправляется следующая команда};
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Цикл «команда --- событие»: автопилот выполняет команду, о завершении сообщает вызовом \texttt{callback}, а из него уходит следующая команда. Сплошная стрелка --- команда, штриховая --- событие.}\label{fig:lua-event-loop}
+\end{tikzfig}

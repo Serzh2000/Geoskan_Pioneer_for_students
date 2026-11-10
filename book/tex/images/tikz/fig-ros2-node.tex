@@ -1,0 +1,19 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\node[fgrey, text width=24mm, minimum height=34mm] (ap) at (-1.4,0) {\textbf{Автопилот} \\ \footnotesize полётный контроллер: моторы, датчики, навигация};
+\node[forange, text width=50mm, minimum height=13mm] (svc) at (6.4,2.7) {\textbf{Сервисы} \\ \footnotesize\texttt{flight/*}, \texttt{board/*}, \texttt{navigation/*}, \texttt{payload/*}};
+\node[fblue, text width=50mm, minimum height=13mm] (pub) at (6.4,0) {\textbf{Публикации} \\ \footnotesize\texttt{sensors/*}, \texttt{flight/fly\_state}, \texttt{navigation/*}, \texttt{rc/trigger}};
+\node[forange, text width=50mm, minimum height=13mm] (sub) at (6.4,-2.7) {\textbf{Подписки} \\ \footnotesize\texttt{flight/cmd\_vel}, \texttt{rc/set\_channels}};
+\begin{scope}[on background layer]
+\node[flane, fit=(svc)(pub)(sub), inner sep=5mm, inner ysep=7mm] (box) {};
+\end{scope}
+\node[font=\ttfamily\small\bfseries, anchor=south west] at (box.north west) {ros\_pioneer\_node (gs\_core)};
+\node[fgreen, text width=28mm, minimum height=70mm] (me) at (13.9,0) {\textbf{Ваш узел} \\ \footnotesize программа на \texttt{rclpy}: клиенты, подписки, таймеры};
+\draw[<->, line width=0.8pt] (ap.east) -- node[flab, above=1pt, font=\sffamily\footnotesize, align=center] {TCP \\ 127.0.0.1:20556} (box.west |- ap.east);
+\draw[fcmd] ([yshift=2mm]me.west |- svc) -- node[flab, above=1pt, font=\sffamily\footnotesize] {запрос} ([yshift=2mm]svc.east);
+\draw[fcmd] ([yshift=-2mm]svc.east) -- node[flab, below=1pt, font=\sffamily\footnotesize] {ответ} ([yshift=-2mm]me.west |- svc);
+\draw[fev] (pub.east) -- node[flab, above=1pt, font=\sffamily\footnotesize] {сообщения} (me.west |- pub.east);
+\draw[fcmd] (me.west |- sub) -- node[flab, above=1pt, font=\sffamily\footnotesize] {команды} (sub.east);
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Узел \texttt{ros\_pioneer\_node} --- мост между автопилотом и ROS~2. К автопилоту он подключён по TCP, наружу открывает сервисы (запрос $\to$ ответ), публикует телеметрию (штриховая стрелка) и принимает команды скорости и пульта. Ваша программа --- ещё один узел сети; все имена начинаются с \texttt{/geoscan/}.}\label{fig:ros2-node}
+\end{tikzfig}

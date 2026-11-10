@@ -1,0 +1,16 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\node[fgrey, text width=26mm, minimum height=16mm] (fr) at (0,0) {\textbf{Кадр} \\ \footnotesize\texttt{get\_cv\_frame()}};
+\node[forange, text width=26mm, minimum height=16mm] (pr) at (6.0,0) {\textbf{Подготовка} \\ \footnotesize сжать до $640\times640$, ось «пакет»};
+\node[forange, text width=29mm, minimum height=16mm] (nn) at (12.0,0) {\textbf{Нейросеть} \\ \footnotesize\texttt{model.run([...])} на NPU};
+\node[forange, text width=26mm, minimum height=16mm] (pp) at (12.0,-3.3) {\textbf{Разбор ответа} \\ \footnotesize пороги, рамки в координаты кадра};
+\node[fblue, text width=26mm, minimum height=16mm] (dc) at (6.0,-3.3) {\textbf{Решение} \\ \footnotesize подтверждение несколькими кадрами};
+\node[fgreen, text width=26mm, minimum height=16mm] (cm) at (0,-3.3) {\textbf{Команда} \\ \footnotesize светодиод, полёт};
+\draw[farrow] (fr) -- node[flab, above=1pt, font=\ttfamily\scriptsize, align=center] {BGR \\ (h, w, 3)} (pr);
+\draw[farrow] (pr) -- node[flab, above=1pt, font=\ttfamily\scriptsize, align=center] {(1, 640, \\ 640, 3)} (nn);
+\draw[farrow] (nn) -- node[flab, right=2pt, font=\ttfamily\scriptsize, align=left] {boxes, classes, \\ scores или None} (pp);
+\draw[farrow] (pp) -- node[flab, above=1pt, font=\sffamily\footnotesize, align=center] {класс, \\ уверенность} (dc);
+\draw[farrow] (dc) -- node[flab, above=1pt, font=\sffamily\footnotesize, align=center] {да или нет} (cm);
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Конвейер распознавания на борту: кадр превращается в вход нейросети, ответ разбирается, а решение принимается по уверенности и нескольким кадрам подряд. Под стрелками --- форма передаваемых данных.}\label{fig:rknn-pipeline}
+\end{tikzfig}

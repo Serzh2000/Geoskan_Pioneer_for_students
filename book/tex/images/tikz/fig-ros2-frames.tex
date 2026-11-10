@@ -1,0 +1,28 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+% Левая половина: map
+\draw[faxis] (-0.4,0) -- (5.6,0) node[below left] {$x$};
+\draw[faxis] (0,-0.4) -- (0,4.4) node[below left] {$y$};
+\fill[Ink] (0,0) circle (1.8pt);
+\node[font=\sffamily\small, anchor=north west] at (0.1,-0.1) {старт};
+\node[font=\sffamily\small\bfseries, text=Accent, anchor=south west] at (-0.3,4.5) {\texttt{frame\_id: 'map'}};
+\def\px{3.6}\def\py{2.8}
+\draw[densely dotted, Muted, line width=0.8pt] (\px,0) -- (\px,\py) -- (0,\py);
+\node[font=\sffamily\small, below] at (\px,0) {$x=1.5$};
+\node[font=\sffamily\small, left] at (0,\py) {$y=1$};
+\fill[Accent] (\px,\py) circle (2.6pt);
+\draw[->, line width=1.2pt, Accent] (0,0) -- (\px-0.1,\py-0.07);
+\node[font=\sffamily\small, text=Accent, anchor=west] at (\px+0.2,\py) {точка цели};
+% Правая половина: base_link
+\def\cx{11.0}\def\cy{1.6}
+\node[font=\sffamily\small\bfseries, text=Accent, anchor=south west] at (8.4,4.5) {\texttt{frame\_id: 'base\_link'}};
+\pic[rotate=30, scale=1.5] at (\cx,\cy) {fdrone};
+\draw[->, line width=1.2pt, Accent] (\cx,\cy) -- ++(120:2.2) node[above left, font=\sffamily\small, text=Accent] {$x$ вперёд};
+\draw[->, line width=1.2pt, InfoBlue] (\cx,\cy) -- ++(210:2.2) node[below left, font=\sffamily\small, text=InfoBlue] {$y$ влево};
+\draw[->, line width=1.2pt, Muted, dashed] (\cx,\cy) -- ++(30:1.6) node[right, font=\sffamily\small, text=Muted] {вправо (не ось)};
+\draw[->, Ink, line width=0.8pt] ([shift={(\cx,\cy)}]-60:1.0) arc[start angle=-60, end angle=40, radius=1.0];
+\node[font=\sffamily\small, anchor=west] at ([shift={(\cx,\cy)}]-10:1.15) {$\psi$};
+\draw[densely dotted, Muted] (7.8,-0.6) -- (7.8,4.5);
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Две системы для \texttt{go\_to\_local\_point} и \texttt{cmd\_vel}. \texttt{map} неподвижна: точка задаётся от старта. \texttt{base\_link} едет вместе с дроном: $x$ вперёд, $y$ влево (как в стандарте ROS), курс $\psi$ повёрнут против часовой стрелки. У \texttt{pioneer\_sdk2} в осях корпуса всё иначе: $x$ вправо, $y$ вперёд.}\label{fig:ros2-frames}
+\end{tikzfig}

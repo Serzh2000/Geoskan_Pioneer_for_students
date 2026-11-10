@@ -1,0 +1,17 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\node[forange, text width=40mm, minimum height=19mm] (a) at (0,0) {\textbf{pioneer1} \\ \footnotesize swarm-server: Heartbeat, телеметрия, ящик};
+\node[forange, text width=40mm, minimum height=19mm] (b) at (10.2,0) {\textbf{pioneer2} \\ \footnotesize swarm-server: Heartbeat, телеметрия, ящик};
+\node[forange, text width=40mm, minimum height=19mm] (c) at (5.1,-4.6) {\textbf{pioneer3} \\ \footnotesize swarm-server: Heartbeat, телеметрия, ящик};
+\begin{scope}[on background layer]
+\node[flane, fit=(a)(b)(c), inner sep=7mm, inner ysep=9mm] (net) {};
+\end{scope}
+\node[font=\sffamily\small\bfseries, text=Muted, anchor=north west] at ([shift={(2mm,-1.5mm)}]net.north west) {общая сеть (Wi-Fi или Ethernet), один домен};
+\draw[<->, fev] (a.east) -- node[flab, above=1pt, font=\sffamily\footnotesize] {Heartbeat} (b.west);
+\draw[<->, fev] ([xshift=10mm]a.south) -- node[flab, font=\sffamily\footnotesize] {Heartbeat} ([xshift=-10mm]c.north);
+\draw[<->, fev] ([xshift=-10mm]b.south) -- node[flab, font=\sffamily\footnotesize] {Heartbeat} ([xshift=10mm]c.north);
+\draw[fcmd, line width=1.4pt] (-1,-0.95) -- (-1,-4.6) node[flab, font=\sffamily\footnotesize, align=center, pos=0.45, left=3pt] {письмо \\ в ящик} -- (c.west);
+\draw[farrow, line width=1.4pt] (11.2,-0.95) -- (11.2,-4.6) node[flab, font=\sffamily\footnotesize, align=center, pos=0.45, right=3pt] {подписка на \\ телеметрию} -- (c.east);
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Рой без центра. Каждый юнит равноправен и сам рассылает Heartbeat («я жив, вот мои данные»; штриховые стрелки); письмо адресуется в ящик конкретного \texttt{machine\_id} (оранжевая стрелка), телеметрию соседа читают по подписке (тёмная стрелка). Ни сервера, ни наземной станции нет.}\label{fig:swarm-mesh}
+\end{tikzfig}

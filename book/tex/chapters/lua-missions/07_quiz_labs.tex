@@ -16,7 +16,7 @@
     \begin{enumerate}[label=(\alph*)] \item \verb|sleep(2); action()| \item \verb|Timer.callLater(2, action)| \item \verb|Timer.new(2, action)| \end{enumerate}
     Ответ: (b).
   \item Как организовать непрерывное обновление точки окружности?
-    \begin{enumerate}[label=(\alph*)] \item \verb|while true do ap.goToLocalPoint(...) end| \item \verb|Timer.new(0.1, function() ap.goToLocalPoint(...) end)| \item \verb|repeat ... until false| \end{enumerate}
+    \begin{enumerate}[label=(\alph*)] \item \texttt{while true do ap.goToLocalPoint(...) end} \item \texttt{Timer.new(0.1, function() ap.goToLocalPoint(...) end)} \item \texttt{repeat ... until false} \end{enumerate}
     Ответ: (b).
   \item Что делать по \verb|Ev.SHOCK|?
     \begin{enumerate}[label=(\alph*)] \item Продолжить маршрут \item \verb|ap.push(Ev.MCE_LANDING)| \item Остановить таймеры и \verb|ap.push(Ev.ENGINES_DISARM)| \end{enumerate}
@@ -49,7 +49,7 @@
 \end{taskbox}
 
 \begin{taskbox}[Старт и останов тумблером]
-Тумблер SwA (\verb|rc_chans[8]|) вверх --- предстарт, взлёт, окружность; тумблер вниз --- прекратить, вернуться в точку над стартом, сесть. Проверьте в панели \ui{Пульт}.
+Тумблер SwA (\verb|rc_chans[8]|) вверх --- предстарт, взлёт, окружность; тумблер вниз --- прекратить, вернуться в точку над стартом, сесть. Проверьте с геймпадом, настроенным в панели \ui{Пульт}.
 \expected{пока тумблер внизу, дрон стоит; после переключения вверх взлетает и кружит; после переключения вниз в любой момент окружности возвращается и садится; повторное переключение во время посадки ничего не ломает; в журнале --- причина остановки «тумблер».}
 \end{taskbox}
 

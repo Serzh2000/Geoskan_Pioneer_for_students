@@ -1,0 +1,18 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\draw[faxis] (-0.5,0) -- (6.2,0) node[below left] {$X$};
+\draw[faxis] (0,-0.5) -- (0,4.4) node[below left] {$Y$};
+\fill[Ink] (0,0) circle (1.8pt);
+\node[font=\sffamily\small, anchor=north east] at (-0.1,-0.1) {старт $(0,0)$, $Z$ вверх};
+\def\px{3.4}\def\py{2.3}
+\draw[densely dotted, Muted, line width=0.8pt] (\px,0) -- (\px,\py) -- (0,\py);
+\node[font=\sffamily\small, below] at (\px,0) {$x$};
+\node[font=\sffamily\small, left] at (0,\py) {$y$};
+\begin{scope}[shift={(\px,\py)}, rotate=30]
+  \pic[scale=1.5] at (0,0) {fdrone};
+  \draw[->, line width=1.2pt, Accent] (0,0) -- (0,1.9) node[above, font=\sffamily\small, text=Accent] {$Y_b$ вперёд};
+  \draw[->, line width=1.2pt, InfoBlue] (0,0) -- (1.9,0) node[right, font=\sffamily\small, text=InfoBlue] {$X_b$ вправо};
+\end{scope}
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Локальная система (оси $X$, $Y$, начало в точке старта, $Z$ вверх) неподвижна. Связанная система ($X_b$, $Y_b$) движется вместе с дроном и повёрнута на его курс: $Y_b$ смотрит вперёд, $X_b$ --- вправо.}\label{fig:sdk2-frames}
+\end{tikzfig}

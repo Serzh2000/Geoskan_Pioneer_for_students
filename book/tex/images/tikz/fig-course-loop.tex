@@ -1,0 +1,14 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\node[fblue, text width=28mm, minimum height=19mm] (a) at (0,0) {\textbf{1. Урок} \\ \footnotesize короткая теория и пример программы};
+\node[forange, text width=28mm, minimum height=19mm] (b) at (4.7,0) {\textbf{2. Запуск} \\ \footnotesize пример в симуляторе, сверка с комментариями};
+\node[forange, text width=28mm, minimum height=19mm] (c) at (9.4,0) {\textbf{3. Задание} \\ \footnotesize рамка после урока и ожидаемый результат};
+\node[fgreen, text width=28mm, minimum height=19mm] (d) at (14.1,0) {\textbf{4. Миссия} \\ \footnotesize проверка полёта в режиме «Обучение»};
+\draw[farrow] (a) -- (b);
+\draw[farrow] (b) -- (c);
+\draw[farrow] (c) -- (d);
+\draw[fcmd] (d.south) -- ++(0,-1.0) -| (a.south);
+\node[flab] at (7.05,-1.95) {следующий урок};
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Рабочий цикл по главе: прочитать урок, запустить пример, выполнить задание, пройти миссию симулятора и перейти к следующему уроку. Главу закрывают «Проверьте себя» и «Итоги».}\label{fig:course-loop}
+\end{tikzfig}

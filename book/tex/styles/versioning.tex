@@ -1,0 +1,24 @@
+﻿% --- Versioning Logic (Python Managed) ---
+\newcounter{buildversion}
+\IfFileExists{styles/version.tex}{\input{styles/version.tex}}{\setcounter{buildversion}{0}}
+
+\def\majorversion{1}
+\def\minorversion{1} % Bumped version for refactoring
+\newcommand{\theversion}{\majorversion.\minorversion.\thebuildversion}
+
+% Time formatting
+\makeatletter
+% \numexpr РѕРєСЂСѓРіР»СЏРµС‚ РґРµР»РµРЅРёРµ, РїРѕСЌС‚РѕРјСѓ С‡Р°СЃС‹ СЃС‡РёС‚Р°РµРј С‡РµСЂРµР· (\time-30)/60 вЂ”
+% РёРЅР°С‡Рµ РІ 12:41 РїРѕР»СѓС‡Р°Р»РѕСЃСЊ В«13В» Рё РјРёРЅСѓС‚С‹ В«0-19В».
+\newcommand{\currenttime}{%
+  \two@digits{\number\numexpr(\time-30)/60\relax}:%
+  \two@digits{\number\numexpr\time-60*((\time-30)/60)\relax}%
+}
+\newcommand{\buildtimestamp}{\two@digits{\number\day}.\two@digits{\number\month}.\number\year\ \currenttime}
+\makeatother
+
+% --- 3D Plot Logic (Preserved) ---
+\def\centerarc[#1](#2)(#3:#4:#5){%
+    \draw [#1] ($(#2)+({#5*cos(#3)}, {#5*sin(#3)})$) arc (#3:#4:#5)%
+}
+

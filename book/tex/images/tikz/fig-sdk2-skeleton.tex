@@ -1,0 +1,19 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\node[forange, minimum width=26mm] (arm) at (0,0) {\texttt{arm()}};
+\node[forange, minimum width=26mm] (to) at (4.2,0) {\texttt{takeoff()}};
+\node[forange, minimum width=26mm] (m) at (8.4,0) {\texttt{mission()}};
+\node[forange, minimum width=26mm] (l) at (12.6,0) {\texttt{land()}};
+\node[fred, minimum width=60mm] (exc) at (6.3,-2.2) {исключение или \key{Ctrl}+\key{C}};
+\node[fgreen, minimum width=30mm] (fin) at (12.6,-2.2) {\texttt{finally:} \\ \texttt{safe\_shutdown()}};
+\draw[farrow] (arm) -- (to);
+\draw[farrow] (to) -- (m);
+\draw[farrow] (m) -- (l);
+\draw[farrow] (l) -- (fin);
+\draw[->, Danger, line width=0.8pt, dashed] (arm.south) |- (exc.west);
+\draw[->, Danger, line width=0.8pt, dashed] (to.south) -- (to.south |- exc.north);
+\draw[->, Danger, line width=0.8pt, dashed] (m.south) -- (m.south |- exc.north);
+\draw[->, Danger, line width=0.8pt, dashed] (exc) -- (fin);
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Каркас полётной программы. Штатный путь --- верхняя строка; при любой ошибке управление идёт в \texttt{finally}, и дрон приводится в безопасное состояние: в воздухе садится, на земле выключает моторы.}\label{fig:sdk2-skeleton}
+\end{tikzfig}

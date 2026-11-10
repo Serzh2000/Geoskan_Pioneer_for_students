@@ -1,0 +1,153 @@
+\section{ROS 2 на Пионере: пакет gs\_core}
+\label{sec:ros2}
+
+\begin{infobox}[Цели главы]
+После главы вы сможете:
+\begin{itemize}
+    \item объяснить, что такое узел, топик, сервис и параметр ROS~2, и чем программа на \texttt{rclpy} отличается от программы на \texttt{pioneer\_sdk2};
+    \item провести дрон через полётный цикл вызовами сервисов \texttt{gs\_core} и задавать точки в системах координат \texttt{map} и \texttt{base\_link};
+    \item читать телеметрию и события автопилота подпиской и управлять дроном скоростью (\texttt{cmd\_vel}) и виртуальным пультом;
+    \item читать и писать параметры автопилота, переключать систему навигации, управлять светодиодами и захватом;
+    \item собрать миссию как узел-автомат без блокирующих ожиданий и объяснить, что делает \texttt{ros\_pioneer\_node};
+    \item отличать отказ сервиса (\verb|success = False|) от ошибки программы и находить причину в журнале.
+\end{itemize}
+Нужно знать: Python с классами (часть~II) и полёт \texttt{pioneer\_sdk2} из главы~\ref{sec:sdk2}.
+\end{infobox}
+
+\begin{missionbox}[Миссии симулятора к главе]
+В треке \ui{Мини 2 · SDK2} режима \ui{Обучение} к главе относятся миссии 38--56 (главы трека 14--17): сервисы полёта (38--43), топики и телеметрия (44--49), параметры, навигация и нагрузка (50--54), итоговый узел (55--56). Таблица соответствия --- в конце главы. Программы запускаются в режиме \ui{Python · SDK2} на модели Мини~2 (панель \ui{Рой}); ROS~2 --- часть этого режима, отдельного языка нет.
+\end{missionbox}
+
+\begin{infobox}[На что опирается глава и что не проверено]
+Основа главы --- справочник пакета \texttt{gs\_core} для ROS~2 Jazzy на docs.geoscan.ru (Пионер Мини~2 и Пионер Базовый с модулем Razero) и десять примеров из \texttt{examples/python-onboard/ros2/}. Все программы главы проверены на симуляторе (на его эмуляции \texttt{rclpy} и узла \texttt{ros\_pioneer\_node}); \emph{на настоящем дроне авторы их не запускали}.
+
+Справочник Геоскана не описывает часть деталей: имена полей ответов сервисов, частоты топиков, момент возврата блокирующих вызовов. В таких местах глава описывает поведение симулятора и помечает это словами «в симуляторе». Точные поля своих сервисов смотрите командой \verb|ros2 interface show <тип>| на дроне, а первый полёт любой программы проводите на открытой площадке без людей.
+\end{infobox}
+
+\subsection{Что такое ROS 2}
+
+\textbf{ROS~2} (Robot Operating System) --- не операционная система, а набор правил и библиотек, по которым программы робота общаются друг с другом. Робот делится на небольшие программы, \emph{узлы} (node): один читает датчики, другой считает маршрут, третий управляет моторами. Узлы находят друг друга сами и обмениваются данными по общим правилам, поэтому узел, написанный другим человеком, можно подключить, не меняя остальные. Версия на Пионере --- ROS~2 Jazzy, программы пишутся на Python с библиотекой \texttt{rclpy}.
+
+Между узлами ходят данные трёх видов:
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+ & \textbf{Что это} & \textbf{Пример на Пионере} \\
+\midrule
+Топик (topic) & непрерывный поток сообщений: кто-то \emph{публикует}, кто-то \emph{подписан}; публикующий не знает, сколько у него читателей & высота борта \fpath{/geoscan/sensors/altitude}: несколько сообщений в секунду, каждый подписчик получает каждое \\
+Сервис (service) & запрос и ответ: клиент отправляет запрос, сервер выполняет и возвращает результат & \fpath{/geoscan/flight/takeoff} (запрос пустой, ответ --- \verb|success|) \\
+Параметр (parameter) & настройка узла по имени: читается и (иногда) меняется во время работы & \verb|topics.gnss| --- создавать ли топики GPS \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Каждый топик и сервис имеет \emph{имя} (путь вида \fpath{/geoscan/flight/arm}) и \emph{тип}: топик передаёт сообщения типа \verb|std_msgs/msg/Float32|, сервис принимает запрос и отдаёт ответ типа \verb|std_srvs/srv/Trigger|. В Python типы лежат в модулях \verb|std_msgs.msg|, \verb|std_srvs.srv|, \verb|geometry_msgs.msg|, \verb|gs_interfaces.srv| и других: поля сообщения --- обычные атрибуты, у сервиса есть классы \verb|Сервис.Request| и \verb|Сервис.Response|. Пакет \verb|gs_interfaces| --- типы самого Геоскана.
+
+Для знакомых вещей из предыдущих глав сравните:
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.38\linewidth} X@{}}
+\toprule
+\textbf{pioneer\_sdk2} & \textbf{ROS 2 (gs\_core)} \\
+\midrule
+\verb|pioneer.arm()| & вызов сервиса \fpath{/geoscan/flight/arm} \\
+\verb|get_local_position_lps()| (опрос) & подписка на \fpath{/geoscan/navigation/local/position}: данные приходят сами \\
+\verb|subscribe(f, Event.X)| & подписка на \fpath{/geoscan/flight/callback_event} \\
+\verb|set_manual_speed(...)| & публикация в \fpath{/geoscan/flight/cmd_vel} \\
+\verb|get_param|, \verb|set_param| & сервисы \fpath{/geoscan/board/get_param} и \fpath{/geoscan/board/set_param} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Зачем ROS 2 на Пионере}
+
+\texttt{pioneer\_sdk2} --- одна библиотека «всё в одном»: вы вызываете методы, она сама держит соединение. ROS~2 устроен иначе, и у него три причины жить на дроне:
+\begin{itemize}
+    \item \textbf{Общий язык с остальной робототехникой.} Пакеты навигации, зрения и SLAM из мира ROS~2 ждут именно такие топики и сервисы. Камера Пионера --- тоже отдельный узел (\texttt{camera\_node} из пакета \texttt{gs\_camera}), и её кадры доступны всем.
+    \item \textbf{Много программ одновременно.} Один узел читает телеметрию, другой управляет скоростью, третий пишет журнал; их запускают и останавливают независимо, а не склеивают в один цикл.
+    \item \textbf{Готовые инструменты.} Команды \verb|ros2 topic echo|, \verb|ros2 service call| и \verb|ros2 param| позволяют посмотреть на дрон и дёрнуть его из терминала, не написав ни строки кода. Те же правила использует Swarm Kit (глава~\ref{sec:swarm}).
+\end{itemize}
+
+Цена --- многословность: простое «взлететь» превращается в создание клиента, запрос и ожидание ответа. Поэтому для первых программ и коротких миссий выбирайте \texttt{pioneer\_sdk2}, а ROS~2 --- когда нужны несколько независимых программ, стандартные инструменты или совместимость с чужими пакетами.
+
+\subsection{Узел ros\_pioneer\_node}
+
+Связь Python-программы с автопилотом обеспечивает пакет \texttt{gs\_core}: его узел \texttt{ros\_pioneer\_node} подключается к автопилоту по TCP (\texttt{127.0.0.1:20556}), публикует телеметрию в топики, принимает команды и открывает сервисы управления полётом, параметрами автопилота и полезной нагрузкой (рисунок~\ref{fig:ros2-node}).
+
+\input{images/tikz/fig-ros2-node}
+
+Узел запускается launch-файлом, по одному на модель дрона, и читает конфигурацию борта (YAML):
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.27\linewidth} >{\ttfamily\raggedright\arraybackslash}p{0.33\linewidth} X@{}}
+\toprule
+\textrm{\textbf{Борт}} & \textrm{\textbf{Launch-файл}} & \textrm{\textbf{Состав}} \\
+\midrule
+\textrm{Пионер Мини~2} & pioneer\_mini2\_\allowbreak full\_launch.py & \textrm{\texttt{ros\_pioneer\_node} и две камеры (\texttt{camera\_node}, \texttt{camera\_servo})} \\
+\textrm{Пионер Базовый с модулем Razero} & pioneer\_razero\_\allowbreak full\_launch.py & \textrm{\texttt{ros\_pioneer\_node} и основная камера} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{codebox}[Терминал дрона: запуск узла (по справочнику Геоскана)]
+\begin{verbatim}
+ros2 launch gs_core pioneer_mini2_full_launch.py
+ros2 run gs_core ros_pioneer_node --ros-args --params-file mini2.yaml
+\end{verbatim}
+\end{codebox}
+
+Пакет входит в стек \texttt{ros-jazzy-pioneer-mini2} (для Razero --- \texttt{ros-jazzy-pioneer-razero}); отдельно его ставят командой \verb|sudo apt install ros-jazzy-gs-core|. Узлу нужен бортовой модуль \texttt{proto} версии 2.0.0 или новее: без него узел не запустится. Ваша программа --- тоже узел: она подключается к той же сети ROS~2, вызывает сервисы и подписывается на топики \texttt{/geoscan/...}.
+
+\begin{infobox}[Узел в симуляторе]
+В симуляторе \texttt{ros\_pioneer\_node} уже работает, когда вы садитесь за редактор: он запускается сам при первом \verb|rclpy.init()| или при первой команде консоли и берёт конфиг \texttt{mini2} для Мини~2 и \texttt{razero} для Базового с Radxa. Он переживает вашу программу: после её остановки исчезают только её узлы. Время (таймеры, ожидания, \verb|spin|) идёт по часам симуляции и ускоряется вместе с ней.
+\end{infobox}
+
+\subsection{Консоль ros2 и первый узел}
+
+В режиме \ui{Python · SDK2} в нижней панели редактора есть вкладка \ui{ROS 2}: консоль, в которой работают привычные команды \verb|ros2|. Она работает и без запущенной программы, поэтому с неё удобно начинать:
+
+\begin{codebox}[Консоль ros2 в симуляторе]
+\begin{verbatim}
+ros2 topic list
+ros2 topic echo --once /geoscan/sensors/battery_state
+ros2 service list
+ros2 interface show gs_interfaces/srv/Arm
+ros2 service call /geoscan/flight/arm gs_interfaces/srv/Arm \
+  "{timeout: 5, retries: 0}"
+\end{verbatim}
+\end{codebox}
+
+Консоль понимает \verb|ros2 topic|, \verb|service|, \verb|interface|, \verb|param|, \verb|node|, \verb|launch| и \verb|run| для \texttt{gs\_core}; она проще настоящего \verb|ros2|: нет \verb|topic hz|, записи bag-файлов и ряда ключей. Вставка нескольких строк выполняет их подряд без пауз, поэтому \verb|go_to_local_point| сразу после \verb|takeoff| будет отклонён (дрон ещё не в воздухе); кнопка \ui{Выполнить} у полётного цикла в подсказке консоли ждёт состояние дрона между командами.
+
+Первый узел --- проверка связи с автопилотом: сервис \fpath{/geoscan/alive} отвечает, жив ли обмен с ним.
+
+\begin{codebox}[Первый узел: на связи ли автопилот]
+\small
+\begin{verbatim}
+import rclpy
+from rclpy.node import Node
+from gs_interfaces.srv import Live
+
+rclpy.init()
+node = Node('hello')
+client = node.create_client(Live, '/geoscan/alive')
+future = client.call_async(Live.Request())
+rclpy.spin_until_future_complete(node, future)
+alive = future.result().status
+print('Узел', node.get_name(), ': автопилот на связи:', alive)
+node.destroy_node()
+rclpy.shutdown()
+\end{verbatim}
+\end{codebox}
+
+\paragraph{Что происходит.} \verb|rclpy.init()| готовит библиотеку, \verb|Node('hello')| создаёт узел с именем \verb|hello|. Клиент сервиса создаётся по типу и имени; \verb|call_async| отправляет запрос и сразу возвращает \verb|future| (обещание ответа), а \verb|spin_until_future_complete| крутит обработку, пока ответ не придёт. В конце узел уничтожают, а библиотеку закрывают \verb|rclpy.shutdown()|. Этот каркас --- основа любой программы главы.
+
+\begin{taskbox}[Первое касание]
+Откройте консоль, выведите список топиков и сервисов, прочитайте одно сообщение \texttt{battery\_state} (ключ \verb|--once|). Затем запустите программу «Первый узел» и вызовите \verb|ros2 interface show gs_interfaces/srv/Live|: какие поля у запроса и ответа?
+\expected{консоль показывает десятки имён с префиксом \texttt{/geoscan/}; программа печатает «автопилот на связи: True»; у \texttt{Live} запрос пустой, в ответе --- поле \texttt{status}.}
+\mission{Мини~2 SDK2}{38}
+\end{taskbox}

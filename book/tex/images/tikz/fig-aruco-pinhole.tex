@@ -1,0 +1,31 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\def\f{2.4}\def\d{9.6}\def\S{1.6}\def\s{0.4}
+% оси камеры
+\draw[faxis] (0,0) -- (11.4,0) node[above left, font=\sffamily\small] {$Z$};
+\draw[faxis] (0,0) -- (0,-1.5) node[right, font=\sffamily\small] {$Y$};
+\draw[line width=0.8pt] (-2.2,-1.0) circle (0.15);
+\fill (-2.2,-1.0) circle (1.4pt);
+\node[font=\sffamily\small, anchor=west] at (-1.95,-1.0) {$X$ к вам};
+\fill[Ink] (0,0) circle (2pt);
+\node[font=\sffamily\small, anchor=south east] at (-0.05,0.1) {камера};
+% лучи
+\draw[Muted, line width=0.8pt] (0,0) -- (\d,\S) (0,0) -- (\d,-\S);
+% tvec
+\draw[->, Accent, line width=1.4pt] (0,0) -- (\d-0.1,0);
+\node[flab, text=Accent, anchor=north] at (6.0,-0.05) {\texttt{tvec}};
+% плоскость кадра
+\draw[Accent, line width=1.6pt] (\f,-\s) -- (\f,\s);
+\draw[Accent, line width=0.8pt] (\f,\s) -- (\f,1.45);
+\node[font=\sffamily\small, text=Accent, anchor=south] at (\f,1.5) {кадр: сторона $s$ пикселей};
+% метка
+\draw[Ink, line width=2.4pt] (\d,-\S) -- (\d,\S);
+\node[font=\sffamily\small, anchor=south] at (\d,\S+0.15) {метка};
+\node[font=\sffamily\small, anchor=west] at (\d+0.2,0.9) {сторона $S$ м};
+% размеры
+\draw[<->, line width=0.8pt, InfoBlue] (0,-2.1) -- node[flab, text=InfoBlue] {$f$} (\f,-2.1);
+\draw[<->, line width=0.8pt, InfoBlue] (0,-2.8) -- node[flab, text=InfoBlue] {$d \approx f\,S/s$} (\d,-2.8);
+\draw[densely dotted, Muted] (\f,-1.0) -- (\f,-2.8) (\d,-1.7) -- (\d,-2.8) (0,-1.5) -- (0,-2.8);
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Модель камеры-«обскуры», вид сбоку. Система камеры: $Z$ вперёд, $Y$ вниз, $X$ вправо по кадру (к наблюдателю). Метка вдвое дальше --- вдвое меньше на кадре. \texttt{tvec} --- положение центра метки в этой системе; его длина --- расстояние до метки.}\label{fig:aruco-pinhole}
+\end{tikzfig}

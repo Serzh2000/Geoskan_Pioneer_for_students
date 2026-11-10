@@ -22,24 +22,25 @@
 
 \subsubsection*{Что из главы работает в симуляторе}
 
-Симулятор снимает кадры виртуальной камерой и подменяет библиотеку \texttt{cv2} упрощённой: она умеет показывать кадр и рисовать на нём, а маркеры находит не по пикселям, а по тому, какие метки сцены видны камере. Поэтому программы распознавания из первых трёх уроков главы работают в браузере, а качество настоящего OpenCV на шумных фотографиях проверяется только на дроне.
+Симулятор снимает кадры виртуальной камерой (всегда $640\times360$) и подменяет библиотеку \texttt{cv2} упрощённой моделью. Маркеры она находит не по пикселям, а по геометрии: метка считается найденной, если она целиком в кадре, обращена к камере, не закрыта и занимает не меньше 10 пикселей по стороне. Поэтому логику распознавания и наведения отлаживают в браузере, а качество настоящего OpenCV на шумных фотографиях, освещение и печать меток проверяют только на дроне.
 
 \begin{center}
 \small
-\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.42\linewidth} >{\raggedright\arraybackslash}X@{}}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.47\linewidth} >{\raggedright\arraybackslash}X@{}}
 \toprule
-\textbf{Работает в симуляторе} & \textbf{Только на настоящем дроне (компьютер + Пионер)} \\
+\textbf{Работает в симуляторе} & \textbf{Только компьютер или настоящий дрон} \\
 \midrule
-\texttt{Camera()} --- передняя камера, \texttt{Camera(view="bottom")} --- нижняя (расширение симулятора); \texttt{get\_cv\_frame()}, \texttt{frame.shape} & RTSP-видеопоток \texttt{VideoStream} для плеера VLC \\
-\texttt{cv2.imshow}, \texttt{waitKey}, \texttt{circle}, \texttt{line}, \texttt{rectangle}, \texttt{putText}, \texttt{cvtColor}, \texttt{resize} & \texttt{cv2.imwrite} (в симуляторе ничего не сохраняет), файлы калибровки \texttt{cv2.FileStorage} \\
-\texttt{cv2.aruco}: словари, \texttt{ArucoDetector}, \texttt{detectMarkers}, \texttt{drawDetectedMarkers} & \texttt{cv2.solvePnP} (в симуляторе всегда возвращает неудачу), оценка позы маркера \\
-\texttt{set\_manual\_speed} для наведения по кадрам & \texttt{mediapipe} (импорт завершится ошибкой), рой настоящих дронов по Wi-Fi \\
+\texttt{Camera()} --- передняя камера (вертикальный угол обзора $80^\circ$), \texttt{Camera(view="bottom")} --- нижняя ($72^\circ$); \texttt{get\_cv\_frame()}, \texttt{frame.shape} & RTSP-поток \texttt{VideoStream} для плеера VLC; шумы, блики и смаз настоящей оптики \\
+\texttt{cv2.imshow}, \texttt{waitKey}, рисование (\texttt{circle}, \texttt{line}, \texttt{rectangle}, \texttt{putText}), \texttt{cvtColor}, \texttt{resize}, \texttt{inRange}, контуры и моменты & \texttt{cv2.imwrite} (в симуляторе возвращает \texttt{True}, но файла не создаёт), \texttt{imread}, \texttt{absdiff}, \texttt{threshold}, \texttt{GaussianBlur}, \texttt{undistort} \\
+\texttt{cv2.aruco}: словари, \texttt{ArucoDetector}, \texttt{detectMarkers}, \texttt{drawDetectedMarkers} & калибровка камеры (\texttt{findChessboardCorners}, \texttt{calibrateCamera}): камера симулятора идеальная \\
+\texttt{cv2.solvePnP}, \texttt{estimatePoseSingleMarkers}, \texttt{drawFrameAxes}; \texttt{cv2.FileStorage} отдаёт матрицу идеальной нижней камеры (без дисторсии) & \texttt{mediapipe} (импорт завершится ошибкой) \\
+\texttt{set\_manual\_speed} для наведения по кадрам & рой из нескольких настоящих дронов по Wi-Fi (раздел о групповом полёте) \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
 \begin{warnbox}[Программы с пометкой «только на дроне»]
-Примеры с потоками, калибровкой, оценкой позы, распознаванием человека и роем написаны для компьютера, подключённого к настоящему Пионеру. В браузере они либо завершатся ошибкой импорта, либо будут «работать» без результата: \verb|solvePnP| вернёт неудачу, \verb|imwrite| не создаст файл. Это ограничение среды, а не ошибка в программе. Программу с компьютера можно направить и на дрон в симуляторе (раздел~\ref{sec:python-external}): тогда работает настоящий OpenCV, но камеру симулятора нужно подключать фрагментом из панели подключения.
+Примеры с потоками, калибровкой, распознаванием человека и роем написаны для компьютера, подключённого к настоящему Пионеру. В браузере они либо завершатся ошибкой (импорт \texttt{mediapipe}, функции, которых в учебной модели нет), либо будут «работать» без результата: \verb|imwrite| не создаст файл. Это ограничение среды, а не ошибка в программе. Программу с компьютера можно направить и на дрон в симуляторе (раздел~\ref{sec:python-external}): тогда работает настоящий OpenCV, но камеру симулятора нужно подключать фрагментом из панели подключения.
 \end{warnbox}
 
 \subsection{Камера с нуля}

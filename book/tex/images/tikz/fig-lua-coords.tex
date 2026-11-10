@@ -1,0 +1,28 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\draw[faxis] (-0.6,0) -- (6.2,0) node[below left] {$X$};
+\draw[faxis] (0,-0.6) -- (0,4.6) node[below left] {$Y$};
+\fill[Ink] (0,0) circle (1.8pt);
+\node[font=\sffamily\small, anchor=north west] at (0.1,-0.1) {начало сцены $(0,0,0)$};
+% дрон на старте
+\pic at (0,0) {fdrone};
+\node[font=\sffamily\small, anchor=west] at (0.7,0.8) {старт: курс $0$, нос вдоль $+Y$};
+% точка
+\def\px{4.2}\def\py{2.6}
+\draw[densely dotted, Muted, line width=0.8pt] (\px,0) -- (\px,\py) -- (0,\py);
+\node[font=\sffamily\small, below] at (\px,0) {$x$};
+\node[font=\sffamily\small, left] at (0,\py) {$y$};
+\pic[rotate=90] at (\px,\py) {fdrone};
+\draw[dashed, Muted, line width=0.8pt] (\px,\py) -- (\px,\py+1.2);
+\draw[->, Accent, line width=0.8pt] (\px,\py+0.95) arc (90:180:0.95);
+\node[font=\sffamily\small, anchor=south east, text=Accent] at (\px-0.7,\py+0.7) {курс $\pi/2$};
+\node[font=\sffamily\small, anchor=west] at (\px+0.6,\py-0.25) {точка $(x,\,y,\,z)$};
+% ось Z
+\begin{scope}[shift={(6.2,4.4)}]
+\draw[line width=0.8pt] (0,0) circle (0.2);
+\fill (0,0) circle (1.6pt);
+\node[font=\sffamily\small, anchor=east] at (-0.3,0) {$Z$ вверх, к вам};
+\end{scope}
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Локальная система координат, вид сверху: $X$ вправо, $Y$ вперёд (вдоль носа на старте), $Z$ вверх. Курс растёт против часовой стрелки: $\pi/2$ --- нос смотрит влево.}\label{fig:lua-coords}
+\end{tikzfig}

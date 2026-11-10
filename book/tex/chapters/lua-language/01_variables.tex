@@ -9,8 +9,8 @@
 \begin{itemize}
     \item \verb|local x = 10| --- \hyperlink{term:scope}{локальная} переменная: живёт в том блоке, где объявлена.
     \item \verb|name = "Pioneer"| без \verb|local| --- глобальная: её видно из любой функции скрипта. Так в курсе объявляют таймеры (глава~\ref{sec:leds}), которые должны жить до конца программы.
-    \item \verb|x, y = 1, 2| присваивает две переменные сразу, а \verb|x, y = y, x| меняет их местами без третьей переменной.
-    \item \verb|print(type(x), ...)| печатает имена типов через табуляцию.
+    \item \verb|local a, b = 1, 2| объявляет две переменные одной строкой, а \verb|a, b = b, a| меняет их местами без третьей переменной.
+    \item \verb|print(type(x), ...)| печатает имена типов через табуляцию, а \verb|print(a, b)| после обмена покажет \texttt{2 1}.
 \end{itemize}
 
 \subsubsection*{Строки и подписи}
@@ -19,6 +19,15 @@
 
 \begin{codefile}{lua/04_language/lua_strings_concat.lua}
 \end{codefile}
+
+Когда число нужно ещё и округлить, пользуются \verb|string.format|: в шаблоне \verb|%.2f| означает «число с двумя знаками после запятой», \verb|%g| --- «число без лишних нулей», \verb|%s| --- «вставить текст». Эта функция встретится в главе~\ref{sec:missions}, где печатаются координаты.
+
+\begin{codebox}[Форматирование в print]
+\begin{verbatim}
+print(string.format("x = %.2f м", 1.5))   -- x = 1.50 м
+print(string.format("%s: %g", "z", 2.0))  -- z: 2
+\end{verbatim}
+\end{codebox}
 
 \subsubsection*{Таблицы}
 

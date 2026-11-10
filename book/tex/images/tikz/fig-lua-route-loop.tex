@@ -1,0 +1,15 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\node[fblue, text width=34mm, minimum height=14mm] (ev1) at (0,0) {\ttfamily\footnotesize Ev.TAKEOFF\_COMPLETE};
+\node[forange, text width=36mm, minimum height=16mm] (np) at (5.8,0) {\texttt{nextPoint()} \\ \footnotesize взять \texttt{points[curr]}, \texttt{curr = curr + 1}};
+\node[forange, text width=34mm, minimum height=14mm] (go) at (11.7,0) {\ttfamily\footnotesize ap.goToLocalPoint \\ \sffamily\footnotesize (очередная точка)};
+\node[fblue, text width=34mm, minimum height=14mm] (ev2) at (11.7,-3.0) {\ttfamily\footnotesize Ev.POINT\_REACHED};
+\node[fgreen, text width=34mm, minimum height=14mm] (ld) at (0,-3.0) {\ttfamily\footnotesize ap.push( \\ Ev.MCE\_LANDING)};
+\draw[fev] (ev1) -- (np);
+\draw[farrow] (np) -- node[flab, above=1pt, font=\sffamily\footnotesize] {есть точка} (go);
+\draw[fev] (go) -- node[flab, right=2pt, font=\sffamily\footnotesize, align=left] {дрон \\ летит} (ev2);
+\draw[fev] (ev2) -- (np);
+\draw[farrow] (np) -- node[flab, above=2pt, sloped, font=\sffamily\footnotesize] {точки кончились} (ld);
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Маршрут по таблице точек. Одна функция \texttt{nextPoint} вызывается по двум событиям: после взлёта (первая точка) и после каждой достигнутой точки (все остальные); когда точки кончились, она отправляет посадку.}\label{fig:lua-route-loop}
+\end{tikzfig}

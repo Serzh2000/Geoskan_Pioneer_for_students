@@ -1,0 +1,17 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\node[fgrey, text width=30mm] (prep) at (0,0) {\textbf{\texttt{PREPARE}}\\ \footnotesize линейка белая};
+\node[forange, text width=30mm] (to) at (6.2,0) {\textbf{\texttt{TO\_CIRCLE}}\\ \footnotesize линейка жёлтая};
+\node[forange, text width=34mm] (circ) at (12.4,0) {\textbf{\texttt{CIRCLE}}\\ \footnotesize линейка фиолетовая};
+\node[fblue, text width=34mm] (ret) at (12.4,-3.2) {\textbf{\texttt{RETURN}}\\ \footnotesize линейка синяя};
+\node[fgreen, text width=30mm] (land) at (6.2,-3.2) {\textbf{\texttt{LANDING}}\\ \footnotesize посадка};
+\node[fred, text width=30mm] (em) at (0,-3.2) {\textbf{\texttt{EMERGENCY}}\\ \footnotesize красная, моторы выключены};
+\draw[farrow] (prep) -- node[flab, above=1pt, font=\ttfamily\scriptsize] {TAKEOFF\_COMPLETE} (to);
+\draw[farrow] (to) -- node[flab, above=1pt, font=\ttfamily\scriptsize] {POINT\_REACHED} (circ);
+\draw[farrow] (circ) -- node[flab, right=2pt, align=left] {таймер \\ 12~с} (ret);
+\draw[farrow] (ret) -- node[flab, above=1pt, align=center, font=\ttfamily\scriptsize] {POINT\_REACHED \\ и near(0, 0, h)} (land);
+\draw[dashed, Danger, line width=0.8pt, ->] (prep) -- node[flab, right=2pt, align=left] {\texttt{SHOCK} из любого \\ состояния} (em);
+\node[fnote, anchor=north] at (land.south) {\texttt{COPTER\_LANDED}: линейка гаснет};
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Автомат миссии «окружность»: пять состояний и события, которые переводят автомат из одного в другое. Удар (\texttt{SHOCK}) переводит в \texttt{EMERGENCY} из любого состояния.}\label{fig:lua-fsm-circle}
+\end{tikzfig}

@@ -1,0 +1,44 @@
+% Общие стили TikZ-рисунков пособия (палитра из preamble.tex).
+% Правила: линии 0.8pt, скругление 3pt, подписи \sffamily\small (не мельче \footnotesize),
+% светлые заливки палитры, смысл не только цветом (форма, штрих, подпись).
+%
+% Узлы:   fnode (нейтральный), forange (действие/команда), fblue (событие/справка),
+%         fgreen (успех/штатно), fred (авария), fgrey (фон, вспомогательное)
+% Стрелки: farrow (поток), fcmd (команда, сплошная Accent), fev (событие, штриховая InfoBlue),
+%          faxis (ось координат)
+% Подписи: flab (на линии, белая подложка), fcode (моноширинный текст)
+% Окружение tikzfig: неразрывный рисунок с подписью через \captionof.
+
+\usetikzlibrary{fit, backgrounds, positioning, arrows.meta, calc, shapes.misc, decorations.pathreplacing}
+
+\tikzset{
+    fig/.style={every node/.append style={execute at begin node={\hyphenpenalty=10000 \exhyphenpenalty=10000 }}, >={Stealth[length=5pt,width=4pt]}, line width=0.8pt, font=\sffamily\small, text=Ink, draw=Ink},
+    fnode/.style={draw=Ink, fill=white, rounded corners=3pt, line width=0.8pt, inner sep=4pt, minimum height=8mm, align=center, font=\sffamily\small, text=Ink},
+    forange/.style={fnode, draw=Accent, fill=Orange!10},
+    fblue/.style={fnode, draw=InfoBlue, fill=InfoBlue!10},
+    fgreen/.style={fnode, draw=Success, fill=Success!10},
+    fred/.style={fnode, draw=Danger, fill=Danger!8},
+    fgrey/.style={fnode, draw=Muted, fill=Paper},
+    farrow/.style={->, line width=0.8pt, draw=Ink},
+    fcmd/.style={->, line width=0.8pt, draw=Accent},
+    fev/.style={->, line width=0.8pt, draw=InfoBlue, dashed},
+    faxis/.style={->, line width=0.8pt, draw=Ink},
+    flab/.style={font=\sffamily\small, text=Ink, fill=white, inner sep=1.5pt, align=center},
+    fcode/.style={font=\ttfamily\small, text=Ink},
+    fnote/.style={font=\sffamily\footnotesize, text=Muted, align=center},
+    flane/.style={draw=Rule, fill=Paper, rounded corners=3pt, line width=0.8pt},
+}
+
+\newenvironment{tikzfig}
+    {\par\medskip\begin{center}\begin{minipage}{\linewidth}\centering}
+    {\end{minipage}\end{center}\medskip}
+
+% Условный дрон сверху: нос вдоль локальной оси +Y. Использование: \pic[rotate=<угол>] at (x,y) {fdrone};
+\tikzset{fdrone/.pic={
+    \foreach \a in {45,135,225,315} {
+        \draw[draw=Muted, line width=0.8pt] (0,0) -- (\a:0.42);
+        \draw[draw=Muted, fill=white, line width=0.8pt] (\a:0.42) circle (0.14);
+    }
+    \draw[draw=Accent, fill=Orange!10, line width=0.8pt, rounded corners=2pt] (-0.17,-0.17) rectangle (0.17,0.17);
+    \fill[Accent] (0,0.32) -- (-0.1,0.12) -- (0.1,0.12) -- cycle;
+}}

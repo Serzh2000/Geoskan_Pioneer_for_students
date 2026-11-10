@@ -1,4 +1,5 @@
 \section{Техническая реализация программных модулей}
+\label{sec:python-tools}
 
 В этой главе мы разберем исходный код инструментов, которые используются для создания карт и навигации. Всё здесь --- обычный Python на компьютере: дрон и симулятор понадобятся только в последнем задании, чтобы получить журнал настоящего полёта.
 
@@ -32,7 +33,7 @@
 У f-строк есть слабое место: они не экранируют специальные символы. Если в названии карты встретится \verb|&| или \verb|<|, получится файл, который ни одна программа не прочитает. Надёжнее строить XML модулем \verb|xml.etree.ElementTree| --- он сам экранирует текст.
 
 \begin{taskbox}[XML без сюрпризов]
-\emph{Компьютер.} Назовите карту \verb|"Склад & цех"| и сохраните её методом \verb|save_xml|. Попробуйте прочитать файл: \verb|xml.etree.ElementTree.parse(filename)|. Затем напишите \verb|save_xml_etree(self, filename)|, которая строит то же дерево через \verb|ET.Element| и \verb|ET.SubElement| и сохраняет \verb|ET.ElementTree(root).write(filename, encoding="utf-8", xml_declaration=True)|.
+\emph{Компьютер.} Назовите карту \verb|"Склад & цех"| и сохраните её методом \verb|save_xml|. Попробуйте прочитать файл: \verb|xml.etree.ElementTree.parse(filename)|. Затем напишите \verb|save_xml_etree(self, filename)|, которая строит то же дерево через \verb|ET.Element| и \verb|ET.SubElement| и сохраняет \texttt{ET.ElementTree(root).write(filename, encoding="utf-8", xml\_declaration=True)}.
 \expected{файл из f-строк не читается (\texttt{ParseError}); файл из \texttt{ElementTree} читается, а \texttt{root.find("name").text} возвращает исходное название \texttt{Склад \& цех}.}
 \end{taskbox}
 

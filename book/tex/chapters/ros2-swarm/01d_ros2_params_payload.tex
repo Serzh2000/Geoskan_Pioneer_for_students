@@ -1,0 +1,164 @@
+\subsection{Параметры: автопилота и узла}
+\label{sec:ros2-params}
+
+Цель раздела: различать два вида параметров --- настройки автопилота и настройки самого узла --- и менять каждый правильным способом.
+
+В ROS~2 слово «параметр» встречается дважды, и путать эти вещи нельзя:
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.19\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+ & \textbf{Параметры автопилота} & \textbf{Параметры узла} \\
+\midrule
+Где живут & в полётном контроллере; сохраняются при перезагрузке & в \texttt{ros\_pioneer\_node}; задаются YAML-файлом борта при запуске \\
+Пример & \texttt{Copter\_com\_takeoffAlt} (высота взлёта) & \texttt{topics.gnss}, \texttt{grab}, \texttt{range\_sensor.max\_range} \\
+Как менять & сервисы \fpath{board/get_param}, \fpath{board/set_param}, \fpath{board/get_parameters}, \fpath{board/set_parameters} & команда \verb|ros2 param|, ключ \verb|--ros-args -p| при запуске, YAML \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Параметры автопилота}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.3\linewidth} >{\raggedright\arraybackslash}p{0.27\linewidth} X@{}}
+\toprule
+\textbf{Сервис} & \textbf{Тип} & \textbf{Что делает} \\
+\midrule
+\fpath{board/get_param} & \texttt{gs\_interfaces/\allowbreak GetParam} & прочитать параметр: \verb|name|, \verb|update| (перечитать словарь с борта) \\
+\fpath{board/set_param} & \texttt{gs\_interfaces/\allowbreak SetParam} & записать: \verb|name|, \verb|value| \\
+\fpath{board/get_parameters} & \texttt{gs\_interfaces/\allowbreak ParametersList} & все параметры; при ошибке \verb|status: false| и пустой список \\
+\fpath{board/set_parameters} & \texttt{gs\_interfaces/\allowbreak SetParametersList} & записать несколько: \verb|params: [{name, value}]| \\
+\fpath{board/restart} & \texttt{std\_srvs/\allowbreak Empty} & перезагрузить автопилот \\
+\fpath{alive} & \texttt{gs\_interfaces/\allowbreak Live} & жив ли обмен с автопилотом \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{codefile}[python]{python-onboard/ros2/ros2_06_params.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Метод \verb|read| вызывает \verb|get_param|; если ответ \verb|status| ложный (параметра нет), возвращает \verb|None|. Программа читает высоту взлёта, записывает 0.8~м, читает снова и проверяет несуществующее имя. Затем \verb|get_parameters| печатает весь список. Значения параметров --- числа (\verb|float32|); имена вида \texttt{Copter\_com\_takeoffAlt} --- как в автопилоте.
+
+\begin{warnbox}[Параметр автопилота сохраняется]
+Записанное значение остаётся в автопилоте и после перезагрузки. Прочитайте и запомните старое значение, а в конце программы верните его (\verb|finally|). Не меняйте параметры, назначения которых не знаете: неверное значение может сломать полёт. В симуляторе известны семь параметров (\texttt{Flight\_com\_navSystem}, \texttt{Copter\_com\_takeoffAlt}, \texttt{Copter\_man\_rcMode0..2}, \texttt{Copter\_flyWithoutRc}, \texttt{SensorMux\_rc}); остальные имена дают \verb|status: false|.
+\end{warnbox}
+
+\begin{taskbox}[Высота взлёта по сервису]
+Прочитайте \texttt{Copter\_com\_takeoffAlt}, запишите вдвое большее значение, взлетите и убедитесь, что дрон поднимается выше; в \verb|finally| верните исходное значение. Отдельно запросите параметр с несуществующим именем и напечатайте результат.
+\expected{после записи высота взлёта изменилась и затем вернулась; несуществующий параметр даёт \texttt{status: False} и \texttt{None}, а не ошибку программы.}
+\mission{Мини~2 SDK2}{50}
+\end{taskbox}
+
+\subsubsection*{Параметры узла и конфиг борта}
+
+Параметры узла определяют, какие топики и модули создаёт \texttt{ros\_pioneer\_node}. Главные у Мини~2 и Razero:
+
+{\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.31\linewidth} c c >{\raggedright\arraybackslash}p{0.36\linewidth}@{}}
+\toprule
+\textbf{Параметр} & \textbf{Мини~2} & \textbf{Razero} & \textbf{Что включает} \\
+\midrule
+\endhead
+\verb|grab| & да & нет & механический захват \\
+\verb|cargo| & нет & да & магнитный захват груза \\
+\texttt{nav\_system\_\allowbreak change\_in\_flight} & нет & да & смену навигации в полёте \\
+\verb|board_reboot| & нет & да & перезагрузку автопилота при старте узла \\
+\verb|topics.imu|, \verb|altitude|, \verb|range| & да & да & соответствующие топики \\
+\verb|topics.motors_rpm|, \verb|ranger| & да & нет & обороты моторов, дальномеры Ranger \\
+\verb|topics.gnss| & нет & нет & топики GPS (\fpath{navigation/global/*}) \\
+\verb|topics.lps| & да & да & локальная навигация (\fpath{navigation/local/*}) \\
+\verb|range_sensor.max_range| & 4.0 & 4.0 & дальность дальномера, м \\
+\bottomrule
+\end{longtable}
+}
+
+Если \verb|topics.X = false|, топика нет вовсе. Если \verb|true|, а модуля на борту нет, топик создан, но данные не публикуются. Включить GPS-топики можно в YAML (\verb|ros_pioneer_node: ros__parameters: topics: gnss: true|) или ключом при запуске:
+
+\begin{codebox}[Включить топики GPS при запуске узла]
+\small
+\begin{verbatim}
+ros2 run gs_core ros_pioneer_node --ros-args \
+  --params-file mini2.yaml -p topics.gnss:=true
+ros2 param list
+ros2 param get /ros_pioneer_node topics.gnss
+\end{verbatim}
+\end{codebox}
+
+Параметры \verb|topics.*|, \verb|shortname|, \verb|board_*|, \verb|gtlp_version| узел читает только при запуске: менять их \verb|ros2 param set| на ходу нельзя, нужен перезапуск (консоль симулятора подскажет). \verb|grab|, \verb|cargo|, \verb|nav_system_change_in_flight| и \verb|range_sensor.*| действуют сразу. Из программы симулятора узел перезапускают вызовом \verb|gs_core.launch.restart_pioneer_node(parameters={'topics.gnss': True})|: этой функции в настоящем пакете нет, это приём симулятора.
+
+\begin{taskbox}[GNSS: включить и проверить]
+Перезапустите узел с \verb|topics.gnss: True| (консолью или функцией симулятора) и сравните список топиков до и после. Подпишитесь на \fpath{navigation/global/status} и объясните, почему данных нет, хотя топик есть.
+\expected{после перезапуска в списке появляются \texttt{navigation/global/*} и \texttt{satellites}; сообщений нет, потому что в симуляторе GPS не моделируется (навигация всегда локальная).}
+\mission{Мини~2 SDK2}{54}
+\end{taskbox}
+
+\subsection{Система навигации}
+
+Автопилот ведёт позицию одной из трёх систем: \texttt{GPS}, \texttt{LPS} (локальная) или \texttt{OPT} (оптический поток). Узнать и сменить систему можно только сервисами навигации, а не через \verb|board/set_parameters|:
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.32\linewidth} >{\raggedright\arraybackslash}p{0.3\linewidth} X@{}}
+\toprule
+\textbf{Сервис} & \textbf{Тип} & \textbf{Результат} \\
+\midrule
+\fpath{navigation/get_system} & \texttt{gs\_interfaces/\allowbreak NavigationSystem} & поле \verb|navigation| (имя системы) и \verb|status| \\
+\fpath{navigation/set_system} & \texttt{gs\_interfaces/\allowbreak SetNavigationSystem} & запрос \verb|navigation: 'OPT'|; ответ \verb|status| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{codefile}[python]{python-onboard/ros2/ros2_07_navigation_system.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Метод \verb|current| запрашивает текущую систему и возвращает её имя или \verb|None| при ошибке. Цикл переключает систему на \texttt{OPT}, затем обратно на \texttt{LPS} и печатает результат и новое состояние. На земле это допустимо. В полёте смена \emph{отклоняется}, если \verb|nav_system_change_in_flight: false| --- а так настроен Мини~2.
+
+\begin{infobox}[GPS и симулятор]
+Сервис \fpath{flight/go_to_global_point} летит в точку по GPS (\verb|frame_id|: \verb|map| --- абсолютные координаты, \verb|base_link| --- смещение). В симуляторе физически работает только LPS, поэтому этот сервис всегда отвечает \verb|success: False|, а смена системы лишь меняет записанное значение. Доверие к позиции показывает \fpath{navigation/local/status}: 3 --- в порядке.
+\end{infobox}
+
+\begin{taskbox}[Навигация в воздухе]
+Прочитайте систему на земле и переключите её на \texttt{OPT}, затем взлетите и попробуйте переключить на \texttt{LPS} в воздухе. Напечатайте «готово» или «отказ» для каждого шага и верните \texttt{LPS} после посадки.
+\expected{на земле смена проходит (готово); в воздухе --- отказ, потому что у Мини~2 \texttt{nav\_system\_change\_in\_flight} выключен; в конце снова \texttt{LPS}.}
+\mission{Мини~2 SDK2}{51}
+\end{taskbox}
+
+\subsection{Полезная нагрузка: светодиоды и захват}
+
+Нагрузку включают собственные параметры узла; выключенный модуль не падает с ошибкой: сервис создаётся, но вызов вернёт отказ с записью в журнал (\verb|success: False|). Топик \fpath{payload/ranger} при выключенном параметре не создаётся вовсе.
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.3\linewidth} >{\raggedright\arraybackslash}p{0.3\linewidth} X@{}}
+\toprule
+\textbf{Модуль} & \textbf{Сервис, тип} & \textbf{Запрос} \\
+\midrule
+Светодиоды (всегда) & \fpath{payload/led/set}, \texttt{gs\_interfaces/\allowbreak Led} & \verb|mode| (\texttt{PIXEL}=0, \texttt{FILL}=1), \verb|leds| (список цветов), \verb|period| \\
+Механический захват (Мини~2) & \fpath{payload/grab}, \texttt{gs\_interfaces/\allowbreak Grab} & \verb|action| (0 открыть, 1 закрыть, 2 остановить), \verb|velocity| (0--100), \verb|movement_time| \\
+Магнитный захват (Базовый) & \fpath{payload/cargo_set}, \texttt{std\_srvs/\allowbreak SetBool} & \verb|data|: \verb|true| взять, \verb|false| отпустить \\
+Ranger (Мини~2) & топик \fpath{payload/ranger} & расстояния \verb|front|, \verb|back|, \verb|left|, \verb|right|, \verb|above_below| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection*{Светодиоды}
+
+\begin{codefile}[python]{python-onboard/ros2/ros2_04_led.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Цвет --- \verb|ColorRGBA| с компонентами от 0.0 до 1.0 (как у \texttt{pioneer\_sdk2}; не 0--255). Режим \verb|PIXEL| задаёт каждому диоду свой цвет по индексу в списке \verb|leds|, \verb|FILL| --- один цвет всей ленте из \verb|leds[0]|. Режимы \verb|BLINK| и \verb|CHASE| справочник не реализует. Таймер раз в секунду отправляет следующий шаг через \verb|call_async| (ответ не нужен), а в конце гасит светодиоды заливкой чёрным. Параметр \verb|period| для \verb|PIXEL| и \verb|FILL| не используется.
+
+\subsubsection*{Захват груза}
+
+\begin{codefile}[python]{python-onboard/ros2/ros2_05_grab_cargo.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Метод \verb|hold| сначала пробует механический захват: \verb|Grab.Request(movement_time=1.0, velocity=100, action=CLOSE)|. Если \verb|movement_time| больше нуля, вызов блокируется на это время, и захват останавливается сам; при нуле движение идёт до явной остановки (\verb|action = 2|). Скорость вне 0--100 --- отказ. Если механического захвата нет (\verb|grab: false|, как у Razero), метод пробует магнитный \verb|cargo_set|; у Мини~2 \verb|cargo = false|, поэтому магнитный там отвечает отказом. Программа не знает модель дрона заранее: она узнаёт её по \verb|success| --- это приём «спросить у сервиса», а не «угадать».
+
+\begin{taskbox}[Светофор из сервисов]
+Сделайте «светофор»: диод 0 красный, диод 1 зелёный, затем наоборот, затем оба жёлтые (\verb|r=1, g=1|), затем выключены. Отдельно закройте и откройте захват; попробуйте \verb|velocity=150| и магнитный захват и напечатайте результаты.
+\expected{цвета меняются по шагам; закрытие и открытие захвата возвращают \texttt{True}; скорость 150 и магнитный захват у Мини~2 --- \texttt{False}.}
+\mission{Мини~2 SDK2}{52, 53}
+\end{taskbox}

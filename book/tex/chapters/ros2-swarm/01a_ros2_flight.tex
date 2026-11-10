@@ -1,0 +1,143 @@
+\subsection{Сервисы полёта: полётный цикл}
+\label{sec:ros2-flight}
+
+Цель раздела: провести дрон через цикл «моторы $\to$ взлёт $\to$ точка $\to$ посадка $\to$ выключение» вызовами сервисов и понять, чем ответ сервиса отличается от окончания действия.
+
+Всё управление полётом --- сервисы с префиксом \fpath{/geoscan/flight/}:
+
+{\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.29\linewidth} >{\raggedright\arraybackslash}p{0.31\linewidth} >{\raggedright\arraybackslash}p{0.31\linewidth}@{}}
+\toprule
+\textbf{Сервис} & \textbf{Тип} & \textbf{Что делает} \\
+\midrule
+\endhead
+\fpath{flight/arm} & \texttt{gs\_interfaces/\allowbreak Arm} & запускает моторы; запрос: \verb|timeout| (секунд ждать подтверждения), \verb|retries| (повторы) \\
+\fpath{flight/takeoff} & \texttt{std\_srvs/\allowbreak Trigger} & взлёт \\
+\fpath{flight/land} & \texttt{std\_srvs/\allowbreak Trigger} & посадка \\
+\fpath{flight/disarm} & \texttt{std\_srvs/\allowbreak Trigger} & остановка моторов \\
+\fpath{flight/rtl} & \texttt{std\_srvs/\allowbreak Trigger} & возврат домой \\
+\fpath{flight/go_to_local_point} & \texttt{gs\_interfaces/\allowbreak GoToLocalPoint} & полёт в точку: \verb|x, y, z|, \verb|yaw|, \verb|time|, \verb|frame_id| \\
+\fpath{flight/go_to_global_point} & \texttt{gs\_interfaces/\allowbreak GoToGlobalPoint} & полёт в точку по GPS \\
+\fpath{flight/set_yaw} & \texttt{gs\_interfaces/\allowbreak Yaw} & поворот на месте, \verb|angle| в градусах \\
+\bottomrule
+\end{longtable}
+}
+
+Эти сервисы управляют тем же автопилотом, что и методы \texttt{pioneer\_sdk2}; разница лишь в способе вызова. Полный цикл, как его описывает справочник Геоскана:
+
+\begin{codefile}[python]{python-onboard/ros2/ros2_01_flight_cycle.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Узел \verb|FlightCycle| создаёт по клиенту на каждый сервис и подписку на \fpath{flight/fly_state} (число 0, 1 или 2: на земле, моторы запущены, в воздухе). \verb|call_service| --- общий способ вызвать любой сервис: отправить запрос \verb|call_async| и крутить обработку, пока не придёт ответ. \verb|Arm.Request(timeout=5.0, retries=0)| --- запрос со своими полями; ответ \verb|arm| проверяется по \verb|success|, и если моторы не запустились, программа прекращается. Блок \verb|finally| выключает моторы, а узел и \verb|rclpy| закрываются при любом исходе.
+
+\begin{rulebox}[Ответ сервиса --- это «принято», а не «сделано»]
+В симуляторе \verb|takeoff|, \verb|land|, \verb|go_to_local_point|, \verb|set_yaw| и \verb|rtl| отвечают, как только команда \emph{принята}, а не когда дрон взлетел или прилетел. Об окончании сообщают топики \fpath{flight/fly_state} и \fpath{flight/callback_event}, поэтому пример ждёт \verb|fly_state|, а не следующую команду сразу. Исключения: \verb|arm| ждёт подтверждения моторов (по \verb|timeout| на каждую из \verb|retries + 1| попыток), а \verb|grab| с \verb|movement_time > 0| --- это время. На настоящем дроне момент возврата сверьте с поведением своих сервисов.
+\end{rulebox}
+
+\begin{warnbox}[Безопасность]
+Программа главы --- не замена пилота: включите пульт и держите руку на аварийной остановке, первые полёты проводите в сетке или на открытой площадке. В примере \verb|finally| только выключает моторы: если программу прервут в воздухе, это уронит дрон. В своих программах, как в главе~\ref{sec:sdk2}, при прерывании сначала сажайте дрон (по \verb|fly_state|), а выключайте моторы на земле.
+\end{warnbox}
+
+\subsubsection*{Как узел ждёт: spin, таймеры и future}
+
+Узел ROS~2 --- не цикл, который вы пишете сами. Ему нужно давать время на работу: пока вы не вызвали \verb|spin|, подписки молчат, а ответы сервисов не приходят.
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.47\linewidth} X@{}}
+\toprule
+\textbf{Вызов} & \textbf{Что делает} \\
+\midrule
+\verb|rclpy.spin(node)| & крутит узел, пока работает \verb|rclpy| (до остановки программы) \\
+\verb|spin_once(node, timeout_sec=0.1)| & обрабатывает всё накопленное, но не дольше 0.1~с; удобно в своём цикле \verb|while rclpy.ok()| \\
+\verb|spin_until_future_complete(node, f)| & крутит узел, пока не придёт ответ \verb|f| \\
+\verb|node.create_timer(0.1, f)| & вызывает \verb|f| каждые 0.1~с (во время \verb|spin|) \\
+\verb|create_subscription(тип, имя, f, 10)| & вызывает \verb|f(msg)| на каждое сообщение; \verb|10| --- глубина очереди \\
+\verb|client.call_async(request)| & отправляет запрос, возвращает \verb|future| \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+В примере \verb|wait_for_state| вызывает \verb|spin_once| по кругу, пока \verb|fly_state| не станет нужным: обратный вызов подписки меняет поле, цикл его проверяет. Это основной приём главы: \emph{обратные вызовы коротко запоминают факт, а решения принимает цикл или таймер}. Тот же принцип, что и в правиле об обработчиках событий главы~\ref{sec:sdk2}.
+
+\begin{infobox}[Как rclpy работает в симуляторе]
+В браузере нет потоков, поэтому раннер сам дописывает ожидание к \verb|spin|, \verb|spin_once|, \verb|wait_for_service| и \verb|Rate.sleep|: в программе они выглядят как в настоящем \texttt{rclpy}. Ответ сервиса приходит в \verb|future| и без \verb|spin| клиента (в настоящем \texttt{rclpy} --- при обработке экзекьютором). Поля сообщений проверяются строго, как в настоящем: \verb|Point(x=1)| даёт \verb|AssertionError|, нужно \verb|1.0|. Вызов сервиса, которого нет, не повисает навсегда в миссиях симулятора, но в вашей программе проверяйте \verb|client.wait_for_service(timeout_sec=...)|.
+\end{infobox}
+
+\begin{taskbox}[Полётный цикл руками и кодом]
+Выполните цикл из консоли (\verb|arm|, \verb|takeoff|, \verb|go_to_local_point|, \verb|land|, \verb|disarm|) с паузами между командами. Затем в программе добавьте вторую точку $(0, 0, 1)$ и дождитесь прибытия в каждую по событию (следующий раздел) или паузой по времени симуляции. Печатайте \verb|fly_state| при каждой смене.
+\expected{дрон проходит обе точки и садится; значения \texttt{fly\_state} в журнале идут 0, 1, 2, 0 (на земле, моторы запущены, в воздухе, на земле).}
+\mission{Мини~2 SDK2}{39}
+\end{taskbox}
+
+\subsection{Системы координат map и base\_link}
+\label{sec:ros2-frames}
+
+Цель раздела: понимать, в каких осях и единицах задаются точки, скорости и курс, --- от этого зависит каждая команда движения.
+
+В сообщениях и запросах \texttt{gs\_core} есть поле \verb|frame_id|: оно говорит, в какой системе координат понимать числа. Допустимы два значения (рисунок~\ref{fig:ros2-frames}):
+\begin{itemize}
+    \item \verb|'map'| --- мировая (локальная) система, неподвижная: начало в точке старта, ось $z$ вверх. Те же координаты показывает \verb|get_local_position_lps()| в \texttt{pioneer\_sdk2} и топик \fpath{navigation/local/position};
+    \item \verb|'base_link'| --- система самого коптера: $x$ вперёд (по носу), $y$ влево, $z$ вверх (так принято в ROS, стандарт REP~103). Для \verb|go_to_local_point| это смещение от текущего положения.
+\end{itemize}
+
+\input{images/tikz/fig-ros2-frames}
+
+\begin{warnbox}[Не путайте оси base\_link и оси корпуса pioneer\_sdk2]
+В \verb|go_to_local_point_body_fixed| и \verb|set_manual_speed_body_fixed| из главы~\ref{sec:sdk2} ось $x$ смотрит \emph{вправо}, а $y$ --- \emph{вперёд}. В \texttt{base\_link} наоборот: $x$ --- вперёд, $y$ --- влево. Поэтому «вперёд на метр» там \verb|y=1|, а здесь \verb|x=1|, и команды переносятся с заменой осей, а не копированием.
+\end{warnbox}
+
+Пустой или чужой \verb|frame_id| сервис полёта отвергает: ответ \verb|success = False| и запись в журнале; у \verb|cmd_vel| такое сообщение игнорируется с предупреждением.
+
+\paragraph{Курс (yaw).} Запрос \verb|go_to_local_point| содержит \verb|yaw|, а сервис \verb|set_yaw| --- \verb|angle|; оба в \emph{градусах} (так сказано в справочнике \texttt{gs\_core}). Правило справочника: если угол совпадает с предыдущим заданным (в \verb|go_to_*| или \verb|set_yaw|), рыскание не меняется. Поэтому в примере \verb|yaw=0.0| означает не «развернись к нулю», а «курс оставь прежним, если он уже 0». Чтобы повернуться, задайте другой угол: он считается абсолютным курсом, а не приращением. Скорость поворота в \verb|cmd_vel|, наоборот, в рад/с (\verb|angular.z|), а курс из топика \fpath{navigation/local/yaw} в симуляторе приходит в радианах.
+
+\begin{warnbox}[Единицы курса: проверьте на своём дроне]
+Для \texttt{pioneer\_sdk2} единицы курса в \verb|go_to_*| неоднозначны (врезка в разделе~\ref{sec:sdk2-frames}); справочник \texttt{gs\_core} говорит о градусах прямо, и симулятор следует ему. Но настоящий дрон авторы не запускали. Проверьте: вызовите \verb|go_to_local_point| с \verb|yaw: 90.0|, затем \verb|yaw: 1.57| и после каждого прочитайте курс из \fpath{navigation/local/yaw}. Направление нулевого курса и знак поворота тоже сверьте глазами: в симуляторе при \verb|yaw = 0| нос смотрит по $+Y$ карты, а положительный курс --- против часовой стрелки (вид сверху).
+\end{warnbox}
+
+Типичные запросы в двух системах:
+
+\begin{codebox}[Консоль ros2: одна и та же команда в разных осях]
+\small
+\begin{verbatim}
+# в map: лететь в точку (1.5, 0.5) на высоте 1 м от старта
+ros2 service call /geoscan/flight/go_to_local_point \
+  gs_interfaces/srv/GoToLocalPoint \
+  "{x: 1.5, y: 0.5, z: 1.0, yaw: 0.0, time: 5, frame_id: 'map'}"
+# в base_link: сместиться на метр вперёд от текущего положения
+ros2 service call /geoscan/flight/go_to_local_point \
+  gs_interfaces/srv/GoToLocalPoint \
+  "{x: 1.0, y: 0.0, z: 0.0, yaw: 0.0, time: 3, frame_id: 'base_link'}"
+\end{verbatim}
+\end{codebox}
+
+Поле \verb|time| --- желаемое время перехода в секундах: \verb|0| оставляет выбор скорости автопилоту. Прилёт сервис не ждёт: его фиксируют по событию \texttt{POINT\_REACHED} (следующий раздел). Для маршрута из нескольких точек действуйте как в миссиях: отправили точку --- дождались события --- отправили следующую.
+
+\begin{taskbox}[Квадрат в map и base\_link]
+Напишите программу, которая взлетает на метр и проходит квадрат $1\times1$~м сначала в \verb|map| (четыре абсолютные точки), затем в \verb|base_link| (четыре раза: шаг вперёд на метр и поворот налево на $90^\circ$ --- по правилу курса, абсолютными углами $90$, $180$, $270$ и $0$ или $360$). После каждой стороны печатайте позицию из \fpath{navigation/local/position}.
+\expected{оба квадрата замыкаются, дрон возвращается к старту с ошибкой порядка десятков сантиметров; шагов по \texttt{base\_link} --- четыре строки «Сторона» с растущим или убывающим курсом.}
+\mission{Мини~2 SDK2}{40, 41}
+\end{taskbox}
+
+\subsection{Отказ сервиса и возврат домой}
+
+Сервис полёта может \emph{отказать}: ответ приходит, но \verb|success = False|. Это не ошибка программы, а штатное «нельзя»: \verb|takeoff| до \verb|arm|, \verb|go_to_local_point| на земле, чужой \verb|frame_id|, повторная посадка на земле. Причину узел записывает в журнал (\verb|ros_pioneer_node|); в консоли симулятора причина печатается серым после вызова. Правило: всегда проверяйте \verb|success| и решайте, что делать --- прекратить миссию, повторить или перейти в безопасную ветку.
+
+\begin{codebox}[Проверка отказа]
+\small
+\begin{verbatim}
+request = GoToLocalPoint.Request(x=1.0, y=0.0, z=1.0, frame_id='map')
+future = client.call_async(request)
+rclpy.spin_until_future_complete(node, future)
+if not future.result().success:
+    node.get_logger().error('Точка отклонена: причина в журнале узла')
+\end{verbatim}
+\end{codebox}
+
+\paragraph{Возврат домой.} Сервис \fpath{flight/rtl} (\verb|Trigger|) отправляет дрон в точку старта. Как и остальные команды движения, он не ждёт окончания; закончилось ли возвращение, видно по \fpath{navigation/local/position} и по состоянию на земле. В симуляторе \verb|rtl| приводит дрон к старту и зависает над ним на небольшой высоте: автоматическая посадка выключена параметром автопилота \texttt{Flight\_com\_landAtHome}, поэтому после возврата дрон сажают вызовом \verb|land|. На настоящем дроне поведение зависит от параметров автопилота --- проверьте его до полёта.
+
+\begin{taskbox}[Домой по сервису]
+Взлетите, отлетите в точку $(1.5, 0.5, 1)$, вызовите \verb|rtl| и по позиции дождитесь, пока дрон окажется ближе 0.6~м от старта (печатайте «Далеко от старта», «Возвращаемся», «Дома»), затем посадите. Отдельно вызовите \verb|takeoff| до \verb|arm| и \verb|land| на земле и напечатайте результат каждого.
+\expected{возврат и посадка у старта; на земле \texttt{takeoff} и \texttt{land} отвечают \texttt{success = False}, а программа не падает.}
+\mission{Мини~2 SDK2}{42, 43}
+\end{taskbox}

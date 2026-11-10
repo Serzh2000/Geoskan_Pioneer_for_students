@@ -1,0 +1,23 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig, x=4cm, y=1cm]
+\node[font=\sffamily\small\bfseries, anchor=south west] at (0,4.7) {С \texttt{sleep(1)}};
+\fill[Danger!10, draw=Danger, line width=0.8pt, rounded corners=3pt] (0,3.5) rectangle (1,4.6);
+\fill[Danger!10, draw=Danger, line width=0.8pt, rounded corners=3pt] (1.05,3.5) rectangle (2.05,4.6);
+\node[font=\sffamily\small, text width=3.4cm, align=center] at (0.5,4.05) {\texttt{sleep(1)}: программа спит};
+\node[font=\sffamily\small, text width=3.4cm, align=center] at (1.55,4.05) {\texttt{sleep(1)}: программа спит};
+\draw[fev] (0.5,2.6) -- (0.5,3.45);
+\node[font=\sffamily\footnotesize, anchor=north west, text=Ink] at (0.55,3.25) {событие пришло, принять некому};
+\node[font=\sffamily\small\bfseries, anchor=south west] at (0,2.15) {С таймером};
+\fill[Orange!10, draw=Accent, line width=0.8pt, rounded corners=2pt] (0,0.6) rectangle (0.1,2.0);
+\fill[Success!10, draw=Success, line width=0.8pt, rounded corners=3pt] (0.15,0.6) rectangle (3.0,2.0);
+\node[font=\sffamily\small, text width=5.2cm, align=center] at (1.5,1.3) {программа свободна: события и таймеры работают};
+\foreach \t in {1,2} {
+  \fill[Accent] (\t,2.0) circle (2.4pt);
+  \node[font=\sffamily\small, text=Ink, anchor=north] at (\t,0.55) {тик: \texttt{fn()}};
+}
+\node[fnote, anchor=north west] at (0,0.55) {программа\\ закончилась};
+\draw[faxis] (0,-0.9) -- (3.15,-0.9) node[right, font=\sffamily\small] {время};
+\foreach \t in {0,1,2,3} { \draw (\t,-0.82) -- (\t,-0.98); \node[font=\sffamily\small, below] at (\t,-0.98) {\t~с}; }
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Две паузы по секунде. Со \texttt{sleep} программа всё это время занята и не видит событий. С таймером она сразу свободна, а нужные действия автопилот вызывает сам в нужный момент.}\label{fig:lua-timers}
+\end{tikzfig}

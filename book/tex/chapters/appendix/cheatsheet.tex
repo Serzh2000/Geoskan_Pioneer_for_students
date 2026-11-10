@@ -1,34 +1,38 @@
-\section{Шпаргалка: Lua и Python}
+\section{Шпаргалка: Lua, Python и pioneer\_sdk2}
 \label{sec:cheatsheet}
 
-Одно и то же действие на двух языках. Lua ждёт событий в \texttt{callback}, Python опрашивает автопилот в цикле.
+Одно и то же действие в трёх вариантах. Lua (Пионер Базовый) ждёт событий в \texttt{callback}; Python с \texttt{pioneer\_sdk} (Базовый) опрашивает автопилот в цикле; \texttt{pioneer\_sdk2} (Пионер Мини~2) в основном \emph{блокирует} вызов до завершения команды. У Мини~2 Lua нет. Подробности по Мини~2 --- в справочнике главы~\ref{sec:sdk2}.
 
 \begin{center}
-\footnotesize
+\scriptsize
 \renewcommand{\arraystretch}{1.2}
-\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.18\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.13\linewidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
 \toprule
-\textbf{Действие} & \textbf{Lua} & \textbf{Python} \\
+\textbf{Действие} & \textbf{Lua (Базовый)} & \textbf{Python, \texttt{pioneer\_sdk} (Базовый)} & \textbf{Python, \texttt{pioneer\_sdk2} (Мини~2)} \\
 \midrule
-Моторы          & \texttt{ap.push(Ev.MCE\_PREFLIGHT)} & \texttt{pioneer.arm()} \\
-Взлёт           & \texttt{ap.push(Ev.MCE\_TAKEOFF)} & \texttt{pioneer.takeoff()} \\
-Точка           & \texttt{ap.goToLocalPoint(x, y, z)} & \texttt{pioneer.go\_to\_local\_point(x=, y=, z=, yaw=)} \\
-Ждать точку     & \texttt{if event == Ev.POINT\_REACHED} & \texttt{while not pioneer.point\_reached(): time.sleep(0.1)} \\
-Курс            & \texttt{ap.updateYaw(рад)} & \texttt{yaw=} (рад) в \texttt{go\_to\_local\_point}; текущий --- \texttt{pioneer.get\_yaw()} \\
-Скорость        & --- (только точки) & \texttt{pioneer.set\_manual\_speed(vx, vy, vz, yaw\_rate)}, повторять каждые 0,1~с \\
-Посадка         & \texttt{ap.push(Ev.MCE\_LANDING)} & \texttt{pioneer.land()} \\
-Выключить моторы & \texttt{ap.push(Ev.ENGINES\_DISARM)} & \texttt{pioneer.disarm()} \\
-Пауза           & \texttt{Timer.callLater(t, f)} & \texttt{time.sleep(t)} \\
-Периодически    & \texttt{Timer.new(p, f):start()} & цикл \texttt{while} с \texttt{time.sleep(p)} \\
-Светодиоды      & \texttt{leds:set(i, r, g, b)}, 0…1 & \texttt{pioneer.led\_control(led\_id, r, g, b)}, 0…255 \\
-Позиция         & \texttt{Sensors.lpsPosition()} & \texttt{pioneer.get\_local\_position\_lps()} \\
-Дальномер       & \texttt{Sensors.range()} & \texttt{pioneer.get\_dist\_sensor\_data()} \\
-Батарея         & \texttt{Sensors.battery()} & \texttt{pioneer.get\_battery\_status()} \\
-Камера          & \texttt{camera.requestMakeShot()} (снимок) & \texttt{Camera().get\_cv\_frame()} (кадр OpenCV); нижняя камера симулятора --- \texttt{Camera(view="bottom")} \\
-Метки ArUco     & --- & \texttt{cv2.aruco.ArucoDetector(словарь).detectMarkers(frame)} \\
-Состояние       & \texttt{event} в \texttt{callback} & \texttt{pioneer.get\_autopilot\_state()} \\
-Вывод           & \texttt{print(...)} & \texttt{print(...)} \\
-Завершение      & --- & \texttt{pioneer.close\_connection()} \\
+Подключение     & --- (программа на борту) & \texttt{Pioneer()}; адрес дрона или сайта в \texttt{ip=} & \texttt{Pioneer()}; на борту адрес по умолчанию верный \\
+Моторы          & \texttt{ap.push(Ev.MCE\_PREFLIGHT)} & \texttt{pioneer.arm()} & \texttt{pioneer.arm()}, ждёт \texttt{ENGINES\_STARTED}, возвращает \texttt{bool} \\
+Взлёт           & \texttt{ap.push(Ev.MCE\_TAKEOFF)} & \texttt{pioneer.takeoff()} & \texttt{pioneer.takeoff()}, ждёт \texttt{TAKEOFF\_COMPLETE} \\
+Точка           & \texttt{ap.goToLocalPoint(x, y, z)} & \texttt{pioneer.go\_to\_\allowbreak local\_point(x=, y=, z=, yaw=)} & \texttt{pioneer.go\_to\_\allowbreak local\_point(x, y, z, yaw=None)}; не ждёт \\
+Ждать точку     & \texttt{if event == Ev.POINT\_REACHED} & \texttt{while not pioneer.point\_reached(): time.sleep(0.1)} & то же опросом \texttt{point\_reached()} или подпиской на \texttt{Event.POINT\_REACHED} \\
+Курс            & \texttt{ap.updateYaw(рад)} & \texttt{yaw=} (рад); текущий --- \texttt{get\_yaw()} & \texttt{yaw=} в \textbf{градусах}; \texttt{set\_yaw(град)}; текущий --- \texttt{get\_local\_yaw\_lps()} \\
+Скорость        & --- (только точки) & \texttt{set\_manual\_speed(vx, vy, vz, yaw\_rate)}, повторять каждые 0,1~с & \texttt{set\_manual\_speed(vx, vy, vz, yaw\_rate, interval=1.0)}; \texttt{interval} задаёт длительность; в осях дрона --- \texttt{set\_manual\_speed\_body\_fixed} \\
+Посадка         & \texttt{ap.push(Ev.MCE\_LANDING)} & \texttt{pioneer.land()} & \texttt{pioneer.land()}, ждёт \texttt{COPTER\_LANDED}; домой --- \texttt{rtl()} \\
+Выключить моторы & \texttt{ap.push(Ev.ENGINES\_DISARM)} & \texttt{pioneer.disarm()} & \texttt{pioneer.disarm()} (после посадки!) \\
+Пауза           & \texttt{Timer.callLater(t, f)} & \texttt{time.sleep(t)} & \texttt{time.sleep(t)} \\
+Периодически    & \texttt{Timer.new(p, f):start()} & цикл \texttt{while} с \texttt{time.sleep(p)} & то же \\
+События         & \texttt{event} в \texttt{callback} & \texttt{get\_autopilot\_state()} & \texttt{subscribe(callback, Event.X)}; \texttt{get\_fly\_state()} \\
+Светодиоды      & \texttt{leds:set(i, r, g, b)}, 0…1 & \texttt{led\_control(led\_id, r, g, b)}, 0…255 & \texttt{led\_control(led\_id=255, r, g, b)}, \textbf{0…1}; два светодиода \\
+Позиция         & \texttt{Sensors.lpsPosition()} & \texttt{get\_local\_position\_lps()} & \texttt{get\_local\_position\_lps()} \\
+Дальномер       & \texttt{Sensors.range()} & \texttt{get\_dist\_sensor\_data()} & \texttt{get\_dist\_sensor\_data()}, \texttt{get\_ranger\_data()} \\
+Батарея         & \texttt{Sensors.battery()} & \texttt{get\_battery\_status()} & \texttt{get\_battery\_status()}: (В, температура) \\
+Груз            & --- & \texttt{cargo\_grab()}/\allowbreak \texttt{cargo\_release()} (магнит) & \texttt{grab\_close()}/\texttt{grab\_open()} (механический захват) \\
+Камера          & \texttt{camera.requestMakeShot()} (снимок) & \texttt{Camera().get\_cv\_frame()}; нижняя камера симулятора --- \texttt{Camera(view="bottom")} & \texttt{Camera(CameraType.MAIN или OPT).get\_cv\_frame()}; показ --- \texttt{ImageViewer().imshow()} \\
+Метки ArUco     & --- & \texttt{cv2.aruco.\allowbreak ArucoDetector(словарь).\allowbreak detectMarkers(frame)} & то же, кадры из \texttt{pioneer\_sdk2} \\
+Нейросети       & --- & --- & \texttt{pioneer\_rknn}: \texttt{Yolo}, \texttt{YoloPose}, \texttt{PaddleOCR} \\
+Блоки           & Blockly & Blockly & Pioneer Bricks (генерирует Python) \\
+Вывод           & \texttt{print(...)} & \texttt{print(...)} & \texttt{print(...)} \\
+Завершение      & --- & \texttt{pioneer.close\_connection()} & \texttt{pioneer.close\_connection()} в \texttt{finally} \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -36,7 +40,42 @@
 \begin{infobox}[Три главные мысли]
 \begin{itemize}
     \item Дрон --- автопилот: вы отдаёте команду и ждёте события, что она выполнена.
-    \item В Lua ждут через \texttt{callback(event)}, в Python --- опросом \texttt{while not ...}.
-    \item Координаты --- метры от старта, Z вверх, курс в радианах; их показывает \key{Ctrl}+щелчок в симуляторе.
+    \item В Lua ждут через \texttt{callback(event)}, в \texttt{pioneer\_sdk} --- опросом \texttt{while not ...}, в \texttt{pioneer\_sdk2} \texttt{arm}, \texttt{takeoff} и \texttt{land} ждут сами.
+    \item Координаты --- метры от старта, Z вверх; их показывает \key{Ctrl}+щелчок в симуляторе. Единицы различаются: курс в радианах у Lua и \texttt{pioneer\_sdk}, в градусах у \texttt{pioneer\_sdk2}; цвет 0…1 у Lua и \texttt{pioneer\_sdk2}, 0…255 у \texttt{pioneer\_sdk}.
 \end{itemize}
 \end{infobox}
+
+\begin{warnbox}[Не смешивайте библиотеки]
+Программа для Мини~2 не запустится на Базовом и наоборот: симулятор остановит импорт чужой библиотеки с подсказкой, а на настоящем дроне получите ошибку. Переносить программу между моделями нужно осознанно: меняются импорт, единицы курса и цвета, порядок ожидания команд.
+\end{warnbox}
+
+\subsection*{pioneer\_sdk2, ROS 2 (rclpy) и pioneer\_swarm}
+
+Для Мини~2 (и Базового с Radxa) те же действия можно выполнить через ROS~2 (глава~\ref{sec:ros2}); общение с другими дронами --- через \texttt{pioneer\_swarm} (глава~\ref{sec:swarm}). Все имена ROS~2 --- с префиксом \texttt{/geoscan/}.
+
+\begin{center}
+\scriptsize
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.14\linewidth} >{\raggedright\arraybackslash}p{0.3\linewidth} >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Действие} & \textbf{pioneer\_sdk2} & \textbf{ROS 2 (rclpy) и pioneer\_swarm} \\
+\midrule
+Узел, соединение & \texttt{Pioneer()} & \texttt{rclpy.init()}, \texttt{Node('имя')}; в конце \texttt{destroy\_node()}, \texttt{rclpy.shutdown()} \\
+Моторы & \texttt{arm(timeout, retries)} & сервис \texttt{flight/arm}, \texttt{Arm.Request(timeout=5.0, retries=0)}, ответ \texttt{success} \\
+Взлёт, посадка, выключение & \texttt{takeoff()}, \texttt{land()}, \texttt{disarm()} & сервисы \texttt{flight/takeoff}, \texttt{land}, \texttt{disarm} (\texttt{Trigger}); окончание --- по \texttt{flight/fly\_state} \\
+Точка & \texttt{go\_to\_local\_point(x, y, z, yaw)} & \texttt{flight/go\_to\_local\_point}, \texttt{frame\_id}: \texttt{'map'} или \texttt{'base\_link'}; $x$ вперёд, $y$ влево \\
+Курс & градусы (единицы \texttt{go\_to\_*} проверить) & \texttt{yaw} и \texttt{set\_yaw}: градусы; \texttt{cmd\_vel.angular.z}: рад/с \\
+Скорость & \texttt{set\_manual\_speed(vx, vy, vz, yaw\_rate, interval)} & публикация \texttt{TwistStamped} в \texttt{flight/cmd\_vel} таймером; пределы $\pm1.82$ рад/с \\
+Ждать точку & \texttt{point\_reached()}, \texttt{subscribe} & топик \texttt{flight/callback\_event} (5 --- точка, 7 --- взлёт, 2 --- посадка) \\
+Позиция, батарея & \texttt{get\_local\_position\_lps()}, \texttt{get\_battery\_status()} & подписки \texttt{navigation/local/position}, \texttt{sensors/battery\_state} \\
+Параметры автопилота & \texttt{get\_param}, \texttt{set\_param} & сервисы \texttt{board/get\_param}, \texttt{set\_param} \\
+Светодиоды (0..1) & \texttt{led\_control(led\_id, r, g, b)} & сервис \texttt{payload/led/set}: \texttt{PIXEL}, \texttt{FILL} \\
+Захват & \texttt{grab\_close()}, \texttt{grab\_open()} & сервис \texttt{payload/grab} (\texttt{action} 0, 1, 2) \\
+Соседи по рою & --- & \texttt{PioneerSwarmUnit().get\_unit\_list()} \\
+Сообщение соседу & --- & \texttt{send\_message\_to\_unit(id, text)} $\to$ \texttt{bool}; чтение --- \texttt{get\_next\_message()} (\texttt{None}, если пусто) \\
+Телеметрия соседа & --- & \texttt{get\_telemetry\_from\_unit(id, timeout\_sec)} $\to$ \texttt{(тип, словарь)}; ключи \texttt{'navigation/local/position'} \\
+Завершение роя & --- & \texttt{swarm.close()} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+

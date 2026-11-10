@@ -1,0 +1,56 @@
+\subsection{Телеметрия соседей}
+\label{sec:swarm-telemetry}
+
+Цель раздела: читать данные соседнего дрона и разбирать ответ, не полагаясь на то, что все потоки уже пришли.
+
+Каждый юнит объявляет в Heartbeat каталог своих данных. У воздушного юнита в симуляторе это девять потоков (имена даны без идентификатора юнита; полное имя в сети, например, \fpath{pioneer1/sensors/altitude}). Те же типы и единицы, что у топиков \texttt{gs\_core} (раздел~\ref{sec:ros2-topics}), только без префикса \fpath{/geoscan/}:
+
+{\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.36\linewidth} >{\raggedright\arraybackslash}p{0.3\linewidth} >{\raggedright\arraybackslash}p{0.25\linewidth}@{}}
+\toprule
+\textbf{Поток} & \textbf{Тип} & \textbf{Период} \\
+\midrule
+\endhead
+\fpath{navigation/local/position} & \texttt{geometry\_msgs/\allowbreak Point} & 0.05~с \\
+\fpath{navigation/local/velocity} & \texttt{geometry\_msgs/\allowbreak Vector3} & 0.05~с \\
+\fpath{navigation/local/yaw} & \texttt{std\_msgs/\allowbreak Float32} (радианы) & 0.05~с \\
+\fpath{navigation/local/status} & \texttt{gs\_interfaces/\allowbreak NavStatus} & 0.05~с \\
+\fpath{sensors/imu} & \texttt{sensor\_msgs/\allowbreak Imu} & $1/30$~с \\
+\fpath{sensors/altitude} & \texttt{std\_msgs/\allowbreak Float32} & 0.1~с \\
+\fpath{sensors/battery_state} & \texttt{sensor\_msgs/\allowbreak BatteryState} & 0.5~с \\
+\fpath{flight/fly_state} & \texttt{std\_msgs/\allowbreak Int8} & 0.1~с \\
+\fpath{flight/callback_event} & \texttt{std\_msgs/\allowbreak Int8} & по событию \\
+\bottomrule
+\end{longtable}
+}
+
+Датчики \verb|range|, \verb|motors_rpm|, оптический поток, Ranger и GPS в рое не объявляются. Каталог --- допущение симулятора (в документации Геоскана указано лишь, что юнит объявляет позицию, скорость, IMU, высоту, батарею и события).
+
+\begin{codefile}[python]{python-onboard/swarm/swarm_04_neighbour_telemetry.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Для каждого соседа вызов \fpath{get_telemetry_from_unit} с \verb|timeout_sec=5.0| возвращает либо \verb|None| (юнита нет в списке), либо пару \verb|(тип, словарь)|. Тип сверяется с \verb|SwarmUnitType.AERO|: не дрон программа пропускает. Ключ словаря --- имя потока, значение --- \emph{объект сообщения ROS~2}: у позиции поля \verb|x, y, z|, у высоты \verb|data|, у батареи \verb|voltage|, у состояния полёта \verb|data| (0, 1, 2). Последняя строка печатает число потоков и их имена.
+
+\begin{rulebox}[Телеметрия по подписке и с тайм-аутом]
+Первый вызов для соседа \emph{подписывает} объект на все потоки каталога и ждёт, пока придёт по образцу каждого периодического (самый медленный --- батарея, 0.5~с), но не дольше \verb|timeout_sec|; подписка держится до \verb|close()|. Дальше вызов возвращает накопленное. Поэтому при коротком тайм-ауте словарь может быть неполным или пустым --- проверяйте наличие ключа, а не разворачивайте словарь вслепую. \verb|timeout_sec=0| --- только подписаться и вернуть накопленное; \verb|None| --- ждать все потоки без ограничения. Пока подписчиков нет, поток в сеть не льётся. Если сосед пропал во время ожидания, вернётся \verb|None|.
+\end{rulebox}
+
+Поток \fpath{flight/callback_event} в словаре появляется только после первого события с момента подписки; событий точки (коды 5 и 6) в рое нет: флаг точки принадлежит программе управления дроном. Остальные потоки присутствуют, как только пришёл первый образец.
+
+\begin{taskbox}[Что у соседа]
+Запустите \texttt{swarm\_04\_neighbour\_telemetry.py} на дроне, стоящем рядом с двумя другими; затем поднимите в воздух второй дрон отдельной программой (полёт и зависание) и повторите. Сравните высоту и состояние полёта соседа до и после.
+\expected{на земле сосед: высота около нуля, состояние полёта 0; в воздухе --- высота около заданной (0.7--1.6~м), состояние 2; в каждом ответе одни и те же восемь потоков (и девятый после события).}
+\mission{Мини~2 SDK2}{61}
+\end{taskbox}
+
+\subsubsection*{Монитор роя}
+
+\begin{codefile}[python]{python-onboard/swarm/swarm_10_monitor.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Раз в секунду программа сравнивает множества: те, кто в сети сейчас (\verb|present|), и те, кто был в прошлый раз (\verb|known|). Разность \verb|present - known| --- вновь появившиеся, \verb|known - present| --- пропавшие. Для каждого присутствующего печатаются высота и напряжение батареи. Запустите программу и, не останавливая её, добавьте или удалите дрон на панели \ui{Рой}: новый юнит появится через секунду, удалённый --- примерно через три (три периода Heartbeat).
+
+\begin{taskbox}[Тревога по батарее]
+Дополните монитор: если напряжение соседа ниже заданного порога, печатайте «ВНИМАНИЕ: pioneerN, батарея ...», но один раз на юнит, пока напряжение не вернётся выше порога. Для проверки удобно ввести порог чуть выше текущего значения.
+\expected{на каждого соседа ниже порога --- одна строка предупреждения, а не по строке на каждый опрос; вернувшийся в норму юнит можно будет предупредить снова.}
+\end{taskbox}

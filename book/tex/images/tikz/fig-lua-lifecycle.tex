@@ -1,0 +1,23 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\def\xl{0.4}\def\xr{10.6}
+\node[font=\sffamily\small\bfseries, anchor=west] at (\xl-0.4,0.5) {Программа};
+\node[font=\sffamily\small\bfseries, anchor=east] at (\xr+0.9,0.5) {Автопилот};
+\draw[Rule, line width=1.6pt] (\xl,0.2) -- (\xl,-6.6);
+\draw[Rule, line width=1.6pt] (\xr,0.2) -- (\xr,-6.6);
+\foreach \y/\c/\e/\t in {
+ -0.5/{ap.push(Ev.MCE\_PREFLIGHT)}/{Ev.ENGINES\_STARTED}/{запуск моторов},
+ -2.0/{ap.push(Ev.MCE\_TAKEOFF)}/{Ev.TAKEOFF\_COMPLETE}/{взлёт},
+ -3.5/{ap.goToLocalPoint(x, y, z)}/{Ev.POINT\_REACHED}/{перелёт к точке},
+ -5.0/{ap.push(Ev.MCE\_LANDING)}/{Ev.COPTER\_LANDED}/{посадка}} {
+  \draw[fcmd] (\xl,\y) -- (\xr,\y);
+  \draw[fev] (\xr,\y-0.7) -- (\xl,\y-0.7);
+  \node[inner sep=1.5pt, font=\ttfamily\small, text=Accent, anchor=south west] at (\xl+0.25,\y) {\c};
+  \node[inner sep=1.5pt, font=\ttfamily\small, text=InfoBlue, anchor=south east] at (\xr-0.25,\y-0.7) {\e};
+  \node[fgrey, minimum height=6mm, anchor=west, font=\sffamily\footnotesize] at (\xr+0.3,\y-0.35) {\t};
+}
+\draw[fcmd] (1.2,-6.2) -- (2.8,-6.2) node[right, font=\sffamily\footnotesize] {команда};
+\draw[fev] (5.2,-6.2) -- (6.8,-6.2) node[right, font=\sffamily\footnotesize] {событие};
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Команды и события идут парами: каждая команда миссии завершается своим событием, и только после него отдаётся следующая.}\label{fig:lua-lifecycle}
+\end{tikzfig}

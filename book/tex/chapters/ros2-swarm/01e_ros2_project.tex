@@ -1,0 +1,167 @@
+\subsection{Итоговый проект: миссия-узел}
+\label{sec:ros2-project}
+
+Цель раздела: собрать из приёмов главы законченную миссию, в которой ни один обработчик не ждёт, а ход программы определяет автомат состояний.
+
+Миссия «arm $\to$ взлёт $\to$ две точки $\to$ посадка $\to$ выключение» устроена как \emph{узел-автомат}: состояние хранится в поле узла, таймер раз в 0.2~с смотрит на него и решает, что сделать дальше. Сервисы вызываются через \verb|call_async| без ожидания, а об окончании действий сообщают события автопилота.
+
+\begin{codefile}[python]{python-onboard/ros2/ros2_10_mission_state_machine.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Состояние \verb|state| проходит цепочку \verb|ARM| $\to$ \verb|TAKEOFF| $\to$ \verb|WAIT_TAKEOFF| $\to$ \verb|FLY| (дважды: две точки из \verb|POINTS|) $\to$ \verb|WAIT_LAND| $\to$ \verb|DONE|. Метод \verb|request| запоминает состояние, сбрасывает последнее событие и отправляет запрос: \verb|self.future| хранит ответ. Таймерный метод \verb|step| работает так:
+\begin{itemize}
+    \item если ответ предыдущего вызова ещё не пришёл (\verb|future.done()| ложно), он ничего не делает;
+    \item если ответ пришёл с \verb|success = False|, миссия прекращается переходом к выключению моторов (\verb|DONE|);
+    \item иначе по состоянию и последнему событию выбирает следующую команду: после \verb|TAKEOFF_COMPLETE| --- первая точка, после \verb|POINT_REACHED| --- следующая или посадка, после \verb|COPTER_LANDED| --- \verb|disarm|.
+\end{itemize}
+Коды событий 2, 5 и 7 --- из таблицы предыдущих разделов. Ожидание нигде не блокирует: пока дрон летит, узел продолжает принимать данные.
+
+\begin{rulebox}[Автомат узла]
+Состояние --- в поле узла; обратные вызовы только фиксируют факты (ответ, событие); решение --- в таймере; каждая команда отправляется один раз при смене состояния. Так программа не зависает, при ошибке выбирает безопасный путь, а её ход виден в журнале (\verb|состояние: FLY|).
+\end{rulebox}
+
+\begin{warnbox}[Чего в этом примере нет]
+Пример доведён до учебной ясности: у него нет аварийной ветки на прерывание или удар и нет проверки напряжения. На настоящем дроне добавьте такую ветку обязательно: подписку на \fpath{sensors/battery_state}, реакцию на события 3, 4 (низкий заряд) и 9 (удар) и посадку перед остановкой узла. Так же, как в проекте-патруле главы~\ref{sec:sdk2}, программа должна приводить дрон в безопасное состояние при любом исходе.
+\end{warnbox}
+
+\begin{taskbox}[Патруль узлом]
+Мини-проект. Расширьте автомат: три точки $(1, 0, 1)$, $(1, 1, 1)$, $(0, 1, 1)$; на каждой вершине диод 0 меняет цвет (жёлтый, зелёный, синий), в конце гаснет; подписка на \fpath{sensors/battery_state} запоминает минимальное напряжение, и узел печатает его в конце. Если сервис отвечает \verb|success = False|, миссия переходит в безопасную ветку: садится, если уже в воздухе, и выключает моторы.
+\expected{дрон проходит три точки и садится; диод 0 по очереди жёлтый, зелёный, синий и в конце выключен; в журнале печатается минимальное напряжение; при отказе первого же сервиса дрон остаётся на земле, а узел завершается без ошибки.}
+\mission{Мини~2 SDK2}{55, 56}
+\end{taskbox}
+
+\begin{taskbox}[Аварийная ветка]
+Добавьте подписку на \fpath{flight/callback_event}: при событии 3 (низкий заряд, \texttt{LOW\_VOLTAGE1}) узел вызывает \verb|rtl| и затем \verb|land|, при событии 9 (удар) выключает моторы только когда \verb|fly_state| уже равен 0. Проверьте ветки, подставляя события вручную (командой \verb|ros2 topic pub --once| в тот же топик с типом \texttt{std\_msgs/msg/Int8}, если консоль это разрешает) или заменив источник события тестовым флагом.
+\expected{при событии 3 дрон возвращается к старту и садится; при отсутствии событий миссия идёт как раньше; ни одна ветка не вызывает команду, запрещённую в текущем состоянии.}
+\end{taskbox}
+
+\subsection{Справочник gs\_core}
+
+Все имена --- с префиксом \fpath{/geoscan/}. Типы с префиксом \verb|gs_interfaces| --- из пакета Геоскана.
+
+\subsubsection*{Сервисы}
+
+{\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.31\linewidth} >{\raggedright\arraybackslash}p{0.29\linewidth} >{\raggedright\arraybackslash}p{0.31\linewidth}@{}}
+\toprule
+\textbf{Сервис} & \textbf{Тип} & \textbf{Назначение} \\
+\midrule
+\endhead
+\fpath{flight/arm} & \verb|Arm| & моторы: \verb|timeout|, \verb|retries| \\
+\fpath{flight/takeoff}, \fpath{land}, \fpath{disarm}, \fpath{rtl} & \verb|Trigger| & взлёт, посадка, остановка моторов, возврат \\
+\fpath{flight/go_to_local_point} & \verb|GoToLocalPoint| & точка: \texttt{x, y, z, yaw, time, frame\_id} \\
+\fpath{flight/go_to_global_point} & \verb|GoToGlobalPoint| & точка по GPS \\
+\fpath{flight/set_yaw} & \verb|Yaw| & курс, \verb|angle| в градусах \\
+\fpath{alive} & \verb|Live| & связь с автопилотом \\
+\fpath{board/get_param}, \fpath{set_param} & \verb|GetParam|, \verb|SetParam| & параметр автопилота \\
+\fpath{board/get_parameters}, \fpath{set_parameters} & \verb|ParametersList|, \verb|SetParametersList| & списки параметров \\
+\fpath{board/restart} & \verb|Empty| & перезагрузка автопилота \\
+\fpath{navigation/get_system}, \fpath{set_system} & \verb|NavigationSystem|, \verb|SetNavigationSystem| & система навигации \\
+\fpath{payload/led/set} & \verb|Led| & светодиоды \\
+\fpath{payload/grab} & \verb|Grab| & механический захват \\
+\fpath{payload/cargo_set} & \verb|SetBool| & магнитный захват \\
+\bottomrule
+\end{longtable}
+}
+
+\subsubsection*{Подписки узла (его входы)}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.3\linewidth} >{\raggedright\arraybackslash}p{0.27\linewidth} X@{}}
+\toprule
+\textbf{Топик} & \textbf{Тип} & \textbf{Что делает} \\
+\midrule
+\fpath{flight/cmd_vel} & \verb|TwistStamped| & скорость: \verb|linear| м/с, \verb|angular.z| рад/с; \verb|frame_id| \verb|base_link| или \verb|map| \\
+\fpath{rc/set_channels} & \verb|RcChannels| & каналы 1--8; публиковать постоянно \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Публикации узла перечислены в таблице раздела~\ref{sec:ros2-topics}.
+
+\subsection{Проверьте себя}
+
+\begin{enumerate}
+  \item Чем топик отличается от сервиса?
+    \begin{enumerate}[label=(\alph*)] \item топик --- поток, сервис --- запрос и ответ \item топик быстрее \item это одно и то же \end{enumerate}
+    Ответ: (a). Топик публикуют и читают без ответа; сервис вызывают и получают результат.
+  \item Что вернёт сервис \fpath{flight/takeoff}, если вызвать его до \fpath{flight/arm}?
+    \begin{enumerate}[label=(\alph*)] \item ошибку программы \item \verb|success = False| \item взлёт всё равно произойдёт \end{enumerate}
+    Ответ: (b) --- это отказ, причина записана в журнале узла; программа не падает, поэтому \verb|success| нужно проверять.
+  \item Когда в симуляторе сервис \verb|go_to_local_point| возвращает ответ?
+    \begin{enumerate}[label=(\alph*)] \item когда дрон прилетел \item когда команда принята \item через время \verb|time| \end{enumerate}
+    Ответ: (b). Прилёт ловят по событию \texttt{POINT\_REACHED} (код 5) в \fpath{flight/callback_event}.
+  \item Как лететь на метр вперёд от текущего положения в \texttt{base\_link}?
+    \begin{enumerate}[label=(\alph*)] \item $y = 1$ \item $x = 1$ \item $z = 1$ \end{enumerate}
+    Ответ: (b) --- в \texttt{base\_link} $x$ направлена вперёд; в осях корпуса \texttt{pioneer\_sdk2} вперёд --- $y$.
+  \item Дрон повёрнут на $90^\circ$. Вы вызываете \verb|go_to_local_point| с \verb|yaw = 90.0|. Что будет с курсом?
+    \begin{enumerate}[label=(\alph*)] \item дрон повернётся ещё на $90^\circ$ \item курс не изменится \item дрон повернётся на $0^\circ$ \end{enumerate}
+    Ответ: (b). Курс абсолютный; угол, совпадающий с прошлым заданным, рыскание не меняет.
+  \item Почему публикацию \verb|cmd_vel| делают таймером, а не один раз?
+    \begin{enumerate}[label=(\alph*)] \item сообщение держит скорость недолго, потом дрон зависает \item иначе узел не запустится \item таймер быстрее \end{enumerate}
+    Ответ: (a). Скорость нужно подтверждать постоянно; если программа зависнет, дрон остановится сам.
+  \item В обработчике подписки выполняется долгий расчёт. Чем это плохо?
+    \begin{enumerate}[label=(\alph*)] \item ничем \item следующие сообщения ждут, узел отстаёт от дрона \item обработчик вызовется дважды \end{enumerate}
+    Ответ: (b). Обработчик запоминает значение, расчёты --- в таймере или основном цикле.
+  \item Что общего у параметров автопилота и узла и в чём разница?
+    \begin{enumerate}[label=(\alph*)] \item нет разницы \item автопилота --- сервисами \texttt{board/*}, узла --- \texttt{ros2 param} и YAML \item узла хранятся в автопилоте \end{enumerate}
+    Ответ: (b). Параметры автопилота сохраняются при перезагрузке; \verb|topics.*| узел читает при запуске.
+  \item Как правильно сменить навигацию на \texttt{OPT}?
+    \begin{enumerate}[label=(\alph*)] \item через \fpath{board/set_parameters} \item сервисом \fpath{navigation/set_system} \item перезагрузкой \end{enumerate}
+    Ответ: (b). Меняют только этим сервисом; в воздухе у Мини~2 он отказывает (\verb|nav_system_change_in_flight: false|).
+  \item Захват вернул \verb|success = False|. Что это значит?
+    \begin{enumerate}[label=(\alph*)] \item модуль выключен параметром узла или нет на борту \item программа с ошибкой \item захват сломан \end{enumerate}
+    Ответ: (a) --- например, у Мини~2 магнитный \verb|cargo_set| отказывает, а механический \verb|grab| работает.
+\end{enumerate}
+
+\subsection{Задания к главе}
+
+\begin{taskbox}[Телеметрия до остановки]
+Узел подписывается на высоту, позицию и батарею и раз в секунду печатает строку; при низком напряжении (\verb|voltage| меньше порога, который вы задали параметром узла) печатает предупреждение. Остановка по \key{Ctrl}+\key{C} закрывает узел без трассировки ошибки.
+\expected{строки идут раз в секунду; порог берётся из параметра узла (\texttt{declare\_parameter}); после \texttt{Ctrl+C} в консоли чисто.}
+\mission{Мини~2 SDK2}{44, 45}
+\end{taskbox}
+
+\begin{taskbox}[Разведчик на двух узлах]
+Мини-проект. Два узла в двух программах (два файла): первый публикует скорость вперёд по таймеру, второй следит за дальномером Ranger (\fpath{payload/ranger}) и при расстоянии впереди меньше 0.7~м вызывает остановку и посадку. Узлы общаются только топиками.
+\expected{дрон летит, пока впереди чисто; при препятствии скорость обнуляется и дрон садится; узлы можно запускать и останавливать независимо.}
+\end{taskbox}
+
+\subsection{Миссии симулятора по разделам главы}
+
+Главы 14--17 трека \ui{Мини 2 · SDK2} (миссии 38--56) идут в порядке главы:
+
+{\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.09\linewidth}>{\raggedright\arraybackslash}p{0.38\linewidth}>{\raggedright\arraybackslash}p{0.45\linewidth}@{}}
+\toprule
+\textbf{№} & \textbf{Тема миссий} & \textbf{Раздел главы} \\
+\midrule
+\endhead
+38 & Первый узел \texttt{rclpy} & консоль и первый узел \\
+39 & Полётный цикл сервисами & сервисы полёта \\
+40--41 & Точка в \texttt{map}, шаги в \texttt{base\_link} & системы координат \\
+42--43 & Отказ сервиса, возврат \texttt{rtl} & отказ сервиса и возврат домой \\
+44--46 & Батарея, высота и позиция, события & топики и телеметрия; события \\
+47--48 & \texttt{cmd\_vel}: вперёд и квадрат по таймеру & управление скоростью \\
+49 & Каналы RC & виртуальный пульт \\
+50--51 & Параметры автопилота, система навигации & параметры; навигация \\
+52--53 & Светодиоды, захват & полезная нагрузка \\
+54 & Конфиг узла, GNSS-топики & параметры узла \\
+55--56 & Узел-автомат и патруль & итоговый проект \\
+\bottomrule
+\end{longtable}
+}
+
+\subsection*{Итоги}
+\begin{itemize}
+    \item ROS~2 делит робота на узлы, общающиеся топиками (потоки), сервисами (запрос и ответ) и параметрами (настройки); \texttt{ros\_pioneer\_node} --- мост между автопилотом и этой сетью, все имена начинаются с \texttt{/geoscan/}.
+    \item Полётный цикл --- сервисы \texttt{arm}, \texttt{takeoff}, \texttt{go\_to\_local\_point}, \texttt{land}, \texttt{disarm}; ответ сервиса означает «принято», окончание видно по \texttt{fly\_state} и \texttt{callback\_event}; \verb|success = False| --- отказ, а не ошибка.
+    \item \texttt{map} --- мировая система от старта, \texttt{base\_link} --- система коптера ($x$ вперёд, $y$ влево, не как в \texttt{pioneer\_sdk2}); курс в сервисах в градусах, абсолютный; равный прошлому не поворачивает.
+    \item Телеметрия приходит подпиской: обработчик запоминает, таймер печатает. События автопилота --- числа в \texttt{flight/callback\_event}.
+    \item Скорость --- публикация \texttt{TwistStamped} в \texttt{cmd\_vel} таймером; \texttt{angular.z} в рад/с, предел $\pm 1.82$; виртуальный пульт --- \texttt{rc/set\_channels}, публиковать постоянно.
+    \item Параметры автопилота --- сервисами \texttt{board/*} (прочитать, записать, вернуть), параметры узла --- \texttt{ros2 param} и YAML; навигацию меняют только \texttt{navigation/set\_system}.
+    \item Нагрузка: светодиоды 0..1 (\texttt{PIXEL}, \texttt{FILL}), захват (механический у Мини~2, магнитный у Базового); выключенный модуль даёт отказ.
+    \item Миссия-узел --- автомат: состояние в поле, обработчики фиксируют факты, решает таймер.
+    \item Всё проверено на симуляторе; на настоящем дроне сверяйте поля сервисов, единицы курса и срок удержания скорости.
+\end{itemize}

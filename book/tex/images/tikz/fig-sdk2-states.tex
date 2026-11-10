@@ -1,0 +1,12 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\node[fgrey, minimum width=30mm, minimum height=11mm] (land) at (0,0) {\texttt{ON\_LAND} \\ \footnotesize на земле};
+\node[forange, minimum width=30mm, minimum height=11mm] (armed) at (6.1,0) {\texttt{ARMED} \\ \footnotesize моторы запущены};
+\node[fgreen, minimum width=30mm, minimum height=11mm] (sky) at (12.2,0) {\texttt{IN\_SKY} \\ \footnotesize в воздухе};
+\draw[farrow] (land.east |- 0,0.25) -- node[flab, above=1pt, font=\ttfamily\small] {arm()} (armed.west |- 0,0.25);
+\draw[farrow] (armed.east |- 0,0.25) -- node[flab, above=1pt, font=\ttfamily\small] {takeoff()} (sky.west |- 0,0.25);
+\draw[farrow] (armed.south) -- ++(0,-0.9) -| node[flab, pos=0.25, font=\ttfamily\small] {disarm()} (land.south);
+\draw[farrow] (sky.south) -- ++(0,-1.7) -| node[flab, pos=0.25, align=center] {\texttt{land()}, \texttt{disarm()}, \\ удар (\texttt{SHOCK})} (land.south);
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Состояния полёта в SDK~2 и команды, которые переводят из одного в другое. Прямые стрелки --- штатный путь вперёд, нижние --- возврат на землю.}\label{fig:sdk2-states}
+\end{tikzfig}

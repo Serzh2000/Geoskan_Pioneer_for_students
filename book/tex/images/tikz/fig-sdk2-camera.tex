@@ -1,0 +1,16 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\node[fgrey, text width=29mm, minimum height=17mm] (cam) at (0,0) {\textbf{Камера дрона} \\ \texttt{Camera(...)}};
+\node[forange, text width=29mm, minimum height=17mm] (fr) at (4.7,0) {\texttt{get\_cv\_frame()} \\ numpy, порядок BGR};
+\node[forange, text width=29mm, minimum height=17mm] (cv) at (9.4,0) {Ваш код \\ \texttt{cv2}: рамки, надписи};
+\node[forange, text width=29mm, minimum height=17mm] (vw) at (14.1,0) {\texttt{viewer.imshow(} \\ \texttt{name, frame)}};
+\node[fblue, text width=29mm, minimum height=17mm] (cmd) at (9.4,-2.9) {Решение \\ команда дрону};
+\node[fgreen, text width=29mm, minimum height=17mm] (br) at (14.1,-2.9) {Браузер: WebRTC; VLC: RTSP};
+\draw[farrow] (cam) -- (fr);
+\draw[farrow] (fr) -- (cv);
+\draw[farrow] (cv) -- (vw);
+\draw[farrow] (vw) -- (br);
+\draw[fev] (cv) -- (cmd);
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Путь кадра на борту Мини~2. Экрана у дрона нет, поэтому кадр показывает браузер; тот же кадр можно использовать для решения (раздел о компьютерном зрении).}\label{fig:sdk2-camera}
+\end{tikzfig}

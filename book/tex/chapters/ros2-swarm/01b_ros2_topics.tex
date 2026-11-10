@@ -1,0 +1,113 @@
+\subsection{Топики и телеметрия}
+\label{sec:ros2-topics}
+
+Цель раздела: читать данные борта подпиской, а не опросом, и знать, какие топики есть и в каких единицах говорят.
+
+Узел \texttt{ros\_pioneer\_node} публикует данные борта в топики с префиксом \fpath{/geoscan/}. Подписчик получает каждое сообщение, как только оно появилось, и не обязан спрашивать. Основные публикации:
+
+{\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.31\linewidth} >{\raggedright\arraybackslash}p{0.31\linewidth} >{\raggedright\arraybackslash}p{0.3\linewidth}@{}}
+\toprule
+\textbf{Топик} & \textbf{Тип} & \textbf{Что в нём} \\
+\midrule
+\endhead
+\fpath{sensors/battery_state} & \texttt{sensor\_msgs/\allowbreak BatteryState} & напряжение (\verb|voltage|, В) и температура АКБ \\
+\fpath{sensors/altitude} & \texttt{std\_msgs/\allowbreak Float32} & высота по барометру, м \\
+\fpath{sensors/range} & \texttt{sensor\_msgs/\allowbreak Range} & дальномер вниз: \verb|range|, м \\
+\fpath{sensors/imu} & \texttt{sensor\_msgs/\allowbreak Imu} & ускорения, угловые скорости, ориентация (кватернион) \\
+\fpath{sensors/motors_rpm} & \texttt{gs\_interfaces/\allowbreak MotorsRpm} & обороты четырёх моторов (у Мини~2) \\
+\fpath{navigation/local/position} & \texttt{geometry\_msgs/\allowbreak Point} & локальная позиция, м (карта \verb|map|) \\
+\fpath{navigation/local/velocity} & \texttt{geometry\_msgs/\allowbreak Vector3} & скорость, м/с \\
+\fpath{navigation/local/yaw} & \texttt{std\_msgs/\allowbreak Float32} & курс \\
+\fpath{navigation/local/status} & \texttt{gs\_interfaces/\allowbreak NavStatus} & доверие к позиции: 0 нет данных, 1 не может, 2 низкое, 3 в порядке \\
+\fpath{navigation/opt/velocity} & \texttt{gs\_interfaces/\allowbreak OptVelocity} & скорость по оптическому потоку, \verb|x|, \verb|y| \\
+\fpath{flight/fly_state} & \texttt{std\_msgs/\allowbreak Int8} & состояние: 0 на земле, 1 моторы запущены, 2 в воздухе \\
+\fpath{flight/callback_event} & \texttt{std\_msgs/\allowbreak Int8} & событие автопилота (таблица ниже) \\
+\fpath{payload/ranger} & \texttt{gs\_interfaces/\allowbreak RangerData} & дальномеры Ranger по сторонам, м (у Мини~2) \\
+\fpath{rc/trigger} & \texttt{std\_msgs/\allowbreak Int32} & значение канала пульта \\
+\bottomrule
+\end{longtable}
+}
+
+Топики GPS (\fpath{navigation/global/*}, \fpath{navigation/satellites}) в поставляемых конфигах выключены (подробнее --- раздел~\ref{sec:ros2-params}). В симуляторе частоты такие: IMU 30~Гц, локальные навигационные топики 20~Гц, высота, дальномер, обороты, \verb|fly_state| и оптический поток 10~Гц, батарея 2~Гц, \verb|callback_event| --- по событию. На настоящем дроне частоты смотрите командой \verb|ros2 topic hz| в обычной среде ROS~2 (в консоли симулятора её нет).
+
+\begin{codefile}[python]{python-onboard/ros2/ros2_02_telemetry.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Узел подписывается на три топика: \verb|create_subscription(тип, имя, обработчик, 10)|. Обработчики \verb|on_altitude|, \verb|on_position|, \verb|on_battery| только запоминают последнее значение в поле объекта --- и больше ничего. Печатает отчёт отдельный таймер \verb|create_timer(1.0, self.report)| раз в секунду, поэтому частота печати не зависит от частоты датчиков. \verb|main| крутит узел восемь секунд по часам узла (\verb|get_clock().now()| и \verb|Duration|); значения времени --- по часам симуляции. Если подписчик создан, а топик не публикуется (выключен параметром или нет модуля), программа не падает, просто остаётся без данных: поле сохранит значение по умолчанию.
+
+\begin{rulebox}[Хранить последнее, печатать по таймеру]
+Обработчик вызывается на каждое сообщение, а их приходит 10--30 в секунду. Делайте в нём одно: запомнить значение. Расчёты и вывод вынесите в таймер или в основной цикл --- иначе очередь обработки растёт, а программа отстаёт от дрона.
+\end{rulebox}
+
+\paragraph{Заголовок сообщения.} У \verb|MotorsRpm|, \verb|PointGPS|, \verb|SatellitesGPS|, \verb|OptVelocity| и \verb|RangerData| поле \verb|header| заполнено: время \verb|stamp| и \verb|frame_id = 'base_link'|. У \verb|Imu|, \verb|Range| и \verb|BatteryState| заголовок \texttt{gs\_core} не заполняет, поэтому время сообщения берите из часов узла.
+
+\begin{taskbox}[Телеметрия в полёте]
+Взлетите на метр, затем напечатайте из подписок высоту, позицию $x, y, z$ и напряжение батареи, а после посадки --- высоту. Сравните высоту из \fpath{sensors/altitude} с координатой $z$ из \fpath{navigation/local/position}: насколько они расходятся?
+\expected{в воздухе высота около 1 м и $z \approx 1$; барометр и локальная навигация различаются на сантиметры или дециметры; на земле высота около нуля.}
+\mission{Мини~2 SDK2}{44, 45}
+\end{taskbox}
+
+\subsection{События автопилота}
+
+Топик \fpath{flight/callback_event} (\texttt{std\_msgs/\allowbreak Int8}) --- то же, что \verb|subscribe| в \texttt{pioneer\_sdk2}: автопилот сообщает о важных моментах числом. В симуляторе коды такие же, как у \verb|Event| из \texttt{pioneer\_sdk2}:
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.1\linewidth} >{\ttfamily}p{0.32\linewidth} X@{}}
+\toprule
+\textbf{Код} & \textrm{\textbf{Событие}} & \textbf{Когда приходит} \\
+\midrule
+1 & DISARM & моторы выключены \\
+2 & COPTER\_LANDED & дрон сел \\
+3, 4 & LOW\_VOLTAGE1, 2 & батарея садится; почти пуста \\
+5 & POINT\_REACHED & точка достигнута \\
+6 & POINT\_DECELERATION & дрон тормозит перед точкой \\
+7 & TAKEOFF\_COMPLETE & взлёт завершён \\
+8 & ENGINES\_STARTED & моторы запущены \\
+9 & SHOCK & удар \\
+10 & LOW\_CHARGE & заряд слишком мал для запуска \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Эти числа справочник Геоскана не приводит: они взяты из эмуляции (по \texttt{pioneer\_sdk2}). Проверяйте их на своём дроне, например подпиской с печатью и \verb|ros2 topic echo|. Событие приходит один раз, поэтому его ловят в обработчике и запоминают: \verb|self.event = msg.data|, а решение принимает таймер. Так строится автомат главного проекта этой главы.
+
+\begin{codebox}[Подписка на события]
+\small
+\begin{verbatim}
+EVENTS = {2: 'COPTER_LANDED', 5: 'POINT_REACHED',
+          7: 'TAKEOFF_COMPLETE', 8: 'ENGINES_STARTED'}
+
+def on_event(self, msg):
+    name = EVENTS.get(msg.data, str(msg.data))
+    self.get_logger().info('Событие: ' + name)
+
+# в __init__:
+self.create_subscription(
+    Int8, '/geoscan/flight/callback_event', self.on_event, 10)
+\end{verbatim}
+\end{codebox}
+
+\begin{taskbox}[Журнал событий]
+Подпишитесь на \fpath{flight/callback_event}, пройдите по двум точкам и печатайте имя каждого события. Покажите порядок: моторы запущены, взлёт завершён, точка достигнута, точка достигнута, дрон сел.
+\expected{в журнале по порядку \texttt{ENGINES\_STARTED}, \texttt{TAKEOFF\_COMPLETE}, затем \texttt{POINT\_REACHED} (по разу на точку) и \texttt{COPTER\_LANDED}; могут встретиться и события торможения.}
+\mission{Мини~2 SDK2}{46}
+\end{taskbox}
+
+\subsection{Датчики: IMU, дальномер, Ranger}
+
+\begin{codefile}[python]{python-onboard/ros2/ros2_08_sensor_logger.py}
+\end{codefile}
+
+\paragraph{Что происходит.} Ориентация дрона в \verb|Imu| задана \emph{кватернионом} (четырьмя числами $w, x, y, z$), а не углами; функция \verb|tilt_degrees| переводит его в крен и тангаж формулами
+\[
+\varphi = \operatorname{atan2}\bigl(2(wx + yz),\; 1 - 2(x^2 + y^2)\bigr),\qquad
+\theta = \arcsin\bigl(2(wy - zx)\bigr).
+\]
+Значение под арксинус зажато в $[-1, 1]$, чтобы ошибка округления не вызвала \verb|ValueError|. Дальномер вниз \fpath{sensors/range} даёт \verb|range| в метрах; вне диапазона датчика (параметры \verb|range_sensor.min_range|, \verb|max_range|) в симуляторе значение --- \verb|-inf| или \verb|+inf|, как в стандарте ROS (REP~117), поэтому перед расчётами проверяйте его через \verb|math.isfinite|. Ranger (\fpath{payload/ranger}) измеряет расстояние до препятствий вокруг дрона: \verb|front|, \verb|back|, \verb|left|, \verb|right|, \verb|above_below|; он есть у Мини~2, а у Базового топика нет, и программа это переживает: подписка просто остаётся без данных, отчёт обходится без строки Ranger.
+
+\begin{taskbox}[Осторожный датчик]
+Допишите в \verb|report()| предупреждение, если дальномер вниз показывает меньше 0.15~м или значение не конечное, и печать «крен/тангаж больше $15^\circ$» при заметном наклоне. Запустите программу на земле и в полёте.
+\expected{на земле дальномер показывает малое значение или бесконечность, и предупреждение печатается; в спокойном полёте крен и тангаж малы; ни одна строка не падает при \texttt{inf} в дальномере.}
+\end{taskbox}

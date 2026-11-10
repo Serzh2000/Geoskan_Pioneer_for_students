@@ -1,0 +1,14 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\node[forange, text width=32mm, minimum height=17mm] (bl) at (0,0) {\textbf{Блоки} \\ \footnotesize редактор в браузере, порт 2020};
+\node[forange, text width=32mm, minimum height=17mm] (py) at (5.4,0) {\textbf{Python} \\ \footnotesize генерируется при сохранении, файл \texttt{.py}};
+\node[forange, text width=32mm, minimum height=17mm] (run) at (10.8,0) {\textbf{Запуск на борту} \\ \footnotesize кнопка «Вжух»};
+\node[fgreen, text width=32mm, minimum height=17mm] (lib) at (10.8,-3.0) {\textbf{Дрон} \\ \footnotesize \texttt{pioneer\_sdk2}, \texttt{pioneer\_rknn}};
+\node[fred, text width=44mm, minimum height=14mm] (lim) at (3.0,-3.0) {\textbf{Ограничения 2.3.0} \\ \footnotesize ошибки генератора и обходы};
+\draw[farrow] (bl) -- (py);
+\draw[farrow] (py) -- (run);
+\draw[farrow] (run) -- (lib);
+\draw[fev] (py.south) -- node[flab, right=2pt, align=left, font=\sffamily\footnotesize] {может содержать \\ ошибку} (py.south |- lim.north);
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Путь блочной программы. Блоки превращаются в обычную программу на Python, и она выполняется на дроне, а не в браузере. Если сгенерированный код ошибочен, программа не запустится: типичные случаи и обходы собраны в разделе~\ref{sec:bricks-limits}.}\label{fig:bricks-flow}
+\end{tikzfig}

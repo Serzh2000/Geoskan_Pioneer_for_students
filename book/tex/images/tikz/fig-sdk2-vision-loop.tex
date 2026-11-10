@@ -1,0 +1,16 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\node[fgrey, text width=26mm, minimum height=14mm] (cam) at (0,0) {\textbf{Камера} \\ \footnotesize\texttt{get\_cv\_frame}};
+\node[forange, text width=26mm, minimum height=14mm] (cv) at (4.5,0) {\textbf{Распознавание} \\ \footnotesize OpenCV, ArUco};
+\node[forange, text width=26mm, minimum height=14mm] (err) at (9.0,0) {\textbf{Ошибка} \\ \footnotesize $e = $ цель $-$ факт};
+\node[forange, text width=26mm, minimum height=14mm] (reg) at (13.5,0) {\textbf{П-регулятор} \\ \footnotesize $u = K_p\,e$};
+\node[fgreen, text width=60mm, minimum height=14mm] (drone) at (6.75,-3.2) {\textbf{Дрон: команда скорости} \\ \footnotesize\texttt{set\_manual\_speed\_body\_fixed}};
+\draw[farrow] (cam) -- (cv);
+\draw[farrow] (cv) -- (err);
+\draw[farrow] (err) -- (reg);
+\draw[farrow] (reg.south) |- (drone.east);
+\draw[farrow] (drone.west) -| node[flab, pos=0.25] {новый кадр} (cam.south);
+\draw[->, Danger, dashed, line width=0.8pt] (cv.south) -- node[flab, right=2pt, align=left, font=\sffamily\footnotesize] {нет кадра или цели: \\ скорость 0} (cv.south |- drone.north);
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Замкнутый контур компьютерного зрения: изображение становится ошибкой, ошибка --- командой скорости, команда меняет положение дрона, и приходит новый кадр. Штриховая стрелка --- безопасная ветка: нет цели --- нулевая скорость.}\label{fig:sdk2-vision-loop}
+\end{tikzfig}

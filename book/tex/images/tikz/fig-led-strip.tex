@@ -1,0 +1,16 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig, x=0.5cm, y=0.5cm]
+\foreach \i in {0,...,3} {
+  \draw[draw=Accent, fill=Orange!10, line width=0.8pt] (\i,0) rectangle (\i+1,1);
+  \node[font=\sffamily\scriptsize] at (\i+0.5,0.5) {\i};
+}
+\foreach \i in {4,...,28} {
+  \draw[draw=InfoBlue, fill=InfoBlue!10, line width=0.8pt] (\i+0.5,0) rectangle (\i+1.5,1);
+  \node[font=\sffamily\scriptsize] at (\i+1,0.5) {\i};
+}
+\draw[decorate, decoration={brace, mirror, amplitude=4pt}, line width=0.8pt, Accent] (0,-0.3) -- (4,-0.3) node[midway, below=5pt, font=\sffamily\small, text=Ink, align=center] {плата: \texttt{0..3}};
+\draw[decorate, decoration={brace, mirror, amplitude=4pt}, line width=0.8pt, InfoBlue] (4.5,-0.3) -- (29.5,-0.3) node[midway, below=5pt, font=\sffamily\small, text=Ink] {модуль светодиодной матрицы: \texttt{4..28} (25 штук)};
+\node[font=\sffamily\small, anchor=south west] at (0,1.4) {\texttt{Ledbar.new(29)}: одна линейка из 29 индексов};
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Нумерация светодиодов в программе. Это нумерация индексов, а не схема расположения: какой индекс у какого угла платы, выясняется опытом.}\label{fig:led-strip}
+\end{tikzfig}

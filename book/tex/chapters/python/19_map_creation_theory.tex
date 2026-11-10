@@ -1,6 +1,7 @@
 \section{Создание навигационных карт}
+\label{sec:python-map-creation}
 
-Карта маркеров связывает номер метки с её местом на полигоне. В миссиях симулятора вы уже пользовались такой договорённостью: в миссии Python №\,100 метка 10 означала «северо-запад», 11 --- «юго-восток», 12 --- «цель», а в миссиях №\,104--105 маршрут строился по известным координатам меток. Эта глава учит готовить такую карту для настоящего полигона: откалибровать камеру, напечатать и наклеить маркеры, записать их положения в файл.
+Карта маркеров связывает номер метки с её местом на полигоне. В миссиях симулятора вы уже пользовались такой договорённостью: в миссии Python №\,100 метка 10 означала «северо-запад», 11 --- «юго-восток», 12 --- «цель», а в миссиях №\,104--105 маршрут строился по известным координатам меток. Эта глава учит готовить такую карту для настоящего полигона: откалибровать камеру, напечатать и наклеить маркеры, записать их положения в файл. Калибровка, печать и монтаж выполняются на настоящем оборудовании; в симуляторе проверяют только готовую карту, «обещание» «в этой точке видна такая метка».
 
 \subsection{Калибровка камеры}
 Перед тем как создавать карту, необходимо откалибровать камеру. Камера дрона — это не идеальный оптический прибор. Линзы (особенно широкоугольные «рыбий глаз») вносят искажения: прямые линии на краях кадра могут выглядеть изогнутыми. Это называется \textbf{дисторсией} (Distortion).
@@ -8,7 +9,7 @@
 Если не учесть эти искажения, координаты маркеров будут вычислены с ошибкой в десятки сантиметров.
 
 \begin{infobox}[Только настоящая камера]
-Калибруют камеру дрона или веб-камеру компьютера с полной библиотекой OpenCV~\cite{opencv_calibration}. Камера симулятора --- идеальная модель без дисторсии, калибровать её не нужно, а функций калибровки в браузерном \verb|cv2| нет.
+Калибруют камеру дрона или веб-камеру компьютера с полной библиотекой OpenCV~\cite{opencv_calibration}. Камера симулятора --- идеальная модель без дисторсии: калибровать её не нужно, а её матрицу ($f \approx 248$~пикселей, центр $(320, 180)$) программе отдаёт \verb|cv2.FileStorage|. Функций калибровки (\verb|findChessboardCorners|, \verb|calibrateCamera|) в браузерном \verb|cv2| нет.
 \end{infobox}
 
 \subsubsection{Процесс калибровки}
@@ -54,22 +55,21 @@
 
 \begin{figure}[H]
     \centering
-    \begin{minipage}{0.45\textwidth}
+    \begin{minipage}{0.3\textwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{markers/vector/aruco_4x4_id0.pdf}
-        \caption{ArUco 4x4 (Вектор)}
+        \includegraphics[width=0.9\linewidth]{markers/vector/aruco_4x4_id0.pdf}
+        \caption{ArUco 4x4}
     \end{minipage}
-    \begin{minipage}{0.45\textwidth}
+    \begin{minipage}{0.3\textwidth}
         \centering
-        \includegraphics[width=0.8\linewidth]{markers/vector/apriltag_id0.pdf}
-        \caption{AprilTag 36h11 (Вектор)}
+        \includegraphics[width=0.9\linewidth]{markers/vector/apriltag_id0.pdf}
+        \caption{AprilTag 36h11}
     \end{minipage}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\linewidth]{markers/vector/aruco_grid_4x4.pdf}
-    \caption{Карта маркеров 4x4 (ArUco, вектор)}
+    \begin{minipage}{0.3\textwidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{markers/vector/aruco_grid_4x4.pdf}
+        \caption{Карта 4x4}
+    \end{minipage}
 \end{figure}
 
 \begin{warnbox}[Важно!]

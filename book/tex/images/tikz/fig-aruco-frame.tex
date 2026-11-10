@@ -1,0 +1,32 @@
+\begin{tikzfig}
+\begin{adjustbox}{max width=\linewidth}\begin{tikzpicture}[fig]
+\draw[draw=Muted, fill=Paper, line width=0.8pt] (0,0) rectangle (9,6.4);
+\node[fnote, anchor=north west] at (0.15,6.25) {кадр $w \times h$ пикселей};
+% оси изображения
+\draw[faxis] (-0.6,6.4) -- (0.5,6.4) node[right, font=\sffamily\small] {$x$};
+\draw[faxis] (-0.6,6.4) -- (-0.6,5.3) node[below, font=\sffamily\small] {$y$};
+% метка
+\begin{scope}[shift={(7.4,4.9)}, rotate=-12]
+  \draw[draw=Ink, fill=Ink!85, line width=0.8pt] (-0.8,-0.8) rectangle (0.8,0.8);
+  \draw[draw=none, fill=white] (-0.5,-0.5) rectangle (0.0,0.0);
+  \draw[draw=none, fill=white] (0.15,0.15) rectangle (0.5,0.5);
+  \coordinate (c1) at (-0.8,0.8);
+  \coordinate (c2) at (0.8,0.8);
+  \coordinate (c3) at (0.8,-0.8);
+  \coordinate (c4) at (-0.8,-0.8);
+\end{scope}
+\foreach \i/\a in {1/135,2/45,3/315,4/225} {
+  \node[circle, draw=Accent, fill=white, inner sep=1pt, minimum size=5mm, font=\sffamily\small\bfseries, text=Accent] at ($(c\i)+(\a:0.45)$) {\i};
+}
+% центр кадра, центр метки, ошибка
+\draw[line width=0.8pt] (4.5,3.2) ++(-0.2,0) -- ++(0.4,0) ++(-0.2,-0.2) -- ++(0,0.4);
+\node[font=\sffamily\small, anchor=east] at (4.2,3.2) {центр кадра};
+\draw[farrow, Accent] (4.5,3.2) -- node[flab, below=1pt] {$e_x > 0$} (7.4,3.2);
+\draw[farrow, Accent] (7.4,3.2) -- (7.4,4.85);
+\node[flab, anchor=east, text=Accent] at (7.3,3.6) {$e_y < 0$};
+\fill[Accent, draw=white] (7.4,4.9) circle (2.6pt);
+\node[font=\sffamily\small, text=Accent, anchor=east] at (5.9,5.8) {центр метки $c$};
+\draw[->, Accent, line width=0.8pt] (5.95,5.7) .. controls (6.5,5.4) and (7.0,5.2) .. (7.33,4.98);
+\end{tikzpicture}\end{adjustbox}
+\captionof{figure}{Углы метки пронумерованы так, как их возвращает детектор: по часовой стрелке от левого верхнего. Центр метки $c$ --- среднее четырёх углов; ошибка --- его смещение от центра кадра. Ось $y$ кадра направлена вниз, поэтому «выше центра» даёт $e_y < 0$.}\label{fig:aruco-frame}
+\end{tikzfig}
