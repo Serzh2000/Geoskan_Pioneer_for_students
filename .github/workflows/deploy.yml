@@ -1,0 +1,62 @@
+name: deploy simulator
+
+# Ручной запуск: Actions -> deploy simulator -> Run workflow (только из main).
+# Адрес сервера, пользователь, ключ и отпечаток хоста лежат в секретах окружения `production`,
+# в репозитории их нет. Ключ на сервере разрешает одно: запустить скрипт выкладки, который
+# принимает архив релиза со стандартного ввода (бэкап, распаковка, сборка, перезапуск).
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-simulator
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: pack, upload, restart
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Pack release (tracked files of simulator/ only)
+        run: git archive --format=tar.gz -o "$RUNNER_TEMP/release.tgz" HEAD:simulator
+
+      - name: Prepare SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/deploy_key ~/.ssh/known_hosts
+
+      - name: Upload and run the deploy script on the server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+              -o ConnectTimeout=30 -o ServerAliveInterval=15 \
+              "$DEPLOY_USER@$DEPLOY_HOST" < "$RUNNER_TEMP/release.tgz"
+
+      - name: Check the site
+        run: |
+          for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://simulator.sakoryagin.ru/ || true)
+            echo "attempt $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 10
+          done
+          exit 1
+
+      - name: Remove SSH material
+        if: always()
+        run: rm -f ~/.ssh/deploy_key ~/.ssh/known_hosts
