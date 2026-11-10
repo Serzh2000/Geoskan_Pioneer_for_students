@@ -3,7 +3,6 @@ export type TerminalSession = {
     id: number; label: string; lines: TerminalLine[]; history: string[]; cursor: number; draft: string;
 };
 export type TerminalActions = { run(): boolean; stop(): boolean; reset(): boolean; status(): string };
-export const TERMINAL_COMMANDS = ['help', 'run', 'stop', 'reset', 'status', 'clear'];
 
 /** IDE shortcuts use physical keys so the Russian layout works too. */
 export function matchesTerminalShortcut(event: Pick<KeyboardEvent, 'code' | 'key'>, key: 'C' | 'L' | 'J'): boolean {

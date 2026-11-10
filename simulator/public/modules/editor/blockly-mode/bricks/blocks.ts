@@ -1,5 +1,5 @@
 import * as Blockly from 'blockly';
-import { BRICKS_COLOURS, BRICKS_DRONE_ONLY_REASON, BRICKS_START_TYPE, bricksType } from './constants.js';
+import { BRICKS_COLOURS, BRICKS_START_TYPE, bricksType } from './constants.js';
 import { FieldHexColour } from './colour-field.js';
 import {
     BRICKS_CATEGORY_COLOUR,
@@ -165,9 +165,4 @@ export function registerBricksBlockDefinitions(): void {
     defineStartBlock();
     definePaintObject();
     BRICKS_SPECS.forEach(defineFromSpec);
-}
-
-/** Для отладки и тестов: причины отключения блока. */
-export function hasBricksDroneOnlyReason(block: Blockly.Block): boolean {
-    return block.hasDisabledReason(BRICKS_DRONE_ONLY_REASON);
 }

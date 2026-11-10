@@ -26,6 +26,7 @@
 - [`public/modules/lua/utils.ts`](#public-modules-lua-utils-ts)
 - [`public/modules/lua/vehicles.ts`](#public-modules-lua-vehicles-ts)
 - [`public/modules/python/browser-runtime.ts`](#public-modules-python-browser-runtime-ts)
+- [`public/modules/python/cv-window.ts`](#public-modules-python-cv-window-ts)
 - [`public/modules/python/external-bridge-binding.ts`](#public-modules-python-external-bridge-binding-ts)
 - [`public/modules/python/external-bridge-runtime.ts`](#public-modules-python-external-bridge-runtime-ts)
 - [`public/modules/python/external-bridge.ts`](#public-modules-python-external-bridge-ts)
@@ -37,8 +38,14 @@
 - [`public/modules/python/pioneer-js-bridge-camera.ts`](#public-modules-python-pioneer-js-bridge-camera-ts)
 - [`public/modules/python/pioneer-js-bridge-cv.ts`](#public-modules-python-pioneer-js-bridge-cv-ts)
 - [`public/modules/python/pioneer-js-bridge.ts`](#public-modules-python-pioneer-js-bridge-ts)
+- [`public/modules/python/pioneer-rknn-bridge.ts`](#public-modules-python-pioneer-rknn-bridge-ts)
+- [`public/modules/python/pioneer-rknn-module.ts`](#public-modules-python-pioneer-rknn-module-ts)
+- [`public/modules/python/pioneer-rknn-scene.ts`](#public-modules-python-pioneer-rknn-scene-ts)
+- [`public/modules/python/pioneer-sdk-cv-extra-prelude.ts`](#public-modules-python-pioneer-sdk-cv-extra-prelude-ts)
 - [`public/modules/python/pioneer-sdk-cv-prelude.ts`](#public-modules-python-pioneer-sdk-cv-prelude-ts)
 - [`public/modules/python/pioneer-sdk-module.ts`](#public-modules-python-pioneer-sdk-module-ts)
+- [`public/modules/python/pioneer-sdk2-bridge.ts`](#public-modules-python-pioneer-sdk2-bridge-ts)
+- [`public/modules/python/pioneer-sdk2-module.ts`](#public-modules-python-pioneer-sdk2-module-ts)
 - [`public/modules/python/pyodide-loader.ts`](#public-modules-python-pyodide-loader-ts)
 - [`public/modules/python/runtime-shared.ts`](#public-modules-python-runtime-shared-ts)
 - [`public/modules/python/runtime.ts`](#public-modules-python-runtime-ts)
@@ -199,8 +206,8 @@
 
 - Исходник: [открыть файл](../../public/modules/lua/utils.ts)
 - Кратко: Модуль Lua-моста и исполнения Lua-логики.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `decodeLuaByteLikeValue`, `log`, `luaToStr`
+- Обнаружено функций/методов: 2
+- Ключевые символы: `decodeLuaByteLikeValue`, `luaToStr`
 
 <a id="public-modules-lua-vehicles-ts"></a>
 ### `public/modules/lua/vehicles.ts`
@@ -215,8 +222,16 @@
 
 - Исходник: [открыть файл](../../public/modules/python/browser-runtime.ts)
 - Кратко: Модуль Python/Pyodide-интеграции.
-- Обнаружено функций/методов: 7
-- Ключевые символы: `__SimAsyncify.if`, `cancelBrowserPythonRun`, `clearActivePythonRun`, `disposeBrowserPythonRunState`, `hasActiveBrowserPythonRun`, `runBrowserPythonScript`, `validatePythonSyntax`
+- Обнаружено функций/методов: 8
+- Ключевые символы: `__SimAsyncify.if`, `cancelBrowserPythonRun`, `checkPythonSdkForDrone`, `clearActivePythonRun`, `disposeBrowserPythonRunState`, `hasActiveBrowserPythonRun`, `runBrowserPythonScript`, `validatePythonSyntax`
+
+<a id="public-modules-python-cv-window-ts"></a>
+### `public/modules/python/cv-window.ts`
+
+- Исходник: [открыть файл](../../public/modules/python/cv-window.ts)
+- Кратко: Модуль Python/Pyodide-интеграции.
+- Обнаружено функций/методов: 19
+- Ключевые символы: `button`, `clamp`, `destroyAllCvWindows`, `drawCvFrame`, `ensureLayer`, `escapeHtml`, `installDragging`, `installResizing`, `isCvWindowShowing`, `layout`, `loadSaved`, `move`, `openCvWindow`, `renderTray`, `save`, `setCvWindowCloseHandler`, `showCvText`, `svg`, `up`
 
 <a id="public-modules-python-external-bridge-binding-ts"></a>
 ### `public/modules/python/external-bridge-binding.ts`
@@ -262,8 +277,8 @@
 
 - Исходник: [открыть файл](../../public/modules/python/marker-detection.ts)
 - Кратко: Модуль Python/Pyodide-интеграции.
-- Обнаружено функций/методов: 8
-- Ключевые символы: `blackSquareHalf`, `detectVisibleMarkers`, `gaussian`, `isHidden`, `lastMarkerFrame`, `latestMarkerDetections`, `markersInFrame`, `sealMarkerFrame`
+- Обнаружено функций/методов: 11
+- Ключевые символы: `axisEnd`, `blackSquareHalf`, `detectVisibleMarkers`, `gaussian`, `isHidden`, `lastMarkerFrame`, `latestMarkerDetections`, `markerSheets`, `markersInFrame`, `scanMarkers`, `sealMarkerFrame`
 
 <a id="public-modules-python-pioneer-js-bridge-camera-render-ts"></a>
 ### `public/modules/python/pioneer-js-bridge-camera-render.ts`
@@ -286,16 +301,16 @@
 
 - Исходник: [открыть файл](../../public/modules/python/pioneer-js-bridge-camera.ts)
 - Кратко: Модуль Python/Pyodide-интеграции.
-- Обнаружено функций/методов: 12
-- Ключевые символы: `buildTimestampSlug`, `captureDroneCameraFrameDataUrl`, `closeDroneCameraConnection`, `connectDroneCamera`, `decodeDataUrlToBytes`, `disconnectDroneCamera`, `downloadDroneCameraPhoto`, `getDroneCameraCvFrame`, `getDroneCameraFrame`, `isDroneCameraConnected`, `reportMissingFeed`, `triggerBrowserDownload`
+- Обнаружено функций/методов: 11
+- Ключевые символы: `buildTimestampSlug`, `closeDroneCameraConnection`, `connectDroneCamera`, `decodeDataUrlToBytes`, `disconnectDroneCamera`, `downloadDroneCameraPhoto`, `getDroneCameraCvFrame`, `getDroneCameraFrame`, `isDroneCameraConnected`, `reportMissingFeed`, `triggerBrowserDownload`
 
 <a id="public-modules-python-pioneer-js-bridge-cv-ts"></a>
 ### `public/modules/python/pioneer-js-bridge-cv.ts`
 
 - Исходник: [открыть файл](../../public/modules/python/pioneer-js-bridge-cv.ts)
 - Кратко: Модуль Python/Pyodide-интеграции.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `ensureCvWindow`, `installCvKeyboardBridge`, `installCvRuntimeAPI`, `renderCvFrameSummary`
+- Обнаружено функций/методов: 3
+- Ключевые символы: `installCvKeyboardBridge`, `installCvRuntimeAPI`, `renderCvFrameSummary`
 
 <a id="public-modules-python-pioneer-js-bridge-ts"></a>
 ### `public/modules/python/pioneer-js-bridge.ts`
@@ -304,6 +319,36 @@
 - Кратко: Модуль Python/Pyodide-интеграции.
 - Обнаружено функций/методов: 2
 - Ключевые символы: `installJsRuntimeAPI`, `toFiniteNumber`
+
+<a id="public-modules-python-pioneer-rknn-bridge-ts"></a>
+### `public/modules/python/pioneer-rknn-bridge.ts`
+
+- Исходник: [открыть файл](../../public/modules/python/pioneer-rknn-bridge.ts)
+- Кратко: Модуль Python/Pyodide-интеграции.
+- Обнаружено функций/методов: 9
+- Ключевые символы: `guard`, `installRknnRuntimeAPI`, `isHiddenUp`, `isInside`, `occludedFrom`, `positive`, `sceneTruth`, `sensorFor`, `unit`
+
+<a id="public-modules-python-pioneer-rknn-module-ts"></a>
+### `public/modules/python/pioneer-rknn-module.ts`
+
+- Исходник: [открыть файл](../../public/modules/python/pioneer-rknn-module.ts)
+- Кратко: Модуль Python/Pyodide-интеграции.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-python-pioneer-rknn-scene-ts"></a>
+### `public/modules/python/pioneer-rknn-scene.ts`
+
+- Исходник: [открыть файл](../../public/modules/python/pioneer-rknn-scene.ts)
+- Кратко: Модуль Python/Pyodide-интеграции.
+- Обнаружено функций/методов: 36
+- Ключевые символы: `ankleOf`, `at`, `build`, `centroid`, `clamp`, `collectSceneTruth`, `confidenceFor`, `convexHull`, `cross`, `detectObjects`, `detectPoses`, `detectTexts`, `elbowOf`, `extentOf`, `fleetCarTarget`, `head`, `inFrameBox`, `iou`, `jitter`, `jitterBox`, `kneeOf`, `orientedBoxPoints`, `padLines`, `padTargets`, `personJoints`, `place`, `prepareCamera`, `projectRect`, `proportionalSkeleton`, `seen`, `serviceClass`, `silhouette`, `smooth`, `toPixel`, `walk`, `wrist`
+
+<a id="public-modules-python-pioneer-sdk-cv-extra-prelude-ts"></a>
+### `public/modules/python/pioneer-sdk-cv-extra-prelude.ts`
+
+- Исходник: [открыть файл](../../public/modules/python/pioneer-sdk-cv-extra-prelude.ts)
+- Кратко: Модуль Python/Pyodide-интеграции.
+- Обнаружено функций/методов: 0
 
 <a id="public-modules-python-pioneer-sdk-cv-prelude-ts"></a>
 ### `public/modules/python/pioneer-sdk-cv-prelude.ts`
@@ -319,6 +364,21 @@
 - Кратко: Модуль Python/Pyodide-интеграции.
 - Обнаружено функций/методов: 1
 - Ключевые символы: `installPioneerSdkModule`
+
+<a id="public-modules-python-pioneer-sdk2-bridge-ts"></a>
+### `public/modules/python/pioneer-sdk2-bridge.ts`
+
+- Исходник: [открыть файл](../../public/modules/python/pioneer-sdk2-bridge.ts)
+- Кратко: Модуль Python/Pyodide-интеграции.
+- Обнаружено функций/методов: 3
+- Ключевые символы: `checkCancelled`, `finite`, `installSdk2RuntimeAPI`
+
+<a id="public-modules-python-pioneer-sdk2-module-ts"></a>
+### `public/modules/python/pioneer-sdk2-module.ts`
+
+- Исходник: [открыть файл](../../public/modules/python/pioneer-sdk2-module.ts)
+- Кратко: Модуль Python/Pyodide-интеграции.
+- Обнаружено функций/методов: 0
 
 <a id="public-modules-python-pyodide-loader-ts"></a>
 ### `public/modules/python/pyodide-loader.ts`

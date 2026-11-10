@@ -21,7 +21,6 @@ import {
     setTextEditorValueOnInstance,
     type TextEditorValueMode
 } from '../text-editor.js';
-import type { AppTheme } from '../../app/theme-toggle.js';
 import type { EditorTheme } from '../text-editor.js';
 import { getBlocklyThemeByName } from '../runtime.js';
 import {

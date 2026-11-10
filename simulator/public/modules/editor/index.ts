@@ -1,8 +1,6 @@
 import 'monaco-editor/min/vs/editor/editor.main.css';
 
 export {
-    beginTemporaryEditorDocument,
-    restoreTemporaryEditorDocument,
     getEditorValue,
     getMainBlocklyWorkspace,
     getSavedEditorDraft,
@@ -15,7 +13,6 @@ export {
     setBlocklyEditorEnabled,
     setEditorLanguage,
     setEditorValue,
-    revealEditorStart,
     syncBlocklyWithDroneModel,
     syncScriptLanguageSelect
 } from './index/api.js';

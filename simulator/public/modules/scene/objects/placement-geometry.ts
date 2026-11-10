@@ -55,18 +55,6 @@ export function softSnapPlanarPoint(point: { x: number; y: number }, active: boo
     return { x: snapToGridSoft(point.x, step, pull), y: snapToGridSoft(point.y, step, pull) };
 }
 
-/** X/Y to the nearest grid node when `active`; the height is never snapped. */
-export function snapPlanarPoint(point: { x: number; y: number }, active: boolean, step = GRID_SNAP_STEP): { x: number; y: number } {
-    if (!active) return { x: point.x, y: point.y };
-    return { x: snapToGrid(point.x, step), y: snapToGrid(point.y, step) };
-}
-
-export function snapAngleRadians(angle: number, active: boolean, stepDegrees = ROTATION_SNAP_DEGREES): number {
-    if (!active || !(stepDegrees > 0)) return angle;
-    const step = THREE.MathUtils.degToRad(stepDegrees);
-    return Math.round(angle / step) * step;
-}
-
 /**
  * Pivot height that puts the object's bounding-box bottom on `surfaceZ`.
  * Models whose pivot is not at their base (a marker sheet is centred on its

@@ -43,7 +43,6 @@ export class ApiError extends Error {
 }
 
 let user: AccountUser | null = null;
-let ready = false;
 /** Сервер больше не узнаёт сессию (два часа без запросов): пользователь остаётся «текущим», но входить нужно заново. */
 let expired = false;
 const listeners = new Set<(user: AccountUser | null) => void>();
@@ -90,7 +89,6 @@ async function call<T>(method: string, url: string, body?: unknown): Promise<T> 
 let lastAuthKind: 'login' | 'register' | 'restore' = 'restore';
 export const getLastAuthKind = () => lastAuthKind;
 export const getUser = () => user;
-export const isAccountReady = () => ready;
 
 export function onUserChange(listener: (user: AccountUser | null) => void): () => void {
     listeners.add(listener);
@@ -101,7 +99,6 @@ function setUser(next: AccountUser | null): void {
     // Повторный вход после истёкшей сессии тоже событие: накопленные зачёты нужно отправить.
     const changed = next?.id !== user?.id || (expired && next !== null);
     user = next;
-    ready = true;
     expired = false;
     if (changed) listeners.forEach((listener) => listener(user));
 }

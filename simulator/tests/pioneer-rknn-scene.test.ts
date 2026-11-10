@@ -4,7 +4,7 @@
  */
 import * as THREE from 'three';
 import {
-    COCO, COCO_CLASSES, collectSceneTruth, confidenceFor, detectObjects, detectPoses, detectTexts, fleetCarTarget,
+    COCO, collectSceneTruth, confidenceFor, detectObjects, detectPoses, detectTexts, fleetCarTarget,
     nonMaxSuppression, type Sensor
 } from '../public/modules/python/pioneer-rknn-scene.js';
 import { createPerson, placePerson, poseNow } from '../public/modules/world/actors.js';
@@ -46,19 +46,6 @@ function personAt(x: number, y: number, facingCamera: boolean, mode: 'idle' | 'h
     scene.updateMatrixWorld(true);
     return { person, scene };
 }
-
-describe('классы COCO', () => {
-    test('80 классов, номера из книги: человек 0, машина 2, собака 16, бутылка 39', () => {
-        expect(COCO_CLASSES).toHaveLength(80);
-        expect(COCO_CLASSES[0]).toBe('person');
-        expect(COCO_CLASSES[2]).toBe('car');
-        expect(COCO_CLASSES[16]).toBe('dog');
-        expect(COCO_CLASSES[39]).toBe('bottle');
-        expect(COCO_CLASSES[COCO.bus]).toBe('bus');
-        expect(COCO_CLASSES[COCO.truck]).toBe('truck');
-        expect(COCO_CLASSES[COCO.train]).toBe('train');
-    });
-});
 
 describe('Yolo: объекты в поле зрения', () => {
     test('человек в 8 м перед камерой найден по центру кадра с классом 0', () => {

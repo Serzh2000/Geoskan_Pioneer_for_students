@@ -178,8 +178,3 @@ export function installBricksGenerators(): void {
         (gen.forBlock as Record<string, (block: Blockly.Block) => string | CodeValue | null>)[bricksType(type)] = generate;
     }
 }
-
-/** Родные имена блоков (как в XML Bricks), для которых есть генератор. */
-export function bricksGeneratorTypes(): string[] {
-    return Object.keys(generators);
-}

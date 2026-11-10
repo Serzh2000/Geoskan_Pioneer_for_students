@@ -5,6 +5,9 @@
 export function collectPythonIssues(code: string): string[] {
     const normalized = (code || '').toLowerCase();
     const issues: string[] = [];
+    // Эвристики написаны под pioneer_sdk. Программы Мини 2 (pioneer_sdk2, в том числе собранные из блоков Bricks)
+    // устроены иначе: посадка в finally, `sleep` из time, подготовка через `pio.arm`/`preflight`.
+    if (/^\s*(?:from|import)\s+pioneer_sdk2\b/m.test(normalized)) return issues;
     const hasArm = /(?:pioneer\.)?arm\s*\(/.test(normalized);
     const hasTakeoff = /(?:pioneer\.)?takeoff\s*\(/.test(normalized);
     const hasGoTo = /go_to_local_point\s*\(/.test(normalized);

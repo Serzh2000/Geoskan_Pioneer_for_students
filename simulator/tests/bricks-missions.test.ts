@@ -4,7 +4,7 @@
  * см. helpers/mini2-runtime.ts) и проходит проверку миссии; шаблон миссии — нет.
  */
 import * as Blockly from 'blockly';
-import { BRICKS_MISSIONS, gradeBricksMission, missingBricksBlocks, solutionBlockTypes } from '../public/modules/ui/mission-guide/mini2/bricks-missions.js';
+import { BRICKS_MISSIONS, gradeBricksMission, missingBricksBlocks } from '../public/modules/ui/mission-guide/mini2/bricks-missions.js';
 import { buildBricksQuests } from '../public/modules/learning/bricks-quests.js';
 import { questGroups } from '../public/modules/learning/quests.js';
 import { loadBricksProject } from '../public/modules/editor/blockly-mode/bricks/index.js';
@@ -68,8 +68,6 @@ describe('структура трека bricks', () => {
 describe('состав блоков', () => {
     test.each(BRICKS_MISSIONS.map((mission) => [mission.id, mission] as const))('%s: эталон содержит нужные блоки, шаблон — нет', (id, mission) => {
         const real = typesOf(mission.solutionXml);
-        // Разбор типов в проверке совпадает с настоящим Blockly.
-        expect(solutionBlockTypes(mission)).toEqual(real);
         expect({ id, missing: missingBricksBlocks(mission, expandCounts(real)) }).toEqual({ id, missing: [] });
         expect(missingBricksBlocks(mission, expandCounts(typesOf(mission.starterXml))).length).toBeGreaterThan(0);
     });

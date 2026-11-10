@@ -39,11 +39,6 @@ export function parseBricksProject(xml: string): BricksProject {
     return { name, dom: root };
 }
 
-/** Текст похож на проект Bricks (корень xml со своим <project> или с блоком start_block). */
-export function looksLikeBricksProject(text: string): boolean {
-    return /<xml[\s>]/.test(text) && (/<project[\s>/]/.test(text) || /type="start_block"/.test(text));
-}
-
 /** Загружает проект Bricks в workspace (прежние блоки удаляются). Возвращает имя проекта. */
 export function loadBricksProject(xml: string, workspace: Blockly.Workspace): string | null {
     const { name, dom } = parseBricksProject(xml);

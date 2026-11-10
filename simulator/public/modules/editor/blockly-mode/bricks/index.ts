@@ -14,7 +14,6 @@ export { BRICKS_STARTER_XML } from './starter.js';
 export {
     bricksProjectFileName,
     loadBricksProject,
-    looksLikeBricksProject,
     parseBricksProject,
     serializeBricksProject
 } from './xml.js';

@@ -43,8 +43,8 @@
 
 - Исходник: [открыть файл](../../public/main.ts)
 - Кратко: Клиентский файл приложения.
-- Обнаружено функций/методов: 5
-- Ключевые символы: `init`, `loadFileContent`, `resetSimulation`, `startSimulation`, `stopSimulation`
+- Обнаружено функций/методов: 8
+- Ключевые символы: `clearSceneObjects`, `init`, `loadFileContent`, `offerToClearScene`, `placedSceneObjects`, `resetSimulation`, `startSimulation`, `stopSimulation`
 
 <a id="public-modules-ui-index-ts"></a>
 ### `public/modules/ui/index.ts`
@@ -66,8 +66,8 @@
 
 - Исходник: [открыть файл](../../server.ts)
 - Кратко: HTTP entry point и настройка Express/Vite-сервера.
-- Обнаружено функций/методов: 12
-- Ключевые символы: `createApp`, `createExternalBridgeLimiter`, `createSensitiveRouteLimiter`, `dedupeExistingPaths`, `examplesRootsFor`, `resolveAutopilotParametersPath`, `resolveCorsOptions`, `resolveExamplesRoots`, `resolveFirstExistingPath`, `resolvePublicPath`, `resolvePythonExamplesRoots`, `startServer`
+- Обнаружено функций/методов: 17
+- Ключевые символы: `createApp`, `createExternalBridgeLimiter`, `createSensitiveRouteLimiter`, `dedupeExistingPaths`, `examplesExtension`, `examplesRootsFor`, `parseExamplesSet`, `resolveAutopilotParametersPath`, `resolveBlocksExamplesRoots`, `resolveBricksExamplesRoots`, `resolveCorsOptions`, `resolveExamplesRoots`, `resolveFirstExistingPath`, `resolvePublicPath`, `resolvePythonExamplesRoots`, `resolvePythonSdk2ExamplesRoots`, `startServer`
 
 <a id="tsconfig-json"></a>
 ### `tsconfig.json`
@@ -88,6 +88,6 @@
 
 - Исходник: [открыть файл](../../vite.config.ts)
 - Кратко: Файл проекта.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `htmlIncludesPlugin`, `resolveHtmlIncludes`
+- Обнаружено функций/методов: 5
+- Ключевые символы: `examplesApiPlugin`, `existing`, `htmlIncludesPlugin`, `resolveHtmlIncludes`, `rootsFor`
 

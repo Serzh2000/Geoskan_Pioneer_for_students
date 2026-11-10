@@ -326,23 +326,6 @@ export function parseRcChannelsOverride(payload: Buffer): RcOverrideCommand | nu
     };
 }
 
-export function decodeDataUrlToBuffer(dataUrl: string | null): Buffer | null {
-    if (!dataUrl) {
-        return null;
-    }
-
-    const match = dataUrl.match(/^data:[^;]+;base64,(.+)$/);
-    if (!match?.[1]) {
-        return null;
-    }
-
-    try {
-        return Buffer.from(match[1], 'base64');
-    } catch {
-        return null;
-    }
-}
-
 export function mapAutopilotStateToCustomMode(state: string | null | undefined): number {
     switch (state) {
         case 'ARMED':

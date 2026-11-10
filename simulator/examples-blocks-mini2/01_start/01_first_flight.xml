@@ -1,0 +1,1 @@
+<xml xmlns="https://developers.google.com/blockly/xml"><project name="01_first_flight" /><variables></variables><block type="start_block" deletable="false" movable="false" x="10" y="10"><next><block type="preflight"><next><block type="take_off"><next><block type="landing"></block></next></block></next></block></next></block></xml>

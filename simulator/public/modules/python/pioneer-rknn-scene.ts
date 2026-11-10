@@ -16,19 +16,6 @@ import { OBJECT_TYPE } from '../shared/object-types.js';
 export const FRAME_WIDTH = 640;
 export const FRAME_HEIGHT = 360;
 
-/** 80 классов набора COCO, на которых обучена yolov8n: номер в ответе Yolo.run - индекс в этом списке. */
-export const COCO_CLASSES: readonly string[] = [
-    'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
-    'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
-    'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
-    'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard',
-    'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-    'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
-    'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone',
-    'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear',
-    'hair drier', 'toothbrush'
-];
-
 /** Классы COCO, которые в сцене симулятора есть. Деревьев, зданий и грузов в COCO нет, yolov8n их не находит. */
 export const COCO = { person: 0, car: 2, bus: 5, train: 6, truck: 7 } as const;
 
@@ -95,11 +82,6 @@ const smooth = (a: number, b: number, value: number) => {
 const jitter = (rng: () => number) => (rng() + rng() + rng() - 1.5) / 1.5;
 
 // ---------------------------------------------------------------- сбор объектов сцены
-
-function isHiddenUp(node: THREE.Object3D): boolean {
-    for (let current: THREE.Object3D | null = node; current; current = current.parent) if (!current.visible) return true;
-    return false;
-}
 
 /** Углы коробки объекта в его собственных осях (учитывает поворот машины, а не раздувается до осевой коробки мира). */
 export function orientedBoxPoints(object: THREE.Object3D): THREE.Vector3[] | null {

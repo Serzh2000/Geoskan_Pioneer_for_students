@@ -44,7 +44,6 @@ export class Gait {
         this.mode = mode;
         poseNow(p, mode, dt, 1);
     }
-    get current() { return this.mode; }
 }
 
 export type DriveOptions = {
@@ -110,11 +109,6 @@ export class Mover {
         this.covered += (got / dt - this.covered) * Math.min(1, dt * 12);
         this.apply(dt, o.still ?? 'idle', !!o.carry, Math.min(this.speed, this.covered));
         return remaining;
-    }
-
-    /** Stand where you are, turning to `face` if given. */
-    hold(dt: number, face?: number, still: PoseMode = 'idle') {
-        return this.drive(dt, { x: this.x, y: this.y }, { face, still });
     }
 
     private pushOut() {

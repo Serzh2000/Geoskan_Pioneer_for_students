@@ -103,31 +103,6 @@ function classifyLogTone(level: LogLevel, tag: string): LogTone {
     return 'info';
 }
 
-export function createLogEntryElement(record: LogRecord): HTMLElement {
-    const entry = document.createElement('article');
-    entry.className = `log-entry log-entry--${record.tone}`;
-    entry.dataset.category = record.category;
-
-    const meta = document.createElement('div');
-    meta.className = 'log-entry__meta';
-
-    const timeElement = document.createElement('span');
-    timeElement.className = 'log-entry__time';
-    timeElement.textContent = `[${record.time}]`;
-
-    const tagElement = document.createElement('span');
-    tagElement.className = 'log-entry__tag';
-    tagElement.textContent = record.tag;
-
-    const messageElement = document.createElement('div');
-    messageElement.className = 'log-entry__message';
-    messageElement.textContent = record.message || 'Без описания события';
-
-    meta.append(timeElement, tagElement);
-    entry.append(meta, messageElement);
-    return entry;
-}
-
 function countEntriesByCategory(): Map<Exclude<LogCategoryKey, 'all'>, number> {
     const counts = new Map<Exclude<LogCategoryKey, 'all'>, number>();
 

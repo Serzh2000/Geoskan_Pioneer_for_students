@@ -34,5 +34,3 @@ export const ROOF_COLORS = [0x6b4a3a, 0x4d5a63, 0x7a3f33, 0x3f5a45, 0x5b4a58];
 
 /** Радиус самого маленького дома каждого вида: нижняя граница MODEL_FOOTPRINTS. */
 export const MIN_BLOCK_RADIUS = Math.min(...BLOCK_SPECS.map(s => s.radius));
-export const MAX_BLOCK_RADIUS = Math.max(...BLOCK_SPECS.map(s => s.radius));
-export const MAX_HOUSE_RADIUS = Math.max(...HOUSE_SPECS.map(s => s.radius));

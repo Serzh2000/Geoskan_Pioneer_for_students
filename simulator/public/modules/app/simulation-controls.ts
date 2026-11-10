@@ -19,12 +19,3 @@ export async function restartAndRunSimulation(): Promise<void> {
     registeredHandlers.reset();
     await registeredHandlers.start();
 }
-
-export function resetSimulationState(): void {
-    if (!registeredHandlers) {
-        console.warn('[SimulationControls] Handlers are not configured yet.');
-        return;
-    }
-
-    registeredHandlers.reset();
-}

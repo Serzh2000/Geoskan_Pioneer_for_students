@@ -12,7 +12,7 @@ import {
 } from './account.js';
 import { renderMedal, renderRankBadge, rankFor } from './achievement-art.js';
 import { ago, downloadText, esc, fmtDate, fmtDateTime, fmtDuration, groupTheme, ICON, initials, plural, renderCalendar, TRACK_LABELS, trapFocus, completedChapters, computeAchievements } from './cabinet-kit.js';
-import { questGroups, type Quest } from './quests.js';
+import { questGroups } from './quests.js';
 import { createQuestCache, trackTotals } from './tracks.js';
 import {
     countByStatus, credentialsReport, filterStudents, matrixReport, sortStudents, STATUS_LABELS, studentStatus, summaryReport, troubleScore,

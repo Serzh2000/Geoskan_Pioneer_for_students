@@ -40,9 +40,11 @@ export type LearningTrack = AccountTrack;
 const TRACK_STORAGE_KEY = 'pioneer:learning:track:v1';
 /** Сколько событий запуска хранит журнал для миссий Мини 2: длинные программы с подсветкой дают больше пятисот. */
 const MINI2_EVENT_LIMIT = 4096;
+/** Пустой проект Bricks: только «Начало программы». */
+const BRICKS_EMPTY_PROJECT = '<xml xmlns="https://developers.google.com/blockly/xml"><project name="mission" /><variables></variables><block type="start_block" deletable="false" movable="false" x="10" y="10"></block></xml>';
 const HUD_POS_STORAGE_KEY = 'pioneer:learning:hud-pos:v1';
 /** Короткие подписи для переключателя в карточке; полные названия треков — TRACK_NAMES. */
-const TRACK_LABELS: Record<LearningTrack, string> = { blocks: 'Blockly', lua: 'Lua', python: 'Python', sdk2: 'Мини 2 · Python', bricks: 'Мини 2 · блоки' };
+const TRACK_LABELS: Record<LearningTrack, string> = { blocks: 'Blockly', lua: 'Lua', python: 'Python', sdk2: 'Мини 2 · Python', bricks: 'Мини 2 · Bricks' };
 /** Треки, где программа собирается из блоков (редактор Blockly): практикум Базового и Bricks Мини 2. */
 const isBlockTrack = (value: LearningTrack): boolean => value === 'blocks' || value === 'bricks';
 /** Язык текстового редактора трека: Lua только у трека Lua, остальные треки пишут на Python. */
@@ -257,6 +259,8 @@ async function enterBricksEditor(xml: string): Promise<void> {
     if (select) select.value = 'python';
     setBlocklyEditorEnabled(true);
     await loadMainBricksProject(xml);
+    // Блок «Начало программы» обязателен: если в проекте (старый черновик, пустой шаблон) его нет, ставим пустой проект.
+    if (!usedBlockTypes().includes('bricks_start_block')) await loadMainBricksProject(BRICKS_EMPTY_PROJECT);
     syncScriptLanguageSelect();
     renderApiDocs('python');
 }
@@ -529,7 +533,7 @@ function renderHud(direction: 'forward' | 'back' = 'forward'): void {
                     ${(Object.keys(TRACK_LABELS) as LearningTrack[]).map((key) => `<button type="button" class="pk-seg__btn${key === track ? ' is-active' : ''}" data-quest-track="${key}">${TRACK_LABELS[key]}</button>`).join('')}
                 </div>
                 <div class="quest-hud__view pk-seg" role="group" aria-label="Что показать">
-                    <button type="button" class="pk-seg__btn${isEditorVisible() ? ' is-active' : ''}" data-quest-view="code">${isBlockTrack(track) ? 'Блоки' : 'Код'}</button>
+                    <button type="button" class="pk-seg__btn${isEditorVisible() ? ' is-active' : ''}" data-quest-view="code">${track === 'bricks' ? 'Bricks' : isBlockTrack(track) ? 'Блоки' : 'Код'}</button>
                     <button type="button" class="pk-seg__btn${isEditorVisible() ? '' : ' is-active'}" data-quest-view="scene">Сцена</button>
                 </div>
             </div>
@@ -598,7 +602,13 @@ async function checkQuest(): Promise<void> {
     const quest = activeQuest;
     if (!quest || checking) return;
     if (track === 'bricks') {
-        const used = usedBlockTypes();
+        let used = usedBlockTypes();
+        if (!used.includes('bricks_start_block')) {
+            // В редакторе нет блоков Bricks (другая модель дрона или пустое поле): возвращаем модель и стартовый блок.
+            ensureMini2Drone();
+            try { await loadMainBricksProject(BRICKS_EMPTY_PROJECT); } catch (error) { console.error('[learning] bricks restore', error); }
+            used = usedBlockTypes();
+        }
         if (!used.includes('bricks_start_block') || used.every((type) => type === 'bricks_start_block')) {
             feedback = { kind: 'error', title: 'Программа пока пустая', lines: ['Прикрепите команды под блок «Начало программы» по шагам миссии.'] };
             renderHud();

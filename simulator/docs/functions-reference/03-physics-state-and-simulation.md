@@ -12,6 +12,7 @@
 - [`public/modules/physics/events.ts`](#public-modules-physics-events-ts)
 - [`public/modules/physics/flight-update.ts`](#public-modules-physics-flight-update-ts)
 - [`public/modules/physics/frames.ts`](#public-modules-physics-frames-ts)
+- [`public/modules/physics/ground.ts`](#public-modules-physics-ground-ts)
 - [`public/modules/physics/helpers.ts`](#public-modules-physics-helpers-ts)
 - [`public/modules/physics/index.ts`](#public-modules-physics-index-ts)
 - [`public/modules/physics/magnet-gripper.ts`](#public-modules-physics-magnet-gripper-ts)
@@ -42,8 +43,8 @@
 
 - Исходник: [открыть файл](../../public/modules/physics/collisions.ts)
 - Кратко: Низкоуровневая физика, столкновения и контактные расчеты.
-- Обнаружено функций/методов: 9
-- Ключевые символы: `capsuleDistanceToPoint`, `gateHasCollision`, `intersectsExpandedBox`, `isGateObject`, `meshBlocks`, `meshesHit`, `obstacleHasCollision`, `sampleSegmentPoints`, `shouldSkipCollisionForObject`
+- Обнаружено функций/методов: 14
+- Ключевые символы: `boxesHit`, `capsuleDistanceToPoint`, `fpvCubeHasCollision`, `gateHasCollision`, `hasCustomCollisionShape`, `intersectsExpandedBox`, `isFpvCubeObject`, `isGateObject`, `meshBlocks`, `meshesHit`, `obstacleHasCollision`, `sampleSegmentPoints`, `shouldSkipCollisionForObject`, `worldSolidHit`
 
 <a id="public-modules-physics-commands-ts"></a>
 ### `public/modules/physics/commands.ts`
@@ -73,8 +74,8 @@
 
 - Исходник: [открыть файл](../../public/modules/physics/flight-update.ts)
 - Кратко: Низкоуровневая физика, столкновения и контактные расчеты.
-- Обнаружено функций/методов: 6
-- Ключевые символы: `isAutonomousMissionControlling`, `resolveTimedGoTo`, `updateActiveFlight`, `updateAutoFlight`, `updateFlightModeFromRc`, `updateManualFlight`
+- Обнаружено функций/методов: 8
+- Ключевые символы: `brakeCap`, `feedback`, `isAutonomousMissionControlling`, `resolveTimedGoTo`, `updateActiveFlight`, `updateAutoFlight`, `updateFlightModeFromRc`, `updateManualFlight`
 
 <a id="public-modules-physics-frames-ts"></a>
 ### `public/modules/physics/frames.ts`
@@ -83,6 +84,14 @@
 - Кратко: Низкоуровневая физика, столкновения и контактные расчеты.
 - Обнаружено функций/методов: 2
 - Ключевые символы: `bodyPlanarToWorld`, `worldPlanarToBody`
+
+<a id="public-modules-physics-ground-ts"></a>
+### `public/modules/physics/ground.ts`
+
+- Исходник: [открыть файл](../../public/modules/physics/ground.ts)
+- Кратко: Низкоуровневая физика, столкновения и контактные расчеты.
+- Обнаружено функций/методов: 4
+- Ключевые символы: `supportHeightBelow`, `supportObjectBelow`, `terrainHeightAt`, `trainingGroundOf`
 
 <a id="public-modules-physics-helpers-ts"></a>
 ### `public/modules/physics/helpers.ts`
@@ -121,8 +130,8 @@
 
 - Исходник: [открыть файл](../../public/modules/physics/state-transitions.ts)
 - Кратко: Низкоуровневая физика, столкновения и контактные расчеты.
-- Обнаружено функций/методов: 5
-- Ключевые символы: `resolveGroundContact`, `stopDroneAtGround`, `updateCrashedState`, `updateDisarmedFallState`, `updateGroundedState`
+- Обнаружено функций/методов: 6
+- Ключевые символы: `resolveGroundContact`, `stopDroneAtGround`, `trackApex`, `updateCrashedState`, `updateDisarmedFallState`, `updateGroundedState`
 
 <a id="public-modules-physics-tracing-ts"></a>
 ### `public/modules/physics/tracing.ts`
