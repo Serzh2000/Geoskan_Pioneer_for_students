@@ -66,10 +66,11 @@ let metricsDays = 30;
 
 /* ---------- Данные ---------- */
 
-function say(kind: 'ok' | 'error', text: string): void {
+function say(kind: 'ok' | 'error', text: string, scroll = true): void {
     notice = { kind, text };
     render();
-    root?.querySelector('.cabt-notice')?.scrollIntoView({ block: 'nearest' });
+    // Быстрый зачёт отмечает много миссий подряд: список не должен прыгать к сообщению наверху.
+    if (scroll) root?.querySelector('.cabt-notice')?.scrollIntoView({ block: 'nearest' });
 }
 
 async function guard(action: () => Promise<void>): Promise<void> {
@@ -280,11 +281,13 @@ function renderStudent(): string {
             const stuck = summary?.stuck?.track === studentTrack && summary.stuck.questId === quest.id;
             const isNext = !completion && nextQuestItem?.id === quest.id;
             const sub = completion ? (completion.by === 'teacher' ? 'Засчитана вами' : `Пройдена ${fmtDate(completion.at)}`) : stuck ? `Застрял · ${summary!.stuck!.fails} ${plural(summary!.stuck!.fails, 'попытка', 'попытки', 'попыток')}` : isNext ? 'Дальше' : 'Не пройдена';
-            return `<button type="button" class="cabt-tile${completion ? ' is-done' : ''}${completion?.by === 'teacher' ? ' is-manual' : ''}${stuck ? ' is-stuck' : ''}${isNext ? ' is-next' : ''}${active ? ' is-active' : ''}" data-act="mission" data-track="${studentTrack}" data-mission="${esc(quest.id)}" aria-pressed="${active}">
+            const quick = `<button type="button" class="cabt-quick${completion ? ' is-on' : ''}" data-act="quick-mark" data-track="${studentTrack}" data-mission="${esc(quest.id)}" data-done="${completion ? '0' : '1'}" aria-label="${completion ? 'Снять зачёт' : 'Засчитать'}: ${esc(quest.title)}" title="${completion ? 'Снять зачёт' : 'Засчитать вручную'}">${ICON.check}</button>`;
+            return `<div class="cabt-tilewrap"><button type="button" class="cabt-tile${completion ? ' is-done' : ''}${completion?.by === 'teacher' ? ' is-manual' : ''}${stuck ? ' is-stuck' : ''}${isNext ? ' is-next' : ''}${active ? ' is-active' : ''}" data-act="mission" data-track="${studentTrack}" data-mission="${esc(quest.id)}" aria-pressed="${active}">
                 <span class="cabt-tile__mark">${completion ? ICON.check : quest.number}</span>
                 <span class="cabt-tile__body"><span class="cabt-tile__title">${quest.number}. ${esc(quest.title)}</span><span class="cabt-tile__sub">${esc(sub)}</span></span>
-                ${completion?.note ? '<span class="cabt-tile__flag" title="Есть комментарий">комментарий</span>' : ''}</button>`;
+                ${completion?.note ? '<span class="cabt-tile__flag" title="Есть комментарий">комментарий</span>' : ''}</button>${quick}</div>`;
         }).join('')}</div>` : '';
+        const bulk = open ? `<div class="cabt-sgroup__bulk">${complete ? '' : `<button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="group-mark" data-group="${esc(group.id)}" data-done="1">${ICON.check}<span>Засчитать весь блок (${group.quests.length - doneCount})</span></button>`}${doneCount ? `<button type="button" class="cab-link" data-act="group-mark" data-group="${esc(group.id)}" data-done="0">Снять зачёты блока</button>` : ''}</div>` : '';
         return `<section class="cab-group cabt-sgroup${complete ? ' is-complete' : ''}${open ? ' is-open' : ''}" data-theme="${theme.id}" style="--g-hue:${theme.hue}">
             <svg class="cab-group__art" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${theme.art}</svg>
             <button type="button" class="cab-group__head cabt-sgroup__toggle" data-act="group-toggle" data-group="${esc(key)}" aria-expanded="${open}">
@@ -293,7 +296,7 @@ function renderStudent(): string {
                 <span class="cab-meter cab-group__meter" aria-hidden="true"><i style="width:${Math.round((doneCount / group.quests.length) * 100)}%"></i></span>
                 <span class="cabt-sgroup__chev" aria-hidden="true"></span>
             </button>
-            ${tiles}</section>`;
+            ${bulk}${tiles}</section>`;
     }).join('');
 
     let detail = '<p class="cab-hint">Нажмите на миссию, чтобы засчитать её вручную, написать комментарий и посмотреть попытки ученика.</p>';
@@ -614,6 +617,36 @@ async function handleAction(node: HTMLElement): Promise<void> {
                 await viewAsStudent(target.id);
                 closeTeacherPanel();
                 openOwnCabinet();
+            });
+            return;
+        }
+        case 'quick-mark': {
+            if (!student) return;
+            const target = student;
+            const track = node.dataset.track as AccountTrack;
+            const questId = node.dataset.mission!;
+            const done = node.dataset.done === '1';
+            await guard(async () => {
+                student = await teacherApi.setDone(target.id, track, questId, done);
+                await refresh();
+                say('ok', done ? 'Миссия засчитана.' : 'Зачёт снят.', false);
+            });
+            return;
+        }
+        case 'group-mark': {
+            if (!student) return;
+            const target = student;
+            const done = node.dataset.done === '1';
+            const group = questGroups(questsFor(studentTrack)).find((item) => item.id === node.dataset.group);
+            if (!group) return;
+            const todo = group.quests.filter((quest) => Boolean(target.progress[studentTrack][quest.id]) !== done);
+            if (!todo.length) return;
+            const label = done ? `Засчитать ${todo.length} ${plural(todo.length, 'миссию', 'миссии', 'миссий')} блока «${group.label}»?` : `Снять зачёт с ${todo.length} ${plural(todo.length, 'миссии', 'миссий', 'миссий')} блока «${group.label}»?`;
+            if (!window.confirm(label)) return;
+            await guard(async () => {
+                for (const quest of todo) student = await teacherApi.setDone(target.id, studentTrack, quest.id, done);
+                await refresh();
+                say('ok', done ? `Засчитано миссий: ${todo.length}.` : `Снято зачётов: ${todo.length}.`, false);
             });
             return;
         }
