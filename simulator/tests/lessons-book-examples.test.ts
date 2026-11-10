@@ -20,6 +20,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { setupLuaSim, type LuaSim, type RunOptions, type SimEvent } from './helpers/lua-sim-harness.js';
 import { findPython, runPythonScenario, type PythonScenario } from './helpers/python-sdk-harness.js';
+import { runRos2 } from './helpers/ros2-runtime.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..');
@@ -300,6 +301,12 @@ type PythonExpectation =
     | { mode: 'bricks'; project: string; whole?: boolean }
     // Только на борту: нужна настоящая камера / нейросеть / OpenCV; на поддельных библиотеках проверяется лишь синтаксис.
     | { mode: 'boardOnly'; reason: string }
+    // ROS 2 (часть V): программа ученика на эмуляции rclpy и ros_pioneer_node (helpers/ros2-runtime.ts).
+    // out - строки print по порядку; log - подстроки журнала узлов; landed - дрон в конце на земле (FSM IDLE).
+    | { mode: 'ros2'; seconds?: number; out?: string[]; log?: string[]; landed?: boolean }
+    // Рой (часть V): примеры из двух файлов запускаются на нескольких дронах; здесь только синтаксис,
+    // поведение проверяет tests/swarm-examples.test.ts (те же файлы, виртуальная сеть и несколько дронов).
+    | { mode: 'swarm' }
     | { mode: 'compile' };
 
 const PY_TAKEOFF = ['arm', 'takeoff'];
@@ -654,6 +661,36 @@ const PYTHON_EXPECTATIONS: Record<string, PythonExpectation> = {
     'u09_ii_tekst.py': { mode: 'bricks', project: 'u09_ii_tekst' },
     'u10_aruco.py': { mode: 'bricks', project: 'u10_aruco' },
 
+    // --- ROS 2 (rclpy, gs_core): examples/python-onboard/ros2 ------------------------------------
+    'ros2_01_flight_cycle.py': { mode: 'ros2', seconds: 200, log: ['Взлетели', 'Сели'], landed: true },
+    'ros2_02_telemetry.py': { mode: 'ros2', log: ['высота', 'позиция', 'АКБ'] },
+    'ros2_03_cmd_vel_square.py': { mode: 'ros2', seconds: 300, landed: true },
+    'ros2_04_led.py': { mode: 'ros2', seconds: 60, log: ['шаг 0', 'шаг 3'] },
+    'ros2_05_grab_cargo.py': { mode: 'ros2', out: ['Захватываем: механический захват', 'Отпускаем: механический захват'] },
+    'ros2_06_params.py': { mode: 'ros2', out: ['Высота взлёта: 0.4', 'Записали 0.8: True', 'Теперь: 0.8', 'Несуществующий параметр: None'] },
+    'ros2_07_navigation_system.py': { mode: 'ros2', out: ['Сейчас: LPS', 'Переключаем на OPT: готово -> OPT', 'Переключаем на LPS: готово -> LPS'] },
+    'ros2_08_sensor_logger.py': { mode: 'ros2', log: ['крен', 'Ranger'] },
+    'ros2_09_rc_channels.py': { mode: 'ros2', log: ['rc/trigger'] },
+    'ros2_10_mission_state_machine.py': { mode: 'ros2', seconds: 300, log: ['состояние: FLY', 'состояние: DONE', 'миссия закончена'], landed: true },
+
+    // --- Рой (pioneer_swarm): examples/python-onboard/swarm --------------------------------------
+    'swarm_01_who_is_here.py': { mode: 'swarm' },
+    'swarm_02_ping_pong_ping.py': { mode: 'swarm' },
+    'swarm_02_ping_pong_pong.py': { mode: 'swarm' },
+    'swarm_03_broadcast_receiver.py': { mode: 'swarm' },
+    'swarm_03_broadcast_sender.py': { mode: 'swarm' },
+    'swarm_04_neighbour_telemetry.py': { mode: 'swarm' },
+    'swarm_05_follow_follower.py': { mode: 'swarm' },
+    'swarm_05_follow_leader.py': { mode: 'swarm' },
+    'swarm_06_sync_takeoff_commander.py': { mode: 'swarm' },
+    'swarm_06_sync_takeoff_wingman.py': { mode: 'swarm' },
+    'swarm_07_led_show_conductor.py': { mode: 'swarm' },
+    'swarm_07_led_show_player.py': { mode: 'swarm' },
+    'swarm_08_formation_follower.py': { mode: 'swarm' },
+    'swarm_09_rescue_rescuer.py': { mode: 'swarm' },
+    'swarm_09_rescue_searcher.py': { mode: 'swarm' },
+    'swarm_10_monitor.py': { mode: 'swarm' },
+
     // --- pioneer_rknn ---------------------------------------------------------------------------
     'rknn_01_models.py': { mode: 'onboard', runs: [{ scenario: { seconds: 3 }, trace: ['print Модели на дроне:', 'exit'] }] },
     'rknn_02_detect.py': {
@@ -705,7 +742,16 @@ describeBook('примеры из книги: Python', () => {
     withPython.each(pythonRefs.map((ref) => [ref.file, ref.chapter]))('%s (%s)', (file) => {
         const full = path.join(CODE, file);
         const expectation = PYTHON_EXPECTATIONS[path.basename(file)] ?? { mode: 'compile' as const };
-        if (expectation.mode === 'compile' || expectation.mode === 'boardOnly') {
+        if (expectation.mode === 'ros2') {
+            const run = runRos2(fs.readFileSync(full, 'utf8'), { mode: 'program', seconds: expectation.seconds ?? 120, speed: 10 });
+            expect(run.result.error).toBeNull();
+            for (const line of expectation.out ?? []) expect(run.out).toContain(line);
+            const journal = run.result.log.map((entry) => entry[1]);
+            for (const part of expectation.log ?? []) expect(journal.some((text) => text.includes(part))).toBe(true);
+            if (expectation.landed) expect(run.result.fsm).toBe('IDLE');
+            return;
+        }
+        if (expectation.mode === 'compile' || expectation.mode === 'boardOnly' || expectation.mode === 'swarm') {
             const result = spawnSync(python!, ['-I', '-m', 'py_compile', full], { encoding: 'utf8', timeout: 30_000 });
             expect({ status: result.status, stderr: result.stderr }).toEqual({ status: 0, stderr: '' });
             return;

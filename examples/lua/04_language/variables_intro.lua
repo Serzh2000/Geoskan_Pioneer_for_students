@@ -6,9 +6,11 @@ name = "Pioneer"
 local ready = true
 -- таблица с позиционными элементами и именованным полем
 local t = {1, 2, 3, speed = 3.5}
--- множественное присваивание
-x, y = 1, 2
--- обмен значениями
-x, y = y, x
 -- выясняем типы значений
-print(type(x), type(name), type(ready), type(t))  -- number string boolean table
+print(type(x), type(name), type(ready), type(t))  -- number  string  boolean  table
+
+-- множественное присваивание: две переменные одной строкой
+local a, b = 1, 2
+-- обмен значениями без третьей переменной
+a, b = b, a
+print(a, b)                                       -- 2  1

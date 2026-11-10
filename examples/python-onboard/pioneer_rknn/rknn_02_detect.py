@@ -14,10 +14,9 @@ viewer = ImageViewer()
 
 
 def prepare(frame):
-    """Кадр камеры -> вход нейросети: 640x640, цвета RGB."""
+    """Кадр камеры -> вход нейросети: 640x640 и пакет из одного изображения."""
     image = cv2.resize(frame, (SIZE, SIZE))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    # пакет из одного изображения
+    # ось «пакет»: (640, 640, 3) -> (1, 640, 640, 3); цвета остаются BGR, как у кадра
     return np.expand_dims(image, 0)
 
 
