@@ -1120,8 +1120,8 @@ Three.js-сцена, окружение, препятствия, модель д
 
 - Исходник: [открыть файл](../../public/modules/scene/objects/placement-geometry.ts)
 - Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
-- Обнаружено функций/методов: 18
-- Ключевые символы: `applyFlatObjectDepthOffset`, `collectGroundSurfaces`, `draggedPivotZ`, `isGridSnapActive`, `isInside`, `isRestingOnSurface`, `keepObjectBottomAboveSurface`, `pivotZAboveSurface`, `sampleSurfaceZ`, `seatedPivotZ`, `seatObjectBottomOnSurface`, `shiftWorldZ`, `snapAngleRadians`, `snapPlanarPoint`, `snapToGrid`, `snapToGridSoft`, `softSnapPlanarPoint`, `verticalExtent`
+- Обнаружено функций/методов: 16
+- Ключевые символы: `applyFlatObjectDepthOffset`, `collectGroundSurfaces`, `draggedPivotZ`, `isGridSnapActive`, `isInside`, `isRestingOnSurface`, `keepObjectBottomAboveSurface`, `pivotZAboveSurface`, `sampleSurfaceZ`, `seatedPivotZ`, `seatObjectBottomOnSurface`, `shiftWorldZ`, `snapToGrid`, `snapToGridSoft`, `softSnapPlanarPoint`, `verticalExtent`
 
 <a id="public-modules-scene-objects-placement-ts"></a>
 ### `public/modules/scene/objects/placement.ts`

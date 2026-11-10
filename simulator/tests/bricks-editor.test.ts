@@ -21,7 +21,6 @@ import {
     buildBricksToolbox,
     compileBricksWorkspace,
     loadBricksProject,
-    looksLikeBricksProject,
     serializeBricksProject,
     setBlocklyModelProvider
 } from '../public/modules/editor/blockly-mode/bricks/index.js';
@@ -149,18 +148,12 @@ describe('проекты Bricks: имена блоков в файле', () => {
         expect(saved).toContain('type="paint_obj"');
         expect(saved).toContain('type="start_block"');
         expect(saved).not.toContain('bricks_');
-        expect(looksLikeBricksProject(saved)).toBe(true);
         workspace.dispose();
     });
 
     test('внутреннее имя в файле тоже открывается', () => {
         const xml = '<xml xmlns="https://developers.google.com/blockly/xml"><block type="bricks_start_block"><next><block type="bricks_take_off"></block></next></block></xml>';
         expect(compileBricksXml(xml)).toContain('pioneer.takeoff()');
-    });
-
-    test('обычный XML Blockly без Bricks не принимается за проект', () => {
-        expect(looksLikeBricksProject('<xml><block type="pioneer_start"></block></xml>')).toBe(false);
-        expect(looksLikeBricksProject('print("hi")')).toBe(false);
     });
 });
 

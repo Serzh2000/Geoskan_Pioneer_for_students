@@ -11,8 +11,6 @@ import type { WizardStep } from './types.js';
 
 /** How far a stick knob travels from the centre of its gimbal, in the drawing's units. */
 export const STICK_TRAVEL = 35;
-/** The swing of a switch lever to either side, in degrees. */
-export const LEVER_SWING = 32;
 /** After a channel is found the wizard waits this long, showing it, then moves on by itself. */
 export const AUTO_ADVANCE_MS = 1400;
 
@@ -68,13 +66,6 @@ export function describeTarget(step: WizardStep, slotOf: (channel: PrimaryChanne
     return { kind: 'switch', switchId: aux.id, positions: aux.positions };
 }
 
-/** Angle of a switch lever for an RC value (1000-2000); a switch that is not heard yet rests in the middle. */
-export function leverAngle(rcValue: number | null): number {
-    if (rcValue === null || !Number.isFinite(rcValue)) return 0;
-    const centered = Math.max(-1, Math.min(1, (rcValue - 1500) / 500));
-    return centered * LEVER_SWING;
-}
-
 export type ChannelRowState = 'pending' | 'current' | 'done' | 'skipped';
 
 export interface ChannelRow {
@@ -102,10 +93,4 @@ export function buildChannelRows(params: {
         const value = state === 'done' || state === 'current' ? Math.max(-1, Math.min(1, params.values[channel] ?? 0)) : 0;
         return { channel, label: params.labels[channel], state, value, source: ref ? params.formatRef(ref) : null };
     });
-}
-
-/** 0..1: how far the pause after a found channel has run. */
-export function advanceProgress(resolvedAt: number | null, now: number): number {
-    if (resolvedAt === null) return 0;
-    return Math.max(0, Math.min(1, (now - resolvedAt) / AUTO_ADVANCE_MS));
 }

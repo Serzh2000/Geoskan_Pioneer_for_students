@@ -75,7 +75,6 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - [`public/modules/editor/index/session.ts`](#public-modules-editor-index-session-ts)
 - [`public/modules/editor/index/shell.ts`](#public-modules-editor-index-shell-ts)
 - [`public/modules/editor/index/state.ts`](#public-modules-editor-index-state-ts)
-- [`public/modules/editor/index/temporary-document.ts`](#public-modules-editor-index-temporary-document-ts)
 - [`public/modules/editor/monaco/completion.ts`](#public-modules-editor-monaco-completion-ts)
 - [`public/modules/editor/monaco/completion/call-context.ts`](#public-modules-editor-monaco-completion-call-context-ts)
 - [`public/modules/editor/monaco/completion/catalog.ts`](#public-modules-editor-monaco-completion-catalog-ts)
@@ -384,8 +383,8 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/xml.ts)
 - Кратко: Исходный модуль симулятора.
-- Обнаружено функций/методов: 6
-- Ключевые символы: `bricksProjectFileName`, `loadBricksProject`, `looksLikeBricksProject`, `parseBricksProject`, `renameBlockTypes`, `serializeBricksProject`
+- Обнаружено функций/методов: 5
+- Ключевые символы: `bricksProjectFileName`, `loadBricksProject`, `parseBricksProject`, `renameBlockTypes`, `serializeBricksProject`
 
 <a id="public-modules-editor-blockly-mode-catalog-ts"></a>
 ### `public/modules/editor/blockly-mode/catalog.ts`
@@ -789,14 +788,6 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Кратко: Исходный модуль симулятора.
 - Обнаружено функций/методов: 5
 - Ключевые символы: `assignEditorIndexShell`, `getEditorIndexCollections`, `getEditorIndexShellState`, `setPendingEditorLanguage`, `setPendingEditorValue`
-
-<a id="public-modules-editor-index-temporary-document-ts"></a>
-### `public/modules/editor/index/temporary-document.ts`
-
-- Исходник: [открыть файл](../../public/modules/editor/index/temporary-document.ts)
-- Кратко: Исходный модуль симулятора.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `beginTemporaryDocument`, `getTemporaryDocumentToken`, `isTemporaryDocumentActive`, `restoreTemporaryDocument`
 
 <a id="public-modules-editor-monaco-completion-ts"></a>
 ### `public/modules/editor/monaco/completion.ts`
@@ -1441,8 +1432,8 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/ui/mission-guide/mini2/bricks-xml-kit.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 13
-- Ключевые символы: `block`, `colour`, `compare`, `distance`, `editorBlockTypes`, `esc`, `frame`, `getVar`, `join`, `num`, `project`, `text`, `variable`
+- Обнаружено функций/методов: 12
+- Ключевые символы: `block`, `colour`, `compare`, `distance`, `esc`, `frame`, `getVar`, `join`, `num`, `project`, `text`, `variable`
 
 <a id="public-modules-ui-mission-guide-mini2-sdk2-grade-ts"></a>
 ### `public/modules/ui/mission-guide/mini2/sdk2-grade.ts`

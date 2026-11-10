@@ -12,8 +12,6 @@ import {
     sampleSurfaceZ,
     seatObjectBottomOnSurface,
     seatedPivotZ,
-    snapAngleRadians,
-    snapPlanarPoint,
     snapToGridSoft,
     softSnapPlanarPoint,
     GRID_SNAP_PULL,
@@ -45,7 +43,6 @@ describe('grid snapping', () => {
         expect(Object.is(snapToGrid(-0.4), -0)).toBe(false);
         expect(snapToGrid(0.74, 0.5)).toBe(0.5);
         expect(snapToGrid(0.3 * 3, 0.1)).toBe(0.9);
-        expect(snapPlanarPoint({ x: 3.7, y: -1.2 }, true)).toEqual({ x: 4, y: -1 });
     });
 
     test('soft snapping pulls to a grid line only when close, and each axis decides for itself', () => {
@@ -63,14 +60,6 @@ describe('grid snapping', () => {
         expect(isGridSnapActive(true, false)).toBe(true);
         expect(isGridSnapActive(true, true)).toBe(false);
         expect(isGridSnapActive(false, false)).toBe(false);
-        expect(snapPlanarPoint({ x: 3.7, y: -1.2 }, isGridSnapActive(true, true))).toEqual({ x: 3.7, y: -1.2 });
-    });
-
-    test('rotation snaps to 15° steps only while snapping is active', () => {
-        const deg = THREE.MathUtils.degToRad;
-        expect(snapAngleRadians(deg(37), true)).toBeCloseTo(deg(30));
-        expect(snapAngleRadians(deg(38), true)).toBeCloseTo(deg(45));
-        expect(snapAngleRadians(deg(37), false)).toBeCloseTo(deg(37));
     });
 });
 

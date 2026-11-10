@@ -5,7 +5,7 @@ import type { DroneSample } from '../evaluation/text/trace.js';
 import { Sdk2Grader, type Sdk2Check } from './sdk2-grade.js';
 import {
     compare, distance, forRange, frame, getVar, goPoint, ifElse, join, landing, ledAll, ledIndex, preflight, print,
-    project, repeat, servo, setVar, sleep, speedStart, stmt, takeOff, text, waitPoint, block, num, editorBlockTypes, type Stmt
+    project, repeat, servo, setVar, sleep, speedStart, stmt, takeOff, text, waitPoint, block, num, type Stmt
 } from './bricks-xml-kit.js';
 
 /**
@@ -426,9 +426,6 @@ export function missingBricksBlocks(mission: Pick<BricksMission, 'requires' | 'm
     }
     return problems;
 }
-
-/** Типы блоков эталонного решения в именах редактора. */
-export const solutionBlockTypes = (mission: BricksMission): Record<string, number> => editorBlockTypes(mission.solutionXml);
 
 export function gradeBricksMission(id: string, samples: DroneSample[], events: LearningEvent[]): GuideEvaluation {
     const mission = BRICKS_MISSION_BY_ID[id];

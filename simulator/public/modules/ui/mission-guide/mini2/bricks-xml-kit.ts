@@ -3,8 +3,6 @@
  * Типы блоков здесь — родные имена Bricks (start_block, take_off…), как в файлах проектов: редактор сам
  * добавляет им префикс при открытии (`loadBricksProject`).
  */
-import { bricksType } from '../../../editor/blockly-mode/bricks/constants.js';
-import { allBricksNativeTypes } from '../../../editor/blockly-mode/bricks/block-specs.js';
 
 /** Команда в цепочке: получает XML следующей команды и возвращает свой блок вместе с ней. */
 export type Stmt = (next: string) => string;
@@ -70,16 +68,3 @@ export function project(name: string, statements: Stmt[], variables: string[] = 
     return `<xml xmlns="https://developers.google.com/blockly/xml"><project name="${name}" /><variables>${vars}</variables>`
         + `<block type="start_block" deletable="false" movable="false" x="10" y="10">${statements.length ? `<next>${chain(statements)}</next>` : ''}</block></xml>`;
 }
-
-/** Типы блоков проекта, как их видит редактор (с префиксом Bricks у блоков Пионера). */
-export function editorBlockTypes(xml: string): Record<string, number> {
-    const counts: Record<string, number> = {};
-    for (const match of xml.matchAll(/<block type="([^"]+)"/g)) {
-        const native = match[1];
-        const type = BRICKS_NATIVE.has(native) ? bricksType(native) : native;
-        counts[type] = (counts[type] ?? 0) + 1;
-    }
-    return counts;
-}
-
-const BRICKS_NATIVE = new Set(allBricksNativeTypes());

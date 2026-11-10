@@ -14,7 +14,6 @@ import {
     buildMavlinkRegistrationKey,
     buildMavlinkSessionId,
     computeX25Crc,
-    decodeDataUrlToBuffer,
     encodeMavlinkV2Message,
     isArmedAutopilotState,
     mapAutopilotStateToCustomMode,
@@ -169,22 +168,6 @@ describe('parseRcChannelsOverride', () => {
 
     test('returns null when the payload is too short', () => {
         expect(parseRcChannelsOverride(Buffer.alloc(17))).toBeNull();
-    });
-});
-
-describe('decodeDataUrlToBuffer', () => {
-    test('decodes a base64 data URL', () => {
-        const original = Buffer.from('hello world');
-        const dataUrl = `data:image/jpeg;base64,${original.toString('base64')}`;
-        expect(decodeDataUrlToBuffer(dataUrl)).toEqual(original);
-    });
-
-    test('returns null for null input', () => {
-        expect(decodeDataUrlToBuffer(null)).toBeNull();
-    });
-
-    test('returns null for a non-data-url string', () => {
-        expect(decodeDataUrlToBuffer('not a data url')).toBeNull();
     });
 });
 

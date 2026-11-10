@@ -31,7 +31,7 @@
   ],
   "commands": {
     "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
-    "unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/editor-temporary-document.test.ts tests/mission-guide-drafts.test.ts tests/workspace-panels.test.ts tests/mission-guide-course-ui.test.ts tests/mission-guide-walkthrough.test.ts tests/mission-guide-learning.test.ts tests/mission-guide-outline-navigation.test.ts tests/viewport-pointer-controls.test.ts tests/mission-guide-scene-preview.test.ts tests/mission-guide-camera-view.test.ts"
+    "unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/mission-guide-drafts.test.ts tests/workspace-panels.test.ts tests/mission-guide-course-ui.test.ts tests/mission-guide-walkthrough.test.ts tests/mission-guide-learning.test.ts tests/mission-guide-outline-navigation.test.ts tests/viewport-pointer-controls.test.ts tests/mission-guide-scene-preview.test.ts tests/mission-guide-camera-view.test.ts"
   },
   "evidence": {
     "failurePaths": "tests/mission-guide-walkthrough.test.ts"

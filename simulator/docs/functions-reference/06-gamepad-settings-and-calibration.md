@@ -35,10 +35,6 @@
 - [`public/modules/ui/settings/input/values.ts`](#public-modules-ui-settings-input-values-ts)
 - [`public/modules/ui/settings/mapping.ts`](#public-modules-ui-settings-mapping-ts)
 - [`public/modules/ui/settings/mapping/legacy.ts`](#public-modules-ui-settings-mapping-legacy-ts)
-- [`public/modules/ui/settings/mapping/profile.ts`](#public-modules-ui-settings-mapping-profile-ts)
-- [`public/modules/ui/settings/mapping/profile/device.ts`](#public-modules-ui-settings-mapping-profile-device-ts)
-- [`public/modules/ui/settings/mapping/profile/runtime.ts`](#public-modules-ui-settings-mapping-profile-runtime-ts)
-- [`public/modules/ui/settings/mapping/profile/shared.ts`](#public-modules-ui-settings-mapping-profile-shared-ts)
 - [`public/modules/ui/settings/rendering.ts`](#public-modules-ui-settings-rendering-ts)
 - [`public/modules/ui/settings/rendering/aux-ranges.ts`](#public-modules-ui-settings-rendering-aux-ranges-ts)
 - [`public/modules/ui/settings/runtime-state.ts`](#public-modules-ui-settings-runtime-state-ts)
@@ -192,8 +188,8 @@
 
 - Исходник: [открыть файл](../../public/modules/ui/settings/constants.ts)
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 8
-- Ключевые символы: `createDefaultBindings`, `createDefaultCalibration`, `createDefaultChannelMappings`, `createDefaultProfile`, `createDefaultWizardSteps`, `getChannelInversionIndex`, `getDefaultChannelRoles`, `getRoleLabel`
+- Обнаружено функций/методов: 1
+- Ключевые символы: `getChannelInversionIndex`
 
 <a id="public-modules-ui-settings-dom-ts"></a>
 ### `public/modules/ui/settings/dom.ts`
@@ -256,8 +252,8 @@
 
 - Исходник: [открыть файл](../../public/modules/ui/settings/input/calibration.ts)
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 11
-- Ключевые символы: `beginCalibration`, `finishCalibration`, `normalizeCenteredAxis`, `normalizeCenteredInput`, `normalizeInputValue`, `normalizeThrottleAxis`, `quantizeDiscreteLevel`, `resetCalibration`, `sampleCalibration`, `sanitizeCalibration`, `toAxisUnit`
+- Обнаружено функций/методов: 6
+- Ключевые символы: `beginCalibration`, `finishCalibration`, `normalizeCenteredAxis`, `normalizeThrottleAxis`, `resetCalibration`, `sampleCalibration`
 
 <a id="public-modules-ui-settings-input-observed-ts"></a>
 ### `public/modules/ui/settings/input/observed.ts`
@@ -297,37 +293,6 @@
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
 - Обнаружено функций/методов: 20
 - Ключевые символы: `applyPrimaryAxisMappingForCurrentMode`, `createAuxOptions`, `createAxisOptions`, `ensureMappingsForGamepad`, `findActiveGamepad`, `getConnectedGamepads`, `getDefaultChannelValue`, `getFallbackMapping`, `getGamepadName`, `getMappingRef`, `getModePrimaryAxisIndexes`, `getPreferredAuxRefs`, `getRcPrimaryAxisMapping`, `hasInputRef`, `hasLegacyPrimaryMapping`, `isAllowedForChannel`, `isLikelyRcTransmitter`, `pushIfUnused`, `readInputRcValue`, `setMappingRef`
-
-<a id="public-modules-ui-settings-mapping-profile-ts"></a>
-### `public/modules/ui/settings/mapping/profile.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/mapping/profile.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 0
-
-<a id="public-modules-ui-settings-mapping-profile-device-ts"></a>
-### `public/modules/ui/settings/mapping/profile/device.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/mapping/profile/device.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 7
-- Ключевые символы: `createInputSourcesFromGamepad`, `createProfileForDevice`, `createVirtualInputSources`, `detectStickMode`, `getChannelTitle`, `inferDeviceKind`, `isLikelyRadioSummary`
-
-<a id="public-modules-ui-settings-mapping-profile-runtime-ts"></a>
-### `public/modules/ui/settings/mapping/profile/runtime.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/mapping/profile/runtime.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `detectMappingConflicts`, `getDuplicateSourceConflicts`
-
-<a id="public-modules-ui-settings-mapping-profile-shared-ts"></a>
-### `public/modules/ui/settings/mapping/profile/shared.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/settings/mapping/profile/shared.ts)
-- Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `getDefaultControlTypeForRole`, `getRadioKeywords`, `getRoleLabel`, `getStickModeAxisPatterns`
 
 <a id="public-modules-ui-settings-rendering-ts"></a>
 ### `public/modules/ui/settings/rendering.ts`
@@ -412,8 +377,8 @@
 
 - Исходник: [открыть файл](../../public/modules/ui/settings/wizard/radio-model.ts)
 - Кратко: Модуль карты каналов, калибровки и настроек геймпада.
-- Обнаружено функций/методов: 5
-- Ключевые символы: `advanceProgress`, `buildChannelRows`, `describeTarget`, `leverAngle`, `stickOffsets`
+- Обнаружено функций/методов: 3
+- Ключевые символы: `buildChannelRows`, `describeTarget`, `stickOffsets`
 
 <a id="public-modules-ui-settings-wizard-radio-view-ts"></a>
 ### `public/modules/ui/settings/wizard/radio-view.ts`

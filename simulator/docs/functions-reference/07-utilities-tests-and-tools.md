@@ -308,7 +308,6 @@
 - [`tests/editor-blockly-ui.test.ts`](#tests-editor-blockly-ui-test-ts)
 - [`tests/editor-docs-keyboard.test.ts`](#tests-editor-docs-keyboard-test-ts)
 - [`tests/editor-overlays.test.ts`](#tests-editor-overlays-test-ts)
-- [`tests/editor-temporary-document.test.ts`](#tests-editor-temporary-document-test-ts)
 - [`tests/environment-geometry.test.ts`](#tests-environment-geometry-test-ts)
 - [`tests/external-bridge-frozen-clock.test.ts`](#tests-external-bridge-frozen-clock-test-ts)
 - [`tests/external-python-bridge.test.ts`](#tests-external-python-bridge-test-ts)
@@ -386,7 +385,6 @@
 - [`tests/python-sdk-docs-coverage.test.ts`](#tests-python-sdk-docs-coverage-test-ts)
 - [`tests/python-sdk2-module.test.ts`](#tests-python-sdk2-module-test-ts)
 - [`tests/quality-governor.test.ts`](#tests-quality-governor-test-ts)
-- [`tests/rc-settings.test.ts`](#tests-rc-settings-test-ts)
 - [`tests/runtime-cleanup.test.ts`](#tests-runtime-cleanup-test-ts)
 - [`tests/scene-manager-catalog.test.ts`](#tests-scene-manager-catalog-test-ts)
 - [`tests/scene-placement.test.ts`](#tests-scene-placement-test-ts)
@@ -2351,8 +2349,8 @@
 
 - Исходник: [открыть файл](../../server/mavlink-bridge.ts)
 - Кратко: Файл проекта.
-- Обнаружено функций/методов: 30
-- Ключевые символы: `buildCameraRegistrationKey`, `buildCameraSessionId`, `buildMavlinkRegistrationKey`, `buildMavlinkSessionId`, `CameraTcpBridge.for`, `CameraTcpBridge.if`, `closeStaleCameraBridge`, `closeStaleMavlinkBridge`, `computeX25Crc`, `decodeDataUrlToBuffer`, `drop`, `emitBridgeEvent`, `emitCameraBridgeEvent`, `encodeMavlinkV2Message`, `ensureBridgeConnections`, `isArmedAutopilotState`, `mapAutopilotStateToCustomMode`, `mapAutopilotStateToSystemStatus`, `MavlinkUdpBridge.if`, `MavlinkUdpBridge.switch`, `normalizeConnectionMethod`, `normalizeIpv4`, `parseCommandLong`, `parseRcChannelsOverride`, `parseSetPositionTargetLocalNed`, `parseSingleMavlinkFrame`, `registerMavlinkBridgeRoutes`, `sameHost`, `sanitizeRegistration`, `stopAllMavlinkBridges`
+- Обнаружено функций/методов: 29
+- Ключевые символы: `buildCameraRegistrationKey`, `buildCameraSessionId`, `buildMavlinkRegistrationKey`, `buildMavlinkSessionId`, `CameraTcpBridge.for`, `CameraTcpBridge.if`, `closeStaleCameraBridge`, `closeStaleMavlinkBridge`, `computeX25Crc`, `drop`, `emitBridgeEvent`, `emitCameraBridgeEvent`, `encodeMavlinkV2Message`, `ensureBridgeConnections`, `isArmedAutopilotState`, `mapAutopilotStateToCustomMode`, `mapAutopilotStateToSystemStatus`, `MavlinkUdpBridge.if`, `MavlinkUdpBridge.switch`, `normalizeConnectionMethod`, `normalizeIpv4`, `parseCommandLong`, `parseRcChannelsOverride`, `parseSetPositionTargetLocalNed`, `parseSingleMavlinkFrame`, `registerMavlinkBridgeRoutes`, `sameHost`, `sanitizeRegistration`, `stopAllMavlinkBridges`
 
 <a id="server-metrics-ts"></a>
 ### `server/metrics.ts`
@@ -2710,13 +2708,6 @@
 - Кратко: Автоматические тесты и тестовые помощники.
 - Обнаружено функций/методов: 2
 - Ключевые символы: `select`, `tintedBox`
-
-<a id="tests-editor-temporary-document-test-ts"></a>
-### `tests/editor-temporary-document.test.ts`
-
-- Исходник: [открыть файл](../../tests/editor-temporary-document.test.ts)
-- Кратко: Автоматические тесты и тестовые помощники.
-- Обнаружено функций/методов: 0
 
 <a id="tests-environment-geometry-test-ts"></a>
 ### `tests/environment-geometry.test.ts`
@@ -3311,13 +3302,6 @@
 ### `tests/quality-governor.test.ts`
 
 - Исходник: [открыть файл](../../tests/quality-governor.test.ts)
-- Кратко: Автоматические тесты и тестовые помощники.
-- Обнаружено функций/методов: 0
-
-<a id="tests-rc-settings-test-ts"></a>
-### `tests/rc-settings.test.ts`
-
-- Исходник: [открыть файл](../../tests/rc-settings.test.ts)
 - Кратко: Автоматические тесты и тестовые помощники.
 - Обнаружено функций/методов: 0
 

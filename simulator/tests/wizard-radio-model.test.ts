@@ -1,11 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import {
-    AUTO_ADVANCE_MS,
-    LEVER_SWING,
     STICK_TRAVEL,
-    advanceProgress,
     buildChannelRows,
-    leverAngle,
     stickOffsets
 } from '../public/modules/ui/settings/wizard/radio-model.js';
 
@@ -20,20 +16,6 @@ describe('wizard radio model', () => {
         expect(full.leftX).toBe(STICK_TRAVEL);
         expect(full.rightY).toBe(-STICK_TRAVEL);
         expect(full.rightX).toBe(STICK_TRAVEL / 2);
-    });
-
-    it('swings a lever with its RC value and keeps an unheard switch in the middle', () => {
-        expect(leverAngle(null)).toBe(0);
-        expect(leverAngle(1500)).toBe(0);
-        expect(leverAngle(2000)).toBe(LEVER_SWING);
-        expect(leverAngle(1000)).toBe(-LEVER_SWING);
-        expect(leverAngle(9000)).toBe(LEVER_SWING);
-    });
-
-    it('runs the pause after a found channel from 0 to 1', () => {
-        expect(advanceProgress(null, 500)).toBe(0);
-        expect(advanceProgress(0, AUTO_ADVANCE_MS / 2)).toBeCloseTo(0.5);
-        expect(advanceProgress(0, AUTO_ADVANCE_MS * 3)).toBe(1);
     });
 
     it('marks channels as done, current, skipped or pending', () => {
