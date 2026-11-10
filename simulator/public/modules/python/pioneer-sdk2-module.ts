@@ -97,11 +97,14 @@ def _bg_task(coro):
     return task
 
 def _check_model(drone_id):
-    model = str(_js.pioneer2_drone_model(drone_id))
-    if model != "pioneer-mini2":
+    # pioneer_sdk2 работает на Мини 2 и на Базовом с бортовым компьютером Radxa Zero 3W:
+    # на Базовом её выбирают языком «Python · SDK2» в панели «Рой».
+    enabled = getattr(_js, "pioneer2_sdk_enabled", None)
+    allowed = bool(enabled(drone_id)) if enabled is not None else str(_js.pioneer2_drone_model(drone_id)) == "pioneer-mini2"
+    if not allowed:
         raise RuntimeError(
-            "pioneer_sdk2 - библиотека Пионера Мини 2, а выбран другой дрон. "
-            "Добавьте дрон «Пионер Мини 2» на панели «Рой» или используйте pioneer_sdk.")
+            "Для этого дрона выбран не pioneer_sdk2. Выберите язык «Python · SDK2» в панели «Рой» "
+            "(у Пионера Базового для него нужна Radxa Zero 3W) или используйте pioneer_sdk.")
 
 class Pioneer:
     def __init__(self, serial=None, tcp="127.0.0.1:20556", baudrate=57600,

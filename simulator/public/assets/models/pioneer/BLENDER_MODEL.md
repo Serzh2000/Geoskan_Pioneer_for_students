@@ -67,3 +67,22 @@ evaluated for every pixel of every material in the scene, and each drone would a
 Regression checks are in `tests/pioneer-blender-model.test.ts`; they load the
 actual GLB to check scale, ground alignment, rotor pivots, material isolation,
 and stable rotor references during asynchronous loading.
+
+## Radxa Zero 3W module (`radxa-module.glb`)
+
+`pioneer_sdk2` works on the Basic only with a Radxa Zero 3W on board, so when a Basic drone is set to
+"Python · SDK2" the simulator shows the module under the body, in the same slot as the ESP32 module (the ESP32 is
+hidden meanwhile). Code: `drone-model/radxa-module.ts` (lazy GLB load, added/removed per drone every frame from
+`drone/index.ts`).
+
+The asset is built from the ChatGPT model `Radxa_v02.blend` (adapter plate, Radxa Zero 3W with heatsinks, FFC ribbon,
+orange camera bracket, antenna; assembly order from `constr.pdf`) by `tools/export_radxa_module.py`:
+
+```powershell
+& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' --background 'Radxa_v02.blend' --python tools/export_radxa_module.py -- public/assets/models/pioneer/radxa-module.glb
+```
+
+The script joins the 870 source objects by material, decimates each material to a triangle budget (218 000 -> ~32 000),
+flips the module lens-down (it is mounted on the underside), converts to simulator axes/scale and seats it in the
+ESP32 slot. Nodes: `radxa_module` (root, meshes inside) and `radxa_camera` (lens centre, not used yet: the FPV camera
+stays where it is). Checks: `tests/radxa-module.test.ts`.

@@ -5,7 +5,7 @@ import { pythonStdlibDocs } from '../../../docs/python-stdlib-docs.js';
 import { pythonSdk2ApiDocs } from '../../../docs/python-sdk2-api-docs.js';
 import { pythonRknnApiDocs } from '../../../docs/python-rknn-api-docs.js';
 import { currentDroneId, drones } from '../../../core/state.js';
-import { droneModelProfile } from '../../../core/drone-models.js';
+import { droneSdk } from '../../../core/drone-models.js';
 import {
     createDocEntry,
     dedupeDocEntries,
@@ -38,7 +38,7 @@ export const PYTHON_SDK2_DOC_TABLE: Record<string, ApiDoc> = { ...pythonSdk2ApiD
 const PYTHON_SDK2_CORE_KEYS = new Set(['Pioneer.arm', 'Pioneer.takeoff', 'Pioneer.land', 'Pioneer.go_to_local_point', 'Pioneer.point_reached', 'Pioneer.subscribe', 'Pioneer.led_control']);
 
 function currentDroneUsesSdk2(): boolean {
-    return droneModelProfile(drones[currentDroneId]?.model).pythonSdk === 'pioneer_sdk2';
+    return droneSdk(drones[currentDroneId]) === 'pioneer_sdk2';
 }
 
 function buildCompletionCatalog(

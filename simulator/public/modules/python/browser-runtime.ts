@@ -11,7 +11,7 @@ import {
     resetPythonDroneBindings
 } from './runtime-shared.js';
 import { ensureNumpyLoaded, ensurePyodide } from './pyodide-loader.js';
-import { droneModelProfile } from '../core/drone-models.js';
+import { droneModelProfile, droneSdk } from '../core/drone-models.js';
 
 // get_cv_frame собирает настоящий numpy-массив, но подгрузить пакет можно только из async-кода,
 // а сам вызов в скрипте синхронный. Поэтому решение принимается по исходнику до запуска.
@@ -64,16 +64,19 @@ const SDK_IMPORT = /^[ \t]*(?:from|import)[ \t]+(pioneer_sdk2?|pioneer_rknn)\b/g
 
 export function checkPythonSdkForDrone(droneId: string, code: string): void {
     const profile = droneModelProfile(drones[droneId]?.model);
+    const sdk = droneSdk(drones[droneId]);
     for (const match of code.matchAll(SDK_IMPORT)) {
         const library = match[1];
-        // pioneer_rknn (нейросети на борту) идёт в комплекте с pioneer_sdk2: она есть только у Мини 2.
-        if (library === profile.pythonSdk || (library === 'pioneer_rknn' && profile.pythonSdk === 'pioneer_sdk2')) continue;
+        // pioneer_rknn (нейросети на борту) идёт в комплекте с pioneer_sdk2 и есть только у Мини 2.
+        const allowed = library === 'pioneer_rknn'
+            ? sdk === 'pioneer_sdk2' && profile.id === 'pioneer-mini2'
+            : library === sdk;
+        if (allowed) continue;
         const line = code.slice(0, match.index ?? 0).split('\n').length;
         const message = library === 'pioneer_rknn'
             ? `pioneer_rknn - библиотека Пионера Мини 2 (нейросети на борту). Для дрона «${profile.title}» её нет: добавьте дрон «Пионер Мини 2» на панели «Рой».`
-            : profile.pythonSdk === 'pioneer_sdk2'
-            ? `${profile.title} программируется через pioneer_sdk2: from pioneer_sdk2 import Pioneer`
-            : `${library} - библиотека Пионера Мини 2. Для дрона «${profile.title}» используйте pioneer_sdk или добавьте дрон «Пионер Мини 2».`;
+            : `Для дрона «${drones[droneId]?.name ?? profile.title}» выбран язык «Python · ${sdk === 'pioneer_sdk2' ? 'SDK2' : 'SDK1'}», а в программе ${library}. `
+                + `Подключите ${sdk}: from ${sdk} import Pioneer - или выберите другой язык в панели «Рой».`;
         throw createScriptFailureError('runtime', message, { line, column: null, details: match[0].trim() });
     }
 }

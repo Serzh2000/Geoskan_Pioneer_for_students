@@ -32,7 +32,7 @@ const LESSON_GROUP_LABELS: Record<string, string> = {
 export function currentExamplesSet(): ExamplesSet {
     // Мини 2 - проекты Bricks (.xml), остальные модели - блоки pioneer_* (.json).
     if (isBlocklyEditorEnabled()) return blocksExamplesSetFor(drones[currentDroneId]?.model);
-    return examplesSetFor(drones[currentDroneId]?.model, currentScriptLanguage);
+    return examplesSetFor(drones[currentDroneId], currentScriptLanguage);
 }
 
 function populateFileOptions(fileSelector: HTMLSelectElement, files: string[]): void {
@@ -91,7 +91,7 @@ export function refreshFileList(language: ScriptLanguage): void {
     delete fileSelector.dataset.state;
     fileSelector.title = 'Выберите пример программы или откройте свой файл';
     // Мини 2 получает свои примеры: программы на pioneer_sdk2.
-    fetch(`/api/files?lang=${isBlocklyEditorEnabled() ? blocksExamplesSetFor(drones[currentDroneId]?.model) : examplesSetFor(drones[currentDroneId]?.model, language)}`)
+    fetch(`/api/files?lang=${isBlocklyEditorEnabled() ? blocksExamplesSetFor(drones[currentDroneId]?.model) : examplesSetFor(drones[currentDroneId], language)}`)
         .then((res) => {
             if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
             return res.json();

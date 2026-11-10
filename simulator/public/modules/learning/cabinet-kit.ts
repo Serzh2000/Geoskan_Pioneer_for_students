@@ -28,6 +28,7 @@ export const ICON = {
     print: svg('<path d="M7 9V4h10v5M7 17H4.500v-6.500h15V17H17"/><path d="M7 14h10v6H7z"/>'),
     plus: svg('<path d="M12 5v14M5 12h14"/>'),
     edit: svg('<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.500 6.500l4 4"/>'),
+    eye: svg('<path d="M2 12s3.500-6.500 10-6.500S22 12 22 12s-3.500 6.500-10 6.500S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
     key: svg('<circle cx="8" cy="15" r="3.500"/><path d="M10.500 12.500L19 4M16 7l2.500 2.500M14 9l2 2"/>'),
     chart: svg('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
     back: svg('<path d="M14 6l-6 6 6 6"/>'),

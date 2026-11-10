@@ -100,8 +100,8 @@
 \begin{tcolorbox}[enhanced, colback=ink, colframe=ink, arc=4pt, left=14pt, right=14pt, top=12pt, bottom=12pt]
     {\color{accent}\small\bfseries ПАМЯТКА}\\[2pt]
     {\color{white}\huge\bfseries\raggedright\hyphenpenalty=10000 Программирование в~симуляторе Пионера\par}\vspace{6pt}
-    {\color{white!80!black}Lua, Python и Blockly на одной странице: как запустить первую программу за пять минут
-    и не наступить на самые частые грабли.\\[4pt]
+    {\color{white!80!black}Lua, Python и блоки для двух дронов (Пионер Базовый и Пионер Мини~2) на нескольких страницах:
+    как запустить первую программу за пять минут и не наступить на самые частые грабли.\\[4pt]
     Адрес: \textbf{\color{white}https://simulator.sakoryagin.ru}}
 \end{tcolorbox}
 
@@ -119,6 +119,7 @@
     \item Камеры дрона
     \item Python со своего компьютера
     \item Частые ошибки
+    \item Пионер Мини~2: Python и блоки Bricks
     \item Шпаргалка: Lua и Python
 \end{enumerate}
 \columnbreak
@@ -151,7 +152,7 @@
 \begin{multicols}{2}
 \small
 \begin{enumerate}[leftmargin=*,itemsep=1pt,label=\bubble{\arabic*}]
-    \item Панели: код, телеметрия, рой, менеджер сцены, руководство, настройки.
+    \item Панели у левого края: \ui{Код}, \ui{Обучение}, \ui{Сцена}, \ui{Рой}, \ui{Полёт}, \ui{Дрон}, \ui{Пульт}; внизу \ui{Аккаунт}, \ui{Тема}, \ui{Настройки}.
     \item Компас осей (щелчок по оси — вид с неё) и окна камер дрона.
     \item \ui{Открыть редактор кода} — сюда пишется программа.
     \item Камера: над землёй, за дроном, от лица дрона (FPV), свободная.
@@ -400,7 +401,7 @@ frame = camera.get_cv_frame()          # кадр для OpenCV, цвета BGR
 \texttt{pioneer\_sdk} (\texttt{pip install pioneer-sdk}), — а летать будет дрон на сайте.
 
 \begin{enumerate}[itemsep=1pt]
-    \item Откройте симулятор, выберите дрон и включите у него \ui{Разрешить внешние команды}.
+    \item Откройте симулятор, панель \ui{Рой}, раздел \ui{Внешний Python}, включите \ui{Разрешить управление} и скопируйте показанную строку подключения (у каждого дрона сцены свой порт).
           Вкладку можно свернуть — полёт продолжится.
     \item В программе укажите адрес сайта вместо адреса дрона:
 \end{enumerate}
@@ -448,6 +449,44 @@ camera = SimCamera(ip='simulator.sakoryagin.ru', port=18001)
 \end{minipage}
 
 % ---------------------------------------------------------------- 11
+\section{Пионер Мини 2: Python и блоки Bricks}
+
+У Пионера Мини~2 Lua нет: его программы на Python выполняются на самом дроне, а блоки Pioneer Bricks
+собирают такую же программу. В симуляторе модель выбирают переключателем \ui{Базовый} / \ui{Мини 2} в шапке
+редактора или кнопкой \ui{Мини 2} в панели \ui{Рой}; менять модель можно только при остановленной программе.
+
+\begin{itemize}[itemsep=1pt]
+    \item Язык \ui{Python} здесь означает библиотеку \texttt{pioneer\_sdk2}; пункт списка \ui{Blockly} называется
+          \ui{Bricks} и даёт отдельный набор блоков. \texttt{pioneer\_sdk} и \ui{Lua} у Мини~2 недоступны.
+    \item Отличия от \texttt{pioneer\_sdk}: \texttt{arm()}, \texttt{takeoff()} и \texttt{land()} сами ждут завершения;
+          курс в градусах; цвет светодиода — от 0 до 1; светодиодов два (0 — левый, 1 — правый).
+    \item Нейросеть в браузере не работает: \texttt{pioneer\_rknn} в симуляторе «видит» людей, машины и надписи
+          на площадках в поле зрения камеры. Параметры автопилота, GPS и запись видео не поддерживаются.
+    \item Кнопка \ui{Проект Bricks} скачивает блоки как проект, который открывается в Bricks на настоящем дроне.
+\end{itemize}
+
+\begin{lstlisting}[style=py]
+from pioneer_sdk2 import Pioneer
+import time
+
+pioneer = Pioneer()
+try:
+    pioneer.arm()                          # ждёт запуска моторов
+    pioneer.takeoff()                      # ждёт конца взлёта
+    pioneer.go_to_local_point(2, 1, 1.5, yaw=0)   # курс в градусах
+    while not pioneer.point_reached():
+        time.sleep(0.1)
+    pioneer.led_control(r=0, g=1, b=0)     # цвет от 0 до 1
+finally:
+    pioneer.land()                         # посадка при любой ошибке
+    pioneer.close_connection()
+\end{lstlisting}
+
+\begin{tip}[Миссии для Мини 2]
+В панели \ui{Обучение} пять треков: \ui{Blockly} (16 миссий), \ui{Lua} (93), \ui{Python} (124),
+\ui{Мини 2 · Python} (37) и \ui{Мини 2 · Bricks} (16). Миссия трека Мини~2 сама выбирает нужный дрон.
+\end{tip}
+
 \section{Шпаргалка: Lua и Python}
 
 \begin{center}
@@ -476,7 +515,7 @@ camera = SimCamera(ip='simulator.sakoryagin.ru', port=18001)
 
 \begin{tip}[Где искать остальное]
 Кнопка со значком книги в заголовке редактора открывает справочник API с описанием и примером каждой
-функции. Раздел \ui{Руководство} на панели слева — уроки с заданиями и автопроверкой.
+функции. Панель \ui{Обучение} слева — миссии с заданиями и автопроверкой полёта. Для Мини~2 в шпаргалке книги есть столбец \texttt{pioneer\_sdk2}.
 \end{tip}
 
 \end{document}

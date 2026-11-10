@@ -8,13 +8,15 @@ import {
     removeDroneState,
     setCurrentDrone
 } from '../../../core/state.js';
-import { getEditorValue, setEditorValue } from '../../../editor/index.js';
+import { getEditorValue, isBlocklyEditorEnabled, setEditorValue } from '../../../editor/index.js';
 import { stopLuaScript } from '../../../lua/index.js';
 import { disposePythonRunState, stopPythonScript } from '../../../python/index.js';
 import { setExternalBridgeEnabled } from '../../../python/external-bridge.js';
 import type { DroneManagerDom } from './dom.js';
-import { DRONE_MODELS, droneModelProfile, type DroneModelId } from '../../../core/drone-models.js';
-import { DEFAULT_PYTHON_SCRIPT, DEFAULT_SDK2_PYTHON_SCRIPT } from '../../../core/state-types.js';
+import {
+    DRONE_MODELS, defaultPythonScriptFor, droneModelProfile, droneSdk, languageChoicesFor, scriptMatchesSdk, usesOnboardSdk,
+    type DroneModelId, type PythonSdkId, type ProgramLanguageChoice
+} from '../../../core/drone-models.js';
 import {
     getDroneAddress,
     getDroneTransportSummary,
@@ -75,9 +77,63 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
     }
 
     const MODEL_HINTS: Record<DroneModelId, string> = {
-        'pioneer-basic': 'Lua и Python (pioneer_sdk). Программу можно загрузить на настоящий дрон кнопкой «На дрон».',
-        'pioneer-mini2': 'Только Python и pioneer_sdk2: программа выполняется на борту. Камера наклоняется сервоприводом.'
+        'pioneer-basic': 'Языки Базового: Lua, Python (SDK1 или SDK2) и Blockly. Lua-программу можно загрузить на настоящий дрон кнопкой «На дрон».',
+        'pioneer-mini2': 'Языки Мини 2: Python (pioneer_sdk2) и блоки Bricks. Программа выполняется на борту, камера наклоняется сервоприводом.'
     };
+
+    const LANGUAGE_HINTS: Record<ProgramLanguageChoice, string> = {
+        'lua': 'Lua выполняется в автопилоте.',
+        'python-sdk1': 'pioneer_sdk: управление с компьютера по MAVLink.',
+        'python-sdk2': 'pioneer_sdk2: программа выполняется на борту. У Базового для этого нужна Radxa Zero 3W.',
+        'blocks': 'Блоки, из которых собирается программа.'
+    };
+
+    function languageLabel(choice: ProgramLanguageChoice, model: DroneModelId): string {
+        if (choice === 'lua') return 'Lua';
+        if (choice === 'python-sdk1') return 'Python · SDK1';
+        if (choice === 'python-sdk2') return 'Python · SDK2';
+        return model === 'pioneer-mini2' ? 'Bricks' : 'Blockly';
+    }
+
+    /** Язык выбранного дрона: блоки, Lua или Python с его библиотекой. */
+    function currentLanguageChoice(drone: (typeof drones)[string]): ProgramLanguageChoice {
+        if (isBlocklyEditorEnabled()) return 'blocks';
+        if (currentScriptLanguage === 'lua') return 'lua';
+        return droneSdk(drone) === 'pioneer_sdk2' ? 'python-sdk2' : 'python-sdk1';
+    }
+
+    /** У программы на Python шаблон своей библиотеки; чужой код не трогаем, если он уже импортирует нужную. */
+    function applyDefaultScriptForSdk(drone: { model: DroneModelId; pythonSdk?: PythonSdkId; pythonScript: string }) {
+        const sdk = droneSdk(drone);
+        if (!scriptMatchesSdk(drone.pythonScript, sdk)) drone.pythonScript = defaultPythonScriptFor(sdk);
+    }
+
+    /** Кнопки «Язык программы»: набор зависит от модели выбранного дрона. */
+    function renderLanguageSwitch() {
+        const seg = dom.languageSeg;
+        if (!seg) return;
+        const drone = drones[currentDroneId];
+        const model = droneModelProfile(drone?.model).id;
+        const choices = languageChoicesFor(model);
+        const active = drone ? currentLanguageChoice(drone) : null;
+        seg.replaceChildren(...choices.map((choice) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `pk-seg__btn${choice === active ? ' is-active' : ''}`;
+            button.setAttribute('role', 'radio');
+            button.setAttribute('aria-checked', choice === active ? 'true' : 'false');
+            button.dataset.droneLanguage = choice;
+            button.textContent = languageLabel(choice, model);
+            button.title = LANGUAGE_HINTS[choice];
+            button.disabled = !drone || drone.running;
+            return button;
+        }));
+        if (dom.languageHint) {
+            dom.languageHint.textContent = drone?.running
+                ? 'Остановите программу, чтобы сменить язык.'
+                : active ? LANGUAGE_HINTS[active] : '';
+        }
+    }
 
     /** Переключатель «Модель дрона» показывает модель выбранного дрона. */
     function renderModelSwitch() {
@@ -94,6 +150,7 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
                 ? 'Остановите программу, чтобы сменить модель.'
                 : MODEL_HINTS[model];
         }
+        renderLanguageSwitch();
         // Переключатель в шапке редактора показывает ту же модель.
         window.dispatchEvent(new CustomEvent('drone-model-changed'));
     }
@@ -118,9 +175,9 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
             drone.name = /\d$/.test(profile.namePrefix) ? `${profile.namePrefix} · ${defaultName[1]}` : `${profile.namePrefix} ${defaultName[1]}`;
         }
         // Программа на чужой библиотеке не запустится - даём шаблон своей.
-        const usesSdk2 = /^\s*(?:from|import)\s+pioneer_sdk2\b/m.test(drone.pythonScript);
-        if (profile.pythonSdk === 'pioneer_sdk2' && !usesSdk2) drone.pythonScript = DEFAULT_SDK2_PYTHON_SCRIPT;
-        if (profile.pythonSdk === 'pioneer_sdk' && usesSdk2) drone.pythonScript = DEFAULT_PYTHON_SCRIPT;
+        // Выбранная библиотека не годится новой модели (SDK1 у Мини 2) - берётся библиотека модели.
+        if (drone.pythonSdk && !profile.pythonSdks.includes(drone.pythonSdk)) drone.pythonSdk = undefined;
+        applyDefaultScriptForSdk(drone);
         // Язык, справочник, примеры и кнопка «На дрон» подстраиваются по этому событию.
         emitDroneSelectionChanged(id);
         if (id === currentDroneId) {
@@ -202,7 +259,7 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
             const meta = document.createElement('span');
             meta.className = 'pk-row__meta';
             const profile = droneModelProfile(drones[id].model);
-            const onboard = profile.pythonSdk === 'pioneer_sdk2';
+            const onboard = usesOnboardSdk(drones[id]);
             meta.textContent = isConfirming
                 ? 'Удалить этого дрона?'
                 : onboard ? 'Python на борту · pioneer_sdk2' : getDroneAddress(id);
@@ -372,7 +429,7 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
             const y = (Math.random() - 0.5) * 4;
 
             const created = createDroneState(id, name, x, y, 0, model);
-            if (profile.pythonSdk === 'pioneer_sdk2') created.pythonScript = DEFAULT_SDK2_PYTHON_SCRIPT;
+            applyDefaultScriptForSdk(created);
             const createdConnection = ensureDronePythonConnectionSettings(id);
             createdConnection.executionTarget = sourceConnection.executionTarget;
             createdConnection.simulator = sourceConnection.simulator;
@@ -392,7 +449,7 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
             reportDroneManagerDebug('H5', 'Created drone from manager', { id, name });
             switchDrone(id);
             updateList();
-            log(profile.pythonSdk === 'pioneer_sdk2'
+            log(usesOnboardSdk(created)
                 ? `Добавлен новый дрон: ${name} (Python, pioneer_sdk2)`
                 : `Добавлен новый дрон: ${name} (${createdConnection.ip}:${createdConnection.mavlinkPort}, camera:${createdConnection.cameraPort}, ${createdConnection.connectionMethod})`, 'success');
         };
@@ -404,6 +461,18 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
             if (!button || button.disabled || !model || !(model in DRONE_MODELS)) return;
             setDroneModel(currentDroneId, model as DroneModelId);
         });
+
+        // Язык программы выбранного дрона: Lua, Python с SDK1 или SDK2, блоки.
+        dom.languageSeg?.addEventListener('click', (event) => {
+            const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-drone-language]');
+            const choice = button?.dataset.droneLanguage as ProgramLanguageChoice | undefined;
+            const drone = drones[currentDroneId];
+            if (!button || button.disabled || !choice || !drone || drone.running) return;
+            if (!languageChoicesFor(drone.model).includes(choice)) return;
+            window.dispatchEvent(new CustomEvent<{ choice: ProgramLanguageChoice }>('drone-language-request', { detail: { choice } }));
+        });
+        // Редактор (language-selector) применил язык - кнопки показывают его.
+        window.addEventListener('drone-language-changed', () => { renderLanguageSwitch(); updateList(); });
 
         // Запрос смены модели из шапки редактора (editor-model-switch.ts).
         window.addEventListener('drone-model-request', (event) => {

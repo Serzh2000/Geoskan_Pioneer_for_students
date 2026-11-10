@@ -43,7 +43,8 @@ export type User = {
     /** Заметка учителя об ученике; ученик её не видит. */
     note?: string;
 };
-type Session = { tokenHash: string; userId: string; expiresAt: number };
+/** viewAs — id учителя, который смотрит кабинет от имени ученика: такая сессия только для просмотра. */
+type Session = { tokenHash: string; userId: string; expiresAt: number; viewAs?: string };
 type Data = { version: number; users: User[]; sessions: Session[]; classes: ClassGroup[] };
 /** Версия формата файла аккаунтов: 1 — без поля version (классов, заметок и дат активности не было). */
 export const DATA_VERSION = 2;
@@ -51,6 +52,10 @@ const ACTIVE_TOUCH_MS = 60 * 1000;
 const NOTE_MAX = 400;
 
 const SESSION_COOKIE = 'pioneer_session';
+/** Обычная сессия учителя, пока он смотрит от имени ученика: по ней возвращаемся обратно. */
+const TEACHER_COOKIE = 'pioneer_teacher_session';
+/** Просмотр от имени ученика живёт час и не продлевается. */
+const VIEW_TTL_MS = 60 * 60 * 1000;
 /** Вход действует два часа после последнего запроса: каждый запрос со своим токеном продлевает сессию. */
 export const SESSION_TTL_MS = 2 * 60 * 60 * 1000;
 /** Продление сессии пишется на диск не чаще раза в минуту: перезапуск сервера теряет в худшем случае минуту. */
@@ -276,6 +281,25 @@ export class AccountStore {
         return token;
     }
 
+    /** Сессия просмотра: учитель видит кабинет ученика его глазами. Активность ученика она не отмечает. */
+    async startViewSession(student: User, teacher: User): Promise<string> {
+        const token = crypto.randomBytes(32).toString('hex');
+        const now = Date.now();
+        this.data.sessions = this.data.sessions.filter((session) => session.expiresAt > now);
+        this.data.sessions.push({ tokenHash: sha256(token), userId: student.id, expiresAt: now + VIEW_TTL_MS, viewAs: teacher.id });
+        await this.save();
+        return token;
+    }
+
+    /** Кто смотрит от имени ученика по этому токену (учитель) или undefined, если сессия обычная. */
+    viewerForToken(token: string | undefined): User | undefined {
+        if (!token) return undefined;
+        const hash = sha256(token);
+        const now = Date.now();
+        const session = this.data.sessions.find((item) => item.tokenHash === hash && item.expiresAt > now);
+        return session?.viewAs ? this.findById(session.viewAs) : undefined;
+    }
+
     async endSession(token: string): Promise<void> {
         const hash = sha256(token);
         this.data.sessions = this.data.sessions.filter((session) => session.tokenHash !== hash);
@@ -289,8 +313,9 @@ export class AccountStore {
         const now = Date.now();
         const session = this.data.sessions.find((item) => item.tokenHash === hash && item.expiresAt > now);
         if (!session) return undefined;
-        session.expiresAt = now + SESSION_TTL_MS;
         const user = this.findById(session.userId);
+        if (session.viewAs) return user; // просмотр не продлевается и не отмечает ученика «был в сети»
+        session.expiresAt = now + SESSION_TTL_MS;
         if (user && now - (user.lastActiveAt ?? 0) > ACTIVE_TOUCH_MS) user.lastActiveAt = now;
         this.scheduleSave();
         return user;
@@ -328,6 +353,8 @@ export class AccountStore {
 }
 
 export const publicUser = (user: User) => ({ id: user.id, role: user.role, fullName: user.fullName, login: user.login, mustChangePassword: user.mustChangePassword === true });
+/** Пользователь для страницы: в режиме просмотра добавляется имя учителя. */
+const sessionUser = (user: User, viewer?: User) => (viewer ? { ...publicUser(user), viewAs: { teacherName: viewer.fullName } } : publicUser(user));
 
 const progressIds = (user: User) => Object.fromEntries(TRACKS.map((track) => [track, Object.keys(user.progress[track])]));
 
@@ -437,8 +464,12 @@ function readCookie(req: express.Request, name: string): string | undefined {
 }
 
 function setSessionCookie(req: express.Request, res: express.Response, token: string, maxAgeMs: number): void {
+    setCookie(req, res, SESSION_COOKIE, token, maxAgeMs);
+}
+
+function setCookie(req: express.Request, res: express.Response, name: string, token: string, maxAgeMs: number): void {
     const secure = req.secure || req.headers['x-forwarded-proto'] === 'https';
-    res.append('Set-Cookie', `${SESSION_COOKIE}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${Math.floor(maxAgeMs / 1000)}${secure ? '; Secure' : ''}`);
+    res.append('Set-Cookie', `${name}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${Math.floor(maxAgeMs / 1000)}${secure ? '; Secure' : ''}`);
 }
 
 type Handler = (req: express.Request, res: express.Response) => Promise<void> | void;
@@ -475,6 +506,11 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
     const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false, message: { error: 'Слишком много попыток. Подождите несколько минут.' } });
 
     const currentUser = (req: express.Request) => store.userForToken(readCookie(req, SESSION_COOKIE));
+    const viewerOf = (req: express.Request) => store.viewerForToken(readCookie(req, SESSION_COOKIE));
+    /** Просмотр от имени ученика только читает: зачёты, попытки и профиль ученика остаются как были. */
+    const forbidInView = (req: express.Request): void => {
+        if (viewerOf(req)) throw new AccountError(403, 'В режиме просмотра нельзя ничего менять. Вернитесь к своему аккаунту.');
+    };
     const requireUser = (req: express.Request): User => {
         const user = currentUser(req);
         if (!user) throw new AccountError(401, 'Нужно войти в аккаунт.');
@@ -520,12 +556,17 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
         const token = readCookie(req, SESSION_COOKIE);
         if (token) await store.endSession(token);
         setSessionCookie(req, res, '', 0);
+        // Выход из режима просмотра не выходит из аккаунта учителя.
+        const teacherToken = readCookie(req, TEACHER_COOKIE);
+        if (teacherToken && store.userForToken(teacherToken)) setSessionCookie(req, res, teacherToken, SESSION_TTL_MS);
+        setCookie(req, res, TEACHER_COOKIE, '', 0);
         res.json({ ok: true });
     }));
 
     // Профиль: ученик сам правит своё имя (логин и класс меняет учитель).
     app.patch('/api/auth/profile', wrap(async (req, res) => {
         const user = requireUser(req);
+        forbidInView(req);
         await store.updateUser(user, { fullName: req.body?.fullName });
         res.json({ user: publicUser(user) });
     }));
@@ -543,11 +584,12 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
 
     app.get('/api/auth/me', wrap((req, res) => {
         const user = currentUser(req);
-        res.json({ user: user ? publicUser(user) : null });
+        res.json({ user: user ? sessionUser(user, viewerOf(req)) : null });
     }));
 
     app.post('/api/auth/password', authLimiter, wrap(async (req, res) => {
         const user = requireUser(req);
+        forbidInView(req);
         if (!checkPassword(user, String(req.body?.current ?? ''))) throw new AccountError(403, 'Текущий пароль неверный.');
         const next = validatePassword(req.body?.password);
         if (String(req.body?.passwordRepeat ?? '') !== next) throw new AccountError(400, 'Пароли не совпадают.');
@@ -563,6 +605,7 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
 
     app.post('/api/progress/complete', wrap(async (req, res) => {
         const user = requireUser(req);
+        if (viewerOf(req)) { res.json({ progress: progressIds(user) }); return; }
         await store.setCompletion(user, parseTrack(req.body?.track), parseQuestId(req.body?.questId), true, 'student');
         res.json({ progress: progressIds(user) });
     }));
@@ -570,7 +613,7 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
     // Журнал попыток: ученик присылает результат каждой проверки, учитель видит, где ученики застревают.
     app.post('/api/learning/attempt', wrap(async (req, res) => {
         const user = requireUser(req);
-        if (user.role === 'student' && attempts) {
+        if (user.role === 'student' && attempts && !viewerOf(req)) {
             await attempts.add(AttemptLog.sanitize({ userId: user.id, name: user.fullName, track: parseTrack(req.body?.track), questId: parseQuestId(req.body?.questId), body: req.body }));
         }
         res.json({ ok: true });
@@ -672,6 +715,35 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
         } else {
             throw new AccountError(400, 'Неизвестное действие.');
         }
+    }));
+
+    // Посмотреть кабинет и обучение глазами ученика, не зная его пароля. Сессия только для чтения, живёт час.
+    app.post('/api/teacher/students/:id/view', wrap(async (req, res) => {
+        const teacher = requireTeacher(req);
+        const student = studentFromParams(req);
+        const teacherToken = readCookie(req, SESSION_COOKIE)!;
+        const token = await store.startViewSession(student, teacher);
+        setCookie(req, res, TEACHER_COOKIE, teacherToken, SESSION_TTL_MS);
+        setSessionCookie(req, res, token, VIEW_TTL_MS);
+        res.json({ user: sessionUser(student, teacher) });
+    }));
+
+    // Вернуться из просмотра в свой аккаунт учителя.
+    app.post('/api/auth/view-exit', wrap(async (req, res) => {
+        const token = readCookie(req, SESSION_COOKIE);
+        const viewer = viewerOf(req);
+        if (!token || !viewer) throw new AccountError(400, 'Режим просмотра не включён.');
+        const teacherToken = readCookie(req, TEACHER_COOKIE);
+        await store.endSession(token);
+        setCookie(req, res, TEACHER_COOKIE, '', 0);
+        const teacher = teacherToken ? store.userForToken(teacherToken) : undefined;
+        if (!teacher || teacher.id !== viewer.id) {
+            setSessionCookie(req, res, '', 0);
+            res.json({ user: null });
+            return;
+        }
+        setSessionCookie(req, res, teacherToken!, SESSION_TTL_MS);
+        res.json({ user: publicUser(teacher) });
     }));
 
     app.post('/api/teacher/students/:id/reset-password', wrap(async (req, res) => {

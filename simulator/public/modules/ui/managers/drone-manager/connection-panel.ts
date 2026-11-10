@@ -1,5 +1,5 @@
 import { log } from '../../../shared/logging/logger.js';
-import { droneModelProfile } from '../../../core/drone-models.js';
+import { droneModelProfile, usesOnboardSdk } from '../../../core/drone-models.js';
 import { drones, ensureDronePythonConnectionSettings } from '../../../core/state.js';
 import type { PioneerConnectionMethod, PythonExecutionTarget } from '../../../core/state.js';
 import { clearExternalBridgeQueue, isExternalBridgeEnabled, setExternalBridgeEnabled } from '../../../python/external-bridge.js';
@@ -150,7 +150,7 @@ export function createConnectionPanel(options: ConnectionPanelOptions) {
             dom.bridgeDisableBtn.disabled = !activeDroneId || !bridgeEnabled;
             // Пионер Мини 2 управляется программой на его борту (pioneer_sdk2),
             // внешнего MAVLink-подключения у него нет.
-            const onboardOnly = !!activeDroneId && droneModelProfile(drones[activeDroneId]?.model).pythonSdk === 'pioneer_sdk2';
+            const onboardOnly = !!activeDroneId && usesOnboardSdk(drones[activeDroneId]);
             if (dom.bridgeToggle) {
                 dom.bridgeToggle.checked = bridgeEnabled;
                 dom.bridgeToggle.disabled = !activeDroneId || (onboardOnly && !bridgeEnabled);
@@ -185,8 +185,9 @@ export function createConnectionPanel(options: ConnectionPanelOptions) {
 
         const profile = droneModelProfile(drones[activeDroneId].model);
         const steps = dom.bridgeSummary.parentElement?.querySelector<HTMLElement>('.swarm-steps');
-        if (steps) steps.hidden = profile.pythonSdk === 'pioneer_sdk2';
-        if (profile.pythonSdk === 'pioneer_sdk2') {
+        const onboard = usesOnboardSdk(drones[activeDroneId]);
+        if (steps) steps.hidden = onboard;
+        if (onboard) {
             dom.bridgeSummary.textContent = `${profile.title} выполняет Python-программу на своём борту через pioneer_sdk2. Пишите её во вкладке «Код» - внешнее подключение с компьютера не нужно.`;
         }
         const bridgeEnabled = isExternalBridgeEnabled(activeDroneId);

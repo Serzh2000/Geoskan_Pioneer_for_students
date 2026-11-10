@@ -34,13 +34,14 @@ class PoseEstimatorThread:
             
         self.size_of_marker = 0.05  # side length in meters
         
-        # Coordinates of marker corners
+        # Углы маркера в его системе координат (центр - начало, Z - от маркера к камере) в том же
+        # порядке, в каком их возвращает детектор: левый верхний, правый верхний, правый нижний, левый нижний.
         self.points_of_marker = np.array([
-            (self.size_of_marker / 2, -self.size_of_marker / 2, 0),
-            (-self.size_of_marker / 2, -self.size_of_marker / 2, 0),
             (-self.size_of_marker / 2, self.size_of_marker / 2, 0),
             (self.size_of_marker / 2, self.size_of_marker / 2, 0),
-        ])
+            (self.size_of_marker / 2, -self.size_of_marker / 2, 0),
+            (-self.size_of_marker / 2, -self.size_of_marker / 2, 0),
+        ], dtype=np.float32)
 
     def detect_markers_compat(self, image):
         if hasattr(aruco, 'ArucoDetector'):

@@ -7,6 +7,7 @@
  * программа работает на его бортовом компьютере, Lua-скриптов автопилота у него нет.
  */
 import type { ScriptLanguage } from './state-types.js';
+import { DEFAULT_PYTHON_SCRIPT, DEFAULT_SDK2_PYTHON_SCRIPT } from './state-types.js';
 
 export type DroneModelId = 'pioneer-basic' | 'pioneer-mini2';
 export type PythonSdkId = 'pioneer_sdk' | 'pioneer_sdk2';
@@ -19,7 +20,10 @@ export interface DroneModelProfile {
     namePrefix: string;
     /** Языки по порядку предпочтения; первый — язык по умолчанию. */
     languages: readonly ScriptLanguage[];
+    /** Python-библиотека по умолчанию. */
     pythonSdk: PythonSdkId;
+    /** Все Python-библиотеки, которые можно выбрать для дрона этой модели. */
+    pythonSdks: readonly PythonSdkId[];
     /** Сколько светодиодов адресует led_control (номера 0..ledCount-1). */
     ledCount: number;
     /** Учебная LED-матрица 5x5 (только у Базового). */
@@ -45,6 +49,8 @@ export const DRONE_MODELS: Record<DroneModelId, DroneModelProfile> = {
         namePrefix: 'Пионер Базовый',
         languages: ['lua', 'python'],
         pythonSdk: 'pioneer_sdk',
+        // pioneer_sdk2 на Базовом работает только с бортовым компьютером Radxa Zero 3W.
+        pythonSdks: ['pioneer_sdk', 'pioneer_sdk2'],
         ledCount: 4,
         ledMatrix: true,
         esp32Module: true,
@@ -60,6 +66,7 @@ export const DRONE_MODELS: Record<DroneModelId, DroneModelProfile> = {
         namePrefix: 'Пионер Мини 2',
         languages: ['python'],
         pythonSdk: 'pioneer_sdk2',
+        pythonSdks: ['pioneer_sdk2'],
         // Два передних индикатора на плечах корпуса: 0 — левый, 1 — правый.
         ledCount: 2,
         ledMatrix: false,
@@ -86,12 +93,43 @@ export function supportsLanguage(model: DroneModelId | undefined | null, languag
     return droneModelProfile(model).languages.includes(language);
 }
 
-/** Набор примеров редактора: у Мини 2 свои программы на pioneer_sdk2 (/api/files?lang=...). */
+/** Python-библиотека дрона: выбранная, если модель её допускает, иначе библиотека модели. */
+export function droneSdk(drone: { model?: DroneModelId | null; pythonSdk?: PythonSdkId } | undefined | null): PythonSdkId {
+    const profile = droneModelProfile(drone?.model);
+    return drone?.pythonSdk && profile.pythonSdks.includes(drone.pythonSdk) ? drone.pythonSdk : profile.pythonSdk;
+}
+
+/** Программа Python написана под эту библиотеку (по строке импорта pioneer_sdk2). */
+export function scriptMatchesSdk(code: string, sdk: PythonSdkId): boolean {
+    const usesSdk2 = /^\s*(?:from|import)\s+pioneer_sdk2\b/m.test(code);
+    return sdk === 'pioneer_sdk2' ? usesSdk2 : !usesSdk2;
+}
+
+/** Шаблон новой Python-программы под библиотеку. */
+export function defaultPythonScriptFor(sdk: PythonSdkId): string {
+    return sdk === 'pioneer_sdk2' ? DEFAULT_SDK2_PYTHON_SCRIPT : DEFAULT_PYTHON_SCRIPT;
+}
+
+/** Python на борту (Мини 2 и любой дрон с pioneer_sdk2): программа выполняется на бортовом компьютере. */
+export function usesOnboardSdk(drone: { model?: DroneModelId | null; pythonSdk?: PythonSdkId } | undefined | null): boolean {
+    return droneSdk(drone) === 'pioneer_sdk2';
+}
+
+/** Название языка для интерфейса: «Lua», «Python · SDK1», «Python · SDK2», «Блоки». */
+export type ProgramLanguageChoice = 'lua' | 'python-sdk1' | 'python-sdk2' | 'blocks';
+
+export function languageChoicesFor(model: DroneModelId | undefined | null): readonly ProgramLanguageChoice[] {
+    return droneModelProfile(model).id === 'pioneer-mini2'
+        ? ['python-sdk2', 'blocks']
+        : ['python-sdk1', 'python-sdk2', 'lua', 'blocks'];
+}
+
+/** Набор примеров редактора: для pioneer_sdk2 свои программы (/api/files?lang=...). */
 export type ExamplesSet = 'lua' | 'python' | 'python-sdk2' | 'blocks' | 'blocks-bricks';
 
-export function examplesSetFor(model: DroneModelId | undefined | null, language: ScriptLanguage): ExamplesSet {
+export function examplesSetFor(drone: { model?: DroneModelId | null; pythonSdk?: PythonSdkId } | undefined | null, language: ScriptLanguage): ExamplesSet {
     if (language === 'lua') return 'lua';
-    return droneModelProfile(model).pythonSdk === 'pioneer_sdk2' ? 'python-sdk2' : 'python';
+    return usesOnboardSdk(drone) ? 'python-sdk2' : 'python';
 }
 
 /** Набор примеров редактора блоков: у Мини 2 - проекты Pioneer Bricks (.xml), у остальных - программы из pioneer_* (.json). */

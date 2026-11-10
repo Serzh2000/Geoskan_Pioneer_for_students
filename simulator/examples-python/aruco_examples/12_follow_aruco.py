@@ -42,12 +42,14 @@ class FollowArucoThread:
             self.parameters = aruco.DetectorParameters()
             
         self.size_of_marker = 0.1 # m
+        # Углы маркера в его системе координат (центр - начало, Z - от маркера к камере) в том же
+        # порядке, в каком их возвращает детектор: левый верхний, правый верхний, правый нижний, левый нижний.
         self.points_of_marker = np.array([
-            (self.size_of_marker / 2, -self.size_of_marker / 2, 0),
-            (-self.size_of_marker / 2, -self.size_of_marker / 2, 0),
             (-self.size_of_marker / 2, self.size_of_marker / 2, 0),
             (self.size_of_marker / 2, self.size_of_marker / 2, 0),
-        ])
+            (self.size_of_marker / 2, -self.size_of_marker / 2, 0),
+            (-self.size_of_marker / 2, -self.size_of_marker / 2, 0),
+        ], dtype=np.float32)
 
         # FPS calculation
         self.frame_times = deque(maxlen=30)

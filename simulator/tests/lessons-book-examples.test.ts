@@ -104,7 +104,7 @@ const LUA_EXPECTATIONS: Record<string, LuaExpectation> = {
     'getting_started_hello.lua': { seconds: 1, prints: ['Системы в норме. Привет, Пионер!'] },
     'lua_intro_basics.lua': { seconds: 1, prints: ['10\tLua\t3'] },
     'lua_strings_concat.lua': { seconds: 1, prints: ['высота, м: 2', '7\tPioneer!'] },
-    'variables_intro.lua': { seconds: 1, prints: ['number\tstring\tboolean\ttable'] },
+    'variables_intro.lua': { seconds: 1, prints: ['number\tstring\tboolean\ttable', '2\t1'] },
     'lua_variables_tables.lua': { seconds: 1, prints: ['3\t40\t4'] },
     'lua_arithmetic_ops.lua': { seconds: 1, prints: ['14\t1\t8.0', 'true\ttrue', '4\t5.0'] },
     'lua_logic_ops.lua': { seconds: 1, prints: ['true\t1\ttrue', 'true\ttrue'] },
@@ -602,6 +602,7 @@ const PYTHON_EXPECTATIONS: Record<string, PythonExpectation> = {
     '18_color_tracking_yaw.py': { mode: 'boardOnly', reason: 'цвет в HSV и контуры cv2 на живом кадре' },
     '19_aruco_distance.py': { mode: 'boardOnly', reason: 'cv2.aruco, solvePnP и калибровка data.yml с настоящей камеры' },
     '20_aruco_follow.py': { mode: 'boardOnly', reason: 'cv2.aruco, solvePnP и калибровка data.yml с настоящей камеры' },
+    '22_marker_field_led.py': { mode: 'boardOnly', reason: 'cv2.aruco на живом кадре нижней камеры и управление с клавиатуры через cv2.waitKey' },
     // Итоговый проект: 2 круга по периметру со снимками; при LOW_VOLTAGE1 - аварийное завершение с rtl.
     '21_patrol_project.py': {
         mode: 'onboard',

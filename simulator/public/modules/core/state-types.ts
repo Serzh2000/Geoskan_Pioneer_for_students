@@ -100,13 +100,18 @@ export interface AuxChannelRange {
 
 export type FlightMode = 'AUTO' | 'LOITER' | 'ALTHOLD' | 'STABILIZE';
 
-import type { DroneModelId } from './drone-models.js';
+import type { DroneModelId, PythonSdkId } from './drone-models.js';
 
 export interface DroneState {
     id: string;
     name: string;
     /** Модель дрона (core/drone-models.ts): внешний вид, языки, Python-библиотека. */
     model: DroneModelId;
+    /**
+     * Python-библиотека дрона, выбранная вместе с языком. Не задана - библиотека модели по
+     * умолчанию; у Базового можно выбрать pioneer_sdk2 (нужна Radxa Zero 3W). См. droneSdk().
+     */
+    pythonSdk?: PythonSdkId;
     running: boolean;
     luaHasEventCallback: boolean;
     /** True when the current script explicitly consumes Ev.ENGINES_STARTED. */

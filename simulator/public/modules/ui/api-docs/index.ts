@@ -8,11 +8,11 @@ import { pythonSdk2ApiDocs } from '../../docs/python-sdk2-api-docs.js';
 import { pythonRknnApiDocs } from '../../docs/python-rknn-api-docs.js';
 import { bricksBlocksApiDocs } from '../../docs/bricks-blocks-docs.js';
 import { currentDroneId, drones } from '../../core/state.js';
-import { droneModelProfile } from '../../core/drone-models.js';
+import { droneSdk } from '../../core/drone-models.js';
 
-/** Справочник Python зависит от модели выбранного дрона: у Мини 2 - pioneer_sdk2. */
+/** Справочник Python зависит от выбранной библиотеки дрона: pioneer_sdk или pioneer_sdk2. */
 function pythonSdkOfCurrentDrone() {
-    return droneModelProfile(drones[currentDroneId]?.model).pythonSdk;
+    return droneSdk(drones[currentDroneId]);
 }
 import { ApiMethodPreview } from './preview/index.js';
 import {
@@ -85,11 +85,11 @@ function destroyPreviews(): void {
 
 function renderToolbar(language: ScriptLanguage, sections: ApiSection[], totalCount: number): string {
     const label = language === 'lua' ? 'Lua' : `Python · ${pythonSdkOfCurrentDrone()}`;
-    // Справочник зависит от модели дрона: pioneer_sdk2 показывается только для Мини 2.
-    const mini2 = language === 'python' && pythonSdkOfCurrentDrone() === 'pioneer_sdk2';
-    const modelBadge = mini2
-        ? '<span class="api-model-badge api-model-badge--mini2" title="Эти методы есть только у Пионера Мини 2. Для Базового выберите модель в шапке редактора.">Только Пионер Мини 2</span>'
-        : '<span class="api-model-badge" title="Для Пионера Мини 2 переключите модель в шапке редактора.">Пионер Базовый</span>';
+    // Справочник зависит от выбранной библиотеки дрона (язык выбирается в панели «Рой»).
+    const sdk2 = language === 'python' && pythonSdkOfCurrentDrone() === 'pioneer_sdk2';
+    const modelBadge = sdk2
+        ? '<span class="api-model-badge api-model-badge--mini2" title="Методы pioneer_sdk2: Пионер Мини 2 или Базовый с Radxa Zero 3W. Язык выбирается в панели «Рой».">pioneer_sdk2 · Мини 2 / Базовый с Radxa</span>'
+        : '<span class="api-model-badge" title="Для pioneer_sdk2 выберите язык «Python · SDK2» в панели «Рой».">pioneer_sdk</span>';
     const escapedQuery = escapeHtml(uiState.query);
     const chips = [
         { id: 'all' as const, title: 'Все', count: totalCount },

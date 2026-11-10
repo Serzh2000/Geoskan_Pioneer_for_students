@@ -73,9 +73,20 @@ function applyPose(state: Esp32State) {
     state.node.position.set(state.base.x, state.base.y, state.base.z - (1 - eased) * PLUG_TRAVEL);
 }
 
-export function updateEsp32Module(model: THREE.Object3D, dt: number) {
+/**
+ * suppressed - в этом слоте стоит модуль Radxa (Базовый с pioneer_sdk2): ESP32 убирается сразу, без анимации.
+ */
+export function updateEsp32Module(model: THREE.Object3D, dt: number, suppressed = false) {
     const state = stateOf(model);
-    if (!state || state.progress === state.target) return;
+    if (!state) return;
+    if (suppressed) {
+        if (state.progress !== 0) {
+            state.progress = 0;
+            applyPose(state);
+        }
+        return;
+    }
+    if (state.progress === state.target) return;
     const step = dt / PLUG_SECONDS;
     state.progress = state.target > state.progress
         ? Math.min(state.target, state.progress + step)

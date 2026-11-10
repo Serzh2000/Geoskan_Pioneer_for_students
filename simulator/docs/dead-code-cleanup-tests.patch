@@ -1,0 +1,1314 @@
+diff --git "a/simulator/docs/project-map/\320\240\320\260\320\267\321\200\320\260\320\261\320\276\321\202\320\272\320\260/\320\242\320\265\321\201\321\202\321\213.md" "b/simulator/docs/project-map/\320\240\320\260\320\267\321\200\320\260\320\261\320\276\321\202\320\272\320\260/\320\242\320\265\321\201\321\202\321\213.md"
+index ca81380..08ddd8e 100644
+--- "a/simulator/docs/project-map/\320\240\320\260\320\267\321\200\320\260\320\261\320\276\321\202\320\272\320\260/\320\242\320\265\321\201\321\202\321\213.md"
++++ "b/simulator/docs/project-map/\320\240\320\260\320\267\321\200\320\260\320\261\320\276\321\202\320\272\320\260/\320\242\320\265\321\201\321\202\321\213.md"
+@@ -25,7 +25,7 @@ node_modules/jest/bin/jest.js`, `npm test`). Конфиг: [jest.config.js](../.
+   `scene-manager-catalog`, `cargo-contact`, `frames` — [[Environment]],
+   [[Scene]], [[Scene Manager]].
+ - **Сервер**: `mavlink-bridge`, `server-rate-limits` — [[Сервер обзор]].
+-- **Прочее**: `fsm` ([[Autopilot]]), `state` ([[Core]]), `rc-settings`
++- **Прочее**: `fsm` ([[Autopilot]]), `state` ([[Core]])
+   ([[Settings]]), `monaco-completion` ([[Editor]]), `editor-blockly-ui`,
+   `logger`, `paths`, `tracing`, `runtime-cleanup`,
+   `pioneer-blender-model`, `pioneer-official-examples`,
+diff --git a/simulator/premium-ui.json b/simulator/premium-ui.json
+index 8456950..2d154dd 100644
+--- a/simulator/premium-ui.json
++++ b/simulator/premium-ui.json
+@@ -31,7 +31,7 @@
+   ],
+   "commands": {
+     "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
+-    "unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/editor-temporary-document.test.ts tests/mission-guide-drafts.test.ts tests/workspace-panels.test.ts tests/mission-guide-course-ui.test.ts tests/mission-guide-walkthrough.test.ts tests/mission-guide-learning.test.ts tests/mission-guide-outline-navigation.test.ts tests/viewport-pointer-controls.test.ts tests/mission-guide-scene-preview.test.ts tests/mission-guide-camera-view.test.ts"
++    "unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/mission-guide-drafts.test.ts tests/workspace-panels.test.ts tests/mission-guide-course-ui.test.ts tests/mission-guide-walkthrough.test.ts tests/mission-guide-learning.test.ts tests/mission-guide-outline-navigation.test.ts tests/viewport-pointer-controls.test.ts tests/mission-guide-scene-preview.test.ts tests/mission-guide-camera-view.test.ts"
+   },
+   "evidence": {
+     "failurePaths": "tests/mission-guide-walkthrough.test.ts"
+diff --git a/simulator/public/modules/editor/blockly-mode/bricks/index.ts b/simulator/public/modules/editor/blockly-mode/bricks/index.ts
+index c2abf00..5b3a5dc 100644
+--- a/simulator/public/modules/editor/blockly-mode/bricks/index.ts
++++ b/simulator/public/modules/editor/blockly-mode/bricks/index.ts
+@@ -14,7 +14,6 @@ export { BRICKS_STARTER_XML } from './starter.js';
+ export {
+     bricksProjectFileName,
+     loadBricksProject,
+-    looksLikeBricksProject,
+     parseBricksProject,
+     serializeBricksProject
+ } from './xml.js';
+diff --git a/simulator/public/modules/editor/blockly-mode/bricks/xml.ts b/simulator/public/modules/editor/blockly-mode/bricks/xml.ts
+index 1cc5461..1b3676e 100644
+--- a/simulator/public/modules/editor/blockly-mode/bricks/xml.ts
++++ b/simulator/public/modules/editor/blockly-mode/bricks/xml.ts
+@@ -39,11 +39,6 @@ export function parseBricksProject(xml: string): BricksProject {
+     return { name, dom: root };
+ }
+ 
+-/** Текст похож на проект Bricks (корень xml со своим <project> или с блоком start_block). */
+-export function looksLikeBricksProject(text: string): boolean {
+-    return /<xml[\s>]/.test(text) && (/<project[\s>/]/.test(text) || /type="start_block"/.test(text));
+-}
+-
+ /** Загружает проект Bricks в workspace (прежние блоки удаляются). Возвращает имя проекта. */
+ export function loadBricksProject(xml: string, workspace: Blockly.Workspace): string | null {
+     const { name, dom } = parseBricksProject(xml);
+diff --git a/simulator/public/modules/editor/index/helpers.ts b/simulator/public/modules/editor/index/helpers.ts
+index 0f20e3c..4f4e457 100644
+--- a/simulator/public/modules/editor/index/helpers.ts
++++ b/simulator/public/modules/editor/index/helpers.ts
+@@ -1,6 +1,5 @@
+ import type { BlocklyNS } from '../blockly-mode/loader.js';
+ import type { ScriptLanguage } from '../../core/state.js';
+-import { isTemporaryDocumentActive } from './temporary-document.js';
+ import type { EditorAutofitContext } from '../autofit.js';
+ import type { BlocklyWorkspaceController } from '../blockly/workspace-controller.js';
+ import { createBlocklyToggleController, createBlocklyWorkspaceController, type EditorControllerHost } from './controllers.js';
+@@ -71,7 +70,6 @@ export function persistEditorIndexSession(
+     state: Pick<EditorIndexShellState, 'blocklyEnabled'>,
+     collections: EditorIndexCollections
+ ): void {
+-    if (isTemporaryDocumentActive()) return;
+     persistEditorSessionToStorage({
+         textDraftByKey: collections.textDraftByKey,
+         blocklyWorkspaceXmlByKey: collections.blocklyWorkspaceXmlByKey,
+diff --git a/simulator/public/modules/editor/index/temporary-document.ts b/simulator/public/modules/editor/index/temporary-document.ts
+deleted file mode 100644
+index 431ca2d..0000000
+--- a/simulator/public/modules/editor/index/temporary-document.ts
++++ /dev/null
+@@ -1,46 +0,0 @@
+-import type { ScriptLanguage } from '../../core/state.js';
+-
+-type DraftCollections = {
+-    textDraftByKey: Map<string, string>;
+-    blocklyWorkspaceXmlByKey: Map<string, string>;
+-    blocklyEnabled: boolean;
+-};
+-
+-export type EditorDocument = { value: string; language: ScriptLanguage; blocklyEnabled: boolean };
+-let original: (EditorDocument & DraftCollections) | null = null;
+-
+-// A lesson borrows the editor widget, never the user's persisted document.
+-export function beginTemporaryDocument(state: DraftCollections, document: Omit<EditorDocument, 'blocklyEnabled'>): void {
+-    if (original) return;
+-    original = {
+-        ...document,
+-        blocklyEnabled: state.blocklyEnabled,
+-        textDraftByKey: new Map(state.textDraftByKey),
+-        blocklyWorkspaceXmlByKey: new Map(state.blocklyWorkspaceXmlByKey)
+-    };
+-}
+-
+-export function isTemporaryDocumentActive(): boolean {
+-    return original !== null;
+-}
+-
+-export function getTemporaryDocumentToken(): object | null {
+-    return original;
+-}
+-
+-export function restoreTemporaryDocument(state: DraftCollections, restore: (document: EditorDocument) => void): void {
+-    if (!original) return;
+-    const document = original;
+-    // Blockly's long-lived change listener retains these maps: preserve identity.
+-    state.textDraftByKey.clear();
+-    document.textDraftByKey.forEach((value, key) => state.textDraftByKey.set(key, value));
+-    state.blocklyWorkspaceXmlByKey.clear();
+-    document.blocklyWorkspaceXmlByKey.forEach((value, key) => state.blocklyWorkspaceXmlByKey.set(key, value));
+-    state.blocklyEnabled = document.blocklyEnabled;
+-    // Restoration also changes the model; keep persistence suspended until it is done.
+-    try {
+-        restore(document);
+-    } finally {
+-        original = null;
+-    }
+-}
+diff --git a/simulator/public/modules/python/pioneer-rknn-scene.ts b/simulator/public/modules/python/pioneer-rknn-scene.ts
+index c78a53d..97ea825 100644
+--- a/simulator/public/modules/python/pioneer-rknn-scene.ts
++++ b/simulator/public/modules/python/pioneer-rknn-scene.ts
+@@ -16,19 +16,6 @@ import { OBJECT_TYPE } from '../shared/object-types.js';
+ export const FRAME_WIDTH = 640;
+ export const FRAME_HEIGHT = 360;
+ 
+-/** 80 классов набора COCO, на которых обучена yolov8n: номер в ответе Yolo.run - индекс в этом списке. */
+-export const COCO_CLASSES: readonly string[] = [
+-    'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat', 'traffic light',
+-    'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep', 'cow',
+-    'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee',
+-    'skis', 'snowboard', 'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard',
+-    'tennis racket', 'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
+-    'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair', 'couch',
+-    'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone',
+-    'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors', 'teddy bear',
+-    'hair drier', 'toothbrush'
+-];
+-
+ /** Классы COCO, которые в сцене симулятора есть. Деревьев, зданий и грузов в COCO нет, yolov8n их не находит. */
+ export const COCO = { person: 0, car: 2, bus: 5, train: 6, truck: 7 } as const;
+ 
+diff --git a/simulator/public/modules/scene/objects/placement-geometry.ts b/simulator/public/modules/scene/objects/placement-geometry.ts
+index 432d407..a060b5b 100644
+--- a/simulator/public/modules/scene/objects/placement-geometry.ts
++++ b/simulator/public/modules/scene/objects/placement-geometry.ts
+@@ -55,18 +55,6 @@ export function softSnapPlanarPoint(point: { x: number; y: number }, active: boo
+     return { x: snapToGridSoft(point.x, step, pull), y: snapToGridSoft(point.y, step, pull) };
+ }
+ 
+-/** X/Y to the nearest grid node when `active`; the height is never snapped. */
+-export function snapPlanarPoint(point: { x: number; y: number }, active: boolean, step = GRID_SNAP_STEP): { x: number; y: number } {
+-    if (!active) return { x: point.x, y: point.y };
+-    return { x: snapToGrid(point.x, step), y: snapToGrid(point.y, step) };
+-}
+-
+-export function snapAngleRadians(angle: number, active: boolean, stepDegrees = ROTATION_SNAP_DEGREES): number {
+-    if (!active || !(stepDegrees > 0)) return angle;
+-    const step = THREE.MathUtils.degToRad(stepDegrees);
+-    return Math.round(angle / step) * step;
+-}
+-
+ /**
+  * Pivot height that puts the object's bounding-box bottom on `surfaceZ`.
+  * Models whose pivot is not at their base (a marker sheet is centred on its
+diff --git a/simulator/public/modules/ui/mission-guide/mini2/bricks-missions.ts b/simulator/public/modules/ui/mission-guide/mini2/bricks-missions.ts
+index 7510dc2..3d90623 100644
+--- a/simulator/public/modules/ui/mission-guide/mini2/bricks-missions.ts
++++ b/simulator/public/modules/ui/mission-guide/mini2/bricks-missions.ts
+@@ -5,7 +5,7 @@ import type { DroneSample } from '../evaluation/text/trace.js';
+ import { Sdk2Grader, type Sdk2Check } from './sdk2-grade.js';
+ import {
+     compare, distance, forRange, frame, getVar, goPoint, ifElse, join, landing, ledAll, ledIndex, preflight, print,
+-    project, repeat, servo, setVar, sleep, speedStart, stmt, takeOff, text, waitPoint, block, num, editorBlockTypes, type Stmt
++    project, repeat, servo, setVar, sleep, speedStart, stmt, takeOff, text, waitPoint, block, num, type Stmt
+ } from './bricks-xml-kit.js';
+ 
+ /**
+@@ -427,9 +427,6 @@ export function missingBricksBlocks(mission: Pick<BricksMission, 'requires' | 'm
+     return problems;
+ }
+ 
+-/** Типы блоков эталонного решения в именах редактора. */
+-export const solutionBlockTypes = (mission: BricksMission): Record<string, number> => editorBlockTypes(mission.solutionXml);
+-
+ export function gradeBricksMission(id: string, samples: DroneSample[], events: LearningEvent[]): GuideEvaluation {
+     const mission = BRICKS_MISSION_BY_ID[id];
+     const grader = new Sdk2Grader(samples, events, BRICKS_DONE_MESSAGE);
+diff --git a/simulator/public/modules/ui/mission-guide/mini2/bricks-xml-kit.ts b/simulator/public/modules/ui/mission-guide/mini2/bricks-xml-kit.ts
+index 8f73fef..5b6c9a0 100644
+--- a/simulator/public/modules/ui/mission-guide/mini2/bricks-xml-kit.ts
++++ b/simulator/public/modules/ui/mission-guide/mini2/bricks-xml-kit.ts
+@@ -3,8 +3,6 @@
+  * Типы блоков здесь — родные имена Bricks (start_block, take_off…), как в файлах проектов: редактор сам
+  * добавляет им префикс при открытии (`loadBricksProject`).
+  */
+-import { bricksType } from '../../../editor/blockly-mode/bricks/constants.js';
+-import { allBricksNativeTypes } from '../../../editor/blockly-mode/bricks/block-specs.js';
+ 
+ /** Команда в цепочке: получает XML следующей команды и возвращает свой блок вместе с ней. */
+ export type Stmt = (next: string) => string;
+@@ -70,16 +68,3 @@ export function project(name: string, statements: Stmt[], variables: string[] =
+     return `<xml xmlns="https://developers.google.com/blockly/xml"><project name="${name}" /><variables>${vars}</variables>`
+         + `<block type="start_block" deletable="false" movable="false" x="10" y="10">${statements.length ? `<next>${chain(statements)}</next>` : ''}</block></xml>`;
+ }
+-
+-/** Типы блоков проекта, как их видит редактор (с префиксом Bricks у блоков Пионера). */
+-export function editorBlockTypes(xml: string): Record<string, number> {
+-    const counts: Record<string, number> = {};
+-    for (const match of xml.matchAll(/<block type="([^"]+)"/g)) {
+-        const native = match[1];
+-        const type = BRICKS_NATIVE.has(native) ? bricksType(native) : native;
+-        counts[type] = (counts[type] ?? 0) + 1;
+-    }
+-    return counts;
+-}
+-
+-const BRICKS_NATIVE = new Set(allBricksNativeTypes());
+diff --git a/simulator/public/modules/ui/settings/constants.ts b/simulator/public/modules/ui/settings/constants.ts
+index f219c49..589c949 100644
+--- a/simulator/public/modules/ui/settings/constants.ts
++++ b/simulator/public/modules/ui/settings/constants.ts
+@@ -3,15 +3,8 @@ import { clamp } from '../../shared/math.js';
+ import type {
+     ActionAuxChannelKey,
+     AuxiliaryChannelKey,
+-    BindingAction,
+     ChannelKey,
+-    ChannelMapping,
+-    ChannelRole,
+-    ControlBinding,
+-    DeviceProfile,
+-    PrimaryChannelKey,
+-    WizardStepId,
+-    WizardStepState
++    PrimaryChannelKey
+ } from './types.js';
+ 
+ export const PRIMARY_CHANNELS: PrimaryChannelKey[] = ['roll', 'pitch', 'throttle', 'yaw'];
+@@ -32,19 +25,6 @@ export const AUTO_DETECT_CONFIRM_MS = 120;
+ export const POSITION_CLUSTER_THRESHOLD = 90;
+ export const MIN_POSITION_SAMPLES = 6;
+ export const MAX_PRESET_POSITIONS = 5;
+-export const RC_CHANNEL_COUNT = 12;
+-export const RC_VISIBLE_CHANNELS_DEFAULT = 8;
+-export const VIRTUAL_DEVICE_ID = 'virtual-radiomaster';
+-
+-export const BINDING_ACTIONS: BindingAction[] = [
+-    'Arm',
+-    'Flight Mode',
+-    'Camera',
+-    'Magnet',
+-    'Gear',
+-    'Return Home',
+-    'Pit Mode'
+-];
+ 
+ export const axisRef = (index: number): GamepadInputRef => `a${index}` as GamepadInputRef;
+ export const buttonRef = (index: number): GamepadInputRef => `b${index}` as GamepadInputRef;
+@@ -54,116 +34,3 @@ export const clampRc = (value: number): number => Math.round(clamp(value, 1000,
+ export function getChannelInversionIndex(channel: ChannelKey): number {
+     return INVERTIBLE_CHANNELS.indexOf(channel);
+ }
+-
+-function getRoleLabel(role: ChannelRole): string {
+-    const labels: Record<ChannelRole, string> = {
+-        roll: 'Крен (Roll)',
+-        pitch: 'Тангаж (Pitch)',
+-        throttle: 'Газ (Throttle)',
+-        yaw: 'Рыскание (Yaw)',
+-        flightMode: 'Режим полета',
+-        arm: 'Arm',
+-        camera: 'Камера',
+-        magnet: 'Magnet',
+-        gear: 'Шасси',
+-        returnHome: 'Return Home',
+-        pitMode: 'Pit Mode',
+-        aux: 'AUX'
+-    };
+-    return labels[role];
+-}
+-
+-function getDefaultChannelRoles(): ChannelRole[] {
+-    return [
+-        'roll',
+-        'pitch',
+-        'throttle',
+-        'yaw',
+-        'flightMode',
+-        'arm',
+-        'magnet',
+-        'camera',
+-        'gear',
+-        'returnHome',
+-        'pitMode',
+-        'aux'
+-    ];
+-}
+-
+-function createDefaultChannelMappings(): ChannelMapping[] {
+-    return getDefaultChannelRoles().slice(0, RC_CHANNEL_COUNT).map((role, index) => ({
+-        channel: index + 1,
+-        role,
+-        label: `CH${index + 1} · ${getRoleLabel(role)}`,
+-        sourceId: null,
+-        controlType: role === 'throttle' ? 'throttle' : index < 4 ? 'stick' : 'button',
+-        invert: false
+-    }));
+-}
+-
+-function createDefaultBindings(): ControlBinding[] {
+-    return BINDING_ACTIONS.map((action, index) => ({
+-        action,
+-        channel: index === 0 ? 6 : index === 1 ? 5 : index === 3 ? 7 : null,
+-        sourceId: null
+-    }));
+-}
+-
+-function createDefaultWizardSteps(): WizardStepState[] {
+-    const ids: WizardStepId[] = ['device', 'sticks', 'switches', 'calibration', 'bindings', 'review'];
+-    const titles: Record<WizardStepId, string> = {
+-        device: 'Выбор устройства',
+-        sticks: 'Стики',
+-        switches: 'Тумблеры',
+-        calibration: 'Калибровка',
+-        bindings: 'Команды',
+-        review: 'Проверка'
+-    };
+-    return ids.map((id, index) => ({
+-        id,
+-        title: titles[id],
+-        status: index === 0 ? 'active' : 'pending',
+-        optional: id === 'switches' || id === 'bindings'
+-    }));
+-}
+-
+-export function createDefaultCalibration() {
+-    return {
+-        min: -1,
+-        center: 0,
+-        max: 1,
+-        deadzone: 0.04,
+-        trim: 0,
+-        invert: false
+-    };
+-}
+-
+-export function createDefaultProfile(overrides: Partial<DeviceProfile> = {}): DeviceProfile {
+-    const now = new Date().toISOString();
+-    const profile: DeviceProfile = {
+-        id: overrides.id ?? `rc-profile-${Date.now()}`,
+-        name: overrides.name ?? 'RC Profile',
+-        deviceId: overrides.deviceId ?? null,
+-        deviceKind: overrides.deviceKind ?? 'rc-transmitter',
+-        transport: overrides.transport ?? 'gamepad-api',
+-        detectedModel: overrides.detectedModel ?? 'Unknown RC Device',
+-        inputSources: overrides.inputSources?.map((source) => ({ ...source })) ?? [],
+-        channelMappings: overrides.channelMappings?.map((mapping) => ({ ...mapping })) ?? createDefaultChannelMappings(),
+-        calibration: Object.fromEntries(
+-            Object.entries(overrides.calibration ?? {}).map(([key, value]) => [key, { ...createDefaultCalibration(), ...value }])
+-        ),
+-        controlBindings: overrides.controlBindings?.map((binding) => ({ ...binding })) ?? createDefaultBindings(),
+-        wizardSteps: overrides.wizardSteps?.map((step) => ({ ...step })) ?? createDefaultWizardSteps(),
+-        notes: [...(overrides.notes ?? [])],
+-        stickMode: overrides.stickMode ?? 2,
+-        autoStickMode: overrides.autoStickMode ?? true,
+-        visibleChannelCount: overrides.visibleChannelCount ?? RC_VISIBLE_CHANNELS_DEFAULT,
+-        createdAt: overrides.createdAt ?? now,
+-        updatedAt: overrides.updatedAt ?? now
+-    };
+-
+-    for (const mapping of profile.channelMappings) {
+-        mapping.label = mapping.label || `CH${mapping.channel} · ${getRoleLabel(mapping.role)}`;
+-    }
+-    return profile;
+-}
+diff --git a/simulator/public/modules/ui/settings/input/calibration.ts b/simulator/public/modules/ui/settings/input/calibration.ts
+index e77569a..d5883d8 100644
+--- a/simulator/public/modules/ui/settings/input/calibration.ts
++++ b/simulator/public/modules/ui/settings/input/calibration.ts
+@@ -1,5 +1,4 @@
+ import { CENTER_DEADBAND, THROTTLE_IDLE_DEADBAND, clamp } from '../constants.js';
+-import type { CalibrationData, InputControlType, InputSignalType } from '../types.js';
+ 
+ type CalibrationState = {
+     min: number[];
+@@ -96,130 +95,12 @@ export function normalizeThrottleAxis(calibration: CalibrationState, rawValue: n
+     return normalized;
+ }
+ 
+-export function sanitizeCalibration(calibration: Partial<CalibrationData> | null | undefined): CalibrationData {
+-    const min = Number.isFinite(calibration?.min) ? Number(calibration?.min) : -1;
+-    const max = Number.isFinite(calibration?.max) ? Number(calibration?.max) : 1;
+-    const boundedMin = clamp(Math.min(min, max), -1, 1);
+-    const boundedMax = clamp(Math.max(min, max), -1, 1);
+-    const centerCandidate = Number.isFinite(calibration?.center) ? Number(calibration?.center) : 0;
+-    return {
+-        min: boundedMin,
+-        center: clamp(centerCandidate, boundedMin, boundedMax),
+-        max: boundedMax,
+-        deadzone: clamp(Number.isFinite(calibration?.deadzone) ? Number(calibration?.deadzone) : 0.04, 0, 0.3),
+-        trim: clamp(Number.isFinite(calibration?.trim) ? Number(calibration?.trim) : 0, -0.3, 0.3),
+-        invert: Boolean(calibration?.invert)
+-    };
+-}
+-
+-export function normalizeCenteredInput(rawValue: number, calibration: CalibrationData): number {
+-    const safe = sanitizeCalibration(calibration);
+-    const min = safe.min;
+-    const max = safe.max;
+-    const center = safe.center;
+-    const denominator = rawValue >= center ? Math.max(0.0001, max - center) : Math.max(0.0001, center - min);
+-    let normalized = clamp((rawValue - center) / denominator, -1, 1);
+-    if (safe.invert) normalized *= -1;
+-    normalized = clamp(normalized + safe.trim, -1, 1);
+-    return Math.abs(normalized) < safe.deadzone ? 0 : normalized;
+-}
+-
+-export function quantizeDiscreteLevel(value: number, levels: number): number {
+-    const safeLevels = Math.max(1, Math.floor(levels));
+-    if (safeLevels === 1) return 0;
+-    const normalized = clamp(value, 0, 1);
+-    return Math.min(safeLevels - 1, Math.floor(normalized * safeLevels));
+-}
+-
+-function toAxisUnit(rawValue: number, calibration: CalibrationData, controlType: InputControlType): number {
+-    if (controlType === 'throttle') {
+-        let normalized = (clamp(rawValue, -1, 1) + 1) / 2;
+-        if (calibration.invert) normalized = 1 - normalized;
+-        normalized = clamp(normalized, 0, 1);
+-        normalized = clamp(normalized + calibration.trim, 0, 1);
+-        if (normalized < THROTTLE_IDLE_DEADBAND) return 0;
+-        if (normalized > 1 - THROTTLE_IDLE_DEADBAND) return 1;
+-        return normalized;
+-    }
+-    return normalizeCenteredInput(rawValue, calibration);
+-}
+-
+-export function normalizeInputValue(
+-    rawValue: number,
+-    calibration: CalibrationData,
+-    controlType: InputControlType,
+-    signalType: InputSignalType
+-): { normalizedValue: number; pwmValue: number; discreteLevel?: number } {
+-    const safeCalibration = sanitizeCalibration(calibration);
+-    if (signalType === 'button') {
+-        const normalizedValue = clamp(rawValue, 0, 1);
+-        return {
+-            normalizedValue,
+-            pwmValue: Math.round(1000 + normalizedValue * 1000),
+-            discreteLevel: normalizedValue >= 0.5 ? 1 : 0
+-        };
+-    }
+-
+-    const normalizedValue = toAxisUnit(rawValue, safeCalibration, controlType);
+-    if (controlType === 'switch-2pos' || controlType === 'button' || controlType === 'momentary') {
+-        const value01 = clamp((normalizedValue + 1) / 2, 0, 1);
+-        const discreteLevel = quantizeDiscreteLevel(value01, 2);
+-        return {
+-            normalizedValue: value01,
+-            pwmValue: discreteLevel === 1 ? 2000 : 1000,
+-            discreteLevel
+-        };
+-    }
+-    if (controlType === 'switch-3pos') {
+-        const value01 = clamp((normalizedValue + 1) / 2, 0, 1);
+-        const discreteLevel = quantizeDiscreteLevel(value01, 3);
+-        return {
+-            normalizedValue: value01,
+-            pwmValue: [1000, 1500, 2000][discreteLevel] ?? 1500,
+-            discreteLevel
+-        };
+-    }
+-    if (controlType === 'selector-6pos') {
+-        const value01 = clamp((normalizedValue + 1) / 2, 0, 1);
+-        const discreteLevel = quantizeDiscreteLevel(value01, 6);
+-        return {
+-            normalizedValue: value01,
+-            pwmValue: Math.round(1000 + (discreteLevel / 5) * 1000),
+-            discreteLevel
+-        };
+-    }
+-    if (controlType === 'throttle') {
+-        return {
+-            normalizedValue,
+-            pwmValue: Math.round(1000 + normalizedValue * 1000)
+-        };
+-    }
+-    return {
+-        normalizedValue,
+-        pwmValue: Math.round(1500 + normalizedValue * 500)
+-    };
+-}
+-
+-export function sampleCalibration(calibration: CalibrationState, gp: Gamepad): void;
+-export function sampleCalibration(calibration: CalibrationData, rawValue: number): CalibrationData;
+-export function sampleCalibration(calibration: CalibrationState | CalibrationData, source: Gamepad | number): void | CalibrationData {
+-    if (typeof source === 'number') {
+-        const current = sanitizeCalibration(calibration as CalibrationData);
+-        const rawValue = clamp(source, -1, 1);
+-        return {
+-            ...current,
+-            min: Math.min(current.min, rawValue),
+-            max: Math.max(current.max, rawValue)
+-        };
+-    }
+-
+-    const legacy = calibration as CalibrationState;
+-    const gp = source;
+-    const axisCount = Math.min(legacy.min.length, gp.axes.length);
++export function sampleCalibration(calibration: CalibrationState, gp: Gamepad): void {
++    const axisCount = Math.min(calibration.min.length, gp.axes.length);
+     for (let i = 0; i < axisCount; i += 1) {
+         const axisValue = gp.axes[i];
+         if (!Number.isFinite(axisValue)) continue;
+-        legacy.min[i] = Math.min(legacy.min[i], axisValue);
+-        legacy.max[i] = Math.max(legacy.max[i], axisValue);
++        calibration.min[i] = Math.min(calibration.min[i], axisValue);
++        calibration.max[i] = Math.max(calibration.max[i], axisValue);
+     }
+ }
+diff --git a/simulator/public/modules/ui/settings/mapping.ts b/simulator/public/modules/ui/settings/mapping.ts
+index 9742477..c380629 100644
+--- a/simulator/public/modules/ui/settings/mapping.ts
++++ b/simulator/public/modules/ui/settings/mapping.ts
+@@ -1,2 +1 @@
+ export * from './mapping/legacy.js';
+-export * from './mapping/profile.js';
+diff --git a/simulator/public/modules/ui/settings/mapping/profile.ts b/simulator/public/modules/ui/settings/mapping/profile.ts
+deleted file mode 100644
+index b97fac7..0000000
+--- a/simulator/public/modules/ui/settings/mapping/profile.ts
++++ /dev/null
+@@ -1,2 +0,0 @@
+-export * from './profile/device.js';
+-export * from './profile/runtime.js';
+diff --git a/simulator/public/modules/ui/settings/mapping/profile/device.ts b/simulator/public/modules/ui/settings/mapping/profile/device.ts
+deleted file mode 100644
+index e30a74b..0000000
+--- a/simulator/public/modules/ui/settings/mapping/profile/device.ts
++++ /dev/null
+@@ -1,135 +0,0 @@
+-import {
+-    createDefaultProfile,
+-    axisRef,
+-    buttonRef,
+-    VIRTUAL_DEVICE_ID
+-} from '../../constants.js';
+-import type {
+-    ChannelMapping,
+-    DeviceKind,
+-    DeviceProfile,
+-    DeviceSummary,
+-    InputSource,
+-    StickMode
+-} from '../../types.js';
+-import {
+-    getDefaultControlTypeForRole,
+-    getRadioKeywords,
+-    getRoleLabel,
+-    getStickModeAxisPatterns
+-} from './shared.js';
+-
+-export function inferDeviceKind(deviceName: string | null | undefined): DeviceKind {
+-    const normalized = String(deviceName || '').toLowerCase();
+-    if (normalized.includes('virtual')) return 'virtual';
+-    return getRadioKeywords().some((keyword) => normalized.includes(keyword)) ? 'rc-transmitter' : 'gamepad';
+-}
+-
+-export function isLikelyRadioSummary(summary: Pick<DeviceSummary, 'kind' | 'likelyRadio' | 'name'> | string): boolean {
+-    if (typeof summary === 'string') return inferDeviceKind(summary) === 'rc-transmitter';
+-    return summary.likelyRadio || summary.kind === 'rc-transmitter' || inferDeviceKind(summary.name) === 'rc-transmitter';
+-}
+-
+-export function createInputSourcesFromGamepad(deviceId: string, deviceName: string, axes: number, buttons: number): InputSource[] {
+-    const sources: InputSource[] = [];
+-    for (let index = 0; index < axes; index += 1) {
+-        sources.push({
+-            id: `a${index}`,
+-            label: `Axis ${index}`,
+-            group: 'Axes',
+-            signalType: 'axis',
+-            controlType: 'stick',
+-            channelHint: index < 4 ? index + 1 : null,
+-            ref: axisRef(index)
+-        });
+-    }
+-    for (let index = 0; index < buttons; index += 1) {
+-        sources.push({
+-            id: `b${index}`,
+-            label: `Button ${index}`,
+-            group: 'Buttons',
+-            signalType: 'button',
+-            controlType: 'button',
+-            channelHint: null,
+-            ref: buttonRef(index)
+-        });
+-    }
+-    return isLikelyRadioSummary(deviceName) && deviceId ? sources : sources;
+-}
+-
+-export function createVirtualInputSources(): InputSource[] {
+-    const sources: InputSource[] = [];
+-    for (let index = 0; index < 7; index += 1) {
+-        sources.push({
+-            id: `va${index}`,
+-            label: `Virtual Axis ${index}`,
+-            group: 'AUX',
+-            signalType: 'axis',
+-            controlType: 'stick',
+-            channelHint: index < 4 ? index + 1 : null,
+-            ref: null
+-        });
+-    }
+-    for (let index = 0; index < 6; index += 1) {
+-        sources.push({
+-            id: `vb${index}`,
+-            label: `Virtual Button ${index}`,
+-            group: 'AUX',
+-            signalType: 'button',
+-            controlType: 'button',
+-            channelHint: null,
+-            ref: null
+-        });
+-    }
+-    return sources;
+-}
+-
+-export function getChannelTitle(mapping: Pick<ChannelMapping, 'channel' | 'role'>): string {
+-    return `CH${mapping.channel} · ${getRoleLabel(mapping.role)}`;
+-}
+-
+-export function createProfileForDevice(device: DeviceSummary): DeviceProfile {
+-    const inputSources = device.id === VIRTUAL_DEVICE_ID || device.kind === 'virtual'
+-        ? createVirtualInputSources()
+-        : createInputSourcesFromGamepad(device.id, device.name, device.axes, device.buttons);
+-
+-    const profile = createDefaultProfile({
+-        name: `${device.name} Profile`,
+-        deviceId: device.id,
+-        deviceKind: device.kind,
+-        transport: device.transport,
+-        detectedModel: device.name,
+-        inputSources,
+-        notes: [...device.warnings]
+-    });
+-
+-    profile.channelMappings = profile.channelMappings.map((mapping) => ({
+-        ...mapping,
+-        label: getChannelTitle(mapping),
+-        sourceId: null,
+-        controlType: getDefaultControlTypeForRole(mapping.role, null)
+-    }));
+-    profile.controlBindings = profile.controlBindings.map((binding) => ({ ...binding, sourceId: null }));
+-    return profile;
+-}
+-
+-export function detectStickMode(profile: Pick<DeviceProfile, 'channelMappings'>): StickMode | null {
+-    const roleToSource = {
+-        roll: profile.channelMappings.find((mapping) => mapping.role === 'roll')?.sourceId ?? null,
+-        pitch: profile.channelMappings.find((mapping) => mapping.role === 'pitch')?.sourceId ?? null,
+-        throttle: profile.channelMappings.find((mapping) => mapping.role === 'throttle')?.sourceId ?? null,
+-        yaw: profile.channelMappings.find((mapping) => mapping.role === 'yaw')?.sourceId ?? null
+-    };
+-    for (const candidate of [1, 2, 3, 4] as StickMode[]) {
+-        const pattern = getStickModeAxisPatterns()[candidate];
+-        if (
+-            roleToSource.roll === pattern.roll
+-            && roleToSource.pitch === pattern.pitch
+-            && roleToSource.throttle === pattern.throttle
+-            && roleToSource.yaw === pattern.yaw
+-        ) {
+-            return candidate;
+-        }
+-    }
+-    return null;
+-}
+diff --git a/simulator/public/modules/ui/settings/mapping/profile/runtime.ts b/simulator/public/modules/ui/settings/mapping/profile/runtime.ts
+deleted file mode 100644
+index 1017072..0000000
+--- a/simulator/public/modules/ui/settings/mapping/profile/runtime.ts
++++ /dev/null
+@@ -1,30 +0,0 @@
+-import type { DeviceProfile } from '../../types.js';
+-
+-export function getDuplicateSourceConflicts(profile: Pick<DeviceProfile, 'channelMappings'>): Array<{ sourceId: string; channels: number[] }> {
+-    const bySource = new Map<string, number[]>();
+-    for (const mapping of profile.channelMappings) {
+-        if (!mapping.sourceId) continue;
+-        const existing = bySource.get(mapping.sourceId) ?? [];
+-        existing.push(mapping.channel);
+-        bySource.set(mapping.sourceId, existing);
+-    }
+-    return Array.from(bySource.entries())
+-        .filter(([, channels]) => channels.length > 1)
+-        .map(([sourceId, channels]) => ({ sourceId, channels }));
+-}
+-
+-export function detectMappingConflicts(profile: Pick<DeviceProfile, 'channelMappings' | 'controlBindings'>): string[] {
+-    const conflicts: string[] = [];
+-    for (const duplicate of getDuplicateSourceConflicts(profile)) {
+-        conflicts.push(`Источник ${duplicate.sourceId} назначен одновременно на ${duplicate.channels.map((channel) => `CH${channel}`).join(', ')}.`);
+-    }
+-    for (const binding of profile.controlBindings) {
+-        if (binding.channel === null) continue;
+-        const mapping = profile.channelMappings.find((item) => item.channel === binding.channel) ?? null;
+-        if (!mapping?.sourceId) {
+-            conflicts.push(`Команда ${binding.action} назначена на CH${binding.channel}, но источник для канала не выбран.`);
+-        }
+-    }
+-    return conflicts;
+-}
+-
+diff --git a/simulator/public/modules/ui/settings/mapping/profile/shared.ts b/simulator/public/modules/ui/settings/mapping/profile/shared.ts
+deleted file mode 100644
+index 2e877de..0000000
+--- a/simulator/public/modules/ui/settings/mapping/profile/shared.ts
++++ /dev/null
+@@ -1,58 +0,0 @@
+-import type { ChannelRole, InputControlType, StickMode } from '../../types.js';
+-
+-const RADIO_KEYWORDS = [
+-    'radiomaster',
+-    'boxer',
+-    'tx16',
+-    'zorro',
+-    'jumper',
+-    'frsky',
+-    'futaba',
+-    'spektrum',
+-    'flysky',
+-    'edgetx',
+-    'opentx',
+-    'radio'
+-];
+-
+-const STICK_MODE_AXIS_PATTERNS: Record<StickMode, Record<'roll' | 'pitch' | 'throttle' | 'yaw', string>> = {
+-    1: { roll: 'a2', pitch: 'a1', throttle: 'a3', yaw: 'a0' },
+-    2: { roll: 'a2', pitch: 'a3', throttle: 'a1', yaw: 'a0' },
+-    3: { roll: 'a0', pitch: 'a1', throttle: 'a3', yaw: 'a2' },
+-    4: { roll: 'a0', pitch: 'a3', throttle: 'a1', yaw: 'a2' }
+-};
+-
+-export function getRadioKeywords() {
+-    return RADIO_KEYWORDS;
+-}
+-
+-export function getStickModeAxisPatterns() {
+-    return STICK_MODE_AXIS_PATTERNS;
+-}
+-
+-export function getRoleLabel(role: ChannelRole): string {
+-    const labels: Record<ChannelRole, string> = {
+-        roll: 'Крен (Roll)',
+-        pitch: 'Тангаж (Pitch)',
+-        throttle: 'Газ (Throttle)',
+-        yaw: 'Рыскание (Yaw)',
+-        flightMode: 'Режим полета',
+-        arm: 'Arm',
+-        camera: 'Камера',
+-        magnet: 'Magnet',
+-        gear: 'Шасси',
+-        returnHome: 'Return Home',
+-        pitMode: 'Pit Mode',
+-        aux: 'AUX'
+-    };
+-    return labels[role];
+-}
+-
+-export function getDefaultControlTypeForRole(role: ChannelRole, sourceId: string | null): InputControlType {
+-    if (role === 'throttle') return 'throttle';
+-    if (role === 'flightMode') return 'switch-3pos';
+-    if (role === 'arm') return 'switch-2pos';
+-    if (role === 'magnet') return 'button';
+-    if (sourceId?.startsWith('b') || sourceId?.startsWith('vb')) return 'button';
+-    return 'stick';
+-}
+diff --git a/simulator/public/modules/ui/settings/types.ts b/simulator/public/modules/ui/settings/types.ts
+index 8bdc688..2a19f7e 100644
+--- a/simulator/public/modules/ui/settings/types.ts
++++ b/simulator/public/modules/ui/settings/types.ts
+@@ -1,5 +1,3 @@
+-import type { GamepadInputRef } from '../../core/state.js';
+-
+ export type PrimaryChannelKey = 'roll' | 'pitch' | 'throttle' | 'yaw';
+ export type AuxiliaryChannelKey = 'mode' | 'arm' | 'magnet';
+ export type ActionAuxChannelKey = 'arm' | 'magnet';
+@@ -20,111 +18,3 @@ export type ObservedInputStats = {
+     samples: number;
+     positions: ObservedInputPosition[];
+ };
+-
+-export type ChannelRole =
+-    | 'roll'
+-    | 'pitch'
+-    | 'throttle'
+-    | 'yaw'
+-    | 'flightMode'
+-    | 'arm'
+-    | 'camera'
+-    | 'magnet'
+-    | 'gear'
+-    | 'returnHome'
+-    | 'pitMode'
+-    | 'aux';
+-
+-export type InputControlType =
+-    | 'stick'
+-    | 'throttle'
+-    | 'switch-2pos'
+-    | 'switch-3pos'
+-    | 'momentary'
+-    | 'knob'
+-    | 'selector-6pos'
+-    | 'button'
+-    | 'unknown';
+-
+-export type InputSignalType = 'axis' | 'button';
+-export type BindingAction = 'Arm' | 'Flight Mode' | 'Camera' | 'Magnet' | 'Gear' | 'Return Home' | 'Pit Mode';
+-export type WizardStepId = 'device' | 'sticks' | 'switches' | 'calibration' | 'bindings' | 'review';
+-export type DeviceKind = 'rc-transmitter' | 'gamepad' | 'virtual';
+-export type DeviceTransport = 'gamepad-api' | 'virtual';
+-
+-export type CalibrationData = {
+-    min: number;
+-    center: number;
+-    max: number;
+-    deadzone: number;
+-    trim: number;
+-    invert: boolean;
+-};
+-
+-export type InputSource = {
+-    id: string;
+-    label: string;
+-    group: string;
+-    signalType: InputSignalType;
+-    controlType: InputControlType;
+-    channelHint?: number | null;
+-    ref?: GamepadInputRef | null;
+-};
+-
+-export type ChannelMapping = {
+-    channel: number;
+-    role: ChannelRole;
+-    label: string;
+-    sourceId: string | null;
+-    controlType: InputControlType;
+-    invert: boolean;
+-    discretePositions?: number;
+-};
+-
+-export type ControlBinding = {
+-    action: BindingAction;
+-    channel: number | null;
+-    sourceId: string | null;
+-};
+-
+-export type WizardStepStateStatus = 'pending' | 'active' | 'completed' | 'skipped';
+-
+-export type WizardStepState = {
+-    id: WizardStepId;
+-    title: string;
+-    status: WizardStepStateStatus;
+-    optional?: boolean;
+-};
+-
+-export type DeviceSummary = {
+-    id: string;
+-    name: string;
+-    kind: DeviceKind;
+-    transport: DeviceTransport;
+-    connected: boolean;
+-    axes: number;
+-    buttons: number;
+-    likelyRadio: boolean;
+-    warnings: string[];
+-};
+-
+-export type DeviceProfile = {
+-    id: string;
+-    name: string;
+-    deviceId: string | null;
+-    deviceKind: DeviceKind;
+-    transport: DeviceTransport;
+-    detectedModel: string;
+-    inputSources: InputSource[];
+-    channelMappings: ChannelMapping[];
+-    calibration: Record<string, CalibrationData>;
+-    controlBindings: ControlBinding[];
+-    wizardSteps: WizardStepState[];
+-    notes: string[];
+-    stickMode: StickMode;
+-    autoStickMode: boolean;
+-    visibleChannelCount: number;
+-    createdAt: string;
+-    updatedAt: string;
+-};
+-
+diff --git a/simulator/public/modules/ui/settings/wizard/radio-model.ts b/simulator/public/modules/ui/settings/wizard/radio-model.ts
+index 881defb..edcd15a 100644
+--- a/simulator/public/modules/ui/settings/wizard/radio-model.ts
++++ b/simulator/public/modules/ui/settings/wizard/radio-model.ts
+@@ -11,8 +11,6 @@ import type { WizardStep } from './types.js';
+ 
+ /** How far a stick knob travels from the centre of its gimbal, in the drawing's units. */
+ export const STICK_TRAVEL = 35;
+-/** The swing of a switch lever to either side, in degrees. */
+-export const LEVER_SWING = 32;
+ /** After a channel is found the wizard waits this long, showing it, then moves on by itself. */
+ export const AUTO_ADVANCE_MS = 1400;
+ 
+@@ -68,13 +66,6 @@ export function describeTarget(step: WizardStep, slotOf: (channel: PrimaryChanne
+     return { kind: 'switch', switchId: aux.id, positions: aux.positions };
+ }
+ 
+-/** Angle of a switch lever for an RC value (1000-2000); a switch that is not heard yet rests in the middle. */
+-export function leverAngle(rcValue: number | null): number {
+-    if (rcValue === null || !Number.isFinite(rcValue)) return 0;
+-    const centered = Math.max(-1, Math.min(1, (rcValue - 1500) / 500));
+-    return centered * LEVER_SWING;
+-}
+-
+ export type ChannelRowState = 'pending' | 'current' | 'done' | 'skipped';
+ 
+ export interface ChannelRow {
+@@ -103,9 +94,3 @@ export function buildChannelRows(params: {
+         return { channel, label: params.labels[channel], state, value, source: ref ? params.formatRef(ref) : null };
+     });
+ }
+-
+-/** 0..1: how far the pause after a found channel has run. */
+-export function advanceProgress(resolvedAt: number | null, now: number): number {
+-    if (resolvedAt === null) return 0;
+-    return Math.max(0, Math.min(1, (now - resolvedAt) / AUTO_ADVANCE_MS));
+-}
+diff --git a/simulator/server/mavlink-bridge.ts b/simulator/server/mavlink-bridge.ts
+index 4939f07..7e69302 100644
+--- a/simulator/server/mavlink-bridge.ts
++++ b/simulator/server/mavlink-bridge.ts
+@@ -326,23 +326,6 @@ export function parseRcChannelsOverride(payload: Buffer): RcOverrideCommand | nu
+     };
+ }
+ 
+-export function decodeDataUrlToBuffer(dataUrl: string | null): Buffer | null {
+-    if (!dataUrl) {
+-        return null;
+-    }
+-
+-    const match = dataUrl.match(/^data:[^;]+;base64,(.+)$/);
+-    if (!match?.[1]) {
+-        return null;
+-    }
+-
+-    try {
+-        return Buffer.from(match[1], 'base64');
+-    } catch {
+-        return null;
+-    }
+-}
+-
+ export function mapAutopilotStateToCustomMode(state: string | null | undefined): number {
+     switch (state) {
+         case 'ARMED':
+diff --git a/simulator/tests/bricks-editor.test.ts b/simulator/tests/bricks-editor.test.ts
+index 275e422..93fa2d1 100644
+--- a/simulator/tests/bricks-editor.test.ts
++++ b/simulator/tests/bricks-editor.test.ts
+@@ -21,7 +21,6 @@ import {
+     buildBricksToolbox,
+     compileBricksWorkspace,
+     loadBricksProject,
+-    looksLikeBricksProject,
+     serializeBricksProject,
+     setBlocklyModelProvider
+ } from '../public/modules/editor/blockly-mode/bricks/index.js';
+@@ -149,7 +148,6 @@ describe('проекты Bricks: имена блоков в файле', () => {
+         expect(saved).toContain('type="paint_obj"');
+         expect(saved).toContain('type="start_block"');
+         expect(saved).not.toContain('bricks_');
+-        expect(looksLikeBricksProject(saved)).toBe(true);
+         workspace.dispose();
+     });
+ 
+@@ -157,11 +155,6 @@ describe('проекты Bricks: имена блоков в файле', () => {
+         const xml = '<xml xmlns="https://developers.google.com/blockly/xml"><block type="bricks_start_block"><next><block type="bricks_take_off"></block></next></block></xml>';
+         expect(compileBricksXml(xml)).toContain('pioneer.takeoff()');
+     });
+-
+-    test('обычный XML Blockly без Bricks не принимается за проект', () => {
+-        expect(looksLikeBricksProject('<xml><block type="pioneer_start"></block></xml>')).toBe(false);
+-        expect(looksLikeBricksProject('print("hi")')).toBe(false);
+-    });
+ });
+ 
+ describe('форма и поведение блоков', () => {
+diff --git a/simulator/tests/bricks-missions.test.ts b/simulator/tests/bricks-missions.test.ts
+index e4585a7..53751c7 100644
+--- a/simulator/tests/bricks-missions.test.ts
++++ b/simulator/tests/bricks-missions.test.ts
+@@ -4,7 +4,7 @@
+  * см. helpers/mini2-runtime.ts) и проходит проверку миссии; шаблон миссии — нет.
+  */
+ import * as Blockly from 'blockly';
+-import { BRICKS_MISSIONS, gradeBricksMission, missingBricksBlocks, solutionBlockTypes } from '../public/modules/ui/mission-guide/mini2/bricks-missions.js';
++import { BRICKS_MISSIONS, gradeBricksMission, missingBricksBlocks } from '../public/modules/ui/mission-guide/mini2/bricks-missions.js';
+ import { buildBricksQuests } from '../public/modules/learning/bricks-quests.js';
+ import { questGroups } from '../public/modules/learning/quests.js';
+ import { loadBricksProject } from '../public/modules/editor/blockly-mode/bricks/index.js';
+@@ -68,8 +68,6 @@ describe('структура трека bricks', () => {
+ describe('состав блоков', () => {
+     test.each(BRICKS_MISSIONS.map((mission) => [mission.id, mission] as const))('%s: эталон содержит нужные блоки, шаблон — нет', (id, mission) => {
+         const real = typesOf(mission.solutionXml);
+-        // Разбор типов в проверке совпадает с настоящим Blockly.
+-        expect(solutionBlockTypes(mission)).toEqual(real);
+         expect({ id, missing: missingBricksBlocks(mission, expandCounts(real)) }).toEqual({ id, missing: [] });
+         expect(missingBricksBlocks(mission, expandCounts(typesOf(mission.starterXml))).length).toBeGreaterThan(0);
+     });
+diff --git a/simulator/tests/editor-temporary-document.test.ts b/simulator/tests/editor-temporary-document.test.ts
+deleted file mode 100644
+index 72ef29e..0000000
+--- a/simulator/tests/editor-temporary-document.test.ts
++++ /dev/null
+@@ -1,45 +0,0 @@
+-import { beginTemporaryDocument, getTemporaryDocumentToken, isTemporaryDocumentActive, restoreTemporaryDocument } from '../public/modules/editor/index/temporary-document.js';
+-import { persistEditorIndexSession } from '../public/modules/editor/index/helpers.js';
+-
+-test('temporary lesson edits cannot persist over the workspace, including a changed mode and an empty document', () => {
+-    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+-    const writes: string[] = [];
+-    Object.defineProperty(globalThis, 'window', { configurable: true, value: {
+-        localStorage: { setItem: (_key: string, value: string) => writes.push(value) }
+-    } });
+-    const state = {
+-        textDraftByKey: new Map([['lua', ''], ['python', '# personal Python']]),
+-        blocklyWorkspaceXmlByKey: new Map([['drone', '<xml>original blocks</xml>']]),
+-        blocklyEnabled: true
+-    };
+-    try {
+-        persistEditorIndexSession(state, state);
+-        const baseline = writes[0];
+-        beginTemporaryDocument(state, { value: '', language: 'lua' });
+-        const firstToken = getTemporaryDocumentToken();
+-        beginTemporaryDocument(state, { value: 'lesson cannot replace snapshot', language: 'python' });
+-        expect(getTemporaryDocumentToken()).toBe(firstToken);
+-        state.textDraftByKey.set('lua', '# tutorial Python');
+-        state.blocklyWorkspaceXmlByKey.set('drone', '<xml>lesson blocks</xml>');
+-        state.blocklyEnabled = false;
+-        persistEditorIndexSession(state, state);
+-        expect(writes).toEqual([baseline]);
+-        restoreTemporaryDocument(state, document => {
+-            expect(isTemporaryDocumentActive()).toBe(true);
+-            expect(document).toMatchObject({ value: '', language: 'lua', blocklyEnabled: true });
+-        });
+-        expect(state.textDraftByKey.get('lua')).toBe('');
+-        expect(state.textDraftByKey.get('python')).toBe('# personal Python');
+-        expect(state.blocklyWorkspaceXmlByKey.get('drone')).toBe('<xml>original blocks</xml>');
+-        expect(state.blocklyEnabled).toBe(true);
+-        persistEditorIndexSession(state, state);
+-        expect(writes).toEqual([baseline, baseline]);
+-        expect(getTemporaryDocumentToken()).toBeNull();
+-        beginTemporaryDocument(state, { value: '', language: 'lua' });
+-        expect(getTemporaryDocumentToken()).not.toBe(firstToken);
+-    } finally {
+-        restoreTemporaryDocument(state, () => undefined);
+-        if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
+-        else Reflect.deleteProperty(globalThis, 'window');
+-    }
+-});
+diff --git a/simulator/tests/mavlink-bridge.test.ts b/simulator/tests/mavlink-bridge.test.ts
+index 17d35f9..97cd6cd 100644
+--- a/simulator/tests/mavlink-bridge.test.ts
++++ b/simulator/tests/mavlink-bridge.test.ts
+@@ -14,7 +14,6 @@ import {
+     buildMavlinkRegistrationKey,
+     buildMavlinkSessionId,
+     computeX25Crc,
+-    decodeDataUrlToBuffer,
+     encodeMavlinkV2Message,
+     isArmedAutopilotState,
+     mapAutopilotStateToCustomMode,
+@@ -172,22 +171,6 @@ describe('parseRcChannelsOverride', () => {
+     });
+ });
+ 
+-describe('decodeDataUrlToBuffer', () => {
+-    test('decodes a base64 data URL', () => {
+-        const original = Buffer.from('hello world');
+-        const dataUrl = `data:image/jpeg;base64,${original.toString('base64')}`;
+-        expect(decodeDataUrlToBuffer(dataUrl)).toEqual(original);
+-    });
+-
+-    test('returns null for null input', () => {
+-        expect(decodeDataUrlToBuffer(null)).toBeNull();
+-    });
+-
+-    test('returns null for a non-data-url string', () => {
+-        expect(decodeDataUrlToBuffer('not a data url')).toBeNull();
+-    });
+-});
+-
+ describe('autopilot state mapping', () => {
+     test.each([
+         ['ARMED', 11],
+diff --git a/simulator/tests/pioneer-rknn-scene.test.ts b/simulator/tests/pioneer-rknn-scene.test.ts
+index 34a45e0..b7022b4 100644
+--- a/simulator/tests/pioneer-rknn-scene.test.ts
++++ b/simulator/tests/pioneer-rknn-scene.test.ts
+@@ -4,7 +4,7 @@
+  */
+ import * as THREE from 'three';
+ import {
+-    COCO, COCO_CLASSES, collectSceneTruth, confidenceFor, detectObjects, detectPoses, detectTexts, fleetCarTarget,
++    COCO, collectSceneTruth, confidenceFor, detectObjects, detectPoses, detectTexts, fleetCarTarget,
+     nonMaxSuppression, type Sensor
+ } from '../public/modules/python/pioneer-rknn-scene.js';
+ import { createPerson, placePerson, poseNow } from '../public/modules/world/actors.js';
+@@ -47,19 +47,6 @@ function personAt(x: number, y: number, facingCamera: boolean, mode: 'idle' | 'h
+     return { person, scene };
+ }
+ 
+-describe('классы COCO', () => {
+-    test('80 классов, номера из книги: человек 0, машина 2, собака 16, бутылка 39', () => {
+-        expect(COCO_CLASSES).toHaveLength(80);
+-        expect(COCO_CLASSES[0]).toBe('person');
+-        expect(COCO_CLASSES[2]).toBe('car');
+-        expect(COCO_CLASSES[16]).toBe('dog');
+-        expect(COCO_CLASSES[39]).toBe('bottle');
+-        expect(COCO_CLASSES[COCO.bus]).toBe('bus');
+-        expect(COCO_CLASSES[COCO.truck]).toBe('truck');
+-        expect(COCO_CLASSES[COCO.train]).toBe('train');
+-    });
+-});
+-
+ describe('Yolo: объекты в поле зрения', () => {
+     test('человек в 8 м перед камерой найден по центру кадра с классом 0', () => {
+         const { scene } = personAt(8, 0, true);
+diff --git a/simulator/tests/rc-settings.test.ts b/simulator/tests/rc-settings.test.ts
+deleted file mode 100644
+index 111ddfa..0000000
+--- a/simulator/tests/rc-settings.test.ts
++++ /dev/null
+@@ -1,91 +0,0 @@
+-import { normalizeCenteredInput, normalizeInputValue, quantizeDiscreteLevel } from '../public/modules/ui/settings/input/calibration.js';
+-import { createDefaultCalibration, createDefaultProfile } from '../public/modules/ui/settings/constants.js';
+-import { createInputSourcesFromGamepad, createProfileForDevice, detectMappingConflicts, detectStickMode } from '../public/modules/ui/settings/mapping.js';
+-
+-describe('RC settings core logic', () => {
+-    test('normalizes centered axis with deadzone and trim', () => {
+-        const calibration = {
+-            ...createDefaultCalibration(),
+-            min: -1,
+-            center: 0,
+-            max: 1,
+-            deadzone: 0.1,
+-            trim: 0.05
+-        };
+-
+-        expect(normalizeCenteredInput(0.02, calibration)).toBe(0);
+-        expect(normalizeCenteredInput(0.5, calibration)).toBeCloseTo(0.55, 2);
+-        expect(normalizeCenteredInput(-0.5, calibration)).toBeCloseTo(-0.45, 2);
+-    });
+-
+-    test('maps throttle and selector inputs to expected PWM ranges', () => {
+-        const calibration = {
+-            ...createDefaultCalibration(),
+-            min: -1,
+-            center: 0,
+-            max: 1
+-        };
+-
+-        const throttleLow = normalizeInputValue(-1, calibration, 'throttle', 'axis');
+-        const throttleHigh = normalizeInputValue(1, calibration, 'throttle', 'axis');
+-        const selectorMid = normalizeInputValue(0, calibration, 'selector-6pos', 'axis');
+-
+-        expect(throttleLow.pwmValue).toBe(1000);
+-        expect(throttleHigh.pwmValue).toBe(2000);
+-        expect(selectorMid.discreteLevel).toBe(3);
+-        expect(selectorMid.pwmValue).toBeGreaterThanOrEqual(1500);
+-    });
+-
+-    test('quantizes discrete levels consistently', () => {
+-        expect(quantizeDiscreteLevel(0, 3)).toBe(0);
+-        expect(quantizeDiscreteLevel(0.5, 3)).toBe(1);
+-        expect(quantizeDiscreteLevel(1, 3)).toBe(2);
+-        expect(quantizeDiscreteLevel(0.81, 6)).toBe(4);
+-    });
+-
+-    test('detects stick mode for common mode 2 layout', () => {
+-        const profile = createDefaultProfile();
+-        profile.channelMappings[0].sourceId = 'a2';
+-        profile.channelMappings[1].sourceId = 'a3';
+-        profile.channelMappings[2].sourceId = 'a1';
+-        profile.channelMappings[3].sourceId = 'a0';
+-
+-        expect(detectStickMode(profile)).toBe(2);
+-    });
+-
+-    test('reports duplicated source conflicts across channels', () => {
+-        const profile = createDefaultProfile();
+-        profile.channelMappings[0].sourceId = 'a0';
+-        profile.channelMappings[1].sourceId = 'a0';
+-        profile.controlBindings[0].channel = 7;
+-
+-        const conflicts = detectMappingConflicts(profile);
+-
+-        expect(conflicts.some((message) => message.includes('a0'))).toBe(true);
+-        expect(conflicts.some((message) => message.includes('Arm'))).toBe(true);
+-    });
+-
+-    test('keeps hardware axis sources neutral for Radiomaster autodetect flow', () => {
+-        const sources = createInputSourcesFromGamepad('radio-1', 'Radiomaster Boxer', 8, 4);
+-
+-        expect(sources[0]).toMatchObject({ id: 'a0', label: 'Axis 0', group: 'Axes' });
+-        expect(sources[3]).toMatchObject({ id: 'a3', label: 'Axis 3', group: 'Axes' });
+-    });
+-
+-    test('creates hardware profile without prebinding primary stick axes', () => {
+-        const profile = createProfileForDevice({
+-            id: 'radio-1',
+-            name: 'Radiomaster Boxer',
+-            kind: 'rc-transmitter',
+-            transport: 'gamepad-api',
+-            connected: true,
+-            axes: 8,
+-            buttons: 4,
+-            likelyRadio: true,
+-            warnings: []
+-        });
+-
+-        expect(profile.deviceKind).toBe('rc-transmitter');
+-        expect(profile.channelMappings.slice(0, 4).every((mapping) => mapping.sourceId === null)).toBe(true);
+-    });
+-});
+diff --git a/simulator/tests/scene-placement.test.ts b/simulator/tests/scene-placement.test.ts
+index 918b002..178bc84 100644
+--- a/simulator/tests/scene-placement.test.ts
++++ b/simulator/tests/scene-placement.test.ts
+@@ -12,8 +12,6 @@ import {
+     sampleSurfaceZ,
+     seatObjectBottomOnSurface,
+     seatedPivotZ,
+-    snapAngleRadians,
+-    snapPlanarPoint,
+     snapToGridSoft,
+     softSnapPlanarPoint,
+     GRID_SNAP_PULL,
+@@ -45,7 +43,6 @@ describe('grid snapping', () => {
+         expect(Object.is(snapToGrid(-0.4), -0)).toBe(false);
+         expect(snapToGrid(0.74, 0.5)).toBe(0.5);
+         expect(snapToGrid(0.3 * 3, 0.1)).toBe(0.9);
+-        expect(snapPlanarPoint({ x: 3.7, y: -1.2 }, true)).toEqual({ x: 4, y: -1 });
+     });
+ 
+     test('soft snapping pulls to a grid line only when close, and each axis decides for itself', () => {
+@@ -63,14 +60,6 @@ describe('grid snapping', () => {
+         expect(isGridSnapActive(true, false)).toBe(true);
+         expect(isGridSnapActive(true, true)).toBe(false);
+         expect(isGridSnapActive(false, false)).toBe(false);
+-        expect(snapPlanarPoint({ x: 3.7, y: -1.2 }, isGridSnapActive(true, true))).toEqual({ x: 3.7, y: -1.2 });
+-    });
+-
+-    test('rotation snaps to 15° steps only while snapping is active', () => {
+-        const deg = THREE.MathUtils.degToRad;
+-        expect(snapAngleRadians(deg(37), true)).toBeCloseTo(deg(30));
+-        expect(snapAngleRadians(deg(38), true)).toBeCloseTo(deg(45));
+-        expect(snapAngleRadians(deg(37), false)).toBeCloseTo(deg(37));
+     });
+ });
+ 
+diff --git a/simulator/tests/wizard-radio-model.test.ts b/simulator/tests/wizard-radio-model.test.ts
+index 78f6c26..8b9c013 100644
+--- a/simulator/tests/wizard-radio-model.test.ts
++++ b/simulator/tests/wizard-radio-model.test.ts
+@@ -1,11 +1,7 @@
+ import { describe, expect, it } from '@jest/globals';
+ import {
+-    AUTO_ADVANCE_MS,
+-    LEVER_SWING,
+     STICK_TRAVEL,
+-    advanceProgress,
+     buildChannelRows,
+-    leverAngle,
+     stickOffsets
+ } from '../public/modules/ui/settings/wizard/radio-model.js';
+ 
+@@ -22,20 +18,6 @@ describe('wizard radio model', () => {
+         expect(full.rightX).toBe(STICK_TRAVEL / 2);
+     });
+ 
+-    it('swings a lever with its RC value and keeps an unheard switch in the middle', () => {
+-        expect(leverAngle(null)).toBe(0);
+-        expect(leverAngle(1500)).toBe(0);
+-        expect(leverAngle(2000)).toBe(LEVER_SWING);
+-        expect(leverAngle(1000)).toBe(-LEVER_SWING);
+-        expect(leverAngle(9000)).toBe(LEVER_SWING);
+-    });
+-
+-    it('runs the pause after a found channel from 0 to 1', () => {
+-        expect(advanceProgress(null, 500)).toBe(0);
+-        expect(advanceProgress(0, AUTO_ADVANCE_MS / 2)).toBeCloseTo(0.5);
+-        expect(advanceProgress(0, AUTO_ADVANCE_MS * 3)).toBe(1);
+-    });
+-
+     it('marks channels as done, current, skipped or pending', () => {
+         const labels = { throttle: 'Газ', yaw: 'Рыскание', pitch: 'Тангаж', roll: 'Крен', mode: 'Режим', arm: 'Взвод', magnet: 'Магнит' };
+         const rows = buildChannelRows({

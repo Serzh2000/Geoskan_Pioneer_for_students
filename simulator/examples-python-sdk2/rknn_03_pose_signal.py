@@ -14,9 +14,8 @@ camera = Camera(camera_type=CameraType.MAIN)
 
 
 def prepare(frame):
-    image = cv2.resize(frame, (SIZE, SIZE))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    return np.expand_dims(image, 0)
+    # кадр BGR -> (1, 640, 640, 3)
+    return np.expand_dims(cv2.resize(frame, (SIZE, SIZE)), 0)
 
 
 def hands_up(person):

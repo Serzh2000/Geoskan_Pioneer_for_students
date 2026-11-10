@@ -1,0 +1,779 @@
+diff --git a/simulator/public/modules/app/simulation-controls.ts b/simulator/public/modules/app/simulation-controls.ts
+index 22988ff..71181de 100644
+--- a/simulator/public/modules/app/simulation-controls.ts
++++ b/simulator/public/modules/app/simulation-controls.ts
+@@ -19,12 +19,3 @@ export async function restartAndRunSimulation(): Promise<void> {
+     registeredHandlers.reset();
+     await registeredHandlers.start();
+ }
+-
+-export function resetSimulationState(): void {
+-    if (!registeredHandlers) {
+-        console.warn('[SimulationControls] Handlers are not configured yet.');
+-        return;
+-    }
+-
+-    registeredHandlers.reset();
+-}
+diff --git a/simulator/public/modules/core/drone-models.ts b/simulator/public/modules/core/drone-models.ts
+index 9281d30..7d2234d 100644
+--- a/simulator/public/modules/core/drone-models.ts
++++ b/simulator/public/modules/core/drone-models.ts
+@@ -73,7 +73,6 @@ export const DRONE_MODELS: Record<DroneModelId, DroneModelProfile> = {
+ };
+ 
+ export const DEFAULT_DRONE_MODEL: DroneModelId = 'pioneer-basic';
+-export const DRONE_MODEL_IDS = Object.keys(DRONE_MODELS) as DroneModelId[];
+ 
+ export function isDroneModelId(value: unknown): value is DroneModelId {
+     return typeof value === 'string' && value in DRONE_MODELS;
+diff --git a/simulator/public/modules/editor/blockly-mode/bricks/blocks.ts b/simulator/public/modules/editor/blockly-mode/bricks/blocks.ts
+index 3f5daa2..8e56c6c 100644
+--- a/simulator/public/modules/editor/blockly-mode/bricks/blocks.ts
++++ b/simulator/public/modules/editor/blockly-mode/bricks/blocks.ts
+@@ -1,5 +1,5 @@
+ import * as Blockly from 'blockly';
+-import { BRICKS_COLOURS, BRICKS_DRONE_ONLY_REASON, BRICKS_START_TYPE, bricksType } from './constants.js';
++import { BRICKS_COLOURS, BRICKS_START_TYPE, bricksType } from './constants.js';
+ import { FieldHexColour } from './colour-field.js';
+ import {
+     BRICKS_CATEGORY_COLOUR,
+@@ -166,8 +166,3 @@ export function registerBricksBlockDefinitions(): void {
+     definePaintObject();
+     BRICKS_SPECS.forEach(defineFromSpec);
+ }
+-
+-/** Для отладки и тестов: причины отключения блока. */
+-export function hasBricksDroneOnlyReason(block: Blockly.Block): boolean {
+-    return block.hasDisabledReason(BRICKS_DRONE_ONLY_REASON);
+-}
+diff --git a/simulator/public/modules/editor/blockly-mode/bricks/generators.ts b/simulator/public/modules/editor/blockly-mode/bricks/generators.ts
+index 2a730d0..d9ea16b 100644
+--- a/simulator/public/modules/editor/blockly-mode/bricks/generators.ts
++++ b/simulator/public/modules/editor/blockly-mode/bricks/generators.ts
+@@ -178,8 +178,3 @@ export function installBricksGenerators(): void {
+         (gen.forBlock as Record<string, (block: Blockly.Block) => string | CodeValue | null>)[bricksType(type)] = generate;
+     }
+ }
+-
+-/** Родные имена блоков (как в XML Bricks), для которых есть генератор. */
+-export function bricksGeneratorTypes(): string[] {
+-    return Object.keys(generators);
+-}
+diff --git a/simulator/public/modules/editor/blockly-mode/workspace.ts b/simulator/public/modules/editor/blockly-mode/workspace.ts
+index 9a68588..576a05e 100644
+--- a/simulator/public/modules/editor/blockly-mode/workspace.ts
++++ b/simulator/public/modules/editor/blockly-mode/workspace.ts
+@@ -3,22 +3,6 @@ import { getBlocklyGenerator, type BlocklyNS } from './loader.js';
+ import { isBricksModelActive } from './bricks/model.js';
+ import { BRICKS_STARTER_XML } from './bricks/starter.js';
+ 
+-const LUA_RAW_CODE_BLOCK = 'lua_raw_code';
+-const PY_RAW_CODE_BLOCK = 'py_raw_code';
+-
+-function getRawCodeBlockType(language: ScriptLanguage): string {
+-    return language === 'lua' ? LUA_RAW_CODE_BLOCK : PY_RAW_CODE_BLOCK;
+-}
+-
+-function getWorkspaceTopBlocks(workspace: BlocklyNS.WorkspaceSvg): BlocklyNS.Block[] {
+-    return workspace.getTopBlocks(true).filter((block) => !block.isInsertionMarker());
+-}
+-
+-function hasOnlySingleRawCodeBlock(language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg): boolean {
+-    const blocks = getWorkspaceTopBlocks(workspace);
+-    return blocks.length === 1 && blocks[0]?.type === getRawCodeBlockType(language) && !blocks[0].getNextBlock();
+-}
+-
+ function compileGeneratorWorkspace(language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg): string {
+     const generator = getBlocklyGenerator(language);
+     const code = String(generator?.workspaceToCode(workspace) || '').trim();
+@@ -44,32 +28,8 @@ function compileGeneratorWorkspace(language: ScriptLanguage, workspace: BlocklyN
+     return [...prefix, ...(code ? [code] : []), ...suffix].join('\n');
+ }
+ 
+-function escapeXml(value: string): string {
+-    return value
+-        .replace(/&/g, '&amp;')
+-        .replace(/</g, '&lt;')
+-        .replace(/>/g, '&gt;')
+-        .replace(/"/g, '&quot;')
+-        .replace(/'/g, '&apos;');
+-}
+-
+ export function compileMainEditorWorkspace(language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg): string {
+-    return hasOnlySingleRawCodeBlock(language, workspace)
+-        ? compileGeneratorWorkspace(language, workspace)
+-        : compileGeneratorWorkspace(language, workspace);
+-}
+-
+-export function createRawCodeWorkspaceXml(language: ScriptLanguage, code: string): string {
+-    const blockType = getRawCodeBlockType(language);
+-    const defaultCode = code.trim() || (language === 'lua' ? '-- ваш код' : '# ваш код');
+-
+-    return `
+-        <xml xmlns="https://developers.google.com/blockly/xml">
+-            <block type="${blockType}" x="32" y="32">
+-                <field name="CODE">${escapeXml(defaultCode)}</field>
+-            </block>
+-        </xml>
+-    `;
++    return compileGeneratorWorkspace(language, workspace);
+ }
+ 
+ // Фаза 7 плана, шаг 4: стартовый workspace одинаковый для обоих языков —
+diff --git a/simulator/public/modules/editor/index.ts b/simulator/public/modules/editor/index.ts
+index 5a348a1..84bf0f2 100644
+--- a/simulator/public/modules/editor/index.ts
++++ b/simulator/public/modules/editor/index.ts
+@@ -1,8 +1,6 @@
+ import 'monaco-editor/min/vs/editor/editor.main.css';
+ 
+ export {
+-    beginTemporaryEditorDocument,
+-    restoreTemporaryEditorDocument,
+     getEditorValue,
+     getMainBlocklyWorkspace,
+     getSavedEditorDraft,
+@@ -15,7 +13,6 @@ export {
+     setBlocklyEditorEnabled,
+     setEditorLanguage,
+     setEditorValue,
+-    revealEditorStart,
+     syncBlocklyWithDroneModel,
+     syncScriptLanguageSelect
+ } from './index/api.js';
+diff --git a/simulator/public/modules/editor/index/api.ts b/simulator/public/modules/editor/index/api.ts
+index a036231..165039d 100644
+--- a/simulator/public/modules/editor/index/api.ts
++++ b/simulator/public/modules/editor/index/api.ts
+@@ -1,4 +1,4 @@
+-import { currentDroneId, currentScriptLanguage, drones, setCurrentScriptLanguage, type ScriptLanguage } from '../../core/state.js';
++import { currentDroneId, currentScriptLanguage, drones, type ScriptLanguage } from '../../core/state.js';
+ import { Blockly, type BlocklyNS } from '../blockly-mode/loader.js';
+ import {
+     buildMainEditorToolbox,
+@@ -51,31 +51,10 @@ import {
+     syncEditorModeVisibility
+ } from './shell.js';
+ import { editorIndexState, getEditorIndexCollections, getEditorIndexShellState } from './state.js';
+-import { beginTemporaryDocument, restoreTemporaryDocument } from './temporary-document.js';
+ 
+ // Какой набор блоков у редактора, решает модель текущего дрона: Мини 2 - Bricks, остальные - pioneer_*.
+ setBlocklyModelProvider(() => drones[currentDroneId]?.model);
+ 
+-export function beginTemporaryEditorDocument(): void {
+-    if (editorIndexState.blocklyEnabled) saveBlocklyWorkspaceState();
+-    beginTemporaryDocument(editorIndexState, { value: getTextEditorValue(), language: currentScriptLanguage });
+-}
+-
+-export function restoreTemporaryEditorDocument(): void {
+-    restoreTemporaryDocument(editorIndexState, document => {
+-        setCurrentScriptLanguage(document.language);
+-        setEditorTextLanguage(document.language);
+-        if (document.blocklyEnabled && editorIndexState.blocklyWorkspace) {
+-            editorIndexState.blocklyWorkspace.updateToolbox(buildMainEditorToolbox(document.language));
+-            loadBlocklyWorkspace(document.language);
+-        }
+-        setTextEditorValue(document.value);
+-        syncEditorModeVisibility();
+-        syncScriptLanguageSelect();
+-        layoutEditor();
+-    });
+-}
+-
+ function getEditorControllers() {
+     return createEditorIndexControllers(editorIndexState, getEditorIndexCollections(), {
+         getTheme: getBlocklyTheme,
+@@ -209,11 +188,6 @@ export async function setEditorValue(value: string): Promise<void> {
+     setTextEditorValue(value);
+ }
+ 
+-export function revealEditorStart(): void {
+-    editorIndexState.editorInstance?.setPosition({ lineNumber: 1, column: 1 });
+-    editorIndexState.editorInstance?.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
+-}
+-
+ export async function setEditorLanguage(language: ScriptLanguage): Promise<void> {
+     setEditorTextLanguage(language);
+ 
+diff --git a/simulator/public/modules/editor/index/shell.ts b/simulator/public/modules/editor/index/shell.ts
+index 20f8400..6cf98c7 100644
+--- a/simulator/public/modules/editor/index/shell.ts
++++ b/simulator/public/modules/editor/index/shell.ts
+@@ -21,7 +21,6 @@ import {
+     setTextEditorValueOnInstance,
+     type TextEditorValueMode
+ } from '../text-editor.js';
+-import type { AppTheme } from '../../app/theme-toggle.js';
+ import type { EditorTheme } from '../text-editor.js';
+ import { getBlocklyThemeByName } from '../runtime.js';
+ import {
+diff --git a/simulator/public/modules/environment/obstacles/buildings/city-specs.ts b/simulator/public/modules/environment/obstacles/buildings/city-specs.ts
+index 9548424..f9026c6 100644
+--- a/simulator/public/modules/environment/obstacles/buildings/city-specs.ts
++++ b/simulator/public/modules/environment/obstacles/buildings/city-specs.ts
+@@ -34,5 +34,3 @@ export const ROOF_COLORS = [0x6b4a3a, 0x4d5a63, 0x7a3f33, 0x3f5a45, 0x5b4a58];
+ 
+ /** Радиус самого маленького дома каждого вида: нижняя граница MODEL_FOOTPRINTS. */
+ export const MIN_BLOCK_RADIUS = Math.min(...BLOCK_SPECS.map(s => s.radius));
+-export const MAX_BLOCK_RADIUS = Math.max(...BLOCK_SPECS.map(s => s.radius));
+-export const MAX_HOUSE_RADIUS = Math.max(...HOUSE_SPECS.map(s => s.radius));
+diff --git a/simulator/public/modules/environment/truss-arena.ts b/simulator/public/modules/environment/truss-arena.ts
+index fa43934..9dc2da7 100644
+--- a/simulator/public/modules/environment/truss-arena.ts
++++ b/simulator/public/modules/environment/truss-arena.ts
+@@ -68,10 +68,3 @@ export function createTrussArenaMesh(size = 18, height = 5) {
+ 
+     return group;
+ }
+-
+-export function createTrussArena(group: THREE.Group) {
+-    const frame = createTrussArenaMesh();
+-    frame.name = 'Ограждение полигона';
+-    frame.userData.defaultArenaFrame = true;
+-    group.add(frame);
+-}
+diff --git a/simulator/public/modules/learning/account.ts b/simulator/public/modules/learning/account.ts
+index 407897d..be2a573 100644
+--- a/simulator/public/modules/learning/account.ts
++++ b/simulator/public/modules/learning/account.ts
+@@ -43,7 +43,6 @@ export class ApiError extends Error {
+ }
+ 
+ let user: AccountUser | null = null;
+-let ready = false;
+ /** Сервер больше не узнаёт сессию (два часа без запросов): пользователь остаётся «текущим», но входить нужно заново. */
+ let expired = false;
+ const listeners = new Set<(user: AccountUser | null) => void>();
+@@ -90,7 +89,6 @@ async function call<T>(method: string, url: string, body?: unknown): Promise<T>
+ let lastAuthKind: 'login' | 'register' | 'restore' = 'restore';
+ export const getLastAuthKind = () => lastAuthKind;
+ export const getUser = () => user;
+-export const isAccountReady = () => ready;
+ 
+ export function onUserChange(listener: (user: AccountUser | null) => void): () => void {
+     listeners.add(listener);
+@@ -101,7 +99,6 @@ function setUser(next: AccountUser | null): void {
+     // Повторный вход после истёкшей сессии тоже событие: накопленные зачёты нужно отправить.
+     const changed = next?.id !== user?.id || (expired && next !== null);
+     user = next;
+-    ready = true;
+     expired = false;
+     if (changed) listeners.forEach((listener) => listener(user));
+ }
+diff --git a/simulator/public/modules/learning/teacher-panel.ts b/simulator/public/modules/learning/teacher-panel.ts
+index 2c7a973..4408443 100644
+--- a/simulator/public/modules/learning/teacher-panel.ts
++++ b/simulator/public/modules/learning/teacher-panel.ts
+@@ -12,7 +12,7 @@ import {
+ } from './account.js';
+ import { renderMedal, renderRankBadge, rankFor } from './achievement-art.js';
+ import { ago, downloadText, esc, fmtDate, fmtDateTime, fmtDuration, groupTheme, ICON, initials, plural, renderCalendar, TRACK_LABELS, trapFocus, completedChapters, computeAchievements } from './cabinet-kit.js';
+-import { questGroups, type Quest } from './quests.js';
++import { questGroups } from './quests.js';
+ import { createQuestCache, trackTotals } from './tracks.js';
+ import {
+     countByStatus, credentialsReport, filterStudents, matrixReport, sortStudents, STATUS_LABELS, studentStatus, summaryReport, troubleScore,
+diff --git a/simulator/public/modules/lua/utils.ts b/simulator/public/modules/lua/utils.ts
+index 3289817..e4f8adf 100644
+--- a/simulator/public/modules/lua/utils.ts
++++ b/simulator/public/modules/lua/utils.ts
+@@ -1,18 +1,5 @@
+ import * as fengari from 'fengari-web';
+ 
+-const logs = document.getElementById('logs');
+-
+-export function log(msg: string, type: 'info' | 'error' | 'warn' | 'success' = 'info') {
+-    if (!logs) return;
+-    const div = document.createElement('div');
+-    div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+-    if (type === 'error') div.className = 'log-error';
+-    if (type === 'warn') div.className = 'log-warn';
+-    if (type === 'success') div.className = 'log-success';
+-    logs.appendChild(div);
+-    logs.scrollTop = logs.scrollHeight;
+-}
+-
+ function decodeLuaByteLikeValue(luaVal: any): string | null {
+     try {
+         if (typeof luaVal === 'string') {
+diff --git a/simulator/public/modules/python/pioneer-js-bridge-camera.ts b/simulator/public/modules/python/pioneer-js-bridge-camera.ts
+index a76b20c..2c272cd 100644
+--- a/simulator/public/modules/python/pioneer-js-bridge-camera.ts
++++ b/simulator/public/modules/python/pioneer-js-bridge-camera.ts
+@@ -130,10 +130,6 @@ export function getDroneCameraCvFrame(id: string): CameraFramePixels | null {
+     return pixels;
+ }
+ 
+-export function captureDroneCameraFrameDataUrl(id: string) {
+-    return captureDroneCameraFrameImageDataUrl(id);
+-}
+-
+ export { captureDroneCameraFrameBlob };
+ 
+ function buildTimestampSlug() {
+diff --git a/simulator/public/modules/python/pioneer-rknn-scene.ts b/simulator/public/modules/python/pioneer-rknn-scene.ts
+index bc42116..c78a53d 100644
+--- a/simulator/public/modules/python/pioneer-rknn-scene.ts
++++ b/simulator/public/modules/python/pioneer-rknn-scene.ts
+@@ -96,11 +96,6 @@ const jitter = (rng: () => number) => (rng() + rng() + rng() - 1.5) / 1.5;
+ 
+ // ---------------------------------------------------------------- сбор объектов сцены
+ 
+-function isHiddenUp(node: THREE.Object3D): boolean {
+-    for (let current: THREE.Object3D | null = node; current; current = current.parent) if (!current.visible) return true;
+-    return false;
+-}
+-
+ /** Углы коробки объекта в его собственных осях (учитывает поворот машины, а не раздувается до осевой коробки мира). */
+ export function orientedBoxPoints(object: THREE.Object3D): THREE.Vector3[] | null {
+     object.updateWorldMatrix(true, true);
+diff --git a/simulator/public/modules/scene/core/transform-controls-style-helpers.ts b/simulator/public/modules/scene/core/transform-controls-style-helpers.ts
+index 530b0f2..4092ac9 100644
+--- a/simulator/public/modules/scene/core/transform-controls-style-helpers.ts
++++ b/simulator/public/modules/scene/core/transform-controls-style-helpers.ts
+@@ -24,7 +24,6 @@ export const AXIS_COLORS: Record<AxisName, THREE.Color> = {
+ };
+ 
+ export const ACTIVE_COLOR = new THREE.Color('#ff6b00');
+-export const NEUTRAL_COLOR = new THREE.Color('#a3afbf');
+ export const CENTER_COLOR = new THREE.Color('#fff4e8');
+ 
+ /** The only place gizmo sizes live: object-transform.ts reads it on activation, the style sync on every change. */
+@@ -81,32 +80,6 @@ export function translateGeometryAlongAxis(object: THREE.Object3D, axis: AxisNam
+     mesh.geometry.computeBoundingSphere();
+ }
+ 
+-export function cloneBaseMaterial(
+-    material: THREE.Material,
+-    options: { color?: THREE.Color; opacity?: number; depthTest?: boolean } = {}
+-) {
+-    const clone = material.clone() as THREE.Material & {
+-        color?: THREE.Color;
+-        opacity?: number;
+-        transparent?: boolean;
+-        depthTest?: boolean;
+-        depthWrite?: boolean;
+-        toneMapped?: boolean;
+-        fog?: boolean;
+-    };
+-
+-    if (options.color && clone.color) clone.color.copy(options.color);
+-    if (options.opacity !== undefined) {
+-        clone.opacity = options.opacity;
+-        clone.transparent = options.opacity < 1;
+-    }
+-    if (options.depthTest !== undefined) clone.depthTest = options.depthTest;
+-    clone.depthWrite = false;
+-    clone.toneMapped = false;
+-    clone.fog = false;
+-    return clone;
+-}
+-
+ /**
+  * One rotate ring around a world axis, built with its final orientation. The library bakes this into
+  * its own geometry and then re-aims the handle at the camera every frame; here the ring is never re-aimed.
+diff --git a/simulator/public/modules/shared/logging/logger.ts b/simulator/public/modules/shared/logging/logger.ts
+index 14a3db5..b3d7a7b 100644
+--- a/simulator/public/modules/shared/logging/logger.ts
++++ b/simulator/public/modules/shared/logging/logger.ts
+@@ -103,31 +103,6 @@ function classifyLogTone(level: LogLevel, tag: string): LogTone {
+     return 'info';
+ }
+ 
+-export function createLogEntryElement(record: LogRecord): HTMLElement {
+-    const entry = document.createElement('article');
+-    entry.className = `log-entry log-entry--${record.tone}`;
+-    entry.dataset.category = record.category;
+-
+-    const meta = document.createElement('div');
+-    meta.className = 'log-entry__meta';
+-
+-    const timeElement = document.createElement('span');
+-    timeElement.className = 'log-entry__time';
+-    timeElement.textContent = `[${record.time}]`;
+-
+-    const tagElement = document.createElement('span');
+-    tagElement.className = 'log-entry__tag';
+-    tagElement.textContent = record.tag;
+-
+-    const messageElement = document.createElement('div');
+-    messageElement.className = 'log-entry__message';
+-    messageElement.textContent = record.message || 'Без описания события';
+-
+-    meta.append(timeElement, tagElement);
+-    entry.append(meta, messageElement);
+-    return entry;
+-}
+-
+ function countEntriesByCategory(): Map<Exclude<LogCategoryKey, 'all'>, number> {
+     const counts = new Map<Exclude<LogCategoryKey, 'all'>, number>();
+ 
+diff --git a/simulator/public/modules/shared/notice-messages/lua-errors.ts b/simulator/public/modules/shared/notice-messages/lua-errors.ts
+index 3b2fe66..5ff5fe6 100644
+--- a/simulator/public/modules/shared/notice-messages/lua-errors.ts
++++ b/simulator/public/modules/shared/notice-messages/lua-errors.ts
+@@ -43,13 +43,6 @@ function parseVariableHint(body: string): { kind: string; name: string } | null
+     return match ? { kind: match[1], name: match[2] } : null;
+ }
+ 
+-/** The token after "near": `near '='` -> `=`, `near <eof>` -> `<eof>`. */
+-function parseNear(body: string): string | null {
+-    const quoted = body.match(/near '(.*)'\s*$/);
+-    if (quoted) return quoted[1];
+-    return /near <eof>/.test(body) ? '<eof>' : null;
+-}
+-
+ const BLOCK_NAMES: Record<string, string> = {
+     'if': 'if',
+     'function': 'function',
+@@ -597,6 +590,3 @@ export const luaDictionaryIds = {
+     syntax: SYNTAX_ENTRIES.map((entry) => entry.id),
+     runtime: RUNTIME_ENTRIES.map((entry) => entry.id)
+ };
+-
+-// Exposed for tests of the small parsers.
+-export const __luaParsers = { parseVariableHint, parseNear };
+diff --git a/simulator/public/modules/ui/api-docs/index.ts b/simulator/public/modules/ui/api-docs/index.ts
+index 392dbd7..ec4bdf8 100644
+--- a/simulator/public/modules/ui/api-docs/index.ts
++++ b/simulator/public/modules/ui/api-docs/index.ts
+@@ -436,30 +436,3 @@ export function renderApiDocs(
+     restoreSearchSelection(container, searchSelection);
+     mountOpenPreview(container);
+ }
+-
+-export function openApiDocsCatalog(options: {
+-    language?: ScriptLanguage;
+-    query?: string;
+-    previewKey?: string | null;
+-} = {}) {
+-    const language = options.language ?? uiState.language;
+-    uiState.language = language;
+-    if (typeof options.query === 'string') {
+-        uiState.query = options.query;
+-    }
+-    uiState.openPreviewKey = options.previewKey ?? null;
+-    uiState.category = 'all';
+-    if (options.previewKey) {
+-        uiState.expanded.add(options.previewKey);
+-    }
+-
+-    // The reference now lives in a drawer inside the code editor
+-    // (panels/editor-docs.ts) - open the editor, then the drawer.
+-    // openPanel is a toggle: calling it for the active editor would hide
+-    // the reference along with the editor instead of revealing it.
+-    if (!document.getElementById('editor-panel')?.classList.contains('active')) {
+-        (window as any).openPanel?.('editor-panel');
+-    }
+-    document.dispatchEvent(new CustomEvent('editor-docs:open'));
+-    renderApiDocs(language);
+-}
+diff --git a/simulator/public/modules/ui/api-docs/preview/index.ts b/simulator/public/modules/ui/api-docs/preview/index.ts
+index fdb07c7..f0e4be8 100644
+--- a/simulator/public/modules/ui/api-docs/preview/index.ts
++++ b/simulator/public/modules/ui/api-docs/preview/index.ts
+@@ -36,7 +36,6 @@ export class ApiMethodPreview {
+     private destroyed = false;
+     private isIntersecting = true;
+     private visibilityObserver: IntersectionObserver | null = null;
+-    private viewMode: ApiPreviewViewMode = 'angled';
+     private readonly handleResize = () => {
+         this.syncSize();
+         this.renderFrame(performance.now(), 1 / 60);
+@@ -179,7 +178,6 @@ export class ApiMethodPreview {
+     private applyViewMode(mode: ApiPreviewViewMode): void {
+         if (!this.camera) return;
+ 
+-        this.viewMode = mode;
+         this.root.dataset.apiPreviewView = mode;
+         this.camera.fov = mode === 'topdown' ? 16 : 30;
+ 
+diff --git a/simulator/public/modules/ui/mission-guide/lessons/pioneer/dsl.ts b/simulator/public/modules/ui/mission-guide/lessons/pioneer/dsl.ts
+index 666380f..ebe234a 100644
+--- a/simulator/public/modules/ui/mission-guide/lessons/pioneer/dsl.ts
++++ b/simulator/public/modules/ui/mission-guide/lessons/pioneer/dsl.ts
+@@ -119,7 +119,6 @@ export const after = (seconds: Input, body: Spec[]): Spec => ({ type: 'pioneer_a
+ 
+ export const set = (name: string, value: Input): Spec => ({ type: 'variables_set', fields: { VAR: { variable: name } }, inputs: { VALUE: value } });
+ export const get = (name: string): Variable => ({ variable: name });
+-export const change = (name: string, delta: Input): Spec => ({ type: 'math_change', fields: { VAR: { variable: name } }, inputs: { DELTA: delta } });
+ export const repeat = (times: Input, body: Spec[]): Spec => ({ type: 'controls_repeat_ext', inputs: { TIMES: times }, statements: { DO: body } });
+ export const forRange = (name: string, from: Input, to: Input, by: Input, body: Spec[]): Spec => ({
+     type: 'controls_for', fields: { VAR: { variable: name } }, inputs: { FROM: from, TO: to, BY: by }, statements: { DO: body }
+diff --git a/simulator/public/modules/ui/mission-guide/types.ts b/simulator/public/modules/ui/mission-guide/types.ts
+index e06b9e5..75a7d37 100644
+--- a/simulator/public/modules/ui/mission-guide/types.ts
++++ b/simulator/public/modules/ui/mission-guide/types.ts
+@@ -1,6 +1,3 @@
+-import type { ScriptLanguage } from '../api-docs/sections.js';
+-import type { PioneerLessonSpec } from './lessons/pioneer/types.js';
+-
+ export type GuideMethodLink = {
+     label: string;
+     query: string;
+@@ -22,118 +19,6 @@ export type GuideDiagnostic = {
+     fix: string;
+ };
+ 
+-export type GuideBlockStyle = 'setup' | 'action' | 'wait' | 'check';
+-
+-export type GuideBlockKind = 'statement' | 'timer' | 'event';
+-
+-export type GuideBlock = {
+-    id: string;
+-    label: string;
+-    codeLabel: string;
+-    explanation: string;
+-    style: GuideBlockStyle;
+-    kind: GuideBlockKind;
+-    code: string;
+-    seconds?: number;
+-    eventName?: string;
+-};
+-
+-export type GuideOrderRule = {
+-    before: string;
+-    after: string;
+-    title: string;
+-    reason: string;
+-    fix: string;
+-};
+-
+-export type GuideTabId = 'tutorial' | 'trainer';
+-
+-export type GuideLessonStepId = 'theory' | 'build' | 'check';
+-
+-export type GuidePortalPageId = 'intro' | 'lesson';
+-
+-export type GuidePracticeTrack = 'blockly' | 'lua' | 'python';
+-
+-export type GuideTheorySpoiler = {
+-    label: string;
+-    paragraphs?: string[];
+-    bullets?: string[];
+-    ordered?: string[];
+-};
+-
+-export type GuideTheorySection = {
+-    title: string;
+-    paragraphs: string[];
+-    bullets?: string[];
+-    ordered?: string[];
+-    spoilers?: GuideTheorySpoiler[];
+-    takeaway?: string;
+-};
+-
+-export type GuidePracticeTask = {
+-    lessonId: string;
+-    title: string;
+-    summary: string;
+-    difficulty: 'basic' | 'intermediate' | 'advanced';
+-};
+-
+-export type GuideChapter = {
+-    id: string;
+-    badge: string;
+-    title: string;
+-    summary: string;
+-    theoryIntro: string;
+-    theorySections: GuideTheorySection[];
+-    practiceHeading: string;
+-    practiceIntro: string;
+-    practiceTasks: GuidePracticeTask[];
+-    primaryLessonId: string;
+-};
+-
+-export type GuideLesson = {
+-    id: string;
+-    chapterId: string;
+-    badge: string;
+-    title: string;
+-    goal: string;
+-    taskSteps?: string[];
+-    summary: string;
+-    lessonIntro: string;
+-    expectedOutcome: string;
+-    builderHint: string;
+-    apiFocus: GuideApiFocusItem[];
+-    targetBlockIds: string[];
+-    blocks: GuideBlock[];
+-    links: GuideMethodLink[];
+-    solutionCode: string;
+-    actionLabel: string;
+-    actionQuery: string;
+-    actionPreviewKey?: string;
+-    errorCatalog: GuideDiagnostic[];
+-    missingBlockDiagnostics: Record<string, GuideDiagnostic>;
+-    extraBlockDiagnostics?: Record<string, GuideDiagnostic>;
+-    orderRules?: GuideOrderRule[];
+-    fieldChecks?: Array<{
+-        blockType: string;
+-        field: string;
+-        expected: number;
+-        diagnostic: GuideDiagnostic;
+-    }>;
+-    compile: (sequenceIds: string[], blocks: GuideBlock[]) => string;
+-    /** Урок на едином наборе блоков pioneer_*: его проверяет полёт, а не порядок учебных блоков. */
+-    pioneer?: PioneerLessonSpec;
+-};
+-
+-export type GuideLessonState = {
+-    activeLessonId: string;
+-    heroEyebrow: string;
+-    heroTitle: string;
+-    heroText: string;
+-    heroFlow: string;
+-    chapters: GuideChapter[];
+-    lessons: GuideLesson[];
+-};
+-
+ export type GuideTextLesson = {
+     academy?: {
+         number: number;
+@@ -165,16 +50,6 @@ export type GuideTextLesson = {
+     solutionCode: string;
+ };
+ 
+-export type GuideTextLessonState = {
+-    activeLessonId: string;
+-    heroEyebrow: string;
+-    heroTitle: string;
+-    heroText: string;
+-    heroFlow: string;
+-    chapters: GuideChapter[];
+-    lessons: GuideTextLesson[];
+-};
+-
+ export type GuideEvaluation = {
+     academyTrial?: string;
+     solved: boolean;
+@@ -182,10 +57,3 @@ export type GuideEvaluation = {
+     diagnostics: GuideDiagnostic[];
+     timeline?: import('./evaluation/text/timeline.js').FlightTimeline;
+ };
+-
+-export type RuntimeBanner = {
+-    kind: 'info' | 'success' | 'warning';
+-    message: string;
+-};
+-
+-export type RenderMissionGuidePanel = (language?: ScriptLanguage) => void;
+diff --git a/simulator/public/modules/ui/panels/editor-docs.ts b/simulator/public/modules/ui/panels/editor-docs.ts
+index 68de3c5..025bd87 100644
+--- a/simulator/public/modules/ui/panels/editor-docs.ts
++++ b/simulator/public/modules/ui/panels/editor-docs.ts
+@@ -7,8 +7,6 @@ import { EDITOR_DRAWER_OPEN_EVENT, announceEditorDrawerOpen, pinEditorPanelHoriz
+  * the (rail-hidden) docs sidebar panel, so every existing renderApiDocs()
+  * call keeps working unchanged.
+  */
+-export const EDITOR_DOCS_OPEN_EVENT = 'editor-docs:open';
+-
+ export function initEditorDocs(): void {
+     const toggleBtn = document.getElementById('editor-docs-toggle-btn');
+     const closeBtn = document.getElementById('editor-docs-close-btn');
+@@ -37,8 +35,6 @@ export function initEditorDocs(): void {
+     document.addEventListener(EDITOR_DRAWER_OPEN_EVENT, (event) => {
+         if ((event as CustomEvent<string>).detail !== 'docs') close();
+     });
+-    // Fired by api-docs' openApiDocsCatalog() (e.g. from the mission guide).
+-    document.addEventListener(EDITOR_DOCS_OPEN_EVENT, open);
+ 
+     document.addEventListener('keydown', (event) => {
+         if (event.key === 'Escape' && !event.defaultPrevented && !panel.hidden
+diff --git a/simulator/public/modules/ui/panels/terminal-session.ts b/simulator/public/modules/ui/panels/terminal-session.ts
+index d98a635..3c202ed 100644
+--- a/simulator/public/modules/ui/panels/terminal-session.ts
++++ b/simulator/public/modules/ui/panels/terminal-session.ts
+@@ -3,7 +3,6 @@ export type TerminalSession = {
+     id: number; label: string; lines: TerminalLine[]; history: string[]; cursor: number; draft: string;
+ };
+ export type TerminalActions = { run(): boolean; stop(): boolean; reset(): boolean; status(): string };
+-export const TERMINAL_COMMANDS = ['help', 'run', 'stop', 'reset', 'status', 'clear'];
+ 
+ /** IDE shortcuts use physical keys so the Russian layout works too. */
+ export function matchesTerminalShortcut(event: Pick<KeyboardEvent, 'code' | 'key'>, key: 'C' | 'L' | 'J'): boolean {
+diff --git a/simulator/public/modules/ui/settings/autopilot-params-model.ts b/simulator/public/modules/ui/settings/autopilot-params-model.ts
+index 8ed126d..358193e 100644
+--- a/simulator/public/modules/ui/settings/autopilot-params-model.ts
++++ b/simulator/public/modules/ui/settings/autopilot-params-model.ts
+@@ -9,13 +9,11 @@ export type {
+     ValidationRule
+ } from './autopilot-params-model/types.js';
+ export {
+-    clearAutopilotAuditLog,
+     exportAutopilotPropertiesText,
+     getAutopilotParameterDefinitions,
+     getAutopilotSettingsState,
+     getAutopilotValidationSummary,
+     importAutopilotProperties,
+-    listAutopilotGroups,
+     loadAutopilotTemplateFromText,
+     resetAutopilotParameters,
+     updateAutopilotAuthor,
+diff --git a/simulator/public/modules/ui/settings/autopilot-params-model/state.ts b/simulator/public/modules/ui/settings/autopilot-params-model/state.ts
+index 0dd0b6e..c0303ab 100644
+--- a/simulator/public/modules/ui/settings/autopilot-params-model/state.ts
++++ b/simulator/public/modules/ui/settings/autopilot-params-model/state.ts
+@@ -98,10 +98,6 @@ export function getAutopilotParameterDefinitions() {
+     return autopilotParameterDefinitions;
+ }
+ 
+-export function listAutopilotGroups() {
+-    return Array.from(new Set(autopilotParameterDefinitions.map((definition) => definition.group)));
+-}
+-
+ export function updateAutopilotAuthor(author: string) {
+     runtimeState.author = safeAutopilotAuthor(author);
+     runtimeState.updatedAt = new Date().toISOString();
+@@ -267,13 +263,6 @@ export function resetAutopilotParameters(author: string) {
+     return getAutopilotSettingsState();
+ }
+ 
+-export function clearAutopilotAuditLog() {
+-    runtimeState.auditLog = [];
+-    runtimeState.updatedAt = new Date().toISOString();
+-    saveState();
+-    return getAutopilotSettingsState();
+-}
+-
+ export function exportAutopilotPropertiesText() {
+     const header = `# ${new Date().toISOString()}`;
+     const lines = autopilotParameterDefinitions.map((definition) => `${definition.key}=${runtimeState.values[definition.key]}`);
+diff --git a/simulator/public/modules/world/traffic.ts b/simulator/public/modules/world/traffic.ts
+index b6a7197..502c33b 100644
+--- a/simulator/public/modules/world/traffic.ts
++++ b/simulator/public/modules/world/traffic.ts
+@@ -15,7 +15,7 @@ import { VEHICLES, vehicleKindFor, type VehicleKind } from './vehicle-kinds.js';
+  * front of them and move right and slow down when one comes up from behind. Controlled junctions also have traffic lights
+  * (signals.ts): on red a car stops at the stop line, on yellow it stops when it can still brake comfortably.
+  */
+-export const MODEL_LENGTH = 4.2, MODEL_WIDTH = 1.75;
++export const MODEL_WIDTH = 1.75;
+ 
+ const A_LAT = 2.6;          // m/s^2 lateral acceleration allowed in a bend
+ const BRAKE = 3.2;          // comfortable braking, m/s^2
+diff --git a/simulator/public/modules/world/walkers.ts b/simulator/public/modules/world/walkers.ts
+index 8d0d5ed..0e461e4 100644
+--- a/simulator/public/modules/world/walkers.ts
++++ b/simulator/public/modules/world/walkers.ts
+@@ -44,7 +44,6 @@ export class Gait {
+         this.mode = mode;
+         poseNow(p, mode, dt, 1);
+     }
+-    get current() { return this.mode; }
+ }
+ 
+ export type DriveOptions = {
+@@ -112,11 +111,6 @@ export class Mover {
+         return remaining;
+     }
+ 
+-    /** Stand where you are, turning to `face` if given. */
+-    hold(dt: number, face?: number, still: PoseMode = 'idle') {
+-        return this.drive(dt, { x: this.x, y: this.y }, { face, still });
+-    }
+-
+     private pushOut() {
+         for (const s of this.solids) {
+             const dx = this.x - s.x, dy = this.y - s.y, d = Math.hypot(dx, dy);

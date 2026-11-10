@@ -3,7 +3,8 @@
  * Сервер хранит учётные записи и зачёт миссий (server/accounts.ts); здесь только тонкая обёртка над fetch и
  * состояние «кто сейчас вошёл». Без входа всё работает как раньше: прогресс остаётся в браузере.
  */
-export type AccountUser = { id: string; role: 'teacher' | 'student'; fullName: string; login: string; mustChangePassword?: boolean };
+/** viewAs — учитель смотрит кабинет от имени этого ученика (только чтение), teacherName — кто смотрит. */
+export type AccountUser = { id: string; role: 'teacher' | 'student'; fullName: string; login: string; mustChangePassword?: boolean; viewAs?: { teacherName: string } };
 /** Способы обучения. sdk2 и bricks — треки для Пионера Мини 2 (Python на pioneer_sdk2 и блоки Pioneer Bricks). */
 export type AccountTrack = 'blocks' | 'lua' | 'python' | 'sdk2' | 'bricks';
 export const ACCOUNT_TRACKS: readonly AccountTrack[] = ['blocks', 'lua', 'python', 'sdk2', 'bricks'];
@@ -172,6 +173,19 @@ export async function register(form: RegisterForm): Promise<AccountUser> {
 export async function logout(): Promise<void> {
     await call('POST', '/api/auth/logout').catch(() => undefined);
     setUser(null);
+}
+
+/** Учитель открывает обучение и кабинет ученика его глазами, не зная пароля. Менять в этом режиме ничего нельзя. */
+export async function viewAsStudent(id: string): Promise<AccountUser> {
+    const { user: next } = await call<{ user: AccountUser }>('POST', `/api/teacher/students/${encodeURIComponent(id)}/view`);
+    setUser(next);
+    return next;
+}
+
+/** Выход из режима просмотра обратно в аккаунт учителя. */
+export async function exitStudentView(): Promise<void> {
+    const { user: next } = await call<{ user: AccountUser | null }>('POST', '/api/auth/view-exit');
+    setUser(next);
 }
 
 export async function changePassword(current: string, password: string, passwordRepeat: string): Promise<void> {
