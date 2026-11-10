@@ -21,7 +21,8 @@ import { runTextLessonCheck } from '../ui/mission-guide/evaluation/text/index.js
 import { ACADEMY_LESSONS } from '../ui/mission-guide/academy/catalog.js';
 import { getAcademySceneEvidence, prepareAcademyScene, restoreAcademyScene, academySceneProfile } from '../ui/mission-guide/academy/scene.js';
 import { ACCOUNT_TRACKS, TRACK_NAMES, type AccountTrack, ApiError, fetchProgress, getLastAuthKind, getUser, isSessionExpired, onUserChange, reportAttempt, reportCompleted, restoreSession, startKeepAlive, trackEvent } from './account.js';
-import { initAccountUi } from './account-ui.js';
+import { initAccountUi, openAccountPanel } from './account-ui.js';
+import { shouldShowAuthNudge, showAuthNudge } from './auth-nudge.js';
 import { openTeacherPanel } from './teacher-panel.js';
 import { openStudentCabinet } from './student-cabinet.js';
 import { getAppMode, onAppModeChange, setAppMode, type AppMode } from './mode.js';
@@ -822,7 +823,35 @@ function applyMode(mode: AppMode, previous: AppMode): void {
     void syncFromServer().finally(() => {
         const quest = currentQuest(quests, progress);
         if (quest) void openQuest(quest);
+        void welcomeLearner();
     });
+}
+
+/** Проверка входа при запуске: пока она не закончилась, гость и вошедший ученик неразличимы. */
+let sessionReady: Promise<unknown> = Promise.resolve();
+
+/**
+ * Первое, что видит ученик в обучении: напоминание об аккаунте (гостю, раз в день), затем окно миссии с
+ * подсветкой и фокусом на кнопке, чтобы было понятно, с чего начать.
+ */
+async function welcomeLearner(): Promise<void> {
+    await sessionReady;
+    if (getAppMode() !== 'learning') return;
+    if (!getUser() && shouldShowAuthNudge()) {
+        const choice = await showAuthNudge();
+        if (choice !== 'skip') { openAccountPanel(choice); return; }
+    }
+    if (getAppMode() === 'learning') drawAttentionToHud();
+}
+
+/** Окно миссии появляется с движением и кольцом, а фокус переходит на кнопку «Начать миссию». */
+function drawAttentionToHud(): void {
+    el.hud.classList.remove('is-arriving');
+    void el.hud.offsetWidth; // перезапуск анимации, если окно уже подсвечивалось
+    el.hud.classList.add('is-arriving');
+    window.setTimeout(() => el.hud.classList.remove('is-arriving'), 4800);
+    // renderHud перерисовывает окно через полсекунды после открытия миссии: фокус ставим после него.
+    window.setTimeout(() => el.hud.querySelector<HTMLElement>('[data-quest-next]')?.focus({ preventScroll: true }), 650);
 }
 
 function buildDom(): void {
@@ -927,7 +956,7 @@ export function initLearningMode(): void {
         openCabinet: () => { void openStudentCabinet({ openQuest: openQuestById }); }
     });
     onUserChange(() => { void handleUserChange(); });
-    void restoreSession();
+    sessionReady = restoreSession();
     startKeepAlive();
     (window as any).openLearningMission = openLearningMission;
     onAppModeChange(applyMode);
