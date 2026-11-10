@@ -1,9 +1,10 @@
 import { drones, currentDroneId } from '../../core/state.js';
 import { getLogEntries, onLogsChanged, type LogRecord } from '../../shared/logging/logger.js';
 import { cleanJournalMessage, describeLogEntry } from './journal-lines.js';
+import { initRos2Console, type Ros2ConsoleHandle } from './ros2-console.js';
 import { appendTerminalLine, createTerminalSession, executeTerminalCommand, matchesTerminalShortcut, navigateTerminalHistory, type TerminalActions, type TerminalLine } from './terminal-session.js';
 
-type TerminalView = 'console' | 'output' | 'problems';
+type TerminalView = 'console' | 'ros2' | 'output' | 'problems';
 
 /** VS Code panel geometry, with browser-native simulator console sessions. */
 export function initTerminalWorkbench(panel: HTMLElement, resize: () => void, clearOutput: () => void) {
@@ -19,6 +20,7 @@ export function initTerminalWorkbench(panel: HTMLElement, resize: () => void, cl
     let active = sessions[0];
     let outputOwner = active;
     let view: TerminalView = 'console';
+    let ros2: Ros2ConsoleHandle | null = null;
     let previousProblemCount = -1;
     let lastProblem: LogRecord | undefined;
     const rows = new WeakMap<TerminalLine, HTMLElement>();
@@ -91,14 +93,15 @@ export function initTerminalWorkbench(panel: HTMLElement, resize: () => void, cl
         const system = panel.querySelector<HTMLElement>('.editor-terminal__system-toggle');
         if (system) system.hidden = view !== 'output';
         const clear = panel.querySelector<HTMLButtonElement>('#terminal-clear-btn');
-        if (clear) { clear.disabled = view === 'problems'; clear.title = view === 'output' ? 'Очистить вывод' : 'Очистить сеанс'; clear.setAttribute('aria-label', clear.title); }
+        if (clear) { clear.disabled = view === 'problems'; clear.title = view === 'output' ? 'Очистить вывод' : view === 'ros2' ? 'Очистить консоль ROS 2' : 'Очистить сеанс'; clear.setAttribute('aria-label', clear.title); }
+        if (view === 'ros2') ros2?.focus();
     };
     panel.querySelectorAll<HTMLButtonElement>('[data-terminal-view]').forEach(button => {
         button.addEventListener('click', () => selectView(button.dataset.terminalView as TerminalView));
         button.addEventListener('keydown', event => {
             if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
             event.preventDefault();
-            const tabs = [...panel.querySelectorAll<HTMLButtonElement>('[data-terminal-view]')];
+            const tabs = [...panel.querySelectorAll<HTMLButtonElement>('[data-terminal-view]')].filter(tab => !tab.hidden);
             const index = tabs.indexOf(button);
             const target = tabs[event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length];
             target.click(); target.focus();
@@ -123,6 +126,7 @@ export function initTerminalWorkbench(panel: HTMLElement, resize: () => void, cl
     selector.addEventListener('change', () => selectSession(Number(selector.value)));
     panel.querySelector('#terminal-clear-btn')?.addEventListener('click', () => {
         if (view === 'console') { active.lines = []; renderConsole(); input.focus(); }
+        else if (view === 'ros2') ros2?.clear();
         else if (view === 'output') clearOutput();
     });
     maximize.addEventListener('click', () => {
@@ -172,11 +176,19 @@ export function initTerminalWorkbench(panel: HTMLElement, resize: () => void, cl
             row.append(label, text); return row;
         }) : [Object.assign(document.createElement('p'), { className: 'terminal-no-problems', textContent: 'Ошибок и предупреждений нет.' })]));
     };
+    // Вкладка «ROS 2» есть только у дрона в режиме «Python · SDK2»; без него - прячется, а открытая переключается на «Терминал».
+    ros2 = initRos2Console(panel, available => {
+        const tab = panel.querySelector<HTMLElement>('#terminal-tab-ros2');
+        if (tab) tab.hidden = !available;
+        if (!available && view === 'ros2') selectView('console');
+    });
+    for (const name of ['drone-selection-changed', 'drone-language-changed', 'drone-model-changed']) window.addEventListener(name, () => ros2?.sync());
     onLogsChanged(updateLogs);
     renderSessions(); renderConsole(); selectView('console'); updateLogs();
     return {
         focus() {
             if (view === 'console') input.focus({ preventScroll: true });
+            else if (view === 'ros2' && ros2) ros2.focus();
             else panel.querySelector<HTMLButtonElement>('[data-terminal-view][aria-selected="true"]')?.focus();
         },
         activateConsole() { selectView('console'); input.focus({ preventScroll: true }); },

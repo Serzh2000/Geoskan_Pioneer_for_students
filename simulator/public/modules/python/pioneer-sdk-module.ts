@@ -2,6 +2,8 @@ import { installJsRuntimeAPI } from './pioneer-js-bridge.js';
 import { PIONEER_CV_PRELUDE } from './pioneer-sdk-cv-prelude.js';
 import { PIONEER_SDK2_PRELUDE } from './pioneer-sdk2-module.js';
 import { PIONEER_RKNN_PRELUDE } from './pioneer-rknn-module.js';
+import { installRos2Module } from './ros2/prelude.js';
+import { installSwarmModule } from './swarm/prelude.js';
 
 const PIONEER_SDK_PRELUDE = `
 import asyncio, inspect, sys, types
@@ -437,5 +439,9 @@ export async function installPioneerSdkModule(pyodide: any) {
     pyodide.runPython(PIONEER_SDK2_PRELUDE);
     // pioneer_rknn (нейросети Мини 2) - «зрение» симулятора по сцене.
     pyodide.runPython(PIONEER_RKNN_PRELUDE);
+    // ROS 2 (rclpy, gs_core): загрузчик по требованию, текст выполняется при первом import rclpy.
+    installRos2Module(pyodide);
+    // Swarm Kit (pioneer_swarm): так же по требованию, при первом import pioneer_swarm.
+    installSwarmModule(pyodide);
     (window as any).__pioneer_sdk_installed = true;
 }

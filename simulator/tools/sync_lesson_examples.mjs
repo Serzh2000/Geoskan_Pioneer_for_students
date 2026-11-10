@@ -48,6 +48,18 @@ const targets = [
         filter: (src) => !src.split(path.sep).includes('board-only')
     },
     {
+        // ROS 2 (rclpy + gs_core) для Мини 2 и Базового с Radxa: плоская папка примеров.
+        label: 'ROS 2 examples (rclpy, gs_core)',
+        source: path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'ros2'),
+        dest: path.join(projectRoot, 'examples-python-ros2')
+    },
+    {
+        // Swarm Kit (pioneer_swarm) для Мини 2 и Базового с Radxa: плоская папка примеров; ведущий/ведомый - отдельными файлами.
+        label: 'Swarm Kit examples (pioneer_swarm)',
+        source: path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'swarm'),
+        dest: path.join(projectRoot, 'examples-python-swarm')
+    },
+    {
         // Проекты Pioneer Bricks (Blockly XML) для редактора блоков Мини 2; Python к ним строит сам редактор.
         label: 'Pioneer Bricks projects (Mini 2 block editor)',
         source: path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'bricks'),

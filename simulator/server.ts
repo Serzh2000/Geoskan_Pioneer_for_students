@@ -126,6 +126,31 @@ function resolveBricksExamplesRoots(): string[] {
     ]);
 }
 
+// ROS 2 programs (rclpy + gs_core) are part of SDK2: listed in the SDK2 examples under the virtual group `ros2/`.
+// A missing or empty folder simply adds nothing.
+function resolvePythonRos2ExamplesRoots(): string[] {
+    return dedupeExistingPaths([
+        ...(resourcesDir ? [path.join(resourcesDir, 'examples-python-ros2')] : []),
+        path.join(runtimeDir, 'examples-python-ros2'),
+        path.join(projectRoot, 'examples-python-ros2'),
+        path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'ros2')
+    ]);
+}
+
+const ROS2_EXAMPLES_GROUP = 'ros2/';
+
+// Swarm Kit programs (pioneer_swarm) are part of SDK2 too: the virtual group `swarm/` of the SDK2 examples.
+function resolvePythonSwarmExamplesRoots(): string[] {
+    return dedupeExistingPaths([
+        ...(resourcesDir ? [path.join(resourcesDir, 'examples-python-swarm')] : []),
+        path.join(runtimeDir, 'examples-python-swarm'),
+        path.join(projectRoot, 'examples-python-swarm'),
+        path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'swarm')
+    ]);
+}
+
+const SWARM_EXAMPLES_GROUP = 'swarm/';
+
 type ExamplesSet = ScriptLanguage | 'python-sdk2' | 'blocks' | 'blocks-bricks';
 
 function parseExamplesSet(value: unknown): ExamplesSet {
@@ -254,6 +279,28 @@ function createApp(options: StartServerOptions): express.Express {
                     allFiles.push(normalized);
                 }
             }
+            if (lang === 'python-sdk2') {
+                for (const root of resolvePythonRos2ExamplesRoots()) {
+                    const files = await glob('**/*.py', { cwd: root, nodir: true });
+                    for (const filePath of files) {
+                        const virtual = ROS2_EXAMPLES_GROUP + filePath.replace(/\\/g, '/');
+                        if (seen.has(virtual)) continue;
+                        seen.add(virtual);
+                        allFiles.push(virtual);
+                    }
+                }
+            }
+            if (lang === 'python-sdk2') {
+                for (const root of resolvePythonSwarmExamplesRoots()) {
+                    const files = await glob('**/*.py', { cwd: root, nodir: true });
+                    for (const filePath of files) {
+                        const virtual = SWARM_EXAMPLES_GROUP + filePath.replace(/\\/g, '/');
+                        if (seen.has(virtual)) continue;
+                        seen.add(virtual);
+                        allFiles.push(virtual);
+                    }
+                }
+            }
             allFiles.sort((a, b) => a.localeCompare(b));
             res.json(allFiles);
         } catch (error) {
@@ -268,10 +315,15 @@ function createApp(options: StartServerOptions): express.Express {
             return res.status(400).json({ error: 'Path required' });
         }
         const lang = parseExamplesSet(req.query.lang);
-        const roots = examplesRootsFor(lang, luaExamplesRoots, pythonExamplesRoots);
+        const isRos2Example = lang === 'python-sdk2' && relativePath.startsWith(ROS2_EXAMPLES_GROUP);
+        const isSwarmExample = lang === 'python-sdk2' && relativePath.startsWith(SWARM_EXAMPLES_GROUP);
+        const roots = isSwarmExample ? resolvePythonSwarmExamplesRoots()
+            : isRos2Example ? resolvePythonRos2ExamplesRoots() : examplesRootsFor(lang, luaExamplesRoots, pythonExamplesRoots);
+        const rootRelativePath = isSwarmExample ? relativePath.slice(SWARM_EXAMPLES_GROUP.length)
+            : isRos2Example ? relativePath.slice(ROS2_EXAMPLES_GROUP.length) : relativePath;
 
         for (const examplesRoot of roots) {
-            const filePath = path.resolve(examplesRoot, relativePath);
+            const filePath = path.resolve(examplesRoot, rootRelativePath);
             if (filePath !== examplesRoot && !filePath.startsWith(examplesRoot + path.sep)) continue;
             if (!fs.existsSync(filePath)) continue;
 

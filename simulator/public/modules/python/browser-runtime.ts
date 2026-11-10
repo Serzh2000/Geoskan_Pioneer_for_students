@@ -13,8 +13,12 @@ import {
 import { ensureNumpyLoaded, ensurePyodide } from './pyodide-loader.js';
 import { droneModelProfile, droneSdk } from '../core/drone-models.js';
 
+// Программа с rclpy: раннер доучивает spin / call / Rate.sleep ждать (см. __SimAsyncify ниже).
+const ROS2_SOURCE = /^[ \t]*(?:from|import)[ \t]+rclpy\b/m;
+
 // get_cv_frame собирает настоящий numpy-массив, но подгрузить пакет можно только из async-кода,
 // а сам вызов в скрипте синхронный. Поэтому решение принимается по исходнику до запуска.
+
 const NUMPY_DEPENDENT_SOURCE = /\bnumpy\b|\bget_cv_frame\b|\bpioneer_rknn\b/;
 
 type ActivePythonRun = {
@@ -60,7 +64,9 @@ __sim_validation_result
 
 // Пионер Мини 2 программируется только через pioneer_sdk2, Базовый - через
 // pioneer_sdk. Импорт чужой библиотеки ловится до запуска, с номером строки.
-const SDK_IMPORT = /^[ \t]*(?:from|import)[ \t]+(pioneer_sdk2?|pioneer_rknn)\b/gm;
+const SDK_IMPORT = /^[ \t]*(?:from|import)[ \t]+(pioneer_sdk2?|pioneer_rknn|pioneer_swarm|rclpy|std_msgs|std_srvs|geometry_msgs|sensor_msgs|builtin_interfaces|gs_interfaces|gs_core)\b/gm;
+// ROS 2 (rclpy и пакеты сообщений gs_core) - часть pioneer_sdk2: доступен там же, где SDK2.
+const ROS2_LIBRARIES = new Set(['rclpy', 'std_msgs', 'std_srvs', 'geometry_msgs', 'sensor_msgs', 'builtin_interfaces', 'gs_interfaces', 'gs_core']);
 
 export function checkPythonSdkForDrone(droneId: string, code: string): void {
     const profile = droneModelProfile(drones[droneId]?.model);
@@ -68,12 +74,23 @@ export function checkPythonSdkForDrone(droneId: string, code: string): void {
     for (const match of code.matchAll(SDK_IMPORT)) {
         const library = match[1];
         // pioneer_rknn (нейросети на борту) идёт в комплекте с pioneer_sdk2 и есть только у Мини 2.
-        const allowed = library === 'pioneer_rknn'
-            ? sdk === 'pioneer_sdk2' && profile.id === 'pioneer-mini2'
-            : library === sdk;
+        const isRos2 = ROS2_LIBRARIES.has(library);
+        // Swarm Kit (pioneer_swarm) - тоже часть SDK2: swarm-server есть на Мини 2 и на Базовом с Radxa.
+        const isSwarm = library === 'pioneer_swarm';
+        const allowed = isRos2 || isSwarm
+            ? sdk === 'pioneer_sdk2'
+            : library === 'pioneer_rknn'
+                ? sdk === 'pioneer_sdk2' && profile.id === 'pioneer-mini2'
+                : library === sdk;
         if (allowed) continue;
         const line = code.slice(0, match.index ?? 0).split('\n').length;
-        const message = library === 'pioneer_rknn'
+        const message = isSwarm
+            ? `Для дрона «${drones[droneId]?.name ?? profile.title}» выбран язык «Python · SDK1», а в программе pioneer_swarm (Swarm Kit). `
+                + 'Рой Swarm Kit входит в «Python · SDK2»: выберите его в панели «Рой» (у Пионера Базового для этого нужна Radxa Zero 3W).'
+            : isRos2
+            ? `Для дрона «${drones[droneId]?.name ?? profile.title}» выбран язык «Python · SDK1», а в программе ${library} (ROS 2). `
+                + 'ROS 2 входит в «Python · SDK2»: выберите его в панели «Рой» (у Пионера Базового для этого нужна Radxa Zero 3W) или используйте pioneer_sdk.'
+            : library === 'pioneer_rknn'
             ? `pioneer_rknn - библиотека Пионера Мини 2 (нейросети на борту). Для дрона «${profile.title}» её нет: добавьте дрон «Пионер Мини 2» на панели «Рой».`
             : `Для дрона «${drones[droneId]?.name ?? profile.title}» выбран язык «Python · ${sdk === 'pioneer_sdk2' ? 'SDK2' : 'SDK1'}», а в программе ${library}. `
                 + `Подключите ${sdk}: from ${sdk} import Pioneer - или выберите другой язык в панели «Рой».`;
@@ -94,6 +111,8 @@ export function disposeBrowserPythonRunState(droneId: string): void {
     cleanupPythonRuntimeState(droneId);
 }
 
+let runSerial = 0;
+
 export async function runBrowserPythonScript(droneId: string, code: string): Promise<void> {
     const pyodide = await ensurePyodide();
     if (!drones[droneId]) return;
@@ -112,8 +131,15 @@ export async function runBrowserPythonScript(droneId: string, code: string): Pro
         await ensureNumpyLoaded();
     }
 
+    // Имена с номером запуска: глобальные переменные Pyodide общие, а программы нескольких дронов идут одновременно.
+    const tasksName = `__sim_tasks_${++runSerial}`;
+    const usesRos2 = ROS2_SOURCE.test(normalizedUserCode);
     const wrapped = `
-import ast, asyncio, builtins, inspect, js
+import ast, asyncio, builtins, inspect, js, sys
+
+# Дрон этой программы: до первого ожидания (там создаются Pioneer() и PioneerSwarmUnit()) идёт тот же участок кода,
+# поэтому программа другого дрона, запущенная следом, не подменит идентификатор.
+js.SIM_DRONE_ID = ${JSON.stringify(droneId)}
 
 if not hasattr(builtins, "__sim_base_print"):
     builtins.__sim_base_print = builtins.print
@@ -126,7 +152,13 @@ def __sim_print(*args, **kwargs):
     text = sep.join(str(arg) for arg in args)
     if end and end != "\\n":
         text += end.rstrip("\\n")
-    js.pioneer_print(js.SIM_DRONE_ID, text)
+    # Печать идёт на дрон своей программы (а не на тот, что запущен последним): так рядом работают программы нескольких дронов.
+    __sim_frame = sys._getframe(1)
+    __sim_owner = None
+    while __sim_frame is not None and not __sim_owner:
+        __sim_owner = __sim_frame.f_globals.get("__sim_drone_id")
+        __sim_frame = __sim_frame.f_back
+    js.pioneer_print(__sim_owner or js.SIM_DRONE_ID, text)
     return builtins.__sim_base_print(*args, **kwargs)
 
 def __sim_input(prompt=""):
@@ -134,7 +166,9 @@ def __sim_input(prompt=""):
 
 builtins.print = __sim_print
 builtins.input = __sim_input
-builtins.__sim_bg_tasks = []
+# Свой список фоновых задач: когда рядом работают программы нескольких дронов, конец одной не должен гасить задачи другой.
+${tasksName} = []
+builtins.__sim_bg_tasks = ${tasksName}
 
 async def __sim_await(value):
     # arm/takeoff/land/get_cv_frame: у pioneer_sdk2 они ждут события автопилота
@@ -144,6 +178,7 @@ async def __sim_await(value):
     return value
 
 __sim_source = ${JSON.stringify(normalizedUserCode)}
+__sim_ros = ${usesRos2 ? 'True' : 'False'}
 
 class __SimAsyncify(ast.NodeTransformer):
     def __init__(self):
@@ -155,7 +190,11 @@ class __SimAsyncify(ast.NodeTransformer):
         # from time import sleep: sleep(1) без префикса time.
         self.sleep_names = set()
         self.awaitable_attrs = {"start", "join", "wait", "stop"}
-        self.maybe_awaitable_attrs = {"arm", "takeoff", "land", "get_cv_frame"}
+        # get_telemetry_from_unit (pioneer_swarm) ждёт телеметрию соседа в симулируемом времени.
+        self.maybe_awaitable_attrs = {"arm", "takeoff", "land", "get_cv_frame", "get_telemetry_from_unit"}
+        if globals().get("__sim_ros"):
+            # rclpy: spin*, ожидание сервиса, синхронный call, Rate.sleep и Clock.sleep_for ждут время симуляции.
+            self.maybe_awaitable_attrs |= {"spin", "spin_once", "spin_some", "spin_until_future_complete", "wait_for_service", "call", "sleep", "sleep_for"}
 
     def collect(self, tree):
         functions = {}
@@ -260,13 +299,14 @@ class __SimAsyncify(ast.NodeTransformer):
         if should_await:
             return ast.Await(value=node)
         # Метод библиотеки может быть и корутиной (Thread.join у SDK), и обычной функцией (str.join):
-        # решает __sim_await на месте.
+        # решает __sim_await на месте. Имя с двумя подчёркиваниями на конце: внутри класса
+        # (метод ученика) обычное __имя компилятор исказил бы.
         if (
             isinstance(node.func, ast.Attribute)
             and not self.is_str_receiver(node)
             and (node.func.attr in self.awaitable_attrs or node.func.attr in self.maybe_awaitable_attrs)
         ):
-            return ast.Await(value=ast.Call(func=ast.Name(id="__sim_await", ctx=ast.Load()), args=[node], keywords=[]))
+            return ast.Await(value=ast.Call(func=ast.Name(id="__sim_await__", ctx=ast.Load()), args=[node], keywords=[]))
         return node
 
 class __SimDropAnnotations(ast.NodeTransformer):
@@ -315,11 +355,15 @@ def __sim_load(code_text):
         type_ignores=[]
     )
     ast.fix_missing_locations(module)
-    user_globals = {"__name__": "__main__", "__builtins__": builtins, "asyncio": asyncio, "__sim_await": __sim_await}
+    # __sim_drone_id: дрон этой программы; по нему pioneer_swarm привязывает юнит, даже если позже стартовала программа другого дрона.
+    user_globals = {"__name__": "__main__", "__builtins__": builtins, "asyncio": asyncio, "__sim_await": __sim_await, "__sim_await__": __sim_await,
+                    "__sim_drone_id": str(getattr(__import__("sys").modules.get("js"), "SIM_DRONE_ID", ""))}
     exec(compile(module, "<user-script>", "exec"), user_globals)
     return user_globals["__user_main"]
 
 __user_main = __sim_load(__sim_source)
+# Счётчик работающих программ: печать и input возвращаются на место, когда кончилась последняя, а не первая из них.
+builtins.__sim_runs = getattr(builtins, "__sim_runs", 0) + 1
 
 try:
     await __user_main()
@@ -330,11 +374,26 @@ except Exception as e:
         raise
 finally:
     # Фоновые задачи библиотек (поток событий pioneer_sdk2) живут, пока живёт программа.
-    for __sim_task in builtins.__sim_bg_tasks:
+    for __sim_task in ${tasksName}:
         __sim_task.cancel()
-    builtins.__sim_bg_tasks = []
-    builtins.print = builtins.__sim_base_print
-    builtins.input = builtins.__sim_base_input
+    if builtins.__sim_bg_tasks is ${tasksName}:
+        builtins.__sim_bg_tasks = []
+    del ${tasksName}
+    if ${usesRos2 ? 'True' : 'False'}:
+        # Узлы ученика исчезают вместе с программой; ros_pioneer_node остаётся.
+        import sys as __sim_sys
+        __sim_rclpy = __sim_sys.modules.get("rclpy")
+        if __sim_rclpy is not None:
+            __sim_rclpy._sim_cleanup()
+    # Объекты PioneerSwarmUnit этой программы закрываются; swarm-server дрона остаётся в сети.
+    import sys as __sim_sys_swarm
+    __sim_swarm = __sim_sys_swarm.modules.get("pioneer_swarm")
+    if __sim_swarm is not None:
+        __sim_swarm._sim_cleanup(${JSON.stringify(droneId)})
+    builtins.__sim_runs = max(0, builtins.__sim_runs - 1)
+    if builtins.__sim_runs == 0:
+        builtins.print = builtins.__sim_base_print
+        builtins.input = builtins.__sim_base_input
 `;
 
     markLearningRunStarted(droneId, drones[droneId].current_time);

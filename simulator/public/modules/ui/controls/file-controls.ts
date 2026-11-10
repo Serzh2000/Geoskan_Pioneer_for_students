@@ -10,6 +10,8 @@ import { scriptFileName } from '../../shared/funny-names.js';
 // shows up without needing a matching code change here. Lua and Python each
 // have their own folder names, so one shared map covers both languages.
 const LESSON_GROUP_LABELS: Record<string, string> = {
+    'ros2': 'ROS 2',
+    'swarm': 'Рой (Swarm Kit)',
     '02_sensors': '02 — Датчики',
     '03_rc_control': '03 — Пульт управления',
     '04_language': '04 — Язык программирования',

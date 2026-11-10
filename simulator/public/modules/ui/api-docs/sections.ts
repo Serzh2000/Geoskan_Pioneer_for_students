@@ -15,6 +15,11 @@ export type ApiCategoryId =
     | 'globals'
     | 'events'
     | 'vehicles'
+    | 'ros2'
+    | 'ros2-services'
+    | 'ros2-topics'
+    | 'swarm'
+    | 'swarm-streams'
     | 'misc';
 
 export type ApiEntryView = {
@@ -81,6 +86,26 @@ const categoryMeta: Record<ApiCategoryId, { title: string; description: string }
         title: 'Транспорт (симулятор)',
         description: 'Машины и поезда на сцене: запуск, остановка, скорость. Только в симуляторе - на реальном полигоне дрон ими не управляет.'
     },
+    ros2: {
+        title: 'ROS 2: rclpy',
+        description: 'Клиентская библиотека ROS 2: узлы, паблишеры, подписки, клиенты и серверы сервисов, таймеры, параметры, spin.'
+    },
+    'ros2-services': {
+        title: 'ROS 2: сервисы gs_core',
+        description: 'Сервисы ros_pioneer_node: полёт, борт и параметры автопилота, навигация, полезная нагрузка.'
+    },
+    'ros2-topics': {
+        title: 'ROS 2: топики и сообщения',
+        description: 'Топики телеметрии и управления /geoscan/... и типы сообщений gs_interfaces, std_msgs, geometry_msgs, sensor_msgs.'
+    },
+    swarm: {
+        title: 'Рой: pioneer_swarm',
+        description: 'Swarm Kit: список соседей, сообщения в почтовый ящик юнита и телеметрия соседей по подписке. Рой одноранговый, у каждого дрона свой machine_id (виден в панели «Рой»).'
+    },
+    'swarm-streams': {
+        title: 'Рой: потоки телеметрии',
+        description: 'Потоки, которые воздушный юнит объявляет в Heartbeat: ключи словаря get_telemetry_from_unit.'
+    },
     misc: {
         title: 'Прочее',
         description: 'Служебные методы, которые не попали в основные категории.'
@@ -110,8 +135,18 @@ function getScopeLabel(name: string, language: ScriptLanguage): string {
     return language === 'python' ? 'Global' : 'Lua';
 }
 
-function classifyEntry(name: string, language: ScriptLanguage): ApiCategoryId {
+function classifyEntry(name: string, language: ScriptLanguage, doc?: ApiDoc): ApiCategoryId {
     const lowerName = name.toLowerCase();
+
+    // ROS 2 (rclpy + gs_core): справочник python-ros2-api-docs.ts.
+    if (language === 'python') {
+        if (name.startsWith('/geoscan/')) return doc?.kind === 'Service' ? 'ros2-services' : 'ros2-topics';
+        if (/^[a-z_]+\/(msg|srv)\//.test(name)) return 'ros2-topics';
+        // Swarm Kit (pioneer_swarm): справочник python-swarm-api-docs.ts.
+        if (/^pioneer1\//.test(name)) return 'swarm-streams';
+        if (/^(PioneerSwarmUnit|SwarmUnitType)(\.|$)/.test(name)) return 'swarm';
+        if (/^(rclpy|Node|Client|Publisher|Subscription|Timer|Future|Executor|QoSProfile|Parameter|Rate|Clock|Duration|Time|Logger)(\.|$)/.test(name)) return 'ros2';
+    }
 
     if (name === 'Bricks' || name.startsWith('Bricks.')) return 'bricks';
     if (/^(Yolo|YoloSeg|YoloPose|PaddleOCR|ModelContainer|ModelRegistry|DetectBox)(.|$)/.test(name)) return 'ai';
@@ -182,7 +217,7 @@ export function buildSections(docs: Record<string, ApiDoc>, language: ScriptLang
             const entry: ApiEntryView = {
                 name,
                 doc,
-                categoryId: classifyEntry(name, language),
+                categoryId: classifyEntry(name, language, doc),
                 scopeLabel,
                 previewScenario: getPreviewScenario(name)
             };
@@ -209,6 +244,11 @@ export function buildSections(docs: Record<string, ApiDoc>, language: ScriptLang
         'peripherals',
         'globals',
         'events',
+        'ros2',
+        'ros2-services',
+        'ros2-topics',
+        'swarm',
+        'swarm-streams',
         'misc'
     ];
 

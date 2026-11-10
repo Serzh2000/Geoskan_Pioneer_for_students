@@ -39,6 +39,8 @@ import {
 import { installCvRuntimeAPI } from './pioneer-js-bridge-cv.js';
 import { installSdk2RuntimeAPI } from './pioneer-sdk2-bridge.js';
 import { installRknnRuntimeAPI } from './pioneer-rknn-bridge.js';
+import { installRos2RuntimeAPI } from './pioneer-ros2-bridge.js';
+import { installSwarmRuntimeAPI } from './pioneer-swarm-bridge.js';
 import { droneModelProfile } from '../core/drone-models.js';
 
 // Python scripts run synchronously between asyncio yields, same as a Lua chunk between
@@ -54,6 +56,8 @@ export function installJsRuntimeAPI() {
     installCvRuntimeAPI(w);
     installSdk2RuntimeAPI(w);
     installRknnRuntimeAPI(w);
+    installRos2RuntimeAPI(w);
+    installSwarmRuntimeAPI(w);
 
     w.py_is_cancelled = (id: string) => Boolean(cancelledRuns[id]);
     w.pioneer_input = (promptText: string) => {

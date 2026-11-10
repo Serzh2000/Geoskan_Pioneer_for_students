@@ -5,6 +5,8 @@
  */
 import { apiDocs, pythonApiDocs } from '../../docs/api-docs.js';
 import { pythonSdk2ApiDocs } from '../../docs/python-sdk2-api-docs.js';
+import { pythonRos2ApiDocs } from '../../docs/python-ros2-api-docs.js';
+import { pythonSwarmApiDocs } from '../../docs/python-swarm-api-docs.js';
 import { pythonRknnApiDocs } from '../../docs/python-rknn-api-docs.js';
 import { bricksBlocksApiDocs } from '../../docs/bricks-blocks-docs.js';
 import { currentDroneId, drones } from '../../core/state.js';
@@ -398,7 +400,7 @@ export function renderApiDocs(
     uiState.language = language;
 
     const docs = language === 'python'
-        ? (pythonSdkOfCurrentDrone() === 'pioneer_sdk2' ? { ...pythonSdk2ApiDocs, ...pythonRknnApiDocs, ...bricksBlocksApiDocs } : pythonApiDocs)
+        ? (pythonSdkOfCurrentDrone() === 'pioneer_sdk2' ? { ...pythonSdk2ApiDocs, ...pythonRos2ApiDocs, ...pythonSwarmApiDocs, ...pythonRknnApiDocs, ...bricksBlocksApiDocs } : pythonApiDocs)
         : apiDocs;
     const sections = buildSections(docs, language, uiState.query);
     const totalEntries = sections.reduce((count, section) => count + section.entries.length, 0);

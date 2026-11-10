@@ -11,6 +11,7 @@ import {
 import { getEditorValue, isBlocklyEditorEnabled, setEditorValue } from '../../../editor/index.js';
 import { stopLuaScript } from '../../../lua/index.js';
 import { disposePythonRunState, stopPythonScript } from '../../../python/index.js';
+import { assignMachineIds } from '../../../python/swarm/machine-id.js';
 import { setExternalBridgeEnabled } from '../../../python/external-bridge.js';
 import type { DroneManagerDom } from './dom.js';
 import {
@@ -232,6 +233,8 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
         }
         const canDelete = droneIds.length > 1;
 
+        // machine_id юнитов роя (Swarm Kit) - тот же, что видит pioneer_swarm в программе.
+        const machineIds = assignMachineIds(droneIds.map((id) => ({ id, name: drones[id].name })));
         droneIds.forEach((id, index) => {
             const connection = ensureDronePythonConnectionSettings(id);
             const isSelected = id === currentDroneId;
@@ -262,13 +265,15 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
             const onboard = usesOnboardSdk(drones[id]);
             meta.textContent = isConfirming
                 ? 'Удалить этого дрона?'
-                : onboard ? 'Python на борту · pioneer_sdk2' : getDroneAddress(id);
+                : onboard ? `Python на борту · ${machineIds.get(id) ?? 'pioneer_sdk2'}` : getDroneAddress(id);
 
             text.appendChild(name);
             text.appendChild(meta);
             item.appendChild(icon);
             item.appendChild(text);
-            item.title = `${drones[id].name} · ${getDroneTransportSummary(id)}`;
+            item.title = onboard && machineIds.has(id)
+                ? `${drones[id].name} · Swarm Kit: machine_id ${machineIds.get(id)} · ${getDroneTransportSummary(id)}`
+                : `${drones[id].name} · ${getDroneTransportSummary(id)}`;
 
             if (isConfirming) {
                 const confirm = document.createElement('span');

@@ -58,6 +58,11 @@ function examplesApiPlugin(projectRoot: string): Plugin {
       : lang === 'python'
         ? existing([path.join(projectRoot, 'examples-python'), path.resolve(projectRoot, '..', 'examples', 'python')])
         : existing([path.join(projectRoot, 'examples'), path.resolve(projectRoot, '..', 'examples', 'lua')]);
+  // Virtual groups of the SDK2 examples (server.ts: ROS 2 and Swarm Kit programs live in their own folders).
+  const virtualGroups: Record<string, string[]> = {
+    'ros2/': existing([path.join(projectRoot, 'examples-python-ros2'), path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'ros2')]),
+    'swarm/': existing([path.join(projectRoot, 'examples-python-swarm'), path.resolve(projectRoot, '..', 'examples', 'python-onboard', 'swarm')])
+  };
   const sendJson = (res: import('node:http').ServerResponse, status: number, body: unknown) => {
     res.statusCode = status;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -86,12 +91,28 @@ function examplesApiPlugin(projectRoot: string): Plugin {
                 }
               }
             }
+            if (lang === 'python-sdk2') {
+              for (const [group, groupRoots] of Object.entries(virtualGroups)) {
+                for (const root of groupRoots) {
+                  for (const file of await glob('**/*.py', { cwd: root, nodir: true })) {
+                    const virtual = group + file.split('\\').join('/');
+                    if (!seen.has(virtual)) {
+                      seen.add(virtual);
+                      files.push(virtual);
+                    }
+                  }
+                }
+              }
+            }
             return sendJson(res, 200, files.sort((a, b) => a.localeCompare(b)));
           }
           const relative = url.searchParams.get('path');
           if (!relative) return sendJson(res, 400, { error: 'Path required' });
-          for (const root of roots) {
-            const file = path.resolve(root, relative);
+          const group = lang === 'python-sdk2' ? Object.keys(virtualGroups).find((prefix) => relative.startsWith(prefix)) : undefined;
+          const contentRoots = group ? virtualGroups[group] : roots;
+          const contentPath = group ? relative.slice(group.length) : relative;
+          for (const root of contentRoots) {
+            const file = path.resolve(root, contentPath);
             // A path that climbs out of the examples folder is never served.
             if (file !== root && !file.startsWith(root + path.sep)) continue;
             if (fs.existsSync(file) && fs.statSync(file).isFile()) return sendJson(res, 200, { content: fs.readFileSync(file, 'utf8') });

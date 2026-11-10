@@ -3,6 +3,7 @@
     <div class="editor-terminal__header">
         <div class="terminal-panel-tabs" role="tablist" aria-label="Нижняя панель">
             <button id="terminal-tab-console" type="button" role="tab" aria-selected="true" aria-controls="terminal-console-pane" data-terminal-view="console">Терминал</button>
+            <button id="terminal-tab-ros2" type="button" role="tab" aria-selected="false" aria-controls="terminal-ros2-pane" data-terminal-view="ros2" tabindex="-1" hidden>ROS 2</button>
             <button id="terminal-tab-output" type="button" role="tab" aria-selected="false" aria-controls="terminal-output-pane" data-terminal-view="output" tabindex="-1">Вывод</button>
             <button id="terminal-tab-problems" type="button" role="tab" aria-selected="false" aria-controls="terminal-problems" data-terminal-view="problems" tabindex="-1">Проблемы <span id="terminal-problem-count" hidden>0</span></button>
         </div>
@@ -24,6 +25,18 @@
             </form>
         </div>
         <div id="terminal-session-list" class="terminal-session-list" role="tablist" aria-label="Сеансы терминала" aria-orientation="vertical" hidden></div>
+    </section>
+    <section id="terminal-ros2-pane" class="terminal-console-pane terminal-ros2-pane" role="tabpanel" aria-labelledby="terminal-tab-ros2" data-terminal-pane="ros2" hidden>
+        <div class="terminal-console-main">
+            <div id="terminal-ros2-intro" class="ros2-intro"></div>
+            <div id="terminal-ros2-stream" class="terminal-console-stream" role="log" aria-label="Вывод консоли ros2" aria-live="polite" aria-relevant="additions"></div>
+            <form id="terminal-ros2-form" class="terminal-command-form terminal-ros2-form" autocomplete="off">
+                <label for="terminal-ros2-input" id="terminal-ros2-prompt" class="terminal-prompt">pioneer@mini2:~$</label>
+                <input id="terminal-ros2-input" type="text" aria-label="Команда ros2" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">
+                <button id="terminal-ros2-stop" type="button" class="ros2-stop" title="Остановить команду (Ctrl+C)" hidden>Ctrl+C</button>
+            </form>
+            <div id="terminal-ros2-status" class="editor-terminal__announcer" role="status" aria-live="polite"></div>
+        </div>
     </section>
     <section id="terminal-output-pane" class="terminal-output-pane" role="tabpanel" aria-labelledby="terminal-tab-output" data-terminal-pane="output" hidden>
         <div id="editor-terminal-stream" class="editor-terminal__stream" role="log" aria-live="polite"></div>

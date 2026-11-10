@@ -12,6 +12,7 @@ import { updateTimers } from '../lua/index.js';
 import { getObstacles } from '../drone/index.js';
 import { checkPhysicsEvents } from './events.js';
 import { updateBatteryState } from './battery.js';
+import { advanceSimClock } from './sim-clock.js';
 import { updateDetachedCargoPhysics, updateMagnetGripper } from './magnet-gripper.js';
 import { processCommandQueue } from './commands.js';
 import { updateActiveFlight } from './flight-update.js';
@@ -31,6 +32,8 @@ export function updatePhysics(dt: number) {
     // hold the whole simulation still so ground contact / autopilot tracking
     // doesn't fight the drag, and so the tracer doesn't log it as a flight.
     if (isSceneEditDragActive) return;
+
+    advanceSimClock(dt);
 
     updateTimers();
     // Before the drones, so collisions and sensors see this frame's vehicle positions.

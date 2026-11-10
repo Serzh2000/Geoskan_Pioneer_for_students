@@ -14,6 +14,7 @@
 #editor-panel #terminal-session-select { width: 112px; min-width: 0; min-height: 30px; padding: 0 6px; border: 0; background: transparent; font-size: 12px; color: var(--text-color); }
 #editor-panel #terminal-session-select:hover { background-color: var(--pc-hover); }
 #editor-panel :is(.terminal-console-pane, .terminal-output-pane, .terminal-problems) { flex: 1 1 0; min-height: 0; }
+#editor-panel .terminal-ros2-pane[hidden] { display: none; }
 #editor-panel .terminal-console-pane { display: flex; }
 #editor-panel .terminal-console-main { display: block; flex: 1 1 0; min-width: 0; min-height: 0; overflow: auto; overscroll-behavior: contain; }
 #editor-panel .terminal-console-stream { padding: 12px 16px 4px; font: 13px/1.65 var(--font-mono); }
@@ -26,6 +27,30 @@
 #editor-panel #terminal-command-input { flex: 1; min-width: 0; height: 30px; min-height: 30px; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--text-color); caret-color: var(--accent-color); font: inherit; }
 #editor-panel #terminal-command-input:focus-visible { outline: none; }
 #editor-panel .terminal-command-form:focus-within { box-shadow: inset 0 -1px var(--accent-color); }
+#editor-panel .terminal-console-line--muted { color: var(--pc-muted); }
+#editor-panel #terminal-ros2-input { flex: 1; min-width: 0; height: 30px; min-height: 30px; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--text-color); caret-color: var(--accent-color); font: inherit; }
+#editor-panel #terminal-ros2-input:focus-visible { outline: none; }
+#editor-panel #terminal-ros2-input::placeholder { color: var(--pc-muted); opacity: 1; }
+#editor-panel .terminal-ros2-form .terminal-prompt { white-space: nowrap; }
+#editor-panel .terminal-ros2-form { position: sticky; bottom: 0; z-index: 1; padding-top: 4px; border-top: 1px solid var(--pc-line); background: var(--panel-bg); }
+#editor-panel .terminal-ros2-form.is-running .terminal-prompt { color: var(--pc-muted); }
+#editor-panel .ros2-stop { flex: none; min-height: 28px; padding: 0 10px; border: 1px solid var(--pc-line); border-radius: 6px; background: transparent; color: var(--text-strong); font: 600 12px/1 var(--font-mono); cursor: pointer; }
+#editor-panel .ros2-stop:hover { background: var(--pc-hover); }
+#editor-panel .ros2-intro { padding: 8px 16px 6px; font: 13px/1.6 var(--font-sans); color: var(--text-color); }
+#editor-panel .ros2-intro[hidden] { display: none; }
+#editor-panel .ros2-intro__title { margin: 0 0 4px; font: 700 14px/1.4 var(--font-sans); color: var(--text-strong); }
+#editor-panel .ros2-intro__subtitle { margin: 12px 0 4px; font: 700 11px/1.4 var(--font-sans); letter-spacing: .04em; text-transform: uppercase; color: var(--pc-muted); }
+#editor-panel .ros2-intro__text { margin: 0 0 4px; max-width: 78ch; color: var(--pc-muted); }
+#editor-panel .ros2-try { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+#editor-panel .ros2-try__item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-width: 0; padding: 4px 0; border-bottom: 1px solid var(--pc-line); }
+#editor-panel .ros2-try__code { min-width: 0; overflow-wrap: anywhere; font: 12.5px/1.5 var(--font-mono); color: var(--text-strong); background: transparent; }
+#editor-panel .ros2-try__code--block { display: block; margin: 6px 0; padding: 8px 10px; overflow-x: auto; border-radius: 6px; background: var(--pc-inset); white-space: pre; }
+#editor-panel .ros2-try__actions { display: inline-flex; gap: 4px; flex: none; }
+#editor-panel .ros2-try__btn { min-height: 28px; padding: 0 10px; border: 1px solid var(--pc-line); border-radius: 6px; background: transparent; color: var(--text-color); font: 600 12px/1 var(--font-sans); cursor: pointer; }
+#editor-panel .ros2-try__btn:hover { background: var(--pc-hover); color: var(--text-strong); }
+#editor-panel .ros2-try__btn--primary { border-color: var(--pc-accent); color: var(--pc-accent); }
+#editor-panel .ros2-try__cycle { margin: 8px 0 4px; }
+#editor-panel .ros2-try__cycle > summary { min-height: 28px; cursor: pointer; font-weight: 600; color: var(--text-strong); }
 #editor-panel .terminal-session-list { display: flex; flex-direction: column; flex: 0 0 140px; gap: 2px; overflow: auto; padding: 8px 4px; border-left: 1px solid var(--pc-line); }
 #editor-panel .terminal-session { min-height: 30px; padding: 4px 10px; border: 0; border-radius: 4px; background: transparent; color: var(--pc-muted); text-align: left; font: 12px/1.4 var(--font-sans); cursor: pointer; }
 #editor-panel .terminal-session[aria-selected='true'] { background: var(--pc-hover); color: var(--text-strong); }
@@ -43,6 +68,9 @@
     #editor-panel .editor-terminal__header { flex-wrap: wrap; gap: 0 8px; }
     #editor-panel .terminal-panel-actions { margin-left: auto; padding: 3px 0; }
     #editor-panel .terminal-session-list { display: none; }
+    #editor-panel .ros2-intro { padding: 10px 12px 0; }
+    #editor-panel .terminal-ros2-form { flex-wrap: wrap; padding-inline: 12px; }
+    #editor-panel .terminal-ros2-form #terminal-ros2-input { flex: 1 1 100%; order: 3; }
     #editor-panel .terminal-panel-tabs { gap: 14px; }
     #editor-panel .terminal-problem { flex-direction: column; gap: 3px; }
     #editor-panel .terminal-problem strong { flex-basis: auto; }
@@ -53,5 +81,7 @@
     #editor-panel .terminal-icon-btn { width: 44px; height: 44px; }
     #editor-panel .terminal-panel-tabs > button { min-height: 44px; }
     #editor-panel #terminal-session-select { min-height: 44px; }
+    #editor-panel :is(.ros2-try__btn, .ros2-stop) { min-height: 44px; }
+    #editor-panel #terminal-ros2-input { height: 44px; min-height: 44px; }
 }
 #editor-panel .editor-terminal.is-collapsed .editor-terminal__header { border-bottom: 0; }
