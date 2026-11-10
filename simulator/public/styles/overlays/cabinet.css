@@ -592,3 +592,14 @@ thead .cabt-g-name { background: var(--panel-bg-strong); height: 108px; color: v
 .cabt-tile:hover { transform: translateY(-1px); border-color: var(--accent-color); }
 .cabt-tile.is-active { border-color: var(--accent-color); box-shadow: 0 0 0 3px var(--accent-soft); }
 @media (max-width: 560px) { .cabt-sgroup__toggle { grid-template-columns: auto minmax(0, 1fr) auto; } .cabt-sgroup__toggle .cab-group__meter { display: none; } }
+
+/* Teacher: one-tap credit on a mission tile and on a whole block, no opening the mission and scrolling back up. */
+.cabt-tilewrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: stretch; }
+.cabt-quick { display: grid; place-items: center; width: 44px; min-height: 44px; padding: 0; color: var(--text-muted); background: transparent; border: 1.5px dashed var(--border-strong); border-radius: 12px; cursor: pointer; transition: background-color .15s ease, border-color .15s ease, color .15s ease; }
+.cabt-quick svg { width: 18px; height: 18px; }
+.cabt-quick:hover { color: var(--cab-ok); border-color: var(--cab-ok); border-style: solid; background: color-mix(in srgb, var(--cab-ok) 12%, transparent); }
+.cabt-quick.is-on { color: #fff; background: var(--cab-ok); border: 1.5px solid var(--cab-ok); }
+.cabt-quick.is-on:hover { background: color-mix(in srgb, var(--cab-ok) 75%, #000); }
+.cabt-quick:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+.cabt-sgroup__bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 0 0 8px; }
+@media (max-width: 560px) { .cabt-tiles { grid-template-columns: 1fr; } .cabt-quick { width: 52px; } }

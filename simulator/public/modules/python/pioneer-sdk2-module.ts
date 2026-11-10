@@ -312,6 +312,9 @@ class Pioneer:
             return False
         if self.wait_callback:
             await self._wait_flag(Event.COPTER_LANDED, give_up=lambda: self._fsm() == "IDLE" and not self._flags[Event.COPTER_LANDED])
+            # Автопилот уже на земле, а фоновый опрос ещё не заметил посадку: состояние не должно отставать от команды.
+            if self._fsm() == "IDLE" and self._state != FlyState.ON_LAND:
+                self._state = FlyState.ON_LAND
             self.__print_log("Посадка завершена")
         return True
 

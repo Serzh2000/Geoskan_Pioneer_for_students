@@ -156,6 +156,13 @@ function renderViewBanner(user: AccountUser | null): void {
     document.body.appendChild(bar);
 }
 
+/** Открывает панель «Аккаунт» сразу на входе или регистрации (напоминание об аккаунте при входе в обучение). */
+export function openAccountPanel(next: 'login' | 'register'): void {
+    view = next;
+    render();
+    showPanel();
+}
+
 /** Открывает личный кабинет текущего пользователя (нужно учителю после входа от имени ученика). */
 export function openOwnCabinet(): void {
     openCabinet();
