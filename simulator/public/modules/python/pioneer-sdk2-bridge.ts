@@ -74,6 +74,8 @@ export function installSdk2RuntimeAPI(w: Record<string, unknown>) {
         checkCancelled(id);
         const d = getDroneOrDefault(id);
         if (d.fsmState === 'IDLE' || d.fsmState === 'PREFLIGHT') return false;
+        // Запоздавшая команда скорости (например, из очереди cmd_vel узла ROS 2) не должна отменять уже начатую посадку.
+        if (d.fsmState === 'LANDING_PROCESS') return false;
         let x = finite(vx, 0);
         let y = finite(vy, 0);
         if (bodyFixed) {

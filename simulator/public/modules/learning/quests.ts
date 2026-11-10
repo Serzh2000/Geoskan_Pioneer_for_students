@@ -47,7 +47,7 @@ export type Quest = {
     requires: Array<[string, string]>;
     source: 'blocks' | 'academy' | 'sdk2' | 'bricks';
     /** Трек «Мини 2 · SDK2»: Python на pioneer_sdk2, дрон Пионер Мини 2. */
-    sdk2?: { waitMs: number; doneMessage: string; scene?: 'markers' };
+    sdk2?: { waitMs: number; doneMessage: string; scene?: 'markers'; swarm?: { neighbours: Array<{ code?: string }> } };
     /** Трек «Мини 2 · Bricks»: блоки Pioneer Bricks, дрон Пионер Мини 2. */
     bricks?: import('./bricks-quests.js').BricksQuestInfo;
     spec?: PioneerLessonSpec;

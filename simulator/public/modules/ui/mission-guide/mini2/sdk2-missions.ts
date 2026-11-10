@@ -2,13 +2,15 @@ import { solutionOf, type Sdk2Mission } from './sdk2-mission-kit.js';
 import { FLIGHT_MISSIONS } from './sdk2-missions-flight.js';
 import { SYSTEM_MISSIONS } from './sdk2-missions-systems.js';
 import { VISION_MISSIONS } from './sdk2-missions-vision.js';
+import { ROS2_MISSIONS } from './sdk2-missions-ros2.js';
+import { SWARM_MISSIONS } from './sdk2-missions-swarm.js';
 import { Sdk2Grader } from './sdk2-grade.js';
 import type { GuideEvaluation } from '../types.js';
 import type { LearningEvent } from '../../../core/learning-journal.js';
 import type { DroneSample } from '../evaluation/text/trace.js';
 
-/** Миссии трека «Мини 2 · SDK2» по порядку прохождения: 13 глав учебника `python-onboard`. */
-export const SDK2_MISSIONS: Sdk2Mission[] = [...FLIGHT_MISSIONS, ...SYSTEM_MISSIONS, ...VISION_MISSIONS];
+/** Миссии трека «Мини 2 · SDK2» по порядку прохождения: главы 1–13 учебника `python-onboard`, затем ROS 2 (14–17) и рой (18–19). Новые главы только в конец: порядок и id хранятся в прогрессе учеников. */
+export const SDK2_MISSIONS: Sdk2Mission[] = [...FLIGHT_MISSIONS, ...SYSTEM_MISSIONS, ...VISION_MISSIONS, ...ROS2_MISSIONS, ...SWARM_MISSIONS];
 export const SDK2_MISSION_BY_ID: Record<string, Sdk2Mission> = Object.fromEntries(SDK2_MISSIONS.map((mission) => [mission.id, mission]));
 export { solutionOf };
 

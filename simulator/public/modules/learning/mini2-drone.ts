@@ -6,7 +6,7 @@
 import { currentDroneId, drones } from '../core/state.js';
 import { droneModelProfile, droneSdk, type DroneModelId, type PythonSdkId } from '../core/drone-models.js';
 
-function selectDrone(id: string): boolean {
+export function selectDrone(id: string): boolean {
     const row = document.querySelector<HTMLElement>(`.pk-row[data-drone-id="${CSS.escape(id)}"]`);
     if (!row) return false;
     row.click();

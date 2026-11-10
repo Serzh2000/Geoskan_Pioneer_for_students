@@ -31,7 +31,7 @@ export function buildSdk2Quests(): Quest[] {
             requires: [],
             source: 'sdk2' as const,
             lesson,
-            sdk2: { waitMs: mission.waitMs, doneMessage: SDK2_DONE_MESSAGE, scene: mission.scene }
+            sdk2: { waitMs: mission.waitMs, doneMessage: SDK2_DONE_MESSAGE, scene: mission.scene, swarm: mission.swarm }
         };
     });
 }

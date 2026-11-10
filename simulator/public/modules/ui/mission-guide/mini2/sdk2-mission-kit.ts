@@ -22,8 +22,16 @@ export type Sdk2Mission = {
     waitMs: number;
     /** Сцена: ArUco-метки на полу (нижняя камера). */
     scene?: 'markers';
+    /**
+     * Миссии роя: рядом с дроном ученика на сцене стоят дроны-соседи (Мини 2). Если у соседа есть `code`, его программа
+     * стартует перед программой ученика и работает, пока идёт проверка; без `code` сосед только стоит в сети роя.
+     * Программа соседа не должна печатать: print идёт на дрон, который запущен последним (дрон ученика).
+     */
+    swarm?: { neighbours: Sdk2Neighbour[] };
     check: Sdk2Check;
 };
+
+export type Sdk2Neighbour = { code?: string };
 
 export const DONE_LINE = 'print("Опыт завершён")\n';
 
@@ -45,7 +53,7 @@ const indent = (text: string) => text.split('\n').map((line) => (line ? `    ${l
  * Каркас полётной программы: arm → takeoff → тело → land, а в finally — аварийная посадка и закрытие соединения.
  * `takeoff`/`land` можно заменить своим текстом (для миссий, где эти команды вписывает ученик).
  */
-export function flightProgram(options: { before?: string; body: string; head?: string; takeoff?: string; land?: string }): string {
+export function flightProgram(options: { before?: string; body: string; head?: string; takeoff?: string; land?: string; after?: string }): string {
     const takeoff = options.takeoff ?? 'pioneer.takeoff()';
     const land = options.land ?? 'pioneer.land()';
     return `${options.head ?? HEAD}${options.before ?? '\n'}in_air = False
@@ -62,7 +70,7 @@ finally:
     if in_air:
         pioneer.land()
     pioneer.disarm()
-    pioneer.close_connection()
+${options.after ? `${indent(options.after.trimEnd())}\n` : ''}    pioneer.close_connection()
 ${DONE_LINE}`;
 }
 

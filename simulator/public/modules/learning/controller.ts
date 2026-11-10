@@ -10,7 +10,7 @@
  * Чем писать, выбирает ученик: Blockly (практикум на блоках) или Lua / Python (уроки Академии).
  */
 import { currentDroneId, currentScriptLanguage, setCurrentScriptLanguage } from '../core/state.js';
-import { restartAndRunSimulation } from '../app/simulation-controls.js';
+import { restartAndRunSimulation, setBeforeStartHook } from '../app/simulation-controls.js';
 import {
     exportMainBricksProject, getEditorValue, getMainBlocklyWorkspace, isBlocklyEditorEnabled, loadMainBlocklyJson, loadMainBlocklyXml, loadMainBricksProject,
     serializeWorkspaceXml, setBlocklyEditorEnabled, setEditorLanguage, setEditorValue, syncScriptLanguageSelect
@@ -27,6 +27,7 @@ import { openStudentCabinet } from './student-cabinet.js';
 import { getAppMode, onAppModeChange, setAppMode, type AppMode } from './mode.js';
 import { buildTrackQuests } from './tracks.js';
 import { applyLearningDrone, ensureMini2Drone } from './mini2-drone.js';
+import { startNeighbourPrograms, syncSwarmNeighbours } from './swarm-scene.js';
 import { CHOICE_BY_ID, choiceForTrack, loadStoredChoice, saveStoredChoice, type Choice } from './track-choice.js';
 import { showTrackPicker, type PickerProgress } from './track-picker.js';
 import { ensurePyodide, isPyodideReady } from '../python/pyodide-loader.js';
@@ -369,6 +370,8 @@ async function openQuest(quest: Quest): Promise<void> {
     prepareQuestScene(quest);
     // Дрон под трек: треки Мини 2 идут на Пионере Мини 2, остальные на Базовом.
     applyLearningDrone(choice.model, choice.sdk);
+    // Миссии роя: рядом с дроном ученика стоят соседи; в остальных миссиях созданные раньше соседи убираются.
+    syncSwarmNeighbours(track === 'sdk2' ? quest.sdk2?.swarm?.neighbours.length ?? 0 : 0);
     try { await loadQuestWorkspace(quest); } catch (error) { console.error("[learning] workspace", error); }
     startChecklistTimer();
     window.setTimeout(() => renderHud(), 500);
@@ -964,6 +967,11 @@ export function openQuestById(forTrack: LearningTrack, questId: string): void {
 /** Подключается один раз при запуске, после initUI. */
 export function initLearningMode(): void {
     buildDom();
+    // Любой запуск в обучении (кнопка «Запуск» и «Проверить полёт») сначала запускает программы соседей миссии роя.
+    setBeforeStartHook(() => {
+        const swarm = getAppMode() === 'learning' && track === 'sdk2' ? activeQuest?.sdk2?.swarm : undefined;
+        return swarm ? startNeighbourPrograms(swarm.neighbours) : undefined;
+    });
     useTrack(loadTrack());
     enableHudDrag();
     initAccountUi(document.getElementById('account-host') ?? document.body, {

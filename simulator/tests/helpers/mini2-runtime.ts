@@ -4,6 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { PIONEER_SDK2_PRELUDE } from '../../public/modules/python/pioneer-sdk2-module.js';
 import { PIONEER_CV_PRELUDE } from '../../public/modules/python/pioneer-sdk-cv-prelude.js';
+import { ROS2_BOOTSTRAP, ROS2_PRELUDE } from '../../public/modules/python/ros2/prelude.js';
+import { SWARM_BOOTSTRAP, SWARM_PRELUDE } from '../../public/modules/python/swarm/prelude.js';
 import type { LearningEvent } from '../../public/modules/core/learning-journal.js';
 import type { DroneSample } from '../../public/modules/ui/mission-guide/evaluation/text/trace.js';
 import { findPython } from './python-sdk-harness.js';
@@ -32,8 +34,9 @@ function transformerSource(): string {
     return `${RUNTIME_SOURCE.slice(awaitStart, awaitEnd)}\n${RUNTIME_SOURCE.slice(classStart, classEnd)}`;
 }
 
-export type Mini2Run = { events: LearningEvent[]; samples: DroneSample[]; error: string | null };
-export type Mini2RunOptions = { seconds?: number; markers?: boolean };
+export type Mini2Run = { events: LearningEvent[]; samples: DroneSample[]; error: string | null; botErrors?: Record<string, string>; rosLog?: Array<[string, string]> };
+/** ros2 — программа использует rclpy; neighbours — соседи по рою (дроны Мини 2 с необязательной программой), как у миссий роя. */
+export type Mini2RunOptions = { seconds?: number; markers?: boolean; ros2?: boolean; neighbours?: Array<{ code?: string }> };
 
 export function runMini2Program(code: string, options: Mini2RunOptions = {}): Mini2Run {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mini2-mission-'));
@@ -42,11 +45,15 @@ export function runMini2Program(code: string, options: Mini2RunOptions = {}): Mi
             'sdk2.py': PIONEER_SDK2_PRELUDE,
             'cv.py': PIONEER_CV_PRELUDE,
             'transformer.py': transformerSource(),
+            'ros2.py': ROS2_PRELUDE,
+            'ros2_bootstrap.py': ROS2_BOOTSTRAP,
+            'swarm.py': SWARM_PRELUDE,
+            'swarm_bootstrap.py': SWARM_BOOTSTRAP,
             'program.py': code
         };
         for (const [name, text] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), text, 'utf8');
         const configPath = path.join(dir, 'config.json');
-        fs.writeFileSync(configPath, JSON.stringify({ seconds: options.seconds ?? 300, markers: Boolean(options.markers) }), 'utf8');
+        fs.writeFileSync(configPath, JSON.stringify({ seconds: options.seconds ?? 300, markers: Boolean(options.markers), ros2: Boolean(options.ros2), neighbours: options.neighbours ?? null }), 'utf8');
         const result = spawnSync(python!, [RUNNER, dir, configPath], { encoding: 'utf8', timeout: 90_000, maxBuffer: 256 * 1024 * 1024, env: { ...process.env, PYTHONIOENCODING: 'utf-8' } });
         const marker = result.stdout.lastIndexOf('@@RESULT@@');
         if (marker === -1) throw new Error(`Python не вернул результат:\n${result.stdout}\n${result.stderr}`);
