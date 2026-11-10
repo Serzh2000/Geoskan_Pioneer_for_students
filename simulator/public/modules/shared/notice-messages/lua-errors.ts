@@ -43,13 +43,6 @@ function parseVariableHint(body: string): { kind: string; name: string } | null 
     return match ? { kind: match[1], name: match[2] } : null;
 }
 
-/** The token after "near": `near '='` -> `=`, `near <eof>` -> `<eof>`. */
-function parseNear(body: string): string | null {
-    const quoted = body.match(/near '(.*)'\s*$/);
-    if (quoted) return quoted[1];
-    return /near <eof>/.test(body) ? '<eof>' : null;
-}
-
 const BLOCK_NAMES: Record<string, string> = {
     'if': 'if',
     'function': 'function',
@@ -597,6 +590,3 @@ export const luaDictionaryIds = {
     syntax: SYNTAX_ENTRIES.map((entry) => entry.id),
     runtime: RUNTIME_ENTRIES.map((entry) => entry.id)
 };
-
-// Exposed for tests of the small parsers.
-export const __luaParsers = { parseVariableHint, parseNear };

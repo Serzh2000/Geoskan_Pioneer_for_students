@@ -68,10 +68,3 @@ export function createTrussArenaMesh(size = 18, height = 5) {
 
     return group;
 }
-
-export function createTrussArena(group: THREE.Group) {
-    const frame = createTrussArenaMesh();
-    frame.name = 'Ограждение полигона';
-    frame.userData.defaultArenaFrame = true;
-    group.add(frame);
-}

@@ -436,30 +436,3 @@ export function renderApiDocs(
     restoreSearchSelection(container, searchSelection);
     mountOpenPreview(container);
 }
-
-export function openApiDocsCatalog(options: {
-    language?: ScriptLanguage;
-    query?: string;
-    previewKey?: string | null;
-} = {}) {
-    const language = options.language ?? uiState.language;
-    uiState.language = language;
-    if (typeof options.query === 'string') {
-        uiState.query = options.query;
-    }
-    uiState.openPreviewKey = options.previewKey ?? null;
-    uiState.category = 'all';
-    if (options.previewKey) {
-        uiState.expanded.add(options.previewKey);
-    }
-
-    // The reference now lives in a drawer inside the code editor
-    // (panels/editor-docs.ts) - open the editor, then the drawer.
-    // openPanel is a toggle: calling it for the active editor would hide
-    // the reference along with the editor instead of revealing it.
-    if (!document.getElementById('editor-panel')?.classList.contains('active')) {
-        (window as any).openPanel?.('editor-panel');
-    }
-    document.dispatchEvent(new CustomEvent('editor-docs:open'));
-    renderApiDocs(language);
-}

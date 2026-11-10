@@ -15,7 +15,7 @@ import { VEHICLES, vehicleKindFor, type VehicleKind } from './vehicle-kinds.js';
  * front of them and move right and slow down when one comes up from behind. Controlled junctions also have traffic lights
  * (signals.ts): on red a car stops at the stop line, on yellow it stops when it can still brake comfortably.
  */
-export const MODEL_LENGTH = 4.2, MODEL_WIDTH = 1.75;
+export const MODEL_WIDTH = 1.75;
 
 const A_LAT = 2.6;          // m/s^2 lateral acceleration allowed in a bend
 const BRAKE = 3.2;          // comfortable braking, m/s^2

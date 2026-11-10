@@ -119,7 +119,6 @@ export const after = (seconds: Input, body: Spec[]): Spec => ({ type: 'pioneer_a
 
 export const set = (name: string, value: Input): Spec => ({ type: 'variables_set', fields: { VAR: { variable: name } }, inputs: { VALUE: value } });
 export const get = (name: string): Variable => ({ variable: name });
-export const change = (name: string, delta: Input): Spec => ({ type: 'math_change', fields: { VAR: { variable: name } }, inputs: { DELTA: delta } });
 export const repeat = (times: Input, body: Spec[]): Spec => ({ type: 'controls_repeat_ext', inputs: { TIMES: times }, statements: { DO: body } });
 export const forRange = (name: string, from: Input, to: Input, by: Input, body: Spec[]): Spec => ({
     type: 'controls_for', fields: { VAR: { variable: name } }, inputs: { FROM: from, TO: to, BY: by }, statements: { DO: body }

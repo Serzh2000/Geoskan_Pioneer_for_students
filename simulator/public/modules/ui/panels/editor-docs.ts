@@ -7,8 +7,6 @@ import { EDITOR_DRAWER_OPEN_EVENT, announceEditorDrawerOpen, pinEditorPanelHoriz
  * the (rail-hidden) docs sidebar panel, so every existing renderApiDocs()
  * call keeps working unchanged.
  */
-export const EDITOR_DOCS_OPEN_EVENT = 'editor-docs:open';
-
 export function initEditorDocs(): void {
     const toggleBtn = document.getElementById('editor-docs-toggle-btn');
     const closeBtn = document.getElementById('editor-docs-close-btn');
@@ -37,8 +35,6 @@ export function initEditorDocs(): void {
     document.addEventListener(EDITOR_DRAWER_OPEN_EVENT, (event) => {
         if ((event as CustomEvent<string>).detail !== 'docs') close();
     });
-    // Fired by api-docs' openApiDocsCatalog() (e.g. from the mission guide).
-    document.addEventListener(EDITOR_DOCS_OPEN_EVENT, open);
 
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && !event.defaultPrevented && !panel.hidden

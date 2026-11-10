@@ -1,4 +1,4 @@
-import { currentDroneId, currentScriptLanguage, drones, setCurrentScriptLanguage, type ScriptLanguage } from '../../core/state.js';
+import { currentDroneId, currentScriptLanguage, drones, type ScriptLanguage } from '../../core/state.js';
 import { Blockly, type BlocklyNS } from '../blockly-mode/loader.js';
 import {
     buildMainEditorToolbox,
@@ -51,30 +51,9 @@ import {
     syncEditorModeVisibility
 } from './shell.js';
 import { editorIndexState, getEditorIndexCollections, getEditorIndexShellState } from './state.js';
-import { beginTemporaryDocument, restoreTemporaryDocument } from './temporary-document.js';
 
 // Какой набор блоков у редактора, решает модель текущего дрона: Мини 2 - Bricks, остальные - pioneer_*.
 setBlocklyModelProvider(() => drones[currentDroneId]?.model);
-
-export function beginTemporaryEditorDocument(): void {
-    if (editorIndexState.blocklyEnabled) saveBlocklyWorkspaceState();
-    beginTemporaryDocument(editorIndexState, { value: getTextEditorValue(), language: currentScriptLanguage });
-}
-
-export function restoreTemporaryEditorDocument(): void {
-    restoreTemporaryDocument(editorIndexState, document => {
-        setCurrentScriptLanguage(document.language);
-        setEditorTextLanguage(document.language);
-        if (document.blocklyEnabled && editorIndexState.blocklyWorkspace) {
-            editorIndexState.blocklyWorkspace.updateToolbox(buildMainEditorToolbox(document.language));
-            loadBlocklyWorkspace(document.language);
-        }
-        setTextEditorValue(document.value);
-        syncEditorModeVisibility();
-        syncScriptLanguageSelect();
-        layoutEditor();
-    });
-}
 
 function getEditorControllers() {
     return createEditorIndexControllers(editorIndexState, getEditorIndexCollections(), {
@@ -207,11 +186,6 @@ export async function setEditorValue(value: string): Promise<void> {
     }
 
     setTextEditorValue(value);
-}
-
-export function revealEditorStart(): void {
-    editorIndexState.editorInstance?.setPosition({ lineNumber: 1, column: 1 });
-    editorIndexState.editorInstance?.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
 }
 
 export async function setEditorLanguage(language: ScriptLanguage): Promise<void> {

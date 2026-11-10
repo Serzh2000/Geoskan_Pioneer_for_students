@@ -24,7 +24,6 @@ export const AXIS_COLORS: Record<AxisName, THREE.Color> = {
 };
 
 export const ACTIVE_COLOR = new THREE.Color('#ff6b00');
-export const NEUTRAL_COLOR = new THREE.Color('#a3afbf');
 export const CENTER_COLOR = new THREE.Color('#fff4e8');
 
 /** The only place gizmo sizes live: object-transform.ts reads it on activation, the style sync on every change. */
@@ -79,32 +78,6 @@ export function translateGeometryAlongAxis(object: THREE.Object3D, axis: AxisNam
     mesh.geometry.translate(axis === 'X' ? offset : 0, axis === 'Y' ? offset : 0, axis === 'Z' ? offset : 0);
     mesh.geometry.computeBoundingBox();
     mesh.geometry.computeBoundingSphere();
-}
-
-export function cloneBaseMaterial(
-    material: THREE.Material,
-    options: { color?: THREE.Color; opacity?: number; depthTest?: boolean } = {}
-) {
-    const clone = material.clone() as THREE.Material & {
-        color?: THREE.Color;
-        opacity?: number;
-        transparent?: boolean;
-        depthTest?: boolean;
-        depthWrite?: boolean;
-        toneMapped?: boolean;
-        fog?: boolean;
-    };
-
-    if (options.color && clone.color) clone.color.copy(options.color);
-    if (options.opacity !== undefined) {
-        clone.opacity = options.opacity;
-        clone.transparent = options.opacity < 1;
-    }
-    if (options.depthTest !== undefined) clone.depthTest = options.depthTest;
-    clone.depthWrite = false;
-    clone.toneMapped = false;
-    clone.fog = false;
-    return clone;
 }
 
 /**

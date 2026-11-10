@@ -20,11 +20,15 @@ Three.js-сцена, окружение, препятствия, модель д
 - [`public/modules/drone/index.ts`](#public-modules-drone-index-ts)
 - [`public/modules/drone/scene-events.ts`](#public-modules-drone-scene-events-ts)
 - [`public/modules/drone/trails.ts`](#public-modules-drone-trails-ts)
+- [`public/modules/environment/buildings-preview.html`](#public-modules-environment-buildings-preview-html)
 - [`public/modules/environment/ground.ts`](#public-modules-environment-ground-ts)
+- [`public/modules/environment/ground/layers.ts`](#public-modules-environment-ground-layers-ts)
+- [`public/modules/environment/ground/surface-textures.ts`](#public-modules-environment-ground-surface-textures-ts)
 - [`public/modules/environment/ground/textures.ts`](#public-modules-environment-ground-textures-ts)
 - [`public/modules/environment/ground/theme.ts`](#public-modules-environment-ground-theme-ts)
 - [`public/modules/environment/index.ts`](#public-modules-environment-index-ts)
 - [`public/modules/environment/lights.ts`](#public-modules-environment-lights-ts)
+- [`public/modules/environment/map-preview.html`](#public-modules-environment-map-preview-html)
 - [`public/modules/environment/obstacles.ts`](#public-modules-environment-obstacles-ts)
 - [`public/modules/environment/obstacles/arena-infrastructure.ts`](#public-modules-environment-obstacles-arena-infrastructure-ts)
 - [`public/modules/environment/obstacles/arena-infrastructure/arena-control-station.ts`](#public-modules-environment-obstacles-arena-infrastructure-arena-control-station-ts)
@@ -39,12 +43,17 @@ Three.js-сцена, окружение, препятствия, модель д
 - [`public/modules/environment/obstacles/arena-infrastructure/video-tower.ts`](#public-modules-environment-obstacles-arena-infrastructure-video-tower-ts)
 - [`public/modules/environment/obstacles/arena-scenery.ts`](#public-modules-environment-obstacles-arena-scenery-ts)
 - [`public/modules/environment/obstacles/arena.ts`](#public-modules-environment-obstacles-arena-ts)
+- [`public/modules/environment/obstacles/batching.ts`](#public-modules-environment-obstacles-batching-ts)
 - [`public/modules/environment/obstacles/buildings.ts`](#public-modules-environment-obstacles-buildings-ts)
+- [`public/modules/environment/obstacles/buildings/city-blocks.ts`](#public-modules-environment-obstacles-buildings-city-blocks-ts)
+- [`public/modules/environment/obstacles/buildings/city-specs.ts`](#public-modules-environment-obstacles-buildings-city-specs-ts)
 - [`public/modules/environment/obstacles/buildings/effects.ts`](#public-modules-environment-obstacles-buildings-effects-ts)
 - [`public/modules/environment/obstacles/buildings/incidents.ts`](#public-modules-environment-obstacles-buildings-incidents-ts)
 - [`public/modules/environment/obstacles/buildings/modules.ts`](#public-modules-environment-obstacles-buildings-modules-ts)
 - [`public/modules/environment/obstacles/buildings/shared.ts`](#public-modules-environment-obstacles-buildings-shared-ts)
 - [`public/modules/environment/obstacles/competition.ts`](#public-modules-environment-obstacles-competition-ts)
+- [`public/modules/environment/obstacles/far-proxy.ts`](#public-modules-environment-obstacles-far-proxy-ts)
+- [`public/modules/environment/obstacles/fpv-cube.ts`](#public-modules-environment-obstacles-fpv-cube-ts)
 - [`public/modules/environment/obstacles/house-prop.ts`](#public-modules-environment-obstacles-house-prop-ts)
 - [`public/modules/environment/obstacles/infra-props.ts`](#public-modules-environment-obstacles-infra-props-ts)
 - [`public/modules/environment/obstacles/linear.ts`](#public-modules-environment-obstacles-linear-ts)
@@ -76,6 +85,7 @@ Three.js-сцена, окружение, препятствия, модель д
 - [`public/modules/environment/training/patterns.ts`](#public-modules-environment-training-patterns-ts)
 - [`public/modules/environment/training/road-network.ts`](#public-modules-environment-training-road-network-ts)
 - [`public/modules/environment/training/settlement-policy.ts`](#public-modules-environment-training-settlement-policy-ts)
+- [`public/modules/environment/training/terrain-mesh.ts`](#public-modules-environment-training-terrain-mesh-ts)
 - [`public/modules/environment/training/town-frontage.ts`](#public-modules-environment-training-town-frontage-ts)
 - [`public/modules/environment/training/town-plan.ts`](#public-modules-environment-training-town-plan-ts)
 - [`public/modules/environment/training/town-sites.ts`](#public-modules-environment-training-town-sites-ts)
@@ -90,17 +100,20 @@ Three.js-сцена, окружение, препятствия, модель д
 - [`public/modules/environment/training/world-surfaces.ts`](#public-modules-environment-training-world-surfaces-ts)
 - [`public/modules/environment/training/world-vegetation.ts`](#public-modules-environment-training-world-vegetation-ts)
 - [`public/modules/environment/training/world-woods.ts`](#public-modules-environment-training-world-woods-ts)
+- [`public/modules/environment/training/yards.ts`](#public-modules-environment-training-yards-ts)
 - [`public/modules/environment/truss-arena.ts`](#public-modules-environment-truss-arena-ts)
 - [`public/modules/scene/core/camera-mode-state.ts`](#public-modules-scene-core-camera-mode-state-ts)
 - [`public/modules/scene/core/camera.ts`](#public-modules-scene-core-camera-ts)
 - [`public/modules/scene/core/DroneOrbitControls.ts`](#public-modules-scene-core-droneorbitcontrols-ts)
 - [`public/modules/scene/core/editor-overlays.ts`](#public-modules-scene-core-editor-overlays-ts)
+- [`public/modules/scene/core/fast-raycast.ts`](#public-modules-scene-core-fast-raycast-ts)
 - [`public/modules/scene/core/FreeFlyControls.ts`](#public-modules-scene-core-freeflycontrols-ts)
 - [`public/modules/scene/core/ground-feedback.ts`](#public-modules-scene-core-ground-feedback-ts)
 - [`public/modules/scene/core/ground-overview.ts`](#public-modules-scene-core-ground-overview-ts)
 - [`public/modules/scene/core/orientation-widget.ts`](#public-modules-scene-core-orientation-widget-ts)
 - [`public/modules/scene/core/pointer-drag.ts`](#public-modules-scene-core-pointer-drag-ts)
 - [`public/modules/scene/core/quality.ts`](#public-modules-scene-core-quality-ts)
+- [`public/modules/scene/core/render-gate.ts`](#public-modules-scene-core-render-gate-ts)
 - [`public/modules/scene/core/render-metrics.ts`](#public-modules-scene-core-render-metrics-ts)
 - [`public/modules/scene/core/scene-init.ts`](#public-modules-scene-core-scene-init-ts)
 - [`public/modules/scene/core/transform-controls-style-helpers.ts`](#public-modules-scene-core-transform-controls-style-helpers-ts)
@@ -115,6 +128,8 @@ Three.js-сцена, окружение, препятствия, модель д
 - [`public/modules/scene/objects/object-manager-support.ts`](#public-modules-scene-objects-object-manager-support-ts)
 - [`public/modules/scene/objects/object-manager.ts`](#public-modules-scene-objects-object-manager-ts)
 - [`public/modules/scene/objects/object-transform.ts`](#public-modules-scene-objects-object-transform-ts)
+- [`public/modules/scene/objects/placement-geometry.ts`](#public-modules-scene-objects-placement-geometry-ts)
+- [`public/modules/scene/objects/placement.ts`](#public-modules-scene-objects-placement-ts)
 
 ## Файлы
 
@@ -123,8 +138,8 @@ Three.js-сцена, окружение, препятствия, модель д
 
 - Исходник: [открыть файл](../../public/modules/drone-model/blender-model.ts)
 - Кратко: Сборка визуальных компонентов модели дрона.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `attachBlenderModel`, `createBlenderModel`, `loadTemplate`, `whenDroneModelReady`
+- Обнаружено функций/методов: 7
+- Ключевые символы: `attachBlenderModel`, `createBlenderModel`, `loadTemplate`, `rememberLedOffColor`, `setupBottomCamera`, `setupCameraGimbal`, `whenDroneModelReady`
 
 <a id="public-modules-drone-model-camera-antenna-ts"></a>
 ### `public/modules/drone-model/camera-antenna.ts`
@@ -171,8 +186,8 @@ Three.js-сцена, окружение, препятствия, модель д
 
 - Исходник: [открыть файл](../../public/modules/drone-model/index.ts)
 - Кратко: Сборка визуальных компонентов модели дрона.
-- Обнаружено функций/методов: 6
-- Ключевые символы: `animateRotors`, `applyLedMaterialState`, `createDroneModel`, `createLegacyDroneModel`, `shouldAnimateRotors`, `updateLEDs`
+- Обнаружено функций/методов: 8
+- Ключевые символы: `animateRotors`, `applyLedMaterialState`, `createDroneModel`, `createLegacyDroneModel`, `setDroneCameraTilt`, `shouldAnimateRotors`, `updateCameraTilt`, `updateLEDs`
 
 <a id="public-modules-drone-model-layout-ts"></a>
 ### `public/modules/drone-model/layout.ts`
@@ -210,8 +225,8 @@ Three.js-сцена, окружение, препятствия, модель д
 
 - Исходник: [открыть файл](../../public/modules/drone/camera-views.ts)
 - Кратко: Визуальное поведение дрона и спецэффекты.
-- Обнаружено функций/методов: 14
-- Ключевые символы: `bottomCameraOf`, `cameraFor`, `clampPosition`, `ensureUi`, `icon`, `installDragging`, `loadState`, `move`, `placeView`, `render`, `renderCameraViews`, `saveState`, `setOpen`, `stop`
+- Обнаружено функций/методов: 18
+- Ключевые символы: `bottomCameraOf`, `cameraFor`, `clampPosition`, `drawMarkers`, `ensureUi`, `fmt`, `icon`, `installDragging`, `loadState`, `move`, `placeView`, `render`, `renderCameraViews`, `saveState`, `setOpen`, `stop`, `svgLine`, `updateMarkerOverlay`
 
 <a id="public-modules-drone-crash-visuals-ts"></a>
 ### `public/modules/drone/crash-visuals.ts`
@@ -242,8 +257,15 @@ Three.js-сцена, окружение, препятствия, модель д
 
 - Исходник: [открыть файл](../../public/modules/drone/trails.ts)
 - Кратко: Визуальное поведение дрона и спецэффекты.
-- Обнаружено функций/методов: 10
-- Ключевые символы: `disposeTrailForDrone`, `getRingState`, `getTracerColorHex`, `getTracerPointSize`, `getTracerWidthPx`, `initTrailForDrone`, `shouldShowTracerLine`, `shouldShowTracerPoints`, `updateTrailForDrone`, `writePositions`
+- Обнаружено функций/методов: 12
+- Ключевые символы: `disposeTrailForDrone`, `getDotTexture`, `getRingState`, `getTracerColorHex`, `getTracerDotSpacing`, `getTracerPointSize`, `getTracerWidthPx`, `initTrailForDrone`, `shouldShowTracerLine`, `shouldShowTracerPoints`, `updateTrailForDrone`, `writePositions`
+
+<a id="public-modules-environment-buildings-preview-html"></a>
+### `public/modules/environment/buildings-preview.html`
+
+- Исходник: [открыть файл](../../public/modules/environment/buildings-preview.html)
+- Кратко: Создание окружения, земли, света и препятствий.
+- Обнаружено функций/методов: 0
 
 <a id="public-modules-environment-ground-ts"></a>
 ### `public/modules/environment/ground.ts`
@@ -252,6 +274,22 @@ Three.js-сцена, окружение, препятствия, модель д
 - Кратко: Создание окружения, земли, света и препятствий.
 - Обнаружено функций/методов: 3
 - Ключевые символы: `applyGroundTheme`, `createGround`, `ensureGroundThemeListener`
+
+<a id="public-modules-environment-ground-layers-ts"></a>
+### `public/modules/environment/ground/layers.ts`
+
+- Исходник: [открыть файл](../../public/modules/environment/ground/layers.ts)
+- Кратко: Создание окружения, земли, света и препятствий.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `layerMaterial`, `layerOffset`
+
+<a id="public-modules-environment-ground-surface-textures-ts"></a>
+### `public/modules/environment/ground/surface-textures.ts`
+
+- Исходник: [открыть файл](../../public/modules/environment/ground/surface-textures.ts)
+- Кратко: Создание окружения, земли, света и препятствий.
+- Обнаружено функций/методов: 8
+- Ключевые символы: `asphaltTexture`, `grassTexture`, `make`, `pavingTexture`, `periodicNoise`, `put`, `rng`, `smooth`
 
 <a id="public-modules-environment-ground-textures-ts"></a>
 ### `public/modules/environment/ground/textures.ts`
@@ -284,6 +322,13 @@ Three.js-сцена, окружение, препятствия, модель д
 - Кратко: Создание окружения, земли, света и препятствий.
 - Обнаружено функций/методов: 1
 - Ключевые символы: `setupLights`
+
+<a id="public-modules-environment-map-preview-html"></a>
+### `public/modules/environment/map-preview.html`
+
+- Исходник: [открыть файл](../../public/modules/environment/map-preview.html)
+- Кратко: Создание окружения, земли, света и препятствий.
+- Обнаружено функций/методов: 0
 
 <a id="public-modules-environment-obstacles-ts"></a>
 ### `public/modules/environment/obstacles.ts`
@@ -394,6 +439,14 @@ Three.js-сцена, окружение, препятствия, модель д
 - Кратко: Создание окружения, земли, света и препятствий.
 - Обнаружено функций/методов: 0
 
+<a id="public-modules-environment-obstacles-batching-ts"></a>
+### `public/modules/environment/obstacles/batching.ts`
+
+- Исходник: [открыть файл](../../public/modules/environment/obstacles/batching.ts)
+- Кратко: Создание окружения, земли, света и препятствий.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `batchStaticMeshes`, `signature`
+
 <a id="public-modules-environment-obstacles-buildings-ts"></a>
 ### `public/modules/environment/obstacles/buildings.ts`
 
@@ -401,6 +454,22 @@ Three.js-сцена, окружение, препятствия, модель д
 - Кратко: Создание окружения, земли, света и препятствий.
 - Обнаружено функций/методов: 10
 - Ключевые символы: `createApartmentBuildingMesh`, `finishShellMeshes`, `getBuildingWindowSlots`, `hasFireAt`, `isKeptSeparate`, `measureRoofTop`, `mergeBuildingShell`, `placeRoofMarker`, `rebuildApartmentBuilding`, `updateApartmentBuildingMetadata`
+
+<a id="public-modules-environment-obstacles-buildings-city-blocks-ts"></a>
+### `public/modules/environment/obstacles/buildings/city-blocks.ts`
+
+- Исходник: [открыть файл](../../public/modules/environment/obstacles/buildings/city-blocks.ts)
+- Кратко: Создание окружения, земли, света и препятствий.
+- Обнаружено функций/методов: 24
+- Ключевые символы: `assemble`, `buildBlock`, `buildHouse`, `cached`, `createCityBlockMesh`, `createCityHouseMesh`, `entrance`, `faceBox`, `flatRoof`, `free`, `gableRoof`, `hipRoof`, `Mesher.box`, `Mesher.for`, `Mesher.if`, `Mesher.quad`, `Mesher.solid`, `Mesher.tri`, `Mesher.triangle`, `mix`, `palette`, `q`, `rng`, `windows`
+
+<a id="public-modules-environment-obstacles-buildings-city-specs-ts"></a>
+### `public/modules/environment/obstacles/buildings/city-specs.ts`
+
+- Исходник: [открыть файл](../../public/modules/environment/obstacles/buildings/city-specs.ts)
+- Кратко: Создание окружения, земли, света и препятствий.
+- Обнаружено функций/методов: 1
+- Ключевые символы: `ring`
 
 <a id="public-modules-environment-obstacles-buildings-effects-ts"></a>
 ### `public/modules/environment/obstacles/buildings/effects.ts`
@@ -441,6 +510,22 @@ Three.js-сцена, окружение, препятствия, модель д
 - Кратко: Создание окружения, земли, света и препятствий.
 - Обнаружено функций/методов: 3
 - Ключевые символы: `createFlagMesh`, `createGateMesh`, `createPylonMesh`
+
+<a id="public-modules-environment-obstacles-far-proxy-ts"></a>
+### `public/modules/environment/obstacles/far-proxy.ts`
+
+- Исходник: [открыть файл](../../public/modules/environment/obstacles/far-proxy.ts)
+- Кратко: Создание окружения, земли, света и препятствий.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `attachFarProxy`, `measure`
+
+<a id="public-modules-environment-obstacles-fpv-cube-ts"></a>
+### `public/modules/environment/obstacles/fpv-cube.ts`
+
+- Исходник: [открыть файл](../../public/modules/environment/obstacles/fpv-cube.ts)
+- Кратко: Создание окружения, земли, света и препятствий.
+- Обнаружено функций/методов: 7
+- Ключевые символы: `createFpvCubeMesh`, `createFrameGeometry`, `createFrameTexture`, `px`, `roundedSquarePath`, `tube`, `updateFpvCubeHeight`
 
 <a id="public-modules-environment-obstacles-house-prop-ts"></a>
 ### `public/modules/environment/obstacles/house-prop.ts`
@@ -533,8 +618,8 @@ Three.js-сцена, окружение, препятствия, модель д
 
 - Исходник: [открыть файл](../../public/modules/environment/obstacles/nature.ts)
 - Кратко: Создание окружения, земли, света и препятствий.
-- Обнаружено функций/методов: 8
-- Ключевые символы: `bark`, `createBushMesh`, `createFirTreeMesh`, `createHillMesh`, `createParkPatch`, `createTreeMesh`, `foliage`, `noise`
+- Обнаружено функций/методов: 13
+- Ключевые символы: `bark`, `createBushMesh`, `createFirTreeMesh`, `createHillMesh`, `createMapleMesh`, `createParkPatch`, `createPineMesh`, `createPoplarMesh`, `createShrubMesh`, `createTreeMesh`, `foliage`, `noise`, `rootFlare`
 
 <a id="public-modules-environment-obstacles-pads-ts"></a>
 ### `public/modules/environment/obstacles/pads.ts`
@@ -683,16 +768,24 @@ Three.js-сцена, окружение, препятствия, модель д
 
 - Исходник: [открыть файл](../../public/modules/environment/training/settlement-policy.ts)
 - Кратко: Создание окружения, земли, света и препятствий.
-- Обнаружено функций/методов: 7
-- Ключевые символы: `canPlaceModel`, `districtAt`, `districts`, `homes`, `modelLimit`, `reserveFootprint`, `residentialNeighbors`
+- Обнаружено функций/методов: 8
+- Ключевые символы: `canPlaceModel`, `districtAt`, `districts`, `homes`, `modelLimit`, `nearestDistrict`, `reserveFootprint`, `residentialNeighbors`
+
+<a id="public-modules-environment-training-terrain-mesh-ts"></a>
+### `public/modules/environment/training/terrain-mesh.ts`
+
+- Исходник: [открыть файл](../../public/modules/environment/training/terrain-mesh.ts)
+- Кратко: Создание окружения, земли, света и препятствий.
+- Обнаружено функций/методов: 9
+- Ключевые символы: `buildSurroundings`, `buildTerrain`, `dirOf`, `groundColor`, `hash2`, `materials`, `smooth`, `terrainNoise`, `valueNoise`
 
 <a id="public-modules-environment-training-town-frontage-ts"></a>
 ### `public/modules/environment/training/town-frontage.ts`
 
 - Исходник: [открыть файл](../../public/modules/environment/training/town-frontage.ts)
 - Кратко: Создание окружения, земли, света и препятствий.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `finishTown`, `frontage`, `inflate`
+- Обнаружено функций/методов: 4
+- Ключевые символы: `finishTown`, `frontage`, `inflate`, `pickBlock`
 
 <a id="public-modules-environment-training-town-plan-ts"></a>
 ### `public/modules/environment/training/town-plan.ts`
@@ -755,8 +848,8 @@ Three.js-сцена, окружение, препятствия, модель д
 
 - Исходник: [открыть файл](../../public/modules/environment/training/world-network.ts)
 - Кратко: Создание окружения, земли, света и препятствий.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `addOverpass`, `addPromenade`, `addSidewalks`, `closeDeadEnds`
+- Обнаружено функций/методов: 8
+- Ключевые символы: `addOverpass`, `addPromenade`, `addSidewalks`, `blocked`, `closeDeadEnds`, `finishTurnarounds`, `planTurnarounds`, `turnarounds`
 
 <a id="public-modules-environment-training-world-places-ts"></a>
 ### `public/modules/environment/training/world-places.ts`
@@ -779,32 +872,40 @@ Three.js-сцена, окружение, препятствия, модель д
 
 - Исходник: [открыть файл](../../public/modules/environment/training/world-surfaces.ts)
 - Кратко: Создание окружения, земли, света и препятствий.
-- Обнаружено функций/методов: 8
-- Ключевые символы: `addJunctionSurfaces`, `addWorldSurfaces`, `batchStaticMeshes`, `disc`, `flatPolygon`, `projectHeading`, `riverOutline`, `signature`
+- Обнаружено функций/методов: 6
+- Ключевые символы: `addJunctionSurfaces`, `addWorldSurfaces`, `disc`, `flatPolygon`, `projectHeading`, `riverOutline`
 
 <a id="public-modules-environment-training-world-vegetation-ts"></a>
 ### `public/modules/environment/training/world-vegetation.ts`
 
 - Исходник: [открыть файл](../../public/modules/environment/training/world-vegetation.ts)
 - Кратко: Создание окружения, земли, света и препятствий.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `addWorldVegetation`
+- Обнаружено функций/методов: 3
+- Ключевые символы: `addWorldVegetation`, `baked`, `mergeSpecies`
 
 <a id="public-modules-environment-training-world-woods-ts"></a>
 ### `public/modules/environment/training/world-woods.ts`
 
 - Исходник: [открыть файл](../../public/modules/environment/training/world-woods.ts)
 - Кратко: Создание окружения, земли, света и препятствий.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `blocked`, `districtOfVillage`, `plantWorld`
+- Обнаружено функций/методов: 4
+- Ключевые символы: `blocked`, `districtOfVillage`, `hash`, `plantWorld`
+
+<a id="public-modules-environment-training-yards-ts"></a>
+### `public/modules/environment/training/yards.ts`
+
+- Исходник: [открыть файл](../../public/modules/environment/training/yards.ts)
+- Кратко: Создание окружения, земли, света и препятствий.
+- Обнаружено функций/методов: 4
+- Ключевые символы: `frame`, `key`, `yardOf`, `yardsOf`
 
 <a id="public-modules-environment-truss-arena-ts"></a>
 ### `public/modules/environment/truss-arena.ts`
 
 - Исходник: [открыть файл](../../public/modules/environment/truss-arena.ts)
 - Кратко: Создание окружения, земли, света и препятствий.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `createTruss`, `createTrussArena`, `createTrussArenaMesh`, `line`
+- Обнаружено функций/методов: 3
+- Ключевые символы: `createTruss`, `createTrussArenaMesh`, `line`
 
 <a id="public-modules-scene-core-camera-mode-state-ts"></a>
 ### `public/modules/scene/core/camera-mode-state.ts`
@@ -819,16 +920,16 @@ Three.js-сцена, окружение, препятствия, модель д
 
 - Исходник: [открыть файл](../../public/modules/scene/core/camera.ts)
 - Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `updateCamera`
+- Обнаружено функций/методов: 3
+- Ключевые символы: `moveToGroundOverview`, `smoothing`, `updateCamera`
 
 <a id="public-modules-scene-core-droneorbitcontrols-ts"></a>
 ### `public/modules/scene/core/DroneOrbitControls.ts`
 
 - Исходник: [открыть файл](../../public/modules/scene/core/DroneOrbitControls.ts)
 - Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
-- Обнаружено функций/методов: 17
-- Ключевые символы: `DroneOrbitControls.addEventListener`, `DroneOrbitControls.clampElevation`, `DroneOrbitControls.clampRadius`, `DroneOrbitControls.clampTargetToSceneBounds`, `DroneOrbitControls.dispatchEvent`, `DroneOrbitControls.enabled`, `DroneOrbitControls.if`, `DroneOrbitControls.isTransformInteractionActive`, `DroneOrbitControls.onPointerDown`, `DroneOrbitControls.onPointerMove`, `DroneOrbitControls.onPointerUp`, `DroneOrbitControls.onWheel`, `DroneOrbitControls.removeEventListener`, `DroneOrbitControls.setTarget`, `DroneOrbitControls.syncSphericalFromCamera`, `DroneOrbitControls.update`, `DroneOrbitControls.zoomTowardsPointer`
+- Обнаружено функций/методов: 35
+- Ключевые символы: `DroneOrbitControls.addEventListener`, `DroneOrbitControls.applyKeys`, `DroneOrbitControls.applyZoomStep`, `DroneOrbitControls.beginPan`, `DroneOrbitControls.clampElevation`, `DroneOrbitControls.clampRadius`, `DroneOrbitControls.clampTargetToSceneBounds`, `DroneOrbitControls.dispatchEvent`, `DroneOrbitControls.enabled`, `DroneOrbitControls.if`, `DroneOrbitControls.isTransformInteractionActive`, `DroneOrbitControls.movePinch`, `DroneOrbitControls.normalizedWheelDelta`, `DroneOrbitControls.onKeyDown`, `DroneOrbitControls.onPointerDown`, `DroneOrbitControls.onPointerMove`, `DroneOrbitControls.onPointerUp`, `DroneOrbitControls.onWheel`, `DroneOrbitControls.panBy`, `DroneOrbitControls.panScreen`, `DroneOrbitControls.panTo`, `DroneOrbitControls.rayAt`, `DroneOrbitControls.removeEventListener`, `DroneOrbitControls.setTarget`, `DroneOrbitControls.startPinch`, `DroneOrbitControls.syncSphericalFromCamera`, `DroneOrbitControls.tick`, `DroneOrbitControls.touchPair`, `DroneOrbitControls.unitsPerPixel`, `DroneOrbitControls.update`, `DroneOrbitControls.viewportRect`, `DroneOrbitControls.zoomAt`, `has`, `isEditableTarget`, `isSceneKeyTarget`
 
 <a id="public-modules-scene-core-editor-overlays-ts"></a>
 ### `public/modules/scene/core/editor-overlays.ts`
@@ -838,13 +939,21 @@ Three.js-сцена, окружение, препятствия, модель д
 - Обнаружено функций/методов: 1
 - Ключевые символы: `materialsOf`
 
+<a id="public-modules-scene-core-fast-raycast-ts"></a>
+### `public/modules/scene/core/fast-raycast.ts`
+
+- Исходник: [открыть файл](../../public/modules/scene/core/fast-raycast.ts)
+- Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
+- Обнаружено функций/методов: 12
+- Ключевые символы: `buildGrid`, `canAccelerate`, `clampCell`, `clipRay`, `computeIntersectionsWithGrid`, `corner`, `gridOf`, `installFastRaycast`, `minScale`, `testTriangle`, `triangleCount`, `visitCell`
+
 <a id="public-modules-scene-core-freeflycontrols-ts"></a>
 ### `public/modules/scene/core/FreeFlyControls.ts`
 
 - Исходник: [открыть файл](../../public/modules/scene/core/FreeFlyControls.ts)
 - Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `FreeFlyControls.enabled`, `FreeFlyControls.getBasis`, `FreeFlyControls.if`
+- Обнаружено функций/методов: 5
+- Ключевые символы: `FreeFlyControls.enabled`, `FreeFlyControls.getBasis`, `FreeFlyControls.if`, `isEditableTarget`, `isSceneKeyTarget`
 
 <a id="public-modules-scene-core-ground-feedback-ts"></a>
 ### `public/modules/scene/core/ground-feedback.ts`
@@ -883,8 +992,16 @@ Three.js-сцена, окружение, препятствия, модель д
 
 - Исходник: [открыть файл](../../public/modules/scene/core/quality.ts)
 - Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
-- Обнаружено функций/методов: 17
-- Ключевые символы: `applyTier`, `createGovernorState`, `decideTier`, `findSun`, `getQualitySetting`, `getQualityTier`, `loadSetting`, `lodFlags`, `manualTier`, `median`, `onQualityChange`, `parseQualitySetting`, `setQualitySetting`, `setShadowCasting`, `tierOfSetting`, `updateDistanceLod`, `updateQuality`
+- Обнаружено функций/методов: 23
+- Ключевые символы: `applyFarProxy`, `applyTier`, `createGovernorState`, `decideTier`, `findSun`, `followDroneWithSun`, `getQualitySetting`, `getQualityTier`, `gpuNameOf`, `initialTier`, `loadSetting`, `lodFlags`, `manualTier`, `median`, `onQualityChange`, `parseQualitySetting`, `setQualitySetting`, `setShadowCasting`, `shadowRedrawEvery`, `snapToStep`, `tierOfSetting`, `updateDistanceLod`, `updateQuality`
+
+<a id="public-modules-scene-core-render-gate-ts"></a>
+### `public/modules/scene/core/render-gate.ts`
+
+- Исходник: [открыть файл](../../public/modules/scene/core/render-gate.ts)
+- Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `holdSceneRendering`, `isSceneRenderingHeld`
 
 <a id="public-modules-scene-core-render-metrics-ts"></a>
 ### `public/modules/scene/core/render-metrics.ts`
@@ -907,16 +1024,16 @@ Three.js-сцена, окружение, препятствия, модель д
 
 - Исходник: [открыть файл](../../public/modules/scene/core/transform-controls-style-helpers.ts)
 - Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
-- Обнаружено функций/методов: 11
-- Ключевые символы: `applySharedRootStyling`, `axisFromName`, `cloneBaseMaterial`, `getAxisValue`, `getGeometryMetrics`, `removeByName`, `replaceRotateGeometry`, `scaleGeometryAlongAxis`, `setMaterialColor`, `translateGeometryAlongAxis`, `tuneMaterialLibrary`
+- Обнаружено функций/методов: 10
+- Ключевые символы: `applySharedRootStyling`, `axisFromName`, `getAxisValue`, `getGeometryMetrics`, `removeByName`, `ringGeometry`, `scaleGeometryAlongAxis`, `setMaterialColor`, `translateGeometryAlongAxis`, `tuneMaterialLibrary`
 
 <a id="public-modules-scene-core-transform-controls-style-ts"></a>
 ### `public/modules/scene/core/transform-controls-style.ts`
 
 - Исходник: [открыть файл](../../public/modules/scene/core/transform-controls-style.ts)
 - Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
-- Обнаружено функций/методов: 8
-- Ключевые символы: `addBackHalfArc`, `applyTransformControlsUxTheme`, `customizeLinearModeGroup`, `customizeRotateModeGroup`, `customizeScaleModeGroup`, `isAxisActive`, `syncCustomHighlight`, `syncTransformControlsStyle`
+- Обнаружено функций/методов: 10
+- Ключевые символы: `addRingLabel`, `applyTransformControlsUxTheme`, `createRingLabel`, `customizeLinearModeGroup`, `customizeRotateModeGroup`, `customizeRotatePickers`, `customizeScaleModeGroup`, `enlargeGroundPlane`, `pinRotateRings`, `syncTransformControlsStyle`
 
 <a id="public-modules-scene-interaction-input-helpers-ts"></a>
 ### `public/modules/scene/interaction/input-helpers.ts`
@@ -963,8 +1080,8 @@ Three.js-сцена, окружение, препятствия, модель д
 
 - Исходник: [открыть файл](../../public/modules/scene/interaction/transform.ts)
 - Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
-- Обнаружено функций/методов: 8
-- Ключевые символы: `createAxisLabel`, `getGuideLength`, `hideRotationGuide`, `setHelperRenderOrder`, `setupTransformControlListeners`, `showRotationGuide`, `syncRotationGuide`, `updateTransformModeDecorations`
+- Обнаружено функций/методов: 10
+- Ключевые символы: `beginDragSession`, `constrainDraggedHeight`, `ensureAngleReadout`, `finishDragSession`, `hideAngleReadout`, `placeAngleReadout`, `setupTransformControlListeners`, `showAngleReadout`, `snapDraggedPosition`, `updateTransformModeDecorations`
 
 <a id="public-modules-scene-objects-object-catalog-ts"></a>
 ### `public/modules/scene/objects/object-catalog.ts`
@@ -979,22 +1096,38 @@ Three.js-сцена, окружение, препятствия, модель д
 
 - Исходник: [открыть файл](../../public/modules/scene/objects/object-manager-support.ts)
 - Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
-- Обнаружено функций/методов: 5
-- Ключевые символы: `detachObjectFromGroupPreservingWorldTransform`, `disposeObjectHierarchyResources`, `getViewportCenterSelectionPoint`, `isDroneSceneObject`, `moveObjectIntoGroupPreservingWorldTransform`
+- Обнаружено функций/методов: 6
+- Ключевые символы: `detachObjectFromGroupPreservingWorldTransform`, `disposeMaterial`, `disposeObjectHierarchyResources`, `getViewportCenterSelectionPoint`, `isDroneSceneObject`, `moveObjectIntoGroupPreservingWorldTransform`
 
 <a id="public-modules-scene-objects-object-manager-ts"></a>
 ### `public/modules/scene/objects/object-manager.ts`
 
 - Исходник: [открыть файл](../../public/modules/scene/objects/object-manager.ts)
 - Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
-- Обнаружено функций/методов: 21
-- Ключевые символы: `addObject`, `appendPointToSelectedLinearObject`, `clearSceneSelection`, `deleteSceneObjectById`, `deleteSelectedObject`, `duplicateObject`, `finishSelectedLinearObjectEditing`, `focusSceneObjectById`, `getSelectedSceneObjectId`, `groupObjects`, `isSelectedLinearObjectEditingActive`, `resetDroneToOrigin`, `resetSelectedSceneObjectTransform`, `rotateSelectedSceneObjectByDegrees`, `selectSceneObjectById`, `setSceneObjectTransformMode`, `startSelectedLinearObjectEditing`, `toggleMultiSelectObjectById`, `ungroupObject`, `updateMarkerObjectSettings`, `updateSelectedSceneObject`
+- Обнаружено функций/методов: 22
+- Ключевые символы: `addObject`, `appendPointToSelectedLinearObject`, `clearSceneSelection`, `deleteSceneObjectById`, `deleteSelectedObject`, `duplicateObject`, `finishSelectedLinearObjectEditing`, `focusSceneObjectById`, `getSceneObjectTransformMode`, `getSelectedSceneObjectId`, `groupObjects`, `isSelectedLinearObjectEditingActive`, `resetDroneToOrigin`, `resetSelectedSceneObjectTransform`, `rotateSelectedSceneObjectByDegrees`, `selectSceneObjectById`, `setSceneObjectTransformMode`, `startSelectedLinearObjectEditing`, `toggleMultiSelectObjectById`, `ungroupObject`, `updateMarkerObjectSettings`, `updateSelectedSceneObject`
 
 <a id="public-modules-scene-objects-object-transform-ts"></a>
 ### `public/modules/scene/objects/object-transform.ts`
 
 - Исходник: [открыть файл](../../public/modules/scene/objects/object-transform.ts)
 - Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
-- Обнаружено функций/методов: 6
-- Ключевые символы: `activateTransformMode`, `clearSelectedObjectInitialTransform`, `rememberSelectedObjectInitialTransform`, `resetSelectedObjectToInitialTransform`, `rotateSelectedObjectByDegrees`, `setSelectedObjectTransform`
+- Обнаружено функций/методов: 7
+- Ключевые символы: `activateTransformMode`, `clearSelectedObjectInitialTransform`, `getActiveTransformMode`, `rememberSelectedObjectInitialTransform`, `resetSelectedObjectToInitialTransform`, `rotateSelectedObjectByDegrees`, `setSelectedObjectTransform`
+
+<a id="public-modules-scene-objects-placement-geometry-ts"></a>
+### `public/modules/scene/objects/placement-geometry.ts`
+
+- Исходник: [открыть файл](../../public/modules/scene/objects/placement-geometry.ts)
+- Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
+- Обнаружено функций/методов: 18
+- Ключевые символы: `applyFlatObjectDepthOffset`, `collectGroundSurfaces`, `draggedPivotZ`, `isGridSnapActive`, `isInside`, `isRestingOnSurface`, `keepObjectBottomAboveSurface`, `pivotZAboveSurface`, `sampleSurfaceZ`, `seatedPivotZ`, `seatObjectBottomOnSurface`, `shiftWorldZ`, `snapAngleRadians`, `snapPlanarPoint`, `snapToGrid`, `snapToGridSoft`, `softSnapPlanarPoint`, `verticalExtent`
+
+<a id="public-modules-scene-objects-placement-ts"></a>
+### `public/modules/scene/objects/placement.ts`
+
+- Исходник: [открыть файл](../../public/modules/scene/objects/placement.ts)
+- Кратко: Логика 3D-сцены, выбора объектов и трансформаций.
+- Обнаружено функций/методов: 17
+- Ключевые символы: `bindGridSnapToggle`, `groundSurfaceZAt`, `groundSurfaceZUnder`, `isGridSnapEnabled`, `isMarkerSceneObject`, `isSurfaceSeatable`, `keepMarkerAboveGround`, `mayFloat`, `measureFootprint`, `placeNewObject`, `readStoredSnap`, `seatOnGround`, `setGridSnapEnabled`, `setShiftHeld`, `shouldSnapToGrid`, `snapPointToGrid`, `syncGizmoRotationSnap`
 

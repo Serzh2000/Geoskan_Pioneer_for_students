@@ -96,11 +96,6 @@ const jitter = (rng: () => number) => (rng() + rng() + rng() - 1.5) / 1.5;
 
 // ---------------------------------------------------------------- сбор объектов сцены
 
-function isHiddenUp(node: THREE.Object3D): boolean {
-    for (let current: THREE.Object3D | null = node; current; current = current.parent) if (!current.visible) return true;
-    return false;
-}
-
 /** Углы коробки объекта в его собственных осях (учитывает поворот машины, а не раздувается до осевой коробки мира). */
 export function orientedBoxPoints(object: THREE.Object3D): THREE.Vector3[] | null {
     object.updateWorldMatrix(true, true);

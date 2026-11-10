@@ -3,22 +3,6 @@ import { getBlocklyGenerator, type BlocklyNS } from './loader.js';
 import { isBricksModelActive } from './bricks/model.js';
 import { BRICKS_STARTER_XML } from './bricks/starter.js';
 
-const LUA_RAW_CODE_BLOCK = 'lua_raw_code';
-const PY_RAW_CODE_BLOCK = 'py_raw_code';
-
-function getRawCodeBlockType(language: ScriptLanguage): string {
-    return language === 'lua' ? LUA_RAW_CODE_BLOCK : PY_RAW_CODE_BLOCK;
-}
-
-function getWorkspaceTopBlocks(workspace: BlocklyNS.WorkspaceSvg): BlocklyNS.Block[] {
-    return workspace.getTopBlocks(true).filter((block) => !block.isInsertionMarker());
-}
-
-function hasOnlySingleRawCodeBlock(language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg): boolean {
-    const blocks = getWorkspaceTopBlocks(workspace);
-    return blocks.length === 1 && blocks[0]?.type === getRawCodeBlockType(language) && !blocks[0].getNextBlock();
-}
-
 function compileGeneratorWorkspace(language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg): string {
     const generator = getBlocklyGenerator(language);
     const code = String(generator?.workspaceToCode(workspace) || '').trim();
@@ -44,32 +28,8 @@ function compileGeneratorWorkspace(language: ScriptLanguage, workspace: BlocklyN
     return [...prefix, ...(code ? [code] : []), ...suffix].join('\n');
 }
 
-function escapeXml(value: string): string {
-    return value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&apos;');
-}
-
 export function compileMainEditorWorkspace(language: ScriptLanguage, workspace: BlocklyNS.WorkspaceSvg): string {
-    return hasOnlySingleRawCodeBlock(language, workspace)
-        ? compileGeneratorWorkspace(language, workspace)
-        : compileGeneratorWorkspace(language, workspace);
-}
-
-export function createRawCodeWorkspaceXml(language: ScriptLanguage, code: string): string {
-    const blockType = getRawCodeBlockType(language);
-    const defaultCode = code.trim() || (language === 'lua' ? '-- ваш код' : '# ваш код');
-
-    return `
-        <xml xmlns="https://developers.google.com/blockly/xml">
-            <block type="${blockType}" x="32" y="32">
-                <field name="CODE">${escapeXml(defaultCode)}</field>
-            </block>
-        </xml>
-    `;
+    return compileGeneratorWorkspace(language, workspace);
 }
 
 // Фаза 7 плана, шаг 4: стартовый workspace одинаковый для обоих языков —

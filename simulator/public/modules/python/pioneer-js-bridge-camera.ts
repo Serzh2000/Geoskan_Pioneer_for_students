@@ -130,10 +130,6 @@ export function getDroneCameraCvFrame(id: string): CameraFramePixels | null {
     return pixels;
 }
 
-export function captureDroneCameraFrameDataUrl(id: string) {
-    return captureDroneCameraFrameImageDataUrl(id);
-}
-
 export { captureDroneCameraFrameBlob };
 
 function buildTimestampSlug() {

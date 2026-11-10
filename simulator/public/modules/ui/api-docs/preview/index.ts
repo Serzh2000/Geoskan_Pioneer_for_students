@@ -36,7 +36,6 @@ export class ApiMethodPreview {
     private destroyed = false;
     private isIntersecting = true;
     private visibilityObserver: IntersectionObserver | null = null;
-    private viewMode: ApiPreviewViewMode = 'angled';
     private readonly handleResize = () => {
         this.syncSize();
         this.renderFrame(performance.now(), 1 / 60);
@@ -179,7 +178,6 @@ export class ApiMethodPreview {
     private applyViewMode(mode: ApiPreviewViewMode): void {
         if (!this.camera) return;
 
-        this.viewMode = mode;
         this.root.dataset.apiPreviewView = mode;
         this.camera.fov = mode === 'topdown' ? 16 : 30;
 

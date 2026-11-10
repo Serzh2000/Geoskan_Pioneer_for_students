@@ -6,6 +6,24 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - [`public/modules/editor/autofit.ts`](#public-modules-editor-autofit-ts)
 - [`public/modules/editor/blockly-mode/blockly-core.ts`](#public-modules-editor-blockly-mode-blockly-core-ts)
+- [`public/modules/editor/blockly-mode/bricks/block-spec-table.ts`](#public-modules-editor-blockly-mode-bricks-block-spec-table-ts)
+- [`public/modules/editor/blockly-mode/bricks/block-spec-types.ts`](#public-modules-editor-blockly-mode-bricks-block-spec-types-ts)
+- [`public/modules/editor/blockly-mode/bricks/block-specs.ts`](#public-modules-editor-blockly-mode-bricks-block-specs-ts)
+- [`public/modules/editor/blockly-mode/bricks/blocks.ts`](#public-modules-editor-blockly-mode-bricks-blocks-ts)
+- [`public/modules/editor/blockly-mode/bricks/colour-field.ts`](#public-modules-editor-blockly-mode-bricks-colour-field-ts)
+- [`public/modules/editor/blockly-mode/bricks/compile.ts`](#public-modules-editor-blockly-mode-bricks-compile-ts)
+- [`public/modules/editor/blockly-mode/bricks/constants.ts`](#public-modules-editor-blockly-mode-bricks-constants-ts)
+- [`public/modules/editor/blockly-mode/bricks/drone-only.ts`](#public-modules-editor-blockly-mode-bricks-drone-only-ts)
+- [`public/modules/editor/blockly-mode/bricks/generator-kit.ts`](#public-modules-editor-blockly-mode-bricks-generator-kit-ts)
+- [`public/modules/editor/blockly-mode/bricks/generators-ai.ts`](#public-modules-editor-blockly-mode-bricks-generators-ai-ts)
+- [`public/modules/editor/blockly-mode/bricks/generators.ts`](#public-modules-editor-blockly-mode-bricks-generators-ts)
+- [`public/modules/editor/blockly-mode/bricks/index.ts`](#public-modules-editor-blockly-mode-bricks-index-ts)
+- [`public/modules/editor/blockly-mode/bricks/model.ts`](#public-modules-editor-blockly-mode-bricks-model-ts)
+- [`public/modules/editor/blockly-mode/bricks/python-lib-extra.ts`](#public-modules-editor-blockly-mode-bricks-python-lib-extra-ts)
+- [`public/modules/editor/blockly-mode/bricks/python-lib.ts`](#public-modules-editor-blockly-mode-bricks-python-lib-ts)
+- [`public/modules/editor/blockly-mode/bricks/starter.ts`](#public-modules-editor-blockly-mode-bricks-starter-ts)
+- [`public/modules/editor/blockly-mode/bricks/toolbox.ts`](#public-modules-editor-blockly-mode-bricks-toolbox-ts)
+- [`public/modules/editor/blockly-mode/bricks/xml.ts`](#public-modules-editor-blockly-mode-bricks-xml-ts)
 - [`public/modules/editor/blockly-mode/catalog.ts`](#public-modules-editor-blockly-mode-catalog-ts)
 - [`public/modules/editor/blockly-mode/index.ts`](#public-modules-editor-blockly-mode-index-ts)
 - [`public/modules/editor/blockly-mode/loader.ts`](#public-modules-editor-blockly-mode-loader-ts)
@@ -42,6 +60,7 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - [`public/modules/editor/blockly-mode/workspace-xml.ts`](#public-modules-editor-blockly-mode-workspace-xml-ts)
 - [`public/modules/editor/blockly-mode/workspace.ts`](#public-modules-editor-blockly-mode-workspace-ts)
 - [`public/modules/editor/blockly.ts`](#public-modules-editor-blockly-ts)
+- [`public/modules/editor/blockly/bounded-metrics.ts`](#public-modules-editor-blockly-bounded-metrics-ts)
 - [`public/modules/editor/blockly/legacy-values.ts`](#public-modules-editor-blockly-legacy-values-ts)
 - [`public/modules/editor/blockly/support.ts`](#public-modules-editor-blockly-support-ts)
 - [`public/modules/editor/blockly/toggle-controller.ts`](#public-modules-editor-blockly-toggle-controller-ts)
@@ -49,6 +68,7 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - [`public/modules/editor/dom.ts`](#public-modules-editor-dom-ts)
 - [`public/modules/editor/index.ts`](#public-modules-editor-index-ts)
 - [`public/modules/editor/index/api.ts`](#public-modules-editor-index-api-ts)
+- [`public/modules/editor/index/bricks-api.ts`](#public-modules-editor-index-bricks-api-ts)
 - [`public/modules/editor/index/controllers.ts`](#public-modules-editor-index-controllers-ts)
 - [`public/modules/editor/index/helpers.ts`](#public-modules-editor-index-helpers-ts)
 - [`public/modules/editor/index/runtime.ts`](#public-modules-editor-index-runtime-ts)
@@ -57,11 +77,16 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - [`public/modules/editor/index/state.ts`](#public-modules-editor-index-state-ts)
 - [`public/modules/editor/index/temporary-document.ts`](#public-modules-editor-index-temporary-document-ts)
 - [`public/modules/editor/monaco/completion.ts`](#public-modules-editor-monaco-completion-ts)
+- [`public/modules/editor/monaco/completion/call-context.ts`](#public-modules-editor-monaco-completion-call-context-ts)
 - [`public/modules/editor/monaco/completion/catalog.ts`](#public-modules-editor-monaco-completion-catalog-ts)
 - [`public/modules/editor/monaco/completion/context.ts`](#public-modules-editor-monaco-completion-context-ts)
 - [`public/modules/editor/monaco/completion/entries.ts`](#public-modules-editor-monaco-completion-entries-ts)
+- [`public/modules/editor/monaco/completion/signature.ts`](#public-modules-editor-monaco-completion-signature-ts)
+- [`public/modules/editor/monaco/completion/snippets.ts`](#public-modules-editor-monaco-completion-snippets-ts)
 - [`public/modules/editor/monaco/completion/types.ts`](#public-modules-editor-monaco-completion-types-ts)
+- [`public/modules/editor/monaco/completion/user-symbols.ts`](#public-modules-editor-monaco-completion-user-symbols-ts)
 - [`public/modules/editor/monaco/hover.ts`](#public-modules-editor-monaco-hover-ts)
+- [`public/modules/editor/monaco/signature-help.ts`](#public-modules-editor-monaco-signature-help-ts)
 - [`public/modules/editor/monaco/syntax.ts`](#public-modules-editor-monaco-syntax-ts)
 - [`public/modules/editor/runtime.ts`](#public-modules-editor-runtime-ts)
 - [`public/modules/editor/text-editor.ts`](#public-modules-editor-text-editor-ts)
@@ -93,14 +118,21 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - [`public/modules/ui/mission-guide/academy/catalog.ts`](#public-modules-ui-mission-guide-academy-catalog-ts)
 - [`public/modules/ui/mission-guide/academy/evaluation/drone.ts`](#public-modules-ui-mission-guide-academy-evaluation-drone-ts)
 - [`public/modules/ui/mission-guide/academy/evaluation/flight.ts`](#public-modules-ui-mission-guide-academy-evaluation-flight-ts)
+- [`public/modules/ui/mission-guide/academy/evaluation/lua-extras.ts`](#public-modules-ui-mission-guide-academy-evaluation-lua-extras-ts)
+- [`public/modules/ui/mission-guide/academy/evaluation/sdk-extras.ts`](#public-modules-ui-mission-guide-academy-evaluation-sdk-extras-ts)
+- [`public/modules/ui/mission-guide/academy/evaluation/sdk-python.ts`](#public-modules-ui-mission-guide-academy-evaluation-sdk-python-ts)
 - [`public/modules/ui/mission-guide/academy/evaluation/signals-code.ts`](#public-modules-ui-mission-guide-academy-evaluation-signals-code-ts)
 - [`public/modules/ui/mission-guide/academy/evaluation/telemetry.ts`](#public-modules-ui-mission-guide-academy-evaluation-telemetry-ts)
 - [`public/modules/ui/mission-guide/academy/evaluation/time.ts`](#public-modules-ui-mission-guide-academy-evaluation-time-ts)
 - [`public/modules/ui/mission-guide/academy/evaluation/vision.ts`](#public-modules-ui-mission-guide-academy-evaluation-vision-ts)
+- [`public/modules/ui/mission-guide/academy/explainers.ts`](#public-modules-ui-mission-guide-academy-explainers-ts)
 - [`public/modules/ui/mission-guide/academy/practices/camera-aruco.ts`](#public-modules-ui-mission-guide-academy-practices-camera-aruco-ts)
 - [`public/modules/ui/mission-guide/academy/practices/drone.ts`](#public-modules-ui-mission-guide-academy-practices-drone-ts)
 - [`public/modules/ui/mission-guide/academy/practices/flight.ts`](#public-modules-ui-mission-guide-academy-practices-flight-ts)
 - [`public/modules/ui/mission-guide/academy/practices/index.ts`](#public-modules-ui-mission-guide-academy-practices-index-ts)
+- [`public/modules/ui/mission-guide/academy/practices/lua-extras.ts`](#public-modules-ui-mission-guide-academy-practices-lua-extras-ts)
+- [`public/modules/ui/mission-guide/academy/practices/sdk-extras.ts`](#public-modules-ui-mission-guide-academy-practices-sdk-extras-ts)
+- [`public/modules/ui/mission-guide/academy/practices/sdk-python.ts`](#public-modules-ui-mission-guide-academy-practices-sdk-python-ts)
 - [`public/modules/ui/mission-guide/academy/practices/shared.ts`](#public-modules-ui-mission-guide-academy-practices-shared-ts)
 - [`public/modules/ui/mission-guide/academy/practices/signals-code.ts`](#public-modules-ui-mission-guide-academy-practices-signals-code-ts)
 - [`public/modules/ui/mission-guide/academy/practices/telemetry.ts`](#public-modules-ui-mission-guide-academy-practices-telemetry-ts)
@@ -108,95 +140,56 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - [`public/modules/ui/mission-guide/academy/practices/vision-shared.ts`](#public-modules-ui-mission-guide-academy-practices-vision-shared-ts)
 - [`public/modules/ui/mission-guide/academy/practices/visual-navigation.ts`](#public-modules-ui-mission-guide-academy-practices-visual-navigation-ts)
 - [`public/modules/ui/mission-guide/academy/scene.ts`](#public-modules-ui-mission-guide-academy-scene-ts)
-- [`public/modules/ui/mission-guide/course-navigation.ts`](#public-modules-ui-mission-guide-course-navigation-ts)
-- [`public/modules/ui/mission-guide/curriculum.ts`](#public-modules-ui-mission-guide-curriculum-ts)
-- [`public/modules/ui/mission-guide/curriculum/constants.ts`](#public-modules-ui-mission-guide-curriculum-constants-ts)
-- [`public/modules/ui/mission-guide/curriculum/lua.ts`](#public-modules-ui-mission-guide-curriculum-lua-ts)
-- [`public/modules/ui/mission-guide/curriculum/python.ts`](#public-modules-ui-mission-guide-curriculum-python-ts)
-- [`public/modules/ui/mission-guide/evaluation/index.ts`](#public-modules-ui-mission-guide-evaluation-index-ts)
-- [`public/modules/ui/mission-guide/evaluation/lua-led-sequence.ts`](#public-modules-ui-mission-guide-evaluation-lua-led-sequence-ts)
-- [`public/modules/ui/mission-guide/evaluation/lua-led-single.ts`](#public-modules-ui-mission-guide-evaluation-lua-led-single-ts)
+- [`public/modules/ui/mission-guide/book/localize.ts`](#public-modules-ui-mission-guide-book-localize-ts)
 - [`public/modules/ui/mission-guide/evaluation/text/graders.ts`](#public-modules-ui-mission-guide-evaluation-text-graders-ts)
 - [`public/modules/ui/mission-guide/evaluation/text/index.ts`](#public-modules-ui-mission-guide-evaluation-text-index-ts)
 - [`public/modules/ui/mission-guide/evaluation/text/snapshot.ts`](#public-modules-ui-mission-guide-evaluation-text-snapshot-ts)
 - [`public/modules/ui/mission-guide/evaluation/text/timeline.ts`](#public-modules-ui-mission-guide-evaluation-text-timeline-ts)
 - [`public/modules/ui/mission-guide/evaluation/text/trace.ts`](#public-modules-ui-mission-guide-evaluation-text-trace-ts)
-- [`public/modules/ui/mission-guide/evaluation/xml.ts`](#public-modules-ui-mission-guide-evaluation-xml-ts)
-- [`public/modules/ui/mission-guide/interactions.ts`](#public-modules-ui-mission-guide-interactions-ts)
-- [`public/modules/ui/mission-guide/interactions/academy.ts`](#public-modules-ui-mission-guide-interactions-academy-ts)
-- [`public/modules/ui/mission-guide/interactions/actions.ts`](#public-modules-ui-mission-guide-interactions-actions-ts)
-- [`public/modules/ui/mission-guide/interactions/context.ts`](#public-modules-ui-mission-guide-interactions-context-ts)
-- [`public/modules/ui/mission-guide/interactions/launch.ts`](#public-modules-ui-mission-guide-interactions-launch-ts)
-- [`public/modules/ui/mission-guide/interactions/learning.ts`](#public-modules-ui-mission-guide-interactions-learning-ts)
-- [`public/modules/ui/mission-guide/interactions/navigation.ts`](#public-modules-ui-mission-guide-interactions-navigation-ts)
-- [`public/modules/ui/mission-guide/interactions/reference.ts`](#public-modules-ui-mission-guide-interactions-reference-ts)
-- [`public/modules/ui/mission-guide/interactions/text-actions.ts`](#public-modules-ui-mission-guide-interactions-text-actions-ts)
-- [`public/modules/ui/mission-guide/interactions/walkthrough.ts`](#public-modules-ui-mission-guide-interactions-walkthrough-ts)
-- [`public/modules/ui/mission-guide/lessons.ts`](#public-modules-ui-mission-guide-lessons-ts)
-- [`public/modules/ui/mission-guide/lessons/catalog/lua-text.ts`](#public-modules-ui-mission-guide-lessons-catalog-lua-text-ts)
-- [`public/modules/ui/mission-guide/lessons/catalog/lua.ts`](#public-modules-ui-mission-guide-lessons-catalog-lua-ts)
-- [`public/modules/ui/mission-guide/lessons/catalog/python-text.ts`](#public-modules-ui-mission-guide-lessons-catalog-python-text-ts)
-- [`public/modules/ui/mission-guide/lessons/catalog/python.ts`](#public-modules-ui-mission-guide-lessons-catalog-python-ts)
-- [`public/modules/ui/mission-guide/lessons/expanded/lua-flight.ts`](#public-modules-ui-mission-guide-lessons-expanded-lua-flight-ts)
-- [`public/modules/ui/mission-guide/lessons/expanded/lua-foundations.ts`](#public-modules-ui-mission-guide-lessons-expanded-lua-foundations-ts)
-- [`public/modules/ui/mission-guide/lessons/expanded/lua.ts`](#public-modules-ui-mission-guide-lessons-expanded-lua-ts)
-- [`public/modules/ui/mission-guide/lessons/expanded/python-flight.ts`](#public-modules-ui-mission-guide-lessons-expanded-python-flight-ts)
-- [`public/modules/ui/mission-guide/lessons/expanded/python-foundations.ts`](#public-modules-ui-mission-guide-lessons-expanded-python-foundations-ts)
-- [`public/modules/ui/mission-guide/lessons/expanded/python.ts`](#public-modules-ui-mission-guide-lessons-expanded-python-ts)
-- [`public/modules/ui/mission-guide/lessons/flight/lua-core.ts`](#public-modules-ui-mission-guide-lessons-flight-lua-core-ts)
-- [`public/modules/ui/mission-guide/lessons/flight/lua-mission.ts`](#public-modules-ui-mission-guide-lessons-flight-lua-mission-ts)
-- [`public/modules/ui/mission-guide/lessons/flight/lua.ts`](#public-modules-ui-mission-guide-lessons-flight-lua-ts)
-- [`public/modules/ui/mission-guide/lessons/flight/python-core.ts`](#public-modules-ui-mission-guide-lessons-flight-python-core-ts)
-- [`public/modules/ui/mission-guide/lessons/flight/python-mission.ts`](#public-modules-ui-mission-guide-lessons-flight-python-mission-ts)
-- [`public/modules/ui/mission-guide/lessons/flight/python.ts`](#public-modules-ui-mission-guide-lessons-flight-python-ts)
-- [`public/modules/ui/mission-guide/lessons/led/lua.ts`](#public-modules-ui-mission-guide-lessons-led-lua-ts)
-- [`public/modules/ui/mission-guide/lessons/led/python.ts`](#public-modules-ui-mission-guide-lessons-led-python-ts)
-- [`public/modules/ui/mission-guide/lessons/support/builders.ts`](#public-modules-ui-mission-guide-lessons-support-builders-ts)
-- [`public/modules/ui/mission-guide/lessons/support/compilers.ts`](#public-modules-ui-mission-guide-lessons-support-compilers-ts)
-- [`public/modules/ui/mission-guide/lessons/support/snippets.ts`](#public-modules-ui-mission-guide-lessons-support-snippets-ts)
-- [`public/modules/ui/mission-guide/lessons/support/state-helpers.ts`](#public-modules-ui-mission-guide-lessons-support-state-helpers-ts)
-- [`public/modules/ui/mission-guide/lessons/text/lua.ts`](#public-modules-ui-mission-guide-lessons-text-lua-ts)
-- [`public/modules/ui/mission-guide/lessons/text/python.ts`](#public-modules-ui-mission-guide-lessons-text-python-ts)
-- [`public/modules/ui/mission-guide/modal.ts`](#public-modules-ui-mission-guide-modal-ts)
-- [`public/modules/ui/mission-guide/panel.ts`](#public-modules-ui-mission-guide-panel-ts)
-- [`public/modules/ui/mission-guide/render.ts`](#public-modules-ui-mission-guide-render-ts)
-- [`public/modules/ui/mission-guide/render/academy.ts`](#public-modules-ui-mission-guide-render-academy-ts)
-- [`public/modules/ui/mission-guide/render/blockly-copy.ts`](#public-modules-ui-mission-guide-render-blockly-copy-ts)
-- [`public/modules/ui/mission-guide/render/check-step.ts`](#public-modules-ui-mission-guide-render-check-step-ts)
-- [`public/modules/ui/mission-guide/render/course-outline.ts`](#public-modules-ui-mission-guide-render-course-outline-ts)
-- [`public/modules/ui/mission-guide/render/learning.ts`](#public-modules-ui-mission-guide-render-learning-ts)
-- [`public/modules/ui/mission-guide/render/navigation.ts`](#public-modules-ui-mission-guide-render-navigation-ts)
-- [`public/modules/ui/mission-guide/render/results.ts`](#public-modules-ui-mission-guide-render-results-ts)
-- [`public/modules/ui/mission-guide/render/shared.ts`](#public-modules-ui-mission-guide-render-shared-ts)
-- [`public/modules/ui/mission-guide/render/support.ts`](#public-modules-ui-mission-guide-render-support-ts)
-- [`public/modules/ui/mission-guide/render/text-guide.ts`](#public-modules-ui-mission-guide-render-text-guide-ts)
-- [`public/modules/ui/mission-guide/render/walkthrough.ts`](#public-modules-ui-mission-guide-render-walkthrough-ts)
-- [`public/modules/ui/mission-guide/state.ts`](#public-modules-ui-mission-guide-state-ts)
-- [`public/modules/ui/mission-guide/state/storage.ts`](#public-modules-ui-mission-guide-state-storage-ts)
-- [`public/modules/ui/mission-guide/support/blockly-preview.ts`](#public-modules-ui-mission-guide-support-blockly-preview-ts)
-- [`public/modules/ui/mission-guide/support/camera-view.ts`](#public-modules-ui-mission-guide-support-camera-view-ts)
-- [`public/modules/ui/mission-guide/support/logging.ts`](#public-modules-ui-mission-guide-support-logging-ts)
-- [`public/modules/ui/mission-guide/support/monaco-preview.ts`](#public-modules-ui-mission-guide-support-monaco-preview-ts)
-- [`public/modules/ui/mission-guide/support/outline-navigation.ts`](#public-modules-ui-mission-guide-support-outline-navigation-ts)
-- [`public/modules/ui/mission-guide/support/scene-preview.ts`](#public-modules-ui-mission-guide-support-scene-preview-ts)
+- [`public/modules/ui/mission-guide/lessons/pioneer/catalog.ts`](#public-modules-ui-mission-guide-lessons-pioneer-catalog-ts)
+- [`public/modules/ui/mission-guide/lessons/pioneer/dsl.ts`](#public-modules-ui-mission-guide-lessons-pioneer-dsl-ts)
+- [`public/modules/ui/mission-guide/lessons/pioneer/flight-basics.ts`](#public-modules-ui-mission-guide-lessons-pioneer-flight-basics-ts)
+- [`public/modules/ui/mission-guide/lessons/pioneer/flight-shapes.ts`](#public-modules-ui-mission-guide-lessons-pioneer-flight-shapes-ts)
+- [`public/modules/ui/mission-guide/lessons/pioneer/grade.ts`](#public-modules-ui-mission-guide-lessons-pioneer-grade-ts)
+- [`public/modules/ui/mission-guide/lessons/pioneer/helpers.ts`](#public-modules-ui-mission-guide-lessons-pioneer-helpers-ts)
+- [`public/modules/ui/mission-guide/lessons/pioneer/light.ts`](#public-modules-ui-mission-guide-lessons-pioneer-light-ts)
+- [`public/modules/ui/mission-guide/lessons/pioneer/logic.ts`](#public-modules-ui-mission-guide-lessons-pioneer-logic-ts)
+- [`public/modules/ui/mission-guide/lessons/pioneer/projects.ts`](#public-modules-ui-mission-guide-lessons-pioneer-projects-ts)
+- [`public/modules/ui/mission-guide/lessons/pioneer/types.ts`](#public-modules-ui-mission-guide-lessons-pioneer-types-ts)
+- [`public/modules/ui/mission-guide/mini2/bricks-missions.ts`](#public-modules-ui-mission-guide-mini2-bricks-missions-ts)
+- [`public/modules/ui/mission-guide/mini2/bricks-xml-kit.ts`](#public-modules-ui-mission-guide-mini2-bricks-xml-kit-ts)
+- [`public/modules/ui/mission-guide/mini2/sdk2-grade.ts`](#public-modules-ui-mission-guide-mini2-sdk2-grade-ts)
+- [`public/modules/ui/mission-guide/mini2/sdk2-mission-kit.ts`](#public-modules-ui-mission-guide-mini2-sdk2-mission-kit-ts)
+- [`public/modules/ui/mission-guide/mini2/sdk2-missions-flight.ts`](#public-modules-ui-mission-guide-mini2-sdk2-missions-flight-ts)
+- [`public/modules/ui/mission-guide/mini2/sdk2-missions-systems.ts`](#public-modules-ui-mission-guide-mini2-sdk2-missions-systems-ts)
+- [`public/modules/ui/mission-guide/mini2/sdk2-missions-vision.ts`](#public-modules-ui-mission-guide-mini2-sdk2-missions-vision-ts)
+- [`public/modules/ui/mission-guide/mini2/sdk2-missions.ts`](#public-modules-ui-mission-guide-mini2-sdk2-missions-ts)
 - [`public/modules/ui/mission-guide/types.ts`](#public-modules-ui-mission-guide-types-ts)
-- [`public/modules/ui/mission-guide/walkthrough/content.ts`](#public-modules-ui-mission-guide-walkthrough-content-ts)
-- [`public/modules/ui/mission-guide/walkthrough/runtime.ts`](#public-modules-ui-mission-guide-walkthrough-runtime-ts)
-- [`public/modules/ui/mission-guide/walkthrough/state.ts`](#public-modules-ui-mission-guide-walkthrough-state-ts)
 - [`public/modules/ui/mobile-editor-viewport.ts`](#public-modules-ui-mobile-editor-viewport-ts)
 - [`public/modules/ui/modal-focus.ts`](#public-modules-ui-modal-focus-ts)
 - [`public/modules/ui/onboarding-tour.ts`](#public-modules-ui-onboarding-tour-ts)
 - [`public/modules/ui/panels/channel-monitor.ts`](#public-modules-ui-panels-channel-monitor-ts)
+- [`public/modules/ui/panels/drone-link-panel.ts`](#public-modules-ui-panels-drone-link-panel-ts)
 - [`public/modules/ui/panels/editor-docs.ts`](#public-modules-ui-panels-editor-docs-ts)
 - [`public/modules/ui/panels/editor-drawers.ts`](#public-modules-ui-panels-editor-drawers-ts)
+- [`public/modules/ui/panels/editor-drone-upload.ts`](#public-modules-ui-panels-editor-drone-upload-ts)
+- [`public/modules/ui/panels/editor-model-switch.ts`](#public-modules-ui-panels-editor-model-switch-ts)
 - [`public/modules/ui/panels/editor-terminal.ts`](#public-modules-ui-panels-editor-terminal-ts)
+- [`public/modules/ui/panels/gamepad-dialog.ts`](#public-modules-ui-panels-gamepad-dialog-ts)
+- [`public/modules/ui/panels/journal-lines.ts`](#public-modules-ui-panels-journal-lines-ts)
 - [`public/modules/ui/panels/led-matrix.ts`](#public-modules-ui-panels-led-matrix-ts)
+- [`public/modules/ui/panels/notice-policy.ts`](#public-modules-ui-panels-notice-policy-ts)
+- [`public/modules/ui/panels/rail-a11y.ts`](#public-modules-ui-panels-rail-a11y-ts)
+- [`public/modules/ui/panels/rail-status.ts`](#public-modules-ui-panels-rail-status-ts)
 - [`public/modules/ui/panels/rail-tooltip.ts`](#public-modules-ui-panels-rail-tooltip-ts)
 - [`public/modules/ui/panels/rail-visibility.ts`](#public-modules-ui-panels-rail-visibility-ts)
+- [`public/modules/ui/panels/scene-stop.ts`](#public-modules-ui-panels-scene-stop-ts)
 - [`public/modules/ui/panels/sidebar-debug.ts`](#public-modules-ui-panels-sidebar-debug-ts)
 - [`public/modules/ui/panels/sidebar.ts`](#public-modules-ui-panels-sidebar-ts)
 - [`public/modules/ui/panels/simulation-notice.ts`](#public-modules-ui-panels-simulation-notice-ts)
 - [`public/modules/ui/panels/stats.ts`](#public-modules-ui-panels-stats-ts)
+- [`public/modules/ui/panels/terminal-session.ts`](#public-modules-ui-panels-terminal-session-ts)
+- [`public/modules/ui/panels/terminal-workbench.ts`](#public-modules-ui-panels-terminal-workbench-ts)
 - [`public/modules/ui/scene-hotbar/index.ts`](#public-modules-ui-scene-hotbar-index-ts)
 - [`public/modules/ui/scene-manager/bindings.ts`](#public-modules-ui-scene-manager-bindings-ts)
 - [`public/modules/ui/scene-manager/bindings/actions.ts`](#public-modules-ui-scene-manager-bindings-actions-ts)
@@ -235,7 +228,6 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - [`public/modules/ui/scene-manager/view-state.ts`](#public-modules-ui-scene-manager-view-state-ts)
 - [`public/modules/ui/scene-onboarding.ts`](#public-modules-ui-scene-onboarding-ts)
 - [`public/modules/ui/vehicle-settings.ts`](#public-modules-ui-vehicle-settings-ts)
-- [`public/modules/ui/viewport-anchor.ts`](#public-modules-ui-viewport-anchor-ts)
 - [`public/modules/ui/workspace-view.ts`](#public-modules-ui-workspace-view-ts)
 
 ## Файлы
@@ -245,8 +237,8 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/editor/autofit.ts)
 - Кратко: Исходный модуль симулятора.
-- Обнаружено функций/методов: 18
-- Ключевые символы: `applySidebarAutofitWidth`, `autoExpandEditorPanelToContent`, `boundingBox`, `clampSidebarWidth`, `expandEditorPanelForBlockly`, `getBlocklyBlocksWidth`, `getRequiredBlocklySidebarWidth`, `getRequiredLuaSidebarWidth`, `getSidebarChromeWidth`, `getSidebarCurrentWidth`, `getSidebarPanelsElement`, `isMobileSidebarLayout`, `isStarterLuaScript`, `maybeAutoExpandTextEditorPanel`, `measureTextWidth`, `normalizeMultilineText`, `restoreEditorPanelWidthAfterBlockly`, `scheduleEditorPanelAutofit`
+- Обнаружено функций/методов: 20
+- Ключевые символы: `applySidebarAutofitWidth`, `autoExpandEditorPanelToContent`, `boundingBox`, `clampSidebarWidth`, `expandEditorPanelForBlockly`, `getBlocklyBlocksWidth`, `getRequiredBlocklySidebarWidth`, `getRequiredLuaSidebarWidth`, `getSceneSafeMaxWidth`, `getSidebarChromeWidth`, `getSidebarCurrentWidth`, `getSidebarPanelsElement`, `isMobileSidebarLayout`, `isStarterLuaScript`, `maybeAutoExpandTextEditorPanel`, `measureTextWidth`, `normalizeMultilineText`, `restoreEditorPanelWidthAfterBlockly`, `scheduleEditorPanelAutofit`, `storeEditorWidth`
 
 <a id="public-modules-editor-blockly-mode-blockly-core-ts"></a>
 ### `public/modules/editor/blockly-mode/blockly-core.ts`
@@ -255,6 +247,145 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Кратко: Исходный модуль симулятора.
 - Обнаружено функций/методов: 4
 - Ключевые символы: `applyRussianMessages`, `getBlocklyGenerator`, `initBlocklyDefinitions`, `registerRussianGeneratorHooks`
+
+<a id="public-modules-editor-blockly-mode-bricks-block-spec-table-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/block-spec-table.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/block-spec-table.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-editor-blockly-mode-bricks-block-spec-types-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/block-spec-types.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/block-spec-types.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-editor-blockly-mode-bricks-block-specs-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/block-specs.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/block-specs.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 5
+- Ключевые символы: `allBricksBlockTypes`, `allBricksNativeTypes`, `bricksDroneOnlyTypes`, `bricksSpecsByCategory`, `isBricksBlockType`
+
+<a id="public-modules-editor-blockly-mode-bricks-blocks-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/blocks.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/blocks.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 9
+- Ключевые символы: `createField`, `defineFromSpec`, `definePaintObject`, `defineStartBlock`, `flush`, `layout`, `registerBricksBlockDefinitions`, `setPaintShape`, `syncPaintInput`
+
+<a id="public-modules-editor-blockly-mode-bricks-colour-field-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/colour-field.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/colour-field.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 3
+- Ключевые символы: `FieldHexColour.for`, `FieldHexColour.if`, `normalise`
+
+<a id="public-modules-editor-blockly-mode-bricks-compile-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/compile.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/compile.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 7
+- Ключевые символы: `asCode`, `buildProgram`, `compileBricksWorkspace`, `indentBody`, `refreshWarnings`, `requiredModel`, `topLevelBlocks`
+
+<a id="public-modules-editor-blockly-mode-bricks-constants-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/constants.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/constants.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `bricksType`, `nativeBricksType`
+
+<a id="public-modules-editor-blockly-mode-bricks-drone-only-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/drone-only.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/drone-only.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 3
+- Ключевые символы: `applyBricksDroneOnly`, `refreshBricksWarning`, `setCompileWarning`
+
+<a id="public-modules-editor-blockly-mode-bricks-generator-kit-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/generator-kit.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/generator-kit.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 17
+- Ключевые символы: `aiCommon`, `arg`, `asText`, `camera`, `collectBricksDefinitions`, `colourHelper`, `define`, `definitions`, `imageName`, `importCv2`, `importDeque`, `importNumpy`, `inferCache`, `pioneer`, `statement`, `value`, `variableOfParent`
+
+<a id="public-modules-editor-blockly-mode-bricks-generators-ai-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/generators-ai.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/generators-ai.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 1
+- Ключевые символы: `join`
+
+<a id="public-modules-editor-blockly-mode-bricks-generators-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/generators.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/generators.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 1
+- Ключевые символы: `installBricksGenerators`
+
+<a id="public-modules-editor-blockly-mode-bricks-index-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/index.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/index.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 1
+- Ключевые символы: `registerBricksBlocks`
+
+<a id="public-modules-editor-blockly-mode-bricks-model-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/model.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/model.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 4
+- Ключевые символы: `blocklyStateKeySuffix`, `currentBlocklyModelId`, `isBricksModelActive`, `setBlocklyModelProvider`
+
+<a id="public-modules-editor-blockly-mode-bricks-python-lib-extra-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/python-lib-extra.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/python-lib-extra.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-editor-blockly-mode-bricks-python-lib-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/python-lib.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/python-lib.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-editor-blockly-mode-bricks-starter-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/starter.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/starter.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-editor-blockly-mode-bricks-toolbox-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/toolbox.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/toolbox.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 5
+- Ключевые символы: `buildBricksToolbox`, `inputsOf`, `renderBlock`, `renderCategory`, `shadowXml`
+
+<a id="public-modules-editor-blockly-mode-bricks-xml-ts"></a>
+### `public/modules/editor/blockly-mode/bricks/xml.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly-mode/bricks/xml.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 6
+- Ключевые символы: `bricksProjectFileName`, `loadBricksProject`, `looksLikeBricksProject`, `parseBricksProject`, `renameBlockTypes`, `serializeBricksProject`
 
 <a id="public-modules-editor-blockly-mode-catalog-ts"></a>
 ### `public/modules/editor/blockly-mode/catalog.ts`
@@ -412,8 +543,8 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/editor/blockly-mode/pioneer/targets/compile.ts)
 - Кратко: Исходный модуль симулятора.
-- Обнаружено функций/методов: 9
-- Ключевые символы: `buildHeaderDefinitions`, `collectDefinitionsText`, `collectTopLevelParts`, `compilePioneerLuaSource`, `compilePioneerPythonSource`, `compilePioneerWorkspace`, `getGenerator`, `joinStatements`, `statementCode`
+- Обнаружено функций/методов: 10
+- Ключевые символы: `buildHeaderDefinitions`, `collectDefinitionsText`, `collectTopLevelParts`, `compilePioneerLuaSource`, `compilePioneerPythonSource`, `compilePioneerWorkspace`, `getGenerator`, `isProcedure`, `joinStatements`, `statementCode`
 
 <a id="public-modules-editor-blockly-mode-pioneer-targets-lua-fsm-ts"></a>
 ### `public/modules/editor/blockly-mode/pioneer/targets/lua-fsm.ts`
@@ -530,8 +661,8 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/editor/blockly-mode/workspace.ts)
 - Кратко: Исходный модуль симулятора.
-- Обнаружено функций/методов: 8
-- Ключевые символы: `compileGeneratorWorkspace`, `compileMainEditorWorkspace`, `createRawCodeWorkspaceXml`, `createStarterWorkspaceXml`, `escapeXml`, `getRawCodeBlockType`, `getWorkspaceTopBlocks`, `hasOnlySingleRawCodeBlock`
+- Обнаружено функций/методов: 3
+- Ключевые символы: `compileGeneratorWorkspace`, `compileMainEditorWorkspace`, `createStarterWorkspaceXml`
 
 <a id="public-modules-editor-blockly-ts"></a>
 ### `public/modules/editor/blockly.ts`
@@ -539,6 +670,14 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Исходник: [открыть файл](../../public/modules/editor/blockly.ts)
 - Кратко: Исходный модуль симулятора.
 - Обнаружено функций/методов: 0
+
+<a id="public-modules-editor-blockly-bounded-metrics-ts"></a>
+### `public/modules/editor/blockly/bounded-metrics.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/blockly/bounded-metrics.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `boundedRange`, `registerBoundedMetricsManager`
 
 <a id="public-modules-editor-blockly-legacy-values-ts"></a>
 ### `public/modules/editor/blockly/legacy-values.ts`
@@ -569,8 +708,8 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/editor/blockly/workspace-controller.ts)
 - Кратко: Исходный модуль симулятора.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `ensureBlocklyWorkspace`, `loadBlocklyWorkspace`, `retargetBlocklyWorkspace`, `saveBlocklyWorkspaceState`
+- Обнаружено функций/методов: 5
+- Ключевые символы: `ensureBlocklyWorkspace`, `loadBlocklyWorkspace`, `retargetBlocklyWorkspace`, `saveBlocklyWorkspaceState`, `switchBlocklyModel`
 
 <a id="public-modules-editor-dom-ts"></a>
 ### `public/modules/editor/dom.ts`
@@ -592,8 +731,16 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/editor/index/api.ts)
 - Кратко: Исходный модуль симулятора.
-- Обнаружено функций/методов: 20
-- Ключевые символы: `beginTemporaryEditorDocument`, `ensureBlocklyWorkspace`, `getEditorControllers`, `getEditorValue`, `getMainBlocklyWorkspace`, `getSavedEditorDraft`, `initEditor`, `isBlocklyEditorEnabled`, `layoutEditor`, `loadBlocklyWorkspace`, `loadMainBlocklyXml`, `restoreTemporaryEditorDocument`, `retargetBlocklyWorkspace`, `revealEditorStart`, `saveBlocklyWorkspaceState`, `setBlocklyEditorEnabled`, `setEditorLanguage`, `setEditorTheme`, `setEditorValue`, `syncScriptLanguageSelect`
+- Обнаружено функций/методов: 19
+- Ключевые символы: `ensureBlocklyWorkspace`, `getEditorControllers`, `getEditorValue`, `getMainBlocklyWorkspace`, `getSavedEditorDraft`, `initEditor`, `isBlocklyEditorEnabled`, `layoutEditor`, `loadBlocklyWorkspace`, `loadMainBlocklyJson`, `loadMainBlocklyXml`, `retargetBlocklyWorkspace`, `saveBlocklyWorkspaceState`, `setBlocklyEditorEnabled`, `setEditorLanguage`, `setEditorTheme`, `setEditorValue`, `syncBlocklyWithDroneModel`, `syncScriptLanguageSelect`
+
+<a id="public-modules-editor-index-bricks-api-ts"></a>
+### `public/modules/editor/index/bricks-api.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/index/bricks-api.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `exportMainBricksProject`, `loadMainBricksProject`
 
 <a id="public-modules-editor-index-controllers-ts"></a>
 ### `public/modules/editor/index/controllers.ts`
@@ -659,13 +806,21 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Обнаружено функций/методов: 3
 - Ключевые символы: `ensureLanguageRegistered`, `setupCompletionProvider`, `toMonacoSuggestions`
 
+<a id="public-modules-editor-monaco-completion-call-context-ts"></a>
+### `public/modules/editor/monaco/completion/call-context.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/monaco/completion/call-context.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 3
+- Ключевые символы: `calleeBefore`, `findCallContext`, `name`
+
 <a id="public-modules-editor-monaco-completion-catalog-ts"></a>
 ### `public/modules/editor/monaco/completion/catalog.ts`
 
 - Исходник: [открыть файл](../../public/modules/editor/monaco/completion/catalog.ts)
 - Кратко: Исходный модуль симулятора.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `buildCompletionCatalog`, `getOwnerMembers`, `inferLuaMemberSeparator`, `LUA_EV_ENTRIES`
+- Обнаружено функций/методов: 8
+- Ключевые символы: `activePythonCatalog`, `activePythonDocTable`, `buildCompletionCatalog`, `currentDroneUsesSdk2`, `getOwnerMembers`, `groupOf`, `inferLuaMemberSeparator`, `LUA_EV_ENTRIES`
 
 <a id="public-modules-editor-monaco-completion-context-ts"></a>
 ### `public/modules/editor/monaco/completion/context.ts`
@@ -680,16 +835,40 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/editor/monaco/completion/entries.ts)
 - Кратко: Исходный модуль симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `getLuaCompletionEntries`, `getPythonCompletionEntries`
+- Обнаружено функций/методов: 4
+- Ключевые символы: `getLuaArgumentTriggerEntries`, `getLuaCompletionEntries`, `getPythonCompletionEntries`, `reservedNames`
+
+<a id="public-modules-editor-monaco-completion-signature-ts"></a>
+### `public/modules/editor/monaco/completion/signature.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/monaco/completion/signature.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 8
+- Ключевые символы: `docTable`, `eventConstantEntries`, `getArgumentEntries`, `parseParameterRanges`, `push`, `resolveDocKey`, `resolveSignature`, `syntaxFromInsertText`
+
+<a id="public-modules-editor-monaco-completion-snippets-ts"></a>
+### `public/modules/editor/monaco/completion/snippets.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/monaco/completion/snippets.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 3
+- Ключевые символы: `callback`, `keyword`, `template`
 
 <a id="public-modules-editor-monaco-completion-types-ts"></a>
 ### `public/modules/editor/monaco/completion/types.ts`
 
 - Исходник: [открыть файл](../../public/modules/editor/monaco/completion/types.ts)
 - Кратко: Исходный модуль симулятора.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `createDocEntry`, `dedupeDocEntries`, `dedupeSuggestions`, `parseApiMemberKey`
+- Обнаружено функций/методов: 5
+- Ключевые символы: `createDocEntry`, `dedupeDocEntries`, `dedupeSuggestions`, `formatEntryDocumentation`, `parseApiMemberKey`
+
+<a id="public-modules-editor-monaco-completion-user-symbols-ts"></a>
+### `public/modules/editor/monaco/completion/user-symbols.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/monaco/completion/user-symbols.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 6
+- Ключевые символы: `extractLuaUserSymbols`, `extractPythonUserSymbols`, `splitNames`, `stripLuaComment`, `stripPythonComment`, `toEntries`
 
 <a id="public-modules-editor-monaco-hover-ts"></a>
 ### `public/modules/editor/monaco/hover.ts`
@@ -698,6 +877,14 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Кратко: Исходный модуль симулятора.
 - Обнаружено функций/методов: 5
 - Ключевые символы: `ensureLanguageRegistered`, `findLuaDoc`, `getFullWordAtPosition`, `getMarkdownContents`, `setupHoverProvider`
+
+<a id="public-modules-editor-monaco-signature-help-ts"></a>
+### `public/modules/editor/monaco/signature-help.ts`
+
+- Исходник: [открыть файл](../../public/modules/editor/monaco/signature-help.ts)
+- Кратко: Исходный модуль симулятора.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `ensureLanguageRegistered`, `setupSignatureHelpProvider`
 
 <a id="public-modules-editor-monaco-syntax-ts"></a>
 ### `public/modules/editor/monaco/syntax.ts`
@@ -720,16 +907,16 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/editor/text-editor.ts)
 - Кратко: Исходный модуль симулятора.
-- Обнаружено функций/методов: 20
-- Ключевые символы: `clearFallbackEditorProblemHighlight`, `clearTextEditorProblemHighlight`, `createTextEditorInstance`, `disposeTextEditorInstance`, `ensureOverflowWidgetsContainer`, `getCurrentAppTheme`, `getFallbackEditorElement`, `getMonacoLanguage`, `getMonacoThemeName`, `getTextEditorValueFromInstance`, `highlightFallbackEditorProblem`, `highlightTextEditorProblem`, `initializeMonacoEnvironment`, `layoutTextEditorInstance`, `normalizeEditorText`, `scheduleEditorFontRemeasure`, `setTextEditorLanguageOnInstance`, `setTextEditorTheme`, `setTextEditorValueOnInstance`, `syncEditorProblemHandlers`
+- Обнаружено функций/методов: 21
+- Ключевые символы: `clearFallbackEditorProblemHighlight`, `clearTextEditorProblemHighlight`, `createTextEditorInstance`, `disposeTextEditorInstance`, `ensureOverflowWidgetsContainer`, `fitToPage`, `getCurrentAppTheme`, `getFallbackEditorElement`, `getMonacoLanguage`, `getMonacoThemeName`, `getTextEditorValueFromInstance`, `highlightFallbackEditorProblem`, `highlightTextEditorProblem`, `initializeMonacoEnvironment`, `layoutTextEditorInstance`, `normalizeEditorText`, `scheduleEditorFontRemeasure`, `setTextEditorLanguageOnInstance`, `setTextEditorTheme`, `setTextEditorValueOnInstance`, `syncEditorProblemHandlers`
 
 <a id="public-modules-ui-api-docs-index-ts"></a>
 ### `public/modules/ui/api-docs/index.ts`
 
 - Исходник: [открыть файл](../../public/modules/ui/api-docs/index.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 15
-- Ключевые символы: `attachInteractions`, `destroyPreviews`, `escapeHtml`, `highlightApiCode`, `mountOpenPreview`, `openApiDocsCatalog`, `renderApiDocs`, `renderDirectionTag`, `renderEntry`, `renderEntryBody`, `renderFact`, `renderPreviewShell`, `renderSections`, `renderToolbar`, `restoreSearchSelection`
+- Обнаружено функций/методов: 16
+- Ключевые символы: `attachInteractions`, `destroyPreviews`, `escapeHtml`, `highlightApiCode`, `mountOpenPreview`, `pythonSdkOfCurrentDrone`, `renderApiDocs`, `renderDirectionTag`, `renderEntry`, `renderEntryBody`, `renderFact`, `renderPreviewShell`, `renderSections`, `renderToolbar`, `resetSearch`, `restoreSearchSelection`
 
 <a id="public-modules-ui-api-docs-preview-index-ts"></a>
 ### `public/modules/ui/api-docs/preview/index.ts`
@@ -837,24 +1024,24 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/ui/controls/camera-mode.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `initCameraModeUI`, `resync`, `slideIndicatorTo`, `syncGroup`
+- Обнаружено функций/методов: 2
+- Ключевые символы: `initCameraModeUI`, `syncGroup`
 
 <a id="public-modules-ui-controls-file-controls-ts"></a>
 ### `public/modules/ui/controls/file-controls.ts`
 
 - Исходник: [открыть файл](../../public/modules/ui/controls/file-controls.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `initFileControls`, `populateFileOptions`, `refreshFileList`
+- Обнаружено функций/методов: 5
+- Ключевые символы: `currentExamplesSet`, `initFileControls`, `populateFileOptions`, `refreshFileList`, `syncBricksButton`
 
 <a id="public-modules-ui-environment-control-ts"></a>
 ### `public/modules/ui/environment-control.ts`
 
 - Исходник: [открыть файл](../../public/modules/ui/environment-control.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `initEnvironmentControl`, `render`, `renderWeather`, `setOpen`
+- Обнаружено функций/методов: 5
+- Ключевые символы: `initEnvironmentControl`, `positionPopover`, `render`, `renderWeather`, `setOpen`
 
 <a id="public-modules-ui-icons-tabler-ts"></a>
 ### `public/modules/ui/icons/tabler.ts`
@@ -885,8 +1072,8 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/ui/managers/drone-manager/connection-panel.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 10
-- Ключевые символы: `applyToCurrentDroneConnection`, `bind`, `createConnectionPanel`, `focusBridgeToggle`, `focusConnectionCard`, `renderBridgeCard`, `renderConnectionForm`, `setBridgeStatus`, `updateActionsState`, `updateConnectionModeHint`
+- Обнаружено функций/методов: 12
+- Ключевые символы: `applyToCurrentDroneConnection`, `bind`, `buildBridgeSnippet`, `buildCameraSnippet`, `createConnectionPanel`, `focusBridgeToggle`, `focusConnectionCard`, `renderBridgeCard`, `renderConnectionForm`, `setBridgeStatus`, `updateActionsState`, `updateConnectionModeHint`
 
 <a id="public-modules-ui-managers-drone-manager-dom-ts"></a>
 ### `public/modules/ui/managers/drone-manager/dom.ts`
@@ -909,8 +1096,8 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/ui/managers/drone-manager/list-panel.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 7
-- Ключевые символы: `bind`, `createDroneListPanel`, `deleteDrone`, `focusRow`, `itemFromEvent`, `switchDrone`, `updateList`
+- Обнаружено функций/методов: 10
+- Ключевые символы: `addDrone`, `bind`, `createDroneListPanel`, `deleteDrone`, `focusRow`, `itemFromEvent`, `renderModelSwitch`, `setDroneModel`, `switchDrone`, `updateList`
 
 <a id="public-modules-ui-marker-settings-ts"></a>
 ### `public/modules/ui/marker-settings.ts`
@@ -933,8 +1120,8 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/ui/mission-guide/academy/evaluation/drone.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `error`, `gradeDroneAcademy`
+- Обнаружено функций/методов: 4
+- Ключевые символы: `at`, `error`, `gradeDroneAcademy`, `sentBetween`
 
 <a id="public-modules-ui-mission-guide-academy-evaluation-flight-ts"></a>
 ### `public/modules/ui/mission-guide/academy/evaluation/flight.ts`
@@ -943,6 +1130,30 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
 - Обнаружено функций/методов: 3
 - Ключевые символы: `fail`, `gradeFlightAcademy`, `near`
+
+<a id="public-modules-ui-mission-guide-academy-evaluation-lua-extras-ts"></a>
+### `public/modules/ui/mission-guide/academy/evaluation/lua-extras.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/academy/evaluation/lua-extras.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 3
+- Ключевые символы: `fail`, `gradeLuaExtrasAcademy`, `near`
+
+<a id="public-modules-ui-mission-guide-academy-evaluation-sdk-extras-ts"></a>
+### `public/modules/ui/mission-guide/academy/evaluation/sdk-extras.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/academy/evaluation/sdk-extras.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `fail`, `gradeSdkExtrasAcademy`
+
+<a id="public-modules-ui-mission-guide-academy-evaluation-sdk-python-ts"></a>
+### `public/modules/ui/mission-guide/academy/evaluation/sdk-python.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/academy/evaluation/sdk-python.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `fail`, `gradeSdkPythonAcademy`
 
 <a id="public-modules-ui-mission-guide-academy-evaluation-signals-code-ts"></a>
 ### `public/modules/ui/mission-guide/academy/evaluation/signals-code.ts`
@@ -973,8 +1184,16 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/ui/mission-guide/academy/evaluation/vision.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 17
-- Ключевые символы: `center`, `centered`, `checkPrintedGeometry`, `error`, `expectPair`, `fail`, `fresh`, `gradeVisionAcademy`, `hasMessage`, `near`, `numbers`, `previousDetection`, `recovered`, `side`, `stableBefore`, `visible`, `zero`
+- Обнаружено функций/методов: 18
+- Ключевые символы: `center`, `centered`, `checkPrintedGeometry`, `error`, `expectPair`, `fail`, `fresh`, `gradeVisionAcademy`, `hasMessage`, `listed`, `near`, `numbers`, `previousDetection`, `recovered`, `side`, `stableBefore`, `visible`, `zero`
+
+<a id="public-modules-ui-mission-guide-academy-explainers-ts"></a>
+### `public/modules/ui/mission-guide/academy/explainers.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/academy/explainers.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 1
+- Ключевые символы: `explainerFor`
 
 <a id="public-modules-ui-mission-guide-academy-practices-camera-aruco-ts"></a>
 ### `public/modules/ui/mission-guide/academy/practices/camera-aruco.ts`
@@ -997,8 +1216,8 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/ui/mission-guide/academy/practices/flight.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `flightBody`, `getFlightAcademyPractices`, `point`
+- Обнаружено функций/методов: 5
+- Ключевые символы: `flightBody`, `getFlightAcademyPractices`, `keep`, `localizedExercise`, `point`
 
 <a id="public-modules-ui-mission-guide-academy-practices-index-ts"></a>
 ### `public/modules/ui/mission-guide/academy/practices/index.ts`
@@ -1007,6 +1226,30 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
 - Обнаружено функций/методов: 2
 - Ключевые символы: `getAcademyTextPractices`, `isAcademyPracticeReady`
+
+<a id="public-modules-ui-mission-guide-academy-practices-lua-extras-ts"></a>
+### `public/modules/ui/mission-guide/academy/practices/lua-extras.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/academy/practices/lua-extras.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `flight`, `getLuaExtrasAcademyPractices`
+
+<a id="public-modules-ui-mission-guide-academy-practices-sdk-extras-ts"></a>
+### `public/modules/ui/mission-guide/academy/practices/sdk-extras.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/academy/practices/sdk-extras.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 1
+- Ключевые символы: `getSdkExtrasAcademyPractices`
+
+<a id="public-modules-ui-mission-guide-academy-practices-sdk-python-ts"></a>
+### `public/modules/ui/mission-guide/academy/practices/sdk-python.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/academy/practices/sdk-python.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 1
+- Ключевые символы: `getSdkPythonAcademyPractices`
 
 <a id="public-modules-ui-mission-guide-academy-practices-shared-ts"></a>
 ### `public/modules/ui/mission-guide/academy/practices/shared.ts`
@@ -1029,8 +1272,8 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/ui/mission-guide/academy/practices/telemetry.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `callback`, `flight`, `getTelemetryAcademyPractices`, `measure`
+- Обнаружено функций/методов: 8
+- Ключевые символы: `callback`, `flight`, `getTelemetryAcademyPractices`, `keep`, `localizedExercise`, `measure`, `reportLuaAs`, `reportPythonAs`
 
 <a id="public-modules-ui-mission-guide-academy-practices-time-ts"></a>
 ### `public/modules/ui/mission-guide/academy/practices/time.ts`
@@ -1064,68 +1307,13 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Обнаружено функций/методов: 5
 - Ключевые символы: `academySceneProfile`, `disposeTerrain`, `getAcademySceneEvidence`, `prepareAcademyScene`, `restoreAcademyScene`
 
-<a id="public-modules-ui-mission-guide-course-navigation-ts"></a>
-### `public/modules/ui/mission-guide/course-navigation.ts`
+<a id="public-modules-ui-mission-guide-book-localize-ts"></a>
+### `public/modules/ui/mission-guide/book/localize.ts`
 
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/course-navigation.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `academyCompletedCount`, `isAcademyLessonComplete`, `switchGuideTrack`
-
-<a id="public-modules-ui-mission-guide-curriculum-ts"></a>
-### `public/modules/ui/mission-guide/curriculum.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/curriculum.ts)
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/book/localize.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
 - Обнаружено функций/методов: 1
-- Ключевые символы: `getGuideChapters`
-
-<a id="public-modules-ui-mission-guide-curriculum-constants-ts"></a>
-### `public/modules/ui/mission-guide/curriculum/constants.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/curriculum/constants.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 0
-
-<a id="public-modules-ui-mission-guide-curriculum-lua-ts"></a>
-### `public/modules/ui/mission-guide/curriculum/lua.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/curriculum/lua.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `buildLuaChapters`
-
-<a id="public-modules-ui-mission-guide-curriculum-python-ts"></a>
-### `public/modules/ui/mission-guide/curriculum/python.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/curriculum/python.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `buildPythonChapters`
-
-<a id="public-modules-ui-mission-guide-evaluation-index-ts"></a>
-### `public/modules/ui/mission-guide/evaluation/index.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/evaluation/index.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 6
-- Ключевые символы: `callback`, `evaluateLesson`, `getCallbackDiagnostics`, `hasRequiredBlockOccurrences`, `solvedDiagnostic`, `uniqueDiagnostics`
-
-<a id="public-modules-ui-mission-guide-evaluation-lua-led-sequence-ts"></a>
-### `public/modules/ui/mission-guide/evaluation/lua-led-sequence.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/evaluation/lua-led-sequence.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 5
-- Ключевые символы: `getStructureDiagnostics`, `matchesLedSet`, `matchesLuaLedSequenceWorkspace`, `matchesTimerDelay`, `validateLuaLedSequenceWorkspace`
-
-<a id="public-modules-ui-mission-guide-evaluation-lua-led-single-ts"></a>
-### `public/modules/ui/mission-guide/evaluation/lua-led-single.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/evaluation/lua-led-single.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `validateLuaLedSingleWorkspace`
+- Ключевые символы: `localize`
 
 <a id="public-modules-ui-mission-guide-evaluation-text-graders-ts"></a>
 ### `public/modules/ui/mission-guide/evaluation/text/graders.ts`
@@ -1167,468 +1355,142 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Обнаружено функций/методов: 2
 - Ключевые символы: `color`, `gradeWalkthroughTrace`
 
-<a id="public-modules-ui-mission-guide-evaluation-xml-ts"></a>
-### `public/modules/ui/mission-guide/evaluation/xml.ts`
+<a id="public-modules-ui-mission-guide-lessons-pioneer-catalog-ts"></a>
+### `public/modules/ui/mission-guide/lessons/pioneer/catalog.ts`
 
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/evaluation/xml.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 10
-- Ключевые символы: `findFirstBlockByType`, `getDirectBlockChild`, `getDirectChildByTagName`, `getFieldValue`, `getNextBlock`, `getStatementBlock`, `hasBlockType`, `hasFieldValue`, `hasNumericFieldValue`, `parseWorkspaceXml`
-
-<a id="public-modules-ui-mission-guide-interactions-ts"></a>
-### `public/modules/ui/mission-guide/interactions.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/interactions.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `attachGuideInteractions`
-
-<a id="public-modules-ui-mission-guide-interactions-academy-ts"></a>
-### `public/modules/ui/mission-guide/interactions/academy.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/interactions/academy.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `attachAcademyBindings`
-
-<a id="public-modules-ui-mission-guide-interactions-actions-ts"></a>
-### `public/modules/ui/mission-guide/interactions/actions.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/interactions/actions.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `attachGuideActionBindings`, `executeLessonLaunch`, `getMainWorkspaceSnapshot`
-
-<a id="public-modules-ui-mission-guide-interactions-context-ts"></a>
-### `public/modules/ui/mission-guide/interactions/context.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/interactions/context.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `buildGuideEventContext`, `resetGuideRuntimeView`
-
-<a id="public-modules-ui-mission-guide-interactions-launch-ts"></a>
-### `public/modules/ui/mission-guide/interactions/launch.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/interactions/launch.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `canLaunchLesson`, `launchLesson`
-
-<a id="public-modules-ui-mission-guide-interactions-learning-ts"></a>
-### `public/modules/ui/mission-guide/interactions/learning.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/interactions/learning.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `attachLearningInteractions`
-
-<a id="public-modules-ui-mission-guide-interactions-navigation-ts"></a>
-### `public/modules/ui/mission-guide/interactions/navigation.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/interactions/navigation.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `attachGuideNavigationBindings`
-
-<a id="public-modules-ui-mission-guide-interactions-reference-ts"></a>
-### `public/modules/ui/mission-guide/interactions/reference.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/interactions/reference.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `openGuideReference`
-
-<a id="public-modules-ui-mission-guide-interactions-text-actions-ts"></a>
-### `public/modules/ui/mission-guide/interactions/text-actions.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/interactions/text-actions.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `attachTextGuideBindings`, `runTextCheck`
-
-<a id="public-modules-ui-mission-guide-interactions-walkthrough-ts"></a>
-### `public/modules/ui/mission-guide/interactions/walkthrough.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/interactions/walkthrough.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `attachWalkthroughBindings`, `getWalkthroughSource`, `move`, `source`
-
-<a id="public-modules-ui-mission-guide-lessons-ts"></a>
-### `public/modules/ui/mission-guide/lessons.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getGuideLessonState`
-
-<a id="public-modules-ui-mission-guide-lessons-catalog-lua-text-ts"></a>
-### `public/modules/ui/mission-guide/lessons/catalog/lua-text.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/catalog/lua-text.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getLuaTextLessonState`
-
-<a id="public-modules-ui-mission-guide-lessons-catalog-lua-ts"></a>
-### `public/modules/ui/mission-guide/lessons/catalog/lua.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/catalog/lua.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getLuaLessonState`
-
-<a id="public-modules-ui-mission-guide-lessons-catalog-python-text-ts"></a>
-### `public/modules/ui/mission-guide/lessons/catalog/python-text.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/catalog/python-text.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getPythonTextLessonState`
-
-<a id="public-modules-ui-mission-guide-lessons-catalog-python-ts"></a>
-### `public/modules/ui/mission-guide/lessons/catalog/python.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/catalog/python.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getPythonLessonState`
-
-<a id="public-modules-ui-mission-guide-lessons-expanded-lua-flight-ts"></a>
-### `public/modules/ui/mission-guide/lessons/expanded/lua-flight.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/expanded/lua-flight.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `callback`, `getLuaExpandedFlightLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-expanded-lua-foundations-ts"></a>
-### `public/modules/ui/mission-guide/lessons/expanded/lua-foundations.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/expanded/lua-foundations.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `callback`, `getLuaExpandedFoundationLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-expanded-lua-ts"></a>
-### `public/modules/ui/mission-guide/lessons/expanded/lua.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/expanded/lua.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getLuaExpandedLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-expanded-python-flight-ts"></a>
-### `public/modules/ui/mission-guide/lessons/expanded/python-flight.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/expanded/python-flight.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getPythonExpandedFlightLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-expanded-python-foundations-ts"></a>
-### `public/modules/ui/mission-guide/lessons/expanded/python-foundations.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/expanded/python-foundations.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getPythonExpandedFoundationLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-expanded-python-ts"></a>
-### `public/modules/ui/mission-guide/lessons/expanded/python.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/expanded/python.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getPythonExpandedLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-flight-lua-core-ts"></a>
-### `public/modules/ui/mission-guide/lessons/flight/lua-core.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/flight/lua-core.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `callback`, `getLuaCoreFlightLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-flight-lua-mission-ts"></a>
-### `public/modules/ui/mission-guide/lessons/flight/lua-mission.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/flight/lua-mission.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `callback`, `getLuaMissionLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-flight-lua-ts"></a>
-### `public/modules/ui/mission-guide/lessons/flight/lua.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/flight/lua.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getLuaFlightLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-flight-python-core-ts"></a>
-### `public/modules/ui/mission-guide/lessons/flight/python-core.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/flight/python-core.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getPythonCoreFlightLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-flight-python-mission-ts"></a>
-### `public/modules/ui/mission-guide/lessons/flight/python-mission.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/flight/python-mission.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getPythonMissionLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-flight-python-ts"></a>
-### `public/modules/ui/mission-guide/lessons/flight/python.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/flight/python.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getPythonFlightLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-led-lua-ts"></a>
-### `public/modules/ui/mission-guide/lessons/led/lua.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/led/lua.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `callback`, `getLuaLedLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-led-python-ts"></a>
-### `public/modules/ui/mission-guide/lessons/led/python.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/led/python.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `getPythonLedLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-support-builders-ts"></a>
-### `public/modules/ui/mission-guide/lessons/support/builders.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/support/builders.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `createEventBlock`, `createStatementBlock`, `createTimerBlock`
-
-<a id="public-modules-ui-mission-guide-lessons-support-compilers-ts"></a>
-### `public/modules/ui/mission-guide/lessons/support/compilers.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/support/compilers.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 8
-- Ключевые символы: `callback`, `compileLuaEvents`, `compileLuaLinear`, `compileLuaTimed`, `compilePython`, `finalizeLuaCode`, `indentLines`, `splitCodeLines`
-
-<a id="public-modules-ui-mission-guide-lessons-support-snippets-ts"></a>
-### `public/modules/ui/mission-guide/lessons/support/snippets.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/support/snippets.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `callback`
-
-<a id="public-modules-ui-mission-guide-lessons-support-state-helpers-ts"></a>
-### `public/modules/ui/mission-guide/lessons/support/state-helpers.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/support/state-helpers.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `apiFocus`
-
-<a id="public-modules-ui-mission-guide-lessons-text-lua-ts"></a>
-### `public/modules/ui/mission-guide/lessons/text/lua.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/text/lua.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `callback`, `getLuaTextLessons`
-
-<a id="public-modules-ui-mission-guide-lessons-text-python-ts"></a>
-### `public/modules/ui/mission-guide/lessons/text/python.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/text/python.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `getPythonTextLessons`, `withPrologue`
-
-<a id="public-modules-ui-mission-guide-modal-ts"></a>
-### `public/modules/ui/mission-guide/modal.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/modal.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 6
-- Ключевые символы: `hide`, `initMissionGuideModal`, `show`, `syncGuideButtonState`, `syncOutlineVisibility`, `syncTrackSwitchState`
-
-<a id="public-modules-ui-mission-guide-panel-ts"></a>
-### `public/modules/ui/mission-guide/panel.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/panel.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `renderMissionGuidePanel`
-
-<a id="public-modules-ui-mission-guide-render-ts"></a>
-### `public/modules/ui/mission-guide/render.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/render.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `renderGuide`
-
-<a id="public-modules-ui-mission-guide-render-academy-ts"></a>
-### `public/modules/ui/mission-guide/render/academy.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/render/academy.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `renderAcademyRoadmap`
-
-<a id="public-modules-ui-mission-guide-render-blockly-copy-ts"></a>
-### `public/modules/ui/mission-guide/render/blockly-copy.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/render/blockly-copy.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `blocklyLessonCopy`, `blocklyPracticeSteps`, `blocklyTopic`, `EV`
-
-<a id="public-modules-ui-mission-guide-render-check-step-ts"></a>
-### `public/modules/ui/mission-guide/render/check-step.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/render/check-step.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `renderCheckStep`, `renderResultScene`, `sortDiagnostics`
-
-<a id="public-modules-ui-mission-guide-render-course-outline-ts"></a>
-### `public/modules/ui/mission-guide/render/course-outline.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/render/course-outline.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `renderCourseOutline`, `renderIntro`
-
-<a id="public-modules-ui-mission-guide-render-learning-ts"></a>
-### `public/modules/ui/mission-guide/render/learning.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/render/learning.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 5
-- Ключевые символы: `getLearningNote`, `getTopic`, `renderColorExperiment`, `renderLearningNote`, `renderPracticeBrief`
-
-<a id="public-modules-ui-mission-guide-render-navigation-ts"></a>
-### `public/modules/ui/mission-guide/render/navigation.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/render/navigation.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `renderLessonSteps`, `renderRunBanner`
-
-<a id="public-modules-ui-mission-guide-render-results-ts"></a>
-### `public/modules/ui/mission-guide/render/results.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/render/results.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 6
-- Ключевые символы: `renderAltitude`, `renderCheckVerdict`, `renderFlightRecord`, `renderPoints`, `renderScenePlaceholder`, `renderSegments`
-
-<a id="public-modules-ui-mission-guide-render-shared-ts"></a>
-### `public/modules/ui/mission-guide/render/shared.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/render/shared.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 8
-- Ключевые символы: `escapeHtml`, `getBlockMap`, `renderApiFocusItem`, `renderDiagnosticCard`, `renderInline`, `renderLessonFooter`, `renderLessonHeader`, `renderTargetRoute`
-
-<a id="public-modules-ui-mission-guide-render-support-ts"></a>
-### `public/modules/ui/mission-guide/render/support.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/render/support.ts)
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/pioneer/catalog.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
 - Обнаружено функций/методов: 0
 
-<a id="public-modules-ui-mission-guide-render-text-guide-ts"></a>
-### `public/modules/ui/mission-guide/render/text-guide.ts`
+<a id="public-modules-ui-mission-guide-lessons-pioneer-dsl-ts"></a>
+### `public/modules/ui/mission-guide/lessons/pioneer/dsl.ts`
 
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/render/text-guide.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `renderTextBuildStep`, `renderTextCheckStep`, `renderTextGuide`
-
-<a id="public-modules-ui-mission-guide-render-walkthrough-ts"></a>
-### `public/modules/ui/mission-guide/render/walkthrough.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/render/walkthrough.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `gateHint`, `renderIdea`, `renderWalkthrough`, `uniqueApiList`
-
-<a id="public-modules-ui-mission-guide-state-ts"></a>
-### `public/modules/ui/mission-guide/state.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/state.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 31
-- Ключевые символы: `ensureActiveChapterId`, `ensureActiveLessonId`, `getActiveChapter`, `getActiveLesson`, `getActivePracticeTrack`, `getActiveTab`, `getActiveTextLesson`, `getFirstUnlockedLesson`, `getLessonBanner`, `getLessonIndex`, `getLessonsForChapter`, `getNextLesson`, `getNextTextLesson`, `getPreviousLesson`, `getPreviousTextLesson`, `getStateKey`, `getTextLessonIndex`, `isLessonChecked`, `isLessonCompleted`, `isLessonUnlocked`, `isTextLessonUnlocked`, `persistCurrentGuideSessionState`, `setActiveChapterId`, `setActiveGuideStep`, `setActiveLessonId`, `setActivePortalPage`, `setActivePracticeTrack`, `setActiveTab`, `setLessonBanner`, `setLessonChecked`, `setLessonCompleted`
-
-<a id="public-modules-ui-mission-guide-state-storage-ts"></a>
-### `public/modules/ui/mission-guide/state/storage.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/state/storage.ts)
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/pioneer/dsl.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
 - Обнаружено функций/методов: 6
-- Ключевые символы: `createDefaultSessionState`, `loadGuideProgress`, `loadGuideSessionState`, `parseActiveStepByLessonKey`, `persistGuideProgress`, `persistGuideSessionState`
+- Ключевые символы: `chain`, `isVariable`, `program`, `toJson`, `valueBlock`, `variableId`
 
-<a id="public-modules-ui-mission-guide-support-blockly-preview-ts"></a>
-### `public/modules/ui/mission-guide/support/blockly-preview.ts`
+<a id="public-modules-ui-mission-guide-lessons-pioneer-flight-basics-ts"></a>
+### `public/modules/ui/mission-guide/lessons/pioneer/flight-basics.ts`
 
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/support/blockly-preview.ts)
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/pioneer/flight-basics.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 10
-- Ключевые символы: `applyLessonToolbox`, `ensureModalBodyObserver`, `getBlocklyCanvasHost`, `getPreviewHost`, `isMissionGuideBlocklyPreviewActive`, `mountMissionGuideBlocklyPreview`, `reattachIfNeeded`, `resizeBlocklySoon`, `restoreMissionGuideBlocklyPreview`, `triggerResize`
+- Обнаружено функций/методов: 0
 
-<a id="public-modules-ui-mission-guide-support-camera-view-ts"></a>
-### `public/modules/ui/mission-guide/support/camera-view.ts`
+<a id="public-modules-ui-mission-guide-lessons-pioneer-flight-shapes-ts"></a>
+### `public/modules/ui/mission-guide/lessons/pioneer/flight-shapes.ts`
 
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/support/camera-view.ts)
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/pioneer/flight-shapes.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 2
-- Ключевые символы: `captureCameraView`, `restoreCameraView`
+- Обнаружено функций/методов: 0
 
-<a id="public-modules-ui-mission-guide-support-logging-ts"></a>
-### `public/modules/ui/mission-guide/support/logging.ts`
+<a id="public-modules-ui-mission-guide-lessons-pioneer-grade-ts"></a>
+### `public/modules/ui/mission-guide/lessons/pioneer/grade.ts`
 
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/support/logging.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 4
-- Ключевые символы: `formatCompactDetails`, `logGuideEvent`, `normalizeDetailValue`, `summarizeGuideDiagnostics`
-
-<a id="public-modules-ui-mission-guide-support-monaco-preview-ts"></a>
-### `public/modules/ui/mission-guide/support/monaco-preview.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/support/monaco-preview.ts)
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/pioneer/grade.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
 - Обнаружено функций/методов: 9
-- Ключевые символы: `ensureModalBodyObserver`, `getMissionGuideDraft`, `getMonacoRoot`, `getPreviewHost`, `layoutMonacoSoon`, `mountMissionGuideMonacoPreview`, `reattachIfNeeded`, `restoreMissionGuideMonacoPreview`, `saveMissionGuideDraft`
+- Ключевые символы: `colourKey`, `describeColour`, `fmt`, `gradePioneerLesson`, `isFlightFinished`, `near`, `pointsWord`, `relativePositions`, `sameColour`
 
-<a id="public-modules-ui-mission-guide-support-outline-navigation-ts"></a>
-### `public/modules/ui/mission-guide/support/outline-navigation.ts`
+<a id="public-modules-ui-mission-guide-lessons-pioneer-helpers-ts"></a>
+### `public/modules/ui/mission-guide/lessons/pioneer/helpers.ts`
 
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/support/outline-navigation.ts)
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/pioneer/helpers.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 6
+- Ключевые символы: `cycle`, `flightMs`, `groundMs`, `lessonsOf`, `R`, `twice`
+
+<a id="public-modules-ui-mission-guide-lessons-pioneer-light-ts"></a>
+### `public/modules/ui/mission-guide/lessons/pioneer/light.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/pioneer/light.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-ui-mission-guide-lessons-pioneer-logic-ts"></a>
+### `public/modules/ui/mission-guide/lessons/pioneer/logic.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/pioneer/logic.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-ui-mission-guide-lessons-pioneer-projects-ts"></a>
+### `public/modules/ui/mission-guide/lessons/pioneer/projects.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/pioneer/projects.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-ui-mission-guide-lessons-pioneer-types-ts"></a>
+### `public/modules/ui/mission-guide/lessons/pioneer/types.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/lessons/pioneer/types.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 0
+
+<a id="public-modules-ui-mission-guide-mini2-bricks-missions-ts"></a>
+### `public/modules/ui/mission-guide/mini2/bricks-missions.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/mini2/bricks-missions.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
 - Обнаружено функций/методов: 3
-- Ключевые символы: `focusCourseContent`, `focusCourseOutline`, `setCourseOutlineOpen`
+- Ключевые символы: `gradeBricksMission`, `missingBricksBlocks`, `T`
 
-<a id="public-modules-ui-mission-guide-support-scene-preview-ts"></a>
-### `public/modules/ui/mission-guide/support/scene-preview.ts`
+<a id="public-modules-ui-mission-guide-mini2-bricks-xml-kit-ts"></a>
+### `public/modules/ui/mission-guide/mini2/bricks-xml-kit.ts`
 
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/support/scene-preview.ts)
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/mini2/bricks-xml-kit.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 12
-- Ключевые символы: `debugPreviewZoom`, `getPreviewHost`, `getRendererHitState`, `getSceneContainer`, `installPreviewGestureGuards`, `isMissionGuideScenePreviewActive`, `mountMissionGuideScenePreview`, `preventGestureDefault`, `preventWheelDefault`, `resizeSceneSoon`, `restoreMissionGuideScenePreview`, `setMissionGuideScenePreviewActive`
+- Обнаружено функций/методов: 13
+- Ключевые символы: `block`, `colour`, `compare`, `distance`, `editorBlockTypes`, `esc`, `frame`, `getVar`, `join`, `num`, `project`, `text`, `variable`
+
+<a id="public-modules-ui-mission-guide-mini2-sdk2-grade-ts"></a>
+### `public/modules/ui/mission-guide/mini2/sdk2-grade.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/mini2/sdk2-grade.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 5
+- Ключевые символы: `hi`, `ledColorName`, `lo`, `Sdk2Grader.for`, `Sdk2Grader.if`
+
+<a id="public-modules-ui-mission-guide-mini2-sdk2-mission-kit-ts"></a>
+### `public/modules/ui/mission-guide/mini2/sdk2-mission-kit.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/mini2/sdk2-mission-kit.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 4
+- Ключевые символы: `fillAnswers`, `flightProgram`, `groundProgram`, `indent`
+
+<a id="public-modules-ui-mission-guide-mini2-sdk2-missions-flight-ts"></a>
+### `public/modules/ui/mission-guide/mini2/sdk2-missions-flight.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/mini2/sdk2-missions-flight.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 1
+- Ключевые символы: `dot`
+
+<a id="public-modules-ui-mission-guide-mini2-sdk2-missions-systems-ts"></a>
+### `public/modules/ui/mission-guide/mini2/sdk2-missions-systems.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/mini2/sdk2-missions-systems.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 1
+- Ключевые символы: `colorAt`
+
+<a id="public-modules-ui-mission-guide-mini2-sdk2-missions-vision-ts"></a>
+### `public/modules/ui/mission-guide/mini2/sdk2-missions-vision.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/mini2/sdk2-missions-vision.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 1
+- Ключевые символы: `lastDetection`
+
+<a id="public-modules-ui-mission-guide-mini2-sdk2-missions-ts"></a>
+### `public/modules/ui/mission-guide/mini2/sdk2-missions.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/mission-guide/mini2/sdk2-missions.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `gradeSdk2Mission`, `isSdk2Mission`
 
 <a id="public-modules-ui-mission-guide-types-ts"></a>
 ### `public/modules/ui/mission-guide/types.ts`
@@ -1636,29 +1498,6 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Исходник: [открыть файл](../../public/modules/ui/mission-guide/types.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
 - Обнаружено функций/методов: 0
-
-<a id="public-modules-ui-mission-guide-walkthrough-content-ts"></a>
-### `public/modules/ui/mission-guide/walkthrough/content.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/walkthrough/content.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `getWalkthroughContent`, `getWalkthroughTopic`, `shuffleChoices`
-
-<a id="public-modules-ui-mission-guide-walkthrough-runtime-ts"></a>
-### `public/modules/ui/mission-guide/walkthrough/runtime.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/walkthrough/runtime.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 0
-
-<a id="public-modules-ui-mission-guide-walkthrough-state-ts"></a>
-### `public/modules/ui/mission-guide/walkthrough/state.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/mission-guide/walkthrough/state.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 15
-- Ключевые символы: `answerWalkthrough`, `beginWalkthroughCheck`, `canCompleteWalkthrough`, `finishWalkthroughCheck`, `getWalkthroughProgress`, `getWalkthroughResult`, `isWalkthroughBusy`, `isWalkthroughCheckCurrent`, `load`, `moveWalkthrough`, `parseWalkthroughProgress`, `resetWalkthroughResult`, `save`, `syncWalkthroughSession`, `walkthroughKey`
 
 <a id="public-modules-ui-mobile-editor-viewport-ts"></a>
 ### `public/modules/ui/mobile-editor-viewport.ts`
@@ -1681,8 +1520,8 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/ui/onboarding-tour.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 12
-- Ключевые символы: `back`, `clampX`, `clampY`, `end`, `initOnboardingTour`, `isAvailable`, `isVisible`, `next`, `onKey`, `place`, `render`, `startOnboardingTour`
+- Обнаружено функций/методов: 16
+- Ключевые символы: `activePanelId`, `back`, `clampX`, `clampY`, `end`, `hidePanel`, `initOnboardingTour`, `isAvailable`, `isVisible`, `next`, `onKey`, `place`, `render`, `showPanel`, `startOnboardingTour`, `startWhenFree`
 
 <a id="public-modules-ui-panels-channel-monitor-ts"></a>
 ### `public/modules/ui/panels/channel-monitor.ts`
@@ -1691,6 +1530,14 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
 - Обнаружено функций/методов: 11
 - Ключевые символы: `buildChannelCell`, `buildRenderSignature`, `initChannelMonitor`, `isMonitorVisible`, `pickGamepad`, `readChannelSample`, `renderBoardStatus`, `renderChannelCell`, `resetPeaks`, `syncFreezeButton`, `toTrackPercent`
+
+<a id="public-modules-ui-panels-drone-link-panel-ts"></a>
+### `public/modules/ui/panels/drone-link-panel.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/panels/drone-link-panel.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 11
+- Ключевые символы: `clock`, `fixed`, `initDroneLinkPanel`, `kibibytes`, `notify`, `render`, `reportFailure`, `setChip`, `setMeter`, `setText`, `showConfirm`
 
 <a id="public-modules-ui-panels-editor-docs-ts"></a>
 ### `public/modules/ui/panels/editor-docs.ts`
@@ -1708,13 +1555,45 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Обнаружено функций/методов: 3
 - Ключевые символы: `announceEditorDrawerOpen`, `pinEditorPanelHorizontalScroll`, `setEditorDrawerState`
 
+<a id="public-modules-ui-panels-editor-drone-upload-ts"></a>
+### `public/modules/ui/panels/editor-drone-upload.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/panels/editor-drone-upload.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 6
+- Ключевые символы: `initEditorDroneUpload`, `notify`, `onProgress`, `setStatus`, `syncAvailability`, `toErrorLike`
+
+<a id="public-modules-ui-panels-editor-model-switch-ts"></a>
+### `public/modules/ui/panels/editor-model-switch.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/panels/editor-model-switch.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `initEditorModelSwitch`, `render`
+
 <a id="public-modules-ui-panels-editor-terminal-ts"></a>
 ### `public/modules/ui/panels/editor-terminal.ts`
 
 - Исходник: [открыть файл](../../public/modules/ui/panels/editor-terminal.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 6
-- Ключевые символы: `close`, `endResize`, `initEditorTerminal`, `render`, `resize`, `resizeBounds`
+- Обнаружено функций/методов: 16
+- Ключевые символы: `announceNew`, `close`, `createJournalLine`, `createSystemToggle`, `describe`, `endResize`, `fitProblems`, `fitProblemsSoon`, `headerHeight`, `initEditorTerminal`, `readShowSystem`, `render`, `resize`, `resizeBounds`, `syncLiveRegions`, `writeShowSystem`
+
+<a id="public-modules-ui-panels-gamepad-dialog-ts"></a>
+### `public/modules/ui/panels/gamepad-dialog.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/panels/gamepad-dialog.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `close`, `initGamepadDialog`
+
+<a id="public-modules-ui-panels-journal-lines-ts"></a>
+### `public/modules/ui/panels/journal-lines.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/panels/journal-lines.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 5
+- Ключевые символы: `cleanJournalMessage`, `describeAutopilotApiCall`, `describeLogEntry`, `formatJournalTime`, `isDefaultJournalLine`
 
 <a id="public-modules-ui-panels-led-matrix-ts"></a>
 ### `public/modules/ui/panels/led-matrix.ts`
@@ -1724,13 +1603,37 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Обнаружено функций/методов: 1
 - Ключевые символы: `initLEDMatrixUI`
 
+<a id="public-modules-ui-panels-notice-policy-ts"></a>
+### `public/modules/ui/panels/notice-policy.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/panels/notice-policy.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 6
+- Ключевые символы: `noticeLifetimeMs`, `noticeRole`, `noticeSignature`, `pickToastToEvict`, `recordNotice`, `splitInlineCode`
+
+<a id="public-modules-ui-panels-rail-a11y-ts"></a>
+### `public/modules/ui/panels/rail-a11y.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/panels/rail-a11y.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 10
+- Ключевые символы: `drawerButton`, `drawerIsOpen`, `editorIsOpen`, `editorPanel`, `initRailA11y`, `panelTabs`, `syncAll`, `syncCurrent`, `syncDocs`, `syncTheme`
+
+<a id="public-modules-ui-panels-rail-status-ts"></a>
+### `public/modules/ui/panels/rail-status.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/panels/rail-status.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `initRailStatus`, `sync`
+
 <a id="public-modules-ui-panels-rail-tooltip-ts"></a>
 ### `public/modules/ui/panels/rail-tooltip.ts`
 
 - Исходник: [открыть файл](../../public/modules/ui/panels/rail-tooltip.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 7
-- Ключевые символы: `adoptAll`, `adoptTitle`, `buttonFrom`, `hide`, `initRailTooltip`, `labelOf`, `show`
+- Обнаружено функций/методов: 8
+- Ключевые символы: `adoptAll`, `adoptTitle`, `buttonFrom`, `hide`, `initRailTooltip`, `labelOf`, `render`, `show`
 
 <a id="public-modules-ui-panels-rail-visibility-ts"></a>
 ### `public/modules/ui/panels/rail-visibility.ts`
@@ -1739,6 +1642,14 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
 - Обнаружено функций/методов: 4
 - Ключевые символы: `hasOpenPanel`, `initRailVisibility`, `isExpanded`, `sync`
+
+<a id="public-modules-ui-panels-scene-stop-ts"></a>
+### `public/modules/ui/panels/scene-stop.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/panels/scene-stop.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 2
+- Ключевые символы: `initSceneStop`, `sync`
 
 <a id="public-modules-ui-panels-sidebar-debug-ts"></a>
 ### `public/modules/ui/panels/sidebar-debug.ts`
@@ -1761,24 +1672,40 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/ui/panels/simulation-notice.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 7
-- Ключевые символы: `closeCenter`, `dismissToast`, `ensureToastStack`, `initSimulationNotice`, `renderNotificationCenter`, `spawnToast`, `updateBadge`
+- Обнаружено функций/методов: 16
+- Ключевые символы: `armToastTimer`, `closeCenter`, `createActionButtons`, `dismissNewestToast`, `dismissToast`, `ensureToastStack`, `initSimulationNotice`, `pauseToast`, `remove`, `renderNotificationCenter`, `renderRichText`, `resumeToast`, `runNoticeAction`, `setCountChip`, `spawnToast`, `updateBadge`
 
 <a id="public-modules-ui-panels-stats-ts"></a>
 ### `public/modules/ui/panels/stats.ts`
 
 - Исходник: [открыть файл](../../public/modules/ui/panels/stats.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 10
-- Ключевые символы: `getLedElements`, `getStatusLabel`, `getStatusTone`, `updateBatteryBar`, `updateButtons`, `updateCameraParamsVisibility`, `updateFlightMode`, `updateLeds`, `updateStats`, `updateTelemetry`
+- Обнаружено функций/методов: 14
+- Ключевые символы: `applyStateChip`, `describeAutopilotState`, `getLedElements`, `getRunStateChip`, `updateBatteryBar`, `updateButtons`, `updateCameraParamsVisibility`, `updateFlightChart`, `updateFlightMode`, `updateLeds`, `updateStats`, `updateTelemetry`, `x`, `y`
+
+<a id="public-modules-ui-panels-terminal-session-ts"></a>
+### `public/modules/ui/panels/terminal-session.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/panels/terminal-session.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 5
+- Ключевые символы: `appendTerminalLine`, `createTerminalSession`, `executeTerminalCommand`, `matchesTerminalShortcut`, `navigateTerminalHistory`
+
+<a id="public-modules-ui-panels-terminal-workbench-ts"></a>
+### `public/modules/ui/panels/terminal-workbench.ts`
+
+- Исходник: [открыть файл](../../public/modules/ui/panels/terminal-workbench.ts)
+- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
+- Обнаружено функций/методов: 7
+- Ключевые символы: `clickAction`, `initTerminalWorkbench`, `renderConsole`, `renderSessions`, `selectSession`, `selectView`, `updateLogs`
 
 <a id="public-modules-ui-scene-hotbar-index-ts"></a>
 ### `public/modules/ui/scene-hotbar/index.ts`
 
 - Исходник: [открыть файл](../../public/modules/ui/scene-hotbar/index.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 21
-- Ключевые символы: `buildItemCard`, `close`, `ensurePlacementMarker`, `escapeHtml`, `initSceneHotbar`, `isSceneCanvasEvent`, `onPlacementPointerMove`, `optionsIn`, `placeArmedObjectAt`, `placeVehicleAt`, `raycastPlaceableSurface`, `registerPlacementInterceptor`, `renderCategoryTabs`, `renderHint`, `renderItems`, `routeUnderCursor`, `selectCategory`, `setArmed`, `setMarkerVisible`, `startRouteAt`, `syncScrollFades`
+- Обнаружено функций/методов: 22
+- Ключевые символы: `buildItemCard`, `close`, `ensurePlacementMarker`, `escapeHtml`, `initSceneHotbar`, `isSceneCanvasEvent`, `onPlacementPointerMove`, `optionsIn`, `placeArmedObjectAt`, `placementPointAt`, `placeVehicleAt`, `raycastPlaceableSurface`, `registerPlacementInterceptor`, `renderCategoryTabs`, `renderHint`, `renderItems`, `routeUnderCursor`, `selectCategory`, `setArmed`, `setMarkerVisible`, `startRouteAt`, `syncScrollFades`
 
 <a id="public-modules-ui-scene-manager-bindings-ts"></a>
 ### `public/modules/ui/scene-manager/bindings.ts`
@@ -1809,8 +1736,8 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/ui/scene-manager/bindings/scene-io.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 1
-- Ключевые символы: `registerSceneIoBindings`
+- Обнаружено функций/методов: 2
+- Ключевые символы: `notify`, `registerSceneIoBindings`
 
 <a id="public-modules-ui-scene-manager-bindings-shared-ts"></a>
 ### `public/modules/ui/scene-manager/bindings/shared.ts`
@@ -1927,8 +1854,8 @@ UI-компоненты симулятора, панели, HUD, контекс�
 
 - Исходник: [открыть файл](../../public/modules/ui/scene-manager/render/list.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 5
-- Ключевые символы: `buildVisibleRows`, `createRow`, `renderObjectList`, `subtreeHasMatch`, `walk`
+- Обнаружено функций/методов: 9
+- Ключевые символы: `appendFolder`, `buildVisibleRows`, `createRow`, `focusRowMain`, `holdsSelection`, `renderObjectList`, `subtreeHasMatch`, `topLevel`, `walk`
 
 <a id="public-modules-ui-scene-manager-scene-io-ts"></a>
 ### `public/modules/ui/scene-manager/scene-io.ts`
@@ -2072,19 +1999,11 @@ UI-компоненты симулятора, панели, HUD, контекс�
 - Обнаружено функций/методов: 12
 - Ключевые символы: `apply`, `close`, `escapeHtml`, `fillDictionaries`, `initVehicleSettings`, `onChange`, `onKey`, `onOutside`, `openVehicleSettings`, `options`, `renderSummary`, `routesFor`
 
-<a id="public-modules-ui-viewport-anchor-ts"></a>
-### `public/modules/ui/viewport-anchor.ts`
-
-- Исходник: [открыть файл](../../public/modules/ui/viewport-anchor.ts)
-- Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 3
-- Ключевые символы: `getAnchorRect`, `initViewportAnchor`, `syncPositions`
-
 <a id="public-modules-ui-workspace-view-ts"></a>
 ### `public/modules/ui/workspace-view.ts`
 
 - Исходник: [открыть файл](../../public/modules/ui/workspace-view.ts)
 - Кратко: Пользовательский интерфейс и рабочие панели симулятора.
-- Обнаружено функций/методов: 5
-- Ключевые символы: `applyPage`, `hasOpenPanel`, `initWorkspaceView`, `isEditorOpen`, `sync`
+- Обнаружено функций/методов: 8
+- Ключевые символы: `applyExpanded`, `applyPage`, `hasOpenPanel`, `initWorkspaceView`, `isEditorOpen`, `on.if`, `refreshViewports`, `sync`
 

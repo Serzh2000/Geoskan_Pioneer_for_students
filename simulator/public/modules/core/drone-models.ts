@@ -73,7 +73,6 @@ export const DRONE_MODELS: Record<DroneModelId, DroneModelProfile> = {
 };
 
 export const DEFAULT_DRONE_MODEL: DroneModelId = 'pioneer-basic';
-export const DRONE_MODEL_IDS = Object.keys(DRONE_MODELS) as DroneModelId[];
 
 export function isDroneModelId(value: unknown): value is DroneModelId {
     return typeof value === 'string' && value in DRONE_MODELS;

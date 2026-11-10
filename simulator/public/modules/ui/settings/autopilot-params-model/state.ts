@@ -98,10 +98,6 @@ export function getAutopilotParameterDefinitions() {
     return autopilotParameterDefinitions;
 }
 
-export function listAutopilotGroups() {
-    return Array.from(new Set(autopilotParameterDefinitions.map((definition) => definition.group)));
-}
-
 export function updateAutopilotAuthor(author: string) {
     runtimeState.author = safeAutopilotAuthor(author);
     runtimeState.updatedAt = new Date().toISOString();
@@ -263,13 +259,6 @@ export function resetAutopilotParameters(author: string) {
         }));
     });
 
-    saveState();
-    return getAutopilotSettingsState();
-}
-
-export function clearAutopilotAuditLog() {
-    runtimeState.auditLog = [];
-    runtimeState.updatedAt = new Date().toISOString();
     saveState();
     return getAutopilotSettingsState();
 }
