@@ -43,7 +43,20 @@ export async function loadMainBricksProject(xml: string): Promise<string> {
     );
     scheduleEditorPanelAutofitAutofit('blockly', createEditorAutofitContext(getEditorIndexShellState()));
     layoutEditor();
+    revealProgramStart(workspace);
     return name ?? '';
+}
+
+// Показывает «Начало программы»: поле могло остаться прокрученным от прошлого проекта, и ученик видел пустую область.
+function revealProgramStart(workspace: { getTopBlocks(ordered: boolean): Array<{ type: string; getRelativeToSurfaceXY(): { x: number; y: number } }>; scroll?: (x: number, y: number) => void; scale?: number }): void {
+    const start = workspace.getTopBlocks(true).find((block) => block.type.endsWith('start_block'));
+    if (!start || typeof workspace.scroll !== 'function') return;
+    const { x, y } = start.getRelativeToSurfaceXY();
+    const scale = workspace.scale ?? 1;
+    // Кадр после раскладки: у скрытой панели размеры нулевые, поэтому прокручиваем сейчас и ещё раз чуть позже.
+    const apply = () => workspace.scroll?.(-x * scale + 40, -y * scale + 24);
+    apply();
+    window.setTimeout(apply, 250);
 }
 
 // Сохраняет блоки Мини 2 в формате проекта Bricks. null - нечего сохранять (редактор блоков закрыт или модель другая).
