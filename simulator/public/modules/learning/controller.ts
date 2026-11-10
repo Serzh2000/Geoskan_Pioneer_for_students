@@ -29,6 +29,7 @@ import { buildTrackQuests } from './tracks.js';
 import { applyLearningDrone, ensureMini2Drone } from './mini2-drone.js';
 import { CHOICE_BY_ID, choiceForTrack, loadStoredChoice, saveStoredChoice, type Choice } from './track-choice.js';
 import { showTrackPicker, type PickerProgress } from './track-picker.js';
+import { ensurePyodide, isPyodideReady } from '../python/pyodide-loader.js';
 import { missingBricksBlocks } from '../ui/mission-guide/mini2/bricks-missions.js';
 import {
     clampStep, completeQuest, countDone, currentQuest, emptyProgress, INTRO_STEP, lastStepIndex,
@@ -340,7 +341,15 @@ function noteQuestLeft(): void {
     questOpenedAt = 0;
 }
 
+/** Выбран Python или Bricks: рантайм Python грузится заранее, пока ученик читает миссию, а не при первой проверке. */
+const usesPythonRuntime = (): boolean => choice.language === 'python-sdk1' || choice.language === 'python-sdk2' || choice.track === 'bricks';
+
+function warmPythonRuntime(): void {
+    if (usesPythonRuntime() && !isPyodideReady()) void ensurePyodide().catch((error) => console.error('[learning] python runtime', error));
+}
+
 async function openQuest(quest: Quest): Promise<void> {
+    warmPythonRuntime();
     noteQuestLeft();
     trackEvent('quest_open', { track, questId: quest.id });
     questOpenedAt = Date.now();
@@ -686,7 +695,7 @@ async function runFlightCheck(quest: Quest): Promise<void> {
         if (!checking || token !== checkToken) { window.clearInterval(timer); return; }
         const button = el.hud.querySelector<HTMLButtonElement>('[data-quest-check]');
         const seconds = Math.round((Date.now() - startedAt) / 1000);
-        if (button && seconds >= 5) button.textContent = `Проверяем полёт… ${seconds} с`;
+        if (button && seconds >= 5) button.textContent = usesPythonRuntime() && !isPyodideReady() ? `Загружаем Python, первый запуск до минуты… ${seconds} с` : `Проверяем полёт… ${seconds} с`;
     }, 1000);
     const academy = quest.lesson?.academy;
     const mini2 = quest.sdk2 ?? quest.bricks;

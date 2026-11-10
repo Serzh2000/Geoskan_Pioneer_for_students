@@ -16,6 +16,9 @@ function loadScript(src: string): Promise<void> {
     });
 }
 
+/** Рантайм Python уже загружен: первый запуск программы тянет Pyodide (десятки мегабайт) и занимает до минуты. */
+export const isPyodideReady = (): boolean => pyodideInstance !== null;
+
 export async function ensurePyodide(): Promise<any> {
     if (pyodideInstance) return pyodideInstance;
     if (pyodideLoadPromise) return pyodideLoadPromise;
