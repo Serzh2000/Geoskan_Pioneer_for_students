@@ -1,4 +1,5 @@
 import { currentDroneId, currentScriptLanguage, drones, type ScriptLanguage } from '../../core/state.js';
+import { droneSdk } from '../../core/drone-models.js';
 import { Blockly, type BlocklyNS } from '../blockly-mode/loader.js';
 import {
     buildMainEditorToolbox,
@@ -90,7 +91,7 @@ function getEditorControllers() {
         loadBlocklyWorkspace,
         syncEditorModeVisibility,
         syncScriptLanguageSelect: () => {
-            syncScriptLanguageSelectDom(editorIndexState.blocklyEnabled, currentScriptLanguage);
+            syncScriptLanguageSelectDom(editorIndexState.blocklyEnabled, currentScriptLanguage, droneSdk(drones[currentDroneId]) === 'pioneer_sdk2');
         },
         restoreEditorPanelWidthAfterBlockly: () => {
             editorIndexState.previousSidebarWidthBeforeBlockly = restoreEditorPanelWidthAfterBlocklyAutofit(
@@ -216,7 +217,7 @@ export function isBlocklyEditorEnabled(): boolean {
 // с текущим состоянием редактора — нужен на старте и после программного
 // включения Blockly (loadMainBlocklyXml).
 export function syncScriptLanguageSelect(): void {
-    syncScriptLanguageSelectDom(editorIndexState.blocklyEnabled, currentScriptLanguage);
+    syncScriptLanguageSelectDom(editorIndexState.blocklyEnabled, currentScriptLanguage, droneSdk(drones[currentDroneId]) === 'pioneer_sdk2');
 }
 
 export function getMainBlocklyWorkspace(): BlocklyNS.WorkspaceSvg | null {

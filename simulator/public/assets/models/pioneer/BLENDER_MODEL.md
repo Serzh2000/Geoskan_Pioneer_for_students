@@ -71,8 +71,9 @@ and stable rotor references during asynchronous loading.
 ## Radxa Zero 3W module (`radxa-module.glb`)
 
 `pioneer_sdk2` works on the Basic only with a Radxa Zero 3W on board, so when a Basic drone is set to
-"Python · SDK2" the simulator shows the module under the body, in the same slot as the ESP32 module (the ESP32 is
-hidden meanwhile). Code: `drone-model/radxa-module.ts` (lazy GLB load, added/removed per drone every frame from
+"Python · SDK2" the simulator shows the module under the centre of the optical-flow board, plugged onto its two
+central 2x6 headers (x = +-0.04, y = 0, header bottoms at z = 0.083; not the white 1x8 strips at the front, which are
+the ESP32 slot). Python then runs on the Radxa, so the ESP32 module is kept hidden. Code: `drone-model/radxa-module.ts` (lazy GLB load, added/removed per drone every frame from
 `drone/index.ts`).
 
 The asset is built from the ChatGPT model `Radxa_v02.blend` (adapter plate, Radxa Zero 3W with heatsinks, FFC ribbon,
@@ -83,6 +84,20 @@ orange camera bracket, antenna; assembly order from `constr.pdf`) by `tools/expo
 ```
 
 The script joins the 870 source objects by material, decimates each material to a triangle budget (218 000 -> ~32 000),
-flips the module lens-down (it is mounted on the underside), converts to simulator axes/scale and seats it in the
-ESP32 slot. Nodes: `radxa_module` (root, meshes inside) and `radxa_camera` (lens centre, not used yet: the FPV camera
+flips the module lens-down (it is mounted on the underside), converts to simulator axes/scale and seats it on the
+central headers. Nodes: `radxa_module` (root, meshes inside) and `radxa_camera` (lens centre, not used yet: the FPV camera
 stays where it is). Checks: `tests/radxa-module.test.ts`.
+
+### Cameras of the Basic (drone-model/camera-specs.ts)
+
+The camera depends on what physically sits on the drone, and so do the field of view, the frame size and the marker
+threshold (the Mini 2 keeps its old values):
+
+| Basic with | Camera | Vertical / horizontal FOV | Frame | Min. marker side |
+|---|---|---|---|---|
+| pioneer_sdk | OV2640 on the ESP32 module (front, `fpv_camera`) | 43.6° / 56.1° (Geoscan example: 640x480, f = 600 px; 68° diagonal) | 640x480 | 20 px |
+| pioneer_sdk2 (Radxa Zero 3W) | Radxa Camera 8M 219 (IMX219) in the bracket, looks down (`radxa_view_camera`, `CameraType.OPT`) | 49° / 62° (Radxa product brief, TV distortion -0.3%) | 640x480 | 20 px |
+
+With pioneer_sdk2 there is no front camera: the front camera window shows NO SIGNAL and `Camera(CameraType.MAIN)`
+raises "NO SIGNAL ...". The FPV scene view is not affected. 640x480 is the stream mode assumed for the Radxa camera
+(the sensor itself is 3280x2464); change `RADXA_8M_219_SPEC` if the real stream differs.

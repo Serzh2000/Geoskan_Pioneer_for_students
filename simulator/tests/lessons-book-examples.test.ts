@@ -602,7 +602,27 @@ const PYTHON_EXPECTATIONS: Record<string, PythonExpectation> = {
     '18_color_tracking_yaw.py': { mode: 'boardOnly', reason: 'цвет в HSV и контуры cv2 на живом кадре' },
     '19_aruco_distance.py': { mode: 'boardOnly', reason: 'cv2.aruco, solvePnP и калибровка data.yml с настоящей камеры' },
     '20_aruco_follow.py': { mode: 'boardOnly', reason: 'cv2.aruco, solvePnP и калибровка data.yml с настоящей камеры' },
-    '22_marker_field_led.py': { mode: 'boardOnly', reason: 'cv2.aruco на живом кадре нижней камеры и управление с клавиатуры через cv2.waitKey' },
+    // Полёт с клавиатуры (W, D, затем отпускание) над маркерами: каждый новый маркер - новый цвет всех светодиодов, тот же маркер,
+    // снова попавший в кадр, цвет не меняет; Esc - плавно в ноль, посадка, светодиоды гаснут, параметры RC возвращаются.
+    '22_marker_field_led.py': {
+        mode: 'onboard',
+        runs: [
+            {
+                scenario: {
+                    seconds: 60,
+                    markers: [[8, 10, 7], [14, 16, 7], [20, 22, 12]],
+                    keys: [[5, 'w'], [5.3, 'w'], [5.6, 'w'], [6, 'd'], [30, 27]]
+                },
+                trace: ['camera OPT', 'param Copter_man_rcMode0=6', ...PY_TAKEOFF, 'goto 0,0,1.5', 'rc pitch', 'rc roll+pitch', 'rc neutral',
+                    'led 0 1,1,1', 'led 0 1,0,1', 'land', 'led 0 0,0,0', 'param Copter_man_rcMode0=0', 'exit']
+            },
+            // Номера 3 и 11 дали бы один цвет палитры - второй маркер получает следующий, а не цвет предыдущего.
+            {
+                scenario: { seconds: 40, markers: [[8, 10, 3], [14, 16, 11]], keys: [[25, 27]] },
+                trace: [...PY_TAKEOFF, 'led 0 1,0.8,0', 'led 0 1,0,1', 'land', 'led 0 0,0,0', 'exit']
+            }
+        ]
+    },
     // Итоговый проект: 2 круга по периметру со снимками; при LOW_VOLTAGE1 - аварийное завершение с rtl.
     '21_patrol_project.py': {
         mode: 'onboard',

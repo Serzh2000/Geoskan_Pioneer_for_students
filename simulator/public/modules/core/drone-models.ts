@@ -110,6 +110,11 @@ export function defaultPythonScriptFor(sdk: PythonSdkId): string {
     return sdk === 'pioneer_sdk2' ? DEFAULT_SDK2_PYTHON_SCRIPT : DEFAULT_PYTHON_SCRIPT;
 }
 
+/** У дрона стоит Radxa Zero 3W с камерой: Пионер Базовый, которому выбран pioneer_sdk2. Передней камеры у такой сборки нет. */
+export function usesRadxaModule(drone: { model?: DroneModelId | null; pythonSdk?: PythonSdkId } | undefined | null): boolean {
+    return droneModelProfile(drone?.model).id === 'pioneer-basic' && droneSdk(drone) === 'pioneer_sdk2';
+}
+
 /** Python на борту (Мини 2 и любой дрон с pioneer_sdk2): программа выполняется на бортовом компьютере. */
 export function usesOnboardSdk(drone: { model?: DroneModelId | null; pythonSdk?: PythonSdkId } | undefined | null): boolean {
     return droneSdk(drone) === 'pioneer_sdk2';

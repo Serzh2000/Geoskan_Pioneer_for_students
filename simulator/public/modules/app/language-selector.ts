@@ -51,14 +51,19 @@ function applyScriptLanguage(lang: ScriptLanguage): void {
 function syncLanguageOptionsForDrone(langSelect: HTMLSelectElement): void {
     const model = drones[currentDroneId]?.model;
     const pythonOnly = !supportsLanguage(model, 'lua');
+    const sdks = droneModelProfile(model).pythonSdks;
     for (const option of Array.from(langSelect.options)) {
-        const blocked = pythonOnly && option.value !== 'python' && option.value !== 'blockly';
+        // Мини 2: только Python на pioneer_sdk2 и Bricks; Базовый: Lua, Python на SDK1 или SDK2 и Blockly.
+        const wrongSdk = (option.value === 'python' && !sdks.includes('pioneer_sdk'))
+            || (option.value === 'python-sdk2' && !sdks.includes('pioneer_sdk2'));
+        const blocked = (pythonOnly && option.value === 'lua') || wrongSdk;
         // У Мини 2 блоки называются Bricks (как в программе Geoscan), у Базового - Blockly.
         if (option.value === 'blockly') option.textContent = pythonOnly ? 'Bricks' : 'Blockly';
-        // Python показывает библиотеку выбранного дрона; её выбирают в панели «Рой».
-        if (option.value === 'python') option.textContent = droneSdk(drones[currentDroneId]) === 'pioneer_sdk2' ? 'Python · SDK2' : 'Python · SDK1';
+        if (option.value === 'python') option.textContent = 'Python · SDK1';
+        if (option.value === 'python-sdk2') option.textContent = 'Python · SDK2';
         option.disabled = blocked;
-        option.title = blocked ? `${droneModelProfile(model).title} программируется на Python и блоками, без Lua` : '';
+        option.hidden = wrongSdk;
+        option.title = blocked ? `${droneModelProfile(model).title} программируется на Python (pioneer_sdk2) и блоками, без Lua` : '';
     }
 }
 
@@ -77,6 +82,8 @@ export function enforceDroneScriptLanguage(): void {
         // Справочник и примеры Python у Мини 2 свои (pioneer_sdk2).
         renderApiDocs(currentScriptLanguage);
         refreshFileList(currentScriptLanguage);
+        // У каждого дрона своя библиотека Python: пункт списка следует за выбранным дроном.
+        syncScriptLanguageSelect();
         return;
     }
     if (blocklyOn) {
@@ -125,42 +132,51 @@ export function initScriptLanguageSelector(): void {
     enforceDroneScriptLanguage();
 
     // Выбор языка в панели «Рой»: Lua, Python с SDK1 или SDK2 (у Базового SDK2 - с Radxa Zero 3W), блоки.
+    // Выставляет пункт списка редактора и вызывает его обработчик - дальше всё как при выборе в самом списке.
     window.addEventListener('drone-language-request', (event) => {
         const choice = (event as CustomEvent<{ choice?: ProgramLanguageChoice }>).detail?.choice;
         const drone = drones[currentDroneId];
         if (!choice || !drone || drone.running) return;
-        const select = document.getElementById('script-language-select') as HTMLSelectElement | null;
-        if (!select) return;
-        if (choice === 'python-sdk1' || choice === 'python-sdk2') {
-            drone.pythonSdk = choice === 'python-sdk2' ? 'pioneer_sdk2' : 'pioneer_sdk';
-            select.value = 'python';
-        } else {
-            select.value = choice === 'lua' ? 'lua' : 'blockly';
-        }
-        select.dispatchEvent(new Event('change'));
-        if (choice === 'python-sdk1' || choice === 'python-sdk2') {
-            // Программа и черновик могли остаться от другой библиотеки - даём шаблон выбранной.
-            const sdk = droneSdk(drone);
-            if (!scriptMatchesSdk(getEditorValue(), sdk)) {
-                drone.pythonScript = defaultPythonScriptFor(sdk);
-                setEditorValue(drone.pythonScript);
-            }
-        }
-        syncLanguageOptionsForDrone(select);
-        renderApiDocs(currentScriptLanguage);
-        refreshFileList(currentScriptLanguage);
-        window.dispatchEvent(new CustomEvent('drone-language-changed'));
+        langSelect.value = choice === 'python-sdk2' ? 'python-sdk2'
+            : choice === 'python-sdk1' ? 'python'
+            : choice === 'lua' ? 'lua' : 'blockly';
+        langSelect.dispatchEvent(new Event('change'));
     });
 
     langSelect.addEventListener('change', () => {
         const selectedDrone = drones[currentDroneId];
         if (!selectedDrone) return;
         const profile = droneModelProfile(selectedDrone.model);
-        if (!supportsLanguage(selectedDrone.model, 'lua') && langSelect.value !== 'python' && langSelect.value !== 'blockly') {
+        if (!supportsLanguage(selectedDrone.model, 'lua') && langSelect.value === 'lua') {
             log(`${profile.title} программируется на Python (pioneer_sdk2) и блоками Bricks, без Lua.`, 'warn');
             syncScriptLanguageSelect();
             return;
         }
+        // Python с выбранной библиотекой: пункт списка задаёт и язык (python), и pioneer_sdk / pioneer_sdk2 дрона.
+        if (langSelect.value === 'python' || langSelect.value === 'python-sdk2') {
+            const wanted = langSelect.value === 'python-sdk2' ? 'pioneer_sdk2' : 'pioneer_sdk';
+            if (!profile.pythonSdks.includes(wanted)) {
+                log(`${profile.title}: ${wanted} недоступна.`, 'warn');
+                syncScriptLanguageSelect();
+                return;
+            }
+            selectedDrone.pythonSdk = wanted;
+        }
+        const finishLanguageChange = () => {
+            // Программа и черновик могли остаться от другой библиотеки - даём шаблон выбранной.
+            if (currentScriptLanguage === 'python' && !isBlocklyEditorEnabled()) {
+                const sdk = droneSdk(selectedDrone);
+                if (!scriptMatchesSdk(getEditorValue(), sdk)) {
+                    selectedDrone.pythonScript = defaultPythonScriptFor(sdk);
+                    setEditorValue(selectedDrone.pythonScript);
+                }
+            }
+            syncScriptLanguageSelect();
+            syncLanguageOptionsForDrone(langSelect);
+            renderApiDocs(currentScriptLanguage);
+            refreshFileList(currentScriptLanguage);
+            window.dispatchEvent(new CustomEvent('drone-language-changed'));
+        };
 
         if (langSelect.value === 'blockly') {
             if (!isBlocklyEditorEnabled()) {
@@ -170,10 +186,11 @@ export function initScriptLanguageSelector(): void {
                 refreshFileList(currentScriptLanguage);
                 log(`Режим Blockly, таргет: ${currentScriptLanguage.toUpperCase()}`, 'info');
             }
+            finishLanguageChange();
             return;
         }
 
-        const lang = langSelect.value as ScriptLanguage;
+        const lang = (langSelect.value === 'python-sdk2' ? 'python' : langSelect.value) as ScriptLanguage;
 
         if (isBlocklyEditorEnabled()) {
             // Выход из Blockly компилирует workspace в текстовый черновик
@@ -197,7 +214,8 @@ export function initScriptLanguageSelector(): void {
         const code = getSavedEditorDraft(lang) || (lang === 'lua' ? selectedDrone.script : selectedDrone.pythonScript);
         setEditorValue(code);
         renderApiDocs(lang);
-            refreshFileList(lang);
-        log(`Язык скрипта: ${lang.toUpperCase()}`, 'info');
+        refreshFileList(lang);
+        finishLanguageChange();
+        log(`Язык скрипта: ${lang === 'python' ? (droneSdk(selectedDrone) === 'pioneer_sdk2' ? 'PYTHON · SDK2' : 'PYTHON · SDK1') : lang.toUpperCase()}`, 'info');
     });
 }

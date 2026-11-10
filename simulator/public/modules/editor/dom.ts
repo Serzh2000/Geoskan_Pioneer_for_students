@@ -70,9 +70,10 @@ export function syncEditorModeVisibility(
 // отдельный чекбокс, поэтому программное включение режима (например,
 // loadMainBlocklyXml из гайда миссии) должно само приводить список в
 // соответствие с состоянием редактора.
-export function syncScriptLanguageSelect(blocklyEnabled: boolean, language: ScriptLanguage) {
+export function syncScriptLanguageSelect(blocklyEnabled: boolean, language: ScriptLanguage, pythonSdk2 = false) {
     const select = document.getElementById('script-language-select') as HTMLSelectElement | null;
-    if (select) select.value = blocklyEnabled ? 'blockly' : language;
+    // Python с pioneer_sdk2 - отдельный пункт списка (значение python-sdk2), остальным модулям он виден как python.
+    if (select) select.value = blocklyEnabled ? 'blockly' : (language === 'python' && pythonSdk2 ? 'python-sdk2' : language);
 }
 
 function getFallbackEditorElement(): HTMLTextAreaElement | null {

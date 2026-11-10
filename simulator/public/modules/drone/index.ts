@@ -11,7 +11,7 @@ import { envGroup } from '../environment/index.js';
 import { createDroneModel, updateLEDs, animateRotors, updateCameraTilt } from '../drone-model/index.js';
 import { setEsp32Attached, updateEsp32Module } from '../drone-model/esp32-module.js';
 import { syncRadxaModule } from '../drone-model/radxa-module.js';
-import { droneSdk } from '../core/drone-models.js';
+import { usesRadxaModule } from '../core/drone-models.js';
 import { updateCamera } from '../scene/core/camera.js';
 import { getCameraMode } from '../scene/core/camera-mode-state.js';
 import { startRenderSample, finishRenderSample } from '../scene/core/render-metrics.js';
@@ -270,8 +270,8 @@ export function updateDrone3D(dt: number, render = true) {
         }
 
         updateTrailForDrone(id);
-        // Базовый с pioneer_sdk2 несёт модуль Radxa Zero 3W - в том же слоте, что ESP32.
-        const radxaOn = syncRadxaModule(mesh, mesh.userData.droneModel === 'pioneer-basic' && droneSdk(drone) === 'pioneer_sdk2');
+        // Базовый с pioneer_sdk2 несёт модуль Radxa Zero 3W на центральных разъёмах платы; Python идёт на нём, ESP32 не нужен.
+        const radxaOn = syncRadxaModule(mesh, usesRadxaModule(drone));
         updateEsp32Module(mesh, dt, radxaOn);
 
         const arrow = mesh.userData.orientationArrow as THREE.Object3D | null | undefined;

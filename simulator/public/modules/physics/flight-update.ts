@@ -161,7 +161,7 @@ function updateManualFlight(simState: DroneState, dt: number, getObstacles: Obst
     if (simState.flightMode === 'LOITER') {
         simState.orientation.pitch = Math.max(
             -PHYSICS_TUNING.LOITER_VISUAL_TILT_LIMIT,
-            Math.min(PHYSICS_TUNING.LOITER_VISUAL_TILT_LIMIT, nextBodyForwardSpeed * PHYSICS_TUNING.LOITER_VISUAL_TILT_GAIN)
+            Math.min(PHYSICS_TUNING.LOITER_VISUAL_TILT_LIMIT, -nextBodyForwardSpeed * PHYSICS_TUNING.LOITER_VISUAL_TILT_GAIN)
         );
         simState.orientation.roll = Math.max(
             -PHYSICS_TUNING.LOITER_VISUAL_TILT_LIMIT,
@@ -172,7 +172,8 @@ function updateManualFlight(simState: DroneState, dt: number, getObstacles: Obst
             ? targetTiltLimit * Math.min(1, config.manual.attScale * 2)
             : targetTiltLimit;
         const tiltGain = tiltLimit / Math.max(0.001, maxBodySpeed);
-        simState.orientation.pitch = Math.max(-tiltLimit, Math.min(tiltLimit, nextBodyForwardSpeed * tiltGain));
+        // Положительный pitch поднимает нос: при полёте вперёд нос опускается.
+        simState.orientation.pitch = Math.max(-tiltLimit, Math.min(tiltLimit, -nextBodyForwardSpeed * tiltGain));
         simState.orientation.roll = Math.max(-tiltLimit, Math.min(tiltLimit, nextBodyRightSpeed * tiltGain));
     }
 
@@ -335,7 +336,7 @@ function updateAutoFlight(simState: DroneState, dt: number) {
     const bodyAccel = worldPlanarToBody(ax, ay, simState.orientation.yaw);
     const targetPitch = Math.max(
         -PHYSICS_TUNING.AUTO_MAX_TILT,
-        Math.min(PHYSICS_TUNING.AUTO_MAX_TILT, bodyAccel.forward * PHYSICS_TUNING.AUTO_TILT_GAIN)
+        Math.min(PHYSICS_TUNING.AUTO_MAX_TILT, -bodyAccel.forward * PHYSICS_TUNING.AUTO_TILT_GAIN)
     );
     const targetRoll = Math.max(
         -PHYSICS_TUNING.AUTO_MAX_TILT,

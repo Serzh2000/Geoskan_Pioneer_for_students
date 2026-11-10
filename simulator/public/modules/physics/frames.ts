@@ -11,14 +11,15 @@ export interface BodyPlanarVector {
 /**
  * Преобразует вектор из плоскости дрона в мировую плоскость.
  * `forward` направлен вдоль носа, `right` - вправо от корпуса.
- * При yaw=0 нос дрона смотрит вдоль отрицательной оси Y мира.
+ * При yaw=0 нос дрона смотрит вдоль положительной оси Y мира, вправо - вдоль +X; положительный курс - против
+ * часовой стрелки (влево). Так же ориентированы модель дрона, обе его камеры и книга (глава о координатах).
  */
 export function bodyPlanarToWorld(right: number, forward: number, yaw: number): WorldPlanarVector {
     const cosYaw = Math.cos(yaw);
     const sinYaw = Math.sin(yaw);
     return {
-        x: right * cosYaw + forward * sinYaw,
-        y: right * sinYaw - forward * cosYaw
+        x: right * cosYaw - forward * sinYaw,
+        y: right * sinYaw + forward * cosYaw
     };
 }
 
@@ -30,6 +31,6 @@ export function worldPlanarToBody(x: number, y: number, yaw: number): BodyPlanar
     const sinYaw = Math.sin(yaw);
     return {
         right: x * cosYaw + y * sinYaw,
-        forward: x * sinYaw - y * cosYaw
+        forward: -x * sinYaw + y * cosYaw
     };
 }

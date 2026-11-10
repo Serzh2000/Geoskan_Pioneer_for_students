@@ -1,6 +1,6 @@
 import { droneMeshes } from '../drone/index.js';
 import { setDroneCameraTilt } from '../drone-model/index.js';
-import { droneModelProfile, droneSdk } from '../core/drone-models.js';
+import { droneModelProfile, droneSdk, usesRadxaModule } from '../core/drone-models.js';
 import { recordLearningEvent } from '../core/learning-journal.js';
 import { activateAutopilotRtl } from '../autopilot/params-runtime.js';
 import { applyGoToLocalPointRequest, isDroneMovingState, setDroneFsmState } from '../autopilot/fsm.js';
@@ -32,6 +32,9 @@ export function installSdk2RuntimeAPI(w: Record<string, unknown>) {
     w.pioneer2_drone_model = (id: string) => getDroneOrDefault(id).model;
     // pioneer_sdk2 доступна Мини 2 и Базовому, которому выбран язык «Python · SDK2» (Radxa Zero 3W).
     w.pioneer2_sdk_enabled = (id: string) => droneSdk(getDroneOrDefault(id)) === 'pioneer_sdk2';
+    // Передняя камера (CameraType.MAIN) есть не у каждой сборки: у Базового с Radxa Zero 3W единственная камера
+    // Radxa 8M 219 смотрит вниз (CameraType.OPT), а передней нет - кадра нет, NO SIGNAL.
+    w.pioneer2_front_camera = (id: string) => !usesRadxaModule(getDroneOrDefault(id));
 
     // Сообщения logger=True библиотеки - в журнал симулятора, как вывод SDK в терминале дрона.
     w.pioneer2_log = (text: string) => {

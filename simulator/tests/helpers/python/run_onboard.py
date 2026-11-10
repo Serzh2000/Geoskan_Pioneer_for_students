@@ -741,6 +741,48 @@ cv2.LINE_AA = 16
 cv2.addWeighted = lambda a, alpha, b, beta, gamma, dst=None: dst if dst is not None else a
 cv2.imwrite = lambda name, image: (record('imwrite %s' % name), True)[1]
 cv2.vconcat = lambda images: np.vstack(images)
+
+
+# ArUco по расписанию из config.markers: [[t0, t1, id], ...] - какие маркеры видит камера. Углы в формате OpenCV:
+# по массиву (1, 4, 2) на маркер, ids - массив (N, 1) или None.
+class _ArucoDetector:
+    def __init__(self, dictionary, params=None):
+        self.dictionary = dictionary
+
+    def detectMarkers(self, frame):
+        t = now()
+        seen = [entry for entry in config.get('markers') or [] if entry[0] <= t < entry[1]]
+        if not seen:
+            return (), None, ()
+        corners = []
+        for k, entry in enumerate(seen):
+            x = 100 + k * 150
+            corners.append(np.array([[[x, 100], [x + 80, 100], [x + 80, 180], [x, 180]]], dtype=np.float32))
+        return tuple(corners), np.array([[int(entry[2])] for entry in seen], dtype=np.int32), ()
+
+
+cv2.aruco = types.SimpleNamespace(
+    DICT_4X4_50='DICT_4X4_50', DICT_6X6_250='DICT_6X6_250',
+    getPredefinedDictionary=lambda name: name,
+    DetectorParameters=lambda: None,
+    ArucoDetector=_ArucoDetector,
+    drawDetectedMarkers=lambda frame, corners, ids=None, *args, **kwargs: frame,
+)
+
+# Нажатия клавиш по расписанию из config.keys: [[t, "w"], ...]; waitKey отдаёт код клавиши один раз, как в симуляторе.
+_keys_consumed = [0]
+
+
+def _wait_key(delay=0):
+    keys = config.get('keys') or []
+    if _keys_consumed[0] < len(keys) and keys[_keys_consumed[0]][0] <= now():
+        key = keys[_keys_consumed[0]][1]
+        _keys_consumed[0] += 1
+        return key if isinstance(key, int) else ord(key)
+    return -1
+
+
+cv2.waitKey = _wait_key
 sys.modules['cv2'] = cv2
 
 

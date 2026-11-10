@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { OV2640_SPEC, applyCameraSpec } from './camera-specs.js';
 
 /*
  * The ESP32 camera module on the optical-flow board.
@@ -42,6 +43,8 @@ export function setupEsp32Module(model: THREE.Object3D, instance: THREE.Object3D
         const lens = instance.getObjectByName('esp32_camera');
         const camera = new THREE.PerspectiveCamera(CAMERA_FOV, 16 / 9, 0.01, 1000);
         camera.name = 'fpv_camera';
+        // Камера модуля ESP32 - OV2640: 640x480, 56° x 44° (drone-model/camera-specs.ts).
+        applyCameraSpec(camera, OV2640_SPEC);
         camera.position.copy(lens?.position ?? new THREE.Vector3(0, 0.16, 0.07));
         camera.position.y += 0.004; // just in front of the glass
         camera.up.set(0, 0, 1);
@@ -74,7 +77,7 @@ function applyPose(state: Esp32State) {
 }
 
 /**
- * suppressed - в этом слоте стоит модуль Radxa (Базовый с pioneer_sdk2): ESP32 убирается сразу, без анимации.
+ * suppressed - Python идёт на модуле Radxa (Базовый с pioneer_sdk2): ESP32 убирается сразу, без анимации.
  */
 export function updateEsp32Module(model: THREE.Object3D, dt: number, suppressed = false) {
     const state = stateOf(model);

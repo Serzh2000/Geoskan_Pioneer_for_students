@@ -239,3 +239,4 @@ export const DEFAULT_SDK2_PYTHON_SCRIPT = [
     'pioneer.land()       # ждёт посадки',
     'pioneer.close_connection()'
 ].join('\n');
+

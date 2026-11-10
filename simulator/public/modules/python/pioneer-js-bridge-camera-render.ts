@@ -5,6 +5,8 @@ import { reportCameraBridgeDebug, resolveConnectedCameraFeed } from './pioneer-j
 import { detectVisibleMarkers, lastMarkerFrame, sealMarkerFrame } from './marker-detection.js';
 import { cameraViewsByDrone } from './pioneer-js-bridge-camera-shared.js';
 import { bottomCameraOf } from '../drone/camera-views.js';
+import { captureSizeOf } from '../drone-model/camera-specs.js';
+import { hasRadxaModule, radxaCameraOf } from '../drone-model/radxa-module.js';
 import { renderWithoutEditorOverlays } from '../scene/core/editor-overlays.js';
 
 // У железной камеры разрешение своё и постоянное, оно не зависит от того, какого размера
@@ -38,15 +40,13 @@ let captureRenderer: WebGLRenderer | null = null;
 let pixelReadCanvas: HTMLCanvasElement | null = null;
 const frameCacheByDrone = new Map<string, FrameCacheEntry>();
 
-function syncCaptureRendererSize(renderer: WebGLRenderer) {
-    renderer.setSize(CAPTURE_WIDTH, CAPTURE_HEIGHT, false);
+function syncCaptureRendererSize(renderer: WebGLRenderer, width = CAPTURE_WIDTH, height = CAPTURE_HEIGHT) {
+    renderer.setSize(width, height, false);
 }
 
 function ensureCaptureRenderer() {
-    if (captureRenderer) {
-        syncCaptureRendererSize(captureRenderer);
-        return captureRenderer;
-    }
+    // Размер выставляет renderDroneFpvFrame по камере: у каждой камеры свой формат кадра.
+    if (captureRenderer) return captureRenderer;
 
     const canvas = document.createElement('canvas');
     captureRenderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true, preserveDrawingBuffer: true });
@@ -61,6 +61,9 @@ function ensureCaptureRenderer() {
 function getDroneFpvCamera(droneId: string): PerspectiveCamera | null {
     const mesh = droneMeshes[droneId];
     if (!mesh) return null;
+    // Базовый с pioneer_sdk2: единственная камера - Radxa 8M 219 в кронштейне модуля, смотрит вниз. Передней камеры нет:
+    // кадра нет (в окне камеры NO SIGNAL, в Python get_cv_frame у CameraType.MAIN сообщает об этом).
+    if (hasRadxaModule(mesh)) return cameraViewsByDrone[droneId] === 'bottom' ? radxaCameraOf(mesh) : null;
     if (cameraViewsByDrone[droneId] === 'bottom') return bottomCameraOf(mesh);
     return mesh.getObjectByName('fpv_camera') as PerspectiveCamera | null;
 }
@@ -73,7 +76,9 @@ function renderDroneFpvFrame(droneId: string): HTMLCanvasElement | null {
         return null;
     }
 
-    syncCaptureRendererSize(renderer);
+    // Формат кадра у каждой камеры свой: OV2640 и Radxa 8M 219 - 640x480, прежние камеры - 640x360.
+    const captureSize = captureSizeOf(fpvCamera);
+    syncCaptureRendererSize(renderer, captureSize.width, captureSize.height);
     const canvas = renderer.domElement;
     fpvCamera.aspect = Math.max(1, canvas.width) / Math.max(1, canvas.height);
     fpvCamera.updateProjectionMatrix();

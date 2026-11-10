@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import radxaUrl from '../../assets/models/pioneer/radxa-module.glb?url';
+import { RADXA_8M_219_SPEC, applyCameraSpec } from './camera-specs.js';
 
 /*
  * Вычислительный модуль Radxa Zero 3W на Пионере Базовом.
@@ -8,14 +9,16 @@ import radxaUrl from '../../assets/models/pioneer/radxa-module.glb?url';
  * pioneer_sdk2 работает на Базовом только с бортовым компьютером Radxa Zero 3W, поэтому, когда дрону
  * выбран язык «Python · SDK2», модуль стоит на модели: плата-адаптер на разъёмах платы расширения, на ней
  * Radxa Zero 3W с радиаторами, сверху оранжевый кронштейн с камерой, шлейф и антенна (схема сборки constr.pdf).
- * Модуль занимает тот же слот под корпусом, что и модуль ESP32, поэтому ESP32 в это время не показывается.
+ * Модуль крепится на два центральных разъёма платы оптического потока (не на белые полоски ESP32 впереди платы).
+ * Python в этом случае идёт на Radxa, а не на ESP32, поэтому ESP32 в это время не показывается.
  *
  * Ассет собран tools/export_radxa_module.py из модели Radxa_v02.blend. Он уже стоит в координатах модели
- * дрона (узел radxa_module), так что достаточно добавить его в группу модели. GLB (2 МБ) грузится только
+ * дрона на центральных разъёмах (узел radxa_module), так что достаточно добавить его в группу модели. GLB (2 МБ) грузится только
  * когда модуль нужен хотя бы одному дрону.
  */
 
 const MODULE_NODE = 'radxa_module';
+const RADXA_VIEW_CAMERA = 'radxa_view_camera';
 
 type RadxaState = {
     /** Включён ли модуль для этого дрона сейчас. */
@@ -59,10 +62,29 @@ export function attachRadxaModule(model: THREE.Object3D, template: THREE.Object3
             : object.material.clone();
         object.castShadow = true;
     });
+    // Камера Radxa Camera 8M 219 стоит в кронштейне: смотрит вниз (-Z), верх кадра - нос дрона (+Y).
+    const lens = node.getObjectByName('radxa_camera');
+    if (lens && !lens.getObjectByName(RADXA_VIEW_CAMERA)) {
+        const camera = new THREE.PerspectiveCamera(RADXA_8M_219_SPEC.vfov, RADXA_8M_219_SPEC.width / RADXA_8M_219_SPEC.height, 0.005, 200);
+        camera.name = RADXA_VIEW_CAMERA;
+        applyCameraSpec(camera, RADXA_8M_219_SPEC);
+        lens.add(camera);
+    }
     const state = stateOf(model);
     state.node = node;
     if (state.wanted) model.add(node);
     return node;
+}
+
+/** Модуль Radxa сейчас стоит на этом дроне (Базовый с pioneer_sdk2). */
+export function hasRadxaModule(model: THREE.Object3D): boolean {
+    return (model.userData.radxa as RadxaState | undefined)?.wanted === true;
+}
+
+/** Камера Radxa Camera 8M 219 этого дрона: единственная камера Базового с pioneer_sdk2. null - модуль не стоит или ещё грузится. */
+export function radxaCameraOf(model: THREE.Object3D): THREE.PerspectiveCamera | null {
+    if (!hasRadxaModule(model)) return null;
+    return (model.getObjectByName(RADXA_VIEW_CAMERA) as THREE.PerspectiveCamera | undefined) ?? null;
 }
 
 /**

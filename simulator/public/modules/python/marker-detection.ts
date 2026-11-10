@@ -161,7 +161,8 @@ export function scanMarkers(camera: THREE.PerspectiveCamera, width: number, heig
         if (!inView) continue;
 
         const side = Math.min(...pixels.map((p, i) => Math.hypot(p[0] - pixels[(i + 1) % 4][0], p[1] - pixels[(i + 1) % 4][1])));
-        if (side < MIN_SIDE_PX) continue;
+        // Порог узнавания зависит от камеры (OV2640 и Radxa 8M 219 - 20 px, как у настоящего cv2.aruco; по умолчанию 10).
+        if (side < ((camera.userData.minMarkerPx as number | undefined) ?? MIN_SIDE_PX)) continue;
 
         // Something between the camera and the marker's centre hides it.
         const now = performance.now();

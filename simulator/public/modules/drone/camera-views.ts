@@ -3,6 +3,7 @@ import { tablerIcon, type TablerIconName } from '../ui/icons/tabler.js';
 import { renderWithoutEditorOverlays } from '../scene/core/editor-overlays.js';
 import { scanMarkers, type ProjectedMarker } from '../python/marker-detection.js';
 import { MARKER_DICTIONARIES } from '../environment/obstacles/marker-dictionaries.js';
+import { hasRadxaModule, radxaCameraOf } from '../drone-model/radxa-module.js';
 
 /*
  * Small picture-in-picture windows in the viewport showing what the current
@@ -295,6 +296,9 @@ export function bottomCameraOf(mesh: THREE.Object3D) {
 }
 
 function cameraFor(id: ViewId, mesh: THREE.Object3D) {
+    // Базовый с pioneer_sdk2: единственная камера - Radxa 8M 219 в кронштейне модуля, смотрит вниз. Передней камеры у
+    // такой сборки нет, поэтому окно «Передняя камера» показывает NO SIGNAL (режим FPV на сцене это не касается).
+    if (hasRadxaModule(mesh)) return id === 'bottom' ? radxaCameraOf(mesh) ?? undefined : undefined;
     return id === 'front'
         ? mesh.getObjectByName('fpv_camera') as THREE.PerspectiveCamera | undefined
         : bottomCameraOf(mesh);
@@ -330,6 +334,17 @@ export function renderCameraViews(renderer: THREE.WebGLRenderer, scene: THREE.Sc
             if (!open[id] || !slot) continue;
             const camera = cameraFor(id, droneMesh);
             slot.classList.toggle('is-empty', !camera);
+            const radxa = hasRadxaModule(droneMesh);
+            const empty = slot.querySelector<HTMLElement>('.scene-camera-view__empty');
+            const emptyText = id === 'front' && radxa ? 'NO SIGNAL' : 'Нет изображения';
+            if (empty && empty.textContent !== emptyText) empty.textContent = emptyText;
+            const title = slot.closest('section')?.querySelector<HTMLElement>('.scene-camera-view__title');
+            const titleText = id === 'bottom' && radxa ? 'Камера Radxa (вниз)' : VIEWS[id].title;
+            if (title && title.textContent !== titleText) title.textContent = titleText;
+            // Окно показывает кадр в формате камеры (4:3 у OV2640 и Radxa 8M 219, иначе 16:9), а не растягивает его.
+            const capture = camera?.userData.capture as { width: number; height: number } | undefined;
+            const ratio = capture ? `${capture.width} / ${capture.height}` : '';
+            if (slot.style.aspectRatio !== ratio) slot.style.aspectRatio = ratio;
             if (!camera) continue;
 
             const rect = slot.getBoundingClientRect();

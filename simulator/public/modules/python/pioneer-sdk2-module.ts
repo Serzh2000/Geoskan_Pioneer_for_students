@@ -106,6 +106,11 @@ def _check_model(drone_id):
             "Для этого дрона выбран не pioneer_sdk2. Выберите язык «Python · SDK2» в панели «Рой» "
             "(у Пионера Базового для него нужна Radxa Zero 3W) или используйте pioneer_sdk.")
 
+def _front_camera_present():
+    # Подделки в тестах могут не знать этой функции: тогда считаем, что камера есть.
+    check = getattr(_js, "pioneer2_front_camera", None)
+    return True if check is None else bool(check(str(_js.SIM_DRONE_ID)))
+
 class Pioneer:
     def __init__(self, serial=None, tcp="127.0.0.1:20556", baudrate=57600,
                  wait_callback=True, safety_command=True, logger=True):
@@ -590,10 +595,16 @@ class Camera:
         self.camera_type = camera_type
         view = "bottom" if camera_type == CameraType.OPT else "front"
         self._camera = _sdk1.Camera(view=view)
+        if camera_type == CameraType.MAIN and not _front_camera_present():
+            _sim_note("У Пионера Базового с pioneer_sdk2 передней камеры нет: CameraType.MAIN даёт NO SIGNAL. "
+                      "Камера Radxa 8M 219 смотрит вниз - используйте CameraType.OPT.")
 
     # Как у настоящей камеры: get_cv_frame ждёт следующий кадр, кадров - 30 в секунду.
     # Заодно цикл стрима отдаёт браузеру время на основную сцену.
     async def get_cv_frame(self, timeout=5.0):
+        if self.camera_type == CameraType.MAIN and not _front_camera_present():
+            raise RuntimeError("NO SIGNAL: у Пионера Базового с pioneer_sdk2 нет передней камеры. "
+                               "Единственная камера (Radxa 8M 219) смотрит вниз: Camera(camera_type=CameraType.OPT).")
         now = _asyncio.get_event_loop().time()
         wait = getattr(self, "_next_frame_at", 0) - now
         if wait > 0:

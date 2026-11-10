@@ -42,6 +42,10 @@ export type PythonScenario = {
     navNotReady?: boolean;
     /** Положение тумблера SWA (8-й канал пульта) с момента t: [[t, значение]]. */
     rc8?: Array<[number, number]>;
+    /** ArUco-маркеры в кадре камеры: [[с, до, номер]]. */
+    markers?: Array<[number, number, number]>;
+    /** Нажатия клавиш для cv2.waitKey: [[момент, символ или код]]. */
+    keys?: Array<[number, string | number]>;
     yolo?: Array<[number, number, number, number]>;
     pose?: Array<[number, number, 'up' | 'down']>;
     ocr?: Array<[number, number, string, number]>;

@@ -35,18 +35,21 @@ test('Radxa asset is light enough for the browser and keeps its nodes', () => {
     expect(materials.size).toBeGreaterThanOrEqual(8);
 });
 
-test('Radxa sits in the ESP32 slot under the body, feet clear of the ground', () => {
+test('Radxa hangs under the centre of the board on its central headers, clear of the ground', () => {
     const model = new THREE.Group();
     const node = attachRadxaModule(model, asset.scene);
     model.add(node);
     const bounds = new THREE.Box3().setFromObject(node);
-    // Модуль висит под корпусом между опорами: выше пола, ниже плиты платы расширения, внутри габарита шасси.
-    expect(bounds.min.z).toBeGreaterThan(0.01);
-    expect(bounds.max.z).toBeLessThan(0.11);
+    // Модуль стоит на двух центральных разъёмах платы оптического потока (x = +-0,04, y = 0, низ разъёмов z = 0,083),
+    // не на белых полосках ESP32 впереди: выше пола и симметрично относительно центра платы.
+    expect(bounds.min.z).toBeGreaterThan(0);
+    expect(bounds.max.z).toBeLessThan(0.1);
     expect(Math.abs(bounds.min.x)).toBeLessThan(0.12);
     expect(Math.abs(bounds.max.x)).toBeLessThan(0.12);
-    expect(bounds.min.y).toBeGreaterThan(0.02);
-    expect(bounds.max.y).toBeLessThan(0.2);
+    expect(bounds.min.y).toBeGreaterThan(-0.09);
+    expect(bounds.max.y).toBeLessThan(0.09);
+    const centre = bounds.getCenter(new THREE.Vector3());
+    expect(Math.abs(centre.y)).toBeLessThan(0.02);
 });
 
 test('attached module clones its materials so drones do not share them', () => {
