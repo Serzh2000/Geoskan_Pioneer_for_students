@@ -221,12 +221,15 @@ LOW\_VOLTAGE1 & батарея садится, но вернуться домо�
 LOW\_VOLTAGE2 & батарея почти пуста, автопилот начал аварийную посадку \\
 LOW\_CHARGE & критически низкий заряд: запуск моторов невозможен \\
 SHOCK & столкновение или сильный удар, моторы выключаются \\
+DISARM & моторы выключены (есть в 0.16) \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-\begin{infobox}[Событие DISARM]
-Справочник симулятора (он ссылается на 0.16) перечисляет ещё событие \verb|DISARM| --- «моторы выключены». В сборнике Геоскана и в исходниках 0.11.0 его нет. Если вашей версии оно неизвестно, \verb|Event.DISARM| завершится ошибкой \verb|AttributeError|; проверяйте так: \verb|hasattr(Event, "DISARM")|.
+\begin{infobox}[Событие DISARM и числовые коды]
+Событие \verb|DISARM| есть в \texttt{pioneer\_sdk2} 0.16 (проверено на бортах Мини~2 и Базового с Radxa Zero~3W); в сборнике Геоскана и в исходниках 0.11.0 его нет. Если вашей версии оно неизвестно, \verb|Event.DISARM| завершится ошибкой \verb|AttributeError|; проверяйте так: \verb|hasattr(Event, "DISARM")|.
+
+Числовые значения событий (\verb|event.value|) сняты с настоящего борта: \texttt{ALL}~0, \texttt{NULL}~1, \texttt{COPTER\_LANDED}~3, \texttt{LOW\_VOLTAGE1}~4, \texttt{LOW\_VOLTAGE2}~5, \texttt{POINT\_REACHED}~6, \texttt{POINT\_DECELERATION}~7, \texttt{TAKEOFF\_COMPLETE}~8, \texttt{ENGINES\_STARTED}~9, \texttt{SHOCK}~10, \texttt{LOW\_CHARGE}~11, \texttt{DISARM}~12. Сравнивайте события по имени, а не по числу: числа принадлежат протоколу автопилота и могут измениться в новой версии.
 \end{infobox}
 
 \begin{codefile}[python]{python-onboard/pioneer_sdk2/sdk2_04_events.py}

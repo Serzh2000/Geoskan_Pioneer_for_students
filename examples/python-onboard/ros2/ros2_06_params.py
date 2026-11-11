@@ -25,15 +25,16 @@ def main():
     rclpy.init()
     node = Params()
 
-    print('Высота взлёта:', node.read('Copter_com_takeoffAlt'))
-    result = node.call_service(node.set_client, SetParam.Request(name='Copter_com_takeoffAlt', value=0.8))
+    print('Высота взлёта:', node.read('Flight_com_takeoffAlt'))
+    result = node.call_service(node.set_client, SetParam.Request(name='Flight_com_takeoffAlt', value=0.8))
     print('Записали 0.8:', result.status)
-    print('Теперь:', node.read('Copter_com_takeoffAlt'))
+    print('Теперь:', node.read('Flight_com_takeoffAlt'))
     print('Несуществующий параметр:', node.read('No_such_param'))
 
     everything = node.call_service(node.list_client, ParametersList.Request())
     if everything.status:
-        for p in everything.params:
+        print('Всего параметров:', len(everything.params))
+        for p in everything.params[:5]:
             print(f'  {p.name} = {p.value}')
 
     node.destroy_node()

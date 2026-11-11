@@ -334,7 +334,7 @@ export const pythonSdk2ApiDocs: Record<string, ApiDoc> = {
         'grab_stop()'
     ]),
     'Pioneer.get_param': method([
-        'Значение параметра автопилота по имени. Первый вызов (и вызов с update=True) печатает «-> Загрузка словаря автопилота ...». Нет такого параметра - None. В симуляторе известны только Flight_com_navSystem (1.0 - LPS), Copter_com_takeoffAlt и параметры RC из send_rc_channels. update=True читает значение заново; для знакомых имён результат тот же.',
+        'Значение параметра автопилота по имени. Первый вызов (и вызов с update=True) печатает «-> Загрузка словаря автопилота ...». Нет такого параметра - None. В симуляторе известны только Flight_com_navSystem (1.0 - LPS), Flight_com_takeoffAlt и параметры RC из send_rc_channels. update=True читает значение заново; для знакомых имён результат тот же.',
         'pioneer.get_param(name, update=False) -> float',
         'name - имя параметра; update - перечитать словарь параметров',
         'число или None',
@@ -433,7 +433,7 @@ export const pythonSdk2ApiDocs: Record<string, ApiDoc> = {
         'get_nav_status_gps()'
     ]),
     'Pioneer.set_param': method([
-        'Записать параметр автопилота. Если параметра нет - печатает «Установка параметра ... не удалась» и возвращает False. В симуляторе известны только параметры RC из README (Copter_man_rcMode0, Copter_man_rcMode1, Copter_man_rcMode2, Copter_flyWithoutRc, SensorMux_rc); Copter_com_takeoffAlt (высота взлёта, 0.4 м по умолчанию); Flight_com_navSystem читается, но не меняется: навигация симулятора всегда LPS. Значение запоминается до конца программы и, кроме RC-набора, не влияет на полёт и не меняет параметры автопилота в панели настроек симулятора.',
+        'Записать параметр автопилота. Если параметра нет - печатает «Установка параметра ... не удалась» и возвращает False. В симуляторе известны только параметры RC из README (Copter_man_rcMode0, Copter_man_rcMode1, Copter_man_rcMode2, Copter_flyWithoutRc, SensorMux_rc); Flight_com_takeoffAlt (высота взлёта, 0.4 м по умолчанию); Flight_com_navSystem читается, но не меняется: навигация симулятора всегда LPS. Значение запоминается до конца программы и, кроме RC-набора, не влияет на полёт и не меняет параметры автопилота в панели настроек симулятора.',
         'pioneer.set_param(name, value) -> bool',
         'name - имя параметра; value - число',
         'True, если параметр записан, иначе False',

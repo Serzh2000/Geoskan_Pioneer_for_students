@@ -83,6 +83,9 @@ class JS(types.ModuleType):
         calls.append(['speed', list(args[1:])])
         return True
 
+    def pioneer_get_local_position_lps(self, _id):
+        return Result([0.0, 0.0, 1.0])
+
     def pioneer2_cargo(self, _id, grab):
         calls.append(['cargo', grab])
         return False

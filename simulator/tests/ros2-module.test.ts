@@ -307,36 +307,36 @@ describe('борт, параметры автопилота, навигация'
         const { lines } = scenario(`
 node = student()
 OUT((await call(node, '/geoscan/alive', Live)).status)
-r = await call(node, '/geoscan/board/get_param', GetParam, name='Copter_com_takeoffAlt', update=True)
+r = await call(node, '/geoscan/board/get_param', GetParam, name='Flight_com_takeoffAlt', update=True)
 OUT(round(r.value, 2), r.status)
 r = await call(node, '/geoscan/board/get_param', GetParam, name='Nope', update=False)
 OUT(r.status)
-OUT((await call(node, '/geoscan/board/set_param', SetParam, name='Copter_com_takeoffAlt', value=1.5)).status)
-r = await call(node, '/geoscan/board/get_param', GetParam, name='Copter_com_takeoffAlt', update=False)
+OUT((await call(node, '/geoscan/board/set_param', SetParam, name='Flight_com_takeoffAlt', value=1.5)).status)
+r = await call(node, '/geoscan/board/get_param', GetParam, name='Flight_com_takeoffAlt', update=False)
 OUT(r.value)
 OUT((await call(node, '/geoscan/board/set_param', SetParam, name='Flight_com_navSystem', value=2.0)).status)
 OUT((await call(node, '/geoscan/board/set_param', SetParam, name='Unknown', value=2.0)).status)
 r = await call(node, '/geoscan/board/get_parameters', ParametersList)
 OUT(r.status, len(r.params), r.params[0].name)
-bad = SetParametersList.Request(params=[Parameter(name='Copter_com_takeoffAlt', value=2.0), Parameter(name='Nope', value=1.0)])
+bad = SetParametersList.Request(params=[Parameter(name='Flight_com_takeoffAlt', value=2.0), Parameter(name='Nope', value=1.0)])
 c = node.create_client(SetParametersList, '/geoscan/board/set_parameters')
 f = c.call_async(bad)
 await rclpy.spin_until_future_complete(node, f)
 OUT(f.result().status)
-r = await call(node, '/geoscan/board/get_param', GetParam, name='Copter_com_takeoffAlt', update=False)
+r = await call(node, '/geoscan/board/get_param', GetParam, name='Flight_com_takeoffAlt', update=False)
 OUT(r.value)
-good = SetParametersList.Request(params=[Parameter(name='Copter_com_takeoffAlt', value=2.0), Parameter(name='Copter_man_rcMode0', value=6.0)])
+good = SetParametersList.Request(params=[Parameter(name='Flight_com_takeoffAlt', value=2.0), Parameter(name='Copter_man_rcMode0', value=6.0)])
 f = c.call_async(good)
 await rclpy.spin_until_future_complete(node, f)
 OUT(f.result().status)
 r = await call(node, '/geoscan/board/get_param', GetParam, name='Copter_man_rcMode0', update=False)
 OUT(r.value)
 await call(node, '/geoscan/board/restart', SS.Empty)
-r = await call(node, '/geoscan/board/get_param', GetParam, name='Copter_com_takeoffAlt', update=False)
+r = await call(node, '/geoscan/board/get_param', GetParam, name='Flight_com_takeoffAlt', update=False)
 OUT(round(r.value, 2))
 `, MINI2);
         expect(lines).toEqual([
-            'True', '0.4 True', 'False', 'True', '1.5', 'False', 'False', 'True 7 Flight_com_navSystem', 'False', '1.5', 'True', '6.0', '0.4'
+            'True', '0.4 True', 'False', 'True', '1.5', 'False', 'False', 'True 232 Offsets_accel_xOffset', 'False', '1.5', 'True', '6.0', '0.4'
         ]);
     });
 
@@ -526,12 +526,12 @@ OUT(J(events))
 OUT(J(sorted(set(states))))
 OUT(states[-1])
 `, MINI2);
-        expect(JSON.parse(lines[0])).toEqual([8, 7, 2]);
+        expect(JSON.parse(lines[0])).toEqual([9, 8, 3]);
         expect(JSON.parse(lines[1])).toEqual([0, 1, 2]);
         expect(lines[2]).toBe('0');
     });
 
-    withRos2Python('POINT_REACHED приходит событием 5', () => {
+    withRos2Python('POINT_REACHED приходит событием 6', () => {
         const { lines } = scenario(`${TOPIC_PRE}
 events = []
 node.create_subscription(Int8, '/geoscan/flight/callback_event', lambda m: events.append(m.data), 50)
@@ -542,9 +542,9 @@ await rclpy.spin_until_future_complete(node, rclpy.Future(), timeout_sec=0.5)
 OUT(J(events))
 `, MINI2);
         const events = JSON.parse(lines[0]) as number[];
-        expect(events).toContain(5);
         expect(events).toContain(6);
-        expect(events.indexOf(6)).toBeLessThan(events.indexOf(5));
+        expect(events).toContain(7);
+        expect(events.indexOf(7)).toBeLessThan(events.indexOf(6));
     });
 
     withRos2Python('данные датчиков: imu, altitude, range, battery, motors_rpm, ranger, optical flow, local/*', () => {

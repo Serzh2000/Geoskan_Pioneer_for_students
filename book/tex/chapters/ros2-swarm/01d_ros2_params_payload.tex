@@ -12,7 +12,7 @@
  & \textbf{Параметры автопилота} & \textbf{Параметры узла} \\
 \midrule
 Где живут & в полётном контроллере; сохраняются при перезагрузке & в \texttt{ros\_pioneer\_node}; задаются YAML-файлом борта при запуске \\
-Пример & \texttt{Copter\_com\_takeoffAlt} (высота взлёта) & \texttt{topics.gnss}, \texttt{grab}, \texttt{range\_sensor.max\_range} \\
+Пример & \texttt{Flight\_com\_takeoffAlt} (высота взлёта) & \texttt{topics.gnss}, \texttt{grab}, \texttt{range\_sensor.max\_range} \\
 Как менять & сервисы \fpath{board/get_param}, \fpath{board/set_param}, \fpath{board/get_parameters}, \fpath{board/set_parameters} & команда \verb|ros2 param|, ключ \verb|--ros-args -p| при запуске, YAML \\
 \bottomrule
 \end{tabularx}
@@ -39,14 +39,14 @@
 \begin{codefile}[python]{python-onboard/ros2/ros2_06_params.py}
 \end{codefile}
 
-\paragraph{Что происходит.} Метод \verb|read| вызывает \verb|get_param|; если ответ \verb|status| ложный (параметра нет), возвращает \verb|None|. Программа читает высоту взлёта, записывает 0.8~м, читает снова и проверяет несуществующее имя. Затем \verb|get_parameters| печатает весь список. Значения параметров --- числа (\verb|float32|); имена вида \texttt{Copter\_com\_takeoffAlt} --- как в автопилоте.
+\paragraph{Что происходит.} Метод \verb|read| вызывает \verb|get_param|; если ответ \verb|status| ложный (параметра нет), возвращает \verb|None|. Программа читает высоту взлёта, записывает 0.8~м, читает снова и проверяет несуществующее имя. Затем \verb|get_parameters| печатает весь список. Значения параметров --- числа (\verb|float32|); имена вида \texttt{Flight\_com\_takeoffAlt} --- как в автопилоте (у настоящего Мини~2 это 0.5~м; в симуляторе 0.4~м).
 
 \begin{warnbox}[Параметр автопилота сохраняется]
-Записанное значение остаётся в автопилоте и после перезагрузки. Прочитайте и запомните старое значение, а в конце программы верните его (\verb|finally|). Не меняйте параметры, назначения которых не знаете: неверное значение может сломать полёт. В симуляторе известны семь параметров (\texttt{Flight\_com\_navSystem}, \texttt{Copter\_com\_takeoffAlt}, \texttt{Copter\_man\_rcMode0..2}, \texttt{Copter\_flyWithoutRc}, \texttt{SensorMux\_rc}); остальные имена дают \verb|status: false|.
+Записанное значение остаётся в автопилоте и после перезагрузки. Прочитайте и запомните старое значение, а в конце программы верните его (\verb|finally|). Не меняйте параметры, назначения которых не знаете: неверное значение может сломать полёт. Автопилот Мини~2 хранит 232 параметра (имена по группам --- в приложении «Протокол Plazlink»); неизвестное имя даёт \verb|status: false|. В симуляторе значения параметров те же, что у борта, кроме \texttt{Flight\_com\_navSystem} (1 вместо 2) и \texttt{Flight\_com\_takeoffAlt} (0.4 вместо 0.5).
 \end{warnbox}
 
 \begin{taskbox}[Высота взлёта по сервису]
-Прочитайте \texttt{Copter\_com\_takeoffAlt}, запишите вдвое большее значение, взлетите и убедитесь, что дрон поднимается выше; в \verb|finally| верните исходное значение. Отдельно запросите параметр с несуществующим именем и напечатайте результат.
+Прочитайте \texttt{Flight\_com\_takeoffAlt}, запишите вдвое большее значение, взлетите и убедитесь, что дрон поднимается выше; в \verb|finally| верните исходное значение. Отдельно запросите параметр с несуществующим именем и напечатайте результат.
 \expected{после записи высота взлёта изменилась и затем вернулась; несуществующий параметр даёт \texttt{status: False} и \texttt{None}, а не ошибку программы.}
 \mission{Мини~2 SDK2}{50}
 \end{taskbox}

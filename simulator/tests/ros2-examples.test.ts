@@ -71,7 +71,8 @@ describe('примеры ROS 2', () => {
     withRos2Python('ros2_06: параметры читаются и записываются', () => {
         const run = runRos2(read('ros2_06_params.py'), { mode: 'program', speed: 10 });
         expect(run.out.slice(0, 4)).toEqual(['Высота взлёта: 0.4', 'Записали 0.8: True', 'Теперь: 0.8', 'Несуществующий параметр: None']);
-        expect(run.out.filter((line) => line.startsWith('  ')).length).toBe(7);
+        expect(run.out.filter((line) => line.startsWith('  ')).length).toBe(5);
+        expect(run.out).toContain('Всего параметров: 232');
     });
 
     withRos2Python('ros2_07: навигация переключается на земле', () => {

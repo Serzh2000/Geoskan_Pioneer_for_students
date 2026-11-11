@@ -144,7 +144,7 @@ get\_satellites\_count() & $(число спутников GPS, число сп�
 \begin{codebox}[Безопасная смена параметра]
 \small
 \begin{verbatim}
-name = "Copter_com_takeoffAlt"
+name = "Flight_com_takeoffAlt"
 old = pioneer.get_param(name, update=True)
 print("было:", old)
 if old is not None:
@@ -160,7 +160,7 @@ if old is not None:
 \end{warnbox}
 
 \begin{infobox}[Параметры в симуляторе]
-Симулятор знает семь параметров: \texttt{Flight\_com\_navSystem} (1.0 --- LPS, менять нельзя), \texttt{Copter\_com\_takeoffAlt} (0.4) и пять параметров пульта (\texttt{Copter\_man\_rcMode0}, \texttt{Copter\_man\_rcMode1}, \texttt{Copter\_man\_rcMode2}, \texttt{Copter\_flyWithoutRc}, \texttt{SensorMux\_rc}). Остальные имена дают \verb|None| и \verb|False|. Значения живут до конца программы и полёт не меняют (кроме набора для пульта, см.\ раздел «Пульт RC»); настройки автопилота в панели симулятора \verb|set_param| не трогает.
+Симулятор знает те же 232 параметра, что настоящий автопилот Мини~2 (имена и значения сняты с борта). Неизвестное имя даёт \verb|None| и \verb|False|, как на дроне. Значения живут до конца программы и полёт не меняют (кроме набора для пульта, см.\ раздел «Пульт RC»); настройки автопилота в панели симулятора \verb|set_param| не трогает. Два значения симулятор намеренно держит своими: \texttt{Flight\_com\_navSystem} равен 1 (LPS, менять нельзя), а у борта 2 (оптика, OPT); \texttt{Flight\_com\_takeoffAlt} равен 0.4~м, а у борта 0.5~м, потому что симулятор взлетает на 0.4~м. Имя высоты взлёта --- именно \texttt{Flight\_com\_takeoffAlt}; параметра \texttt{Copter\_com\_takeoffAlt} на борту нет. Значения для пульта на борту по умолчанию такие: \texttt{Copter\_man\_rcMode0/1/2} = 1/2/4, \texttt{Copter\_flyWithoutRc} = 1, \texttt{SensorMux\_rc} = 0.
 \end{infobox}
 
 \paragraph{Контекстный менеджер для параметров.} Возврат старого значения удобно спрятать в конструкцию \verb|with|:

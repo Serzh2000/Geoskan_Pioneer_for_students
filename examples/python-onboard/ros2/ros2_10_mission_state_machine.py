@@ -7,9 +7,9 @@ from std_msgs.msg import Int8
 from std_srvs.srv import Trigger
 from gs_interfaces.srv import Arm, GoToLocalPoint
 
-EVENT_COPTER_LANDED = 2
-EVENT_POINT_REACHED = 5
-EVENT_TAKEOFF_COMPLETE = 7
+EVENT_COPTER_LANDED = 3
+EVENT_POINT_REACHED = 6
+EVENT_TAKEOFF_COMPLETE = 8
 
 POINTS = [(1.0, 0.0, 1.0), (1.0, 1.0, 1.0)]
 

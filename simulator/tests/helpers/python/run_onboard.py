@@ -140,7 +140,7 @@ class NavStatus(enum.Enum):
 
 # Параметры автопилота, как в pioneer-sdk2-module.ts: остальных get_param не знает.
 PARAMS = {
-    'Flight_com_navSystem': 1.0, 'Copter_com_takeoffAlt': 0.4, 'Copter_man_rcMode0': 0.0,
+    'Flight_com_navSystem': 1.0, 'Flight_com_takeoffAlt': 0.4, 'Copter_man_rcMode0': 0.0,
     'Copter_man_rcMode1': 0.0, 'Copter_man_rcMode2': 0.0, 'Copter_flyWithoutRc': 0.0, 'SensorMux_rc': 0.0,
 }
 PARAMS_LOCKED = ('Flight_com_navSystem',)

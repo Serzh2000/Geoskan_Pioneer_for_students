@@ -10,6 +10,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { PIONEER_SDK2_PRELUDE } from '../public/modules/python/pioneer-sdk2-module.js';
 import { pythonSdk2ApiDocs } from '../public/modules/docs/python-sdk2-api-docs.js';
+import { MINI2_BOARD_CONFIG, RAZERO_BOARD_CONFIG } from '../public/modules/python/board-configs.js';
 import { findPython } from './helpers/python-sdk-harness.js';
 
 const RUNNER = path.join(process.cwd(), 'tests', 'helpers', 'python', 'run_sdk2_module.py');
@@ -95,6 +96,44 @@ describe('pioneer_sdk2: полнота относительно 0.11.0', () => {
 
 describe('pioneer_sdk2: поведение на настоящем Python', () => {
     if (!python) test('Python 3 не найден, тесты пропущены', () => undefined);
+
+    pythonTest('Razero: board_config.json отключает Ranger и захват, go_to_local_point идёт по gtlp_version 1', () => {
+        const lines = run(`${PRE}
+    js.pioneer2_board_config = lambda _id: ${JSON.stringify(JSON.stringify(RAZERO_BOARD_CONFIG))}
+    pioneer = P(logger=False)
+    out("nav", pioneer.get_nav_system().name)
+    out("ranger", pioneer.get_ranger_data())
+    out("grab", pioneer.grab_close())
+    out("reboot", pioneer.reboot_board())
+    await pioneer.arm()
+    await pioneer.takeoff()
+    calls.clear()
+    pioneer.go_to_local_point(1, 2, 3, yaw=90)
+    pioneer.go_to_local_point_body_fixed(1, 0, 0.5, yaw=45)
+    out("calls", json.dumps(calls))
+`);
+        expect(lines).toContain('OUT nav OPT');
+        expect(lines).toContain('OUT ranger (None, None, None, None, None)');
+        expect(lines).toContain('OUT grab False');
+        expect(lines).toContain('OUT reboot True');
+        const calls = JSON.parse(String(lines.find((line) => line.startsWith('OUT calls '))).slice('OUT calls '.length));
+        // Курс - отдельной командой set_yaw (go_to в текущую точку с курсом), затем точка без курса; body_fixed = LPS + смещение.
+        expect(calls.map((call: unknown[]) => call[0])).toEqual(['go_to', 'go_to', 'go_to', 'go_to']);
+        expect(calls[1][1].slice(0, 3)).toEqual([1, 2, 3]);
+        expect(calls[1][1][3]).toBeNull();
+        expect(calls[3][1].slice(0, 3)).toEqual([1, 0, 1.5]);
+        expect(calls[3][1][3]).toBeNull();
+    });
+
+    test('Мини 2: файл board-config-mini2.json совпадает с константой', () => {
+        const file = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'modules', 'python', 'board-config-mini2.json'), 'utf8'));
+        expect(file).toEqual(MINI2_BOARD_CONFIG);
+    });
+
+    pythonTest('Razero: файл board-config-razero.json совпадает с константой', () => {
+        const file = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'modules', 'python', 'board-config-razero.json'), 'utf8'));
+        expect(file).toEqual(RAZERO_BOARD_CONFIG);
+    });
 
     pythonTest('RC: rc_sdk1_to_sdk2 считает так же, как оригинал 0.11.0', () => {
         const lines = run(`${PRE}
@@ -259,11 +298,11 @@ async def main():
 
     pythonTest('параметр высоты взлёта из примера 11 читается и временно меняется', () => {
         const lines = run(`${PRE}
-    out("before", pioneer.get_param("Copter_com_takeoffAlt"))
-    out("set", pioneer.set_param("Copter_com_takeoffAlt", 0.7))
-    out("inside", pioneer.get_param("Copter_com_takeoffAlt", update=True))
-    pioneer.set_param("Copter_com_takeoffAlt", 0.4)
-    out("after", pioneer.get_param("Copter_com_takeoffAlt", update=True))
+    out("before", pioneer.get_param("Flight_com_takeoffAlt"))
+    out("set", pioneer.set_param("Flight_com_takeoffAlt", 0.7))
+    out("inside", pioneer.get_param("Flight_com_takeoffAlt", update=True))
+    pioneer.set_param("Flight_com_takeoffAlt", 0.4)
+    out("after", pioneer.get_param("Flight_com_takeoffAlt", update=True))
 `);
         for (const expected of ['OUT before 0.4', 'OUT set True', 'OUT inside 0.7', 'OUT after 0.4']) expect(lines).toContain(expected);
     });

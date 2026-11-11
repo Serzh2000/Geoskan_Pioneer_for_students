@@ -12,6 +12,8 @@
  * Камера - та же виртуальная камера, что у pioneer_sdk (класс Camera
  * первого SDK), ImageViewer показывает кадры в окне симулятора.
  */
+import { MINI2_AUTOPILOT_PARAMS } from './autopilot-params-mini2.js';
+
 export const PIONEER_SDK2_PRELUDE = `
 import asyncio as _asyncio, builtins as _builtins, enum as _enum, inspect as _inspect, math as _math, sys as _sys, types as _types
 import js as _js
@@ -20,18 +22,19 @@ _sdk1 = _sys.modules['pioneer_sdk']
 _sdk2 = _types.ModuleType('pioneer_sdk2')
 
 class Event(_enum.Enum):
-    ALL = 255
-    NULL = 0
-    DISARM = 1
-    COPTER_LANDED = 2
-    LOW_VOLTAGE1 = 3
-    LOW_VOLTAGE2 = 4
-    POINT_REACHED = 5
-    POINT_DECELERATION = 6
-    TAKEOFF_COMPLETE = 7
-    ENGINES_STARTED = 8
-    SHOCK = 9
-    LOW_CHARGE = 10
+    # Числа - proto.Event настоящего борта (pioneer_sdk2 0.16.0, Мини 2, 2026-11-12).
+    ALL = 0
+    NULL = 1
+    DISARM = 12
+    COPTER_LANDED = 3
+    LOW_VOLTAGE1 = 4
+    LOW_VOLTAGE2 = 5
+    POINT_REACHED = 6
+    POINT_DECELERATION = 7
+    TAKEOFF_COMPLETE = 8
+    ENGINES_STARTED = 9
+    SHOCK = 10
+    LOW_CHARGE = 11
 
 class NavSystem(_enum.Enum):
     GPS = 0
@@ -53,22 +56,13 @@ _CYCLE = [FlyState.ON_LAND, FlyState.ARMED, FlyState.IN_SKY]
 _ALLOWED = {FlyState.ON_LAND: "arm", FlyState.ARMED: "takeoff", FlyState.IN_SKY: "flight"}
 _FLYING = ("FLYING_HOVER", "FLYING_MOVING")
 
-# Параметры автопилота, которые известны симулятору (get_param / set_param).
-# Имена - из README pioneer_sdk2 0.11.0 (раздел «Управление RC-каналами» и
-# get_nav_system) и примера 11 из сборника SDK2 (Copter_com_takeoffAlt);
-# значения по умолчанию - симулятора. Остальных параметров настоящего
-# автопилота здесь нет: get_param вернёт None, set_param - False. Значения
-# живут до конца программы и не меняют полёт, кроме RC-набора (см. send_rc_channels):
-# настройки автопилота в панели симулятора set_param не трогает.
-_PARAMS = {
-    "Flight_com_navSystem": 1.0,
-    "Copter_com_takeoffAlt": 0.4,
-    "Copter_man_rcMode0": 0.0,
-    "Copter_man_rcMode1": 0.0,
-    "Copter_man_rcMode2": 0.0,
-    "Copter_flyWithoutRc": 0.0,
-    "SensorMux_rc": 0.0,
-}
+# Словарь параметров автопилота (get_param / set_param): имена и значения настоящего
+# Мини 2 (232 параметра, autopilot-params-mini2.ts). Неизвестного имени у борта нет, как и
+# у настоящего SDK: get_param вернёт None, set_param - False. Значения живут до конца
+# программы и не меняют полёт, кроме RC-набора (см. send_rc_channels): настройки
+# автопилота в панели симулятора set_param не трогает. Flight_com_takeoffAlt взят 0.4 (у борта 0.5),
+# потому что симулятор взлетает на 0.4 м; Flight_com_navSystem взят 1 (LPS, навигация симулятора), у борта 2 (OPT).
+_PARAMS = {k: float(v) for k, v in ${JSON.stringify({ ...MINI2_AUTOPILOT_PARAMS, Flight_com_takeoffAlt: 0.4, Flight_com_navSystem: 1 })}.items()}
 # Навигация симулятора всегда LPS: этот параметр менять нельзя.
 _PARAMS_LOCKED = ("Flight_com_navSystem",)
 # Набор из README, при котором автопилот слушает send_rc_channels.
@@ -111,6 +105,13 @@ def _front_camera_present():
     check = getattr(_js, "pioneer2_front_camera", None)
     return True if check is None else bool(check(str(_js.SIM_DRONE_ID)))
 
+def _board_config(drone_id):
+    # board_config.json борта (Razero) или None. Подделки в тестах могут не знать этой функции: тогда это Мини 2.
+    import json as _json
+    check = getattr(_js, "pioneer2_board_config", None)
+    text = "" if check is None else str(check(drone_id))
+    return _json.loads(text) if text else None
+
 class Pioneer:
     def __init__(self, serial=None, tcp="127.0.0.1:20556", baudrate=57600,
                  wait_callback=True, safety_command=True, logger=True):
@@ -126,6 +127,11 @@ class Pioneer:
         self._decel_sent = False
         self._grab_closed = False
         self._param_values = dict(_PARAMS)
+        # board_config.json настоящего SDK (у Razero: gtlp_version 1, без ranger / grab / servo / flashlight,
+        # с cargo); у борта с ним навигация OPT (Flight_com_navSystem = 2). У Мини 2 конфигурации нет.
+        self._board = _board_config(self._id)
+        if self._board is not None:
+            self._param_values["Flight_com_navSystem"] = 2.0
         self._params_loaded = False
         self._nav_system = None
         self._rc_channels = [0, 0, 0, 0, 1, 0, 1, 0]
@@ -329,16 +335,30 @@ class Pioneer:
         yaw_rad = None if yaw is None else _math.radians(float(yaw))
         _js.pioneer2_go_to(self._id, x, y, z, yaw_rad, time)
 
+    # gtlp_version 1 (Razero): курс уходит отдельной командой set_yaw (абсолютный, даже у
+    # body_fixed), а body_fixed - это просто смещение в мировых осях от позиции LPS.
+    def _go_v1(self, x, y, z, yaw, time, body_fixed):
+        if yaw is not None:
+            self.set_yaw(yaw)
+        if body_fixed:
+            px, py, pz = self.get_local_position_lps()
+            x, y, z = px + x, py + y, pz + z
+        self._go(x, y, z, None, time)
+
     def go_to_local_point(self, x, y, z, yaw=None, time=0):
         if not self.__check_allowed("flight"):
             self.__print_log("Команда полета в точку проигнорирована: коптер еще не в воздухе")
             return False
+        if self._board is not None and self._board.get("gtlp_version") == 1:
+            return self._go_v1(x, y, z, yaw, time, False)
         self._go(x, y, z, yaw, time)
 
     def go_to_local_point_body_fixed(self, x, y, z, yaw=None, time=0):
         if not self.__check_allowed("flight"):
             self.__print_log("Команда полета в точку проигнорирована: коптер еще не в воздухе")
             return False
+        if self._board is not None and self._board.get("gtlp_version") == 1:
+            return self._go_v1(x, y, z, yaw, time, True)
         snap = _js.pioneer2_snapshot(self._id).to_py()
         px, py, pz, cur_yaw = snap[6], snap[7], snap[8], snap[9]
         right, forward = float(x), float(y)
@@ -387,6 +407,12 @@ class Pioneer:
             _sim_note("yaw_rate больше 1.82 рад/с: команда скорости не выполнена.")
             return None
         self._target = None
+        # Как __set_speed_fields настоящего SDK: в автопилот уходят целые числа
+        # (скорость - в см/с с отбрасыванием дробной части, курс - в сотых долях
+        # град/с, interval - в мс), поэтому 0.29 м/с превращается в 0.28.
+        vx, vy, vz = (int(float(v) * 1e2) / 1e2 for v in (vx, vy, vz))
+        yaw_rate = _math.radians(int(_math.degrees(float(yaw_rate)) * 1e2) / 1e2)
+        interval = int(float(interval) * 1e3) / 1e3
         _js.pioneer2_set_manual_speed(self._id, vx, vy, vz, yaw_rate, interval, body_fixed)
         return None
 
@@ -488,6 +514,9 @@ class Pioneer:
         return self._no_gps(None)
 
     def get_ranger_data(self):
+        if self._board is not None and not self._board.get("ranger"):
+            self.__print_log("Модуль Ranger не поддерживается")
+            return (None, None, None, None, None)
         return tuple(round(float(v), 3) for v in _js.pioneer2_ranger(self._id).to_py())
 
     # Словарь параметров, как у SDK, грузится при первом обращении (или update=True).
@@ -516,6 +545,15 @@ class Pioneer:
         return False
 
     def reboot_board(self):
+        if self._board is not None:
+            if not self._board.get("board_reboot"):
+                self.__print_log(f"Перезагрузка платы {self._board.get('board_name')} запрещена")
+                return False
+            # Настоящий SDK шлёт SystemCommand.REBOOT и закрывает связь; в симуляторе борт не
+            # перезагружается, программа продолжает работать.
+            self.__print_log("-> Перезагрузка платы автопилота")
+            self.__print_log("Перезагрузка завершена")
+            return True
         self.__print_log("Перезагрузка платы Pioneer Mini 2 запрещена")
         return False
 
@@ -562,6 +600,9 @@ class Pioneer:
         return bool(_js.pioneer_led_control(self._id, led_id, level(r), level(g), level(b)))
 
     def _grab_move(self, closed, movement_time=0, velocity=20):
+        if self._board is not None and not self._board.get("grab"):
+            self.__print_log("-> Модуль захвата не поддерживается")
+            return False
         if velocity > 100 or velocity < 0:
             self.__print_log("-> Скорость должна быть в диапазоне от 0 до 100 включительно")
             raise ValueError("-> Скорость должна быть в диапазоне от 0 до 100 включительно")

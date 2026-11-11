@@ -1,0 +1,25 @@
+{
+    "board_name": "Razero",
+    "board_reboot": true,
+    "gtlp_version": 1,
+    "cameras": {
+        "driver": "gstreamer",
+        "main": {
+            "name": "maincamera",
+            "resolutions": [{
+                "width": 1080,
+                "height": 720,
+                "fps": 30,
+                "program": true,
+                "recordable": true
+            }],
+            "record_device": 1
+        },
+        "recorder": false
+    },
+    "servo": null,
+    "flashlight": false,
+    "ranger": false,
+    "grab": false,
+    "cargo": true
+}

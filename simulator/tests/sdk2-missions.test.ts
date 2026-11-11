@@ -57,10 +57,11 @@ describe('структура трека sdk2', () => {
         expect(quests.slice(0, LEGACY_IDS.length).map((quest) => quest.id)).toEqual(LEGACY_IDS);
         expect(quests[LEGACY_IDS.length - 1].groupTitle).toMatch(/^13\./);
         const groups = questGroups(quests);
-        expect(groups.length).toBe(19);
-        expect(groups.slice(13).map((group) => group.title.slice(0, 2))).toEqual(['14', '15', '16', '17', '18', '19']);
+        expect(groups.length).toBe(20);
+        expect(groups.slice(13).map((group) => group.title.slice(0, 2))).toEqual(['14', '15', '16', '17', '18', '19', '20']);
         expect(groups.slice(13, 17).every((group) => group.quests.every((quest) => /^sdk2-ros2-/.test(quest.id)))).toBe(true);
-        expect(groups.slice(17).every((group) => group.quests.every((quest) => /^sdk2-swarm-/.test(quest.id)))).toBe(true);
+        expect(groups.slice(17, 19).every((group) => group.quests.every((quest) => /^sdk2-swarm-/.test(quest.id)))).toBe(true);
+        expect(groups[19].quests.every((quest) => /^sdk2-board-/.test(quest.id))).toBe(true);
         groups.slice(13).forEach((group) => {
             expect(group.quests.length).toBeGreaterThanOrEqual(2);
             expect(group.quests.length).toBeLessThanOrEqual(6);

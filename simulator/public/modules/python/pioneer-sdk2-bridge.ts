@@ -1,5 +1,6 @@
 import { droneMeshes } from '../drone/index.js';
 import { setDroneCameraTilt } from '../drone-model/index.js';
+import { RAZERO_BOARD_CONFIG } from './board-configs.js';
 import { droneModelProfile, droneSdk, usesRadxaModule } from '../core/drone-models.js';
 import { recordLearningEvent } from '../core/learning-journal.js';
 import { activateAutopilotRtl } from '../autopilot/params-runtime.js';
@@ -35,6 +36,11 @@ export function installSdk2RuntimeAPI(w: Record<string, unknown>) {
     // Передняя камера (CameraType.MAIN) есть не у каждой сборки: у Базового с Radxa Zero 3W единственная камера
     // Radxa 8M 219 смотрит вниз (CameraType.OPT), а передней нет - кадра нет, NO SIGNAL.
     w.pioneer2_front_camera = (id: string) => !usesRadxaModule(getDroneOrDefault(id));
+
+    // Борт Razero (Базовый с Radxa Zero 3W): board_config.json настоящего SDK - gtlp_version 1,
+    // без Ranger, захвата, серво и подсветки, навигация OPT, перезагрузка платы разрешена.
+    // Возвращает board_config.json борта JSON-строкой или '' (у Мини 2 SDK настроен иначе).
+    w.pioneer2_board_config = (id: string) => (usesRadxaModule(getDroneOrDefault(id)) ? JSON.stringify(RAZERO_BOARD_CONFIG) : '');
 
     // Сообщения logger=True библиотеки - в журнал симулятора, как вывод SDK в терминале дрона.
     w.pioneer2_log = (text: string) => {

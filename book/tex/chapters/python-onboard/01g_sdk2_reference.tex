@@ -109,7 +109,7 @@
 \verb|get_global_position_gps()| & (широта, долгота, высота) & \verb|None| и сообщение \\
 \verb|get_global_velocity_gps()| & (север, восток, вертикаль), м/с & \verb|None| и сообщение \\
 \verb|get_satellites_count()| & (спутники GPS, спутники ГЛОНАСС) & \verb|None| и сообщение \\
-\verb|get_param(name, update=False)| & параметр автопилота или \verb|None| & семь известных параметров \\
+\verb|get_param(name, update=False)| & параметр автопилота или \verb|None| & все 232 параметра Мини~2 \\
 \verb|set_param(name, value)| & записать параметр; \verb|bool| & только для известных \\
 \bottomrule
 \end{longtable}
@@ -164,7 +164,7 @@
 \toprule
 \textrm{\textbf{Имя}} & \textbf{Значения} \\
 \midrule
-Event & \verb|ALL|, \verb|COPTER_LANDED|, \verb|LOW_VOLTAGE1|, \verb|LOW_VOLTAGE2|, \verb|POINT_REACHED|, \verb|POINT_DECELERATION|, \verb|TAKEOFF_COMPLETE|, \verb|ENGINES_STARTED|, \verb|SHOCK|, \verb|LOW_CHARGE| (в 0.16 и в симуляторе ещё \verb|DISARM|) \\
+Event & \verb|ALL|, \verb|COPTER_LANDED|, \verb|LOW_VOLTAGE1|, \verb|LOW_VOLTAGE2|, \verb|POINT_REACHED|, \verb|POINT_DECELERATION|, \verb|TAKEOFF_COMPLETE|, \verb|ENGINES_STARTED|, \verb|SHOCK|, \verb|LOW_CHARGE|, \verb|DISARM| (числовые коды --- в разделе «События») \\
 FlyState & \verb|ON_LAND|, \verb|ARMED|, \verb|IN_SKY| \\
 NavSystem & \verb|GPS|, \verb|LPS|, \verb|OPT| \\
 NavStatus & \verb|NO_DATA|, \verb|CANNOT|, \verb|LOW|, \verb|OK| \\
@@ -200,7 +200,7 @@ ServoPriority & \verb|HIGH|, \verb|MEDIUM|, \verb|LOW| \\
 \verb|point_reached()| сразу \verb|True| & остался флаг от предыдущей точки; опрашивайте каждую точку \\
 \verb|get_*| вернул \verb|None|, дальше \texttt{TypeError} при распаковке & нет датчика или данных; проверяйте результат перед распаковкой \\
 Метод GPS или груза ничего не делает, пишет «не поддерживается» & нужной аппаратуры нет на борту: \verb|cargo_*| --- Базовый Пионер, \verb|grab_*| и \verb|ServoCamera| --- Мини~2 \\
-\verb|get_param| вернул \verb|None| & нет такого параметра (в симуляторе --- любой, кроме семи известных) \\
+\verb|get_param| вернул \verb|None| & нет такого параметра (имена см.\ приложение «Протокол Plazlink» и справочник Pioneer Code); например, высота взлёта называется \texttt{Flight\_com\_takeoffAlt} \\
 RC-каналы игнорируются & не выставлены параметры \texttt{SensorMux\_rc} и \texttt{Copter\_man\_rcMode*}, дрон не в воздухе или каналы отправляются с перерывами \\
 Нет потока \verb|ImageViewer| & драйвер камеры не gstreamer или неверное имя потока в адресе (\texttt{stream not found}) \\
 Программа после камеры не завершается & не вызван \verb|camera.stop()| \\

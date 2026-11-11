@@ -245,11 +245,11 @@ pioneer.subscribe(on_event)
         ],
         hint: 'Новое значение — число 0.8. Старое значение сохраняется в переменной old, и в конце оно же записывается обратно.',
         outcome: 'Параметры правят осторожно: прочитал, записал, вернул. В симуляторе известны не все параметры, неизвестные возвращают None.',
-        starter: groundProgram({ body: 'NAME = "Copter_com_takeoffAlt"\nold = pioneer.get_param(NAME)\nprint("Было:", old)\nok = pioneer.set_param(NAME, ___)\nprint("Записано:", ok)\nprint("Стало:", pioneer.get_param(NAME))\npioneer.set_param(NAME, old)\nprint("Вернули:", pioneer.get_param(NAME))\nprint("Нет такого:", pioneer.get_param("No_such_param"))' }),
+        starter: groundProgram({ body: 'NAME = "Flight_com_takeoffAlt"\nold = pioneer.get_param(NAME)\nprint("Было:", old)\nok = pioneer.set_param(NAME, ___)\nprint("Записано:", ok)\nprint("Стало:", pioneer.get_param(NAME))\npioneer.set_param(NAME, old)\nprint("Вернули:", pioneer.get_param(NAME))\nprint("Нет такого:", pioneer.get_param("No_such_param"))' }),
         answers: ['0.8'], waitMs: 30000,
         check: (g) => {
             g.basics(false).noArm();
-            g.expectText('Было:', '0.4', 'Читайте параметр Copter_com_takeoffAlt через get_param.');
+            g.expectText('Было:', '0.4', 'Читайте параметр Flight_com_takeoffAlt через get_param.');
             g.expectText('Записано:', 'True', 'set_param возвращает True, если параметр принят.');
             g.expectText('Стало:', '0.8', 'После set_param(..., 0.8) get_param вернёт 0.8.');
             g.expectText('Вернули:', '0.4', 'В конце запишите старое значение обратно.');

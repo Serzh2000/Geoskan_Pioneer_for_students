@@ -85,7 +85,7 @@ python3 sdk2_01_connect.py
     \item \verb|ImageViewer| открывает окно симулятора, а не страницу \texttt{10.42.0.1:8889}; аргументы \verb|serial| и \verb|tcp| конструктора не используются;
     \item у Мини~2 два светодиода --- передние индикаторы (0 --- левый, 1 --- правый); захват \verb|grab_close()| подхватывает груз под дроном, как магнит Базового;
     \item навигация всегда LPS: GPS, глобальные точки и магнитный захват \verb|cargo_*| не работают (методы пишут пояснение и возвращают \verb|False| или \verb|None|); \verb|reboot_board()| запрещена, как на настоящем Мини~2;
-    \item \verb|get_param| и \verb|set_param| знают только семь параметров (высота взлёта, набор для пульта RC и другие, см.\ раздел «Параметры»), остальные имена возвращают \verb|None| и \verb|False|;
+    \item \verb|get_param| и \verb|set_param| знают те же 232 параметра, что автопилот Мини~2 (см.\ раздел «Параметры»); неизвестные имена возвращают \verb|None| и \verb|False|, а значения живут до конца программы;
     \item \verb|RecorderControl| проверяет аргументы и печатает «сделал бы», но файлов не создаёт;
     \item вызов \verb|land()| на земле сразу возвращается с предупреждением, а на дроне программа зависнет.
 \end{itemize}
@@ -148,6 +148,55 @@ RecorderControl & запись видео и фото в галерею дрон
 
 \begin{infobox}[Набор классов зависит от платы]
 Настройки платы лежат в файле \texttt{board\_config.json} внутри пакета, и по ним библиотека решает, что у вас есть: \verb|Camera| и \verb|CameraType| --- где есть камера; \verb|ImageViewer| --- при драйвере gstreamer (Мини~2, Radxa Zero~3W); \verb|ServoCamera|, \verb|RecorderControl| и \verb|grab_*| --- Мини~2; \verb|cargo_*| --- Базовый Пионер; \verb|get_ranger_data| --- плата с модулем Ranger. Вызов метода, которого плата не поддерживает, не падает: метод печатает пояснение и возвращает \verb|False| или \verb|None|. Проверяйте результат.
+\end{infobox}
+
+\subsection{Что внутри борта}
+\label{sec:board-inside}
+
+Цифры этого раздела сняты с настоящих бортов (Мини~2 и Базовый Пионер с модулем Radxa Zero~3W, образ Pioneer~OS на Ubuntu~24.04, версии: \texttt{pioneer\_sdk2}~0.16.0, \texttt{pioneer\_dds}~0.4.0, \texttt{pioneer\_swarm}~0.1.3, \texttt{plazlink-server-rs}~0.2.1, Pioneer Bricks~2.3.0).
+
+\paragraph{Цепочка связи.} Автопилот отдаёт данные по UART на скорости 115200 (у Мини~2 порт \texttt{/dev/ttyS3}, у Базового с Radxa --- \texttt{/dev/ttyS4}). Их принимает служба \texttt{plazlink-server-rs} (в системе она называется \texttt{plazlink-core}) и открывает TCP-порт \texttt{20556}. Библиотека \texttt{pioneer\_sdk2} при вызове \verb|Pioneer()| подключается именно к \texttt{127.0.0.1:20556}, поэтому \verb|tcp="127.0.0.1:20556"| в конструкторе --- не случайное число. Через эту же службу работают Pioneer Bricks, служба роя \texttt{swarm-server} и программы с ROS~2: автопилот один, а клиентов к нему подключается несколько.
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Звено} & \textbf{Что делает} \\
+\midrule
+Автопилот & управляет моторами, хранит 232 параметра, отдаёт поля телеметрии \\
+UART 115200 & проводная связь автопилота с бортовым компьютером \\
+\texttt{plazlink-server-rs} (TCP 20556) & протокол Plazlink: даёт нескольким программам доступ к одному автопилоту \\
+\texttt{pioneer\_sdk2} & удобный Python-интерфейс: \verb|arm|, \verb|takeoff|, \verb|get_*| \\
+\texttt{swarm-server}, Bricks, ROS~2 & публикуют данные и принимают команды по сети \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\paragraph{Настройки платы.} Файл \texttt{board\_config.json} внутри пакета \texttt{pioneer\_sdk2} решает, какие модули доступны программе. У двух бортов он разный:
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+& \textbf{Мини 2} & \textbf{Базовый с Radxa Zero 3W} \\
+\midrule
+Перезагрузка платы \verb|reboot_board()| & запрещена & разрешена \\
+Команда \verb|go_to_local_point| & версия~2: курс и точка одной командой & версия~1: сначала \verb|set_yaw|, потом точка; у \verb|go_to_local_point_body_fixed| смещение берётся в осях сцены от текущей позиции \\
+Ranger (\verb|get_ranger_data|) & есть & нет: \verb|None| и сообщение «Модуль Ranger не поддерживается» \\
+Захват (\verb|grab_*|) & есть & нет: \verb|False| и сообщение «Модуль захвата не поддерживается» \\
+Магнитный захват (\verb|cargo_*|) & нет & есть \\
+Сервопривод камеры & есть, $-80\ldots30^\circ$ & нет \\
+Камеры & основная $1080\times720$ при 30 к/с для программы (запись до $3840\times2160$), нижняя $1280\times800$ при 60 к/с & только основная $1080\times720$ при 30 к/с, запись выключена \\
+Навигация по умолчанию & оптическая (\texttt{Flight\_com\_navSystem} = 2) & оптическая \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Симулятор повторяет эти различия: у Базового с модулем Radxa Zero~3W (язык «Python · SDK2») он отключает Ranger и \verb|grab_*|, включает \verb|reboot_board()| и ведёт перелёт по версии~1; у Мини~2 перезагрузка запрещена, а Ranger и захват доступны.
+
+\paragraph{Службы и порты Мини 2.} Кроме разделов Pioneer Code из таблицы выше, на борту работают: \texttt{plazlink-core} (TCP~20556), потоковый сервер камеры (RTSP~8554, WebRTC~8889, управление~9997), gRPC-служба борта (50051), сервис записей (5000) и служба роя \texttt{swarm-server}.
+\begin{infobox}[Что такое DDS и при чём тут рой]
+\textbf{DDS} (Data Distribution Service) --- стандарт обмена данными «издатель --- подписчик» без центрального сервера; на нём построен ROS~2. Данные ходят по \emph{топикам} (имя и тип сообщения), участники сами находят друг друга в сети, а команды идут \emph{сервисами} (запрос --- ответ). На борту работает реализация Fast DDS 2.14, а библиотека \texttt{pioneer\_dds} даёт Python-обёртки \verb|Publisher|, \verb|Subscriber| и \verb|Service|. Служба \texttt{swarm-server} читает данные через \texttt{pioneer\_sdk2} и публикует их в DDS по описанию типа дрона: позицию, скорость и курс (\texttt{navigation/local/\allowbreak position}, \texttt{velocity}, \texttt{yaw}, по 10~Гц), IMU, высоту и батарею (\texttt{sensors/\allowbreak imu}, \texttt{altitude}, \texttt{battery\_state}), а также события полёта (\texttt{flight/\allowbreak callback\_event}). Команды \texttt{flight/arm}, \texttt{disarm}, \texttt{takeoff}, \texttt{land}, \texttt{go\_to\_local\_point}, \texttt{go\_to\_global\_point}, \texttt{set\_yaw}, \texttt{payload/grab} и \texttt{payload/led/set} служба принимает как сервисы и выполняет через SDK. Каждый борт регулярно объявляет себя сообщением \texttt{Heartbeat} из пакета \texttt{swarm\_msgs}: по нему рой узнаёт, кто в сети. Подробности --- в части «ROS~2 и рой на Пионере».
 \end{infobox}
 
 \subsection{Подключение и жизненный цикл}

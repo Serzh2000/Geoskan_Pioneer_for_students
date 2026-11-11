@@ -77,7 +77,7 @@ from std_srvs.srv import Trigger
 from gs_interfaces.srv import Arm, GoToLocalPoint
 ${options.imports ?? ''}
 ON_LAND, IN_SKY = 0, 2            # значения flight/fly_state
-EVENT_POINT_REACHED = 5           # код в flight/callback_event
+EVENT_POINT_REACHED = 6           # код в flight/callback_event
 
 rclpy.init()
 node = Node('mission')

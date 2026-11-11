@@ -50,7 +50,7 @@
 
 \subsection{События автопилота}
 
-Топик \fpath{flight/callback_event} (\texttt{std\_msgs/\allowbreak Int8}) --- то же, что \verb|subscribe| в \texttt{pioneer\_sdk2}: автопилот сообщает о важных моментах числом. В симуляторе коды такие же, как у \verb|Event| из \texttt{pioneer\_sdk2}:
+Топик \fpath{flight/callback_event} (\texttt{std\_msgs/\allowbreak Int8}) --- то же, что \verb|subscribe| в \texttt{pioneer\_sdk2}: автопилот сообщает о важных моментах числом. Служба роя на борту публикует в него число \verb|event.value| из \texttt{pioneer\_sdk2}, поэтому коды те же, что у \verb|Event| (значения сняты с настоящего борта):
 
 \begin{center}
 \small
@@ -58,26 +58,28 @@
 \toprule
 \textbf{Код} & \textrm{\textbf{Событие}} & \textbf{Когда приходит} \\
 \midrule
-1 & DISARM & моторы выключены \\
-2 & COPTER\_LANDED & дрон сел \\
-3, 4 & LOW\_VOLTAGE1, 2 & батарея садится; почти пуста \\
-5 & POINT\_REACHED & точка достигнута \\
-6 & POINT\_DECELERATION & дрон тормозит перед точкой \\
-7 & TAKEOFF\_COMPLETE & взлёт завершён \\
-8 & ENGINES\_STARTED & моторы запущены \\
-9 & SHOCK & удар \\
-10 & LOW\_CHARGE & заряд слишком мал для запуска \\
+0 & ALL & не событие: «все события» при подписке \\
+1 & NULL & пустое событие \\
+3 & COPTER\_LANDED & дрон сел \\
+4, 5 & LOW\_VOLTAGE1, 2 & батарея садится; почти пуста \\
+6 & POINT\_REACHED & точка достигнута \\
+7 & POINT\_DECELERATION & дрон тормозит перед точкой \\
+8 & TAKEOFF\_COMPLETE & взлёт завершён \\
+9 & ENGINES\_STARTED & моторы запущены \\
+10 & SHOCK & удар \\
+11 & LOW\_CHARGE & заряд слишком мал для запуска \\
+12 & DISARM & моторы выключены \\
 \bottomrule
 \end{tabularx}
 \end{center}
 
-Эти числа справочник Геоскана не приводит: они взяты из эмуляции (по \texttt{pioneer\_sdk2}). Проверяйте их на своём дроне, например подпиской с печатью и \verb|ros2 topic echo|. Событие приходит один раз, поэтому его ловят в обработчике и запоминают: \verb|self.event = msg.data|, а решение принимает таймер. Так строится автомат главного проекта этой главы.
+Эти числа справочник Геоскана не приводит: они сняты с борта через \texttt{pioneer\_sdk2} 0.16. Проверяйте их на своём дроне, например подпиской с печатью и \verb|ros2 topic echo|. Событие приходит один раз, поэтому его ловят в обработчике и запоминают: \verb|self.event = msg.data|, а решение принимает таймер. Так строится автомат главного проекта этой главы.
 
 \begin{codebox}[Подписка на события]
 \small
 \begin{verbatim}
-EVENTS = {2: 'COPTER_LANDED', 5: 'POINT_REACHED',
-          7: 'TAKEOFF_COMPLETE', 8: 'ENGINES_STARTED'}
+EVENTS = {3: 'COPTER_LANDED', 6: 'POINT_REACHED',
+          8: 'TAKEOFF_COMPLETE', 9: 'ENGINES_STARTED'}
 
 def on_event(self, msg):
     name = EVENTS.get(msg.data, str(msg.data))

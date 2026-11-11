@@ -7,17 +7,16 @@
  * Допущения там, где справочник молчит, собраны в docs/ros2/emulation-notes.md и помечены здесь словом «допущение».
  * В тексте нет обратных кавычек, `${` и обратных слэшей: он лежит в шаблонной строке.
  */
+import { MINI2_AUTOPILOT_PARAMS } from '../autopilot-params-mini2.js';
+
 export const ROS2_PRELUDE_NODE = `
 # ---------------------------------------------------------------- ros_pioneer_node
 _FLYING = ('FLYING_HOVER', 'FLYING_MOVING')
-# События автопилота и состояние полёта: допущение - те же коды, что у pioneer_sdk2 (Event, FlyState).
-_EV = {'DISARM': 1, 'COPTER_LANDED': 2, 'LOW_VOLTAGE1': 3, 'LOW_VOLTAGE2': 4, 'POINT_REACHED': 5, 'POINT_DECELERATION': 6,
-       'TAKEOFF_COMPLETE': 7, 'ENGINES_STARTED': 8, 'SHOCK': 9, 'LOW_CHARGE': 10}
-# Параметры автопилота для board/get_param и set_param: те же, что знает pioneer_sdk2 в симуляторе.
-_BOARD_PARAMS = {
-    'Flight_com_navSystem': 1.0, 'Copter_com_takeoffAlt': 0.4, 'Copter_man_rcMode0': 0.0, 'Copter_man_rcMode1': 0.0,
-    'Copter_man_rcMode2': 0.0, 'Copter_flyWithoutRc': 0.0, 'SensorMux_rc': 0.0,
-}
+# События автопилота: настоящие числа proto.Event борта (pioneer_sdk2 0.16.0), callback_event несёт Event.value.
+_EV = {'DISARM': 12, 'COPTER_LANDED': 3, 'LOW_VOLTAGE1': 4, 'LOW_VOLTAGE2': 5, 'POINT_REACHED': 6, 'POINT_DECELERATION': 7,
+       'TAKEOFF_COMPLETE': 8, 'ENGINES_STARTED': 9, 'SHOCK': 10, 'LOW_CHARGE': 11}
+# Параметры автопилота для board/get_param и set_param: словарь настоящего Мини 2 (232 параметра), как у pioneer_sdk2 в симуляторе.
+_BOARD_PARAMS = {k: float(v) for k, v in ${JSON.stringify({ ...MINI2_AUTOPILOT_PARAMS, Flight_com_takeoffAlt: 0.4, Flight_com_navSystem: 1 })}.items()}
 _NAV_NAMES = {0: 'GPS', 1: 'LPS', 2: 'OPT'}
 _SN = '/geoscan/'
 # (параметр-флаг, топик, тип, частота в симулируемых Гц): частоты - допущение (справочник их не называет).

@@ -536,8 +536,8 @@ const PYTHON_EXPECTATIONS: Record<string, PythonExpectation> = {
         mode: 'onboard',
         runs: [{
             scenario: { seconds: 10 },
-            trace: ['print Высота взлёта сейчас: 0.4', 'param Copter_com_takeoffAlt=0.7', 'print Copter_com_takeoffAlt: 0.4 -> 0.7',
-                'print Внутри блока: 0.7', 'param Copter_com_takeoffAlt=0.4', 'print Copter_com_takeoffAlt: восстановлено 0.4',
+            trace: ['print Высота взлёта сейчас: 0.4', 'param Flight_com_takeoffAlt=0.7', 'print Flight_com_takeoffAlt: 0.4 -> 0.7',
+                'print Внутри блока: 0.7', 'param Flight_com_takeoffAlt=0.4', 'print Flight_com_takeoffAlt: восстановлено 0.4',
                 'print После блока : 0.4', 'exit']
         }]
     },

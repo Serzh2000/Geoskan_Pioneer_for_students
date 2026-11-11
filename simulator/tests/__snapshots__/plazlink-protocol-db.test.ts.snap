@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`база протокола Plazlink каждое поле HUB_MAP есть у автопилота, кроме модулей, не установленных на Мини 2 1`] = `
+[
+  "gnss.altitude",
+  "gnss.latitude",
+  "gnss.longitude",
+  "gnss.satGlonass",
+  "gnss.satGps",
+  "gnss.status",
+  "gnss.velDown",
+  "gnss.velEast",
+  "gnss.velNorth",
+  "grab.state",
+  "grab.time",
+  "grab.velocity",
+  "led.b",
+  "led.g",
+  "led.r",
+  "ledBar.cargo",
+  "ledBar.color",
+  "ranger.aboveBelow",
+  "ranger.back",
+  "ranger.front",
+  "ranger.left",
+  "ranger.right",
+  "rc.flaps",
+]
+`;

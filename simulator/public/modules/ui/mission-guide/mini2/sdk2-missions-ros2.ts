@@ -347,14 +347,14 @@ node.create_subscription(Point, '/geoscan/navigation/local/position', on_positio
         goal: 'Читать топик `flight/callback_event`: автопилот сообщает числовыми кодами о запуске моторов, взлёте, прилёте и посадке.',
         steps: [
             '`callback_event` (`std_msgs/Int8`) публикует событие в момент, когда оно произошло: 8 — моторы запущены, 7 — взлёт завершён, 5 — точка достигнута, 2 — посадка завершена, 1 — моторы остановлены. Это те же коды, что в `Event` пакета `pioneer_sdk2`.',
-            'В каркасе уже есть обработчик `on_event`, он ловит код 5 для `go()`. Дополнительная строка печатает название события по таблице `NAMES`. Одно название в таблице пропущено.',
-            'Вместо `___` впишите название события с кодом 7: `TAKEOFF_COMPLETE`.',
+            'В каркасе уже есть обработчик `on_event`, он ловит код 6 для `go()`. Дополнительная строка печатает название события по таблице `NAMES`. Одно название в таблице пропущено.',
+            'Вместо `___` впишите название события с кодом 8: `TAKEOFF_COMPLETE`.',
             'Нажмите «Проверить полёт»: журнал показывает ENGINES_STARTED, TAKEOFF_COMPLETE, POINT_REACHED, COPTER_LANDED по порядку.'
         ],
         hint: 'Событие, которое приходит, когда takeoff закончен: take-off complete заглавными буквами через подчёркивание.',
         outcome: 'События — это «уведомления» автопилота. Программа на ROS 2 не опрашивает дрон, а реагирует на сообщения.',
         starter: rosFlightProgram({
-            setup: 'NAMES = {1: "DISARM", 2: "COPTER_LANDED", 5: "POINT_REACHED", 7: "___", 8: "ENGINES_STARTED"}\n\n',
+            setup: 'NAMES = {12: "DISARM", 3: "COPTER_LANDED", 6: "POINT_REACHED", 8: "___", 9: "ENGINES_STARTED"}\n\n',
             onEvent: 'print("Событие:", NAMES.get(msg.data, msg.data))',
             body: 'go(1.0, 0.0, 1.0)'
         }),
@@ -491,7 +491,7 @@ node.create_timer(0.1, send_rc)
         goal: 'Прочитать и записать параметр автопилота сервисами `board/get_param` и `board/set_param`, обработать отсутствующий параметр.',
         steps: [
             '`board/get_param` (`GetParam`: `name`, `update`) возвращает `value` и `status`. `board/set_param` (`SetParam`: `name`, `value`) записывает параметр и отвечает `status`. Неизвестное имя даёт `status=False`.',
-            'Параметр `Copter_com_takeoffAlt` — высота взлёта. Функция `read()` возвращает значение или `None`, если параметра нет.',
+            'Параметр `Flight_com_takeoffAlt` — высота взлёта. Функция `read()` возвращает значение или `None`, если параметра нет.',
             'Вместо `___` впишите новое значение высоты взлёта: `0.8`.',
             'Нажмите «Проверить полёт»: «Высота взлёта: 0.4», «Записали: True», «Теперь: 0.8», «Несуществующий: None». В конце программа возвращает 0.4.'
         ],
@@ -512,7 +512,7 @@ def write(name, value):
     return call(set_client, SetParam.Request(name=name, value=value)).status
 
 `,
-            body: `NAME = 'Copter_com_takeoffAlt'
+            body: `NAME = 'Flight_com_takeoffAlt'
 print("Высота взлёта:", read(NAME))
 print("Записали:", write(NAME, ___))
 print("Теперь:", read(NAME))
@@ -665,11 +665,11 @@ def has_topic(name):
         goal: 'Собрать миссию как узел-автомат: таймер смотрит на состояние, сервисы вызываются через `call_async`, события приходят из топика.',
         steps: [
             'Ожидание внутри обработчиков блокирует узел, поэтому большие программы пишут автоматами. Состояние хранится в `self.state`, таймер раз в 0,2 с вызывает `step()`, а сервисы отправляются без ожидания: `self.future = client.call_async(...)`; в следующий вызов `step()` ответ смотрят у `future`.',
-            'Переход между этапами делают события автопилота из `callback_event`: код 7 — взлёт завершён, 5 — точка достигнута, 2 — посадка завершена.',
-            'В заготовке пропущены коды двух событий: `EVENT_POINT_REACHED` и `EVENT_COPTER_LANDED`. Впишите по порядку: `5` и `2`.',
+            'Переход между этапами делают события автопилота из `callback_event`: код 8 — взлёт завершён, 6 — точка достигнута, 3 — посадка завершена.',
+            'В заготовке пропущены коды двух событий: `EVENT_POINT_REACHED` и `EVENT_COPTER_LANDED`. Впишите по порядку: `6` и `3`.',
             'Нажмите «Проверить полёт»: автомат печатает этапы ARM, TAKEOFF, FLY, FLY, LAND, DONE и пролетает точки (1, 0, 1) и (1, 1, 1).'
         ],
-        hint: 'Нужные числа есть в шаге 2: «точка достигнута» — 5, «посадка завершена» — 2.',
+        hint: 'Нужные числа есть в шаге 2: «точка достигнута» — 6, «посадка завершена» — 3.',
         outcome: 'Автомат на таймере — основа настоящих миссий на ROS 2: узел всегда отзывчив, а логика читается как таблица переходов.',
         starter: `import rclpy
 from rclpy.node import Node
@@ -679,7 +679,7 @@ from gs_interfaces.srv import Arm, GoToLocalPoint
 
 EVENT_POINT_REACHED = ___
 EVENT_COPTER_LANDED = ___
-EVENT_TAKEOFF_COMPLETE = 7
+EVENT_TAKEOFF_COMPLETE = 8
 
 POINTS = [(1.0, 0.0, 1.0), (1.0, 1.0, 1.0)]
 
@@ -748,7 +748,7 @@ rclpy.spin_once(node, timeout_sec=0.5)    # дослать disarm
 node.destroy_node()
 rclpy.shutdown()
 ${DONE_LINE}`,
-        answers: ['5', '2'], waitMs: 180000,
+        answers: ['6', '3'], waitMs: 180000,
         check: (g) => {
             g.basics(true).armOnce().takeoff().landing().route([[1, 0, 1], [1, 1, 1]]);
             g.order(['Этап: TAKEOFF', 'Этап: WAIT_TAKEOFF', 'Этап: FLY', 'Этап: FLY', 'Этап: LAND', 'Этап: DONE'], 'Автомат должен пройти этапы по порядку: ARM, TAKEOFF, FLY, FLY, LAND, DONE.');
@@ -773,9 +773,9 @@ from std_srvs.srv import Trigger
 from sensor_msgs.msg import BatteryState
 from gs_interfaces.srv import Arm, GoToLocalPoint, Led
 
-EVENT_COPTER_LANDED = 2
-EVENT_POINT_REACHED = 5
-EVENT_TAKEOFF_COMPLETE = 7
+EVENT_COPTER_LANDED = 3
+EVENT_POINT_REACHED = 6
+EVENT_TAKEOFF_COMPLETE = 8
 
 POINTS = [(1.0, 0.0, 1.0), (1.0, 1.0, 1.0), (0.0, 1.0, 1.0)]
 

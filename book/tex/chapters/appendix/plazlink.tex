@@ -1,0 +1,196 @@
+% Файл создан скриптом gen_plazlink.js из снимка настоящего борта Мини 2 (reference/mini2-disk). Не править вручную.
+\section{Протокол Plazlink и поля автопилота}
+\label{sec:plazlink-protocol}
+
+Автопилот Пионера Мини~2 общается с бортовым компьютером по протоколу Plazlink: пакеты с номером сообщения, длиной, данными и контрольной суммой (разбор пакета идёт по этапам SYNC, ID, LENGTH, PAYLOAD, CHECKSUM). Данные автопилота устроены как дерево: \emph{компонент} (датчик, подсистема) содержит \emph{поля} (значения), а поле имеет номер, тип, флаги, масштаб и границы. Библиотека \texttt{pioneer\_sdk2} прячет это за методами: например, \verb|get_battery_status()| читает поля \texttt{SensorMonitor.voltage} (или \texttt{CBoard.VoltBatt}) и \texttt{Battery.temperature}. Ниже --- сведения, снятые с работающего борта (11 компонентов, 178 полей, 232 параметра). Значения этих таблиц нужны, если вы читаете поля напрямую или сверяете симулятор с настоящим дроном.
+
+\subsection*{Компоненты автопилота}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}r l r X@{}}
+\toprule
+\textbf{№} & \textbf{Компонент} & \textbf{Полей} & \textbf{Примеры полей} \\
+\midrule
+0 & \texttt{Battery} & 8 & \texttt{charge}, \texttt{current}, \texttt{voltage}, \texttt{temperature}, \texttt{serialBattery}, \texttt{serialNumber} \\
+1 & \texttt{Actuators} & 6 & \texttt{packetErrors}, \texttt{rpmMotor0}, \texttt{rpmMotor1}, \texttt{rpmMotor2}, \texttt{rpmMotor3} \\
+2 & \texttt{SmartBoard} & 9 & \texttt{command}, \texttt{rkSwitch}, \texttt{rkMaskRom}, \texttt{apSwitch}, \texttt{rcChan}, \texttt{rcServo} \\
+3 & \texttt{SensorMonitor} & 45 & \texttt{magEnabled}, \texttt{magDeclination}, \texttt{altitudeOffset}, \texttt{magX}, \texttt{magY}, \texttt{magZ} \\
+4 & \texttt{EnvMonitor} & 4 & \texttt{temperature}, \texttt{humidity}, \texttt{windAzimuth}, \texttt{windSpeed} \\
+5 & \texttt{FlightManager} & 24 & \texttt{maxCommands}, \texttt{maxIndices}, \texttt{maxPoints}, \texttt{missionPoint}, \texttt{missionTime}, \texttt{onMissionHalted} \\
+6 & \texttt{ManualControl} & 22 & \texttt{mode}, \texttt{interval}, \texttt{altitude}, \texttt{speed}, \texttt{heading}, \texttt{roll} \\
+7 & \texttt{UavMonitor} & 35 & \texttt{time}, \texttt{uptime}, \texttt{roll}, \texttt{pitch}, \texttt{yaw}, \texttt{altitude} \\
+8 & \texttt{CanMaster} & 12 & \texttt{poolCapacity}, \texttt{poolCurrent}, \texttt{poolPeak}, \texttt{transfersRx}, \texttt{transfersTx}, \texttt{transfersDropped} \\
+9 & \texttt{LpsMonitor} & 9 & \texttt{capabilities}, \texttt{status}, \texttt{x}, \texttt{y}, \texttt{z}, \texttt{velX} \\
+10 & \texttt{OptCamera} & 4 & \texttt{enabled}, \texttt{restart}, \texttt{uptime} \\
+\midrule
+ & \textbf{Всего} & \textbf{178} & \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection*{Какое поле читает метод SDK}
+
+Таблица связывает группу полей SDK (то, что библиотека обозначает как \texttt{messenger['группа']['поле']}) с компонентом автопилота. Если компонентов два, библиотека берёт тот, который есть на борту: так одни и те же методы работают на разных платах.
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily\raggedright\arraybackslash}p{0.14\linewidth} X@{}}
+\toprule
+\textrm{\textbf{Группа}} & \textbf{Поля и компонент автопилота} \\
+\midrule
+board & \texttt{state}, \texttt{time}, \texttt{uptime}, \texttt{altitude}, \texttt{roll}, \texttt{pitch}, \texttt{yaw} --- \texttt{UavMonitor} \\
+accel & \texttt{x}, \texttt{y}, \texttt{z} --- \texttt{SensorMonitor} \\
+gyro & \texttt{x}, \texttt{y}, \texttt{z} --- \texttt{SensorMonitor} \\
+mag & \texttt{x}, \texttt{y}, \texttt{z} --- \texttt{SensorMonitor} \\
+optFlow & \texttt{x}, \texttt{y} --- \texttt{SensorMonitor} \\
+sensor & \texttt{range}, \texttt{status} --- \texttt{SensorMonitor} \\
+battery & \texttt{voltage}, \texttt{temperature}, \texttt{charge} --- \texttt{SensorMonitor / CBoard}; \texttt{Battery} \\
+rc & \texttt{channel}, \texttt{flaps} --- \texttt{SmartBoard / ManualControl}; \texttt{ManualControl} \\
+gnss & \texttt{latitude}, \texttt{longitude}, \texttt{altitude}, \texttt{velNorth}, \texttt{velEast}, \texttt{velDown}, \texttt{satGps}, \texttt{satGlonass}, \texttt{status} --- \texttt{Ublox / Allystar} \\
+lps & \texttt{x}, \texttt{y}, \texttt{z}, \texttt{velX}, \texttt{velY}, \texttt{velZ}, \texttt{yaw}, \texttt{status} --- \texttt{LpsMonitor / USNav\_module} \\
+grab & \texttt{state}, \texttt{velocity}, \texttt{time} --- \texttt{GrabModule} \\
+flight & \texttt{missionTime}, \texttt{event} --- \texttt{FlightManager} \\
+manual & \texttt{interval}, \texttt{velX}, \texttt{velY}, \texttt{velZ}, \texttt{yawRate}, \texttt{mode}, \texttt{yaw} --- \texttt{ManualControl} \\
+led & \texttt{r}, \texttt{g}, \texttt{b} --- \texttt{LedModule} \\
+ledBar & \texttt{color}, \texttt{cargo} --- \texttt{LedBar} \\
+ranger & \texttt{right}, \texttt{left}, \texttt{front}, \texttt{back}, \texttt{aboveBelow} --- \texttt{RangerModule} \\
+actuators & \texttt{rpmMotor0}, \texttt{rpmMotor1}, \texttt{rpmMotor2}, \texttt{rpmMotor3} --- \texttt{Actuators} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection*{Команды состояния и ручное управление}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}l r X@{}}
+\toprule
+\textbf{Набор} & \textbf{Код} & \textbf{Значение} \\
+\midrule
+\texttt{BoardState} & 0 & \texttt{DISARM} --- остановить моторы \\
+ & 1 & \texttt{ARM} --- запустить моторы \\
+ & 2 & \texttt{TAKEOFF} --- взлёт \\
+ & 3 & \texttt{RTL} --- возврат домой \\
+ & 4 & \texttt{LAND} --- посадка \\
+\midrule
+\texttt{ManualSpeedMode} & 0 & \texttt{GLOBAL} --- скорость в осях сцены \\
+ & 1 & \texttt{BODY} --- скорость в осях корпуса \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Методы \verb|arm()|, \verb|disarm()|, \verb|takeoff()|, \verb|land()| и \verb|rtl()| записывают эти коды в поле \texttt{UavMonitor.mode}, а \verb|set_manual_speed()| и \verb|set_manual_speed_body_fixed()| выбирают режим \texttt{GLOBAL} или \texttt{BODY}.
+
+\subsection*{Системные команды}
+
+Системные команды автопилота запускают калибровки и обслуживание. Из SDK~2 доступна только перезагрузка (\verb|reboot_board()|, код 18, и только если плата её разрешает); остальные команды вызывают станции и сервисные программы. Не запускайте их на дроне, назначение которых вы не знаете.
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}r X@{}}
+\toprule
+\textbf{Код} & \textbf{Команда} \\
+\midrule
+1 & начать калибровку барометра (\texttt{Start baro calibration}) \\
+3 & начать калибровку гироскопа (\texttt{Start gyro calibration}) \\
+4 & начать калибровку магнитометра (\texttt{Start mag calibration}) \\
+5 & закончить калибровку магнитометра (\texttt{Stop mag calibration}) \\
+6 & начать калибровку акселерометра (\texttt{Start accel calibration}) \\
+7 & закончить калибровку акселерометра (\texttt{Stop accel calibration}) \\
+8 & снять точку калибровки акселерометра (\texttt{Make accel sample}) \\
+9 & сбросить выравнивание платы (\texttt{Reset board alignment}) \\
+10 & выровнять плату (\texttt{Align board}) \\
+11 & начать проверку магнитометра (\texttt{Start mag check}) \\
+12 & закончить проверку магнитометра (\texttt{Stop mag check}) \\
+13 & пересчитать магнитное склонение (\texttt{Recalc mag declination}) \\
+14 & форматировать память автопилота (\texttt{Format memory}) \\
+15 & начать проверку гироскопа (\texttt{Start gyro check}) \\
+18 & перезагрузка автопилота (\texttt{Restart}) \\
+19 & перезагрузка в загрузчик (\texttt{Restart to bootloader}) \\
+20 & самотест инерциального датчика (\texttt{Run IMU self-test}) \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection*{Коды ответов протокола}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}r >{\ttfamily}l X@{}}
+\toprule
+\textbf{Код} & \textrm{\textbf{Имя}} & \textbf{Значение} \\
+\midrule
+-3 & INCORRECT\_PARAMETER & неверный параметр \\
+-2 & CHECKSUM\_ERROR & ошибка контрольной суммы \\
+-1 & GENERIC\_TIMEOUT & общий тайм-аут \\
+0 & SUCCESS & успех \\
+1 & COMPONENT\_NOT\_FOUND & нет такого компонента \\
+2 & FIELD\_NOT\_FOUND & нет такого поля \\
+3 & FIELD\_TYPE\_MISMATCH & тип значения не подходит полю \\
+4 & FIELD\_RANGE\_ERROR & значение вне границ поля \\
+5 & FIELD\_ERROR & ошибка поля \\
+6 & FIELD\_READ\_ONLY & поле только для чтения \\
+7 & FILE\_NOT\_FOUND & нет такого файла \\
+8 & FILE\_ERROR & ошибка файла \\
+9 & FIELD\_UNAVAILABLE & поле сейчас недоступно \\
+10 & FIELD\_TIMEOUT & поле не ответило вовремя \\
+11 & FILE\_ACCESS\_ERROR & нет доступа к файлу \\
+12 & FILE\_POSITION\_ERROR & неверная позиция в файле \\
+13 & FILE\_TIMEOUT & файл не ответил вовремя \\
+14 & QUEUE\_ERROR & очередь команд переполнена \\
+15 & COMMAND\_UNSUPPORTED & команда не поддерживается \\
+16 & COMMAND\_QUEUED & команда поставлена в очередь \\
+17 & COMMAND\_ERROR & ошибка выполнения команды \\
+18 & HWID\_MISMATCH & не тот идентификатор платы \\
+19 & LICENSE\_EXPIRED & лицензия истекла \\
+20 & SIGNATURE\_ERROR & неверная подпись \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection*{Типы значений, флаги и номера сообщений}
+
+Типы полей: 0~--- \texttt{bool}, 1~--- \texttt{char}, 2~--- \texttt{int8}, 3~--- \texttt{int16}, 4~--- \texttt{int32}, 5~--- \texttt{int64}, 6~--- \texttt{uint8}, 7~--- \texttt{uint16}, 8~--- \texttt{uint32}, 9~--- \texttt{uint64}, 10~--- \texttt{float}, 11~--- \texttt{double}. Флаги поля складываются: 1~--- читается, 2~--- записывается, 4~--- важное. Здоровье компонента: 0~--- норма, 1~--- предупреждение, 2~--- ошибка, 3~--- критическое состояние. Режим компонента: 0~--- рабочий, 1~--- инициализация, 2~--- обслуживание, 3~--- обновление программы, 7~--- не в сети.
+
+Номера сообщений протокола: \texttt{REQ\_PARAM}~0, \texttt{PARAM\_INFO}~1, \texttt{PARAM}~2, \texttt{PROTOCOL\_REQUEST}~3, \texttt{PROTOCOL\_INFO}~4, \texttt{COMPONENT\_COUNT\_REQUEST}~5, \texttt{COMPONENT\_COUNT}~6, \texttt{COMPONENT\_INFO\_REQUEST}~7, \texttt{COMPONENT\_INFO}~8, \texttt{COMPONENT\_INFO\_ERROR}~9, \texttt{COMPONENT\_FIELD\_REQUEST}~10, \texttt{COMPONENT\_FIELD}~11, \texttt{COMPONENT\_FIELD\_RESPONSE}~12, \texttt{COMPONENT\_FIELD\_DESCRIBE}~13, \texttt{COMPONENT\_FIELD\_INFO}~14, \texttt{COMPONENT\_FIELD\_ERROR}~15, \texttt{SYSTEM\_COMMAND}~16, \texttt{SYSTEM\_COMMAND\_RESPONSE}~17, \texttt{COMPONENT\_MESSAGE}~18, \texttt{COMPONENT\_FILE\_DESCRIBE}~19, \texttt{COMPONENT\_FILE\_INFO}~20, \texttt{COMPONENT\_FILE\_INFO\_ERROR}~21, \texttt{COMPONENT\_FILE\_WRITE}~22, \texttt{COMPONENT\_FILE\_WRITE\_RESPONSE}~23, \texttt{COMPONENT\_FILE\_READ}~24, \texttt{COMPONENT\_FILE\_READ\_RESPONSE}~25, \texttt{COMPONENT\_FILE\_READ\_ERROR}~26, \texttt{MEDIA\_PASSPORT}~27, \texttt{COMPONENT\_RAW\_DATA}~28, \texttt{COMPONENT\_INFO\_EXT}~29, \texttt{COMPONENT\_FIELD\_INFO\_EXT}~30, \texttt{LICENSE\_INFO\_REQUEST}~31, \texttt{LICENSE\_INFO}~32, \texttt{GO\_TO\_POINT\_V2}~33, \texttt{GO\_TO\_RELATIVE\_POINT\_V2}~34, \texttt{GO\_TO\_POINT\_RESPONSE}~35, \texttt{GOTO\_LOCAL\_POINT}~36, \texttt{MANUAL\_CONTROL}~37, \texttt{GO\_TO\_LOCAL\_POINT\_V2}~38.
+
+\subsection*{Типы аппаратов}
+
+Автопилот сообщает тип аппарата числом (поле \texttt{Board\_type}). У Мини~2 оно равно 23, а в списке плат протокола стоят 12 и 23. Названия типов в библиотеке: 0~--- \texttt{GeoScan 101 3S}, 1~--- \texttt{GeoScan 300}, 2~--- \texttt{GeoScan 002}, 4~--- \texttt{GeoScan 401}, 5~--- \texttt{GeoScan 102}, 6~--- \texttt{GeoScan 201 4S}, 7~--- \texttt{GeoScan 301}, 8~--- \texttt{GeoScan 425}, 9~--- \texttt{GeoScan 501}, 10~--- \texttt{GeoScan 101 4S}, 11~--- \texttt{GeoScan 201 5S}, 12~--- \texttt{GeoScan Pioneer}, 13~--- \texttt{GeoScan 201M}, 14~--- \texttt{GeoScan 501M}.
+
+\subsection*{Параметры автопилота по группам}
+
+Автопилот Мини~2 хранит 232 параметров (\verb|get_param|, \verb|set_param|; значения сохраняются после перезагрузки). Имя состоит из группы и названия. Группы и число параметров в них:
+
+\begin{center}
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\ttfamily\raggedright\arraybackslash}p{0.3\linewidth} r >{\ttfamily\raggedright\arraybackslash}p{0.3\linewidth} r@{}}
+\toprule
+\textrm{\textbf{Группа}} & \textbf{Число} & \textrm{\textbf{Группа}} & \textbf{Число} \\
+\midrule
+Flight\_com & 30 & Serial & 4 \\
+Copter & 24 & Offsets\_accel & 3 \\
+Copter\_pos & 19 & Offsets\_gyro & 3 \\
+Imu & 17 & Board & 3 \\
+Copter\_man & 13 & Sensors\_pressure & 3 \\
+Copter\_xyRate & 11 & Copter\_zRate & 3 \\
+Copter\_alt & 10 & Flight\_mission & 3 \\
+Copter\_optFlow & 8 & State & 3 \\
+Sensors\_gyro & 6 & Offsets\_board & 2 \\
+Modules & 6 & Board\_version & 2 \\
+SensorMux & 6 & ICM40609\_filter & 2 \\
+Offsets\_mag1 & 5 & Sensors\_accel & 2 \\
+Offsets\_mag2 & 5 & Sensors\_mag & 2 \\
+Sensors\_airspeed & 5 & Flight\_chargeMonitor & 2 \\
+Sensors\_rates & 5 & SensorMux\_pressure & 2 \\
+BoardPioneerMiniV2\_motor & 5 & Battery & 2 \\
+Telemetry & 5 & Sensors\_gnss & 1 \\
+ICM40609 & 4 & Sensors\_ns & 1 \\
+Copter\_thrLimit & 4 & Flight\_man & 1 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Значения часто используемых параметров на настоящем Мини~2: \texttt{Flight\_com\_takeoffAlt} = 0.5, \texttt{Flight\_com\_navSystem} = 2, \texttt{Flight\_com\_maxAltitude} = 4, \texttt{Copter\_pos\_vMax} = 1, \texttt{Copter\_pos\_vTakeoff} = 0.30000001192092896, \texttt{Copter\_motorCheckTime} = 10, \texttt{Copter\_flyWithoutRc} = 1, \texttt{Copter\_man\_rcMode0} = 1, \texttt{Copter\_man\_rcMode1} = 2, \texttt{Copter\_man\_rcMode2} = 4, \texttt{SensorMux\_rc} = 0. Высота взлёта называется именно \texttt{Flight\_com\_takeoffAlt}; параметра \texttt{Copter\_com\_takeoffAlt} на борту нет.
+

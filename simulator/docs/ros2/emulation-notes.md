@@ -58,7 +58,7 @@ Ros2Registry.interfaceList();
 
 **Заголовки.** По справочнику `header` заполняют (stamp, `frame_id=base_link`) только `MotorsRpm`, `PointGPS`, `SatellitesGPS`, `OptVelocity`, `RangerData`. У `Imu`, `Range`, `BatteryState` заголовок не заполняется. Время в stamp - симулятора плюс эпоха 1980-01-06, как `time()` у `pioneer_sdk2`.
 
-**Коды.** `fly_state`: 0 на земле, 1 моторы запущены, 2 в воздухе; `callback_event`: коды `Event` из `pioneer_sdk2` (1 DISARM, 2 COPTER_LANDED, 3/4 LOW_VOLTAGE1/2, 5 POINT_REACHED, 6 POINT_DECELERATION, 7 TAKEOFF_COMPLETE, 8 ENGINES_STARTED, 9 SHOCK, 10 LOW_CHARGE).
+**Коды.** `fly_state`: 0 на земле, 1 моторы запущены, 2 в воздухе; `callback_event`: коды `Event` из `pioneer_sdk2` (настоящие числа борта: 3 COPTER_LANDED, 4/5 LOW_VOLTAGE1/2, 6 POINT_REACHED, 7 POINT_DECELERATION, 8 TAKEOFF_COMPLETE, 9 ENGINES_STARTED, 10 SHOCK, 11 LOW_CHARGE, 12 DISARM).
 
 **Частоты** (в симулируемых Гц): imu 30; altitude, range, motors_rpm, fly_state, optical_flow, ranger 10; local/* 20; battery 2; global/* 5; satellites 1. `rc/trigger` - при изменении 8-го канала, `callback_event` - по событию.
 
@@ -70,7 +70,7 @@ Ros2Registry.interfaceList();
 
 **rc/set_channels.** Значения - как у `pioneer_send_rc_channels` симулятора (1000..2000, центр 1500), каналы уходят на тот же ручной путь, что и пульт.
 
-**Параметры автопилота** (`board/get_param`, `set_param`): известные симулятору (`Flight_com_navSystem`, `Copter_com_takeoffAlt`, `Copter_man_rcMode0..2`, `Copter_flyWithoutRc`, `SensorMux_rc`); остальных нет, `status: false`. `Flight_com_navSystem` меняется только `navigation/set_system`. `board/restart` возвращает параметры к значениям по умолчанию, в полёте запрещён.
+**Параметры автопилота** (`board/get_param`, `set_param`): известные симулятору (`Flight_com_navSystem`, `Flight_com_takeoffAlt`, `Copter_man_rcMode0..2`, `Copter_flyWithoutRc`, `SensorMux_rc`); остальных нет, `status: false`. `Flight_com_navSystem` меняется только `navigation/set_system`. `board/restart` возвращает параметры к значениям по умолчанию, в полёте запрещён.
 
 **Навигация.** `set_system` меняет значение, физически навигация симулятора всегда LPS. Топики `navigation/global/*` и `navigation/satellites` при `topics.gnss: true` создаются, но данные не публикуются; `go_to_global_point` всегда `success: False`. При `topics.ranger: true` на борту без Ranger (Базовый) топик есть, данных нет.
 

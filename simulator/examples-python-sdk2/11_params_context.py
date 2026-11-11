@@ -28,12 +28,12 @@ def temporary_params(drone, **new_values):
 drone = Pioneer()
 
 try:
-    print("Высота взлёта сейчас:", drone.get_param("Copter_com_takeoffAlt"))
+    print("Высота взлёта сейчас:", drone.get_param("Flight_com_takeoffAlt"))
 
-    with temporary_params(drone, Copter_com_takeoffAlt=0.7):
-        print("Внутри блока:", drone.get_param("Copter_com_takeoffAlt", update=True))
+    with temporary_params(drone, Flight_com_takeoffAlt=0.7):
+        print("Внутри блока:", drone.get_param("Flight_com_takeoffAlt", update=True))
         # здесь можно, например, выполнить arm()/takeoff() с изменённой высотой взлёта
 
-    print("После блока :", drone.get_param("Copter_com_takeoffAlt", update=True))
+    print("После блока :", drone.get_param("Flight_com_takeoffAlt", update=True))
 finally:
     drone.close_connection()

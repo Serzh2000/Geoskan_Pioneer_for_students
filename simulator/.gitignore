@@ -28,3 +28,16 @@ __pycache__/
 
 # Pyodide (среда Python) скачивается скриптом scripts/fetch-pyodide.cjs
 /public/vendor/pyodide/
+
+# Референс: диск Пионера с модулем Razero (бинарные blob'ы; текст оставлен в рабочем дереве)
+/reference/razero-disk/_binaries/
+/reference/razero-disk/**/*.so
+/reference/razero-disk/usr/local/bin/*/dist/
+/reference/razero-disk/usr/local/bin/*/static/blockly/
+/reference/razero-disk/usr/local/share/fastddsgen/
+
+# Референс Мини 2: полный образ корневой ФС с дрона (архив, много ГБ) и снятые блобы
+/reference/mini2-full/
+/reference/mini2-disk/_binaries/
+/reference/mini2-disk/**/*.so
+/reference/mini2-disk/usr/local/bin/*/dist/
