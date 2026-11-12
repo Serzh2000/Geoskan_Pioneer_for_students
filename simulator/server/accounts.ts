@@ -449,7 +449,7 @@ export function buildCabinet(store: AccountStore, user: User, attempts: AttemptL
             firstTrySolved: attempts?.firstTrySolved(user.id) ?? 0,
             lastAttemptAt: own.length ? own[own.length - 1].at : null
         },
-        recent: own.slice(-40).reverse().map(({ code, ...rest }) => rest)
+        recent: own.slice(-40).reverse().map(({ code: _code, ...rest }) => rest)
     };
 }
 

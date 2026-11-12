@@ -27,7 +27,7 @@ function stopDroneAtGround(simState: DroneState) {
 }
 
 // Земля под дроном - рельеф карты (physics/ground.ts), а не плоскость z = 0.
-export function resolveGroundContact(simState: DroneState, id: string, prevPos: Vector3) {
+export function resolveGroundContact(simState: DroneState, id: string, _prevPos: Vector3) {
     const ground = terrainHeightAt(simState.pos.x, simState.pos.y);
     const apex = trackApex(simState);
     if (simState.pos.z > ground) return;
@@ -61,7 +61,7 @@ export function resolveGroundContact(simState: DroneState, id: string, prevPos: 
     stopDroneAtGround(simState);
 }
 
-export function updateDisarmedFallState(simState: DroneState, id: string, dt: number, prevPos: Vector3) {
+export function updateDisarmedFallState(simState: DroneState, id: string, dt: number, _prevPos: Vector3) {
     const impactVel = { ...simState.vel };
     simState.vel.z -= 9.81 * dt;
     simState.pos.x += simState.vel.x * dt;

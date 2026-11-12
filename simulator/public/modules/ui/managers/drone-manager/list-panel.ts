@@ -261,7 +261,6 @@ export function createDroneListPanel(options: DroneListPanelOptions) {
 
             const meta = document.createElement('span');
             meta.className = 'pk-row__meta';
-            const profile = droneModelProfile(drones[id].model);
             const onboard = usesOnboardSdk(drones[id]);
             meta.textContent = isConfirming
                 ? 'Удалить этого дрона?'

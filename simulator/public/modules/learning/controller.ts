@@ -48,8 +48,6 @@ const MINI2_EVENT_LIMIT = 4096;
 /** Пустой проект Bricks: только «Начало программы». */
 const BRICKS_EMPTY_PROJECT = '<xml xmlns="https://developers.google.com/blockly/xml"><project name="mission" /><variables></variables><block type="start_block" deletable="false" movable="false" x="10" y="10"></block></xml>';
 const HUD_POS_STORAGE_KEY = 'pioneer:learning:hud-pos:v1';
-/** Короткие подписи для переключателя в карточке; полные названия треков — TRACK_NAMES. */
-const TRACK_LABELS: Record<LearningTrack, string> = { blocks: 'Blockly', lua: 'Lua', python: 'Python', sdk2: 'Мини 2 · Python', bricks: 'Мини 2 · Bricks' };
 /** Треки, где программа собирается из блоков (редактор Blockly): практикум Базового и Bricks Мини 2. */
 const isBlockTrack = (value: LearningTrack): boolean => value === 'blocks' || value === 'bricks';
 /** Язык текстового редактора трека: Lua только у трека Lua, остальные треки пишут на Python. */
