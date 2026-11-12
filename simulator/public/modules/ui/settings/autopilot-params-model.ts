@@ -9,11 +9,13 @@ export type {
     ValidationRule
 } from './autopilot-params-model/types.js';
 export {
+    clearAutopilotAuditLog,
     exportAutopilotPropertiesText,
     getAutopilotParameterDefinitions,
     getAutopilotSettingsState,
     getAutopilotValidationSummary,
     importAutopilotProperties,
+    listAutopilotGroups,
     loadAutopilotTemplateFromText,
     resetAutopilotParameters,
     updateAutopilotAuthor,

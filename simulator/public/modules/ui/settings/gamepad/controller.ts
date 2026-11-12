@@ -131,6 +131,7 @@ export function createGamepadSettingsController(dom: SettingsDomRefs, state: Set
                 const nextRef = select.value as GamepadInputRef;
                 if (!isAllowedForChannel(key, nextRef)) return;
                 setMappingRef(key, nextRef);
+                simSettings.gamepadMappingConfirmed = true;
                 if (key === 'mode') {
                     resetModePositionsTracking();
                     applyModeRangesFromObserved(state.observedInputStats, getMappingRef('mode'));
@@ -201,21 +202,28 @@ export function createGamepadSettingsController(dom: SettingsDomRefs, state: Set
         return readRefRcValue(gp, inputRef, key);
     };
 
-    const updateDroneChannels = (gp: Gamepad): void => {
+    /**
+     * Writes the transmitter into the drone's channels. `panelOpen` says whether the channel table (the old dialog) is on screen:
+     * only then do the ranges get learned from what the switches show and the table get redrawn. Flying must not depend on it,
+     * and a student's own ranges must not be rewritten by a switch that happens to be flipped in flight.
+     */
+    const updateDroneChannels = (gp: Gamepad, panelOpen = true): void => {
         const drone = drones[currentDroneId];
         if (!drone) return;
 
-        calibration.sampleObservedInputs(gp);
+        if (panelOpen) {
+            calibration.sampleObservedInputs(gp);
 
-        const modeRef = getMappingRef('mode');
-        const modePositions = getModePositions();
-        if (modePositions.length !== lastModePositionsCount) {
-            const oldCount = lastModePositionsCount;
-            lastModePositionsCount = modePositions.length;
-            if (lastModePositionsCount >= 2 && lastModePositionsCount > oldCount) {
-                applyModeRangesFromObserved(state.observedInputStats, modeRef);
-                renderAuxRangeEditorsState();
-                saveGamepadSettings();
+            const modeRef = getMappingRef('mode');
+            const modePositions = getModePositions();
+            if (modePositions.length !== lastModePositionsCount) {
+                const oldCount = lastModePositionsCount;
+                lastModePositionsCount = modePositions.length;
+                if (lastModePositionsCount >= 2 && lastModePositionsCount > oldCount) {
+                    applyModeRangesFromObserved(state.observedInputStats, modeRef);
+                    renderAuxRangeEditorsState();
+                    saveGamepadSettings();
+                }
             }
         }
 
@@ -236,22 +244,24 @@ export function createGamepadSettingsController(dom: SettingsDomRefs, state: Set
         drone.rcChannels[6] = magnet;
         drone.rcChannels[7] = magnet;
 
-        updateBar(dom, 'roll', roll);
-        updateBar(dom, 'pitch', pitch);
-        updateBar(dom, 'throttle', throttle);
-        updateBar(dom, 'yaw', yaw);
+        if (panelOpen) {
+            updateBar(dom, 'roll', roll);
+            updateBar(dom, 'pitch', pitch);
+            updateBar(dom, 'throttle', throttle);
+            updateBar(dom, 'yaw', yaw);
 
-        renderChannelValue(dom, 'roll', roll);
-        renderChannelValue(dom, 'pitch', pitch);
-        renderChannelValue(dom, 'throttle', throttle);
-        renderChannelValue(dom, 'yaw', yaw);
-        renderChannelValue(dom, 'mode', mode);
-        renderChannelValue(dom, 'arm', arm);
-        renderChannelValue(dom, 'magnet', magnet);
-        renderModeMetaState(mode);
-        renderAuxRangeEditorsState();
-        renderChannelDataStateView();
-        renderMappingControlsStateView();
+            renderChannelValue(dom, 'roll', roll);
+            renderChannelValue(dom, 'pitch', pitch);
+            renderChannelValue(dom, 'throttle', throttle);
+            renderChannelValue(dom, 'yaw', yaw);
+            renderChannelValue(dom, 'mode', mode);
+            renderChannelValue(dom, 'arm', arm);
+            renderChannelValue(dom, 'magnet', magnet);
+            renderModeMetaState(mode);
+            renderAuxRangeEditorsState();
+            renderChannelDataStateView();
+            renderMappingControlsStateView();
+        }
 
         const magnetActive = matchesAuxRange(magnet, simSettings.gamepadAuxRanges.magnet);
         if (magnetActive && !drone.magnetGripper.active) {

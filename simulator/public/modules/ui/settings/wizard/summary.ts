@@ -1,4 +1,5 @@
-import type { AuxChannelRange, GamepadInputRef } from '../../../core/state.js';
+import { simSettings, type AuxChannelRange, type GamepadInputRef } from '../../../core/state.js';
+import { isDefaultTuning } from '../input/tuning.js';
 import { buildRangesFromPositions, pickRepresentativePositions } from '../input/observed.js';
 import { CHANNEL_LABELS } from './config.js';
 import type { ChannelKey, PrimaryChannelKey } from '../types.js';
@@ -20,8 +21,11 @@ export function buildSummaryHtml(params: {
             const value = ref ? formatRefLabel(ref) : 'не найдено';
             const inversionLabel = getChannelInversion(channel) ? 'Инверсия включена' : 'Инверсия выключена';
             return `
-                <div class="gp-wizard-summary-row"><span>${CHANNEL_LABELS[channel]}</span><strong>${value}</strong></div>
-                <div class="gp-wizard-summary-row"><span>Направление</span><strong class="gp-wizard-summary-badge">${inversionLabel}</strong></div>
+                <div class="gp-wizard-summary-channel">
+                    <div class="gp-wizard-summary-row"><span>${CHANNEL_LABELS[channel]}</span><strong>${value}</strong></div>
+                    <div class="gp-wizard-summary-row"><span>Направление</span><strong class="gp-wizard-summary-badge" data-inverted="${getChannelInversion(channel)}">${inversionLabel}</strong></div>
+                    ${describeTuning(channel)}
+                </div>
             `;
         })
         .join('');
@@ -41,7 +45,7 @@ export function buildSummaryHtml(params: {
                 <div class="gp-wizard-summary-card">
                     <div class="gp-wizard-summary-card-title">${CHANNEL_LABELS[channel]}</div>
                     <div class="gp-wizard-summary-row"><span>Вход</span><strong>${refText}</strong></div>
-                    <div class="gp-wizard-summary-row"><span>Направление</span><strong class="gp-wizard-summary-badge">${inversionLabel}</strong></div>
+                    <div class="gp-wizard-summary-row"><span>Направление</span><strong class="gp-wizard-summary-badge" data-inverted="${getChannelInversion(channel)}">${inversionLabel}</strong></div>
                     <div class="gp-wizard-summary-row"><span>Положения</span><strong>${positionsText}</strong></div>
                     <div class="gp-wizard-summary-note">${rangeText}</div>
                 </div>
@@ -66,6 +70,15 @@ export function formatRefLabel(ref: GamepadInputRef): string {
         return `Ось ${index} / CH${index + 1}`;
     }
     return `Кнопка ${index + 1}`;
+}
+
+/** The zero point and dead zone of a flight channel, only when the student changed them. */
+function describeTuning(channel: PrimaryChannelKey): string {
+    const tuning = simSettings.gamepadTuning[channel];
+    if (isDefaultTuning(channel, tuning)) return '';
+    const trim = Math.abs(tuning.trim) < 0.0005 ? '0' : `${tuning.trim > 0 ? '+' : '−'}${Math.abs(tuning.trim * 100).toFixed(1)}%`;
+    const rates = channel === 'throttle' ? '' : ` · экспо ${Math.round((tuning.expo ?? 0) * 100)}% · рейт ${Math.round((tuning.rate ?? 1) * 100)}%`;
+    return `<div class="gp-wizard-summary-note">Нуль ${trim} · мёртвая зона ${(tuning.deadzone * 100).toFixed(1)}%${rates}</div>`;
 }
 
 function formatModeRanges(modeResult?: AuxDetectionResult): string {

@@ -49,10 +49,10 @@ export function finishCalibration(calibration: CalibrationState): void {
     calibration.isCalibrated = calibratedAxes > 0;
 }
 
-export function normalizeCenteredAxis(calibration: CalibrationState, rawValue: number, axisIndex: number): number {
+export function normalizeCenteredAxis(calibration: CalibrationState, rawValue: number, axisIndex: number, deadband: number = CENTER_DEADBAND): number {
     if (!calibration.isCalibrated) {
         const unclamped = clamp(rawValue, -1, 1);
-        return Math.abs(unclamped) < CENTER_DEADBAND ? 0 : unclamped;
+        return Math.abs(unclamped) < deadband ? 0 : unclamped;
     }
 
     const min = calibration.min[axisIndex];
@@ -61,7 +61,7 @@ export function normalizeCenteredAxis(calibration: CalibrationState, rawValue: n
 
     if (!Number.isFinite(min) || !Number.isFinite(max) || max - min < 0.05) {
         const fallback = clamp(rawValue, -1, 1);
-        return Math.abs(fallback) < CENTER_DEADBAND ? 0 : fallback;
+        return Math.abs(fallback) < deadband ? 0 : fallback;
     }
 
     if (!(center > min && center < max)) {
@@ -72,14 +72,14 @@ export function normalizeCenteredAxis(calibration: CalibrationState, rawValue: n
     if (denominator < 0.0001) return 0;
 
     const normalized = clamp((rawValue - center) / denominator, -1, 1);
-    return Math.abs(normalized) < CENTER_DEADBAND ? 0 : normalized;
+    return Math.abs(normalized) < deadband ? 0 : normalized;
 }
 
-export function normalizeThrottleAxis(calibration: CalibrationState, rawValue: number, axisIndex: number): number {
+export function normalizeThrottleAxis(calibration: CalibrationState, rawValue: number, axisIndex: number, idleDeadband: number = THROTTLE_IDLE_DEADBAND): number {
     if (!calibration.isCalibrated) {
         const fallback = clamp((clamp(rawValue, -1, 1) + 1) / 2, 0, 1);
-        if (fallback < THROTTLE_IDLE_DEADBAND) return 0;
-        if (fallback > 1 - THROTTLE_IDLE_DEADBAND) return 1;
+        if (fallback < idleDeadband) return 0;
+        if (fallback > 1 - idleDeadband) return 1;
         return fallback;
     }
 
@@ -90,8 +90,8 @@ export function normalizeThrottleAxis(calibration: CalibrationState, rawValue: n
     }
 
     const normalized = clamp((rawValue - min) / (max - min), 0, 1);
-    if (normalized < THROTTLE_IDLE_DEADBAND) return 0;
-    if (normalized > 1 - THROTTLE_IDLE_DEADBAND) return 1;
+    if (normalized < idleDeadband) return 0;
+    if (normalized > 1 - idleDeadband) return 1;
     return normalized;
 }
 

@@ -57,6 +57,9 @@
     overflow: hidden;
 }
 .gp-wizard-card:has(#gp-wizard-summary[style*='block']) { width: min(760px, calc(100vw - 48px)); }
+.gp-wizard-card:has(#gp-wizard-tuning[style*='block']) { width: min(380px, calc(100vw - 48px)); }
+.gp-wizard-card:has(#gp-wizard-switches[style*='block']),
+.gp-wizard-card:has(#gp-wizard-ready[style*='block']) { width: min(440px, calc(100vw - 48px)); }
 
 .gp-wizard-card__head { display: flex; align-items: center; gap: 10px; padding: 18px 110px 6px 20px; }
 .gp-wizard-card__icon { flex: none; color: var(--gw-muted); }
@@ -167,6 +170,12 @@
 .gp-wizard-steps li[data-state='current']::after { background: var(--panel-bg); border: 2px solid var(--gw-accent); transform: scale(1.4); }
 
 .gp-range-meta { min-height: 16px; font-size: 11px; color: var(--text-muted); line-height: 1.35; }
+
+@media (max-width: 960px) {
+    .gp-wizard-card:has(#gp-wizard-switches[style*='block']),
+    .gp-wizard-card:has(#gp-wizard-ready[style*='block']) { width: min(400px, calc(100vw - 48px)); }
+    .gp-wizard-card { max-height: min(calc(100dvh - 130px), 62dvh); }
+}
 
 @media (max-width: 720px) {
     .gp-wizard-card { top: 12px; left: 12px; width: calc(100vw - 24px); max-height: calc(100dvh - 150px); }

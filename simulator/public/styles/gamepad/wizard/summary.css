@@ -1,74 +1,90 @@
+/* The wizard's summary: cards in the colours of the wizard (tokens from layout.css), so both themes match the rest of the window. */
 .gp-wizard-summary {
     display: grid;
-    gap: 16px;
+    gap: 14px;
 }
 
 .gp-wizard-summary-lead {
-    padding: 12px 14px;
-    border-radius: 14px;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-    border: 1px solid #e5e7eb;
-    color: #4b5563;
-    font-size: 12px;
+    padding: 2px 2px 0;
+    color: var(--gw-muted);
+    font-size: 13px;
     line-height: 1.45;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
 }
 
 .gp-wizard-summary-grid {
     display: grid;
-    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
 }
 
 .gp-wizard-summary-card {
     display: grid;
+    align-content: start;
     gap: 8px;
     padding: 14px;
-    border-radius: 16px;
-    background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.05);
+    border-radius: 12px;
+    background: var(--gw-inset);
+    border: 1px solid var(--gw-line);
 }
 
+/* The four flight channels take the whole first row: the switches share the second. */
+.gp-wizard-summary-grid > .gp-wizard-summary-card:first-child {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 24px;
+}
+.gp-wizard-summary-channel { display: grid; align-content: start; gap: 6px; }
+.gp-wizard-summary-grid > .gp-wizard-summary-card:first-child > .gp-wizard-summary-card-title { grid-column: 1 / -1; }
+
 .gp-wizard-summary-card-title {
-    color: #1d1d20;
+    color: var(--text-strong);
     font-size: 12px;
     font-weight: 800;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
 }
 
 .gp-wizard-summary-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    color: #6b7280;
+    gap: 4px 12px;
+    color: var(--gw-muted);
     font-size: 12px;
 }
 
 .gp-wizard-summary-row strong {
-    color: #1d1d20;
+    color: var(--text-strong);
     font-family: var(--font-mono);
     font-size: 11px;
+    font-weight: 600;
     text-align: right;
 }
 
 .gp-wizard-summary-note {
-    color: #6b7280;
+    color: var(--gw-muted);
     font-size: 11px;
     line-height: 1.45;
 }
 
+/* Direction: quiet by default, the accent colour only where the channel is inverted (the thing worth a look). */
 .gp-wizard-summary-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 82px;
-    padding: 4px 8px;
+    min-width: 0;
+    padding: 3px 9px;
     border-radius: 999px;
-    background: rgba(255, 107, 0, 0.1);
-    border: 1px solid rgba(255, 107, 0, 0.14);
-    color: #c2410c;
-    font-size: 10px;
-    font-weight: 700;
+    background: transparent;
+    border: 1px solid var(--gw-line-strong);
+    color: var(--gw-muted) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+}
+.gp-wizard-summary-badge[data-inverted='true'] {
+    background: color-mix(in srgb, var(--gw-accent) 16%, transparent);
+    border-color: color-mix(in srgb, var(--gw-accent) 55%, transparent);
+    color: var(--gw-accent) !important;
 }

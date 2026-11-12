@@ -1,0 +1,193 @@
+/* The fine-tuning screen of the wizard (wizard/tuning-ui.ts): a narrow list, one line per flight channel; the one you open shows its settings. Tokens come from layout.css. */
+.gp-wizard-tuning { display: grid; gap: 12px; }
+
+/* The first screen: two choices. */
+.gp-wizard-menu { display: none; gap: 10px; }
+.gp-wizard-menu__item {
+    display: grid;
+    gap: 4px;
+    padding: 14px 16px;
+    text-align: left;
+    border: 1px solid var(--gw-line-strong);
+    border-radius: 12px;
+    background: var(--gw-inset);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: border-color .15s, background-color .15s;
+}
+.gp-wizard-menu__item strong { font: 700 14px/1.2 var(--font-sans); color: var(--text-strong); }
+.gp-wizard-menu__item span { font: 400 12px/1.4 var(--font-sans); color: var(--gw-muted); }
+.gp-wizard-menu__item:hover { border-color: var(--gw-accent); background: color-mix(in srgb, var(--gw-accent) 8%, var(--gw-inset)); }
+.gp-wizard-menu__item:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+.gp-wizard-tuning-content { display: grid; gap: 6px; }
+
+.gp-tune {
+    border: 1px solid var(--gw-line);
+    border-radius: 10px;
+    background: var(--gw-inset);
+    transition: border-color .15s;
+}
+.gp-tune[data-open='true'] { border-color: var(--gw-line-strong); }
+
+/* The line of a channel: name, the live meter, the value. */
+.gp-tune__head {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) 44px 12px;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    border-radius: 10px;
+}
+.gp-tune__head:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+.gp-tune__name { font: 700 13px/1.2 var(--font-sans); color: var(--text-strong); }
+.gp-tune__value { font: 600 12px/1 var(--font-mono); text-align: right; color: var(--gw-muted); }
+.gp-tune[data-live='true'][data-dead='false'] .gp-tune__value { color: var(--gw-accent); }
+.gp-tune__chevron { width: 12px; height: 12px; fill: none; stroke: var(--gw-muted); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: transform .15s; }
+.gp-tune[data-open='true'] .gp-tune__chevron { transform: rotate(180deg); }
+
+/* The meter: the whole travel of the stick as it is read. The dot is the reading, the line the zero point, the shade the dead zone. */
+.gp-tune__meter {
+    position: relative;
+    height: 10px;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--text-strong) 11%, transparent);
+}
+.gp-tune__meter::before { /* the middle of the travel, for reference */
+    content: '';
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 50%;
+    width: 1px;
+    background: color-mix(in srgb, var(--text-strong) 22%, transparent);
+}
+.gp-tune[data-channel='throttle'] .gp-tune__meter::before { display: none; }
+.gp-tune__band {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: color-mix(in srgb, var(--gw-accent) 30%, transparent);
+    border-radius: 5px;
+    transition: left .08s linear, width .08s linear;
+}
+.gp-tune__band[hidden] { display: none; }
+.gp-tune__zero {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    width: 2px;
+    margin-left: -1px;
+    border-radius: 1px;
+    background: var(--gw-accent);
+    transition: left .08s linear;
+}
+.gp-tune__dots { position: absolute; inset: 0 5px; pointer-events: none; }
+.gp-tune__dots i {
+    position: absolute;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    border-radius: 50%;
+    background: var(--text-strong);
+    box-shadow: 0 0 0 2px var(--gw-inset);
+    transition: left .05s linear, background-color .15s;
+}
+.gp-tune[data-live='false'] .gp-tune__dots i { opacity: .25; }
+.gp-tune[data-dead='false'][data-live='true'] .gp-tune__dots i { background: var(--gw-accent); }
+
+/* What opens under the line. */
+.gp-tune__details { display: none; gap: 10px; padding: 2px 12px 12px; }
+.gp-tune[data-open='true'] .gp-tune__details { display: grid; }
+.gp-tune__invert { font-size: 12px; gap: 8px; }
+.gp-tune__slider {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr) 46px;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--gw-muted);
+}
+.gp-tune__slider output { font: 500 11px/1 var(--font-mono); text-align: right; color: var(--text-strong); }
+.gp-tune__slider input[type='range'] { width: 100%; margin: 0; accent-color: var(--gw-accent); }
+.gp-tune__curve { justify-self: end; width: 84px; height: 84px; margin-top: -2px; border-radius: 8px; background: color-mix(in srgb, var(--text-strong) 6%, transparent); }
+.gp-tune__curve-axis { fill: none; stroke: color-mix(in srgb, var(--text-strong) 24%, transparent); stroke-width: .03; }
+.gp-tune__curve-line { fill: none; stroke: var(--gw-accent); stroke-width: .07; stroke-linecap: round; stroke-linejoin: round; }
+.gp-tune__curve-dot { fill: var(--text-strong); stroke: var(--gw-inset); stroke-width: .03; }
+.gp-tune__buttons { display: flex; gap: 8px; }
+.gp-tune__button {
+    flex: 1 1 0;
+    padding: 6px 8px;
+    border: 1px solid var(--gw-line-strong);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-color);
+    font: 600 12px/1.2 var(--font-sans);
+    cursor: pointer;
+    transition: background-color .15s, border-color .15s;
+}
+.gp-tune__button:hover:not(:disabled) { border-color: var(--gw-accent); background: color-mix(in srgb, var(--gw-accent) 10%, transparent); }
+.gp-tune__button:disabled { opacity: .45; cursor: default; }
+.gp-tune__button:focus-visible,
+.gp-tune__slider input:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+
+/* The stages of the whole setup, shown while the wizard leads the student from calibration to flight. */
+.gp-wizard-journey { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0 20px 4px; list-style: none; }
+.gp-wizard-journey[hidden] { display: none; }
+.gp-wizard-journey li { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-top: 6px; border-top: 3px solid var(--gw-line-strong); font: 600 10px/1.2 var(--font-sans); letter-spacing: .04em; text-transform: uppercase; color: var(--gw-muted); }
+.gp-wizard-journey li[data-state='done'] { border-top-color: color-mix(in srgb, var(--gw-accent) 55%, transparent); }
+.gp-wizard-journey li[data-state='current'] { border-top-color: var(--gw-accent); color: var(--text-strong); }
+
+/* The switches screen. */
+.gp-wizard-switches, .gp-wizard-ready { display: grid; gap: 12px; }
+.gp-wizard-switches-content { display: grid; gap: 10px; }
+.gp-sw { display: grid; gap: 10px; padding: 12px 14px; border: 1px solid var(--gw-line); border-radius: 12px; background: var(--gw-inset); }
+.gp-sw__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.gp-sw__title { display: grid; gap: 2px; min-width: 0; }
+.gp-sw__title b { font: 700 13px/1.2 var(--font-sans); color: var(--text-strong); }
+.gp-sw__title small { font: 400 11px/1.4 var(--font-sans); color: var(--gw-muted); }
+.gp-sw__state { flex: none; padding: 4px 8px; border-radius: 6px; background: color-mix(in srgb, var(--text-strong) 9%, transparent); font: 600 11px/1 var(--font-mono); color: var(--gw-muted); white-space: nowrap; }
+.gp-sw__state[data-on='true'] { background: color-mix(in srgb, var(--gw-accent) 20%, transparent); color: var(--gw-accent); }
+.gp-sw__source { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.gp-sw__source select { min-width: 0; min-height: 32px; }
+.gp-sw__source .gp-tune__button { flex: none; white-space: nowrap; }
+.gp-sw__source .gp-tune__button[data-listening='true'] { border-color: var(--gw-accent); background: color-mix(in srgb, var(--gw-accent) 14%, transparent); color: var(--gw-accent); }
+.gp-sw__note { margin: 0; font: 400 12px/1.45 var(--font-sans); color: var(--gw-muted); }
+.gp-sw__note:empty { display: none; }
+.gp-sw__note[data-tone='warn'] { color: var(--warning, #f5a524); }
+.gp-sw__note[data-tone='ok'] { color: var(--success, #3ecf8e); }
+.gp-sw__note[data-tone='listening'] { color: var(--gw-accent); }
+
+/* The live bar: 1000 to 2000, the ranges as bands, the switch as the dot. */
+.gp-sw__bar { position: relative; height: 12px; border-radius: 6px; background: color-mix(in srgb, var(--text-strong) 11%, transparent); }
+.gp-sw__band { position: absolute; top: 0; bottom: 0; border-radius: 6px; background: color-mix(in srgb, var(--gw-accent) 38%, transparent); }
+.gp-sw__band[data-i='1'], .gp-sw__range[data-i='1'] { --sw-tone: #38bdf8; }
+.gp-sw__band[data-i='2'], .gp-sw__range[data-i='2'] { --sw-tone: #a3e635; }
+.gp-sw__band[data-i='0'], .gp-sw__range[data-i='0'] { --sw-tone: var(--gw-accent); }
+.gp-sw__band { background: color-mix(in srgb, var(--sw-tone, var(--gw-accent)) 42%, transparent); }
+.gp-sw__live { position: absolute; top: 50%; left: 0; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--text-strong); box-shadow: 0 0 0 2px var(--gw-inset); transition: left .05s linear, opacity .15s; }
+
+.gp-sw__ranges { display: grid; gap: 6px; }
+.gp-sw__range { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; align-items: center; gap: 6px 8px; padding: 6px 8px; border-radius: 8px; border: 1px solid transparent; font-size: 12px; }
+.gp-sw__range[data-active='true'] { border-color: color-mix(in srgb, var(--sw-tone, var(--gw-accent)) 60%, transparent); background: color-mix(in srgb, var(--sw-tone, var(--gw-accent)) 10%, transparent); }
+.gp-sw__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--sw-tone, var(--gw-accent)); opacity: .5; }
+.gp-sw__range[data-active='true'] .gp-sw__dot { opacity: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--sw-tone, var(--gw-accent)) 28%, transparent); }
+.gp-sw__label { min-width: 0; color: var(--text-strong); font-weight: 600; }
+.gp-sw__label small { font: 500 10px/1 var(--font-mono); color: var(--gw-muted); margin-left: 4px; }
+.gp-sw__edges { grid-column: 2 / -1; grid-row: 2; display: inline-flex; align-items: center; gap: 6px; color: var(--gw-muted); }
+#gp-wizard-switches .gp-sw__edges input { flex: 0 0 84px; width: 84px; max-width: 84px; min-height: 28px; padding: 2px 6px; font: 500 11px/1 var(--font-mono); text-align: right; }
+.gp-sw__range .gp-tune__button { flex: none; padding: 5px 8px; font-size: 11px; white-space: nowrap; }
+
+/* The last screen. */
+.gp-ready-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.gp-ready-list li { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 10px; padding: 8px 12px; border: 1px solid var(--gw-line); border-radius: 10px; background: var(--gw-inset); font-size: 12px; line-height: 1.4; }
+.gp-ready-list b { color: var(--text-strong); }
+.gp-ready-list span { color: var(--gw-muted); }
+.gp-ready-steps { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; counter-reset: ready; }
+.gp-ready-steps li { position: relative; padding: 10px 12px 10px 40px; border-radius: 10px; background: color-mix(in srgb, var(--gw-accent) 8%, var(--gw-inset)); font-size: 12px; line-height: 1.45; color: var(--text-color); counter-increment: ready; }
+.gp-ready-steps li::before { content: counter(ready); position: absolute; left: 12px; top: 10px; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 50%; background: var(--gw-accent); color: #151515; font: 700 11px/1 var(--font-sans); }
+.gp-ready-title { margin: 4px 0 0; font: 700 12px/1.3 var(--font-sans); letter-spacing: .06em; text-transform: uppercase; color: var(--gw-muted); }
+
+/* A warning in the status line of a step: the input moved is already taken. */
+.gp-wizard-status[data-tone='warn'] { color: var(--warning, #f5a524); }

@@ -11,7 +11,8 @@ import {
     loadAutopilotState,
     persistAutopilotState
 } from './storage.js';
-import { buildDefinitions, parseTemplate } from './template.js';
+import { parsePropertiesText } from './properties-parser.js';
+import { buildDefinition, buildDefinitions, parseTemplate } from './template.js';
 import type {
     AutopilotImportResult,
     AutopilotParameterDefinition,
@@ -40,6 +41,16 @@ function refreshTemplate(templateText: string, sourceFileName = 'Встроен�
     ) as Record<string, number>;
 }
 
+/** Добавляет в схему параметр, которого нет в загруженном шаблоне (профиль новее шаблона). */
+function registerExtraDefinition(key: string, defaultValue: number) {
+    if (autopilotDefinitionMap.has(key)) return;
+    const definition = buildDefinition(key, defaultValue);
+    autopilotParameterDefinitions = [...autopilotParameterDefinitions, definition];
+    autopilotParameterKeys = [...autopilotParameterKeys, key];
+    autopilotDefinitionMap.set(key, definition);
+    templateDefaultValues[key] = defaultValue;
+}
+
 function saveState() {
     persistAutopilotState({
         storageKey: STORAGE_KEY,
@@ -48,11 +59,18 @@ function saveState() {
     });
 }
 
-function validateParameterValue(definition: AutopilotParameterDefinition, value: number): string | null {
+/** Жёсткая проверка: значение принципиально недопустимо (не число, не из списка допустимых). */
+function validateHardConstraints(definition: AutopilotParameterDefinition, value: number): string | null {
     if (!Number.isFinite(value)) return 'Значение должно быть конечным числом.';
     if (definition.validation.allowedValues && !definition.validation.allowedValues.includes(value)) {
         return `Допустимые значения: ${definition.validation.allowedValues.join(', ')}.`;
     }
+    return null;
+}
+
+function validateParameterValue(definition: AutopilotParameterDefinition, value: number): string | null {
+    const hard = validateHardConstraints(definition, value);
+    if (hard) return hard;
     if (typeof definition.validation.min === 'number' && value < definition.validation.min) {
         return `Значение не должно быть меньше ${definition.validation.min}.`;
     }
@@ -68,6 +86,15 @@ let runtimeState = loadAutopilotState({
     storageKey: STORAGE_KEY,
     templateDefaultValues,
     templateSourceFileName
+});
+// Значения из localStorage могут содержать параметры вне встроенного шаблона (импорт более нового профиля).
+Object.keys(runtimeState.values).forEach((key) => {
+    const value = runtimeState.values[key];
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        registerExtraDefinition(key, value);
+    } else {
+        delete runtimeState.values[key];
+    }
 });
 syncAutopilotRuntimeFromValues(runtimeState.values);
 
@@ -96,6 +123,10 @@ export function loadAutopilotTemplateFromText(text: string, sourceFileName: stri
 
 export function getAutopilotParameterDefinitions() {
     return autopilotParameterDefinitions;
+}
+
+export function listAutopilotGroups() {
+    return Array.from(new Set(autopilotParameterDefinitions.map((definition) => definition.group)));
 }
 
 export function updateAutopilotAuthor(author: string) {
@@ -161,62 +192,77 @@ export function updateAutopilotParameter(parameterKey: string, rawValue: string,
 }
 
 export function importAutopilotProperties(text: string, fileName: string, author: string): AutopilotImportResult {
-    const nextValues = { ...runtimeState.values };
+    const parsed = parsePropertiesText(text);
     const errors: string[] = [];
     const warnings: string[] = [];
-    const changedKeys: string[] = [];
-    const seen = new Set<string>();
+    const accepted = new Map<string, { value: number; line: number }>();
+    const duplicates: string[] = [];
+    const rawExtras: Record<string, string> = {};
+    const skipped: string[] = [];
 
-    text.split(/\r?\n/).forEach((line, index) => {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#')) return;
-        const eqIndex = trimmed.indexOf('=');
-        if (eqIndex <= 0) {
-            errors.push(`Строка ${index + 1}: ожидался формат key=value.`);
-            return;
-        }
-        const key = trimmed.slice(0, eqIndex).trim();
-        const rawValue = trimmed.slice(eqIndex + 1).trim();
-        const definition = autopilotDefinitionMap.get(key);
-        if (!definition) {
-            errors.push(`Строка ${index + 1}: неизвестный параметр ${key}.`);
-            return;
-        }
-        const numericValue = Number(rawValue);
-        if (!Number.isFinite(numericValue)) {
-            errors.push(`Строка ${index + 1}: значение ${rawValue} не является числом.`);
-            return;
-        }
-        const validationError = validateParameterValue(definition, numericValue);
-        if (validationError) {
-            errors.push(`Строка ${index + 1}: ${key} -> ${validationError}`);
-            return;
-        }
-        if (seen.has(key)) {
-            warnings.push(`Строка ${index + 1}: параметр ${key} встретился повторно, использовано последнее значение.`);
-        }
-        seen.add(key);
-        if (nextValues[key] !== numericValue) {
-            changedKeys.push(key);
-        }
-        nextValues[key] = numericValue;
+    parsed.malformedLines.forEach(({ line, text: lineText }) => {
+        warnings.push(`Строка ${line}: не распознана как key=value, пропущена («${lineText.slice(0, 40)}»).`);
     });
 
-    if (seen.size === 0) {
-        errors.push('Файл не содержит ни одного параметра автопилота.');
-    }
+    parsed.entries.forEach((entry) => {
+        if (entry.value === null) {
+            // Нечисловое значение: схема его не знает — сохраняем как есть, в числовые параметры не попадает.
+            if (entry.raw) rawExtras[entry.key] = entry.raw;
+            skipped.push(entry.key);
+            warnings.push(`Строка ${entry.line}: ${entry.key} — ${entry.error}; сохранено как текст без применения.`);
+            return;
+        }
+        const definition = autopilotDefinitionMap.get(entry.key);
+        if (definition) {
+            const hardError = validateHardConstraints(definition, entry.value);
+            if (hardError) {
+                skipped.push(entry.key);
+                warnings.push(`Строка ${entry.line}: ${entry.key} = ${entry.value} пропущен, оставлено текущее значение. ${hardError}`);
+                return;
+            }
+            const rangeError = validateParameterValue(definition, entry.value);
+            if (rangeError) {
+                warnings.push(`Строка ${entry.line}: ${entry.key} = ${entry.value} вне рекомендуемого диапазона (${rangeError}) — значение применено.`);
+            }
+        }
+        if (accepted.has(entry.key)) duplicates.push(entry.key);
+        accepted.set(entry.key, { value: entry.value, line: entry.line });
+    });
 
-    const missingKeys = autopilotParameterKeys.filter((key) => !seen.has(key));
-    if (missingKeys.length > 0) {
-        warnings.push(`В файле отсутствует ${missingKeys.length} параметров. Для них сохранены текущие значения.`);
-    }
-
-    if (errors.length > 0) {
+    // Файл отвергается только если в нём нет ни одного пригодного параметра.
+    if (accepted.size === 0) {
+        errors.push(skipped.length > 0
+            ? 'В файле нет ни одного параметра с числовым значением, пригодным для применения.'
+            : 'Файл не содержит ни одного параметра автопилота.');
         return { ok: false, errors, warnings, changedKeys: [], state: getAutopilotSettingsState() };
     }
 
+    if (duplicates.length > 0) {
+        warnings.push(`Повторяются параметры (${duplicates.length}), использовано последнее значение: ${duplicates.slice(0, 3).join(', ')}.`);
+    }
+
+    // Атомарное применение: схема и значения меняются только после успешного разбора всего файла.
+    const newKeys = [...accepted.keys()].filter((key) => !autopilotDefinitionMap.has(key));
+    newKeys.forEach((key) => registerExtraDefinition(key, accepted.get(key)!.value));
+    if (newKeys.length > 0) {
+        warnings.push(`Профиль новее текущего шаблона: добавлено новых параметров — ${newKeys.length}.`);
+    }
+
+    const missingKeys = autopilotParameterKeys.filter((key) => !accepted.has(key));
+    if (missingKeys.length > 0) {
+        warnings.push(`В файле отсутствует ${missingKeys.length} параметров, для них сохранены текущие значения.`);
+    }
+
     const previousState = cloneAutopilotState(runtimeState);
+    const nextValues = { ...runtimeState.values };
+    const changedKeys: string[] = [];
+    accepted.forEach(({ value }, key) => {
+        if (previousState.values[key] !== value) changedKeys.push(key);
+        nextValues[key] = value;
+    });
+
     runtimeState.values = nextValues;
+    runtimeState.rawExtras = { ...(runtimeState.rawExtras || {}), ...rawExtras };
     runtimeState.author = safeAutopilotAuthor(author);
     runtimeState.sourceFileName = fileName || 'Импортированный файл';
     runtimeState.importedAt = new Date().toISOString();
@@ -226,7 +272,7 @@ export function importAutopilotProperties(text: string, fileName: string, author
         appendAutopilotAuditEntry(runtimeState, createAutopilotAuditEntry({
             parameterKey: key,
             author,
-            previousValue: previousState.values[key],
+            previousValue: previousState.values[key] ?? null,
             nextValue: nextValues[key],
             status: 'applied',
             source: 'file-import',
@@ -263,10 +309,20 @@ export function resetAutopilotParameters(author: string) {
     return getAutopilotSettingsState();
 }
 
+export function clearAutopilotAuditLog() {
+    runtimeState.auditLog = [];
+    runtimeState.updatedAt = new Date().toISOString();
+    saveState();
+    return getAutopilotSettingsState();
+}
+
 export function exportAutopilotPropertiesText() {
     const header = `# ${new Date().toISOString()}`;
     const lines = autopilotParameterDefinitions.map((definition) => `${definition.key}=${runtimeState.values[definition.key]}`);
-    return [header, ...lines].join('\n');
+    const extras = Object.entries(runtimeState.rawExtras || {})
+        .filter(([key]) => !autopilotDefinitionMap.has(key))
+        .map(([key, raw]) => `${key}=${raw}`);
+    return [header, ...lines, ...extras].join('\n');
 }
 
 export function getAutopilotValidationSummary() {

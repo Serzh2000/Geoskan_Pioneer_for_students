@@ -1,20 +1,14 @@
 import { DOC_OVERRIDES, GROUP_DESCRIPTIONS } from './metadata.js';
+import { parsePropertiesText } from './properties-parser.js';
 import type { AutopilotParameterDefinition, ValidationRule } from './types.js';
 
 export function parseTemplate(text: string) {
     const values: Record<string, number> = {};
     const keys: string[] = [];
-    text.split(/\r?\n/).forEach((line) => {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#')) return;
-        const eqIndex = trimmed.indexOf('=');
-        if (eqIndex <= 0) return;
-        const key = trimmed.slice(0, eqIndex).trim();
-        const rawValue = trimmed.slice(eqIndex + 1).trim();
-        const value = Number(rawValue);
-        if (!Number.isFinite(value)) return;
-        keys.push(key);
-        values[key] = value;
+    parsePropertiesText(text).entries.forEach((entry) => {
+        if (entry.value === null) return;
+        if (!(entry.key in values)) keys.push(entry.key);
+        values[entry.key] = entry.value;
     });
     return { values, keys };
 }
@@ -39,25 +33,26 @@ function describeFallback(group: string, key: string) {
     };
 }
 
+export function buildDefinition(key: string, defaultValue: number): AutopilotParameterDefinition {
+    const group = key.includes('_') ? key.split('_')[0] : 'General';
+    const fallback = describeFallback(group, key);
+    const override = DOC_OVERRIDES[key];
+    const mergedValidation: ValidationRule = {
+        ...(fallback.validation || {}),
+        ...(override?.validation || {})
+    };
+    return {
+        key,
+        group,
+        defaultValue,
+        description: override?.description || fallback.description,
+        details: override?.details || fallback.details,
+        validation: mergedValidation,
+        source: override?.source || fallback.source
+    };
+}
+
 export function buildDefinitions(templateText: string) {
     const parsed = parseTemplate(templateText);
-    return parsed.keys.map((key) => {
-        const defaultValue = parsed.values[key];
-        const group = key.includes('_') ? key.split('_')[0] : 'General';
-        const fallback = describeFallback(group, key);
-        const override = DOC_OVERRIDES[key];
-        const mergedValidation: ValidationRule = {
-            ...(fallback.validation || {}),
-            ...(override?.validation || {})
-        };
-        return {
-            key,
-            group,
-            defaultValue,
-            description: override?.description || fallback.description,
-            details: override?.details || fallback.details,
-            validation: mergedValidation,
-            source: override?.source || fallback.source
-        } satisfies AutopilotParameterDefinition;
-    });
+    return parsed.keys.map((key) => buildDefinition(key, parsed.values[key]));
 }

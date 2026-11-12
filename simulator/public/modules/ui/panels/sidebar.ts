@@ -37,6 +37,7 @@ export function initSidebar(callbacks: UICallbacks) {
     const debugPanelIds = new Set(['settings-panel']);
     const logPanelOpenDiagnostics = createSidebarDiagnosticsLogger(panels, shouldLogPanelDebug, debugPanelIds);
     const gamepadDialog = initGamepadDialog();
+    window.addEventListener('gamepad-dialog:open', () => gamepadDialog?.open());
     let isResizing = false;
     let viewportRefreshFrame = 0;
     let closeAnimationTimer = 0;
@@ -165,7 +166,12 @@ export function initSidebar(callbacks: UICallbacks) {
     };
 
     const openPanel = function(panelId: string) {
-        if (panelId === 'gamepad-panel') { gamepadDialog?.open(); return; }
+        // The controller button opens the setup wizard at once; the channel table and the signal monitor are its third choice.
+        if (panelId === 'gamepad-panel') {
+            const wizardButton = document.getElementById('gp-btn-wizard');
+            if (wizardButton) wizardButton.click(); else gamepadDialog?.open();
+            return;
+        }
         const panel = document.getElementById(panelId);
         if (!panel) {
             console.warn('[Sidebar][Debug] openPanel target not found', { panelId });

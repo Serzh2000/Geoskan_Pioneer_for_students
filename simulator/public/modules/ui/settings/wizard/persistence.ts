@@ -17,6 +17,7 @@ export function persistWizardResults(params: {
     wizardDraftInversion: boolean[];
 }): void {
     const { detectedMapping, auxResults, wizardDraftInversion } = params;
+    if (Object.keys(detectedMapping).length > 0) simSettings.gamepadMappingConfirmed = true;
 
     for (const channel of WIZARD_CHANNELS) {
         const ref = detectedMapping[channel];

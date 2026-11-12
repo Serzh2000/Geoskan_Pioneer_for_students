@@ -11,8 +11,7 @@
 
 /* The stage is a grid of kit sections; script sets display:grid inline. */
 .gamepad-stage { display: grid; gap: 20px; min-width: 0; }
-.gamepad-stage:not(.is-disconnected) > .gp-connect { display: none; }
-.gamepad-stage:not(.is-disconnected) > .gp-connect + .pk-section { padding-top: 0; border-top: 0; }
+.gamepad-stage:not(.is-disconnected) .gp-connect { display: none; }
 .gamepad-stage.is-disconnected .gp-calibration-hint--online,
 .gamepad-stage:not(.is-disconnected) .gp-calibration-hint--offline { display: none; }
 

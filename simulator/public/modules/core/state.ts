@@ -60,6 +60,27 @@ export function setCurrentScriptLanguage(language: ScriptLanguage) {
     currentScriptLanguage = language;
 }
 
+/** Fine tuning of one flight channel (the wizard's last step): where its zero sits and how wide the dead zone around it is. */
+export type ChannelTuning = {
+    trim: number;
+    deadzone: number;
+    /** Rates of a stick, like in a drone simulator: 0 is a straight response, 1 a strong curve (gentle near zero, steep at the ends). The throttle has none. */
+    expo: number;
+    /** How much of the stick's travel is used, 0.3..1: at 0.6 the stick at the end commands 60% of the full deflection. */
+    rate: number;
+};
+export type TunedChannel = 'roll' | 'pitch' | 'throttle' | 'yaw';
+
+/** Defaults equal the fixed dead zones the controller used before tuning existed, so nothing changes until the student tunes. */
+export function defaultGamepadTuning(): Record<TunedChannel, ChannelTuning> {
+    return {
+        roll: { trim: 0, deadzone: 0.03, expo: 0, rate: 1 },
+        pitch: { trim: 0, deadzone: 0.03, expo: 0, rate: 1 },
+        yaw: { trim: 0, deadzone: 0.03, expo: 0, rate: 1 },
+        throttle: { trim: 0, deadzone: 0.02, expo: 0, rate: 1 }
+    };
+}
+
 export const simSettings = {
     showTracer: true,
     tracerColor: '#38bdf8',
@@ -69,6 +90,8 @@ export const simSettings = {
     simSpeed: 1.0,
     gamepadConnected: false,
     gamepadStickMode: 2 as 1 | 2 | 3 | 4,
+    /** The student's own mapping (set by the wizard) is kept as it is; an unconfirmed one may be swapped for the stick-mode defaults when a pad is plugged in. */
+    gamepadMappingConfirmed: false,
     gamepadMapping: {
         roll: 'a2' as GamepadInputRef,
         pitch: 'a1' as GamepadInputRef,
@@ -85,6 +108,7 @@ export const simSettings = {
         isCalibrated: false
     },
     gamepadInversion: [false, false, false, true, false, false, false, false], // R, P, T, Y, Mode, Arm, Magnet
+    gamepadTuning: defaultGamepadTuning(),
     gamepadAuxRanges: {
         arm: { min: 1800, max: 2100, center: 2000 } as AuxChannelRange,
         magnet: { min: 1800, max: 2100, center: 2000 } as AuxChannelRange
@@ -103,10 +127,13 @@ export function saveGamepadSettings() {
     if (typeof localStorage === 'undefined') return;
     const data = {
         mapping: simSettings.gamepadMapping,
+        mappingConfirmed: simSettings.gamepadMappingConfirmed,
         inversion: simSettings.gamepadInversion,
         auxRanges: simSettings.gamepadAuxRanges,
         modeRanges: simSettings.gamepadModeRanges,
-        stickMode: simSettings.gamepadStickMode
+        stickMode: simSettings.gamepadStickMode,
+        tuning: simSettings.gamepadTuning,
+        calibration: simSettings.gamepadCalibration
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
@@ -118,10 +145,33 @@ export function loadGamepadSettings() {
         if (saved) {
             const data = JSON.parse(saved);
             if (data.mapping) Object.assign(simSettings.gamepadMapping, data.mapping);
+            simSettings.gamepadMappingConfirmed = data.mappingConfirmed === true;
             if (data.inversion) simSettings.gamepadInversion = data.inversion;
             if (data.auxRanges) Object.assign(simSettings.gamepadAuxRanges, data.auxRanges);
             if (data.modeRanges) Object.assign(simSettings.gamepadModeRanges, data.modeRanges);
             if (data.stickMode) simSettings.gamepadStickMode = data.stickMode;
+            // The recorded stick ranges: without them a pad that does not report the full -1..1 would need calibrating after every reload.
+            const cal = data.calibration;
+            const cs = simSettings.gamepadCalibration;
+            if (cal && cal.isCalibrated === true && [cal.min, cal.max, cal.center].every((a) => Array.isArray(a) && a.length === cs.min.length && a.every(Number.isFinite))) {
+                cs.min = [...cal.min];
+                cs.max = [...cal.max];
+                cs.center = [...cal.center];
+                cs.isCalibrated = true;
+            }
+            if (data.tuning && typeof data.tuning === 'object') {
+                for (const channel of Object.keys(simSettings.gamepadTuning) as TunedChannel[]) {
+                    const saved = data.tuning[channel];
+                    if (saved && Number.isFinite(saved.trim) && Number.isFinite(saved.deadzone)) {
+                        simSettings.gamepadTuning[channel] = {
+                            trim: saved.trim,
+                            deadzone: saved.deadzone,
+                            expo: Number.isFinite(saved.expo) ? saved.expo : 0,
+                            rate: Number.isFinite(saved.rate) ? saved.rate : 1
+                        };
+                    }
+                }
+            }
         }
     } catch (e) {
         console.warn('[State] Failed to load gamepad settings:', e);

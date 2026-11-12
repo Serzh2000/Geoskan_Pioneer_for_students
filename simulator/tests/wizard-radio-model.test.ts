@@ -11,9 +11,10 @@ describe('wizard radio model', () => {
     it('rests the throttle at the bottom of its stick and moves the others from the centre', () => {
         const rest = stickOffsets({ throttle: 0, yaw: 0, pitch: 0, roll: 0 }, slotOf);
         expect(rest).toEqual({ leftX: 0, leftY: STICK_TRAVEL, rightX: 0, rightY: 0 });
-        const full = stickOffsets({ throttle: 1, yaw: 1, pitch: -1, roll: 0.5 }, slotOf);
+        const full = stickOffsets({ throttle: 1, yaw: 1, pitch: 1, roll: 0.5 }, slotOf);
         expect(full.leftY).toBe(-STICK_TRAVEL);
         expect(full.leftX).toBe(STICK_TRAVEL);
+        // Pitch forward is the HIGH end in the simulator, and a stick pushed forward is drawn away from the pilot.
         expect(full.rightY).toBe(-STICK_TRAVEL);
         expect(full.rightX).toBe(STICK_TRAVEL / 2);
     });

@@ -11,17 +11,17 @@ export const SECTION_META: Record<SectionKey, SectionMeta> = {
     sensors: {
         title: 'Датчики и IMU',
         description: 'Сенсорные контуры, IMU, фильтрация и маршрутизация показаний.',
-        groups: ['ICM20689', 'Imu', 'SensorMux', 'Sensors']
+        groups: ['ICM20689', 'Imu', 'Offsets', 'PMW3901', 'Power', 'SensorMux', 'Sensors']
     },
     hardware: {
         title: 'Плата и модули',
         description: 'Версия платы, радиомодуль, аппаратная конфигурация и модули.',
-        groups: ['BoardPioneer', 'Board', 'Modules', 'RC11xx']
+        groups: ['BoardPioneer', 'Board', 'Modules', 'RC11xx', 'Serial']
     },
     system: {
         title: 'Система и телеметрия',
         description: 'Логирование, служебные состояния и телеметрические потоки.',
-        groups: ['Logger', 'State', 'Telemetry']
+        groups: ['Logger', 'Lua', 'State', 'Telemetry']
     }
 };
 
@@ -38,6 +38,18 @@ export const GROUP_DESCRIPTIONS: Record<string, string> = {
     SensorMux: 'Маршрутизация и переключение источников данных датчиков.',
     Sensors: 'Частоты, фильтрация, задержки и калибровка датчиков.',
     State: 'Служебные внутренние параметры состояния автопилота.',
+    Lua: 'Разрешения и модули встроенного Lua-интерпретатора.',
+    Offsets: 'Калибровочные смещения акселерометра, гироскопа, магнитометров и платы.',
+    PMW3901: 'Порог качества сигнала оптического датчика потока PMW3901.',
+    Power: 'Измерение напряжения и тока питания, фильтры и коэффициенты.',
+    Serial: 'Назначение последовательных портов автопилота.',
     Telemetry: 'Настройки телеметрического потока и частот обновления.'
 };
 
+
+/** Группы, не описанные в SECTION_META (профиль новее интерфейса), показываются в этом разделе. */
+export const FALLBACK_SECTION = 'system' as const;
+
+export function getKnownGroups() {
+    return new Set(SECTION_ORDER.flatMap((key) => SECTION_META[key].groups));
+}

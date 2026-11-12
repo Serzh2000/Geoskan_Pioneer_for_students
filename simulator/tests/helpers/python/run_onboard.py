@@ -763,6 +763,7 @@ class _ArucoDetector:
 
 cv2.aruco = types.SimpleNamespace(
     DICT_4X4_50='DICT_4X4_50', DICT_6X6_250='DICT_6X6_250',
+    DICT_APRILTAG_16h5='DICT_APRILTAG_16h5', DICT_APRILTAG_25h9='DICT_APRILTAG_25h9', DICT_APRILTAG_36h11='DICT_APRILTAG_36h11',
     getPredefinedDictionary=lambda name: name,
     DetectorParameters=lambda: None,
     ArucoDetector=_ArucoDetector,

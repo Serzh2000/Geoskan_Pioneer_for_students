@@ -10,6 +10,9 @@ import type {
     WizardStep
 } from './types.js';
 
+/** How far from where it started an axis must go before its first direction counts. */
+const DIRECTION_THRESHOLD = 0.25;
+
 export function getUsedRefs(
     detectedMapping: Partial<Record<ChannelKey, GamepadInputRef>>,
     exceptChannel?: ChannelKey
@@ -46,6 +49,9 @@ export function detectPrimaryAxis(params: {
         stats.travel += deltaFromLast;
         if (deltaFromBaseline >= 0.12) {
             stats.activitySamples += 1;
+        }
+        if (stats.firstDirection === 0 && deltaFromBaseline >= DIRECTION_THRESHOLD) {
+            stats.firstDirection = Math.sign(value - baseline);
         }
         stepLastAxes[index] = value;
 

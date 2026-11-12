@@ -211,6 +211,7 @@ export function bindGamepadSettingsControls(params: {
             state.isCalibrating = false;
             state.calibrationStartedAt = 0;
             resetCalibration();
+            saveGamepadSettings();
             renderCalibrationState();
         };
     }

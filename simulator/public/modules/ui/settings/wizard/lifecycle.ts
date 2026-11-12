@@ -15,6 +15,8 @@ export function finishWizardSession(params: {
     auxResults: Partial<Record<WizardAuxChannelKey, AuxDetectionResult>>;
     wizardDraftInversion: boolean[];
     stopWizard: () => void;
+    /** Keep the window open: the caller carries on with the next screen instead of closing. */
+    keepOpen?: boolean;
 }): void {
     persistWizardResults({
         detectedMapping: params.detectedMapping,
@@ -23,6 +25,8 @@ export function finishWizardSession(params: {
     });
     saveGamepadSettings();
     window.dispatchEvent(new CustomEvent(SETTINGS_CHANGED_EVENT));
+
+    if (params.keepOpen) return;
 
     const overlay = document.getElementById('gp-wizard-overlay');
     if (overlay) {

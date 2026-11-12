@@ -18,6 +18,8 @@ export type AxisMotionStats = {
     maxDelta: number;
     travel: number;
     activitySamples: number;
+    /** Which way the student pushed the axis first: -1, +1, or 0 while it has not moved far enough. The step names that direction, so it tells the channel's direction. */
+    firstDirection: number;
 };
 
 export type AuxDetectionResult = {

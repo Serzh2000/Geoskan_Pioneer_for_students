@@ -8,12 +8,38 @@
                     <svg class="gp-wizard-card__icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z"/><path d="M9 9h.01M15 9h.01M9 15h6"/></svg>
                     <span id="gp-wizard-title" class="gp-wizard-card__title">Настройка пульта</span>
                 </header>
+                <ol id="gp-wizard-journey" class="gp-wizard-journey" aria-label="Этапы настройки" hidden>
+                    <li title="Калибровка">Калибровка</li><li title="Тонкая настройка">Стики</li><li title="Тумблеры и команды">Тумблеры</li><li title="Готов к полёту">Полёт</li>
+                </ol>
                 <button id="gp-wizard-close" type="button" class="gp-wizard-card__cancel" aria-label="Закрыть мастер">Отмена</button>
                 <div class="gp-wizard-body">
+                    <div id="gp-wizard-menu" class="gp-wizard-menu">
+                        <div class="gp-wizard-ask">
+                            <div class="gp-wizard-instruction">Что настроим?</div>
+                            <p class="gp-wizard-hint">Дрон и пульт справа показывают, что читает ваш пульт прямо сейчас.</p>
+                        </div>
+                        <button id="gp-wizard-menu-calibrate" type="button" class="gp-wizard-menu__item">
+                            <strong>Калибровка</strong>
+                            <span>Покажем пульту стики и тумблеры по очереди: симулятор запомнит, что за что отвечает.</span>
+                        </button>
+                        <button id="gp-wizard-menu-tuning" type="button" class="gp-wizard-menu__item">
+                            <strong>Тонкая настройка</strong>
+                            <span>Инверсия, нулевая точка, мёртвая зона и рейты каждого канала.</span>
+                        </button>
+                        <button id="gp-wizard-menu-switches" type="button" class="gp-wizard-menu__item">
+                            <strong>Тумблеры и команды</strong>
+                            <span>Взвод, режимы полёта и магнит: на какой тумблер и в каком положении.</span>
+                        </button>
+                        <button id="gp-wizard-menu-channels" type="button" class="gp-wizard-menu__item">
+                            <strong>Каналы и монитор сигнала</strong>
+                            <span>Назначить входы вручную, диапазоны тумблеров, график всех 16 каналов.</span>
+                        </button>
+                        <div id="gp-wizard-menu-status" class="gp-wizard-status" role="status"></div>
+                    </div>
                     <div id="gp-wizard-step-container">
                         <div class="gp-wizard-step">
                             <div class="gp-wizard-ask" aria-live="polite">
-                                <div id="gp-wizard-instruction" class="gp-wizard-instruction">Подвигайте стик газа вверх и вниз</div>
+                                <div id="gp-wizard-instruction" class="gp-wizard-instruction">Отклоните стик газа вверх до упора, затем вниз</div>
                                 <p id="gp-wizard-hint" class="gp-wizard-hint">Повторите движение, которое показывает пульт.</p>
                             </div>
                             <ul id="gp-wizard-channels" class="gp-wizard-channels" aria-label="Каналы пульта"></ul>
@@ -26,6 +52,27 @@
                             </div>
                             <div id="gp-wizard-status" class="gp-wizard-status" role="status">Ожидание движения...</div>
                         </div>
+                    </div>
+                    <div id="gp-wizard-tuning" class="gp-wizard-tuning" style="display: none;">
+                        <div class="gp-wizard-ask">
+                            <div class="gp-wizard-instruction">Тонкая настройка</div>
+                            <p class="gp-wizard-hint">Двигайте стики: точка показывает, что читает пульт. Если что-то не так — нажмите на канал и поправьте. Иначе жмите «Готово».</p>
+                        </div>
+                        <div id="gp-wizard-tuning-content" class="gp-wizard-tuning-content"></div>
+                    </div>
+                    <div id="gp-wizard-switches" class="gp-wizard-switches" style="display: none;">
+                        <div class="gp-wizard-ask">
+                            <div class="gp-wizard-instruction">Тумблеры и команды</div>
+                            <p class="gp-wizard-hint">Что делает каждый тумблер. Нажмите «Определить» и переключите тумблер, затем поставьте его в нужное положение и нажмите «Взять положение». Полоса показывает тумблер вживую.</p>
+                        </div>
+                        <div id="gp-wizard-switches-content" class="gp-wizard-switches-content"></div>
+                    </div>
+                    <div id="gp-wizard-ready" class="gp-wizard-ready" style="display: none;">
+                        <div class="gp-wizard-ask">
+                            <div class="gp-wizard-instruction">Пульт готов к полёту</div>
+                            <p class="gp-wizard-hint">Настройки сохранены в этом браузере: после перезагрузки страницы настраивать ничего не нужно.</p>
+                        </div>
+                        <div id="gp-wizard-ready-content"></div>
                     </div>
                     <div id="gp-wizard-summary" class="gp-wizard-summary" style="display: none;">
                         <div class="gp-wizard-summary-lead">Мастер собрал каналы и диапазоны. Проверьте результат перед применением.</div>

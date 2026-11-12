@@ -35,6 +35,8 @@ type AttachAutopilotParamsEventsArgs = {
     getSettingsState: () => AutopilotSettingsState;
     loadSourceIntoModel: (announceSuccess: boolean) => Promise<void>;
     persistSourceFile: () => Promise<void>;
+    readFromDrone: () => Promise<void>;
+    writeToDrone: () => Promise<void>;
 };
 
 export function attachAutopilotParamsEvents(args: AttachAutopilotParamsEventsArgs) {
@@ -141,6 +143,14 @@ export function attachAutopilotParamsEvents(args: AttachAutopilotParamsEventsArg
             }
             if (action === 'reload-source') {
                 void args.loadSourceIntoModel(true);
+                return;
+            }
+            if (action === 'drone-read') {
+                void args.readFromDrone();
+                return;
+            }
+            if (action === 'drone-write') {
+                void args.writeToDrone();
                 return;
             }
             if (action === 'trigger-import') {

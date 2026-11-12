@@ -1,7 +1,8 @@
-import { simSettings, type GamepadInputRef } from '../../../core/state.js';
+import { simSettings, type ChannelTuning, type GamepadInputRef } from '../../../core/state.js';
 import { clamp, clampRc, getChannelInversionIndex } from '../constants.js';
 import { normalizeCenteredAxis, normalizeThrottleAxis } from './calibration.js';
 import type { ChannelKey, PrimaryChannelKey, StickMode } from '../types.js';
+import { applyCenteredTuning, applyThrottleTuning, getChannelTuning } from './tuning.js';
 
 export type PrimaryStickSlot = 'left-x' | 'left-y' | 'right-x' | 'right-y';
 
@@ -17,29 +18,44 @@ export function isChannelInverted(channel: ChannelKey): boolean {
     return inversionIndex >= 0 ? !!simSettings.gamepadInversion[inversionIndex] : false;
 }
 
+/**
+ * The value of a channel, 0..1 for the throttle and -1..1 for the rest. The four flight channels go through the student's
+ * fine tuning (zero point and dead zone); `tuning` can be passed to read the value with other settings, e.g. without any.
+ */
 export function readRefNormalizedValue(
     gp: Gamepad,
     ref: GamepadInputRef,
     channel: ChannelKey,
-    isInverted: boolean = isChannelInverted(channel)
+    isInverted: boolean = isChannelInverted(channel),
+    tuning: ChannelTuning | null = getChannelTuning(channel)
 ): number {
     const index = Number(ref.slice(1));
     if (ref.startsWith('b')) {
         const buttonValue = clamp(gp.buttons[index]?.value ?? 0, 0, 1);
         if (channel === 'throttle') {
-            return isInverted ? 1 - buttonValue : buttonValue;
+            const throttle = isInverted ? 1 - buttonValue : buttonValue;
+            return tuning ? applyThrottleTuning(throttle, tuning) : throttle;
         }
 
         const centeredValue = buttonValue * 2 - 1;
-        return isInverted ? -centeredValue : centeredValue;
+        const signed = isInverted ? -centeredValue : centeredValue;
+        return tuning ? applyCenteredTuning(signed, tuning) : signed;
     }
 
     const rawValue = gp.axes[index] ?? 0;
     if (channel === 'throttle') {
+        if (tuning) {
+            const normalizedThrottle = normalizeThrottleAxis(simSettings.gamepadCalibration, rawValue, index, 0);
+            return applyThrottleTuning(isInverted ? 1 - normalizedThrottle : normalizedThrottle, tuning);
+        }
         const normalizedThrottle = normalizeThrottleAxis(simSettings.gamepadCalibration, rawValue, index);
         return isInverted ? 1 - normalizedThrottle : normalizedThrottle;
     }
 
+    if (tuning) {
+        const centeredValue = normalizeCenteredAxis(simSettings.gamepadCalibration, rawValue, index, 0);
+        return applyCenteredTuning(isInverted ? -centeredValue : centeredValue, tuning);
+    }
     const centeredValue = normalizeCenteredAxis(simSettings.gamepadCalibration, rawValue, index);
     return isInverted ? -centeredValue : centeredValue;
 }

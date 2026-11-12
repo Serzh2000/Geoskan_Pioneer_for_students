@@ -90,6 +90,8 @@ function isLikelyRcTransmitter(gp: Gamepad): boolean {
 }
 
 function hasLegacyPrimaryMapping(): boolean {
+    // What the wizard found is the student's choice, even when it happens to look like the old default (a0..a3 is exactly how many real transmitters report).
+    if (simSettings.gamepadMappingConfirmed) return false;
     return simSettings.gamepadMapping.roll === 'a0'
         && simSettings.gamepadMapping.pitch === 'a1'
         && simSettings.gamepadMapping.throttle === 'a2'

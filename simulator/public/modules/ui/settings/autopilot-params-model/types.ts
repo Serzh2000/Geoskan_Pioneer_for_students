@@ -38,6 +38,8 @@ export type AutopilotSettingsState = {
     importedAt: string | null;
     updatedAt: string;
     auditLog: AutopilotAuditEntry[];
+    /** Записи профиля, которые не удалось разобрать как число: хранятся как есть и возвращаются при экспорте. */
+    rawExtras?: Record<string, string>;
 };
 
 export type AutopilotParameterUpdateResult = {

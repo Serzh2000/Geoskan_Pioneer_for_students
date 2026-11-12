@@ -72,6 +72,8 @@
 .pk-seg { display: flex; gap: 2px; padding: 3px; margin: 0; border: 0; border-radius: var(--radius-sm); background: var(--pk-inset); }
 .pk-seg__btn { flex: 1; min-width: 0; min-height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--text-muted); font: 600 12px/1.3 var(--font-sans); display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; cursor: pointer; transition: background-color .15s, color .15s; }
 .pk-seg__btn:hover { color: var(--text-strong); }
+/* Four languages do not fit one row in a narrow panel: they wrap into a grid instead of running over each other. */
+#drone-language-seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); }
 .pk-seg__btn.is-active, .pk-seg__btn[aria-selected='true'] { background: var(--pk-raised); color: var(--text-strong); box-shadow: 0 0 0 1px var(--pk-line); }
 .pk-seg__btn small { font: 500 11px/1 var(--font-mono); color: var(--text-muted); }
 .pk-seg__btn.is-active small, .pk-seg__btn[aria-selected='true'] small { color: var(--pc-accent, var(--accent-color)); }

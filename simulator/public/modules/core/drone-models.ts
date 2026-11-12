@@ -40,6 +40,12 @@ export interface DroneModelProfile {
     ranger: boolean;
     /** Магнитный захват cargo_set. */
     cargo: boolean;
+    /**
+     * Ручной полёт с пульта. `speedScale` умножает базовые скорости физики (при параметрах автопилота по умолчанию),
+     * `maxSpeed` (м/с) — потолок горизонтальной скорости; null — без потолка.
+     * Мини 2: в паспорте «Макс. скорость полёта 15 км/ч» (руководство pioneer_mini2_manual_ru, с. 10).
+     */
+    manualFlight: { speedScale: number; maxSpeed: number | null };
 }
 
 export const DRONE_MODELS: Record<DroneModelId, DroneModelProfile> = {
@@ -58,7 +64,10 @@ export const DRONE_MODELS: Record<DroneModelId, DroneModelProfile> = {
         servoCamera: null,
         grab: false,
         ranger: false,
-        cargo: true
+        cargo: true,
+        // Паспорт Базового: «Скорость полёта до 65 км/ч» = 18,06 м/с (руководство по сборке, таблица 1). Стабилизация на стике до упора
+        // при параметрах по умолчанию (8 м/с × attScale 0,25 = 2 м/с) даёт ровно паспорт; медленнее летать помогают параметры Copter_man_*.
+        manualFlight: { speedScale: (65 / 3.6) / (8 * 0.25), maxSpeed: 65 / 3.6 }
     },
     'pioneer-mini2': {
         id: 'pioneer-mini2',
@@ -75,7 +84,9 @@ export const DRONE_MODELS: Record<DroneModelId, DroneModelProfile> = {
         servoCamera: { min: -80, max: 30 },
         grab: true,
         ranger: true,
-        cargo: false
+        cargo: false,
+        // 15 км/ч = 4,17 м/с. Стабилизация на стике до упора при параметрах по умолчанию (8 м/с × attScale 0,25 = 2 м/с) даёт ровно паспорт.
+        manualFlight: { speedScale: (15 / 3.6) / (8 * 0.25), maxSpeed: 15 / 3.6 }
     }
 };
 

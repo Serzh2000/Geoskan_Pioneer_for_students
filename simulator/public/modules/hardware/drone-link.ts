@@ -1,5 +1,7 @@
 import { compileLuaForDrone } from './lua-bytecode.js';
+import type { ParamChange } from './drone-params.js';
 import { crc32, PlazlinkClient, PlazlinkError, type ComponentInfo, type PlazlinkTransport } from './plazlink/client.js';
+import { readAllParams, writeParam, type DroneParam } from './plazlink/params.js';
 import { decodeFieldValue, TELEMETRY_FIELDS, type Telemetry } from './telemetry.js';
 import { openPioneerPort } from './web-serial-transport.js';
 
@@ -228,6 +230,47 @@ export class DroneLink {
         await this.exclusive(() => client.setInt8Field(luaRun.component, luaRun.index, running ? 1 : 0));
         this.update({ telemetry: { ...this.snapshot.telemetry, luaRun: running ? 1 : 0 } });
     }
+    /** Reads every autopilot parameter. The drone must be connected; the call waits its turn behind other port work. */
+    async readParameters(onProgress?: (done: number, total: number) => void): Promise<DroneParam[]> {
+        const client = this.client;
+        if (!client || this.snapshot.status !== 'connected') throw new PlazlinkError('Дрон не подключён.', 'closed');
+        try {
+            return await this.exclusive(() => readAllParams(client, onProgress));
+        } catch (error) {
+            if (error instanceof PlazlinkError && error.code === 'timeout') await this.markLost(error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Writes the given changes one by one, in the order given, reading each value back. It stops at the first failure so a
+     * half-understood drone is not written further; what was written before stays and is listed.
+     */
+    async writeParameters(
+        changes: readonly ParamChange[],
+        onProgress?: (done: number, total: number, name: string) => void
+    ): Promise<{ written: string[]; failed: { name: string; error: string } | null }> {
+        const client = this.client;
+        if (!client || this.snapshot.status !== 'connected') throw new PlazlinkError('Дрон не подключён.', 'closed');
+        const written: string[] = [];
+        let failed: { name: string; error: string } | null = null;
+        await this.exclusive(async () => {
+            for (const change of changes) {
+                onProgress?.(written.length, changes.length, change.name);
+                try {
+                    await writeParam(client, change, change.to);
+                    written.push(change.name);
+                } catch (error) {
+                    failed = { name: change.name, error: error instanceof Error ? error.message : String(error) };
+                    if (error instanceof PlazlinkError && error.code === 'timeout') await this.markLost(error.message);
+                    return;
+                }
+            }
+            onProgress?.(written.length, changes.length, '');
+        });
+        return { written, failed };
+    }
+
 }
 
 export const droneLink = new DroneLink();

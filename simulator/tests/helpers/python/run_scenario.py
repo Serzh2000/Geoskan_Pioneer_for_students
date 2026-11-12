@@ -250,7 +250,12 @@ class Camera:
         return None
 
     def get_cv_frame(self):
-        return None
+        # Кадр есть только у сценариев с метками (config.markers): остальным по-прежнему None, как у дрона без видео.
+        if config.get('markers') is None:
+            return None
+        fake_time.sleep(1 / 30)
+        import numpy
+        return numpy.zeros((480, 640, 3), dtype=numpy.uint8)
 
 
 sdk = types.ModuleType('pioneer_sdk')
@@ -265,6 +270,33 @@ cv2.waitKey = lambda *args, **kwargs: (_real_time.sleep(0.001 / SPEED) or -1)
 cv2.destroyAllWindows = lambda *args, **kwargs: None
 cv2.imdecode = lambda *args, **kwargs: None
 cv2.IMREAD_COLOR = 1
+
+
+# ArUco/AprilTag по расписанию из config.markers: [[с, до, номер], ...]; углы в формате OpenCV: массив (1, 4, 2) на метку.
+class _ArucoDetector:
+    def __init__(self, dictionary, params=None):
+        self.dictionary = dictionary
+
+    def detectMarkers(self, frame):
+        import numpy
+        t = now()
+        seen = [entry for entry in config.get('markers') or [] if entry[0] <= t < entry[1]]
+        if not seen:
+            return (), None, ()
+        corners = []
+        for k in range(len(seen)):
+            x = 100 + k * 150
+            corners.append(numpy.array([[[x, 100], [x + 80, 100], [x + 80, 180], [x, 180]]], dtype=numpy.float32))
+        return tuple(corners), numpy.array([[int(entry[2])] for entry in seen], dtype=numpy.int32), ()
+
+
+cv2.aruco = types.SimpleNamespace(
+    DICT_6X6_250='DICT_6X6_250', DICT_APRILTAG_16h5='DICT_APRILTAG_16h5', DICT_APRILTAG_25h9='DICT_APRILTAG_25h9',
+    DICT_APRILTAG_36h11='DICT_APRILTAG_36h11',
+    getPredefinedDictionary=lambda name: name,
+    DetectorParameters=lambda: None,
+    ArucoDetector=_ArucoDetector,
+)
 sys.modules['cv2'] = cv2
 if 'numpy' not in sys.modules:
     try:
@@ -274,6 +306,19 @@ if 'numpy' not in sys.modules:
         np.frombuffer = lambda *args, **kwargs: None
         np.uint8 = 'uint8'
         sys.modules['numpy'] = np
+
+
+# Сценарии с метками (config.markers) записывают и вывод программы: "print <текст>", как в run_onboard.py.
+if config.get('markers') is not None:
+    import builtins
+    _real_print = builtins.print
+
+    def _print(*args, sep=' ', end='\n', file=None, flush=False):
+        if file is None:
+            record('print ' + sep.join(str(a) for a in args))
+        _real_print(*args, sep=sep, end=end, file=file, flush=flush)
+
+    builtins.print = _print
 
 
 def _thread_error(args):

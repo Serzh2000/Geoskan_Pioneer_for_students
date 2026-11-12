@@ -27,11 +27,74 @@
     transform: none;
     background: var(--panel-bg);
 }
-#gamepad-dialog .settings-stack { max-width: 1120px; margin-inline: auto; }
-#gamepad-dialog .settings-panel-content { padding: 24px; }
-#gamepad-dialog .gamepad-stage > .pk-section + .pk-section { margin-top: 8px; padding-top: 24px; border-color: var(--pk-line-strong); }
-#gamepad-dialog .pk-seg { max-width: 420px; }
+/* ---- Full-window layout: the dialog is the whole window; a narrow column of controls beside a wide field of channel cards ---- */
+.gamepad-modal-overlay { padding: 0; background: var(--bg-color); }
+#gamepad-dialog #gamepad-panel { width: 100%; max-width: none; border: 0; border-radius: 0; background: var(--panel-bg); }
+#gamepad-dialog .panel-header { padding-inline: clamp(16px, 3vw, 40px); }
+#gamepad-dialog .settings-panel-content { padding: 24px clamp(16px, 3vw, 40px) 40px; }
+#gamepad-dialog .settings-stack { max-width: 1360px; margin-inline: auto; gap: 20px; }
+#gamepad-dialog .pk-seg { max-width: 360px; }
+
+#gamepad-dialog .gamepad-stage { grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 24px; align-items: start; }
+#gamepad-dialog .gp-aside { position: sticky; top: 0; display: grid; gap: 12px; min-width: 0; }
+#gamepad-dialog .gp-main { display: grid; gap: 24px; min-width: 0; }
+#gamepad-dialog .pk-section { padding: 18px; border: 1px solid var(--pk-line); border-radius: 14px; }
+#gamepad-dialog .pk-section__title { font-size: 15px; }
+#gamepad-dialog .gp-main > .pk-section { padding: 0; border: 0; background: transparent; gap: 14px; }
+
+/* The layout card: the select above a full-width wizard button. */
+#gamepad-dialog .gp-aside .pk-inline { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+#gamepad-dialog #gp-btn-wizard { width: 100%; min-height: 40px; font-size: 14px; }
+#gamepad-dialog .gp-aside .pk-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* Channel cards: name and live value on top, the meter, the source, then the two small controls. */
+#gamepad-dialog .gp-sec-primary .gp-ch-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+#gamepad-dialog .gp-sec-aux .gp-ch-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+#gamepad-dialog .gp-ch {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px 10px;
+    padding: 16px;
+    border: 1px solid var(--pk-line);
+    border-radius: 14px;
+    background: var(--pk-inset);
+}
+#gamepad-dialog .gp-ch__id { grid-column: 1; grid-row: 1; display: grid; place-items: center; min-width: 38px; height: 24px; padding: 0 6px; border-radius: 6px; background: var(--pk-raised); font-size: 11px; color: var(--text-muted); }
+#gamepad-dialog .gp-ch__name { grid-column: 2; grid-row: 1; }
+#gamepad-dialog .gp-ch__name b { font-size: 15px; }
+#gamepad-dialog .gp-ch__name b { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.25; }
+#gamepad-dialog .gp-ch__tools { display: contents; }
+#gamepad-dialog .gp-ch__value { grid-column: 3; grid-row: 1; margin: 0; font: 600 20px/1 var(--font-mono); letter-spacing: -.02em; }
+#gamepad-dialog .gp-ch__meter { grid-column: 1 / -1; grid-row: 2; height: 8px; }
+#gamepad-dialog .gp-bar-bg, #gamepad-dialog .gp-bar { border-radius: 4px; }
+#gamepad-dialog .gp-ch__meter::after { top: -4px; bottom: -4px; }
+#gamepad-dialog .gp-ch__select { grid-column: 1 / -1; grid-row: 3; min-height: 36px; background: var(--panel-bg); }
+#gamepad-dialog .gp-auto-btn { grid-column: 1; grid-row: 4; justify-self: start; }
+#gamepad-dialog .gp-rev { grid-column: 2 / -1; grid-row: 4; justify-self: end; }
+/* Switch cards have no meter: the select moves up and the rest follows. */
+#gamepad-dialog .gp-ch--aux .gp-ch__value { font-size: 16px; }
+#gamepad-dialog .gp-ch--aux .gp-ch__select { grid-row: 2; }
+#gamepad-dialog .gp-ch--aux .gp-auto-btn { grid-row: 3; }
+#gamepad-dialog .gp-ch--aux .gp-ch__meta,
+#gamepad-dialog .gp-ch--aux .gp-ch__extra { grid-column: 1 / -1; grid-row: auto; }
+
+#gamepad-dialog .gp-status { padding: 0 2px; }
+
+/* The signal monitor: controls in one row, a wide grid of channels. */
+#gamepad-dialog .gp-monitor .pk-section:first-child { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+#gamepad-dialog .gp-monitor .pk-section:first-child .pk-section__hint { margin-left: auto; }
+#gamepad-dialog .channel-monitor-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 28px; }
+#gamepad-dialog .channel-monitor-cell { min-height: 38px; }
+
+@media (max-width: 1100px) {
+    #gamepad-dialog .gp-sec-aux .gp-ch-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+    #gamepad-dialog .gamepad-stage { grid-template-columns: minmax(0, 1fr); }
+    #gamepad-dialog .gp-aside { position: static; }
+}
 @media (max-width: 640px) {
-    .gamepad-modal-overlay { padding: 8px; }
     #gamepad-dialog .settings-panel-content { padding: 16px; }
+    #gamepad-dialog .gp-sec-primary .gp-ch-list,
+    #gamepad-dialog .gp-sec-aux .gp-ch-list { grid-template-columns: minmax(0, 1fr); }
 }

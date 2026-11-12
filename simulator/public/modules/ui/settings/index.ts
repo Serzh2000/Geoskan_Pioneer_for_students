@@ -22,7 +22,6 @@ export function initSettingsUI() {
     const state = createSettingsRuntimeState();
     const controller = createGamepadSettingsController(dom, state);
     const gamepadPanel = document.getElementById('gamepad-panel');
-    let panelIsIntersecting = true;
     let updateFrameId = 0;
 
     initAutopilotParamsUI();
@@ -49,13 +48,15 @@ export function initSettingsUI() {
         selectAuxPreset: controller.selectAuxPreset
     });
 
+    const isLegacyPanelOpen = (): boolean => !!gamepadPanel && gamepadPanel.getClientRects().length > 0;
+
     window.addEventListener('gamepadsettingschanged', () => {
         controller.resetModePositionsTracking();
         syncInversionCheckboxes(dom);
         const gp = controller.findCurrentActiveGamepad();
         if (gp) {
             controller.syncConnectionState(gp);
-            controller.updateDroneChannels(gp);
+            controller.updateDroneChannels(gp, isLegacyPanelOpen());
         } else {
             controller.renderChannelDefaultsState();
         }
@@ -78,11 +79,11 @@ export function initSettingsUI() {
 
     let lastPollAt = 0;
     let wasDisconnectedIdle = false;
+    // The transmitter flies the drone whether or not its panel is on screen: the panel lives in a dialog that is closed in
+    // flight, and a loop that waited for it to be visible left the drone deaf to the sticks. Only a hidden tab stops it.
     const isGamepadUiVisible = (): boolean => !!gamepadPanel
         && document.visibilityState !== 'hidden'
-        && gamepadPanel.isConnected
-        && gamepadPanel.getClientRects().length > 0
-        && panelIsIntersecting;
+        && gamepadPanel.isConnected;
     const stopUpdateLoop = (): void => {
         if (updateFrameId !== 0) {
             window.cancelAnimationFrame(updateFrameId);
@@ -133,7 +134,7 @@ export function initSettingsUI() {
                 setAutoStatus: controller.setAutoStatusState
             });
             controller.updateCalibrationProgress(activeGamepad);
-            controller.updateDroneChannels(activeGamepad);
+            controller.updateDroneChannels(activeGamepad, isLegacyPanelOpen());
             wasDisconnectedIdle = false;
         } else {
             if (!wasDisconnectedIdle || connectionChanged) {
@@ -146,21 +147,9 @@ export function initSettingsUI() {
         ensureUpdateLoop();
     };
 
-    if (gamepadPanel && typeof IntersectionObserver === 'function') {
-        const visibilityObserver = new IntersectionObserver((entries) => {
-            const entry = entries.find((candidate) => candidate.target === gamepadPanel);
-            if (!entry) return;
-            panelIsIntersecting = entry.isIntersecting && entry.intersectionRatio > 0;
-            ensureUpdateLoop(true);
-        }, {
-            threshold: 0.01
-        });
-        visibilityObserver.observe(gamepadPanel);
-    }
-
     document.addEventListener('visibilitychange', () => ensureUpdateLoop(true));
 
-    controller.resetCalibration();
+    // The stick ranges the wizard recorded were loaded with the settings: they are kept (calibration starts out at the defaults anyway).
     controller.renderChannelDefaultsState();
     controller.setAutoStatusState(state.autoStatusMode, state.autoStatusText);
     controller.renderChannelDataStateView();

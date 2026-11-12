@@ -28,6 +28,12 @@ type WizardDomRefs = {
     stepContainer: HTMLElement | null;
     summaryContainer: HTMLElement | null;
     summaryContent: HTMLElement | null;
+    tuningContainer: HTMLElement | null;
+    switchesContainer: HTMLElement | null;
+    readyContainer: HTMLElement | null;
+    journeyList: HTMLElement | null;
+    menuContainer: HTMLElement | null;
+    menuStatus: HTMLElement | null;
     channels: HTMLElement | null;
     primaryControls: HTMLElement | null;
     stepDots: HTMLElement | null;
@@ -38,7 +44,17 @@ let wizardDomRefs: WizardDomRefs | null = null;
 
 type WizardRenderParams = {
     currentStepIdx: number;
+    showingMenu: boolean;
     showingSummary: boolean;
+    showingTuning: boolean;
+    showingSwitches: boolean;
+    showingReady: boolean;
+    /** The wizard leads the student through all stages (calibration, tuning, switches, flight). */
+    journey: boolean;
+    /** A warning about the step, e.g. the student moved an input that another channel already uses. */
+    notice: string | null;
+    /** How the direction of the channel was read from the first push. */
+    directionNote: string | null;
     detectedMapping: Partial<Record<ChannelKey, GamepadInputRef>>;
     auxResults: Partial<Record<WizardAuxChannelKey, AuxDetectionResult>>;
     stepObservedStats: Map<GamepadInputRef, ObservedInputStats>;
@@ -74,6 +90,12 @@ function getWizardDomRefs(): WizardDomRefs {
         stepContainer: document.getElementById('gp-wizard-step-container'),
         summaryContainer: document.getElementById('gp-wizard-summary'),
         summaryContent: document.getElementById('gp-wizard-summary-content'),
+        tuningContainer: document.getElementById('gp-wizard-tuning'),
+        switchesContainer: document.getElementById('gp-wizard-switches'),
+        readyContainer: document.getElementById('gp-wizard-ready'),
+        journeyList: document.getElementById('gp-wizard-journey'),
+        menuContainer: document.getElementById('gp-wizard-menu'),
+        menuStatus: document.getElementById('gp-wizard-menu-status'),
         channels: document.getElementById('gp-wizard-channels'),
         primaryControls: document.getElementById('gp-wizard-primary-controls'),
         stepDots: document.getElementById('gp-wizard-steps'),
@@ -166,8 +188,9 @@ function describeAsk(step: WizardStep): string {
     const target = describeTarget(step, getPrimaryChannelStickSlot);
     if (target.kind === 'stick') {
         const side = target.side === 'left' ? 'левый' : 'правый';
-        const move = target.axis === 'y' ? 'вверх и вниз' : 'влево и вправо';
-        return `Двигайте ${side} стик ${move} до упора, как показывает пульт на схеме.`;
+        const first = step.channel === 'throttle' ? 'вверх' : step.channel === 'pitch' ? 'вперёд, от себя' : 'вправо';
+        const second = step.channel === 'throttle' ? 'вниз' : step.channel === 'pitch' ? 'назад' : 'влево';
+        return `Сначала ${side} стик ${first} до упора, потом ${second}, как показывает пульт на схеме. Первое движение определяет направление канала.`;
     }
     const channel = CHANNEL_LABELS[step.channel].toLowerCase();
     return target.positions === 3
@@ -177,8 +200,9 @@ function describeAsk(step: WizardStep): string {
 
 /** The line of steps along the bottom: done, the current one, and those still to come. */
 function renderStepDots(list: HTMLElement, current: number): void {
-    if (list.children.length !== STEPS.length + 1) {
-        list.replaceChildren(...Array.from({ length: STEPS.length + 1 }, () => document.createElement('li')));
+    // One dot per calibration step.
+    if (list.children.length !== STEPS.length) {
+        list.replaceChildren(...Array.from({ length: STEPS.length }, () => document.createElement('li')));
     }
     Array.from(list.children).forEach((dot, index) => {
         setDataIfChanged(dot as HTMLElement, 'state', index < current ? 'done' : index === current ? 'current' : 'todo');
@@ -188,7 +212,14 @@ function renderStepDots(list: HTMLElement, current: number): void {
 export function renderWizardState(params: WizardRenderParams): void {
     const {
         currentStepIdx,
+        showingMenu,
         showingSummary,
+        showingTuning,
+        showingSwitches,
+        showingReady,
+        journey,
+        notice,
+        directionNote,
         detectedMapping,
         auxResults,
         stepObservedStats,
@@ -216,18 +247,61 @@ export function renderWizardState(params: WizardRenderParams): void {
         stepContainer,
         summaryContainer,
         summaryContent,
+        tuningContainer,
+        switchesContainer,
+        readyContainer,
+        journeyList,
+        menuContainer,
+        menuStatus,
         channels,
         primaryControls,
         stepDots,
         invertCheckbox
     } = getWizardDomRefs();
 
-    if (stepDots) renderStepDots(stepDots, showingSummary ? STEPS.length : currentStepIdx);
+    if (stepDots) {
+        renderStepDots(stepDots, showingSummary ? STEPS.length : currentStepIdx);
+        // The steps are those of the calibration; the menu and fine tuning on its own have none.
+        setDisplayIfChanged(stepDots, showingMenu || showingTuning || showingSwitches || showingReady ? 'none' : '');
+    }
 
     if (
         !instruction || !hint || !status || !nextBtn || !nextLabel || !prevBtn || !skipBtn || !stepContainer
-        || !summaryContainer || !summaryContent || !channels || !primaryControls || !invertCheckbox
+        || !summaryContainer || !summaryContent || !tuningContainer || !switchesContainer || !readyContainer || !journeyList || !menuContainer || !menuStatus || !channels || !primaryControls || !invertCheckbox
     ) return;
+
+    // The stages of the whole setup, while the wizard leads through them.
+    setHiddenIfChanged(journeyList, !journey || showingMenu);
+    const stage = showingReady ? 3 : showingSwitches ? 2 : showingTuning ? 1 : 0;
+    Array.from(journeyList.children).forEach((item, index) => {
+        setDataIfChanged(item as HTMLElement, 'state', index < stage ? 'done' : index === stage ? 'current' : 'todo');
+    });
+
+    // On the menu the choice is made with its buttons, so the footer has nothing to offer.
+    setHiddenIfChanged(prevBtn, showingMenu);
+    setHiddenIfChanged(nextBtn, showingMenu);
+    setDisplayIfChanged(menuContainer, showingMenu ? 'grid' : 'none');
+    setDisplayIfChanged(tuningContainer, showingTuning ? 'block' : 'none');
+    setDisplayIfChanged(switchesContainer, showingSwitches ? 'block' : 'none');
+    setDisplayIfChanged(readyContainer, showingReady ? 'block' : 'none');
+    if (showingMenu) {
+        setDisplayIfChanged(stepContainer, 'none');
+        setDisplayIfChanged(summaryContainer, 'none');
+        setHiddenIfChanged(skipBtn, true);
+        setTextIfChanged(menuStatus, connected ? 'Пульт подключён. Впервые? Начните с калибровки: дальше мастер проведёт сам.' : 'Пульт не виден. Подключите его по USB и подвигайте любой стик.');
+        return;
+    }
+
+    if (showingTuning || showingSwitches || showingReady) {
+        setDisplayIfChanged(stepContainer, 'none');
+        setDisplayIfChanged(summaryContainer, 'none');
+        setDisabledIfChanged(prevBtn, false);
+        setDisabledIfChanged(nextBtn, false);
+        setHiddenIfChanged(skipBtn, true);
+        setTextIfChanged(nextLabel, showingReady ? 'Закрыть' : journey ? 'Далее' : 'Готово');
+        setDataIfChanged(nextBtn, 'advancing', 'false');
+        return;
+    }
 
     if (showingSummary) {
         setDisplayIfChanged(stepContainer, 'none');
@@ -240,7 +314,7 @@ export function renderWizardState(params: WizardRenderParams): void {
         setDisabledIfChanged(prevBtn, false);
         setDisabledIfChanged(nextBtn, false);
         setHiddenIfChanged(skipBtn, true);
-        setTextIfChanged(nextLabel, 'Применить');
+        setTextIfChanged(nextLabel, 'Применить и настроить');
         setDataIfChanged(nextBtn, 'advancing', 'false');
         return;
     }
@@ -255,9 +329,11 @@ export function renderWizardState(params: WizardRenderParams): void {
 
     setTextIfChanged(instruction, resolved ? `${label}: найден` : step.instruction);
     setTextIfChanged(hint, resolved
-        ? (advancing ? 'Отлично, переходим к следующему шагу. Нажмите «Назад», если нужно что-то поправить.' : 'Канал найден. Если направление перепутано, включите инверсию, затем нажмите «Далее».')
+        ? `${directionNote ? directionNote + ' ' : 'Канал найден. '}${advancing ? 'Переходим дальше; «Назад», если нужно поправить.' : 'Если направление всё же перепутано, переключите инверсию и нажмите «Далее».'}`
         : describeAsk(step));
-    setTextIfChanged(status, connected ? getStepStatusText({
+    const warning = connected ? notice : null;
+    setDataIfChanged(status, 'tone', warning ? 'warn' : '');
+    setTextIfChanged(status, warning ?? (connected ? getStepStatusText({
         step,
         getDetectedRef,
         getFirstConnectedGamepad,
@@ -265,10 +341,10 @@ export function renderWizardState(params: WizardRenderParams): void {
         stepObservedStats,
         stepSwitchTransitions,
         auxResults
-    }) : 'Пульт не виден. Подключите его по USB и подвигайте любой стик.');
-    setDisabledIfChanged(prevBtn, currentStepIdx === 0);
+    }) : 'Пульт не виден. Подключите его по USB и подвигайте любой стик.'));
+    setDisabledIfChanged(prevBtn, false);
     setDisabledIfChanged(nextBtn, !resolved);
-    setTextIfChanged(nextLabel, currentStepIdx === STEPS.length - 1 ? 'Показать сводку' : 'Далее');
+    setTextIfChanged(nextLabel, 'Далее');
     setDataIfChanged(nextBtn, 'advancing', String(advancing));
     // Only the switches may be left out: without the four flight channels the controller cannot fly the drone.
     setHiddenIfChanged(skipBtn, step.type !== 'aux' || resolved);

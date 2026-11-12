@@ -1,5 +1,5 @@
 import type { AutopilotParameterDefinition, AutopilotSettingsState } from '../autopilot-params-model.js';
-import { GROUP_DESCRIPTIONS, SECTION_META, SECTION_ORDER } from './config.js';
+import { FALLBACK_SECTION, GROUP_DESCRIPTIONS, getKnownGroups, SECTION_META, SECTION_ORDER } from './config.js';
 import { escapeHtml, formatDateTime, formatNumber, getStatusLabel, isParameterChanged } from './helpers.js';
 import type { DraftState, FilterMode, FlashMessage, GroupState, SectionKey, SectionState } from './types.js';
 
@@ -14,8 +14,16 @@ function buildGroupedMarkup(params: {
     const groupsBySection = new Map<SectionKey, { markup: string; itemsCount: number }[]>();
     SECTION_ORDER.forEach((sectionKey) => groupsBySection.set(sectionKey, []));
 
+    const knownGroups = getKnownGroups();
+    const unknownGroups = [...new Set(params.definitions.map((definition) => definition.group))]
+        .filter((group) => !knownGroups.has(group))
+        .sort();
+
     SECTION_ORDER.forEach((sectionKey) => {
-        SECTION_META[sectionKey].groups.forEach((group) => {
+        const sectionGroups = sectionKey === FALLBACK_SECTION
+            ? [...SECTION_META[sectionKey].groups, ...unknownGroups]
+            : SECTION_META[sectionKey].groups;
+        sectionGroups.forEach((group) => {
             const items = params.definitions.filter((definition) => definition.group === group);
             if (!items.length) return;
             const isGroupOpen = params.normalizedSearch ? true : params.groupState[group] === true;
@@ -133,6 +141,7 @@ export function renderAutopilotParamsBody(params: {
     filteredDefinitions: AutopilotParameterDefinition[];
     flash: FlashMessage | null;
     invalidDraftCount: number;
+    isDroneBusy: boolean;
     isLoadingSource: boolean;
     isSavingSource: boolean;
     isSourceDirty: boolean;
@@ -185,9 +194,12 @@ export function renderAutopilotParamsBody(params: {
                         <button type="button" class="autopilot-action-btn" data-action="save-source"${params.isSavingSource || !params.isSourceDirty ? ' disabled' : ''}>Сохранить в исходный файл</button>
                         <button type="button" class="autopilot-action-btn autopilot-action-btn--ghost" data-action="reload-source"${params.isLoadingSource ? ' disabled' : ''}>Перечитать исходный файл</button>
                         <button type="button" class="autopilot-action-btn" data-action="trigger-import">Загрузить .properties</button>
+                        <button type="button" class="autopilot-action-btn" data-action="drone-read"${params.isDroneBusy ? ' disabled' : ''}>Прочитать с дрона</button>
+                        <button type="button" class="autopilot-action-btn" data-action="drone-write"${params.isDroneBusy ? ' disabled' : ''}>Записать на дрон</button>
                         <button type="button" class="autopilot-action-btn" data-action="export">Скачать текущий профиль</button>
                         <button type="button" class="autopilot-action-btn autopilot-action-btn--ghost" data-action="reset">Сбросить к шаблону</button>
                     </div>
+                    <div id="autopilot-drone-progress" class="autopilot-params-sidebar__hint" role="status"${params.isDroneBusy ? '' : ' hidden'}>Подключаюсь к дрону…</div>
                     <input id="${params.fileInputId}" type="file" accept=".properties,text/plain" hidden>
                 </div>
             </aside>

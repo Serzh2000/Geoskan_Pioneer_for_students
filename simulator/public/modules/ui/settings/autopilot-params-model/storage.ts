@@ -7,7 +7,8 @@ export function cloneAutopilotState(state: AutopilotSettingsState): AutopilotSet
         sourceFileName: state.sourceFileName,
         importedAt: state.importedAt,
         updatedAt: state.updatedAt,
-        auditLog: [...state.auditLog]
+        auditLog: [...state.auditLog],
+        rawExtras: { ...(state.rawExtras || {}) }
     };
 }
 
@@ -44,7 +45,8 @@ export function loadAutopilotState(params: {
             sourceFileName: parsed.sourceFileName || 'Локальное хранилище',
             importedAt: parsed.importedAt || null,
             updatedAt: parsed.updatedAt || new Date().toISOString(),
-            auditLog: Array.isArray(parsed.auditLog) ? parsed.auditLog.slice(0, params.maxAuditEntries) : []
+            auditLog: Array.isArray(parsed.auditLog) ? parsed.auditLog.slice(0, params.maxAuditEntries) : [],
+            rawExtras: parsed.rawExtras && typeof parsed.rawExtras === 'object' ? { ...parsed.rawExtras } : {}
         };
     } catch (error) {
         console.warn('[Autopilot Params] Failed to load state:', error);

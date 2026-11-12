@@ -4,6 +4,7 @@ import type { DroneState } from '../core/state.js';
 import { emitMissionGamepadOverride } from '../core/mission-notices.js';
 import { enterPreflight, enterTakeoffProcess, setDroneFsmState } from '../autopilot/fsm.js';
 import { matchesAuxRange, simSettings } from '../core/state.js';
+import { droneModelProfile } from '../core/drone-models.js';
 import { triggerLuaCallback } from '../lua/index.js';
 import { shouldDispatchLuaEvent } from '../lua/mission-guard.js';
 import {
@@ -114,6 +115,11 @@ function updateManualFlight(simState: DroneState, dt: number, getObstacles: Obst
         maxBodySpeed = PHYSICS_TUNING.STABILIZE_MAX_BODY_SPEED * config.manual.attScale;
         maxClimbRate = PHYSICS_TUNING.STABILIZE_MAX_CLIMB_RATE * config.manual.vzScale;
     }
+
+    // Паспортная скорость модели: масштаб к базовым скоростям и потолок (у Мини 2 — 15 км/ч).
+    const manual = droneModelProfile(simState.model).manualFlight;
+    maxBodySpeed *= manual.speedScale;
+    if (manual.maxSpeed !== null) maxBodySpeed = Math.min(maxBodySpeed, manual.maxSpeed);
 
     const currentBodyVelocity = worldPlanarToBody(simState.vel.x, simState.vel.y, simState.orientation.yaw);
     const targetBodyForwardSpeed = pitch * maxBodySpeed;

@@ -1,5 +1,6 @@
 <div id="gamepad-pane-mapping" role="tabpanel" aria-labelledby="gp-tab-mapping" class="gamepad-panel-pane is-active" data-gamepad-pane-panel="mapping">
     <div id="gamepad-info" class="gamepad-stage is-disconnected">
+        <div class="gp-aside">
         <section class="pk-section gp-connect">
             <p class="pk-section__hint" role="status">Подключите пульт по USB и нажмите любую кнопку или подвигайте стик — он определится автоматически.</p>
         </section>
@@ -16,7 +17,18 @@
             <p class="pk-section__hint">Мастер назначит стики и тумблеры по очереди. Или задайте входы вручную ниже.</p>
         </section>
 
-        <section class="pk-section" aria-labelledby="gp-primary-title">
+        <section class="pk-section" aria-labelledby="gp-calibration-title">
+            <div class="pk-section__head"><h3 id="gp-calibration-title" class="pk-section__title">Калибровка</h3></div>
+            <div class="pk-btn-row">
+                <button id="gp-btn-calibrate" class="btn-secondary" type="button">Начать калибровку</button>
+                <button id="gp-btn-reset-cal" class="btn-secondary" type="button" aria-label="Сбросить калибровку">Сбросить</button>
+            </div>
+            <p class="pk-section__hint gp-calibration-hint gp-calibration-hint--offline">Доступна после подключения пульта.</p>
+            <p class="pk-section__hint gp-calibration-hint gp-calibration-hint--online">Запишите полный ход стиков и все положения тумблеров.</p>
+        </section>
+        </div>
+        <div class="gp-main">
+        <section class="pk-section gp-sec-primary" aria-labelledby="gp-primary-title">
             <div class="pk-section__head"><h3 id="gp-primary-title" class="pk-section__title">Основные каналы</h3><span class="pk-section__meta">4</span></div>
             <div class="gp-ch-list">
                 <div class="gp-ch">
@@ -68,7 +80,7 @@
             <div id="gp-auto-status" class="gp-status" role="status">Нажмите «Авто» и подвигайте нужный стик или тумблер.</div>
         </section>
 
-        <section class="pk-section" aria-labelledby="gp-aux-title">
+        <section class="pk-section gp-sec-aux" aria-labelledby="gp-aux-title">
             <div class="pk-section__head"><h3 id="gp-aux-title" class="pk-section__title">Тумблеры</h3><span class="pk-section__meta">режим · взвод · магнит</span></div>
             <div class="gp-ch-list">
                 <div class="gp-ch gp-ch--aux">
@@ -142,14 +154,6 @@
             </div>
         </section>
 
-        <section class="pk-section" aria-labelledby="gp-calibration-title">
-            <div class="pk-section__head"><h3 id="gp-calibration-title" class="pk-section__title">Калибровка</h3></div>
-            <div class="pk-btn-row">
-                <button id="gp-btn-calibrate" class="btn-secondary" type="button">Начать калибровку</button>
-                <button id="gp-btn-reset-cal" class="btn-secondary" type="button" aria-label="Сбросить калибровку">Сбросить</button>
-            </div>
-            <p class="pk-section__hint gp-calibration-hint gp-calibration-hint--offline">Доступна после подключения пульта.</p>
-            <p class="pk-section__hint gp-calibration-hint gp-calibration-hint--online">Запишите полный ход стиков и все положения тумблеров.</p>
-        </section>
+        </div>
     </div>
 </div>

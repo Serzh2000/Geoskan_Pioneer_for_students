@@ -8,6 +8,9 @@
 export const MESSAGE_ID = {
     protocolRequest: 34,
     protocolInfo: 35,
+    paramRequest: 5,
+    paramCount: 6,
+    param: 7,
     componentCountRequest: 41,
     componentCount: 42,
     componentInfoRequest: 43,

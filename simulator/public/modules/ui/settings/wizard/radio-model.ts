@@ -43,7 +43,8 @@ export function stickOffsets(values: Record<PrimaryChannelKey, number>, slotOf: 
         const slot = slotOf(channel);
         const value = values[channel] ?? 0;
         // Throttle: 0 is the bottom (positive y in the drawing), 1 the top.
-        const offset = channel === 'throttle' ? (0.5 - value) * 2 * STICK_TRAVEL * (slot.endsWith('-y') ? 1 : -1) : value * STICK_TRAVEL;
+        // Pitch: the simulator flies forward when the channel is HIGH, and a stick pushed forward is drawn away from the pilot (negative y).
+        const offset = channel === 'throttle' ? (0.5 - value) * 2 * STICK_TRAVEL * (slot.endsWith('-y') ? 1 : -1) : (channel === 'pitch' ? 0 - value : value) * STICK_TRAVEL;
         if (slot === 'left-x') offsets.leftX = offset;
         else if (slot === 'left-y') offsets.leftY = offset;
         else if (slot === 'right-x') offsets.rightX = offset;

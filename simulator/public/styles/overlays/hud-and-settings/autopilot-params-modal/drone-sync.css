@@ -1,0 +1,71 @@
+/* "Записать на дрон": confirmation drawn over the autopilot window. Uses the window's own --ap-* tokens. */
+.autopilot-params-modal { position: relative; }
+
+.autopilot-drone-dialog {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(20, 30, 43, .42);
+    backdrop-filter: blur(3px);
+}
+
+.autopilot-drone-dialog__card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: min(760px, 100%);
+    max-height: 100%;
+    padding: 20px 22px;
+    border: 1px solid var(--ap-line);
+    border-radius: 16px;
+    background: var(--ap-surface);
+    color: var(--ap-text);
+    box-shadow: 0 24px 70px rgba(15, 23, 42, .28);
+}
+
+.autopilot-drone-dialog__title { font-size: 19px; font-weight: 700; letter-spacing: -.02em; }
+.autopilot-drone-dialog__hint { color: var(--ap-muted); font-size: 13px; line-height: 1.45; }
+
+.autopilot-drone-dialog__list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 0;
+    overflow: auto;
+}
+
+.autopilot-drone-dialog__row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 10px;
+    row-gap: 4px;
+    align-items: center;
+    padding: 8px 10px;
+    border: 1px solid var(--ap-line);
+    border-radius: 10px;
+    background: var(--ap-soft);
+    cursor: pointer;
+}
+
+.autopilot-drone-dialog__row.is-critical { border-color: #f1c4a4; background: #fff7f0; }
+.autopilot-drone-dialog__name { font-family: ui-monospace, Consolas, monospace; font-size: 13px; overflow-wrap: anywhere; }
+.autopilot-drone-dialog__values { font-variant-numeric: tabular-nums; font-size: 13px; white-space: nowrap; }
+.autopilot-drone-dialog__tag,
+.autopilot-drone-dialog__note { grid-column: 2 / -1; font-size: 12px; line-height: 1.4; color: var(--ap-muted); }
+.autopilot-drone-dialog__note { color: #a74808; }
+
+.autopilot-drone-dialog__actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+:root[data-theme='dark'] .autopilot-drone-dialog__card { --ap-surface: #1b2430; --ap-soft: #222c3a; --ap-line: #34414f; --ap-text: #e8edf3; --ap-muted: #9aa8b8; }
+:root[data-theme='dark'] .autopilot-drone-dialog__row.is-critical { background: #33261c; border-color: #6b4a2e; }
+:root[data-theme='dark'] .autopilot-drone-dialog__note { color: #ffb27a; }
+
+@media (max-width: 640px) {
+    .autopilot-drone-dialog { padding: 10px; }
+    .autopilot-drone-dialog__row { grid-template-columns: auto minmax(0, 1fr); }
+    .autopilot-drone-dialog__values { grid-column: 2; }
+}

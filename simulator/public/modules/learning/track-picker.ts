@@ -9,7 +9,7 @@ const esc = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').
 
 /** Какая модель на карточке: Базовый, Базовый с модулем Radxa (SDK 2) или Мини 2. Картинки рисуются из настоящих GLB дрона. */
 type PreviewKind = 'basic' | 'basic-radxa' | 'mini2';
-const previewKind = (choice: Choice): PreviewKind => choice.model === 'pioneer-mini2' ? 'mini2' : choice.sdk === 'pioneer_sdk2' ? 'basic-radxa' : 'basic';
+const previewKind = (choice: Choice): PreviewKind => choice.model === 'pioneer-mini2' ? 'mini2' : 'basic';
 
 /** Значок языка в круге: показывает, чем пишем программу. */
 const BADGE: Record<ChoiceId, string> = {
@@ -19,6 +19,12 @@ const BADGE: Record<ChoiceId, string> = {
     'basic-sdk2': `<svg viewBox="0 0 40 40" aria-hidden="true"><text x="20" y="19" text-anchor="middle" font-size="12" font-weight="800" fill="currentColor">Py</text><text x="20" y="34" text-anchor="middle" font-size="12" font-weight="800" fill="currentColor" opacity=".8">SDK2</text></svg>`,
     'mini2-python': `<svg viewBox="0 0 40 40" aria-hidden="true"><text x="20" y="19" text-anchor="middle" font-size="12" font-weight="800" fill="currentColor">Py</text><text x="20" y="34" text-anchor="middle" font-size="12" font-weight="800" fill="currentColor" opacity=".8">SDK2</text></svg>`,
     'mini2-bricks': `<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="7" y="8" width="12" height="12" rx="2.500" fill="currentColor"/><rect x="21" y="8" width="12" height="12" rx="2.500" fill="currentColor" opacity=".7"/><rect x="7" y="22" width="12" height="12" rx="2.500" fill="currentColor" opacity=".7"/><rect x="21" y="22" width="12" height="12" rx="2.500" fill="currentColor" opacity=".45"/></svg>`
+};
+
+/** Подпись модуля под значком: какая плата на дроне запускает программу. Без подписи программа идёт в самом симуляторе или в Геоскане. */
+const MODULE_LABEL: Partial<Record<ChoiceId, string>> = {
+    'basic-sdk1': '+ ESP32',
+    'basic-sdk2': '+ Radxa Zero 3W'
 };
 
 export type PickerProgress = Partial<Record<ChoiceId, { done: number; total: number }>>;
@@ -38,7 +44,7 @@ function card(choice: Choice, options: PickerOptions): string {
     const stat = options.progress?.[choice.id];
     const percent = stat && stat.total ? Math.round((stat.done / stat.total) * 100) : 0;
     return `<button type="button" class="tp-card${current ? ' is-current' : ''}" data-choice="${choice.id}" data-model="${mini ? 'mini2' : 'basic'}" aria-pressed="${current}">
-        <span class="tp-card__art"><img class="tp-drone" data-preview="${previewKind(choice)}" alt="" width="480" height="300" hidden><span class="tp-card__badge">${BADGE[choice.id]}</span></span>
+        <span class="tp-card__art"><img class="tp-drone" data-preview="${previewKind(choice)}" alt="" width="480" height="300" hidden><span class="tp-card__badge">${BADGE[choice.id]}</span>${MODULE_LABEL[choice.id] ? `<span class="tp-card__module">${MODULE_LABEL[choice.id]}</span>` : ''}</span>
         <span class="tp-card__title">${esc(choice.title)}</span>
         <span class="tp-card__text">${esc(choice.text)}</span>
         ${stat ? `<span class="tp-card__progress"><span class="tp-card__bar"><i style="width:${percent}%"></i></span><span>${stat.done} из ${stat.total}</span></span>` : ''}
@@ -88,8 +94,8 @@ export function showTrackPicker(options: PickerOptions): Promise<Choice | null> 
         document.addEventListener('keydown', onKey, true);
         document.body.appendChild(back);
         // Картинки появляются по мере готовности: окно открывается сразу, а модели грузятся в фоне.
-        for (const kind of ['basic', 'basic-radxa', 'mini2'] as const) {
-            void renderDronePreview({ model: kind === 'mini2' ? 'pioneer-mini2' : 'pioneer-basic', radxa: kind === 'basic-radxa' }).then((url) => {
+        for (const kind of ['basic', 'mini2'] as const) {
+            void renderDronePreview({ model: kind === 'mini2' ? 'pioneer-mini2' : 'pioneer-basic', radxa: false }).then((url) => {
                 if (!url) return;
                 back.querySelectorAll<HTMLImageElement>(`img[data-preview="${kind}"]`).forEach((image) => { image.src = url; image.hidden = false; });
             });

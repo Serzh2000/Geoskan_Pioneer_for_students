@@ -7,6 +7,8 @@ import {
     loadAutopilotTemplateFromText
 } from '../autopilot-params-model.js';
 import type { DraftState, FilterMode, FlashMessage, GroupState, SectionState } from './types.js';
+import { getKnownGroups } from './config.js';
+import { createDroneSync } from './drone-sync.js';
 import { attachAutopilotParamsEvents } from './events.js';
 import { isParameterChanged } from './helpers.js';
 import { renderAutopilotParamsBody } from './markup.js';
@@ -54,7 +56,7 @@ export function initAutopilotParamsUI() {
 
     const setAllExpanded = (expanded: boolean) => {
         sectionState = { flight: expanded, sensors: expanded, hardware: expanded, system: expanded };
-        for (const group of ['BoardPioneer', 'Board', 'Copter', 'Flight', 'ICM20689', 'Imu', 'Logger', 'Modules', 'RC11xx', 'SensorMux', 'Sensors', 'State', 'Telemetry']) {
+        for (const group of new Set([...getKnownGroups(), ...getAutopilotParameterDefinitions().map((definition) => definition.group)])) {
             groupState[group] = expanded;
         }
     };
@@ -111,6 +113,17 @@ export function initAutopilotParamsUI() {
         openButton?.setAttribute('aria-expanded', 'false');
     };
 
+    const droneSync = createDroneSync({
+        getAuthor: () => (overlay.querySelector('#autopilot-author-input') as HTMLInputElement | null)?.value || getAutopilotSettingsState().author,
+        getDialogHost: () => overlay.querySelector('.autopilot-params-modal') as HTMLElement | null,
+        setFlash: (next) => { flash = next; },
+        render: () => render(),
+        onModelChanged: () => {
+            drafts.clear();
+            isSourceDirty = true;
+        }
+    });
+
     const render = () => {
         if (!body) return;
         const previousMain = body.querySelector('.autopilot-params-main') as HTMLElement | null;
@@ -142,6 +155,7 @@ export function initAutopilotParamsUI() {
             filteredDefinitions,
             flash,
             invalidDraftCount,
+            isDroneBusy: droneSync.isBusy(),
             isLoadingSource,
             isSavingSource,
             isSourceDirty,
@@ -176,6 +190,8 @@ export function initAutopilotParamsUI() {
             getSectionState: () => sectionState,
             getSettingsState: () => state,
             loadSourceIntoModel,
+            readFromDrone: droneSync.readFromDrone,
+            writeToDrone: droneSync.writeToDrone,
             persistSourceFile
         });
     };
