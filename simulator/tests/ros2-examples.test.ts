@@ -45,7 +45,8 @@ describe('примеры ROS 2', () => {
     });
 
     withRos2Python('ros2_03: квадрат скоростью - четыре стороны по 1 м и посадка', () => {
-        const run = runRos2(read('ros2_03_cmd_vel_square.py'), { mode: 'program', seconds: 300, speed: 10 });
+        // Лимит программы считается по настенным часам (seconds / speed): 30 с на загруженном CI-раннере не хватало, 60 с хватает с запасом.
+        const run = runRos2(read('ros2_03_cmd_vel_square.py'), { mode: 'program', seconds: 600, speed: 10 });
         expect(run.result.error).toBeNull();
         expect(run.result.calls.some((c) => c[0] === 'speed')).toBe(true);
         expect(run.result.calls.map((c) => c[0]).slice(-1)[0]).toBe('land');
