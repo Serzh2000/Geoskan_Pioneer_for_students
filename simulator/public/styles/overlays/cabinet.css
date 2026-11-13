@@ -703,3 +703,14 @@ thead .cabt-g-name { background: var(--panel-bg-strong); height: 108px; color: v
     .cabo-rename .cab-btn, .cabo-invite-form .cab-btn { width: 100%; justify-content: center; }
     .cabo-teacher .cab-btn { flex: 1 1 100%; justify-content: center; }
 }
+
+/* Organization / admin tabs use the full width on large screens: two columns instead of an empty right half. */
+@media (min-width: 1100px) {
+    .cabo { max-width: none; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+    .cabo > .cabo-section:first-child { grid-column: 1 / -1; }
+    .cabo-rename { flex-wrap: nowrap; max-width: 720px; }
+}
+@media (min-width: 1100px) and (max-width: 1399px) {
+    .cabo-invite-form { grid-template-columns: 1fr 1fr; }
+    .cabo-invite-form .cab-btn { grid-column: 1 / -1; justify-content: center; }
+}
