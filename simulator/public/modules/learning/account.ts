@@ -22,7 +22,7 @@ export type ClassInfo = { id: string; name: string; createdAt: number; count?: n
 export type StuckInfo = { track: AccountTrack; questId: string; fails: number; lastAt: number };
 export type OverviewStudent = StudentSummary & { done: ServerProgress; attemptsTotal: number; attempts7d: number; lastAttemptAt: number | null; stuck: StuckInfo | null };
 export type Overview = { classes: ClassInfo[]; students: OverviewStudent[]; activity: Record<string, number>; today: string };
-export type AttemptRecord = { at: number; track: AccountTrack; questId: string; solved: boolean; titles: string[]; code: string; name?: string };
+export type AttemptRecord = { at: number; track: AccountTrack; questId: string; solved: boolean; partial?: boolean; titles: string[]; code: string; name?: string };
 export type CabinetData = {
     user: AccountUser;
     classGroup: ClassInfo | null;
@@ -236,11 +236,11 @@ export async function changePassword(current: string, password: string, password
 export const fetchProgress = async (): Promise<ServerProgress> => (await call<{ progress: ServerProgress }>('GET', '/api/progress')).progress;
 
 /** Результат одной проверки для журнала учителя; ошибки отправки не должны мешать ученику. */
-export const reportAttempt = async (attempt: { track: AccountTrack; questId: string; solved: boolean; titles: string[]; code: string }): Promise<void> => {
+export const reportAttempt = async (attempt: { track: AccountTrack; questId: string; solved: boolean; titles: string[]; code: string; partial?: boolean }): Promise<void> => {
     try { await call('POST', '/api/learning/attempt', attempt); } catch { /* журнал не критичен */ }
 };
 
-export type QuestStats = { track: AccountTrack; questId: string; attempts: number; solved: number; students: number; studentsSolved: number; avgAttemptsToSolve: number | null; topIssues: { title: string; count: number }[] };
+export type QuestStats = { track: AccountTrack; questId: string; attempts: number; solved: number; partial: number; failures: number; students: number; studentsSolved: number; avgAttemptsToSolve: number | null; avgFailsToSolve: number | null; topIssues: { title: string; count: number }[] };
 export type FailedAttempt = { at: number; name: string; titles: string[]; code: string };
 export type StuckStudent = { userId: string; name: string; fails: number; lastAt: number };
 

@@ -334,7 +334,7 @@ function renderStudent(): string {
             </form>
             <h5>Попытки ученика</h5>
             ${attempts === null ? '<p class="cab-muted">Загружаем…</p>' : attempts.length ? `<ol class="cab-attempts">${attempts.slice(0, 15).map((attempt) => `<li>
-                <div class="cab-attempts__row"><span class="cab-chip ${attempt.solved ? 'cab-chip--ok' : 'cab-chip--warn'}">${attempt.solved ? 'Прошла' : 'Не прошла'}</span><span class="cab-muted">${fmtDateTime(attempt.at)}</span>${attempt.titles.length ? `<span class="cab-attempts__why">${esc(attempt.titles.slice(0, 2).join('; '))}</span>` : ''}</div>
+                <div class="cab-attempts__row"><span class="cab-chip ${attempt.solved ? 'cab-chip--ok' : attempt.partial ? 'cab-chip--plain' : 'cab-chip--warn'}">${attempt.solved ? 'Прошла' : attempt.partial ? 'Опыт записан' : 'Не прошла'}</span><span class="cab-muted">${fmtDateTime(attempt.at)}</span>${attempt.titles.length ? `<span class="cab-attempts__why">${esc(attempt.titles.slice(0, 2).join('; '))}</span>` : ''}</div>
                 ${attempt.code ? `<details><summary>Показать код</summary><pre class="cab-code-pre">${esc(attempt.code)}</pre></details>` : ''}</li>`).join('')}</ol>` : '<p class="cab-empty">Проверок по этой миссии не было.</p>'}
         </section>`;
     }
@@ -389,11 +389,12 @@ function renderStudent(): string {
 
 function renderStuck(): string {
     const seg = ACCOUNT_TRACKS.map((key) => `<button type="button" role="tab" class="cab-seg__btn${key === stuckTrack ? ' is-active' : ''}" aria-selected="${key === stuckTrack}" data-act="stuck-track" data-track="${key}">${TRACK_LABELS[key]}</button>`).join('');
-    const rows = [...(stuckStats ?? [])].sort((a, b) => (b.attempts - b.solved) - (a.attempts - a.solved));
+    // Сверху миссии с наибольшим числом настоящих ошибок; обязательные промежуточные опыты в счёт не идут.
+    const rows = [...(stuckStats ?? [])].sort((a, b) => b.failures - a.failures || b.attempts - a.attempts);
     const table = stuckStats === null ? '<div class="cab-state" role="status"><span class="cab-spinner" aria-hidden="true"></span><p>Загружаем…</p></div>'
-        : rows.length ? `<div class="cabt-tablewrap"><table class="cabt-table cabt-table--plain"><thead><tr><th scope="col">Миссия</th><th scope="col">Проверок</th><th scope="col">Не прошли</th><th scope="col">Решили</th><th scope="col">До зачёта</th><th scope="col">Частые замечания</th></tr></thead><tbody>${rows.map((row) => `
+        : rows.length ? `<div class="cabt-tablewrap"><table class="cabt-table cabt-table--plain"><thead><tr><th scope="col">Миссия</th><th scope="col" title="Все запуски проверки">Проверок</th><th scope="col" title="Верные промежуточные опыты миссий из нескольких запусков: ошибкой не считаются">Опытов</th><th scope="col" title="Проверки, которые не засчитаны и не были верным промежуточным опытом">Ошибок</th><th scope="col">Решили</th><th scope="col" title="Сколько ошибок в среднем было до зачёта">Ошибок до зачёта</th><th scope="col">Частые замечания</th></tr></thead><tbody>${rows.map((row) => `
             <tr class="${stuckDetail?.questId === row.questId ? 'is-selected' : ''}"><td><button type="button" class="cabt-link" data-act="stuck-quest" data-mission="${esc(row.questId)}">${esc(titleOf(stuckTrack, row.questId))}</button></td>
-            <td class="cab-num">${row.attempts}</td><td class="cab-num">${row.attempts - row.solved}</td><td class="cab-num">${row.studentsSolved} из ${row.students}</td><td class="cab-num">${row.avgAttemptsToSolve ?? '—'}</td>
+            <td class="cab-num">${row.attempts}</td><td class="cab-num">${row.partial || '—'}</td><td class="cab-num">${row.failures}</td><td class="cab-num">${row.studentsSolved} из ${row.students}</td><td class="cab-num">${row.avgFailsToSolve ?? '—'}</td>
             <td>${row.topIssues.map((issue) => `${esc(issue.title)} <span class="cab-muted">×${issue.count}</span>`).join('<br>') || '—'}</td></tr>`).join('')}</tbody></table></div>`
             : '<p class="cab-empty">Проверок пока нет. Данные появятся, когда ученики с аккаунтом начнут проходить миссии.</p>';
     const detail = stuckDetail ? `<section class="cab-block cabt-detail" aria-label="Разбор миссии">
@@ -404,7 +405,7 @@ function renderStuck(): string {
     </section>` : '';
     return `<div class="cabt-toolbar"><div class="cab-seg" role="tablist" aria-label="Язык">${seg}</div>
             <label class="cabt-inline"><span class="cab-sr">Класс</span><select class="cab-input" data-filter="classId" data-reload="stuck"><option value="">Все классы</option>${(overview?.classes ?? []).map((item) => `<option value="${item.id}"${filter.classId === item.id ? ' selected' : ''}>${esc(item.name)}</option>`).join('')}</select></label></div>
-        <p class="cab-lead">Миссии с наибольшим числом неудачных проверок вверху. Если ученики часто спотыкаются об одно замечание, формулировка задания или подсказка непонятна. Нажмите на миссию, чтобы увидеть, кто застрял и какой код пишут.</p>
+        <p class="cab-lead">Миссии с наибольшим числом ошибок вверху. «Опыты» — верные промежуточные запуски миссий из нескольких опытов (например, сначала зелёный, потом синий): они не ошибки. Если ученики часто спотыкаются об одно замечание, формулировка задания или подсказка непонятна. Нажмите на миссию, чтобы увидеть, кто застрял и какой код пишут.</p>
         ${table}${detail}`;
 }
 

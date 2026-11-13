@@ -568,6 +568,8 @@ function completionTimes(user: User): number[] {
 export function findStuck(user: User, attempts: Attempt[], now = Date.now()): { track: string; questId: string; fails: number; lastAt: number } | null {
     const byQuest = new Map<string, Attempt[]>();
     for (const attempt of attempts) {
+        // Промежуточный опыт миссии из нескольких запусков не ошибка: три правильных опыта подряд не делают ученика «застрявшим».
+        if (attempt.partial) continue;
         const list = byQuest.get(`${attempt.track}\n${attempt.questId}`) ?? [];
         list.push(attempt);
         byQuest.set(`${attempt.track}\n${attempt.questId}`, list);

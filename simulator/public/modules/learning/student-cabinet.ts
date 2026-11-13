@@ -174,7 +174,7 @@ function renderAttempts(): string {
     if (!history.list) return '<p class="cab-muted">Загружаем историю…</p>';
     if (!history.list.length) return '<p class="cab-empty">По этой миссии проверок ещё не было.</p>';
     return `<ol class="cab-attempts">${history.list.map((attempt, index) => `<li>
-        <div class="cab-attempts__row"><span class="cab-chip ${attempt.solved ? 'cab-chip--ok' : 'cab-chip--warn'}">${attempt.solved ? 'Прошла' : 'Не прошла'}</span>
+        <div class="cab-attempts__row"><span class="cab-chip ${attempt.solved ? 'cab-chip--ok' : attempt.partial ? 'cab-chip--plain' : 'cab-chip--warn'}">${attempt.solved ? 'Прошла' : attempt.partial ? 'Опыт записан' : 'Не прошла'}</span>
         <span class="cab-muted">${esc(fmtDateTime(attempt.at))}</span>${attempt.titles.length ? `<span class="cab-attempts__why">${esc(attempt.titles.slice(0, 2).join('; '))}</span>` : ''}</div>
         ${attempt.code ? `<details><summary>Показать мой код</summary><div class="cab-code"><button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-cab-copy="${index}">${ICON.copy}<span>Скопировать</span></button><pre>${esc(attempt.code)}</pre></div></details>` : ''}
     </li>`).join('')}</ol>`;
