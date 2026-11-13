@@ -324,3 +324,8 @@ body[data-app-mode='learning'] #sidebar-guide-btn { display: none; }
 @keyframes auth-nudge-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes auth-nudge-pop { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .auth-nudge-back, .auth-nudge { animation: none; } }
+
+/* Honeypot field of the teacher sign-up: invisible to people, bots fill it in. */
+.auth-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.account-banner--info { color: var(--text-color); background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent-color) 40%, transparent); }
+.account-banner--info strong { color: var(--accent-color-strong); }

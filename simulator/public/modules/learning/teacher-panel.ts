@@ -6,7 +6,8 @@
  * Названия миссий берутся из тех же списков, что и в режиме обучения.
  */
 import {
-    ACCOUNT_TRACKS, teacherApi, viewAsStudent,
+    ACCOUNT_TRACKS, adminApi, getAdminOrg, getUser, orgApi, setAdminOrg, teacherApi, viewAsStudent,
+    type AdminOrg, type OrgData, type OrgInvite,
     type AccountTrack, type AttemptRecord, type BulkCredentials, type CabinetData, type MetricsSummary, type Overview, type OverviewStudent,
     type QuestStats, type StuckStudent, type FailedAttempt, type StudentDetail
 } from './account.js';
@@ -20,7 +21,7 @@ import {
     type SortKey, type StatusFilter, type StudentFilter, type StudentStatus
 } from './teacher-report.js';
 
-type View = 'class' | 'matrix' | 'student' | 'stuck' | 'improve';
+type View = 'class' | 'matrix' | 'student' | 'stuck' | 'improve' | 'org' | 'admin';
 type Modal =
     | { kind: 'add'; mode: 'list' | 'one' }
     | { kind: 'credentials'; title: string; rows: BulkCredentials[]; skipped: { line: string; reason: string }[] }
@@ -64,6 +65,11 @@ let missionAttempts: AttemptRecord[] | null = null;
 let metrics: MetricsSummary | null | undefined;
 let metricsDays = 30;
 
+/** Организация учителя (команда, ссылки) и, для админа, список всех организаций. */
+let orgData: OrgData | null = null;
+let adminOrgs: AdminOrg[] | null = null;
+const isAdmin = () => getUser()?.role === 'admin';
+
 /* ---------- Данные ---------- */
 
 function say(kind: 'ok' | 'error', text: string, scroll = true): void {
@@ -76,6 +82,17 @@ function say(kind: 'ok' | 'error', text: string, scroll = true): void {
 async function guard(action: () => Promise<void>): Promise<void> {
     try { await action(); } catch (error) { say('error', (error as Error).message); }
 }
+
+async function loadOrg(): Promise<void> {
+    await guard(async () => { orgData = await orgApi.get(); render(); });
+}
+
+async function loadAdminOrgs(): Promise<void> {
+    await guard(async () => { adminOrgs = await adminApi.orgs(); render(); });
+}
+
+/** Ссылка, которую учитель отправляет ученикам или коллегам: открывает сайт и показывает приглашение. */
+const inviteLink = (invite: OrgInvite) => `${window.location.origin}${window.location.pathname}?join=${encodeURIComponent(invite.token)}`;
 
 async function refresh(): Promise<void> {
     overview = await teacherApi.overview();
@@ -471,8 +488,96 @@ function renderModal(): string {
 /* ---------- Каркас ---------- */
 
 const TABS: Array<{ id: View; label: string }> = [
-    { id: 'class', label: 'Класс' }, { id: 'matrix', label: 'Таблица' }, { id: 'stuck', label: 'Где застревают' }, { id: 'improve', label: 'Что улучшить' }
+    { id: 'class', label: 'Класс' }, { id: 'matrix', label: 'Таблица' }, { id: 'stuck', label: 'Где застревают' }, { id: 'improve', label: 'Что улучшить' },
+    { id: 'org', label: 'Организация' }
 ];
+/** Вкладки: у админа ещё «Организации» (все, кого он видит). */
+const tabsFor = (): Array<{ id: View; label: string }> => (isAdmin() ? [...TABS, { id: 'admin', label: 'Организации' }] : TABS);
+
+const INVITE_STATE: Record<OrgInvite['state'], string> = { ok: 'Действует', expired: 'Срок вышел', revoked: 'Отозвана', 'used-up': 'Использована' };
+
+function renderInviteList(invites: OrgInvite[], kind: 'student' | 'teacher'): string {
+    const list = invites.filter((invite) => invite.kind === kind);
+    if (!list.length) return `<p class="cab-empty">Ссылок пока нет. Создайте первую кнопкой выше.</p>`;
+    return `<ul class="cabo-invites">${list.map((invite) => `<li class="cabo-invite${invite.state === 'ok' ? '' : ' is-off'}">
+        <div class="cabo-invite__link"><input class="cab-input" readonly value="${esc(inviteLink(invite))}" aria-label="Ссылка-приглашение" data-select-all>
+            <button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="invite-copy" data-id="${invite.id}">${ICON.copy}<span>Скопировать</span></button></div>
+        <div class="cabo-invite__meta">
+            <span class="cab-chip ${invite.state === 'ok' ? 'cab-chip--ok' : 'cab-chip--plain'}">${INVITE_STATE[invite.state]}</span>
+            <span class="cab-muted">до ${fmtDate(invite.expiresAt)} · использована ${invite.uses}${invite.maxUses ? ` из ${invite.maxUses}` : ''} · создал ${esc(invite.createdBy || 'учитель')}</span>
+            ${invite.state === 'ok' ? `<button type="button" class="cab-link cab-danger" data-act="invite-revoke" data-id="${invite.id}">Отозвать</button>` : ''}
+        </div></li>`).join('')}</ul>`;
+}
+
+function inviteForm(kind: 'student' | 'teacher'): string {
+    return `<form class="cabo-invite-form" data-form="invite-create" data-kind="${kind}">
+        <label class="cab-field"><span>Срок действия</span><select class="cab-input" name="days"><option value="7">7 дней</option><option value="30" selected>30 дней</option><option value="90">90 дней</option><option value="365">Год</option></select></label>
+        <label class="cab-field"><span>Сколько человек может воспользоваться</span><input class="cab-input" name="maxUses" type="number" min="1" max="1000" placeholder="Без ограничения"></label>
+        <button type="submit" class="cab-btn cab-btn--primary cab-btn--sm">${ICON.plus}<span>${kind === 'student' ? 'Создать ссылку для учеников' : 'Создать ссылку для коллег'}</span></button>
+    </form>`;
+}
+
+function renderOrg(): string {
+    if (!orgData) return '<div class="cab-state" role="status"><span class="cab-spinner" aria-hidden="true"></span><p>Загружаем организацию…</p></div>';
+    const { org, teachers, invites, counts } = orgData;
+    const admin = isAdmin();
+    const rename = org.canManageTeam
+        ? `<form class="cab-form cabo-rename" data-form="org-rename"><label class="cab-field"><span>Название организации</span><input class="cab-input" name="name" value="${esc(org.name)}" required maxlength="60"></label>
+            <button type="submit" class="cab-btn cab-btn--primary cab-btn--sm">Сохранить</button></form>`
+        : `<h3 class="cabo-name">${esc(org.name)}</h3>`;
+    const team = teachers.map((teacher) => `<li class="cabo-teacher">
+        <span class="cab-avatar cab-avatar--sm" aria-hidden="true">${esc(initials(teacher.fullName))}</span>
+        <span class="cabo-teacher__who"><strong>${esc(teacher.fullName)}</strong><small>Логин ${esc(teacher.login)} · был ${esc(ago(teacher.lastActiveAt))}</small></span>
+        ${teacher.isOwner ? '<span class="cab-chip cab-chip--ok">Владелец</span>' : teacher.role === 'admin' ? '<span class="cab-chip cab-chip--plain">Админ</span>' : ''}
+        ${admin && teacher.role === 'teacher' ? `<button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="teacher-reset" data-id="${teacher.id}">${ICON.key}<span>Новый пароль</span></button>` : ''}
+        ${org.canManageTeam && !teacher.isOwner && teacher.role === 'teacher' ? `<button type="button" class="cab-btn cab-btn--ghost cab-btn--sm cab-danger" data-act="teacher-remove" data-id="${teacher.id}">Убрать из команды</button>` : ''}
+    </li>`).join('');
+    return `<div class="cabo">
+        <section class="cab-block cabo-section">
+            ${rename}
+            <p class="cab-muted">${counts.students} ${plural(counts.students, 'ученик', 'ученика', 'учеников')} · ${counts.teachers} ${plural(counts.teachers, 'учитель', 'учителя', 'учителей')}${org.blocked ? ' · организация заблокирована администратором' : ''}</p>
+        </section>
+        <section class="cab-block cabo-section" aria-labelledby="cabo-students-h">
+            <h3 id="cabo-students-h">Ссылки для учеников</h3>
+            <p class="cab-muted">Отправьте ссылку ученикам: они зарегистрируются сами и сразу попадут в вашу организацию. Потом вы разложите их по классам. Видеть их будете только вы и ваши коллеги.</p>
+            ${inviteForm('student')}
+            ${renderInviteList(invites, 'student')}
+        </section>
+        <section class="cab-block cabo-section" aria-labelledby="cabo-team-h">
+            <h3 id="cabo-team-h">Команда</h3>
+            <ul class="cabo-team">${team}</ul>
+            ${org.canManageTeam ? `<h4>Пригласить коллегу</h4>
+                <p class="cab-muted">Коллега станет учителем вашей организации: увидит всех её учеников и классы, но не сможет приглашать и убирать других учителей.</p>
+                ${inviteForm('teacher')}${renderInviteList(invites, 'teacher')}` : '<p class="cab-muted">Приглашать и убирать коллег может владелец организации.</p>'}
+        </section>
+    </div>`;
+}
+
+function renderAdmin(): string {
+    if (!adminOrgs) return '<div class="cab-state" role="status"><span class="cab-spinner" aria-hidden="true"></span><p>Загружаем организации…</p></div>';
+    const rows = adminOrgs.map((org) => `<tr class="${org.blocked ? 'is-blocked' : ''}">
+        <td data-label="Организация"><strong>${esc(org.name)}</strong>${org.isMain ? ' <span class="cab-chip cab-chip--plain">основная</span>' : ''}${org.blocked ? ' <span class="cab-chip cab-chip--danger">заблокирована</span>' : ''}</td>
+        <td data-label="Владелец">${esc(org.ownerName || '—')}</td>
+        <td data-label="Учителей">${org.teachers}</td>
+        <td data-label="Учеников">${org.students}</td>
+        <td data-label="Был(а)">${esc(ago(org.lastActiveAt))}</td>
+        <td class="cabo-actions"><button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="admin-open" data-id="${org.id}">Открыть</button>
+            ${org.isMain ? '' : `<button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="admin-block" data-id="${org.id}" data-blocked="${org.blocked ? '0' : '1'}">${org.blocked ? 'Разблокировать' : 'Заблокировать'}</button>
+            <button type="button" class="cab-btn cab-btn--ghost cab-btn--sm cab-danger" data-act="admin-delete" data-id="${org.id}">Удалить</button>`}</td></tr>`).join('');
+    return `<div class="cabo"><section class="cab-block cabo-section">
+        <h3>Все организации</h3>
+        <p class="cab-muted">Учителя регистрируются сами и создают организации. «Открыть» переключает кабинет на организацию: вы видите её учеников и команду. Удаление переносит учеников в «Основную», учителей и классы организации стирает.</p>
+        <div class="cab-tablewrap"><table class="cabt-table cabt-table--plain cabo-table"><thead><tr><th>Организация</th><th>Владелец</th><th>Учителей</th><th>Учеников</th><th>Был(а)</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    </section></div>`;
+}
+
+/** Админ выбирает, чьих учеников смотрит: «Все» или одну организацию. */
+function renderAdminScope(): string {
+    if (!isAdmin() || !adminOrgs) return '';
+    const current = getAdminOrg() ?? '';
+    const options = [`<option value="*"${current === '*' ? ' selected' : ''}>Все организации</option>`, ...adminOrgs.map((org) => `<option value="${org.id}"${current === org.id || (!current && org.isMain) ? ' selected' : ''}>${esc(org.name)}</option>`)].join('');
+    return `<label class="cabo-scope"><span class="cab-sr">Организация</span><select class="cab-input cab-input--sm" data-act="admin-scope" aria-label="Организация">${options}</select></label>`;
+}
 
 function render(): void {
     if (!root) return;
@@ -487,14 +592,17 @@ function render(): void {
     else if (view === 'matrix') content = renderMatrix(overview);
     else if (view === 'student') content = renderStudent();
     else if (view === 'stuck') content = renderStuck();
+    else if (view === 'org') content = renderOrg();
+    else if (view === 'admin') content = renderAdmin();
     else content = renderImprove();
 
-    const tabs = [...TABS, ...(view === 'student' ? [{ id: 'student' as View, label: student ? student.fullName : 'Ученик' }] : [])];
+    const tabs = [...tabsFor(), ...(view === 'student' ? [{ id: 'student' as View, label: student ? student.fullName : 'Ученик' }] : [])];
     root.innerHTML = `
         <div class="cab-shell cabt-shell" role="dialog" aria-modal="true" aria-labelledby="cabt-title"${modal ? ' aria-hidden="true"' : ''}>
             <header class="cab-top">
-                <h2 id="cabt-title">Кабинет учителя</h2>
+                <h2 id="cabt-title">${isAdmin() ? 'Кабинет администратора' : 'Кабинет учителя'}</h2>
                 <div class="cabt-top__actions">
+                    ${renderAdminScope()}
                     <button type="button" class="cab-btn cab-btn--primary cab-btn--sm" data-act="add-open">${ICON.plus}<span>Добавить учеников</span></button>
                     <button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="classes-open">${ICON.users}<span>Классы</span></button>
                     <button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="report-open">${ICON.download}<span>Отчёт CSV</span></button>
@@ -546,7 +654,60 @@ async function handleAction(node: HTMLElement): Promise<void> {
             view = next;
             if (next === 'stuck') { await loadStuck(); return; }
             if (next === 'improve') { await loadMetrics(); return; }
+            if (next === 'org') { orgData = null; render(); await loadOrg(); return; }
+            if (next === 'admin') { adminOrgs = null; render(); await loadAdminOrgs(); return; }
             render();
+            return;
+        }
+        case 'invite-copy': {
+            const invite = orgData?.invites.find((item) => item.id === id);
+            if (!invite) return;
+            const link = inviteLink(invite);
+            try { await navigator.clipboard.writeText(link); say('ok', 'Ссылка скопирована. Отправьте её в мессенджере или напишите на доске.', false); }
+            catch { window.prompt('Скопируйте ссылку (Ctrl+C):', link); }
+            return;
+        }
+        case 'invite-revoke': {
+            if (!window.confirm('Отозвать ссылку? По ней больше нельзя будет зарегистрироваться. Уже зарегистрированные останутся.')) return;
+            await guard(async () => { await orgApi.revokeInvite(id); orgData = await orgApi.get(); say('ok', 'Ссылка отозвана.', false); });
+            return;
+        }
+        case 'teacher-remove': {
+            const teacher = orgData?.teachers.find((item) => item.id === id);
+            if (!teacher || !window.confirm(`Убрать «${teacher.fullName}» из команды? Аккаунт останется, но у него будет своя пустая организация без ваших учеников.`)) return;
+            await guard(async () => { await orgApi.removeTeacher(id); orgData = await orgApi.get(); say('ok', 'Учитель убран из команды.', false); });
+            return;
+        }
+        case 'teacher-reset': {
+            const teacher = orgData?.teachers.find((item) => item.id === id);
+            if (!teacher || !window.confirm(`Выдать «${teacher.fullName}» новый пароль? Старый перестанет работать.`)) return;
+            await guard(async () => {
+                const result = await adminApi.resetTeacherPassword(id);
+                modal = { kind: 'credentials', title: 'Новый пароль учителя', rows: [{ id, fullName: result.fullName, login: result.login, password: result.password }], skipped: [] };
+                render();
+            });
+            return;
+        }
+        case 'admin-open': {
+            setAdminOrg(id);
+            await guard(async () => { await refresh(); orgData = null; view = 'class'; render(); });
+            return;
+        }
+        case 'admin-block': {
+            const block = node.dataset.blocked === '1';
+            if (block && !window.confirm('Заблокировать организацию? Её учителя не смогут войти. Ученики продолжат учиться.')) return;
+            await guard(async () => { await adminApi.update(id, { blocked: block }); adminOrgs = await adminApi.orgs(); say('ok', block ? 'Организация заблокирована.' : 'Организация разблокирована.', false); });
+            return;
+        }
+        case 'admin-delete': {
+            const org = adminOrgs?.find((item) => item.id === id);
+            if (!org || !window.confirm(`Удалить организацию «${org.name}»? Её ${org.students} ${plural(org.students, 'ученик', 'ученика', 'учеников')} перейдут в «Основную» без класса, а ${org.teachers} ${plural(org.teachers, 'учитель', 'учителя', 'учителей')} и классы будут удалены. Это нельзя отменить.`)) return;
+            await guard(async () => {
+                const result = await adminApi.remove(id);
+                if (getAdminOrg() === id) setAdminOrg(null);
+                adminOrgs = await adminApi.orgs();
+                say('ok', `Организация удалена. В «Основную» перенесено учеников: ${result.movedStudents}.`, false);
+            });
             return;
         }
         case 'status': filter = { ...filter, status: node.dataset.status as StatusFilter }; render(); return;
@@ -704,6 +865,19 @@ async function handleAction(node: HTMLElement): Promise<void> {
 async function handleSubmit(form: HTMLFormElement, submitter: HTMLElement | null): Promise<void> {
     const values = formValues(form);
     switch (form.dataset.form) {
+        case 'org-rename': {
+            await guard(async () => { orgData = await orgApi.rename(values.name); say('ok', 'Название сохранено.', false); });
+            return;
+        }
+        case 'invite-create': {
+            const kind = form.dataset.kind === 'teacher' ? 'teacher' : 'student';
+            await guard(async () => {
+                await orgApi.createInvite(kind, { days: Number(values.days) || 30, maxUses: values.maxUses ? Number(values.maxUses) : null });
+                orgData = await orgApi.get();
+                say('ok', 'Ссылка создана. Скопируйте её кнопкой рядом.', false);
+            });
+            return;
+        }
         case 'bulk': {
             await guard(async () => {
                 const result = await teacherApi.bulkCreate(values.names, values.classId || null);
@@ -771,6 +945,11 @@ function onClick(event: Event): void {
 
 function onChange(event: Event): void {
     const node = event.target as HTMLElement;
+    if (node instanceof HTMLSelectElement && node.dataset.act === 'admin-scope') {
+        setAdminOrg(node.value);
+        void guard(async () => { orgData = null; await refresh(); if (view === 'org') await loadOrg(); render(); });
+        return;
+    }
     if (node instanceof HTMLInputElement && node.dataset.act) { void handleAction(node); return; }
     const key = node.dataset.filter as keyof StudentFilter | undefined;
     if (!key) return;
@@ -818,7 +997,10 @@ export async function openTeacherPanel(): Promise<void> {
     notice = null;
     loading = true;
     selected = new Set();
+    orgData = null;
+    adminOrgs = null;
     render();
+    if (isAdmin()) await guard(async () => { adminOrgs = await adminApi.orgs(); });
     await guard(async () => { await refresh(); });
     loading = false;
     render();

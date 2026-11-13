@@ -4,7 +4,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import request from 'supertest';
-import { AccountStore, DATA_VERSION, ensureTeacher, registerAccountRoutes } from '../server/accounts.js';
+import { AccountStore, DATA_VERSION, MAIN_ORG_ID, ensureTeacher, registerAccountRoutes } from '../server/accounts.js';
 import { AttemptLog } from '../server/attempts.js';
 import { MetricsLog, sanitizeEvent } from '../server/metrics.js';
 import { activityByDay, dayKey, generatePassword, parseTz, streaks, suggestLogin } from '../server/cabinet.js';
@@ -62,7 +62,7 @@ describe('миграция файла аккаунтов', () => {
         expect(ivanov.classId).toBeNull();
         expect(store.findByLogin('bare')!.progress).toEqual({ blocks: {}, lua: {}, python: {}, sdk2: {}, bricks: {} });
         expect(store.list('student')).toHaveLength(2);
-        expect(store.classes).toEqual([]);
+        expect(store.classesOf()).toEqual([]);
     });
 
     test('копия исходного файла сохраняется один раз, потом файл пишется новой версии', async () => {
@@ -72,7 +72,7 @@ describe('миграция файла аккаунтов', () => {
         fs.writeFileSync(file, original);
         const store = new AccountStore(file);
         expect(fs.readFileSync(`${file}.v1.bak`, 'utf8')).toBe(original);
-        await store.createClass('8А');
+        await store.createClass(MAIN_ORG_ID, '8А');
         const saved = JSON.parse(fs.readFileSync(file, 'utf8'));
         expect(saved.version).toBe(DATA_VERSION);
         expect(saved.classes).toHaveLength(1);
@@ -86,7 +86,7 @@ describe('миграция файла аккаунтов', () => {
         const dir = tmp();
         const first = await makeApp(dir);
         await register(first.app, 'old-pupil');
-        await first.store.createClass('7Б');
+        await first.store.createClass(MAIN_ORG_ID, '7Б');
         // Имитируем файл прошлой версии: убираем новые поля.
         const file = path.join(dir, 'accounts.json');
         const raw = JSON.parse(fs.readFileSync(file, 'utf8'));

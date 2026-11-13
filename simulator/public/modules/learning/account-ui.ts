@@ -2,7 +2,7 @@
  * Панель «Аккаунт» в левой рельсе: вход и регистрация формой прямо в панели, профиль со сменой пароля и выходом,
  * вход в кабинет учителя. Когда вход истёк (два часа без действий), панель открывается сама и просит войти снова.
  */
-import { changePassword, exitStudentView, getUser, isSessionExpired, login, logout, onProfileChange, onSessionExpired, onUserChange, register, type AccountUser } from './account.js';
+import { changePassword, exitStudentView, fetchCaptcha, getUser, isSessionExpired, isStaffUser, login, logout, onProfileChange, onSessionExpired, onUserChange, register, registerTeacher, type AccountUser, type InviteInfo } from './account.js';
 
 const esc = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -17,6 +17,37 @@ let openCabinet: () => void = () => undefined;
 const PRIVACY = 'Ваш код и результаты проверок видит только ваш учитель, и сохраняются они только после входа в аккаунт.';
 let view: View = 'login';
 let lastLogin = '';
+/** Кто регистрируется: ученик или учитель (у учителя своя форма: организация и вопрос против ботов). */
+let registerAs: 'student' | 'teacher' = 'student';
+/** Ссылка-приглашение, с которой открыли сайт: регистрация пойдёт в её организацию. */
+let invite: { token: string; info: InviteInfo } | null = null;
+/** Вопрос «не бот» для регистрации учителя без ссылки. */
+let captcha: { token: string; question: string } | null = null;
+let captchaLoading = false;
+/** Вопрос уже пытались загрузить: без этого при недоступном сервере форма просила бы его бесконечно. */
+let captchaTried = false;
+
+/** Запоминает ссылку-приглашение (страница по ссылке сообщает о ней) и открывает нужную форму регистрации. */
+export function setInviteContext(next: { token: string; info: InviteInfo } | null): void {
+    invite = next;
+    if (next) registerAs = next.info.kind === 'teacher' ? 'teacher' : 'student';
+    render();
+}
+
+/** inPlace: после ошибки меняем только вопрос, чтобы не стереть то, что человек уже ввёл в форму. */
+function loadCaptcha(inPlace = false): void {
+    if (captchaLoading) return;
+    captchaLoading = true;
+    captchaTried = true;
+    fetchCaptcha().then((next) => { captcha = next; }).catch(() => { captcha = null; }).finally(() => {
+        captchaLoading = false;
+        if (!inPlace) { render(); return; }
+        const label = host.querySelector<HTMLElement>('[data-captcha-label]');
+        if (label && captcha) label.textContent = `Проверка: ${captcha.question}`;
+        const input = host.querySelector<HTMLInputElement>('input[name="captchaAnswer"]');
+        if (input) input.value = '';
+    });
+}
 
 function field(name: string, label: string, type = 'text', autocomplete = 'off', hint = '', value = ''): string {
     return `<label class="auth-field"><span>${label}</span>
@@ -26,16 +57,45 @@ function field(name: string, label: string, type = 'text', autocomplete = 'off',
 
 const FORMS: Record<View, () => string> = {
     login: () => field('login', 'Логин', 'text', 'username', '', lastLogin) + field('password', 'Пароль', 'password', 'current-password'),
-    register: () => field('fullName', 'ФИО', 'text', 'name', 'Фамилия, имя и отчество полностью')
+    register: () => registerAsSwitch() + inviteBanner() + field('fullName', 'ФИО', 'text', 'name', 'Фамилия, имя и отчество полностью')
         + field('login', 'Логин', 'text', 'username', 'Латинские буквы, цифры, точка, дефис, подчёркивание; от 3 символов')
         + field('loginRepeat', 'Логин ещё раз')
         + field('password', 'Пароль', 'password', 'new-password', 'Не короче 6 символов')
-        + field('passwordRepeat', 'Пароль ещё раз', 'password', 'new-password'),
+        + field('passwordRepeat', 'Пароль ещё раз', 'password', 'new-password')
+        + teacherFields(),
     password: () => field('current', 'Текущий пароль', 'password', 'current-password')
         + field('password', 'Новый пароль', 'password', 'new-password', 'Не короче 6 символов')
         + field('passwordRepeat', 'Новый пароль ещё раз', 'password', 'new-password')
 };
 const SUBMIT: Record<View, string> = { login: 'Войти', register: 'Создать аккаунт', password: 'Сменить пароль' };
+
+/** «Я ученик / Я учитель». Со ссылкой-приглашением роль задана ссылкой, переключателя нет. */
+function registerAsSwitch(): string {
+    if (invite) return '';
+    return `<div class="pk-seg account-tabs" role="tablist" aria-label="Кто вы">
+        <button type="button" class="pk-seg__btn${registerAs === 'student' ? ' is-active' : ''}" data-register-as="student">Я ученик</button>
+        <button type="button" class="pk-seg__btn${registerAs === 'teacher' ? ' is-active' : ''}" data-register-as="teacher">Я учитель</button>
+    </div>`;
+}
+
+function inviteBanner(): string {
+    if (!invite) return registerAs === 'teacher'
+        ? '<p class="auth-note">Вы создадите свою организацию (школу, кружок) и получите ссылки, чтобы пригласить в неё учеников и коллег. Видеть ваших учеников будут только вы и ваша команда.</p>'
+        : '';
+    const who = invite.info.kind === 'teacher' ? 'как учитель' : 'как ученик';
+    return `<div class="account-banner account-banner--info" role="status"><strong>Приглашение в «${esc(invite.info.orgName)}»</strong>Вы регистрируетесь ${who} в этой организации.</div>`;
+}
+
+/** Только для учителя без ссылки: название организации, вопрос против ботов и скрытая ловушка. */
+function teacherFields(): string {
+    if (registerAs !== 'teacher' || invite) return '';
+    const question = captcha
+        ? `<label class="auth-field"><span data-captcha-label>Проверка: ${esc(captcha.question)}</span><input class="auth-input" name="captchaAnswer" inputmode="numeric" autocomplete="off" required></label>`
+        : `<p class="auth-note">${captchaTried && !captchaLoading ? 'Не удалось загрузить вопрос. Проверьте связь и обновите страницу.' : 'Загружаем вопрос…'}</p>`;
+    return field('orgName', 'Название организации', 'text', 'organization', 'Школа, кружок или клуб: так вас увидят ученики и коллеги')
+        + question
+        + '<input class="auth-hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">';
+}
 
 function initials(user: AccountUser): string {
     const [first] = user.fullName.trim().split(/\s+/);
@@ -74,11 +134,11 @@ function render(): void {
         body = `<button type="button" class="account-back" data-account-view="back">← К профилю</button>
             <div class="account-intro"><h3>Смена пароля</h3></div>${renderForm(user)}`;
     } else {
-        const teacher = user.role === 'teacher';
+        const teacher = isStaffUser(user);
         body = `<div class="account-profile">
                 <span class="account-avatar" aria-hidden="true">${esc(initials(user))}</span>
-                <span class="account-profile__who"><strong>${esc(user.fullName)}</strong><small>Логин ${esc(user.login)}</small></span>
-                <span class="account-role account-role--${teacher ? 'teacher' : 'student'}">${teacher ? 'Учитель' : 'Ученик'}</span>
+                <span class="account-profile__who"><strong>${esc(user.fullName)}</strong><small>Логин ${esc(user.login)}${user.org ? ` · ${esc(user.org.name)}` : ''}</small></span>
+                <span class="account-role account-role--${teacher ? 'teacher' : 'student'}">${user.role === 'admin' ? 'Администратор' : teacher ? 'Учитель' : 'Ученик'}</span>
             </div>
             ${user.mustChangePassword ? '<div class="account-banner" role="status"><strong>Временный пароль</strong>Учитель выдал вам пароль. Смените его на свой, кнопка ниже.</div>' : ''}
             <div class="account-actions">
@@ -109,8 +169,15 @@ function wire(): void {
         else if (action === 'cabinet') openCabinet();
         else if (action === 'logout') void logout();
     }));
+    host.querySelectorAll<HTMLElement>('[data-register-as]').forEach((button) => button.addEventListener('click', () => {
+        registerAs = button.dataset.registerAs === 'teacher' ? 'teacher' : 'student';
+        captchaTried = false;
+        render();
+    }));
     const form = host.querySelector<HTMLFormElement>('.account-form');
     if (!form) return;
+    // Учителю без ссылки нужен вопрос против ботов; грузим его, когда форма открыта.
+    if (view === 'register' && registerAs === 'teacher' && !invite && !captcha && !captchaTried) loadCaptcha();
     // Повторные поля вводятся руками: так ошибка в логине или пароле не копируется в проверку.
     form.querySelectorAll<HTMLInputElement>('input[name$="Repeat"]').forEach((input) => input.addEventListener('paste', (event) => event.preventDefault()));
     const error = form.querySelector('.auth-error') as HTMLElement;
@@ -122,14 +189,25 @@ function wire(): void {
         submit.disabled = true;
         try {
             if (view === 'login') { lastLogin = values.login; await login(values.login, values.password); }
-            else if (view === 'register') await register({
-                fullName: values.fullName, login: values.login, loginRepeat: values.loginRepeat,
-                password: values.password, passwordRepeat: values.passwordRepeat
-            });
+            else if (view === 'register') {
+                const base = {
+                    fullName: values.fullName, login: values.login, loginRepeat: values.loginRepeat,
+                    password: values.password, passwordRepeat: values.passwordRepeat, ...(invite ? { invite: invite.token } : {})
+                };
+                if (registerAs === 'teacher') {
+                    await registerTeacher({ ...base, orgName: values.orgName, captchaToken: captcha?.token, captchaAnswer: values.captchaAnswer, website: values.website });
+                } else {
+                    await register(base);
+                }
+                invite = null;
+                captcha = null;
+            }
             else { await changePassword(values.current, values.password, values.passwordRepeat); view = 'login'; render(); }
         } catch (failure) {
             error.textContent = (failure as Error).message;
             error.hidden = false;
+            // Токен вопроса одноразовый: после любой ошибки нужен новый.
+            if (view === 'register' && registerAs === 'teacher' && !invite) { captcha = null; loadCaptcha(true); }
         } finally {
             submit.disabled = false;
         }
