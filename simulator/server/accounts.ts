@@ -157,15 +157,19 @@ export function validateOrgName(raw: unknown): string {
  * Версия 3: появляются организации. Все прежние ученики и классы переходят в «Основную»; самый старый учитель
  * становится админом и владельцем «Основной», остальные учителя остаются учителями в ней.
  */
-export function migrateData(raw: any): Data {
-    const users: User[] = (Array.isArray(raw?.users) ? raw.users : []).filter((user: any) =>
+/** Запись из файла аккаунтов любой версии: поля проверяются при чтении, поэтому здесь свободный тип. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Raw = { [key: string]: any };
+
+export function migrateData(raw: Raw): Data {
+    const users: User[] = (Array.isArray(raw?.users) ? raw.users : []).filter((user: Raw) =>
         user && typeof user === 'object' && typeof user.id === 'string' && typeof user.login === 'string' && typeof user.hash === 'string' && typeof user.salt === 'string');
-    const orgs: Organization[] = (Array.isArray(raw?.orgs) ? raw.orgs : []).filter((item: any) => item && typeof item.id === 'string' && typeof item.name === 'string')
-        .map((item: any) => ({ ...item, ownerId: typeof item.ownerId === 'string' ? item.ownerId : '', createdAt: Number.isFinite(item.createdAt) ? item.createdAt : Date.now() }));
+    const orgs: Organization[] = (Array.isArray(raw?.orgs) ? raw.orgs : []).filter((item: Raw) => item && typeof item.id === 'string' && typeof item.name === 'string')
+        .map((item: Raw) => ({ ...item, ownerId: typeof item.ownerId === 'string' ? item.ownerId : '', createdAt: Number.isFinite(item.createdAt) ? item.createdAt : Date.now() } as Organization));
     if (!orgs.some((item) => item.id === MAIN_ORG_ID)) orgs.unshift({ id: MAIN_ORG_ID, name: MAIN_ORG_NAME, ownerId: '', createdAt: Date.now() });
     const orgIds = new Set(orgs.map((item) => item.id));
-    const classes: ClassGroup[] = (Array.isArray(raw?.classes) ? raw.classes : []).filter((item: any) => item && typeof item.id === 'string' && typeof item.name === 'string')
-        .map((item: any) => ({ ...item, createdAt: Number.isFinite(item.createdAt) ? item.createdAt : Date.now(), orgId: orgIds.has(item.orgId) ? item.orgId : MAIN_ORG_ID }));
+    const classes: ClassGroup[] = (Array.isArray(raw?.classes) ? raw.classes : []).filter((item: Raw) => item && typeof item.id === 'string' && typeof item.name === 'string')
+        .map((item: Raw) => ({ ...item, createdAt: Number.isFinite(item.createdAt) ? item.createdAt : Date.now(), orgId: orgIds.has(item.orgId) ? item.orgId : MAIN_ORG_ID } as ClassGroup));
     const classIds = new Set(classes.map((item) => item.id));
     for (const user of users) {
         user.role = user.role === 'teacher' || user.role === 'admin' ? user.role : 'student';
@@ -197,9 +201,9 @@ export function migrateData(raw: any): Data {
         if (!staff.some((user) => user.id === org.ownerId)) org.ownerId = (org.id === MAIN_ORG_ID ? staff.find((user) => user.role === 'admin') : undefined)?.id ?? staff[0]?.id ?? '';
     }
     const sessions: Session[] = Array.isArray(raw?.sessions) ? raw.sessions : [];
-    const invites: Invite[] = (Array.isArray(raw?.invites) ? raw.invites : []).filter((item: any) =>
+    const invites: Invite[] = (Array.isArray(raw?.invites) ? raw.invites : []).filter((item: Raw) =>
         item && typeof item.id === 'string' && typeof item.token === 'string' && orgIds.has(item.orgId) && (item.kind === 'student' || item.kind === 'teacher'))
-        .map((item: any) => ({ ...item, uses: Number.isFinite(item.uses) ? item.uses : 0, maxUses: Number.isFinite(item.maxUses) ? item.maxUses : null, revoked: item.revoked === true }));
+        .map((item: Raw) => ({ ...item, uses: Number.isFinite(item.uses) ? item.uses : 0, maxUses: Number.isFinite(item.maxUses) ? item.maxUses : null, revoked: item.revoked === true } as Invite));
     return { version: DATA_VERSION, users, sessions, classes, orgs, invites };
 }
 
