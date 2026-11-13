@@ -70,12 +70,14 @@ describe('robots.txt и sitemap.xml', () => {
         expect(robots).toMatch(/^Disallow: \/api\/$/m);
         expect(robots).not.toMatch(/^Disallow: \/$/m);
         expect(robots).toMatch(/^Sitemap: https:\/\/simulator\.sakoryagin\.ru\/sitemap\.xml$/m);
+        expect(robots).toMatch(/^Sitemap: https:\/\/simulator\.sakoryagin\.ru\/sitemap-lessons\.xml$/m);
     });
 
     test('sitemap.xml: корректная карта с главной страницей', () => {
         expect(sitemap.startsWith('<?xml')).toBe(true);
         expect(sitemap).toContain('xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"');
         expect(sitemap).toContain('<loc>https://simulator.sakoryagin.ru/</loc>');
+        expect(sitemap).toContain('<loc>https://simulator.sakoryagin.ru/uroki/</loc>');
         expect(sitemap.match(/<url>/g)?.length).toBe(sitemap.match(/<\/url>/g)?.length);
     });
 

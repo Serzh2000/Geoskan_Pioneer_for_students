@@ -41,3 +41,7 @@ __pycache__/
 /reference/mini2-disk/_binaries/
 /reference/mini2-disk/**/*.so
 /reference/mini2-disk/usr/local/bin/*/dist/
+
+# Страницы уроков для поисковиков строит scripts/generate-seo-pages.mjs
+/static/uroki/
+/static/sitemap-lessons.xml

@@ -14,6 +14,7 @@ import { MetricsLog, resolveMetricsFile } from './server/metrics.js';
 import { registerExternalPythonBridgeRoutes } from './server/external-python-bridge.js';
 import { registerMavlinkBridgeRoutes, stopAllMavlinkBridges } from './server/mavlink-bridge.js';
 import { registerPythonRuntimeRoutes, stopAllLocalPythonRuns } from './server/python-runtime.js';
+import { precompressedStatic, staticHeaders } from './server/static-compressed.js';
 
 dotenv.config();
 
@@ -382,7 +383,9 @@ function createApp(options: StartServerOptions): express.Express {
 
     if (shouldServeStaticUi) {
         console.log(`Serving static files from: ${publicPath}`);
-        app.use(express.static(publicPath));
+        // Готовые .br/.gz из сборки, если браузер умеет сжатие; хэшированные файлы кэшируются на год.
+        app.use(precompressedStatic(publicPath));
+        app.use(express.static(publicPath, { setHeaders: (res, file) => staticHeaders(res, file, publicPath) }));
         app.get(/^\/(?!api).*/, (_req: express.Request, res: express.Response) => {
             res.sendFile(path.join(publicPath, 'index.html'));
         });
