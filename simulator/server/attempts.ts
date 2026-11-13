@@ -7,6 +7,7 @@
  * дописывание одной строки не портит прошлые записи, а при сбое теряется не больше последней строки.
  */
 import fs from 'fs';
+import { rename, writeFile } from 'fs/promises';
 import { appendFile, mkdir } from 'fs/promises';
 import path from 'path';
 
@@ -62,6 +63,32 @@ export class AttemptLog {
             solved: input.body?.solved === true, titles, code: clip(input.body?.code, MAX_CODE_LENGTH),
             ...(input.body?.partial === true && input.body?.solved !== true ? { partial: true } : {})
         };
+    }
+
+    /**
+     * Стирает всю историю проверок одного человека (при удалении аккаунта вместе с ним не должно оставаться ни имени, ни кода).
+     * Файл переписывается целиком через временный: записи других учеников не теряются. Возвращает, сколько записей удалено.
+     */
+    async removeUser(userId: string): Promise<number> {
+        let removed = 0;
+        this.writes = this.writes.then(async () => {
+            if (!fs.existsSync(this.file)) return;
+            const keep: string[] = [];
+            for (const line of fs.readFileSync(this.file, 'utf8').split('\n')) {
+                if (!line) continue;
+                try {
+                    if ((JSON.parse(line) as Attempt).userId === userId) { removed++; continue; }
+                } catch { /* оборванную строку не трогаем */ }
+                keep.push(line);
+            }
+            if (!removed) return;
+            const temp = `${this.file}.${process.pid}.tmp`;
+            await writeFile(temp, keep.length ? `${keep.join('\n')}\n` : '', 'utf8');
+            await rename(temp, this.file);
+            this.cache = null;
+        }).catch((error) => { console.error('[attempts]', error); });
+        await this.writes;
+        return removed;
     }
 
     async add(attempt: Attempt): Promise<void> {

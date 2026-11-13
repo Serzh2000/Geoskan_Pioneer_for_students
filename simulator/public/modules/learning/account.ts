@@ -210,6 +210,20 @@ export async function joinOrganization(invite: string): Promise<AccountUser> {
     return result.user;
 }
 
+/** Ученик удаляет свой аккаунт: сервер просит логин и пароль. На этом компьютере стираются и его локальный прогресс и черновики. */
+export async function deleteMyAccount(confirm: string, password: string): Promise<void> {
+    const id = user?.id;
+    await call('POST', '/api/auth/delete-account', { confirm, password });
+    try {
+        if (id) {
+            const marker = `:u:${id}`;
+            Object.keys(window.localStorage).filter((key) => key.startsWith('pioneer:') && key.includes(marker)).forEach((key) => window.localStorage.removeItem(key));
+        }
+    } catch { /* хранилище недоступно: на сервере всё уже удалено */ }
+    adminOrg = null;
+    setUser(null);
+}
+
 export async function logout(): Promise<void> {
     await call('POST', '/api/auth/logout').catch(() => undefined);
     adminOrg = null;

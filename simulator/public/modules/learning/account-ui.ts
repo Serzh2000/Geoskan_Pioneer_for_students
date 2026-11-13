@@ -2,11 +2,11 @@
  * Панель «Аккаунт» в левой рельсе: вход и регистрация формой прямо в панели, профиль со сменой пароля и выходом,
  * вход в кабинет учителя. Когда вход истёк (два часа без действий), панель открывается сама и просит войти снова.
  */
-import { changePassword, exitStudentView, fetchCaptcha, getUser, isSessionExpired, isStaffUser, login, logout, onProfileChange, onSessionExpired, onUserChange, register, registerTeacher, type AccountUser, type InviteInfo } from './account.js';
+import { changePassword, deleteMyAccount, exitStudentView, fetchCaptcha, getUser, isSessionExpired, isStaffUser, login, logout, onProfileChange, onSessionExpired, onUserChange, register, registerTeacher, type AccountUser, type InviteInfo } from './account.js';
 
 const esc = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-type View = 'login' | 'register' | 'password';
+type View = 'login' | 'register' | 'password' | 'delete';
 
 let host: HTMLElement;
 let railButton: HTMLElement | null = null;
@@ -17,6 +17,8 @@ let openCabinet: () => void = () => undefined;
 const PRIVACY = 'Ваш код и результаты проверок видит только ваш учитель, и сохраняются они только после входа в аккаунт.';
 let view: View = 'login';
 let lastLogin = '';
+/** Сообщение, которое показывается один раз над формой (например, «Аккаунт удалён»). */
+let flash: string | null = null;
 /** Кто регистрируется: ученик или учитель (у учителя своя форма: организация и вопрос против ботов). */
 let registerAs: 'student' | 'teacher' = 'student';
 /** Ссылка-приглашение, с которой открыли сайт: регистрация пойдёт в её организацию. */
@@ -65,9 +67,13 @@ const FORMS: Record<View, () => string> = {
         + teacherFields(),
     password: () => field('current', 'Текущий пароль', 'password', 'current-password')
         + field('password', 'Новый пароль', 'password', 'new-password', 'Не короче 6 символов')
-        + field('passwordRepeat', 'Новый пароль ещё раз', 'password', 'new-password')
+        + field('passwordRepeat', 'Новый пароль ещё раз', 'password', 'new-password'),
+    // Удаление нельзя нажать случайно: логин набирается руками, нужен пароль и отметка, что последствия понятны.
+    delete: () => field('confirm', `Чтобы подтвердить, введите свой логин: ${getUser()?.login ?? ''}`, 'text', 'off', 'Копировать и вставлять нельзя: наберите логин сами')
+        + field('password', 'Ваш пароль', 'password', 'current-password')
+        + '<label class="auth-check"><input type="checkbox" name="understand"> <span>Я понимаю, что удалённый аккаунт, прогресс и история проверок не восстанавливаются</span></label>'
 };
-const SUBMIT: Record<View, string> = { login: 'Войти', register: 'Создать аккаунт', password: 'Сменить пароль' };
+const SUBMIT: Record<View, string> = { login: 'Войти', register: 'Создать аккаунт', password: 'Сменить пароль', delete: 'Удалить аккаунт навсегда' };
 
 /** «Я ученик / Я учитель». Со ссылкой-приглашением роль задана ссылкой, переключателя нет. */
 function registerAsSwitch(): string {
@@ -133,6 +139,11 @@ function render(): void {
     } else if (view === 'password') {
         body = `<button type="button" class="account-back" data-account-view="back">← К профилю</button>
             <div class="account-intro"><h3>Смена пароля</h3></div>${renderForm(user)}`;
+    } else if (view === 'delete' && user.role === 'student') {
+        body = `<button type="button" class="account-back" data-account-view="back">← К профилю</button>
+            <div class="account-intro"><h3>Удаление аккаунта</h3>
+                <p>Будут удалены навсегда: аккаунт «${esc(user.login)}», все пройденные миссии и достижения, история проверок с вашим кодом. Учитель перестанет вас видеть.</p>
+                <p>Отменить это нельзя. Если вы просто хотите уйти с этого компьютера, нажмите «Выйти» в профиле.</p></div>${renderForm(user)}`;
     } else {
         const teacher = isStaffUser(user);
         body = `<div class="account-profile">
@@ -146,12 +157,15 @@ function render(): void {
                 <button type="button" class="btn-secondary" data-account="password">Сменить пароль</button>
                 <button type="button" class="btn-secondary" data-account="logout">Выйти</button>
             </div>
+            ${teacher ? '' : '<button type="button" class="account-delete-link" data-account="delete">Удалить мой аккаунт</button>'}
             <p class="auth-note">${teacher ? 'В кабинете вы ведёте классы, видите, кто застрял, и вручную засчитываете миссии. ' : 'В кабинете виден весь прогресс, история проверок и достижения. '}Вход действует два часа после последнего действия, потом нужно войти снова.</p>
             ${teacher ? '' : `<p class="auth-privacy">${PRIVACY}</p>`}`;
     }
-    const banner = expired
+    const notice = flash ? `<div class="account-banner account-banner--info" role="status"><strong>${esc(flash)}</strong></div>` : '';
+    flash = null;
+    const banner = notice + (expired
         ? `<div class="account-banner" role="status"><strong>Вход закончился</strong>Вы не пользовались симулятором больше двух часов. Войдите снова: всё, что вы прошли, уже сохранено и дойдёт до учителя.</div>`
-        : '';
+        : '');
     host.innerHTML = `<div class="account">${banner}${body}</div>`;
     wire();
 }
@@ -165,6 +179,7 @@ function wire(): void {
     host.querySelectorAll<HTMLElement>('[data-account]').forEach((button) => button.addEventListener('click', () => {
         const action = button.dataset.account;
         if (action === 'password') { view = 'password'; render(); }
+        else if (action === 'delete') { view = 'delete'; render(); }
         else if (action === 'teacher') openTeacher();
         else if (action === 'cabinet') openCabinet();
         else if (action === 'logout') void logout();
@@ -179,7 +194,20 @@ function wire(): void {
     // Учителю без ссылки нужен вопрос против ботов; грузим его, когда форма открыта.
     if (view === 'register' && registerAs === 'teacher' && !invite && !captcha && !captchaTried) loadCaptcha();
     // Повторные поля вводятся руками: так ошибка в логине или пароле не копируется в проверку.
-    form.querySelectorAll<HTMLInputElement>('input[name$="Repeat"]').forEach((input) => input.addEventListener('paste', (event) => event.preventDefault()));
+    form.querySelectorAll<HTMLInputElement>('input[name$="Repeat"], input[name="confirm"]').forEach((input) => input.addEventListener('paste', (event) => event.preventDefault()));
+    // Кнопка удаления неактивна, пока не набран логин, не введён пароль и не поставлена отметка.
+    const submitButton = form.querySelector<HTMLButtonElement>('button[type=submit]');
+    const syncDelete = () => {
+        if (view !== 'delete' || !submitButton) return;
+        const get = (name: string) => form.querySelector<HTMLInputElement>(`[name="${name}"]`);
+        submitButton.disabled = !(get('confirm')?.value.trim() === getUser()?.login && (get('password')?.value.length ?? 0) > 0 && get('understand')?.checked);
+    };
+    if (view === 'delete') {
+        submitButton?.classList.add('account-submit--danger');
+        form.addEventListener('input', syncDelete);
+        form.addEventListener('change', syncDelete);
+        syncDelete();
+    }
     const error = form.querySelector('.auth-error') as HTMLElement;
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -202,6 +230,12 @@ function wire(): void {
                 invite = null;
                 captcha = null;
             }
+            else if (view === 'delete') {
+                await deleteMyAccount(values.confirm, values.password);
+                flash = 'Аккаунт удалён. Ваши данные стёрты.';
+                view = 'login';
+                render();
+            }
             else { await changePassword(values.current, values.password, values.passwordRepeat); view = 'login'; render(); }
         } catch (failure) {
             error.textContent = (failure as Error).message;
@@ -210,9 +244,10 @@ function wire(): void {
             if (view === 'register' && registerAs === 'teacher' && !invite) { captcha = null; loadCaptcha(true); }
         } finally {
             submit.disabled = false;
+            syncDelete();
         }
     });
-    if (!getUser() || view === 'password') form.querySelector<HTMLElement>('input')?.focus();
+    if (!getUser() || view === 'password' || view === 'delete') form.querySelector<HTMLElement>('input')?.focus();
 }
 
 /** Панель открывается только когда она закрыта: openPanel переключает, и второй вызов закрыл бы её. */

@@ -1114,7 +1114,24 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
 
     app.delete('/api/teacher/students/:id', wrap(async (req, res) => {
         const actor = requireStaff(req);
-        await store.deleteUser(studentFromParams(req, actor));
+        const student = studentFromParams(req, actor);
+        await store.deleteUser(student);
+        await attempts?.removeUser(student.id);
+        res.json({ ok: true });
+    }));
+
+    // Ученик удаляет свой аккаунт сам. Случайно это не сделать: нужны логин (набирается вручную) и пароль, а в режиме просмотра
+    // учителя удаление закрыто. Вместе с аккаунтом стираются прогресс, достижения и вся история проверок с кодом.
+    app.post('/api/auth/delete-account', authLimiter, wrap(async (req, res) => {
+        const user = requireUser(req);
+        forbidInView(req);
+        if (user.role !== 'student') throw new AccountError(400, 'Аккаунт учителя удаляет администратор: напишите ему.');
+        if (String(req.body?.confirm ?? '').trim() !== user.login) throw new AccountError(400, 'Чтобы подтвердить удаление, введите свой логин точно так, как он записан.');
+        if (!checkPassword(user, String(req.body?.password ?? ''))) throw new AccountError(403, 'Пароль неверный. Аккаунт не удалён.');
+        await store.deleteUser(user);
+        await attempts?.removeUser(user.id);
+        setSessionCookie(req, res, '', 0);
+        setCookie(req, res, TEACHER_COOKIE, '', 0);
         res.json({ ok: true });
     }));
 
