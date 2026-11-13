@@ -643,3 +643,17 @@ thead .cabt-g-name { background: var(--panel-bg-strong); height: 108px; color: v
     .cabo-scope { flex: 1 1 100%; }
     .cabo-scope select { max-width: none; width: 100%; }
 }
+
+/* Admin table: fixed number columns, no mid-word wraps, the chip stays beside the name. */
+.cabo-table { table-layout: auto; }
+.cabo-table th, .cabo-table td { padding: 12px 14px; vertical-align: middle; }
+.cabo-table th:nth-child(n+3):nth-child(-n+5), .cabo-table td:nth-child(n+3):nth-child(-n+5) { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+.cabo-table td:first-child { min-width: 180px; }
+.cabo-table td:first-child strong { margin-right: 6px; }
+.cabo-table td:first-child .cab-chip { vertical-align: middle; }
+.cabo-table td:nth-child(2) { min-width: 140px; }
+.cabo-table td:nth-child(5) { text-align: left; }
+.cabo-table th:nth-child(5) { text-align: left; }
+@media (max-width: 700px) {
+    .cabo-table td:nth-child(n+3):nth-child(-n+5), .cabo-table th:nth-child(n+3):nth-child(-n+5) { text-align: left; }
+}
