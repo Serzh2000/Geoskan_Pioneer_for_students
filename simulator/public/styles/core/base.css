@@ -8,7 +8,7 @@
  * РІРєР»Р°РґРѕРє, РїР°РЅРµР»РµР№ С‚РµР»РµРјРµС‚СЂРёРё, РјРµРЅРµРґР¶РµСЂР° СЃС†РµРЅС‹, СЂРµРґР°РєС‚РѕСЂР° РєРѕРґР° Рё РєРЅРѕРїРѕРє.
  * Р’С‹РЅРµСЃРµРЅ РёР· index.html РґР»СЏ СѓРґРѕР±СЃС‚РІР° РїРѕРґРґРµСЂР¶РєРё Рё С‡С‚РµРЅРёСЏ.
  */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+@import url('./fonts.css');
 
 :root {
     /* Height the floating run buttons cover at the bottom of a panel: scrolling content leaves this much room. */

@@ -4,8 +4,6 @@
  */
 import { acceptConsent, getUser, logout, onUserChange, type AccountUser } from './account.js';
 
-const esc = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-
 let open = false;
 
 export function consentCheckboxes(staff: boolean): string {
@@ -57,7 +55,6 @@ function show(user: AccountUser): void {
         }
     });
     form.querySelector<HTMLElement>('input')?.focus();
-    void esc;
 }
 
 /** Подключается один раз: показывает окно, когда у вошедшего пользователя нет согласия на нынешнюю политику. */

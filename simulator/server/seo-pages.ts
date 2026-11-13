@@ -98,7 +98,7 @@ ${ld}
 <nav class="crumbs" aria-label="Путь">${trail}</nav>
 ${options.body}
 </main>
-<footer>Бесплатный онлайн-симулятор квадрокоптера Геоскан Пионер: Lua, Python и блоки, уроки с проверкой полёта. <a href="/uroki/">Все уроки</a></footer>
+<footer>Бесплатный онлайн-симулятор квадрокоптера Геоскан Пионер: Lua, Python и блоки, уроки с проверкой полёта. <a href="/uroki/">Все уроки</a> · <a href="/privacy/">Политика конфиденциальности</a></footer>
 </body>
 </html>
 `;
