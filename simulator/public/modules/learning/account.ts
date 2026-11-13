@@ -6,7 +6,9 @@
 /** Организация пользователя и его роль в ней (isOwner - владелец, управляет командой). */
 export type AccountOrg = { id: string; name: string; isOwner: boolean };
 /** viewAs — учитель смотрит кабинет от имени этого ученика (только чтение), teacherName — кто смотрит. */
-export type AccountUser = { id: string; role: 'admin' | 'teacher' | 'student'; fullName: string; login: string; mustChangePassword?: boolean; org?: AccountOrg; viewAs?: { teacherName: string } };
+export type AccountUser = { id: string; role: 'admin' | 'teacher' | 'student'; fullName: string; login: string; mustChangePassword?: boolean; org?: AccountOrg; viewAs?: { teacherName: string };
+    /** Нет согласия на нынешнюю версию политики: до принятия сервис ничего не записывает. */
+    needsConsent?: boolean };
 /** Учитель или админ: всё, что не ученик. */
 export const isStaffUser = (value: AccountUser | null | undefined): boolean => Boolean(value && value.role !== 'student');
 /** Способы обучения. sdk2 и bricks — треки для Пионера Мини 2 (Python на pioneer_sdk2 и блоки Pioneer Bricks). */
@@ -41,7 +43,8 @@ export type MetricsSummary = {
 };
 export type BulkCredentials = { id: string; fullName: string; login: string; password: string };
 
-export type RegisterForm = { fullName: string; login: string; loginRepeat: string; password: string; passwordRepeat: string; invite?: string };
+export type ConsentForm = { consentPd: boolean; acceptTerms: boolean; confirmConsents?: boolean };
+export type RegisterForm = { fullName: string; login: string; loginRepeat: string; password: string; passwordRepeat: string; invite?: string } & ConsentForm;
 export type TeacherRegisterForm = RegisterForm & { orgName?: string; captchaToken?: string; captchaAnswer?: string; website?: string };
 export type InviteState = 'ok' | 'expired' | 'revoked' | 'used-up';
 export type InviteInfo = { kind: 'student' | 'teacher'; orgName: string; state: InviteState; message: string };
@@ -187,6 +190,13 @@ export async function register(form: RegisterForm): Promise<AccountUser> {
     const result = await call<{ user: AccountUser }>('POST', '/api/auth/register', form);
     lastAuthKind = 'register';
     setUser(result.user);
+    return result.user;
+}
+
+/** Принять политику и условия (для тех, кто пришёл раньше или при смене версии). */
+export async function acceptConsent(form: ConsentForm): Promise<AccountUser> {
+    const result = await call<{ user: AccountUser }>('POST', '/api/auth/consent', form);
+    replaceUser(result.user);
     return result.user;
 }
 

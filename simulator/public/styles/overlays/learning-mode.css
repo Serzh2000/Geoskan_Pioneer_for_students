@@ -338,3 +338,10 @@ body[data-app-mode='learning'] #sidebar-guide-btn { display: none; }
 .account-submit--danger:disabled { opacity: .45; cursor: not-allowed; }
 .auth-check { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; line-height: 1.45; }
 .auth-check input { margin-top: 3px; flex: none; width: 18px; height: 18px; }
+
+/* Consent checkboxes (sign-up form and the consent gate for existing accounts). */
+.auth-consents { display: grid; gap: 10px; }
+.auth-check a { color: var(--accent-color-strong, var(--accent-color)); }
+.consent-gate { text-align: left; justify-items: stretch; }
+.consent-gate h2, .consent-gate p { text-align: left; }
+.consent-gate__checks { display: grid; gap: 10px; }

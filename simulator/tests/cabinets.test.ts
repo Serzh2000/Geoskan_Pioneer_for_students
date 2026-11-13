@@ -28,7 +28,7 @@ async function makeApp(dir = tmp()) {
 
 async function register(app: express.Express, login: string, fullName = 'Иванов Иван') {
     const agent = request.agent(app);
-    const res = await agent.post('/api/auth/register').send({ fullName, login, loginRepeat: login, password: 'secret1', passwordRepeat: 'secret1' });
+    const res = await agent.post('/api/auth/register').send({ fullName, login, loginRepeat: login, password: 'secret1', passwordRepeat: 'secret1', consentPd: true, acceptTerms: true, confirmConsents: true });
     return { agent, id: res.body.user.id as string };
 }
 

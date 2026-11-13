@@ -20,6 +20,7 @@ import { rateLimit } from 'express-rate-limit';
 import { AttemptLog, type Attempt } from './attempts.js';
 import { MetricsLog, sanitizeEvent } from './metrics.js';
 import { CaptchaIssuer } from './captcha.js';
+import { CONSENT_VERSION } from './legal-config.js';
 import { activityByDay, dayKey, generatePassword, parseTz, streaks, suggestLogin } from './cabinet.js';
 
 /** Способы обучения. sdk2 и bricks — треки «Мини 2»; у старых аккаунтов они появляются пустыми при чтении файла. */
@@ -56,6 +57,8 @@ export type User = {
     mustChangePassword?: boolean;
     /** Заметка учителя об ученике; ученик её не видит. */
     note?: string;
+    /** Согласие на обработку данных и принятие условий: когда и на какую версию политики. */
+    consent?: { at: number; version: string };
 };
 /** viewAs — id учителя, который смотрит кабинет от имени ученика: такая сессия только для просмотра. */
 type Session = { tokenHash: string; userId: string; expiresAt: number; viewAs?: string };
@@ -107,7 +110,7 @@ function emptyProgress(): User['progress'] {
 
 export function validateFullName(raw: unknown, requireSurnameAndName = true): string {
     const name = String(raw ?? '').replace(/\s+/g, ' ').trim();
-    if (name.length < 2 || name.length > 100) throw new AccountError(400, 'Введите ФИО: от 2 до 100 символов.');
+    if (name.length < 2 || name.length > 100) throw new AccountError(400, 'Введите имя или ник: от 2 до 100 символов.');
     if (requireSurnameAndName && name.split(' ').length < 2) throw new AccountError(400, 'Введите фамилию и имя полностью.');
     return name;
 }
@@ -176,6 +179,7 @@ export function migrateData(raw: Raw): Data {
         user.orgId = orgIds.has(user.orgId) ? user.orgId : MAIN_ORG_ID;
         user.fullName = typeof user.fullName === 'string' ? user.fullName : user.login;
         user.createdAt = Number.isFinite(user.createdAt) ? user.createdAt : Date.now();
+        if (!(user.consent && Number.isFinite(user.consent.at) && typeof user.consent.version === 'string')) delete user.consent;
         user.progress = { ...emptyProgress(), ...(user.progress && typeof user.progress === 'object' ? user.progress : {}) };
         for (const track of TRACKS) {
             const bucket = user.progress[track] && typeof user.progress[track] === 'object' ? user.progress[track] : {};
@@ -315,6 +319,11 @@ export class AccountStore {
     }
 
     /** Учитель уходит из чужой организации в новую свою (владелец убрал его из команды). */
+    async acceptConsent(user: User): Promise<void> {
+        user.consent = { at: Date.now(), version: CONSENT_VERSION };
+        await this.save();
+    }
+
     async spinOffTeacher(teacher: User): Promise<Organization> {
         return this.createOrg(`Организация ${teacher.fullName}`.slice(0, ORG_NAME_MAX), teacher);
     }
@@ -394,11 +403,12 @@ export class AccountStore {
         return this.data.users.some((user) => user.role === 'admin');
     }
 
-    async createUser(role: User['role'], fullName: string, login: string, password: string, extra: { orgId?: string; classId?: string | null; mustChangePassword?: boolean } = {}): Promise<User> {
+    async createUser(role: User['role'], fullName: string, login: string, password: string, extra: { orgId?: string; classId?: string | null; mustChangePassword?: boolean; consented?: boolean } = {}): Promise<User> {
         if (this.findByLogin(login)) throw new AccountError(409, 'Такой логин уже занят.');
         const orgId = extra.orgId && this.findOrg(extra.orgId) ? extra.orgId : MAIN_ORG_ID;
         const user: User = { id: crypto.randomUUID(), role, orgId, fullName, login, ...hashPassword(password), createdAt: Date.now(), progress: emptyProgress(), classId: extra.classId ?? null };
         if (extra.mustChangePassword) user.mustChangePassword = true;
+        if (extra.consented) user.consent = { at: Date.now(), version: CONSENT_VERSION };
         this.data.users.push(user);
         // Админ - владелец «Основной», пока у неё нет владельца.
         const org = this.findOrg(orgId);
@@ -408,11 +418,12 @@ export class AccountStore {
     }
 
     /** Учитель, который регистрируется сам: сразу и аккаунт, и своя организация (одной записью, без полусозданного состояния). */
-    async createTeacherWithOrg(fullName: string, login: string, password: string, orgName: string): Promise<{ user: User; org: Organization }> {
+    async createTeacherWithOrg(fullName: string, login: string, password: string, orgName: string, consented = false): Promise<{ user: User; org: Organization }> {
         if (this.findByLogin(login)) throw new AccountError(409, 'Такой логин уже занят.');
         const org: Organization = { id: crypto.randomUUID(), name: orgName, ownerId: '', createdAt: Date.now() };
         const user: User = { id: crypto.randomUUID(), role: 'teacher', orgId: org.id, fullName, login, ...hashPassword(password), createdAt: Date.now(), progress: emptyProgress(), classId: null };
         org.ownerId = user.id;
+        if (consented) user.consent = { at: Date.now(), version: CONSENT_VERSION };
         this.data.orgs.push(org);
         this.data.users.push(user);
         await this.save();
@@ -527,6 +538,9 @@ export class AccountStore {
     }
 }
 
+/** Согласие дано на нынешнюю версию политики. Без него пользователь только принимает политику или выходит. */
+export const hasConsent = (user: User): boolean => user.consent?.version === CONSENT_VERSION;
+
 /** Учитель или админ: всё, что не ученик. */
 export const isStaff = (user: User): boolean => user.role !== 'student';
 
@@ -537,6 +551,8 @@ const sessionUser = (store: AccountStore, user: User, viewer?: User) => {
     return {
         ...publicUser(user),
         org: { id: org.id, name: org.name, isOwner: org.ownerId === user.id },
+        // В режиме просмотра согласие не спрашивается: смотрит учитель, а не ученик.
+        needsConsent: viewer ? false : !hasConsent(user),
         ...(viewer ? { viewAs: { teacherName: viewer.fullName } } : {})
     };
 };
@@ -676,12 +692,12 @@ export async function ensureTeacher(store: AccountStore, env: NodeJS.ProcessEnv 
     const login = env.TEACHER_LOGIN?.trim();
     const password = env.TEACHER_PASSWORD;
     if (login && password) {
-        if (!store.findByLogin(login)) await store.createUser('admin', env.TEACHER_NAME?.trim() || 'Учитель', validateLogin(login), validatePassword(password), { orgId: MAIN_ORG_ID });
+        if (!store.findByLogin(login)) await store.createUser('admin', env.TEACHER_NAME?.trim() || 'Учитель', validateLogin(login), validatePassword(password), { orgId: MAIN_ORG_ID, consented: true });
         return;
     }
     if (store.hasAdmin()) return;
     const generated = crypto.randomBytes(9).toString('base64url');
-    await store.createUser('admin', 'Учитель', 'teacher', generated, { orgId: MAIN_ORG_ID });
+    await store.createUser('admin', 'Учитель', 'teacher', generated, { orgId: MAIN_ORG_ID, consented: true });
     console.warn(`[accounts] Создан администратор: логин "teacher", пароль "${generated}". Смените его в кабинете или задайте TEACHER_LOGIN и TEACHER_PASSWORD.`);
 }
 
@@ -724,6 +740,7 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
     const requireStaff = (req: express.Request): User => {
         const user = requireUser(req);
         if (!isStaff(user)) throw new AccountError(403, 'Доступно только учителю.');
+        if (!hasConsent(user)) throw new AccountError(403, 'Сначала нужно принять политику обработки данных и условия использования.');
         if (user.role !== 'admin' && store.orgOf(user).blocked) throw new AccountError(403, 'Организация заблокирована администратором.');
         return user;
     };
@@ -778,6 +795,15 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
         return invite;
     };
     const userJson = (req: express.Request, user: User) => sessionUser(store, user, viewerOf(req));
+    /** Две отдельные отметки: согласие на обработку данных и принятие условий. Учитель ещё подтверждает права на данные учеников. */
+    const requireConsents = (body: Record<string, unknown>, staff: boolean): void => {
+        if (body.consentPd !== true || body.acceptTerms !== true) throw new AccountError(400, 'Нужно отметить согласие на обработку данных и принятие условий использования: это две отдельные отметки.');
+        if (staff && body.confirmConsents !== true) throw new AccountError(400, 'Подтвердите, что у вас есть согласие учеников или их родителей на ввод данных в сервис.');
+    };
+    /** Без согласия на нынешнюю политику сервис ничего не записывает про человека. */
+    const requireConsented = (user: User): void => {
+        if (!hasConsent(user)) throw new AccountError(403, 'Сначала нужно принять политику обработки данных и условия использования.');
+    };
 
     // ---- вход, регистрация ----
     app.get('/api/auth/captcha', authLimiter, wrap((_req, res) => {
@@ -794,14 +820,16 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
 
     app.post('/api/auth/register', authLimiter, wrap(async (req, res) => {
         const body = req.body ?? {};
-        const fullName = validateFullName(body.fullName);
+        // Достаточно ника: настоящие фамилию и имя сервис не требует, имя видит только учитель организации.
+        const fullName = validateFullName(body.fullName, false);
         const login = validateLogin(body.login);
         if (String(body.loginRepeat ?? '') !== login) throw new AccountError(400, 'Логины не совпадают.');
         const password = validatePassword(body.password);
         if (String(body.passwordRepeat ?? '') !== password) throw new AccountError(400, 'Пароли не совпадают.');
+        requireConsents(body, false);
         // Без ссылки ученик попадает в «Основную»; по ссылке организации - в неё.
         const invite = body.invite ? usableInvite(body.invite, 'student') : null;
-        const user = await store.createUser('student', fullName, login, password, { orgId: invite?.orgId ?? MAIN_ORG_ID });
+        const user = await store.createUser('student', fullName, login, password, { orgId: invite?.orgId ?? MAIN_ORG_ID, consented: true });
         if (invite) await store.useInvite(invite);
         setSessionCookie(req, res, await store.startSession(user), SESSION_TTL_MS);
         res.status(201).json({ user: userJson(req, user) });
@@ -812,20 +840,21 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
         const body = req.body ?? {};
         // Скрытое поле, которое человек не видит: бот заполняет всё подряд.
         if (typeof body.website === 'string' && body.website.trim()) throw new AccountError(400, 'Не удалось зарегистрироваться.');
-        const fullName = validateFullName(body.fullName);
+        const fullName = validateFullName(body.fullName, false);
         const login = validateLogin(body.login);
         if (String(body.loginRepeat ?? '') !== login) throw new AccountError(400, 'Логины не совпадают.');
         const password = validatePassword(body.password);
         if (String(body.passwordRepeat ?? '') !== password) throw new AccountError(400, 'Пароли не совпадают.');
+        requireConsents(body, true);
         let user: User;
         if (body.invite) {
             const invite = usableInvite(body.invite, 'teacher');
-            user = await store.createUser('teacher', fullName, login, password, { orgId: invite.orgId });
+            user = await store.createUser('teacher', fullName, login, password, { orgId: invite.orgId, consented: true });
             await store.useInvite(invite);
         } else {
             const orgName = validateOrgName(body.orgName);
             if (!captcha.verify(body.captchaToken, body.captchaAnswer)) throw new AccountError(400, 'Неверный ответ на вопрос. Попробуйте ещё раз с новым вопросом.');
-            user = (await store.createTeacherWithOrg(fullName, login, password, orgName)).user;
+            user = (await store.createTeacherWithOrg(fullName, login, password, orgName, true)).user;
         }
         setSessionCookie(req, res, await store.startSession(user), SESSION_TTL_MS);
         res.status(201).json({ user: userJson(req, user) });
@@ -907,6 +936,7 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
     app.post('/api/progress/complete', wrap(async (req, res) => {
         const user = requireUser(req);
         if (viewerOf(req)) { res.json({ progress: progressIds(user) }); return; }
+        requireConsented(user);
         await store.setCompletion(user, parseTrack(req.body?.track), parseQuestId(req.body?.questId), true, 'student');
         res.json({ progress: progressIds(user) });
     }));
@@ -914,6 +944,7 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
     // Журнал попыток: ученик присылает результат каждой проверки, учитель видит, где ученики застревают.
     app.post('/api/learning/attempt', wrap(async (req, res) => {
         const user = requireUser(req);
+        if (user.role === 'student' && !viewerOf(req)) requireConsented(user);
         if (user.role === 'student' && attempts && !viewerOf(req)) {
             await attempts.add(AttemptLog.sanitize({ userId: user.id, name: user.fullName, track: parseTrack(req.body?.track), questId: parseQuestId(req.body?.questId), body: req.body }));
         }
@@ -966,12 +997,12 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
         res.json({ ok: true });
     }));
 
-    // Список учеников разом: по ФИО в строке; логины и временные пароли придумывает сервер.
+    // Список учеников разом: по имени или нику в строке; логины и временные пароли придумывает сервер.
     app.post('/api/teacher/students/bulk', wrap(async (req, res) => {
         const actor = requireStaff(req);
         const orgId = writeOrgOf(req, actor);
         const lines = String(req.body?.names ?? '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-        if (!lines.length) throw new AccountError(400, 'Впишите хотя бы одно ФИО.');
+        if (!lines.length) throw new AccountError(400, 'Впишите хотя бы одно имя или ник.');
         if (lines.length > 100) throw new AccountError(400, 'За один раз можно добавить до 100 учеников.');
         const classId = classForOrg(req.body?.classId, orgId);
         const created: { id: string; fullName: string; login: string; password: string }[] = [];
@@ -1118,6 +1149,15 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
         await store.deleteUser(student);
         await attempts?.removeUser(student.id);
         res.json({ ok: true });
+    }));
+
+    // Согласие тех, кто зарегистрировался до появления политики (или чей аккаунт создал учитель): принимается при входе.
+    app.post('/api/auth/consent', authLimiter, wrap(async (req, res) => {
+        const user = requireUser(req);
+        forbidInView(req);
+        requireConsents(req.body ?? {}, isStaff(user));
+        await store.acceptConsent(user);
+        res.json({ user: userJson(req, user) });
     }));
 
     // Ученик удаляет свой аккаунт сам. Случайно это не сделать: нужны логин (набирается вручную) и пароль, а в режиме просмотра

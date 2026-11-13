@@ -19,7 +19,7 @@ async function makeApp() {
     registerAccountRoutes(app, store, attempts);
     const register = async (login: string) => {
         const agent = request.agent(app);
-        const res = await agent.post('/api/auth/register').send({ fullName: `Ник ${login}`, login, loginRepeat: login, password: 'secret1', passwordRepeat: 'secret1' });
+        const res = await agent.post('/api/auth/register').send({ fullName: `Ник ${login}`, login, loginRepeat: login, password: 'secret1', passwordRepeat: 'secret1', consentPd: true, acceptTerms: true, confirmConsents: true });
         expect(res.status).toBe(201);
         return agent;
     };

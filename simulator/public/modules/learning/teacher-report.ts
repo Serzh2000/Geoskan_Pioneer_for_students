@@ -91,9 +91,9 @@ export type ReportQuest = { id: string; number: number; title: string };
 
 const dateText = (at: number | null | undefined) => (at ? new Date(at).toLocaleDateString('ru-RU') : '');
 
-/** Итоговая таблица по классу: ФИО, класс, пройдено по языкам, последний вход, где застрял. */
+/** Итоговая таблица по классу: имя, класс, пройдено по языкам, последний вход, где застрял. */
 export function summaryReport(students: OverviewStudent[], classes: ClassInfo[], totals: Record<AccountTrack, number>, titleOf: (track: AccountTrack, id: string) => string): string {
-    const header = ['ФИО', 'Логин', 'Класс', ...ACCOUNT_TRACKS.map((key) => `${TRACK_NAMES[key]} (из ${totals[key]})`), 'Последний вход', 'Застрял на'];
+    const header = ['Имя', 'Логин', 'Класс', ...ACCOUNT_TRACKS.map((key) => `${TRACK_NAMES[key]} (из ${totals[key]})`), 'Последний вход', 'Застрял на'];
     const rows = students.map((student) => [
         student.fullName, student.login, classes.find((item) => item.id === student.classId)?.name ?? '',
         ...ACCOUNT_TRACKS.map((key) => student.counts[key] ?? 0),
@@ -105,7 +105,7 @@ export function summaryReport(students: OverviewStudent[], classes: ClassInfo[],
 
 /** Журнал по одному языку: строка — ученик, столбец — миссия, 1 — пройдена. */
 export function matrixReport(students: OverviewStudent[], classes: ClassInfo[], track: AccountTrack, quests: ReportQuest[]): string {
-    const header = ['ФИО', 'Класс', ...quests.map((quest) => `${quest.number}. ${quest.title}`), 'Всего'];
+    const header = ['Имя', 'Класс', ...quests.map((quest) => `${quest.number}. ${quest.title}`), 'Всего'];
     const rows = students.map((student) => {
         const done = new Set(student.done[track]);
         return [student.fullName, classes.find((item) => item.id === student.classId)?.name ?? '', ...quests.map((quest) => (done.has(quest.id) ? 1 : '')), done.size];
@@ -115,7 +115,7 @@ export function matrixReport(students: OverviewStudent[], classes: ClassInfo[], 
 
 /** Выданные логины и пароли: для печати листков и таблицы. */
 export function credentialsReport(rows: { fullName: string; login: string; password: string }[]): string {
-    return toCsv([['ФИО', 'Логин', 'Временный пароль'], ...rows.map((row) => [row.fullName, row.login, row.password])]);
+    return toCsv([['Имя', 'Логин', 'Временный пароль'], ...rows.map((row) => [row.fullName, row.login, row.password])]);
 }
 
 /* ---------- Метрика: чему уделить внимание ---------- */

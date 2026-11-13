@@ -2,6 +2,7 @@
  * Панель «Аккаунт» в левой рельсе: вход и регистрация формой прямо в панели, профиль со сменой пароля и выходом,
  * вход в кабинет учителя. Когда вход истёк (два часа без действий), панель открывается сама и просит войти снова.
  */
+import { consentCheckboxes } from './consent-gate.js';
 import { changePassword, deleteMyAccount, exitStudentView, fetchCaptcha, getUser, isSessionExpired, isStaffUser, login, logout, onProfileChange, onSessionExpired, onUserChange, register, registerTeacher, type AccountUser, type InviteInfo } from './account.js';
 
 const esc = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -59,12 +60,14 @@ function field(name: string, label: string, type = 'text', autocomplete = 'off',
 
 const FORMS: Record<View, () => string> = {
     login: () => field('login', 'Логин', 'text', 'username', '', lastLogin) + field('password', 'Пароль', 'password', 'current-password'),
-    register: () => registerAsSwitch() + inviteBanner() + field('fullName', 'ФИО', 'text', 'name', 'Фамилия, имя и отчество полностью')
+    register: () => registerAsSwitch() + inviteBanner() + nameField()
         + field('login', 'Логин', 'text', 'username', 'Латинские буквы, цифры, точка, дефис, подчёркивание; от 3 символов')
         + field('loginRepeat', 'Логин ещё раз')
         + field('password', 'Пароль', 'password', 'new-password', 'Не короче 6 символов')
         + field('passwordRepeat', 'Пароль ещё раз', 'password', 'new-password')
-        + teacherFields(),
+        + teacherFields()
+        + `<div class="auth-consents">${consentCheckboxes(registerAs === 'teacher')}</div>`
+        + (registerAs === 'student' ? '<p class="auth-note">Если вам меньше 14 лет, регистрируйтесь вместе с родителем или учителем.</p>' : ''),
     password: () => field('current', 'Текущий пароль', 'password', 'current-password')
         + field('password', 'Новый пароль', 'password', 'new-password', 'Не короче 6 символов')
         + field('passwordRepeat', 'Новый пароль ещё раз', 'password', 'new-password'),
@@ -74,6 +77,13 @@ const FORMS: Record<View, () => string> = {
         + '<label class="auth-check"><input type="checkbox" name="understand"> <span>Я понимаю, что удалённый аккаунт, прогресс и история проверок не восстанавливаются</span></label>'
 };
 const SUBMIT: Record<View, string> = { login: 'Войти', register: 'Создать аккаунт', password: 'Сменить пароль', delete: 'Удалить аккаунт навсегда' };
+
+/** Имя или ник: настоящие фамилию и имя сервис не просит, это поле видит только учитель организации. */
+function nameField(): string {
+    return registerAs === 'teacher'
+        ? field('fullName', 'Имя', 'text', 'name', 'Так вас будут видеть коллеги и ученики')
+        : field('fullName', 'Имя или ник', 'text', 'nickname', 'Так вас будет видеть ваш учитель. Настоящие фамилию и имя вводить не нужно.');
+}
 
 /** «Я ученик / Я учитель». Со ссылкой-приглашением роль задана ссылкой, переключателя нет. */
 function registerAsSwitch(): string {
@@ -202,6 +212,15 @@ function wire(): void {
         const get = (name: string) => form.querySelector<HTMLInputElement>(`[name="${name}"]`);
         submitButton.disabled = !(get('confirm')?.value.trim() === getUser()?.login && (get('password')?.value.length ?? 0) > 0 && get('understand')?.checked);
     };
+    // Регистрация: кнопка неактивна, пока не поставлены обязательные отметки согласия (сервер проверяет их тоже).
+    if (view === 'register' && submitButton) {
+        const syncRegister = () => {
+            const on = (name: string) => form.querySelector<HTMLInputElement>(`[name="${name}"]`)?.checked === true;
+            submitButton.disabled = !(on('consentPd') && on('acceptTerms') && (registerAs !== 'teacher' || on('confirmConsents')));
+        };
+        form.addEventListener('change', syncRegister);
+        syncRegister();
+    }
     if (view === 'delete') {
         submitButton?.classList.add('account-submit--danger');
         form.addEventListener('input', syncDelete);
@@ -220,7 +239,8 @@ function wire(): void {
             else if (view === 'register') {
                 const base = {
                     fullName: values.fullName, login: values.login, loginRepeat: values.loginRepeat,
-                    password: values.password, passwordRepeat: values.passwordRepeat, ...(invite ? { invite: invite.token } : {})
+                    password: values.password, passwordRepeat: values.passwordRepeat, ...(invite ? { invite: invite.token } : {}),
+                    consentPd: values.consentPd === 'on', acceptTerms: values.acceptTerms === 'on', confirmConsents: values.confirmConsents === 'on'
                 };
                 if (registerAs === 'teacher') {
                     await registerTeacher({ ...base, orgName: values.orgName, captchaToken: captcha?.token, captchaAnswer: values.captchaAnswer, website: values.website });
@@ -243,7 +263,7 @@ function wire(): void {
             // Токен вопроса одноразовый: после любой ошибки нужен новый.
             if (view === 'register' && registerAs === 'teacher' && !invite) { captcha = null; loadCaptcha(true); }
         } finally {
-            submit.disabled = false;
+            submit.disabled = view === 'register' ? !(['consentPd', 'acceptTerms'].every((name) => form.querySelector<HTMLInputElement>(`[name="${name}"]`)?.checked) && (registerAs !== 'teacher' || form.querySelector<HTMLInputElement>('[name="confirmConsents"]')?.checked === true)) : false;
             syncDelete();
         }
     });

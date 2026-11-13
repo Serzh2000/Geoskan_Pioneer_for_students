@@ -20,7 +20,7 @@ async function makeApp() {
     app.use(express.json());
     registerAccountRoutes(app, store, log);
     const pupil = request.agent(app);
-    await pupil.post('/api/auth/register').send({ fullName: 'Иванов Иван', login: 'ivanov', loginRepeat: 'ivanov', password: 'secret1', passwordRepeat: 'secret1' });
+    await pupil.post('/api/auth/register').send({ fullName: 'Иванов Иван', login: 'ivanov', loginRepeat: 'ivanov', password: 'secret1', passwordRepeat: 'secret1', consentPd: true, acceptTerms: true, confirmConsents: true });
     const teacher = request.agent(app);
     await teacher.post('/api/auth/login').send({ login: 'teacher', password: 'teacher-pass' });
     return { pupil, teacher, store };

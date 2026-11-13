@@ -24,6 +24,7 @@ import { ACCOUNT_TRACKS, TRACK_NAMES, type AccountTrack, ApiError, fetchProgress
 import { initAccountUi, openAccountPanel } from './account-ui.js';
 import { shouldShowAuthNudge, showAuthNudge } from './auth-nudge.js';
 import { handleInviteLink, watchPendingJoin } from './invite-link.js';
+import { watchConsent } from './consent-gate.js';
 import { countUnfilledBlanks, unfilledBlanksMessage } from './blanks.js';
 import { openTeacherPanel } from './teacher-panel.js';
 import { openStudentCabinet } from './student-cabinet.js';
@@ -1021,6 +1022,7 @@ export function initLearningMode(): void {
     sessionReady = restoreSession();
     // Открыли сайт по ссылке-приглашению организации: после проверки входа показываем, кто приглашает.
     watchPendingJoin();
+    watchConsent();
     void sessionReady.then(() => handleInviteLink());
     startKeepAlive();
     (window as any).openLearningMission = openLearningMission;

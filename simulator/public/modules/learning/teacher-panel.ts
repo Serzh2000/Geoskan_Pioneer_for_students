@@ -196,11 +196,11 @@ function renderClass(ov: Overview): string {
         </div>` : '';
     const empty = ov.students.length
         ? '<tr><td colspan="9" class="cab-empty">По этим условиям никого нет. Сбросьте фильтры или поиск.</td></tr>'
-        : '<tr><td colspan="9" class="cab-empty">Учеников пока нет. Нажмите «Добавить учеников»: вставьте список ФИО, а логины и пароли появятся сами. Ученик также может зарегистрироваться сам.</td></tr>';
+        : '<tr><td colspan="9" class="cab-empty">Учеников пока нет. Нажмите «Добавить учеников»: вставьте список имён, а логины и пароли появятся сами. Ученик также может зарегистрироваться сам.</td></tr>';
     return `${activityBars(ov)}
         <div class="cabt-filters" role="group" aria-label="Фильтр по состоянию">${chips}</div>
         <div class="cabt-toolbar">
-            <label class="cabt-search"><span class="cab-sr">Поиск по ФИО или логину</span><input class="cab-input" type="search" placeholder="Поиск по ФИО или логину" value="${esc(filter.search)}" data-keep="search" data-filter="search"></label>
+            <label class="cabt-search"><span class="cab-sr">Поиск по имени или логину</span><input class="cab-input" type="search" placeholder="Поиск по имени или логину" value="${esc(filter.search)}" data-keep="search" data-filter="search"></label>
             <label class="cabt-inline"><span class="cab-sr">Класс</span><select class="cab-input" data-filter="classId">
                 <option value="">Все классы</option><option value="none"${filter.classId === 'none' ? ' selected' : ''}>Без класса</option>
                 ${ov.classes.map((item) => `<option value="${item.id}"${filter.classId === item.id ? ' selected' : ''}>${esc(item.name)} (${item.count ?? 0})</option>`).join('')}</select></label>
@@ -212,7 +212,7 @@ function renderClass(ov: Overview): string {
                 ${th('name', 'Ученик')}${th('class', 'Класс')}${ACCOUNT_TRACKS.map((key) => th(key, TRACK_LABELS[key])).join('')}${th('seen', 'Был')}<th scope="col">Состояние</th></tr></thead>
             <tbody>${rows.map((item) => `<tr class="${selected.has(item.id) ? 'is-selected' : ''}">
                 <td class="cabt-check"><input type="checkbox" data-act="toggle-row" data-id="${item.id}" aria-label="Выбрать: ${esc(item.fullName)}"${selected.has(item.id) ? ' checked' : ''}></td>
-                <td data-label="Ученик"><button type="button" class="cabt-name" data-act="open-student" data-id="${item.id}"><span class="cab-avatar cab-avatar--sm" aria-hidden="true">${esc(initials(item.fullName))}</span><span><strong>${esc(item.fullName)}</strong><small>${esc(item.login)}</small></span></button><button type="button" class="cab-btn cab-btn--ghost cab-btn--icon cabt-rename" data-act="rename-student" data-id="${item.id}" aria-label="Изменить ФИО: ${esc(item.fullName)}" title="Изменить ФИО">${ICON.edit}</button></td>
+                <td data-label="Ученик"><button type="button" class="cabt-name" data-act="open-student" data-id="${item.id}"><span class="cab-avatar cab-avatar--sm" aria-hidden="true">${esc(initials(item.fullName))}</span><span><strong>${esc(item.fullName)}</strong><small>${esc(item.login)}</small></span></button><button type="button" class="cab-btn cab-btn--ghost cab-btn--icon cabt-rename" data-act="rename-student" data-id="${item.id}" aria-label="Изменить имя: ${esc(item.fullName)}" title="Изменить имя">${ICON.edit}</button></td>
                 <td data-label="Класс">${esc(className(item.classId)) || '<span class="cab-muted">—</span>'}</td>
                 ${ACCOUNT_TRACKS.map((key) => bar(item, key)).join('')}
                 <td data-label="Был" class="cabt-seen">${esc(ago(lastSeen(item)))}</td>
@@ -344,14 +344,14 @@ function renderStudent(): string {
         <header class="cabt-student__head">
             <button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="tab" data-view="class">${ICON.back}<span>К классу</span></button>
             <div class="cabt-student__who"><span class="cab-avatar" aria-hidden="true">${esc(initials(s.fullName))}</span>
-                <div><h3>${esc(s.fullName)} <button type="button" class="cab-btn cab-btn--ghost cab-btn--icon cabt-rename" data-act="rename-student" data-id="${s.id}" aria-label="Изменить ФИО" title="Изменить ФИО">${ICON.edit}</button></h3><p class="cab-muted">Логин ${esc(s.login)} · ${s.classId ? `класс ${esc(className(s.classId))} · ` : ''}был ${esc(ago(summary ? lastSeen(summary) : s.lastActiveAt))} · аккаунт с ${fmtDate(s.createdAt)}</p></div></div>
+                <div><h3>${esc(s.fullName)} <button type="button" class="cab-btn cab-btn--ghost cab-btn--icon cabt-rename" data-act="rename-student" data-id="${s.id}" aria-label="Изменить имя" title="Изменить имя">${ICON.edit}</button></h3><p class="cab-muted">Логин ${esc(s.login)} · ${s.classId ? `класс ${esc(className(s.classId))} · ` : ''}был ${esc(ago(summary ? lastSeen(summary) : s.lastActiveAt))} · аккаунт с ${fmtDate(s.createdAt)}</p></div></div>
             <span class="cab-chip cab-chip--${status === 'stuck' ? 'danger' : status === 'away' ? 'warn' : status === 'today' ? 'ok' : 'plain'}">${STATUS_LABELS[status]}</span>
         </header>
         <div class="cabt-student__grid">
             <aside class="cabt-student__side">
                 <form class="cab-block cab-form" data-form="account" aria-labelledby="cabt-acc-h">
                     <h3 id="cabt-acc-h">Аккаунт</h3>
-                    <label class="cab-field"><span>ФИО</span><input class="cab-input" name="fullName" value="${esc(s.fullName)}" required></label>
+                    <label class="cab-field"><span>Имя или ник</span><input class="cab-input" name="fullName" value="${esc(s.fullName)}" required></label>
                     <label class="cab-field"><span>Логин</span><input class="cab-input" name="login" value="${esc(s.login)}" required autocomplete="off"></label>
                     <label class="cab-field"><span>Класс</span><select class="cab-input" name="classId"><option value="">Без класса</option>${(overview?.classes ?? []).map((item) => `<option value="${item.id}"${s.classId === item.id ? ' selected' : ''}>${esc(item.name)}</option>`).join('')}</select></label>
                     <label class="cab-field"><span>Заметка о ученике</span><textarea class="cab-input" name="note" rows="3" maxlength="400" placeholder="Видите только вы">${esc(s.note)}</textarea></label>
@@ -449,25 +449,25 @@ function renderModal(): string {
                 <button type="button" role="tab" class="cab-seg__btn${modal.mode === 'list' ? ' is-active' : ''}" aria-selected="${modal.mode === 'list'}" data-act="add-mode" data-mode="list">Списком</button>
                 <button type="button" role="tab" class="cab-seg__btn${modal.mode === 'one' ? ' is-active' : ''}" aria-selected="${modal.mode === 'one'}" data-act="add-mode" data-mode="one">Одного</button></div>
             ${modal.mode === 'list' ? `<form class="cab-form" data-form="bulk">
-                <label class="cab-field"><span>ФИО, по одному в строке</span><textarea class="cab-input" name="names" rows="8" required placeholder="Иванов Иван&#10;Петрова Мария&#10;Сидоров Алексей" data-autofocus></textarea><small>Логины (ivanov.ivan) и временные пароли придумает сервер. До 100 человек за раз. Пароли покажутся один раз: скачайте или распечатайте их.</small></label>
+                <label class="cab-field"><span>Имена или ники, по одному в строке</span><textarea class="cab-input" name="names" rows="8" required placeholder="Иванов Иван&#10;Петрова Мария&#10;Сидоров Алексей" data-autofocus></textarea><small>Логины (ivanov.ivan) и временные пароли придумает сервер. До 100 человек за раз. Пароли покажутся один раз: скачайте или распечатайте их.</small></label>
                 <label class="cab-field"><span>Класс</span><select class="cab-input" name="classId"><option value="">Без класса</option>${classOptions}</select></label>
                 <button type="submit" class="cab-btn cab-btn--primary">Создать аккаунты</button></form>`
             : `<form class="cab-form" data-form="one">
-                <label class="cab-field"><span>ФИО</span><input class="cab-input" name="fullName" required data-autofocus></label>
+                <label class="cab-field"><span>Имя или ник</span><input class="cab-input" name="fullName" required data-autofocus></label>
                 <label class="cab-field"><span>Логин</span><input class="cab-input" name="login" required autocomplete="off"><small>Латинские буквы, цифры, точка, дефис, подчёркивание; от 3 символов</small></label>
                 <label class="cab-field"><span>Пароль</span><input class="cab-input" name="password" required autocomplete="new-password"><small>Не короче 6 символов</small></label>
                 <label class="cab-field"><span>Класс</span><select class="cab-input" name="classId"><option value="">Без класса</option>${classOptions}</select></label>
                 <button type="submit" class="cab-btn cab-btn--primary">Создать</button></form>`}`);
     }
     if (modal.kind === 'rename') {
-        return frame('Изменить ФИО', `<form class="cab-form" data-form="rename" data-id="${modal.id}">
-            <label class="cab-field"><span>ФИО ученика</span><input class="cab-input" name="fullName" value="${esc(modal.fullName)}" required maxlength="100" autocomplete="off" data-autofocus><small>Фамилия и имя полностью. Логин и пароль не меняются, прогресс и история сохраняются.</small></label>
+        return frame('Изменить имя', `<form class="cab-form" data-form="rename" data-id="${modal.id}">
+            <label class="cab-field"><span>Имя или ник ученика</span><input class="cab-input" name="fullName" value="${esc(modal.fullName)}" required maxlength="100" autocomplete="off" data-autofocus><small>Фамилия и имя полностью. Логин и пароль не меняются, прогресс и история сохраняются.</small></label>
             <div class="cab-form__row"><button type="submit" class="cab-btn cab-btn--primary">Сохранить</button><button type="button" class="cab-btn cab-btn--ghost" data-act="modal-close">Отмена</button></div></form>`);
     }
     if (modal.kind === 'credentials') {
         return frame(modal.title, `
             <p class="cab-lead">Пароли показываются только сейчас, потом их нельзя будет узнать: на сервере хранится лишь хеш. Ученик должен сменить временный пароль при первом входе.</p>
-            <div class="cabt-tablewrap"><table class="cabt-table cabt-table--plain"><thead><tr><th scope="col">ФИО</th><th scope="col">Логин</th><th scope="col">Пароль</th></tr></thead><tbody>${modal.rows.map((row) => `<tr><td>${esc(row.fullName)}</td><td><code>${esc(row.login)}</code></td><td><code>${esc(row.password)}</code></td></tr>`).join('')}</tbody></table></div>
+            <div class="cabt-tablewrap"><table class="cabt-table cabt-table--plain"><thead><tr><th scope="col">Имя</th><th scope="col">Логин</th><th scope="col">Пароль</th></tr></thead><tbody>${modal.rows.map((row) => `<tr><td>${esc(row.fullName)}</td><td><code>${esc(row.login)}</code></td><td><code>${esc(row.password)}</code></td></tr>`).join('')}</tbody></table></div>
             ${modal.skipped.length ? `<div class="cab-notice cab-notice--warn" role="status"><span>Не созданы: ${modal.skipped.map((item) => `«${esc(item.line)}» — ${esc(item.reason)}`).join('; ')}</span></div>` : ''}
             <div class="cab-actions"><button type="button" class="cab-btn cab-btn--primary" data-act="csv-credentials">${ICON.download}<span>Скачать CSV</span></button><button type="button" class="cab-btn cab-btn--ghost" data-act="print-credentials">${ICON.print}<span>Распечатать листки</span></button></div>`, true);
     }
@@ -906,7 +906,7 @@ async function handleSubmit(form: HTMLFormElement, submitter: HTMLElement | null
                 if (student?.id === id) student = updated;
                 modal = null;
                 await refresh();
-                say('ok', `ФИО изменено: ${updated.fullName}.`);
+                say('ok', `Имя изменено: ${updated.fullName}.`);
             });
             return;
         }

@@ -13,7 +13,7 @@ async function makeApp() {
     return { app, store };
 }
 
-const student = { fullName: 'Иванов Иван', login: 'ivanov', loginRepeat: 'ivanov', password: 'secret1', passwordRepeat: 'secret1' };
+const student = { fullName: 'Иванов Иван', login: 'ivanov', loginRepeat: 'ivanov', password: 'secret1', passwordRepeat: 'secret1', consentPd: true, acceptTerms: true, confirmConsents: true };
 
 async function login(app: express.Express, who: string, password: string) {
     const agent = request.agent(app);
@@ -35,10 +35,10 @@ describe('регистрация ученика', () => {
 
     test.each([
         ['логины не совпадают', { loginRepeat: 'ivanof' }],
-        ['пароли не совпадают', { passwordRepeat: 'secret2' }],
+        ['пароли не совпадают', { passwordRepeat: 'secret2', consentPd: true, acceptTerms: true, confirmConsents: true }],
         ['короткий пароль', { password: '123', passwordRepeat: '123' }],
         ['плохой логин', { login: 'и в', loginRepeat: 'и в' }],
-        ['ФИО из одного слова', { fullName: 'Иванов' }]
+        ['имя из одной буквы', { fullName: 'И' }]
     ])('%s: отказ 400', async (_name, patch) => {
         const { app } = await makeApp();
         const res = await request(app).post('/api/auth/register').send({ ...student, ...patch });
@@ -159,7 +159,7 @@ describe('срок входа: два часа после последнего �
 });
 
 describe('один браузер, два ученика', () => {
-    const second = { fullName: 'Петров Пётр', login: 'petrov', loginRepeat: 'petrov', password: 'secret2', passwordRepeat: 'secret2' };
+    const second = { fullName: 'Петров Пётр', login: 'petrov', loginRepeat: 'petrov', password: 'secret2', passwordRepeat: 'secret2', consentPd: true, acceptTerms: true, confirmConsents: true };
 
     test('зачёт вкладки первого ученика не записывается тому, кто вошёл в соседней вкладке', async () => {
         const { app } = await makeApp();

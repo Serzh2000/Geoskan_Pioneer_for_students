@@ -31,7 +31,7 @@ async function makeApp(options: { captcha?: CaptchaIssuer } = {}) {
 }
 
 const form = (login: string, extra: Record<string, unknown> = {}) => ({
-    fullName: `Иванов ${login}`, login, loginRepeat: login, password: 'secret1', passwordRepeat: 'secret1', ...extra
+    fullName: `Иванов ${login}`, login, loginRepeat: login, password: 'secret1', passwordRepeat: 'secret1', consentPd: true, acceptTerms: true, confirmConsents: true, ...extra
 });
 
 async function loginAs(app: express.Express, login: string, password = 'secret1') {
