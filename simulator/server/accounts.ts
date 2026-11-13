@@ -5,8 +5,10 @@
  * этого достаточно, база не нужна. Пароли лежат только в виде scrypt-хеша, сессии — в виде sha256 от токена.
  * Подтверждения почтой нет: ученик сам вводит ФИО, логин и пароль дважды.
  *
- * Роли: `teacher` (создаётся из окружения или при первом запуске) и `student` (регистрируется сам).
- * Учитель управляет учениками и вручную засчитывает или снимает любую миссию; зачёт учителя главнее
+ * Роли: `admin` (создаётся из окружения или при первом запуске, владеет организацией «Основная» и видит всё),
+ * `teacher` (регистрируется сам или по ссылке коллеги, учит только учеников своей организации) и `student`
+ * (регистрируется сам или по ссылке организации). Организация: название, владелец, классы, учителя, ученики.
+ * Учитель управляет учениками своей организации и вручную засчитывает или снимает любую миссию; зачёт учителя главнее
  * автоматического: клиент ученика при входе берёт прогресс с сервера.
  */
 import crypto from 'crypto';
@@ -17,6 +19,7 @@ import path from 'path';
 import { rateLimit } from 'express-rate-limit';
 import { AttemptLog, type Attempt } from './attempts.js';
 import { MetricsLog, sanitizeEvent } from './metrics.js';
+import { CaptchaIssuer } from './captcha.js';
 import { activityByDay, dayKey, generatePassword, parseTz, streaks, suggestLogin } from './cabinet.js';
 
 /** Способы обучения. sdk2 и bricks — треки «Мини 2»; у старых аккаунтов они появляются пустыми при чтении файла. */
@@ -24,10 +27,21 @@ export type Track = 'blocks' | 'lua' | 'python' | 'sdk2' | 'bricks';
 export const TRACKS: readonly Track[] = ['blocks', 'lua', 'python', 'sdk2', 'bricks'];
 
 export type Completion = { at: number; by: 'student' | 'teacher'; /** Комментарий учителя к зачёту. */ note?: string };
-export type ClassGroup = { id: string; name: string; createdAt: number };
+export type Role = 'admin' | 'teacher' | 'student';
+/** Организация (школа, кружок): владелец управляет командой, учителя видят всех её учеников. */
+export type Organization = { id: string; name: string; ownerId: string; createdAt: number; blocked?: boolean };
+/** Ссылка-приглашение: ученика в организацию или коллеги-учителя в неё же. Токен хранится как есть, чтобы ссылку можно было показать снова. */
+export type Invite = {
+    id: string; token: string; orgId: string; kind: 'student' | 'teacher'; createdBy: string;
+    createdAt: number; expiresAt: number; maxUses: number | null; uses: number; revoked: boolean;
+};
+export type InviteState = 'ok' | 'expired' | 'revoked' | 'used-up';
+export type ClassGroup = { id: string; name: string; createdAt: number; orgId: string };
 export type User = {
     id: string;
-    role: 'teacher' | 'student';
+    role: Role;
+    /** Организация: у ученика, учителя и админа она всегда есть. */
+    orgId: string;
     fullName: string;
     login: string;
     salt: string;
@@ -45,9 +59,14 @@ export type User = {
 };
 /** viewAs — id учителя, который смотрит кабинет от имени ученика: такая сессия только для просмотра. */
 type Session = { tokenHash: string; userId: string; expiresAt: number; viewAs?: string };
-type Data = { version: number; users: User[]; sessions: Session[]; classes: ClassGroup[] };
-/** Версия формата файла аккаунтов: 1 — без поля version (классов, заметок и дат активности не было). */
-export const DATA_VERSION = 2;
+type Data = { version: number; users: User[]; sessions: Session[]; classes: ClassGroup[]; orgs: Organization[]; invites: Invite[] };
+/** Версия формата файла аккаунтов: 1 — без поля version (классов, заметок и дат активности не было), 2 — без организаций и админа. */
+export const DATA_VERSION = 3;
+/** Организация, в которую перешли все ученики и классы до появления организаций, и куда попадают ученики без ссылки. */
+export const MAIN_ORG_ID = 'org-main';
+export const MAIN_ORG_NAME = 'Основная';
+const INVITE_DEFAULT_DAYS = 30;
+const ORG_NAME_MAX = 60;
 const ACTIVE_TOUCH_MS = 60 * 1000;
 const NOTE_MAX = 400;
 
@@ -126,18 +145,31 @@ export function validateClassName(raw: unknown): string {
     return name;
 }
 
+export function validateOrgName(raw: unknown): string {
+    const name = String(raw ?? '').replace(/\s+/g, ' ').trim();
+    if (name.length < 2 || name.length > ORG_NAME_MAX) throw new AccountError(400, `Название организации: от 2 до ${ORG_NAME_MAX} символов.`);
+    return name;
+}
+
 /**
  * Тихая миграция файла любой версии к текущей: недостающие поля дописываются, существующие не трогаются, неизвестные
  * поля остаются. Записи, которые не похожи на аккаунт (нет id, логина или хеша пароля), пропускаются.
+ * Версия 3: появляются организации. Все прежние ученики и классы переходят в «Основную»; самый старый учитель
+ * становится админом и владельцем «Основной», остальные учителя остаются учителями в ней.
  */
 export function migrateData(raw: any): Data {
     const users: User[] = (Array.isArray(raw?.users) ? raw.users : []).filter((user: any) =>
         user && typeof user === 'object' && typeof user.id === 'string' && typeof user.login === 'string' && typeof user.hash === 'string' && typeof user.salt === 'string');
+    const orgs: Organization[] = (Array.isArray(raw?.orgs) ? raw.orgs : []).filter((item: any) => item && typeof item.id === 'string' && typeof item.name === 'string')
+        .map((item: any) => ({ ...item, ownerId: typeof item.ownerId === 'string' ? item.ownerId : '', createdAt: Number.isFinite(item.createdAt) ? item.createdAt : Date.now() }));
+    if (!orgs.some((item) => item.id === MAIN_ORG_ID)) orgs.unshift({ id: MAIN_ORG_ID, name: MAIN_ORG_NAME, ownerId: '', createdAt: Date.now() });
+    const orgIds = new Set(orgs.map((item) => item.id));
     const classes: ClassGroup[] = (Array.isArray(raw?.classes) ? raw.classes : []).filter((item: any) => item && typeof item.id === 'string' && typeof item.name === 'string')
-        .map((item: any) => ({ ...item, createdAt: Number.isFinite(item.createdAt) ? item.createdAt : Date.now() }));
+        .map((item: any) => ({ ...item, createdAt: Number.isFinite(item.createdAt) ? item.createdAt : Date.now(), orgId: orgIds.has(item.orgId) ? item.orgId : MAIN_ORG_ID }));
     const classIds = new Set(classes.map((item) => item.id));
     for (const user of users) {
-        user.role = user.role === 'teacher' ? 'teacher' : 'student';
+        user.role = user.role === 'teacher' || user.role === 'admin' ? user.role : 'student';
+        user.orgId = orgIds.has(user.orgId) ? user.orgId : MAIN_ORG_ID;
         user.fullName = typeof user.fullName === 'string' ? user.fullName : user.login;
         user.createdAt = Number.isFinite(user.createdAt) ? user.createdAt : Date.now();
         user.progress = { ...emptyProgress(), ...(user.progress && typeof user.progress === 'object' ? user.progress : {}) };
@@ -150,14 +182,29 @@ export function migrateData(raw: any): Data {
             }
             user.progress[track] = bucket;
         }
-        user.classId = user.classId && classIds.has(user.classId) ? user.classId : null;
+        // Класс ученика должен быть из его же организации: иначе класс чужой и ученик остаётся без класса.
+        const group = user.classId && classIds.has(user.classId) ? classes.find((item) => item.id === user.classId) : undefined;
+        user.classId = group && group.orgId === user.orgId ? group.id : null;
+    }
+    // До организаций учитель был один и всемогущий: самый старый становится админом.
+    if (!users.some((user) => user.role === 'admin')) {
+        const first = users.filter((user) => user.role === 'teacher').sort((a, b) => a.createdAt - b.createdAt)[0];
+        if (first) { first.role = 'admin'; first.orgId = MAIN_ORG_ID; }
+    }
+    // Владелец организации - её учитель или админ; если владельца нет (удалён), им становится самый старый из них.
+    for (const org of orgs) {
+        const staff = users.filter((user) => user.orgId === org.id && user.role !== 'student').sort((a, b) => a.createdAt - b.createdAt);
+        if (!staff.some((user) => user.id === org.ownerId)) org.ownerId = (org.id === MAIN_ORG_ID ? staff.find((user) => user.role === 'admin') : undefined)?.id ?? staff[0]?.id ?? '';
     }
     const sessions: Session[] = Array.isArray(raw?.sessions) ? raw.sessions : [];
-    return { version: DATA_VERSION, users, sessions, classes };
+    const invites: Invite[] = (Array.isArray(raw?.invites) ? raw.invites : []).filter((item: any) =>
+        item && typeof item.id === 'string' && typeof item.token === 'string' && orgIds.has(item.orgId) && (item.kind === 'student' || item.kind === 'teacher'))
+        .map((item: any) => ({ ...item, uses: Number.isFinite(item.uses) ? item.uses : 0, maxUses: Number.isFinite(item.maxUses) ? item.maxUses : null, revoked: item.revoked === true }));
+    return { version: DATA_VERSION, users, sessions, classes, orgs, invites };
 }
 
 export class AccountStore {
-    private data: Data = { version: DATA_VERSION, users: [], sessions: [], classes: [] };
+    private data: Data = { version: DATA_VERSION, users: [], sessions: [], classes: [], orgs: [{ id: MAIN_ORG_ID, name: MAIN_ORG_NAME, ownerId: '', createdAt: Date.now() }], invites: [] };
     private writing: Promise<void> = Promise.resolve();
     private touchTimer: NodeJS.Timeout | null = null;
 
@@ -194,20 +241,128 @@ export class AccountStore {
         return this.writing;
     }
 
-    get classes(): readonly ClassGroup[] { return this.data.classes; }
+    /** Классы организации; без аргумента все (только для админа). */
+    classesOf(orgId?: string | null): readonly ClassGroup[] { return orgId ? this.data.classes.filter((item) => item.orgId === orgId) : this.data.classes; }
     findClass(id: unknown): ClassGroup | undefined { return this.data.classes.find((item) => item.id === id); }
 
-    async createClass(name: string): Promise<ClassGroup> {
-        if (this.data.classes.some((item) => item.name.toLowerCase() === name.toLowerCase())) throw new AccountError(409, 'Класс с таким названием уже есть.');
-        const group: ClassGroup = { id: crypto.randomUUID(), name, createdAt: Date.now() };
+    async createClass(orgId: string, name: string): Promise<ClassGroup> {
+        if (this.classesOf(orgId).some((item) => item.name.toLowerCase() === name.toLowerCase())) throw new AccountError(409, 'Класс с таким названием уже есть.');
+        const group: ClassGroup = { id: crypto.randomUUID(), name, createdAt: Date.now(), orgId };
         this.data.classes.push(group);
         await this.save();
         return group;
     }
 
     async renameClass(group: ClassGroup, name: string): Promise<void> {
-        if (this.data.classes.some((item) => item.id !== group.id && item.name.toLowerCase() === name.toLowerCase())) throw new AccountError(409, 'Класс с таким названием уже есть.');
+        if (this.classesOf(group.orgId).some((item) => item.id !== group.id && item.name.toLowerCase() === name.toLowerCase())) throw new AccountError(409, 'Класс с таким названием уже есть.');
         group.name = name;
+        await this.save();
+    }
+
+    // ---- организации ----
+    get orgs(): readonly Organization[] { return this.data.orgs; }
+    findOrg(id: unknown): Organization | undefined { return this.data.orgs.find((item) => item.id === id); }
+    /** Организация пользователя; у любого аккаунта она есть (иначе «Основная»). */
+    orgOf(user: User): Organization { return this.findOrg(user.orgId) ?? this.findOrg(MAIN_ORG_ID)!; }
+
+    async createOrg(name: string, owner: User): Promise<Organization> {
+        const org: Organization = { id: crypto.randomUUID(), name, ownerId: owner.id, createdAt: Date.now() };
+        this.data.orgs.push(org);
+        owner.orgId = org.id;
+        owner.classId = null;
+        await this.save();
+        return org;
+    }
+
+    async renameOrg(org: Organization, name: string): Promise<void> {
+        org.name = name;
+        await this.save();
+    }
+
+    async setOrgBlocked(org: Organization, blocked: boolean): Promise<void> {
+        if (blocked) org.blocked = true; else delete org.blocked;
+        await this.save();
+    }
+
+    /**
+     * Удаление организации (только админом): ученики не пропадают, а переходят в «Основную» без класса; учителя и
+     * классы организации, её ссылки и сессии учителей удаляются. «Основную» удалить нельзя.
+     */
+    async deleteOrg(org: Organization): Promise<{ movedStudents: number; removedTeachers: number }> {
+        if (org.id === MAIN_ORG_ID) throw new AccountError(400, 'Основную организацию удалить нельзя.');
+        const students = this.data.users.filter((user) => user.orgId === org.id && user.role === 'student');
+        const teachers = this.data.users.filter((user) => user.orgId === org.id && user.role !== 'student');
+        students.forEach((user) => { user.orgId = MAIN_ORG_ID; user.classId = null; });
+        const gone = new Set(teachers.map((user) => user.id));
+        this.data.users = this.data.users.filter((user) => !gone.has(user.id));
+        this.data.sessions = this.data.sessions.filter((session) => !gone.has(session.userId) && !(session.viewAs && gone.has(session.viewAs)));
+        this.data.classes = this.data.classes.filter((item) => item.orgId !== org.id);
+        this.data.invites = this.data.invites.filter((item) => item.orgId !== org.id);
+        this.data.orgs = this.data.orgs.filter((item) => item.id !== org.id);
+        await this.save();
+        return { movedStudents: students.length, removedTeachers: teachers.length };
+    }
+
+    /** Ученик переходит в другую организацию по своей воле: прогресс остаётся, класс сбрасывается. */
+    async moveStudentToOrg(student: User, orgId: string): Promise<void> {
+        student.orgId = orgId;
+        student.classId = null;
+        await this.save();
+    }
+
+    /** Учитель уходит из чужой организации в новую свою (владелец убрал его из команды). */
+    async spinOffTeacher(teacher: User): Promise<Organization> {
+        return this.createOrg(`Организация ${teacher.fullName}`.slice(0, ORG_NAME_MAX), teacher);
+    }
+
+    staffOf(orgId: string): User[] {
+        return this.data.users.filter((user) => user.orgId === orgId && user.role !== 'student');
+    }
+
+    studentsOf(orgId?: string | null): User[] {
+        return this.data.users.filter((user) => user.role === 'student' && (!orgId || user.orgId === orgId));
+    }
+
+    // ---- ссылки-приглашения ----
+    invitesOf(orgId: string): Invite[] { return this.data.invites.filter((item) => item.orgId === orgId); }
+    findInvite(id: unknown): Invite | undefined { return this.data.invites.find((item) => item.id === id); }
+    findInviteByToken(token: unknown): Invite | undefined {
+        if (typeof token !== 'string' || token.length < 16 || token.length > 128) return undefined;
+        const given = Buffer.from(token);
+        // Сравнение за постоянное время: по времени ответа токен подобрать нельзя.
+        return this.data.invites.find((item) => {
+            const right = Buffer.from(item.token);
+            return right.length === given.length && crypto.timingSafeEqual(right, given);
+        });
+    }
+
+    inviteState(invite: Invite, now = Date.now()): InviteState {
+        if (invite.revoked) return 'revoked';
+        if (invite.expiresAt <= now) return 'expired';
+        if (invite.maxUses !== null && invite.uses >= invite.maxUses) return 'used-up';
+        return 'ok';
+    }
+
+    async createInvite(org: Organization, kind: Invite['kind'], createdBy: User, options: { days?: number; maxUses?: number | null } = {}): Promise<Invite> {
+        const days = Math.min(Math.max(Math.round(options.days ?? INVITE_DEFAULT_DAYS), 1), 365);
+        const maxUses = options.maxUses === null || options.maxUses === undefined ? null : Math.min(Math.max(Math.round(options.maxUses), 1), 1000);
+        const now = Date.now();
+        const invite: Invite = {
+            id: crypto.randomUUID(), token: crypto.randomBytes(16).toString('base64url'), orgId: org.id, kind, createdBy: createdBy.id,
+            createdAt: now, expiresAt: now + days * 24 * 60 * 60 * 1000, maxUses, uses: 0, revoked: false
+        };
+        this.data.invites.push(invite);
+        await this.save();
+        return invite;
+    }
+
+    async useInvite(invite: Invite): Promise<void> {
+        invite.uses++;
+        await this.save();
+    }
+
+    async revokeInvite(invite: Invite): Promise<void> {
+        invite.revoked = true;
         await this.save();
     }
 
@@ -231,17 +386,33 @@ export class AccountStore {
         return this.data.users.find((user) => user.id === id);
     }
 
-    hasTeacher(): boolean {
-        return this.data.users.some((user) => user.role === 'teacher');
+    hasAdmin(): boolean {
+        return this.data.users.some((user) => user.role === 'admin');
     }
 
-    async createUser(role: User['role'], fullName: string, login: string, password: string, extra: { classId?: string | null; mustChangePassword?: boolean } = {}): Promise<User> {
+    async createUser(role: User['role'], fullName: string, login: string, password: string, extra: { orgId?: string; classId?: string | null; mustChangePassword?: boolean } = {}): Promise<User> {
         if (this.findByLogin(login)) throw new AccountError(409, 'Такой логин уже занят.');
-        const user: User = { id: crypto.randomUUID(), role, fullName, login, ...hashPassword(password), createdAt: Date.now(), progress: emptyProgress(), classId: extra.classId ?? null };
+        const orgId = extra.orgId && this.findOrg(extra.orgId) ? extra.orgId : MAIN_ORG_ID;
+        const user: User = { id: crypto.randomUUID(), role, orgId, fullName, login, ...hashPassword(password), createdAt: Date.now(), progress: emptyProgress(), classId: extra.classId ?? null };
         if (extra.mustChangePassword) user.mustChangePassword = true;
         this.data.users.push(user);
+        // Админ - владелец «Основной», пока у неё нет владельца.
+        const org = this.findOrg(orgId);
+        if (org && !org.ownerId && role !== 'student') org.ownerId = user.id;
         await this.save();
         return user;
+    }
+
+    /** Учитель, который регистрируется сам: сразу и аккаунт, и своя организация (одной записью, без полусозданного состояния). */
+    async createTeacherWithOrg(fullName: string, login: string, password: string, orgName: string): Promise<{ user: User; org: Organization }> {
+        if (this.findByLogin(login)) throw new AccountError(409, 'Такой логин уже занят.');
+        const org: Organization = { id: crypto.randomUUID(), name: orgName, ownerId: '', createdAt: Date.now() };
+        const user: User = { id: crypto.randomUUID(), role: 'teacher', orgId: org.id, fullName, login, ...hashPassword(password), createdAt: Date.now(), progress: emptyProgress(), classId: null };
+        org.ownerId = user.id;
+        this.data.orgs.push(org);
+        this.data.users.push(user);
+        await this.save();
+        return { user, org };
     }
 
     async updateUser(user: User, changes: { fullName?: unknown; login?: unknown; password?: unknown; classId?: unknown; note?: unknown; temporaryPassword?: boolean }): Promise<void> {
@@ -352,9 +523,19 @@ export class AccountStore {
     }
 }
 
+/** Учитель или админ: всё, что не ученик. */
+export const isStaff = (user: User): boolean => user.role !== 'student';
+
 export const publicUser = (user: User) => ({ id: user.id, role: user.role, fullName: user.fullName, login: user.login, mustChangePassword: user.mustChangePassword === true });
-/** Пользователь для страницы: в режиме просмотра добавляется имя учителя. */
-const sessionUser = (user: User, viewer?: User) => (viewer ? { ...publicUser(user), viewAs: { teacherName: viewer.fullName } } : publicUser(user));
+/** Пользователь для страницы: организация (название и роль в ней) и, в режиме просмотра, имя учителя. */
+const sessionUser = (store: AccountStore, user: User, viewer?: User) => {
+    const org = store.orgOf(user);
+    return {
+        ...publicUser(user),
+        org: { id: org.id, name: org.name, isOwner: org.ownerId === user.id },
+        ...(viewer ? { viewAs: { teacherName: viewer.fullName } } : {})
+    };
+};
 
 const progressIds = (user: User) => Object.fromEntries(TRACKS.map((track) => [track, Object.keys(user.progress[track])]));
 
@@ -399,15 +580,17 @@ export function findStuck(user: User, attempts: Attempt[], now = Date.now()): { 
     return worst;
 }
 
-export function buildOverview(store: AccountStore, attempts: AttemptLog | undefined, tz: number, now = Date.now()) {
-    const all = attempts?.read() ?? [];
+/** Обзор организации (orgId) или всех организаций сразу (null, только для админа). */
+export function buildOverview(store: AccountStore, attempts: AttemptLog | undefined, tz: number, orgId: string | null, now = Date.now()) {
+    const members = new Set(store.studentsOf(orgId).map((user) => user.id));
+    const all = (attempts?.read() ?? []).filter((attempt) => members.has(attempt.userId));
     const byUser = new Map<string, Attempt[]>();
     for (const attempt of all) {
         const list = byUser.get(attempt.userId) ?? [];
         list.push(attempt);
         byUser.set(attempt.userId, list);
     }
-    const students = store.list('student').map((user) => {
+    const students = store.studentsOf(orgId).map((user) => {
         const own = byUser.get(user.id) ?? [];
         return {
             ...studentSummary(user),
@@ -421,10 +604,10 @@ export function buildOverview(store: AccountStore, attempts: AttemptLog | undefi
     // Сколько разных учеников занималось в каждый из последних 30 дней.
     const perDay: Record<string, Set<string>> = {};
     const mark = (userId: string, at: number) => { if (now - at <= 30 * DAY) (perDay[dayKey(at, tz)] ??= new Set()).add(userId); };
-    for (const user of store.list('student')) completionTimes(user).forEach((at) => mark(user.id, at));
+    for (const user of store.studentsOf(orgId)) completionTimes(user).forEach((at) => mark(user.id, at));
     for (const attempt of all) mark(attempt.userId, attempt.at);
     const activity = Object.fromEntries(Object.entries(perDay).map(([day, who]) => [day, who.size]));
-    const classes = store.classes.map((group) => ({ ...group, count: students.filter((student) => student.classId === group.id).length }));
+    const classes = store.classesOf(orgId).map((group) => ({ ...group, count: students.filter((student) => student.classId === group.id).length }));
     return { classes, students, activity, today: dayKey(now, tz) };
 }
 
@@ -482,23 +665,32 @@ const wrap = (handler: Handler): express.RequestHandler => async (req, res) => {
     }
 };
 
-/** Первый учитель: из TEACHER_LOGIN / TEACHER_PASSWORD, а если их нет, то случайный пароль в консоли сервера. */
+/** Первый админ: из TEACHER_LOGIN / TEACHER_PASSWORD, а если их нет, то случайный пароль в консоли сервера. */
 export async function ensureTeacher(store: AccountStore, env: NodeJS.ProcessEnv = process.env): Promise<void> {
     const login = env.TEACHER_LOGIN?.trim();
     const password = env.TEACHER_PASSWORD;
     if (login && password) {
-        if (!store.findByLogin(login)) await store.createUser('teacher', env.TEACHER_NAME?.trim() || 'Учитель', validateLogin(login), validatePassword(password));
+        if (!store.findByLogin(login)) await store.createUser('admin', env.TEACHER_NAME?.trim() || 'Учитель', validateLogin(login), validatePassword(password), { orgId: MAIN_ORG_ID });
         return;
     }
-    if (store.hasTeacher()) return;
+    if (store.hasAdmin()) return;
     const generated = crypto.randomBytes(9).toString('base64url');
-    await store.createUser('teacher', 'Учитель', 'teacher', generated);
-    console.warn(`[accounts] Создан учитель: логин "teacher", пароль "${generated}". Смените его в кабинете или задайте TEACHER_LOGIN и TEACHER_PASSWORD.`);
+    await store.createUser('admin', 'Учитель', 'teacher', generated, { orgId: MAIN_ORG_ID });
+    console.warn(`[accounts] Создан администратор: логин "teacher", пароль "${generated}". Смените его в кабинете или задайте TEACHER_LOGIN и TEACHER_PASSWORD.`);
 }
 
-export function registerAccountRoutes(app: express.Express, store: AccountStore, attempts?: AttemptLog, metrics?: MetricsLog): void {
+/** Заголовок, которым админ выбирает организацию, с которой работает (`*` - со всеми сразу). */
+export const ORG_HEADER = 'x-pioneer-org';
+
+const INVITE_REASONS: Record<Exclude<InviteState, 'ok'>, string> = {
+    expired: 'Срок действия ссылки закончился. Попросите у учителя новую.',
+    revoked: 'Ссылка отозвана. Попросите у учителя новую.',
+    'used-up': 'Ссылкой уже воспользовалось нужное число человек. Попросите у учителя новую.'
+};
+
+export function registerAccountRoutes(app: express.Express, store: AccountStore, attempts?: AttemptLog, metrics?: MetricsLog, captcha: CaptchaIssuer = new CaptchaIssuer()): void {
     // Каждый запрос живого входа продлевает и сессию на сервере, и cookie в браузере: два часа отсчитываются от последнего действия.
-    app.use(['/api/auth', '/api/progress', '/api/teacher', '/api/learning'], (req, res, next) => {
+    app.use(['/api/auth', '/api/progress', '/api/teacher', '/api/learning', '/api/org', '/api/admin'], (req, res, next) => {
         const token = readCookie(req, SESSION_COOKIE);
         if (token && req.path !== '/logout' && store.userForToken(token)) setSessionCookie(req, res, token, SESSION_TTL_MS);
         next();
@@ -522,16 +714,77 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
         }
         return user;
     };
-    const requireTeacher = (req: express.Request): User => {
+    /** Учитель или админ. Учитель заблокированной организации не работает, админ работает всегда. */
+    const requireStaff = (req: express.Request): User => {
         const user = requireUser(req);
-        if (user.role !== 'teacher') throw new AccountError(403, 'Доступно только учителю.');
+        if (!isStaff(user)) throw new AccountError(403, 'Доступно только учителю.');
+        if (user.role !== 'admin' && store.orgOf(user).blocked) throw new AccountError(403, 'Организация заблокирована администратором.');
         return user;
     };
-    const studentFromParams = (req: express.Request): User => {
+    const requireAdmin = (req: express.Request): User => {
+        const user = requireUser(req);
+        if (user.role !== 'admin') throw new AccountError(403, 'Доступно только администратору.');
+        return user;
+    };
+    /**
+     * Чьих учеников видит и меняет этот запрос. Учитель - только свою организацию; админ - ту, что выбрал заголовком
+     * (по умолчанию свою), а `*` означает все организации (null).
+     */
+    const scopeOf = (req: express.Request, actor: User): string | null => {
+        if (actor.role !== 'admin') return actor.orgId;
+        const wanted = req.headers[ORG_HEADER];
+        if (wanted === '*') return null;
+        return typeof wanted === 'string' && store.findOrg(wanted) ? wanted : actor.orgId;
+    };
+    /** Куда класть новое (классы, ученики): выбранная организация, а при «всех» - своя. */
+    const writeOrgOf = (req: express.Request, actor: User): string => scopeOf(req, actor) ?? actor.orgId;
+    const canManage = (actor: User, student: User): boolean => actor.role === 'admin' || student.orgId === actor.orgId;
+    const studentFromParams = (req: express.Request, actor: User): User => {
         const student = store.findById(String(req.params.id));
-        if (!student || student.role !== 'student') throw new AccountError(404, 'Ученик не найден.');
+        // Чужой ученик выглядит как несуществующий: по ответу нельзя узнать, есть ли такой в другой организации.
+        if (!student || student.role !== 'student' || !canManage(actor, student)) throw new AccountError(404, 'Ученик не найден.');
         return student;
     };
+    const classFromParams = (req: express.Request, actor: User) => {
+        const group = store.findClass(String(req.params.id));
+        if (!group || (actor.role !== 'admin' && group.orgId !== actor.orgId)) throw new AccountError(404, 'Класс не найден.');
+        return group;
+    };
+    /** Класс из тела запроса: должен существовать и быть из той же организации, что и ученики. */
+    const classForOrg = (classId: unknown, orgId: string): string | null => {
+        if (!classId) return null;
+        const group = store.findClass(classId);
+        if (!group || group.orgId !== orgId) throw new AccountError(400, 'Такого класса нет.');
+        return group.id;
+    };
+    const managesTeam = (actor: User, org: Organization): boolean => actor.role === 'admin' || org.ownerId === actor.id;
+    const orgForRequest = (req: express.Request, actor: User): Organization => {
+        const scope = scopeOf(req, actor);
+        return (scope ? store.findOrg(scope) : undefined) ?? store.orgOf(actor);
+    };
+    const usableInvite = (token: unknown, kind?: Invite['kind']): Invite => {
+        const invite = store.findInviteByToken(token);
+        if (!invite) throw new AccountError(404, 'Ссылка не найдена. Проверьте, что она скопирована целиком.');
+        const state = store.inviteState(invite);
+        if (state !== 'ok') throw new AccountError(410, INVITE_REASONS[state]);
+        if (kind && invite.kind !== kind) throw new AccountError(400, invite.kind === 'teacher' ? 'Эта ссылка для учителей.' : 'Эта ссылка для учеников.');
+        if (store.findOrg(invite.orgId)?.blocked) throw new AccountError(403, 'Организация закрыта администратором.');
+        return invite;
+    };
+    const userJson = (req: express.Request, user: User) => sessionUser(store, user, viewerOf(req));
+
+    // ---- вход, регистрация ----
+    app.get('/api/auth/captcha', authLimiter, wrap((_req, res) => {
+        res.json(captcha.create());
+    }));
+
+    // Что за ссылка: страница показывает «Вас приглашает: Школа 5» до того, как человек что-то ввёл.
+    app.get('/api/invites/:token', authLimiter, wrap((req, res) => {
+        const invite = store.findInviteByToken(req.params.token);
+        if (!invite) throw new AccountError(404, 'Ссылка не найдена. Проверьте, что она скопирована целиком.');
+        const state = store.inviteState(invite);
+        res.json({ kind: invite.kind, orgName: store.findOrg(invite.orgId)?.name ?? '', state, message: state === 'ok' ? '' : INVITE_REASONS[state] });
+    }));
 
     app.post('/api/auth/register', authLimiter, wrap(async (req, res) => {
         const body = req.body ?? {};
@@ -540,16 +793,56 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
         if (String(body.loginRepeat ?? '') !== login) throw new AccountError(400, 'Логины не совпадают.');
         const password = validatePassword(body.password);
         if (String(body.passwordRepeat ?? '') !== password) throw new AccountError(400, 'Пароли не совпадают.');
-        const user = await store.createUser('student', fullName, login, password);
+        // Без ссылки ученик попадает в «Основную»; по ссылке организации - в неё.
+        const invite = body.invite ? usableInvite(body.invite, 'student') : null;
+        const user = await store.createUser('student', fullName, login, password, { orgId: invite?.orgId ?? MAIN_ORG_ID });
+        if (invite) await store.useInvite(invite);
         setSessionCookie(req, res, await store.startSession(user), SESSION_TTL_MS);
-        res.status(201).json({ user: publicUser(user) });
+        res.status(201).json({ user: userJson(req, user) });
+    }));
+
+    // Учитель регистрируется сам: со ссылкой коллеги входит в его организацию, без неё создаёт свою (с проверкой «не бот»).
+    app.post('/api/auth/register-teacher', authLimiter, wrap(async (req, res) => {
+        const body = req.body ?? {};
+        // Скрытое поле, которое человек не видит: бот заполняет всё подряд.
+        if (typeof body.website === 'string' && body.website.trim()) throw new AccountError(400, 'Не удалось зарегистрироваться.');
+        const fullName = validateFullName(body.fullName);
+        const login = validateLogin(body.login);
+        if (String(body.loginRepeat ?? '') !== login) throw new AccountError(400, 'Логины не совпадают.');
+        const password = validatePassword(body.password);
+        if (String(body.passwordRepeat ?? '') !== password) throw new AccountError(400, 'Пароли не совпадают.');
+        let user: User;
+        if (body.invite) {
+            const invite = usableInvite(body.invite, 'teacher');
+            user = await store.createUser('teacher', fullName, login, password, { orgId: invite.orgId });
+            await store.useInvite(invite);
+        } else {
+            const orgName = validateOrgName(body.orgName);
+            if (!captcha.verify(body.captchaToken, body.captchaAnswer)) throw new AccountError(400, 'Неверный ответ на вопрос. Попробуйте ещё раз с новым вопросом.');
+            user = (await store.createTeacherWithOrg(fullName, login, password, orgName)).user;
+        }
+        setSessionCookie(req, res, await store.startSession(user), SESSION_TTL_MS);
+        res.status(201).json({ user: userJson(req, user) });
+    }));
+
+    // Ученик, у которого уже есть аккаунт, переходит в организацию по ссылке (по своей воле: страница спрашивает его).
+    app.post('/api/auth/join', authLimiter, wrap(async (req, res) => {
+        const user = requireUser(req);
+        forbidInView(req);
+        if (user.role !== 'student') throw new AccountError(400, 'Перейти по ссылке может только ученик.');
+        const invite = usableInvite(req.body?.invite, 'student');
+        if (invite.orgId === user.orgId) throw new AccountError(409, 'Вы уже в этой организации.');
+        await store.moveStudentToOrg(user, invite.orgId);
+        await store.useInvite(invite);
+        res.json({ user: userJson(req, user) });
     }));
 
     app.post('/api/auth/login', authLimiter, wrap(async (req, res) => {
         const user = store.authenticate(String(req.body?.login ?? ''), String(req.body?.password ?? ''));
         if (!user) throw new AccountError(401, 'Неверный логин или пароль.');
+        if (isStaff(user) && user.role !== 'admin' && store.orgOf(user).blocked) throw new AccountError(403, 'Организация заблокирована администратором.');
         setSessionCookie(req, res, await store.startSession(user), SESSION_TTL_MS);
-        res.json({ user: publicUser(user) });
+        res.json({ user: userJson(req, user) });
     }));
 
     app.post('/api/auth/logout', wrap(async (req, res) => {
@@ -568,12 +861,14 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
         const user = requireUser(req);
         forbidInView(req);
         await store.updateUser(user, { fullName: req.body?.fullName });
-        res.json({ user: publicUser(user) });
+        res.json({ user: userJson(req, user) });
     }));
 
     // Личный кабинет ученика: прогресс с датами, календарь активности, серия, последние проверки.
     app.get('/api/me/cabinet', wrap((req, res) => {
-        res.json(buildCabinet(store, requireUser(req), attempts, parseTz(req.query.tz)));
+        const user = requireUser(req);
+        const org = store.orgOf(user);
+        res.json({ ...buildCabinet(store, user, attempts, parseTz(req.query.tz)), org: { id: org.id, name: org.name } });
     }));
 
     // История проверок с кодом: ученик видит только свои.
@@ -584,7 +879,7 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
 
     app.get('/api/auth/me', wrap((req, res) => {
         const user = currentUser(req);
-        res.json({ user: user ? sessionUser(user, viewerOf(req)) : null });
+        res.json({ user: user ? userJson(req, user) : null });
     }));
 
     app.post('/api/auth/password', authLimiter, wrap(async (req, res) => {
@@ -619,64 +914,60 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
         res.json({ ok: true });
     }));
 
+    // ---- кабинет учителя: везде только ученики своей организации (админ - выбранной) ----
     app.get('/api/teacher/attempts', wrap((req, res) => {
-        requireTeacher(req);
+        const actor = requireStaff(req);
         const track = typeof req.query.track === 'string' && (TRACKS as readonly string[]).includes(req.query.track) ? req.query.track : undefined;
         // Можно ограничить сводку одним классом.
         const classId = typeof req.query.classId === 'string' && req.query.classId ? req.query.classId : undefined;
-        const only = classId ? new Set(store.list('student').filter((student) => student.classId === classId).map((student) => student.id)) : undefined;
+        const only = new Set(store.studentsOf(scopeOf(req, actor)).filter((student) => !classId || student.classId === classId).map((student) => student.id));
         res.json({ stats: attempts?.stats(track, only) ?? [] });
     }));
 
     app.get('/api/teacher/attempts/:questId', wrap((req, res) => {
-        requireTeacher(req);
+        const actor = requireStaff(req);
         const track = parseTrack(req.query.track);
         const questId = parseQuestId(req.params.questId);
-        const stuck = (attempts?.stuckStudents(track, questId) ?? []).filter((item) => {
+        const members = new Set(store.studentsOf(scopeOf(req, actor)).map((student) => student.id));
+        const stuck = (attempts?.stuckStudents(track, questId, members) ?? []).filter((item) => {
             const student = store.findById(item.userId);
             return student && !student.progress[track][questId];   // уже засчитанные учителем не застряли
         });
-        res.json({ failures: attempts?.recentFailures(track, questId) ?? [], stuck });
+        res.json({ failures: attempts?.recentFailures(track, questId, 25, members) ?? [], stuck });
     }));
 
     // Обзор класса: все ученики с прогрессом, последним входом и пометкой «застрял».
     app.get('/api/teacher/overview', wrap((req, res) => {
-        requireTeacher(req);
-        res.json(buildOverview(store, attempts, parseTz(req.query.tz)));
+        const actor = requireStaff(req);
+        res.json(buildOverview(store, attempts, parseTz(req.query.tz), scopeOf(req, actor)));
     }));
 
     app.post('/api/teacher/classes', wrap(async (req, res) => {
-        requireTeacher(req);
-        res.status(201).json({ classGroup: await store.createClass(validateClassName(req.body?.name)) });
+        const actor = requireStaff(req);
+        res.status(201).json({ classGroup: await store.createClass(writeOrgOf(req, actor), validateClassName(req.body?.name)) });
     }));
 
-    const classFromParams = (req: express.Request) => {
-        const group = store.findClass(String(req.params.id));
-        if (!group) throw new AccountError(404, 'Класс не найден.');
-        return group;
-    };
-
     app.patch('/api/teacher/classes/:id', wrap(async (req, res) => {
-        requireTeacher(req);
-        const group = classFromParams(req);
+        const actor = requireStaff(req);
+        const group = classFromParams(req, actor);
         await store.renameClass(group, validateClassName(req.body?.name));
         res.json({ classGroup: group });
     }));
 
     app.delete('/api/teacher/classes/:id', wrap(async (req, res) => {
-        requireTeacher(req);
-        await store.deleteClass(classFromParams(req));
+        const actor = requireStaff(req);
+        await store.deleteClass(classFromParams(req, actor));
         res.json({ ok: true });
     }));
 
     // Список учеников разом: по ФИО в строке; логины и временные пароли придумывает сервер.
     app.post('/api/teacher/students/bulk', wrap(async (req, res) => {
-        requireTeacher(req);
+        const actor = requireStaff(req);
+        const orgId = writeOrgOf(req, actor);
         const lines = String(req.body?.names ?? '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
         if (!lines.length) throw new AccountError(400, 'Впишите хотя бы одно ФИО.');
         if (lines.length > 100) throw new AccountError(400, 'За один раз можно добавить до 100 учеников.');
-        const classId = req.body?.classId ? String(req.body.classId) : null;
-        if (classId && !store.findClass(classId)) throw new AccountError(400, 'Такого класса нет.');
+        const classId = classForOrg(req.body?.classId, orgId);
         const created: { id: string; fullName: string; login: string; password: string }[] = [];
         const skipped: { line: string; reason: string }[] = [];
         for (const line of lines) {
@@ -684,7 +975,7 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
                 const fullName = validateFullName(line, false);
                 const login = suggestLogin(fullName, (candidate) => Boolean(store.findByLogin(candidate)));
                 const password = generatePassword();
-                const user = await store.createUser('student', fullName, login, password, { classId, mustChangePassword: true });
+                const user = await store.createUser('student', fullName, login, password, { orgId, classId, mustChangePassword: true });
                 created.push({ id: user.id, fullName, login, password });
             } catch (error) {
                 skipped.push({ line, reason: error instanceof AccountError ? error.message : 'Не удалось создать.' });
@@ -695,13 +986,17 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
 
     // Действие над несколькими учениками: перенос в класс или новые пароли.
     app.post('/api/teacher/students/batch', wrap(async (req, res) => {
-        requireTeacher(req);
+        const actor = requireStaff(req);
         const ids: unknown[] = Array.isArray(req.body?.ids) ? req.body.ids : [];
-        const targets = ids.map((id) => store.findById(String(id))).filter((user): user is User => user?.role === 'student');
+        const targets = ids.map((id) => store.findById(String(id))).filter((user): user is User => user?.role === 'student' && canManage(actor, user));
         if (!targets.length) throw new AccountError(400, 'Выберите хотя бы одного ученика.');
         if (req.body?.action === 'move') {
             const classId = req.body?.classId ? String(req.body.classId) : null;
-            if (classId && !store.findClass(classId)) throw new AccountError(400, 'Такого класса нет.');
+            if (classId) {
+                const group = store.findClass(classId);
+                // Класс должен быть той же организации, что и все переносимые ученики.
+                if (!group || targets.some((student) => student.orgId !== group.orgId)) throw new AccountError(400, 'Такого класса нет.');
+            }
             await store.moveToClass(targets, classId);
             res.json({ moved: targets.length });
         } else if (req.body?.action === 'reset') {
@@ -719,13 +1014,13 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
 
     // Посмотреть кабинет и обучение глазами ученика, не зная его пароля. Сессия только для чтения, живёт час.
     app.post('/api/teacher/students/:id/view', wrap(async (req, res) => {
-        const teacher = requireTeacher(req);
-        const student = studentFromParams(req);
+        const teacher = requireStaff(req);
+        const student = studentFromParams(req, teacher);
         const teacherToken = readCookie(req, SESSION_COOKIE)!;
         const token = await store.startViewSession(student, teacher);
         setCookie(req, res, TEACHER_COOKIE, teacherToken, SESSION_TTL_MS);
         setSessionCookie(req, res, token, VIEW_TTL_MS);
-        res.json({ user: sessionUser(student, teacher) });
+        res.json({ user: sessionUser(store, student, teacher) });
     }));
 
     // Вернуться из просмотра в свой аккаунт учителя.
@@ -743,81 +1038,195 @@ export function registerAccountRoutes(app: express.Express, store: AccountStore,
             return;
         }
         setSessionCookie(req, res, teacherToken!, SESSION_TTL_MS);
-        res.json({ user: publicUser(teacher) });
+        res.json({ user: sessionUser(store, teacher) });
     }));
 
     app.post('/api/teacher/students/:id/reset-password', wrap(async (req, res) => {
-        requireTeacher(req);
-        const student = studentFromParams(req);
+        const actor = requireStaff(req);
+        const student = studentFromParams(req, actor);
         const password = generatePassword();
         await store.updateUser(student, { password, temporaryPassword: true });
         res.json({ password, student: studentDetail(student) });
     }));
 
     app.get('/api/teacher/students/:id/attempts', wrap((req, res) => {
-        requireTeacher(req);
-        res.json({ attempts: attemptsForUser(attempts, studentFromParams(req).id, req.query) });
+        const actor = requireStaff(req);
+        res.json({ attempts: attemptsForUser(attempts, studentFromParams(req, actor).id, req.query) });
     }));
 
     app.get('/api/teacher/students/:id/activity', wrap((req, res) => {
-        requireTeacher(req);
-        const student = studentFromParams(req);
+        const actor = requireStaff(req);
+        const student = studentFromParams(req, actor);
         res.json(buildCabinet(store, student, attempts, parseTz(req.query.tz)));
     }));
 
     // Анонимная метрика: принимает события без имён и кода, поэтому вход не нужен (гость тоже учится).
+    // Организацию вошедшего ставит сервер по его входу, а не страница: подделать её нельзя.
     const metricsLimiter = rateLimit({ windowMs: 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false, message: { error: 'Слишком много событий.' } });
     app.post('/api/metrics', metricsLimiter, wrap(async (req, res) => {
         const list: unknown[] = Array.isArray(req.body?.events) ? req.body.events.slice(0, 30) : [];
         const sid = req.body?.sid;
-        const events = list.map((item) => sanitizeEvent({ ...(item as object), sid })).filter((event): event is NonNullable<typeof event> => event !== null);
+        const org = currentUser(req)?.orgId;
+        const events = list.map((item) => sanitizeEvent({ ...(item as object), sid })).filter((event): event is NonNullable<typeof event> => event !== null)
+            .map((event) => (org ? { ...event, org } : event));
         await metrics?.add(events);
         res.json({ ok: true, accepted: events.length });
     }));
 
     app.get('/api/teacher/metrics', wrap((req, res) => {
-        requireTeacher(req);
+        const actor = requireStaff(req);
         const days = Math.min(Math.max(Math.round(Number(req.query.days)) || 30, 1), 365);
-        res.json({ summary: metrics?.summary(days) ?? null });
+        res.json({ summary: metrics?.summary(days, Date.now(), scopeOf(req, actor)) ?? null });
     }));
 
     app.get('/api/teacher/students', wrap((req, res) => {
-        requireTeacher(req);
-        res.json({ students: store.list('student').map(studentSummary).sort((a, b) => a.fullName.localeCompare(b.fullName, 'ru')) });
+        const actor = requireStaff(req);
+        res.json({ students: store.studentsOf(scopeOf(req, actor)).map(studentSummary).sort((a, b) => a.fullName.localeCompare(b.fullName, 'ru')) });
     }));
 
     app.post('/api/teacher/students', wrap(async (req, res) => {
-        requireTeacher(req);
+        const actor = requireStaff(req);
         const body = req.body ?? {};
-        if (body.classId && !store.findClass(body.classId)) throw new AccountError(400, 'Такого класса нет.');
-        const user = await store.createUser('student', validateFullName(body.fullName, false), validateLogin(body.login), validatePassword(body.password), { classId: body.classId ? String(body.classId) : null });
+        const orgId = writeOrgOf(req, actor);
+        const user = await store.createUser('student', validateFullName(body.fullName, false), validateLogin(body.login), validatePassword(body.password), { orgId, classId: classForOrg(body.classId, orgId) });
         res.status(201).json({ student: studentDetail(user) });
     }));
 
     app.get('/api/teacher/students/:id', wrap((req, res) => {
-        requireTeacher(req);
-        res.json({ student: studentDetail(studentFromParams(req)) });
+        const actor = requireStaff(req);
+        res.json({ student: studentDetail(studentFromParams(req, actor)) });
     }));
 
     app.patch('/api/teacher/students/:id', wrap(async (req, res) => {
-        requireTeacher(req);
-        const student = studentFromParams(req);
+        const actor = requireStaff(req);
+        const student = studentFromParams(req, actor);
         const { fullName, login, password, classId, note } = req.body ?? {};
+        if (classId) classForOrg(classId, student.orgId);
         await store.updateUser(student, { fullName, login, password, classId, note, temporaryPassword: false });
         res.json({ student: studentDetail(student) });
     }));
 
     app.delete('/api/teacher/students/:id', wrap(async (req, res) => {
-        requireTeacher(req);
-        await store.deleteUser(studentFromParams(req));
+        const actor = requireStaff(req);
+        await store.deleteUser(studentFromParams(req, actor));
         res.json({ ok: true });
     }));
 
     app.put('/api/teacher/students/:id/progress', wrap(async (req, res) => {
-        requireTeacher(req);
-        const student = studentFromParams(req);
+        const actor = requireStaff(req);
+        const student = studentFromParams(req, actor);
         await store.setCompletion(student, parseTrack(req.body?.track), parseQuestId(req.body?.questId), Boolean(req.body?.done), 'teacher', req.body?.note);
         res.json({ student: studentDetail(student) });
+    }));
+
+    // ---- организация: команда, ссылки ----
+    const inviteJson = (invite: Invite) => ({
+        id: invite.id, token: invite.token, kind: invite.kind, createdAt: invite.createdAt, expiresAt: invite.expiresAt,
+        maxUses: invite.maxUses, uses: invite.uses, state: store.inviteState(invite), createdBy: store.findById(invite.createdBy)?.fullName ?? ''
+    });
+    const orgJson = (org: Organization, actor: User) => ({
+        org: {
+            id: org.id, name: org.name, isMain: org.id === MAIN_ORG_ID, blocked: org.blocked === true, createdAt: org.createdAt,
+            ownerId: org.ownerId, canManageTeam: managesTeam(actor, org)
+        },
+        teachers: store.staffOf(org.id).map((user) => ({ id: user.id, fullName: user.fullName, login: user.login, role: user.role, isOwner: org.ownerId === user.id, lastActiveAt: user.lastActiveAt ?? null })),
+        invites: store.invitesOf(org.id).filter((invite) => invite.kind === 'student' || managesTeam(actor, org)).sort((a, b) => b.createdAt - a.createdAt).map(inviteJson),
+        counts: { students: store.studentsOf(org.id).length, teachers: store.staffOf(org.id).length }
+    });
+
+    app.get('/api/org', wrap((req, res) => {
+        const actor = requireStaff(req);
+        res.json(orgJson(orgForRequest(req, actor), actor));
+    }));
+
+    app.patch('/api/org', wrap(async (req, res) => {
+        const actor = requireStaff(req);
+        const org = orgForRequest(req, actor);
+        if (!managesTeam(actor, org)) throw new AccountError(403, 'Название меняет только владелец организации.');
+        await store.renameOrg(org, validateOrgName(req.body?.name));
+        res.json(orgJson(org, actor));
+    }));
+
+    app.post('/api/org/invites', wrap(async (req, res) => {
+        const actor = requireStaff(req);
+        const org = orgForRequest(req, actor);
+        const kind = req.body?.kind === 'teacher' ? 'teacher' : 'student';
+        if (kind === 'teacher' && !managesTeam(actor, org)) throw new AccountError(403, 'Приглашать коллег может только владелец организации.');
+        const days = req.body?.days === undefined ? undefined : Number(req.body.days);
+        const maxUses = req.body?.maxUses === undefined || req.body.maxUses === null || req.body.maxUses === '' ? null : Number(req.body.maxUses);
+        if ((days !== undefined && !Number.isFinite(days)) || (maxUses !== null && !Number.isFinite(maxUses))) throw new AccountError(400, 'Срок и число использований должны быть числами.');
+        const invite = await store.createInvite(org, kind, actor, { days, maxUses });
+        res.status(201).json({ invite: inviteJson(invite) });
+    }));
+
+    app.delete('/api/org/invites/:id', wrap(async (req, res) => {
+        const actor = requireStaff(req);
+        const invite = store.findInvite(req.params.id);
+        const org = invite ? store.findOrg(invite.orgId) : undefined;
+        if (!invite || !org || (actor.role !== 'admin' && org.id !== actor.orgId)) throw new AccountError(404, 'Ссылка не найдена.');
+        if (invite.kind === 'teacher' && !managesTeam(actor, org)) throw new AccountError(403, 'Ссылку для коллег отзывает только владелец организации.');
+        await store.revokeInvite(invite);
+        res.json({ ok: true });
+    }));
+
+    // Владелец убирает коллегу из команды: аккаунт остаётся, у учителя появляется своя организация, учеников нет.
+    app.delete('/api/org/teachers/:id', wrap(async (req, res) => {
+        const actor = requireStaff(req);
+        const org = orgForRequest(req, actor);
+        if (!managesTeam(actor, org)) throw new AccountError(403, 'Команду меняет только владелец организации.');
+        const teacher = store.findById(String(req.params.id));
+        if (!teacher || teacher.role !== 'teacher' || teacher.orgId !== org.id) throw new AccountError(404, 'Учитель не найден.');
+        if (org.ownerId === teacher.id) throw new AccountError(400, 'Владельца из организации убрать нельзя.');
+        await store.spinOffTeacher(teacher);
+        res.json({ ok: true });
+    }));
+
+    // ---- администратор: все организации ----
+    app.get('/api/admin/orgs', wrap((req, res) => {
+        requireAdmin(req);
+        res.json({
+            orgs: store.orgs.map((org) => {
+                const staff = store.staffOf(org.id);
+                const students = store.studentsOf(org.id);
+                const last = [...staff, ...students].reduce((max, user) => Math.max(max, user.lastActiveAt ?? 0), 0);
+                return {
+                    id: org.id, name: org.name, isMain: org.id === MAIN_ORG_ID, blocked: org.blocked === true, createdAt: org.createdAt,
+                    ownerName: store.findById(org.ownerId)?.fullName ?? '', teachers: staff.length, students: students.length, lastActiveAt: last || null
+                };
+            }).sort((a, b) => Number(b.isMain) - Number(a.isMain) || a.name.localeCompare(b.name, 'ru'))
+        });
+    }));
+
+    const orgFromParams = (req: express.Request): Organization => {
+        const org = store.findOrg(String(req.params.id));
+        if (!org) throw new AccountError(404, 'Организация не найдена.');
+        return org;
+    };
+
+    app.patch('/api/admin/orgs/:id', wrap(async (req, res) => {
+        requireAdmin(req);
+        const org = orgFromParams(req);
+        if (req.body?.name !== undefined) await store.renameOrg(org, validateOrgName(req.body.name));
+        if (req.body?.blocked !== undefined) {
+            if (org.id === MAIN_ORG_ID) throw new AccountError(400, 'Основную организацию заблокировать нельзя.');
+            await store.setOrgBlocked(org, Boolean(req.body.blocked));
+        }
+        res.json({ ok: true });
+    }));
+
+    app.delete('/api/admin/orgs/:id', wrap(async (req, res) => {
+        requireAdmin(req);
+        res.json(await store.deleteOrg(orgFromParams(req)));
+    }));
+
+    // Забытый пароль учителя: почты нет, поэтому новый временный пароль выдаёт админ.
+    app.post('/api/admin/teachers/:id/reset-password', wrap(async (req, res) => {
+        requireAdmin(req);
+        const teacher = store.findById(String(req.params.id));
+        if (!teacher || teacher.role !== 'teacher') throw new AccountError(404, 'Учитель не найден.');
+        const password = generatePassword();
+        await store.updateUser(teacher, { password, temporaryPassword: true });
+        res.json({ password, login: teacher.login, fullName: teacher.fullName });
     }));
 }
 

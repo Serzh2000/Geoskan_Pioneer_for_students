@@ -241,7 +241,7 @@ describe('просмотр от имени ученика', () => {
         expect(me.body.user).toMatchObject({ login: 'ivanov', viewAs: expect.any(Object) });
         expect((await teacher.get('/api/me/cabinet')).status).toBe(200);
         const back = await teacher.post('/api/auth/view-exit');
-        expect(back.body.user).toMatchObject({ role: 'teacher', login: 'teacher' });
+        expect(back.body.user).toMatchObject({ role: 'admin', login: 'teacher' });
         expect((await teacher.get('/api/teacher/students')).status).toBe(200);
     });
 
@@ -275,7 +275,7 @@ describe('просмотр от имени ученика', () => {
         await teacher.get('/api/progress');
         expect(store.findById(id)!.lastActiveAt ?? 0).toBe(before);
         await teacher.post('/api/auth/logout');
-        expect((await teacher.get('/api/auth/me')).body.user).toMatchObject({ role: 'teacher' });
+        expect((await teacher.get('/api/auth/me')).body.user).toMatchObject({ role: 'admin' });
     });
 
     test('просмотр без режима просмотра: выход отклоняется', async () => {

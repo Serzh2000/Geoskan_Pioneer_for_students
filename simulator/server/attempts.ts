@@ -92,10 +92,11 @@ export class AttemptLog {
     }
 
     /** Ученики, которые проверяли миссию и ни разу не прошли её; `fails` — число неудачных проверок. */
-    stuckStudents(track: string, questId: string): { userId: string; name: string; fails: number; lastAt: number }[] {
+    stuckStudents(track: string, questId: string, onlyUsers?: Set<string>): { userId: string; name: string; fails: number; lastAt: number }[] {
         const byUser = new Map<string, Attempt[]>();
         for (const attempt of this.read()) {
             if (attempt.track !== track || attempt.questId !== questId) continue;
+            if (onlyUsers && !onlyUsers.has(attempt.userId)) continue;
             const own = byUser.get(attempt.userId) ?? [];
             own.push(attempt);
             byUser.set(attempt.userId, own);
@@ -154,7 +155,7 @@ export class AttemptLog {
     }
 
     /** Последние неудачные попытки миссии: по коду видно, что именно ученики пишут не так. */
-    recentFailures(track: string, questId: string, limit = 25): Attempt[] {
-        return this.read().filter((attempt) => attempt.track === track && attempt.questId === questId && !attempt.solved).slice(-limit).reverse();
+    recentFailures(track: string, questId: string, limit = 25, onlyUsers?: Set<string>): Attempt[] {
+        return this.read().filter((attempt) => attempt.track === track && attempt.questId === questId && !attempt.solved && (!onlyUsers || onlyUsers.has(attempt.userId))).slice(-limit).reverse();
     }
 }
