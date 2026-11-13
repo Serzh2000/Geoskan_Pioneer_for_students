@@ -3,8 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <title>Pioneer Lua Web Simulator</title>
-    <link rel="icon" href="data:,">
+    <title>Симулятор квадрокоптера Геоскан Пионер: Lua, Python и блоки онлайн</title>
+    <meta name="description" content="Онлайн-симулятор квадрокоптера Геоскан Пионер: программы на Lua, Python и блоках, полёт в 3D, уроки с проверкой и кабинеты для учителей. Без установки.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="theme-color" content="#151515">
+    <link rel="canonical" href="https://simulator.sakoryagin.ru/">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Симулятор Геоскан Пионер">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:title" content="Симулятор квадрокоптера Геоскан Пионер: Lua, Python и блоки онлайн">
+    <meta property="og:description" content="Онлайн-симулятор квадрокоптера Геоскан Пионер: программы на Lua, Python и блоках, полёт в 3D, уроки с проверкой и кабинеты для учителей. Без установки.">
+    <meta property="og:url" content="https://simulator.sakoryagin.ru/">
+    <meta property="og:image" content="https://simulator.sakoryagin.ru/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Симулятор квадрокоптера Геоскан Пионер: Lua, Python и блоки онлайн">
+    <meta name="twitter:description" content="Онлайн-симулятор квадрокоптера Геоскан Пионер: программы на Lua, Python и блоках, полёт в 3D, уроки с проверкой и кабинеты для учителей. Без установки.">
+    <meta name="twitter:image" content="https://simulator.sakoryagin.ru/og-image.jpg">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Симулятор квадрокоптера Геоскан Пионер",
+        "alternateName": "Pioneer Simulator",
+        "url": "https://simulator.sakoryagin.ru/",
+        "description": "Онлайн-симулятор квадрокоптера Геоскан Пионер: программы на Lua, Python и блоках, полёт в 3D, уроки с проверкой и кабинеты для учителей. Без установки.",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Любой современный браузер",
+        "browserRequirements": "Требуется JavaScript и WebGL",
+        "inLanguage": "ru",
+        "audience": { "@type": "EducationalAudience", "educationalRole": "student" },
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "RUB" }
+    }
+    </script>
     <script>
         (function () {
             var storageKey = 'geoskan_app_theme_v1';
@@ -30,6 +63,8 @@
         #app-splash .splash__mark::before, #app-splash .splash__mark::after { content: ''; position: absolute; inset: 0; border-radius: 50%; }
         #app-splash .splash__mark::before { border: 3px solid rgba(255, 107, 0, .18); }
         #app-splash .splash__mark::after { border: 3px solid transparent; border-top-color: #ff6b00; animation: splash-spin 0.9s linear infinite; }
+        /* Описание для поисковиков и программ чтения с экрана: на экране его нет, приложение занимает окно целиком. */
+        .seo-intro { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
         #app-splash .splash__title { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
         #app-splash .splash__hint { margin: 6px 0 0; font-size: 14px; opacity: .6; }
         #app-splash .splash__bar { width: 220px; height: 3px; overflow: hidden; border-radius: 2px; background: rgba(127, 127, 127, .25); }
@@ -48,7 +83,7 @@
         <div class="splash__card">
             <div class="splash__mark" aria-hidden="true"></div>
             <div>
-                <h1 class="splash__title">Pioneer Simulator</h1>
+                <p class="splash__title">Pioneer Simulator</p>
                 <p class="splash__hint">Загружаем симулятор…</p>
             </div>
             <div class="splash__bar" aria-hidden="true"></div>
@@ -64,6 +99,32 @@
         };
         setTimeout(window.hideAppSplash, 25000);
     </script>
+    <section id="seo-intro" class="seo-intro" aria-label="О симуляторе">
+        <h1>Симулятор квадрокоптера Геоскан Пионер: программирование на Lua, Python и блоках</h1>
+        <p>Онлайн-симулятор для тех, кто учится программировать квадрокоптеры Геоскан Пионер. Программа запускается прямо в браузере: дрон взлетает, летит по маршруту, зажигает светодиоды и снимает камерой в трёхмерной сцене с физикой полёта.</p>
+        <h2>Что внутри</h2>
+        <ul>
+            <li>Модели Пионер Базовый и Пионер Мини 2: полёт, посадка, светодиоды, дальномер, камера, ArUco-метки.</li>
+            <li>Программы на Lua, Python (библиотеки pioneer_sdk и pioneer_sdk2) и блоки: Blockly и Pioneer Bricks.</li>
+            <li>Более 300 миссий-уроков с автоматической проверкой полёта: от первого взлёта до маршрутов, камеры и нейросетей.</li>
+            <li>Справочник по функциям, примеры программ, редактор сцены с объектами и препятствиями.</li>
+            <li>Личные кабинеты: ученик видит прогресс и достижения, учитель ведёт классы, а организация приглашает учеников по ссылке.</li>
+        </ul>
+        <h2>Для кого</h2>
+        <p>Для школьников, студентов, кружков робототехники и учителей информатики. Устанавливать ничего не нужно: достаточно современного браузера. Регистрация нужна только для того, чтобы прогресс сохранялся на сервере.</p>
+        <h2>Уроки</h2>
+        <ul>
+            <li><a href="/uroki/lua/">Курс Lua для Пионера Базовый</a></li>
+            <li><a href="/uroki/python/">Курс Python (pioneer_sdk) для Пионера Базовый</a></li>
+            <li><a href="/uroki/blockly/">Курс Blockly для Пионера Базовый</a></li>
+            <li><a href="/uroki/python-sdk2/">Курс Python SDK 2 для Пионера Мини 2</a></li>
+            <li><a href="/uroki/bricks/">Курс Pioneer Bricks для Пионера Мини 2</a></li>
+        </ul>
+        <h2>Частые вопросы</h2>
+        <p><strong>Чем отличаются Пионер Базовый и Мини 2?</strong> Базовый программируется на Lua, Python (pioneer_sdk и pioneer_sdk2) и блоками Blockly. Мини 2 работает на Python (pioneer_sdk2) и блоками Pioneer Bricks, программа выполняется на борту.</p>
+        <p><strong>С чего начать?</strong> Откройте «Обучение», выберите дрона и язык и пройдите первую миссию: она объясняет, как запустить моторы, взлететь и сесть.</p>
+    </section>
+    <noscript><p style="padding:24px;font:16px system-ui,sans-serif">Для работы симулятора нужен включённый JavaScript.</p></noscript>
     <main class="container" data-mobile-workspace-page="code">
         <div class="mobile-workspace-track">
             <aside id="workspace-tools" class="workspace-sidebar" data-mobile-workspace-panel="code">

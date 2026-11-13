@@ -1,5 +1,5 @@
 /**
- * Кладёт среду выполнения Python (Pyodide) рядом с приложением: public/vendor/pyodide/.
+ * Кладёт среду выполнения Python (Pyodide) рядом с приложением: static/vendor/pyodide/.
  * Тогда первый запуск Python не зависит от интернета и от CDN (школьные сети его часто режут) и стартует быстрее.
  * Файлы скачиваются один раз и не хранятся в git. Нет сети - скрипт только предупреждает, а приложение берёт CDN.
  */
@@ -8,7 +8,7 @@ const path = require('node:path');
 
 const VERSION = '0.26.2';
 const BASE = `https://cdn.jsdelivr.net/pyodide/v${VERSION}/full/`;
-const OUT = path.join(__dirname, '..', 'public', 'vendor', 'pyodide');
+const OUT = path.join(__dirname, '..', 'static', 'vendor', 'pyodide');
 // numpy нужен кадрам камеры (cv2 в симуляторе); остальные пакеты программы не подгружают.
 const PACKAGES = ['numpy'];
 const CORE = ['pyodide.js', 'pyodide.mjs', 'pyodide.asm.js', 'pyodide.asm.wasm', 'python_stdlib.zip', 'pyodide-lock.json'];
@@ -37,7 +37,7 @@ async function main() {
     };
     PACKAGES.forEach(visit);
     for (const name of wanted) if (await download(lock.packages[name].file_name)) fetched++;
-    console.log(fetched ? `[pyodide] Скачано файлов: ${fetched} (public/vendor/pyodide)` : '[pyodide] Уже на месте: public/vendor/pyodide');
+    console.log(fetched ? `[pyodide] Скачано файлов: ${fetched} (static/vendor/pyodide)` : '[pyodide] Уже на месте: static/vendor/pyodide');
 }
 
 main().catch((error) => {

@@ -129,6 +129,9 @@ function examplesApiPlugin(projectRoot: string): Plugin {
 
 export default defineConfig({
   root: 'public',
+  // Файлы, которые попадают в сборку как есть (robots.txt, sitemap.xml, значок, картинка превью, Pyodide).
+  // Папка public здесь корень приложения, поэтому свою статику держим отдельно.
+  publicDir: path.resolve(__dirname, 'static'),
   plugins: [htmlIncludesPlugin(path.resolve(__dirname, 'public')), examplesApiPlugin(__dirname)],
   build: {
     outDir: '../dist/public',

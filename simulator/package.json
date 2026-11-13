@@ -9,7 +9,7 @@
     "vite": "node scripts/fetch-pyodide.cjs && vite",
     "pyodide": "node scripts/fetch-pyodide.cjs",
     "postinstall": "node scripts/fetch-pyodide.cjs",
-    "build": "npm run sync-examples && node scripts/fetch-pyodide.cjs && vite build && tsc -p tsconfig.server.json",
+    "build": "npm run sync-examples && node scripts/fetch-pyodide.cjs && node scripts/generate-seo-pages.mjs && vite build && node scripts/precompress.cjs && tsc -p tsconfig.server.json",
     "sync-examples": "node tools/sync_lesson_examples.mjs",
     "examples:blocks": "node tools/block-examples/build.mjs",
     "preview": "vite preview",
