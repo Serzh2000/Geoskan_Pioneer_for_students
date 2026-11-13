@@ -27,7 +27,7 @@ __pycache__/
 /data/
 
 # Pyodide (среда Python) скачивается скриптом scripts/fetch-pyodide.cjs
-/public/vendor/pyodide/
+/static/vendor/pyodide/
 
 # Референс: диск Пионера с модулем Razero (бинарные blob'ы; текст оставлен в рабочем дереве)
 /reference/razero-disk/_binaries/

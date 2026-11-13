@@ -8,7 +8,7 @@ const path = require('node:path');
 
 const VERSION = '0.26.2';
 const BASE = `https://cdn.jsdelivr.net/pyodide/v${VERSION}/full/`;
-const OUT = path.join(__dirname, '..', 'public', 'vendor', 'pyodide');
+const OUT = path.join(__dirname, '..', 'static', 'vendor', 'pyodide');
 // numpy нужен кадрам камеры (cv2 в симуляторе); остальные пакеты программы не подгружают.
 const PACKAGES = ['numpy'];
 const CORE = ['pyodide.js', 'pyodide.mjs', 'pyodide.asm.js', 'pyodide.asm.wasm', 'python_stdlib.zip', 'pyodide-lock.json'];
