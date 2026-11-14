@@ -61,6 +61,15 @@ export function gradeTelemetryAcademy(number: number, samples: DroneSample[], ev
     }
     if (number < 64 || number > 72) fail('Неизвестный урок', 'Номер не относится к телеметрии.', 'Выберите урок текущего раздела.');
     if (diagnostics.length) return { solved: false, complete: Boolean(last), diagnostics };
-    if (number === 65 && !new Set([...(activity.trials || []), trial]).has('slow')) return { solved: false, complete: true, academyTrial: trial, diagnostics: [{ kind: 'info', title: 'Частый опрос подтверждён', reason: 'Остался сравнительный опыт с периодом 0.8 секунды.', fix: 'Измените только интервал и повторите проверку.' }] };
+    if (number === 65 && !new Set([...(activity.trials || []), trial]).has('slow')) {
+        // Ученики застревали, гоняя один и тот же опыт 0.2: говорим прямо, что записано и какое число поменять.
+        const again = (activity.trials || []).includes('fast');
+        return { solved: false, complete: true, academyTrial: trial, diagnostics: [{
+            kind: 'info',
+            title: again ? 'Опыт 0.2 уже записан: теперь замените 0.2 на 0.8' : 'Опыт 1 из 2 записан: осталось проверить 0.8',
+            reason: again ? 'Повторять 0.2 не нужно, второй опыт ещё не сделан: период по-прежнему 0.2 секунды.' : 'Опыт с периодом 0.2 секунды записан. Миссия засчитывается после второго опыта с периодом 0.8 секунды.',
+            fix: 'В строке с периодом (Timer.callLater(0.2, measure) или time.sleep(0.2)) замените 0.2 на 0.8, ничего больше не меняйте и снова нажмите «Проверить».'
+        }] };
+    }
     return { solved: true, complete: true, academyTrial: trial, diagnostics: [{ kind: 'success', title: 'Измерение и решение подтверждены', reason: 'Проверены реальные чтения и условия текущего опыта.', fix: 'Объясните, чем заданная цель отличается от измеренного положения.' }] };
 }
