@@ -49,7 +49,14 @@ describe('примеры ROS 2', () => {
         const run = runRos2(read('ros2_03_cmd_vel_square.py'), { mode: 'program', seconds: 600, speed: 10 });
         expect(run.result.error).toBeNull();
         expect(run.result.calls.some((c) => c[0] === 'speed')).toBe(true);
-        expect(run.result.calls.map((c) => c[0]).slice(-1)[0]).toBe('land');
+        // После посадки эмуляция сама шлёт нулевую скорость (сторожевой таймер cmd_vel), и на Linux она иногда приходит
+        // позже land: поэтому проверяем не «land - последний вызов», а «после land нет ненулевой скорости, до него она была».
+        const names = run.result.calls.map((c) => c[0]);
+        const land = names.lastIndexOf('land');
+        expect(land).toBeGreaterThan(0);
+        const moving = (c: (typeof run.result.calls)[number]) => c[0] === 'speed' && (c[1] as number[]).slice(0, 4).some((v) => v !== 0);
+        expect(run.result.calls.slice(land + 1).some(moving)).toBe(false);
+        expect(run.result.calls.slice(0, land).some(moving)).toBe(true);
         expect(Math.hypot(run.result.pos[0], run.result.pos[1])).toBeLessThan(0.6);
     });
 
