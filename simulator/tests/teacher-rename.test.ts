@@ -6,7 +6,7 @@ test('учитель меняет ФИО ученика, логин и прог�
     await ensureTeacher(store, { TEACHER_LOGIN: 'teacher', TEACHER_PASSWORD: 'teacher-pass' } as NodeJS.ProcessEnv);
     const app = express(); app.use(express.json()); registerAccountRoutes(app, store);
     const pupil = request.agent(app);
-    const reg = await pupil.post('/api/auth/register').send({ fullName: 'Иванов Иван', login: 'ivanov', loginRepeat: 'ivanov', password: 'secret1', passwordRepeat: 'secret1' });
+    const reg = await pupil.post('/api/auth/register').send({ fullName: 'Иванов Иван', login: 'ivanov', loginRepeat: 'ivanov', password: 'secret1', passwordRepeat: 'secret1', consentPd: true, acceptTerms: true, confirmConsents: true });
     await pupil.post('/api/progress/complete').send({ track: 'python', questId: 'academy-001' });
     const teacher = request.agent(app);
     await teacher.post('/api/auth/login').send({ login: 'teacher', password: 'teacher-pass' });

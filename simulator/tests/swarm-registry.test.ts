@@ -92,9 +92,10 @@ while True:
     });
 
     test('setOnline: выключенный swarm-server пропадает из видимых через 3 с, включённый возвращается', async () => {
-        await swarm.setOnline('pioneer3', false);
-        await host.wait(1);
-        expect((await swarm.units()).find((row) => row.machine_id === 'pioneer3')).toMatchObject({ visible: true, online: false });
+        // Строка, которую вернул сам setOnline, снята в момент выключения (возраст ~0): отдельный запрос units() позже зависит
+        // от настенных часов процесса, и на загруженном CI-раннере между вызовами набегало больше 3 с.
+        const justOff = await swarm.setOnline('pioneer3', false);
+        expect(justOff).toMatchObject({ visible: true, online: false });
         await host.wait(3);
         const off = (await swarm.units()).find((row) => row.machine_id === 'pioneer3');
         expect(off).toMatchObject({ visible: false, online: false });

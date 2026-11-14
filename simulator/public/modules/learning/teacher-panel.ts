@@ -6,7 +6,8 @@
  * Названия миссий берутся из тех же списков, что и в режиме обучения.
  */
 import {
-    ACCOUNT_TRACKS, teacherApi, viewAsStudent,
+    ACCOUNT_TRACKS, adminApi, getAdminOrg, getUser, orgApi, setAdminOrg, teacherApi, viewAsStudent,
+    type AdminOrg, type OrgData, type OrgInvite,
     type AccountTrack, type AttemptRecord, type BulkCredentials, type CabinetData, type MetricsSummary, type Overview, type OverviewStudent,
     type QuestStats, type StuckStudent, type FailedAttempt, type StudentDetail
 } from './account.js';
@@ -20,7 +21,7 @@ import {
     type SortKey, type StatusFilter, type StudentFilter, type StudentStatus
 } from './teacher-report.js';
 
-type View = 'class' | 'matrix' | 'student' | 'stuck' | 'improve';
+type View = 'class' | 'matrix' | 'student' | 'stuck' | 'improve' | 'org' | 'admin';
 type Modal =
     | { kind: 'add'; mode: 'list' | 'one' }
     | { kind: 'credentials'; title: string; rows: BulkCredentials[]; skipped: { line: string; reason: string }[] }
@@ -64,6 +65,11 @@ let missionAttempts: AttemptRecord[] | null = null;
 let metrics: MetricsSummary | null | undefined;
 let metricsDays = 30;
 
+/** Организация учителя (команда, ссылки) и, для админа, список всех организаций. */
+let orgData: OrgData | null = null;
+let adminOrgs: AdminOrg[] | null = null;
+const isAdmin = () => getUser()?.role === 'admin';
+
 /* ---------- Данные ---------- */
 
 function say(kind: 'ok' | 'error', text: string, scroll = true): void {
@@ -76,6 +82,17 @@ function say(kind: 'ok' | 'error', text: string, scroll = true): void {
 async function guard(action: () => Promise<void>): Promise<void> {
     try { await action(); } catch (error) { say('error', (error as Error).message); }
 }
+
+async function loadOrg(): Promise<void> {
+    await guard(async () => { orgData = await orgApi.get(); render(); });
+}
+
+async function loadAdminOrgs(): Promise<void> {
+    await guard(async () => { adminOrgs = await adminApi.orgs(); render(); });
+}
+
+/** Ссылка, которую учитель отправляет ученикам или коллегам: открывает сайт и показывает приглашение. */
+const inviteLink = (invite: OrgInvite) => `${window.location.origin}${window.location.pathname}?join=${encodeURIComponent(invite.token)}`;
 
 async function refresh(): Promise<void> {
     overview = await teacherApi.overview();
@@ -179,11 +196,11 @@ function renderClass(ov: Overview): string {
         </div>` : '';
     const empty = ov.students.length
         ? '<tr><td colspan="9" class="cab-empty">По этим условиям никого нет. Сбросьте фильтры или поиск.</td></tr>'
-        : '<tr><td colspan="9" class="cab-empty">Учеников пока нет. Нажмите «Добавить учеников»: вставьте список ФИО, а логины и пароли появятся сами. Ученик также может зарегистрироваться сам.</td></tr>';
+        : '<tr><td colspan="9" class="cab-empty">Учеников пока нет. Нажмите «Добавить учеников»: вставьте список имён, а логины и пароли появятся сами. Ученик также может зарегистрироваться сам.</td></tr>';
     return `${activityBars(ov)}
         <div class="cabt-filters" role="group" aria-label="Фильтр по состоянию">${chips}</div>
         <div class="cabt-toolbar">
-            <label class="cabt-search"><span class="cab-sr">Поиск по ФИО или логину</span><input class="cab-input" type="search" placeholder="Поиск по ФИО или логину" value="${esc(filter.search)}" data-keep="search" data-filter="search"></label>
+            <label class="cabt-search"><span class="cab-sr">Поиск по имени или логину</span><input class="cab-input" type="search" placeholder="Поиск по имени или логину" value="${esc(filter.search)}" data-keep="search" data-filter="search"></label>
             <label class="cabt-inline"><span class="cab-sr">Класс</span><select class="cab-input" data-filter="classId">
                 <option value="">Все классы</option><option value="none"${filter.classId === 'none' ? ' selected' : ''}>Без класса</option>
                 ${ov.classes.map((item) => `<option value="${item.id}"${filter.classId === item.id ? ' selected' : ''}>${esc(item.name)} (${item.count ?? 0})</option>`).join('')}</select></label>
@@ -195,7 +212,7 @@ function renderClass(ov: Overview): string {
                 ${th('name', 'Ученик')}${th('class', 'Класс')}${ACCOUNT_TRACKS.map((key) => th(key, TRACK_LABELS[key])).join('')}${th('seen', 'Был')}<th scope="col">Состояние</th></tr></thead>
             <tbody>${rows.map((item) => `<tr class="${selected.has(item.id) ? 'is-selected' : ''}">
                 <td class="cabt-check"><input type="checkbox" data-act="toggle-row" data-id="${item.id}" aria-label="Выбрать: ${esc(item.fullName)}"${selected.has(item.id) ? ' checked' : ''}></td>
-                <td data-label="Ученик"><button type="button" class="cabt-name" data-act="open-student" data-id="${item.id}"><span class="cab-avatar cab-avatar--sm" aria-hidden="true">${esc(initials(item.fullName))}</span><span><strong>${esc(item.fullName)}</strong><small>${esc(item.login)}</small></span></button><button type="button" class="cab-btn cab-btn--ghost cab-btn--icon cabt-rename" data-act="rename-student" data-id="${item.id}" aria-label="Изменить ФИО: ${esc(item.fullName)}" title="Изменить ФИО">${ICON.edit}</button></td>
+                <td data-label="Ученик"><button type="button" class="cabt-name" data-act="open-student" data-id="${item.id}"><span class="cab-avatar cab-avatar--sm" aria-hidden="true">${esc(initials(item.fullName))}</span><span><strong>${esc(item.fullName)}</strong><small>${esc(item.login)}</small></span></button><button type="button" class="cab-btn cab-btn--ghost cab-btn--icon cabt-rename" data-act="rename-student" data-id="${item.id}" aria-label="Изменить имя: ${esc(item.fullName)}" title="Изменить имя">${ICON.edit}</button></td>
                 <td data-label="Класс">${esc(className(item.classId)) || '<span class="cab-muted">—</span>'}</td>
                 ${ACCOUNT_TRACKS.map((key) => bar(item, key)).join('')}
                 <td data-label="Был" class="cabt-seen">${esc(ago(lastSeen(item)))}</td>
@@ -317,7 +334,7 @@ function renderStudent(): string {
             </form>
             <h5>Попытки ученика</h5>
             ${attempts === null ? '<p class="cab-muted">Загружаем…</p>' : attempts.length ? `<ol class="cab-attempts">${attempts.slice(0, 15).map((attempt) => `<li>
-                <div class="cab-attempts__row"><span class="cab-chip ${attempt.solved ? 'cab-chip--ok' : 'cab-chip--warn'}">${attempt.solved ? 'Прошла' : 'Не прошла'}</span><span class="cab-muted">${fmtDateTime(attempt.at)}</span>${attempt.titles.length ? `<span class="cab-attempts__why">${esc(attempt.titles.slice(0, 2).join('; '))}</span>` : ''}</div>
+                <div class="cab-attempts__row"><span class="cab-chip ${attempt.solved ? 'cab-chip--ok' : attempt.partial ? 'cab-chip--plain' : 'cab-chip--warn'}">${attempt.solved ? 'Прошла' : attempt.partial ? 'Опыт записан' : 'Не прошла'}</span><span class="cab-muted">${fmtDateTime(attempt.at)}</span>${attempt.titles.length ? `<span class="cab-attempts__why">${esc(attempt.titles.slice(0, 2).join('; '))}</span>` : ''}</div>
                 ${attempt.code ? `<details><summary>Показать код</summary><pre class="cab-code-pre">${esc(attempt.code)}</pre></details>` : ''}</li>`).join('')}</ol>` : '<p class="cab-empty">Проверок по этой миссии не было.</p>'}
         </section>`;
     }
@@ -327,14 +344,14 @@ function renderStudent(): string {
         <header class="cabt-student__head">
             <button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="tab" data-view="class">${ICON.back}<span>К классу</span></button>
             <div class="cabt-student__who"><span class="cab-avatar" aria-hidden="true">${esc(initials(s.fullName))}</span>
-                <div><h3>${esc(s.fullName)} <button type="button" class="cab-btn cab-btn--ghost cab-btn--icon cabt-rename" data-act="rename-student" data-id="${s.id}" aria-label="Изменить ФИО" title="Изменить ФИО">${ICON.edit}</button></h3><p class="cab-muted">Логин ${esc(s.login)} · ${s.classId ? `класс ${esc(className(s.classId))} · ` : ''}был ${esc(ago(summary ? lastSeen(summary) : s.lastActiveAt))} · аккаунт с ${fmtDate(s.createdAt)}</p></div></div>
+                <div><h3>${esc(s.fullName)} <button type="button" class="cab-btn cab-btn--ghost cab-btn--icon cabt-rename" data-act="rename-student" data-id="${s.id}" aria-label="Изменить имя" title="Изменить имя">${ICON.edit}</button></h3><p class="cab-muted">Логин ${esc(s.login)} · ${s.classId ? `класс ${esc(className(s.classId))} · ` : ''}был ${esc(ago(summary ? lastSeen(summary) : s.lastActiveAt))} · аккаунт с ${fmtDate(s.createdAt)}</p></div></div>
             <span class="cab-chip cab-chip--${status === 'stuck' ? 'danger' : status === 'away' ? 'warn' : status === 'today' ? 'ok' : 'plain'}">${STATUS_LABELS[status]}</span>
         </header>
         <div class="cabt-student__grid">
             <aside class="cabt-student__side">
                 <form class="cab-block cab-form" data-form="account" aria-labelledby="cabt-acc-h">
                     <h3 id="cabt-acc-h">Аккаунт</h3>
-                    <label class="cab-field"><span>ФИО</span><input class="cab-input" name="fullName" value="${esc(s.fullName)}" required></label>
+                    <label class="cab-field"><span>Имя или ник</span><input class="cab-input" name="fullName" value="${esc(s.fullName)}" required></label>
                     <label class="cab-field"><span>Логин</span><input class="cab-input" name="login" value="${esc(s.login)}" required autocomplete="off"></label>
                     <label class="cab-field"><span>Класс</span><select class="cab-input" name="classId"><option value="">Без класса</option>${(overview?.classes ?? []).map((item) => `<option value="${item.id}"${s.classId === item.id ? ' selected' : ''}>${esc(item.name)}</option>`).join('')}</select></label>
                     <label class="cab-field"><span>Заметка о ученике</span><textarea class="cab-input" name="note" rows="3" maxlength="400" placeholder="Видите только вы">${esc(s.note)}</textarea></label>
@@ -372,11 +389,12 @@ function renderStudent(): string {
 
 function renderStuck(): string {
     const seg = ACCOUNT_TRACKS.map((key) => `<button type="button" role="tab" class="cab-seg__btn${key === stuckTrack ? ' is-active' : ''}" aria-selected="${key === stuckTrack}" data-act="stuck-track" data-track="${key}">${TRACK_LABELS[key]}</button>`).join('');
-    const rows = [...(stuckStats ?? [])].sort((a, b) => (b.attempts - b.solved) - (a.attempts - a.solved));
+    // Сверху миссии с наибольшим числом настоящих ошибок; обязательные промежуточные опыты в счёт не идут.
+    const rows = [...(stuckStats ?? [])].sort((a, b) => b.failures - a.failures || b.attempts - a.attempts);
     const table = stuckStats === null ? '<div class="cab-state" role="status"><span class="cab-spinner" aria-hidden="true"></span><p>Загружаем…</p></div>'
-        : rows.length ? `<div class="cabt-tablewrap"><table class="cabt-table cabt-table--plain"><thead><tr><th scope="col">Миссия</th><th scope="col">Проверок</th><th scope="col">Не прошли</th><th scope="col">Решили</th><th scope="col">До зачёта</th><th scope="col">Частые замечания</th></tr></thead><tbody>${rows.map((row) => `
+        : rows.length ? `<div class="cabt-tablewrap"><table class="cabt-table cabt-table--plain"><thead><tr><th scope="col">Миссия</th><th scope="col" title="Все запуски проверки">Проверок</th><th scope="col" title="Верные промежуточные опыты миссий из нескольких запусков: ошибкой не считаются">Опытов</th><th scope="col" title="Проверки, которые не засчитаны и не были верным промежуточным опытом">Ошибок</th><th scope="col">Решили</th><th scope="col" title="Сколько ошибок в среднем было до зачёта">Ошибок до зачёта</th><th scope="col">Частые замечания</th></tr></thead><tbody>${rows.map((row) => `
             <tr class="${stuckDetail?.questId === row.questId ? 'is-selected' : ''}"><td><button type="button" class="cabt-link" data-act="stuck-quest" data-mission="${esc(row.questId)}">${esc(titleOf(stuckTrack, row.questId))}</button></td>
-            <td class="cab-num">${row.attempts}</td><td class="cab-num">${row.attempts - row.solved}</td><td class="cab-num">${row.studentsSolved} из ${row.students}</td><td class="cab-num">${row.avgAttemptsToSolve ?? '—'}</td>
+            <td class="cab-num">${row.attempts}</td><td class="cab-num">${row.partial || '—'}</td><td class="cab-num">${row.failures}</td><td class="cab-num">${row.studentsSolved} из ${row.students}</td><td class="cab-num">${row.avgFailsToSolve ?? '—'}</td>
             <td>${row.topIssues.map((issue) => `${esc(issue.title)} <span class="cab-muted">×${issue.count}</span>`).join('<br>') || '—'}</td></tr>`).join('')}</tbody></table></div>`
             : '<p class="cab-empty">Проверок пока нет. Данные появятся, когда ученики с аккаунтом начнут проходить миссии.</p>';
     const detail = stuckDetail ? `<section class="cab-block cabt-detail" aria-label="Разбор миссии">
@@ -387,7 +405,7 @@ function renderStuck(): string {
     </section>` : '';
     return `<div class="cabt-toolbar"><div class="cab-seg" role="tablist" aria-label="Язык">${seg}</div>
             <label class="cabt-inline"><span class="cab-sr">Класс</span><select class="cab-input" data-filter="classId" data-reload="stuck"><option value="">Все классы</option>${(overview?.classes ?? []).map((item) => `<option value="${item.id}"${filter.classId === item.id ? ' selected' : ''}>${esc(item.name)}</option>`).join('')}</select></label></div>
-        <p class="cab-lead">Миссии с наибольшим числом неудачных проверок вверху. Если ученики часто спотыкаются об одно замечание, формулировка задания или подсказка непонятна. Нажмите на миссию, чтобы увидеть, кто застрял и какой код пишут.</p>
+        <p class="cab-lead">Миссии с наибольшим числом ошибок вверху. «Опыты» — верные промежуточные запуски миссий из нескольких опытов (например, сначала зелёный, потом синий): они не ошибки. Если ученики часто спотыкаются об одно замечание, формулировка задания или подсказка непонятна. Нажмите на миссию, чтобы увидеть, кто застрял и какой код пишут.</p>
         ${table}${detail}`;
 }
 
@@ -431,25 +449,25 @@ function renderModal(): string {
                 <button type="button" role="tab" class="cab-seg__btn${modal.mode === 'list' ? ' is-active' : ''}" aria-selected="${modal.mode === 'list'}" data-act="add-mode" data-mode="list">Списком</button>
                 <button type="button" role="tab" class="cab-seg__btn${modal.mode === 'one' ? ' is-active' : ''}" aria-selected="${modal.mode === 'one'}" data-act="add-mode" data-mode="one">Одного</button></div>
             ${modal.mode === 'list' ? `<form class="cab-form" data-form="bulk">
-                <label class="cab-field"><span>ФИО, по одному в строке</span><textarea class="cab-input" name="names" rows="8" required placeholder="Иванов Иван&#10;Петрова Мария&#10;Сидоров Алексей" data-autofocus></textarea><small>Логины (ivanov.ivan) и временные пароли придумает сервер. До 100 человек за раз. Пароли покажутся один раз: скачайте или распечатайте их.</small></label>
+                <label class="cab-field"><span>Имена или ники, по одному в строке</span><textarea class="cab-input" name="names" rows="8" required placeholder="Иванов Иван&#10;Петрова Мария&#10;Сидоров Алексей" data-autofocus></textarea><small>Логины (ivanov.ivan) и временные пароли придумает сервер. До 100 человек за раз. Пароли покажутся один раз: скачайте или распечатайте их.</small></label>
                 <label class="cab-field"><span>Класс</span><select class="cab-input" name="classId"><option value="">Без класса</option>${classOptions}</select></label>
                 <button type="submit" class="cab-btn cab-btn--primary">Создать аккаунты</button></form>`
             : `<form class="cab-form" data-form="one">
-                <label class="cab-field"><span>ФИО</span><input class="cab-input" name="fullName" required data-autofocus></label>
+                <label class="cab-field"><span>Имя или ник</span><input class="cab-input" name="fullName" required data-autofocus></label>
                 <label class="cab-field"><span>Логин</span><input class="cab-input" name="login" required autocomplete="off"><small>Латинские буквы, цифры, точка, дефис, подчёркивание; от 3 символов</small></label>
                 <label class="cab-field"><span>Пароль</span><input class="cab-input" name="password" required autocomplete="new-password"><small>Не короче 6 символов</small></label>
                 <label class="cab-field"><span>Класс</span><select class="cab-input" name="classId"><option value="">Без класса</option>${classOptions}</select></label>
                 <button type="submit" class="cab-btn cab-btn--primary">Создать</button></form>`}`);
     }
     if (modal.kind === 'rename') {
-        return frame('Изменить ФИО', `<form class="cab-form" data-form="rename" data-id="${modal.id}">
-            <label class="cab-field"><span>ФИО ученика</span><input class="cab-input" name="fullName" value="${esc(modal.fullName)}" required maxlength="100" autocomplete="off" data-autofocus><small>Фамилия и имя полностью. Логин и пароль не меняются, прогресс и история сохраняются.</small></label>
+        return frame('Изменить имя', `<form class="cab-form" data-form="rename" data-id="${modal.id}">
+            <label class="cab-field"><span>Имя или ник ученика</span><input class="cab-input" name="fullName" value="${esc(modal.fullName)}" required maxlength="100" autocomplete="off" data-autofocus><small>Фамилия и имя полностью. Логин и пароль не меняются, прогресс и история сохраняются.</small></label>
             <div class="cab-form__row"><button type="submit" class="cab-btn cab-btn--primary">Сохранить</button><button type="button" class="cab-btn cab-btn--ghost" data-act="modal-close">Отмена</button></div></form>`);
     }
     if (modal.kind === 'credentials') {
         return frame(modal.title, `
             <p class="cab-lead">Пароли показываются только сейчас, потом их нельзя будет узнать: на сервере хранится лишь хеш. Ученик должен сменить временный пароль при первом входе.</p>
-            <div class="cabt-tablewrap"><table class="cabt-table cabt-table--plain"><thead><tr><th scope="col">ФИО</th><th scope="col">Логин</th><th scope="col">Пароль</th></tr></thead><tbody>${modal.rows.map((row) => `<tr><td>${esc(row.fullName)}</td><td><code>${esc(row.login)}</code></td><td><code>${esc(row.password)}</code></td></tr>`).join('')}</tbody></table></div>
+            <div class="cabt-tablewrap"><table class="cabt-table cabt-table--plain"><thead><tr><th scope="col">Имя</th><th scope="col">Логин</th><th scope="col">Пароль</th></tr></thead><tbody>${modal.rows.map((row) => `<tr><td>${esc(row.fullName)}</td><td><code>${esc(row.login)}</code></td><td><code>${esc(row.password)}</code></td></tr>`).join('')}</tbody></table></div>
             ${modal.skipped.length ? `<div class="cab-notice cab-notice--warn" role="status"><span>Не созданы: ${modal.skipped.map((item) => `«${esc(item.line)}» — ${esc(item.reason)}`).join('; ')}</span></div>` : ''}
             <div class="cab-actions"><button type="button" class="cab-btn cab-btn--primary" data-act="csv-credentials">${ICON.download}<span>Скачать CSV</span></button><button type="button" class="cab-btn cab-btn--ghost" data-act="print-credentials">${ICON.print}<span>Распечатать листки</span></button></div>`, true);
     }
@@ -471,8 +489,96 @@ function renderModal(): string {
 /* ---------- Каркас ---------- */
 
 const TABS: Array<{ id: View; label: string }> = [
-    { id: 'class', label: 'Класс' }, { id: 'matrix', label: 'Таблица' }, { id: 'stuck', label: 'Где застревают' }, { id: 'improve', label: 'Что улучшить' }
+    { id: 'class', label: 'Класс' }, { id: 'matrix', label: 'Таблица' }, { id: 'stuck', label: 'Где застревают' }, { id: 'improve', label: 'Что улучшить' },
+    { id: 'org', label: 'Организация' }
 ];
+/** Вкладки: у админа ещё «Организации» (все, кого он видит). */
+const tabsFor = (): Array<{ id: View; label: string }> => (isAdmin() ? [...TABS, { id: 'admin', label: 'Организации' }] : TABS);
+
+const INVITE_STATE: Record<OrgInvite['state'], string> = { ok: 'Действует', expired: 'Срок вышел', revoked: 'Отозвана', 'used-up': 'Использована' };
+
+function renderInviteList(invites: OrgInvite[], kind: 'student' | 'teacher'): string {
+    const list = invites.filter((invite) => invite.kind === kind);
+    if (!list.length) return `<p class="cab-empty">Ссылок пока нет. Создайте первую кнопкой выше.</p>`;
+    return `<ul class="cabo-invites">${list.map((invite) => `<li class="cabo-invite${invite.state === 'ok' ? '' : ' is-off'}">
+        <div class="cabo-invite__link"><input class="cab-input" readonly value="${esc(inviteLink(invite))}" aria-label="Ссылка-приглашение" data-select-all>
+            <button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="invite-copy" data-id="${invite.id}">${ICON.copy}<span>Скопировать</span></button></div>
+        <div class="cabo-invite__meta">
+            <span class="cab-chip ${invite.state === 'ok' ? 'cab-chip--ok' : 'cab-chip--plain'}">${INVITE_STATE[invite.state]}</span>
+            <span class="cab-muted">до ${fmtDate(invite.expiresAt)} · использована ${invite.uses}${invite.maxUses ? ` из ${invite.maxUses}` : ''} · создал ${esc(invite.createdBy || 'учитель')}</span>
+            ${invite.state === 'ok' ? `<button type="button" class="cab-link cab-danger" data-act="invite-revoke" data-id="${invite.id}">Отозвать</button>` : ''}
+        </div></li>`).join('')}</ul>`;
+}
+
+function inviteForm(kind: 'student' | 'teacher'): string {
+    return `<form class="cabo-invite-form" data-form="invite-create" data-kind="${kind}">
+        <label class="cab-field"><span>Срок действия</span><select class="cab-input" name="days"><option value="7">7 дней</option><option value="30" selected>30 дней</option><option value="90">90 дней</option><option value="365">Год</option></select></label>
+        <label class="cab-field"><span>Сколько человек может воспользоваться</span><input class="cab-input" name="maxUses" type="number" min="1" max="1000" placeholder="Без ограничения"></label>
+        <button type="submit" class="cab-btn cab-btn--primary cab-btn--sm">${ICON.plus}<span>${kind === 'student' ? 'Создать ссылку для учеников' : 'Создать ссылку для коллег'}</span></button>
+    </form>`;
+}
+
+function renderOrg(): string {
+    if (!orgData) return '<div class="cab-state" role="status"><span class="cab-spinner" aria-hidden="true"></span><p>Загружаем организацию…</p></div>';
+    const { org, teachers, invites, counts } = orgData;
+    const admin = isAdmin();
+    const rename = org.canManageTeam
+        ? `<form class="cab-form cabo-rename" data-form="org-rename"><label class="cab-field"><span>Название организации</span><input class="cab-input" name="name" value="${esc(org.name)}" required maxlength="60"></label>
+            <button type="submit" class="cab-btn cab-btn--primary cab-btn--sm">Сохранить</button></form>`
+        : `<h3 class="cabo-name">${esc(org.name)}</h3>`;
+    const team = teachers.map((teacher) => `<li class="cabo-teacher">
+        <span class="cab-avatar cab-avatar--sm" aria-hidden="true">${esc(initials(teacher.fullName))}</span>
+        <span class="cabo-teacher__who"><strong>${esc(teacher.fullName)}</strong><small>Логин ${esc(teacher.login)} · был ${esc(ago(teacher.lastActiveAt))}</small></span>
+        ${teacher.isOwner ? '<span class="cab-chip cab-chip--ok">Владелец</span>' : teacher.role === 'admin' ? '<span class="cab-chip cab-chip--plain">Админ</span>' : ''}
+        ${admin && teacher.role === 'teacher' ? `<button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="teacher-reset" data-id="${teacher.id}">${ICON.key}<span>Новый пароль</span></button>` : ''}
+        ${org.canManageTeam && !teacher.isOwner && teacher.role === 'teacher' ? `<button type="button" class="cab-btn cab-btn--ghost cab-btn--sm cab-danger" data-act="teacher-remove" data-id="${teacher.id}">Убрать из команды</button>` : ''}
+    </li>`).join('');
+    return `<div class="cabo">
+        <section class="cab-block cabo-section">
+            ${rename}
+            <p class="cab-muted">${counts.students} ${plural(counts.students, 'ученик', 'ученика', 'учеников')} · ${counts.teachers} ${plural(counts.teachers, 'учитель', 'учителя', 'учителей')}${org.blocked ? ' · организация заблокирована администратором' : ''}</p>
+        </section>
+        <section class="cab-block cabo-section" aria-labelledby="cabo-students-h">
+            <h3 id="cabo-students-h">Ссылки для учеников</h3>
+            <p class="cab-muted">Отправьте ссылку ученикам: они зарегистрируются сами и сразу попадут в вашу организацию. Потом вы разложите их по классам. Видеть их будете только вы и ваши коллеги.</p>
+            ${inviteForm('student')}
+            ${renderInviteList(invites, 'student')}
+        </section>
+        <section class="cab-block cabo-section" aria-labelledby="cabo-team-h">
+            <h3 id="cabo-team-h">Команда</h3>
+            <ul class="cabo-team">${team}</ul>
+            ${org.canManageTeam ? `<h4>Пригласить коллегу</h4>
+                <p class="cab-muted">Коллега станет учителем вашей организации: увидит всех её учеников и классы, но не сможет приглашать и убирать других учителей.</p>
+                ${inviteForm('teacher')}${renderInviteList(invites, 'teacher')}` : '<p class="cab-muted">Приглашать и убирать коллег может владелец организации.</p>'}
+        </section>
+    </div>`;
+}
+
+function renderAdmin(): string {
+    if (!adminOrgs) return '<div class="cab-state" role="status"><span class="cab-spinner" aria-hidden="true"></span><p>Загружаем организации…</p></div>';
+    const rows = adminOrgs.map((org) => `<tr class="${org.blocked ? 'is-blocked' : ''}">
+        <td data-label="Организация"><strong>${esc(org.name)}</strong>${org.isMain ? ' <span class="cab-chip cab-chip--plain">основная</span>' : ''}${org.blocked ? ' <span class="cab-chip cab-chip--danger">заблокирована</span>' : ''}</td>
+        <td data-label="Владелец">${esc(org.ownerName || '—')}</td>
+        <td data-label="Учителей">${org.teachers}</td>
+        <td data-label="Учеников">${org.students}</td>
+        <td data-label="Был(а)">${esc(ago(org.lastActiveAt))}</td>
+        <td class="cabo-actions"><button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="admin-open" data-id="${org.id}">Открыть</button>
+            ${org.isMain ? '' : `<button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="admin-block" data-id="${org.id}" data-blocked="${org.blocked ? '0' : '1'}">${org.blocked ? 'Разблокировать' : 'Заблокировать'}</button>
+            <button type="button" class="cab-btn cab-btn--ghost cab-btn--sm cab-danger" data-act="admin-delete" data-id="${org.id}">Удалить</button>`}</td></tr>`).join('');
+    return `<div class="cabo"><section class="cab-block cabo-section">
+        <h3>Все организации</h3>
+        <p class="cab-muted">Учителя регистрируются сами и создают организации. «Открыть» переключает кабинет на организацию: вы видите её учеников и команду. Удаление переносит учеников в «Основную», учителей и классы организации стирает.</p>
+        <div class="cab-tablewrap"><table class="cabt-table cabt-table--plain cabo-table"><thead><tr><th>Организация</th><th>Владелец</th><th>Учителей</th><th>Учеников</th><th>Был(а)</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    </section></div>`;
+}
+
+/** Админ выбирает, чьих учеников смотрит: «Все» или одну организацию. */
+function renderAdminScope(): string {
+    if (!isAdmin() || !adminOrgs) return '';
+    const current = getAdminOrg() ?? '';
+    const options = [`<option value="*"${current === '*' ? ' selected' : ''}>Все организации</option>`, ...adminOrgs.map((org) => `<option value="${org.id}"${current === org.id || (!current && org.isMain) ? ' selected' : ''}>${esc(org.name)}</option>`)].join('');
+    return `<label class="cabo-scope"><span class="cab-sr">Организация</span><select class="cab-input cab-input--sm" data-act="admin-scope" aria-label="Организация">${options}</select></label>`;
+}
 
 function render(): void {
     if (!root) return;
@@ -487,14 +593,17 @@ function render(): void {
     else if (view === 'matrix') content = renderMatrix(overview);
     else if (view === 'student') content = renderStudent();
     else if (view === 'stuck') content = renderStuck();
+    else if (view === 'org') content = renderOrg();
+    else if (view === 'admin') content = renderAdmin();
     else content = renderImprove();
 
-    const tabs = [...TABS, ...(view === 'student' ? [{ id: 'student' as View, label: student ? student.fullName : 'Ученик' }] : [])];
+    const tabs = [...tabsFor(), ...(view === 'student' ? [{ id: 'student' as View, label: student ? student.fullName : 'Ученик' }] : [])];
     root.innerHTML = `
         <div class="cab-shell cabt-shell" role="dialog" aria-modal="true" aria-labelledby="cabt-title"${modal ? ' aria-hidden="true"' : ''}>
             <header class="cab-top">
-                <h2 id="cabt-title">Кабинет учителя</h2>
+                <h2 id="cabt-title">${isAdmin() ? 'Кабинет администратора' : 'Кабинет учителя'}</h2>
                 <div class="cabt-top__actions">
+                    ${renderAdminScope()}
                     <button type="button" class="cab-btn cab-btn--primary cab-btn--sm" data-act="add-open">${ICON.plus}<span>Добавить учеников</span></button>
                     <button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="classes-open">${ICON.users}<span>Классы</span></button>
                     <button type="button" class="cab-btn cab-btn--ghost cab-btn--sm" data-act="report-open">${ICON.download}<span>Отчёт CSV</span></button>
@@ -546,7 +655,60 @@ async function handleAction(node: HTMLElement): Promise<void> {
             view = next;
             if (next === 'stuck') { await loadStuck(); return; }
             if (next === 'improve') { await loadMetrics(); return; }
+            if (next === 'org') { orgData = null; render(); await loadOrg(); return; }
+            if (next === 'admin') { adminOrgs = null; render(); await loadAdminOrgs(); return; }
             render();
+            return;
+        }
+        case 'invite-copy': {
+            const invite = orgData?.invites.find((item) => item.id === id);
+            if (!invite) return;
+            const link = inviteLink(invite);
+            try { await navigator.clipboard.writeText(link); say('ok', 'Ссылка скопирована. Отправьте её в мессенджере или напишите на доске.', false); }
+            catch { window.prompt('Скопируйте ссылку (Ctrl+C):', link); }
+            return;
+        }
+        case 'invite-revoke': {
+            if (!window.confirm('Отозвать ссылку? По ней больше нельзя будет зарегистрироваться. Уже зарегистрированные останутся.')) return;
+            await guard(async () => { await orgApi.revokeInvite(id); orgData = await orgApi.get(); say('ok', 'Ссылка отозвана.', false); });
+            return;
+        }
+        case 'teacher-remove': {
+            const teacher = orgData?.teachers.find((item) => item.id === id);
+            if (!teacher || !window.confirm(`Убрать «${teacher.fullName}» из команды? Аккаунт останется, но у него будет своя пустая организация без ваших учеников.`)) return;
+            await guard(async () => { await orgApi.removeTeacher(id); orgData = await orgApi.get(); say('ok', 'Учитель убран из команды.', false); });
+            return;
+        }
+        case 'teacher-reset': {
+            const teacher = orgData?.teachers.find((item) => item.id === id);
+            if (!teacher || !window.confirm(`Выдать «${teacher.fullName}» новый пароль? Старый перестанет работать.`)) return;
+            await guard(async () => {
+                const result = await adminApi.resetTeacherPassword(id);
+                modal = { kind: 'credentials', title: 'Новый пароль учителя', rows: [{ id, fullName: result.fullName, login: result.login, password: result.password }], skipped: [] };
+                render();
+            });
+            return;
+        }
+        case 'admin-open': {
+            setAdminOrg(id);
+            await guard(async () => { await refresh(); orgData = null; view = 'class'; render(); });
+            return;
+        }
+        case 'admin-block': {
+            const block = node.dataset.blocked === '1';
+            if (block && !window.confirm('Заблокировать организацию? Её учителя не смогут войти. Ученики продолжат учиться.')) return;
+            await guard(async () => { await adminApi.update(id, { blocked: block }); adminOrgs = await adminApi.orgs(); say('ok', block ? 'Организация заблокирована.' : 'Организация разблокирована.', false); });
+            return;
+        }
+        case 'admin-delete': {
+            const org = adminOrgs?.find((item) => item.id === id);
+            if (!org || !window.confirm(`Удалить организацию «${org.name}»? Её ${org.students} ${plural(org.students, 'ученик', 'ученика', 'учеников')} перейдут в «Основную» без класса, а ${org.teachers} ${plural(org.teachers, 'учитель', 'учителя', 'учителей')} и классы будут удалены. Это нельзя отменить.`)) return;
+            await guard(async () => {
+                const result = await adminApi.remove(id);
+                if (getAdminOrg() === id) setAdminOrg(null);
+                adminOrgs = await adminApi.orgs();
+                say('ok', `Организация удалена. В «Основную» перенесено учеников: ${result.movedStudents}.`, false);
+            });
             return;
         }
         case 'status': filter = { ...filter, status: node.dataset.status as StatusFilter }; render(); return;
@@ -704,6 +866,19 @@ async function handleAction(node: HTMLElement): Promise<void> {
 async function handleSubmit(form: HTMLFormElement, submitter: HTMLElement | null): Promise<void> {
     const values = formValues(form);
     switch (form.dataset.form) {
+        case 'org-rename': {
+            await guard(async () => { orgData = await orgApi.rename(values.name); say('ok', 'Название сохранено.', false); });
+            return;
+        }
+        case 'invite-create': {
+            const kind = form.dataset.kind === 'teacher' ? 'teacher' : 'student';
+            await guard(async () => {
+                await orgApi.createInvite(kind, { days: Number(values.days) || 30, maxUses: values.maxUses ? Number(values.maxUses) : null });
+                orgData = await orgApi.get();
+                say('ok', 'Ссылка создана. Скопируйте её кнопкой рядом.', false);
+            });
+            return;
+        }
         case 'bulk': {
             await guard(async () => {
                 const result = await teacherApi.bulkCreate(values.names, values.classId || null);
@@ -731,7 +906,7 @@ async function handleSubmit(form: HTMLFormElement, submitter: HTMLElement | null
                 if (student?.id === id) student = updated;
                 modal = null;
                 await refresh();
-                say('ok', `ФИО изменено: ${updated.fullName}.`);
+                say('ok', `Имя изменено: ${updated.fullName}.`);
             });
             return;
         }
@@ -771,6 +946,11 @@ function onClick(event: Event): void {
 
 function onChange(event: Event): void {
     const node = event.target as HTMLElement;
+    if (node instanceof HTMLSelectElement && node.dataset.act === 'admin-scope') {
+        setAdminOrg(node.value);
+        void guard(async () => { orgData = null; await refresh(); if (view === 'org') await loadOrg(); render(); });
+        return;
+    }
     if (node instanceof HTMLInputElement && node.dataset.act) { void handleAction(node); return; }
     const key = node.dataset.filter as keyof StudentFilter | undefined;
     if (!key) return;
@@ -818,7 +998,10 @@ export async function openTeacherPanel(): Promise<void> {
     notice = null;
     loading = true;
     selected = new Set();
+    orgData = null;
+    adminOrgs = null;
     render();
+    if (isAdmin()) await guard(async () => { adminOrgs = await adminApi.orgs(); });
     await guard(async () => { await refresh(); });
     loading = false;
     render();

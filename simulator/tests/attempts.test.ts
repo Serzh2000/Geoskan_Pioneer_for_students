@@ -7,7 +7,7 @@ import request from 'supertest';
 import { AccountStore, ensureTeacher, registerAccountRoutes } from '../server/accounts.js';
 import { AttemptLog, MAX_CODE_LENGTH } from '../server/attempts.js';
 
-const student = { fullName: 'Иванов Иван', login: 'ivanov', loginRepeat: 'ivanov', password: 'secret1', passwordRepeat: 'secret1' };
+const student = { fullName: 'Иванов Иван', login: 'ivanov', loginRepeat: 'ivanov', password: 'secret1', passwordRepeat: 'secret1', consentPd: true, acceptTerms: true, confirmConsents: true };
 
 async function makeApp() {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'attempts-'));

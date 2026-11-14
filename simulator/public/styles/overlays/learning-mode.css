@@ -324,3 +324,24 @@ body[data-app-mode='learning'] #sidebar-guide-btn { display: none; }
 @keyframes auth-nudge-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes auth-nudge-pop { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .auth-nudge-back, .auth-nudge { animation: none; } }
+
+/* Honeypot field of the teacher sign-up: invisible to people, bots fill it in. */
+.auth-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.account-banner--info { color: var(--text-color); background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent-color) 40%, transparent); }
+.account-banner--info strong { color: var(--accent-color-strong); }
+
+/* Account deletion: a quiet link in the profile, a red submit that stays disabled until the checks pass. */
+.account-delete-link { justify-self: start; padding: 8px 0; font: inherit; font-size: 13.5px; color: var(--text-muted); background: none; border: 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.account-delete-link:hover { color: var(--danger); }
+.account-submit--danger { color: #fff; background: var(--danger, #d64545); border-color: transparent; }
+.account-submit--danger:hover:not(:disabled) { filter: brightness(1.08); }
+.account-submit--danger:disabled { opacity: .45; cursor: not-allowed; }
+.auth-check { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; line-height: 1.45; }
+.auth-check input { margin-top: 3px; flex: none; width: 18px; height: 18px; }
+
+/* Consent checkboxes (sign-up form and the consent gate for existing accounts). */
+.auth-consents { display: grid; gap: 10px; }
+.auth-check a { color: var(--accent-color-strong, var(--accent-color)); }
+.consent-gate { text-align: left; justify-items: stretch; }
+.consent-gate h2, .consent-gate p { text-align: left; }
+.consent-gate__checks { display: grid; gap: 10px; }

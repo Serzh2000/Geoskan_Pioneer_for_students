@@ -3,8 +3,14 @@
  * Сервер хранит учётные записи и зачёт миссий (server/accounts.ts); здесь только тонкая обёртка над fetch и
  * состояние «кто сейчас вошёл». Без входа всё работает как раньше: прогресс остаётся в браузере.
  */
+/** Организация пользователя и его роль в ней (isOwner - владелец, управляет командой). */
+export type AccountOrg = { id: string; name: string; isOwner: boolean };
 /** viewAs — учитель смотрит кабинет от имени этого ученика (только чтение), teacherName — кто смотрит. */
-export type AccountUser = { id: string; role: 'teacher' | 'student'; fullName: string; login: string; mustChangePassword?: boolean; viewAs?: { teacherName: string } };
+export type AccountUser = { id: string; role: 'admin' | 'teacher' | 'student'; fullName: string; login: string; mustChangePassword?: boolean; org?: AccountOrg; viewAs?: { teacherName: string };
+    /** Нет согласия на нынешнюю версию политики: до принятия сервис ничего не записывает. */
+    needsConsent?: boolean };
+/** Учитель или админ: всё, что не ученик. */
+export const isStaffUser = (value: AccountUser | null | undefined): boolean => Boolean(value && value.role !== 'student');
 /** Способы обучения. sdk2 и bricks — треки для Пионера Мини 2 (Python на pioneer_sdk2 и блоки Pioneer Bricks). */
 export type AccountTrack = 'blocks' | 'lua' | 'python' | 'sdk2' | 'bricks';
 export const ACCOUNT_TRACKS: readonly AccountTrack[] = ['blocks', 'lua', 'python', 'sdk2', 'bricks'];
@@ -18,7 +24,7 @@ export type ClassInfo = { id: string; name: string; createdAt: number; count?: n
 export type StuckInfo = { track: AccountTrack; questId: string; fails: number; lastAt: number };
 export type OverviewStudent = StudentSummary & { done: ServerProgress; attemptsTotal: number; attempts7d: number; lastAttemptAt: number | null; stuck: StuckInfo | null };
 export type Overview = { classes: ClassInfo[]; students: OverviewStudent[]; activity: Record<string, number>; today: string };
-export type AttemptRecord = { at: number; track: AccountTrack; questId: string; solved: boolean; titles: string[]; code: string; name?: string };
+export type AttemptRecord = { at: number; track: AccountTrack; questId: string; solved: boolean; partial?: boolean; titles: string[]; code: string; name?: string };
 export type CabinetData = {
     user: AccountUser;
     classGroup: ClassInfo | null;
@@ -37,13 +43,29 @@ export type MetricsSummary = {
 };
 export type BulkCredentials = { id: string; fullName: string; login: string; password: string };
 
-export type RegisterForm = { fullName: string; login: string; loginRepeat: string; password: string; passwordRepeat: string };
+export type ConsentForm = { consentPd: boolean; acceptTerms: boolean; confirmConsents?: boolean };
+export type RegisterForm = { fullName: string; login: string; loginRepeat: string; password: string; passwordRepeat: string; invite?: string } & ConsentForm;
+export type TeacherRegisterForm = RegisterForm & { orgName?: string; captchaToken?: string; captchaAnswer?: string; website?: string };
+export type InviteState = 'ok' | 'expired' | 'revoked' | 'used-up';
+export type InviteInfo = { kind: 'student' | 'teacher'; orgName: string; state: InviteState; message: string };
+export type OrgInvite = { id: string; token: string; kind: 'student' | 'teacher'; createdAt: number; expiresAt: number; maxUses: number | null; uses: number; state: InviteState; createdBy: string };
+export type OrgData = {
+    org: { id: string; name: string; isMain: boolean; blocked: boolean; createdAt: number; ownerId: string; canManageTeam: boolean };
+    teachers: Array<{ id: string; fullName: string; login: string; role: 'admin' | 'teacher'; isOwner: boolean; lastActiveAt: number | null }>;
+    invites: OrgInvite[];
+    counts: { students: number; teachers: number };
+};
+export type AdminOrg = { id: string; name: string; isMain: boolean; blocked: boolean; createdAt: number; ownerName: string; teachers: number; students: number; lastActiveAt: number | null };
 
 export class ApiError extends Error {
     constructor(public status: number, message: string) { super(message); }
 }
 
 let user: AccountUser | null = null;
+/** Организация, с которой работает админ: id, «*» (все сразу) или null (своя). Учителям не нужна: сервер знает их организацию. */
+let adminOrg: string | null = null;
+export const getAdminOrg = (): string | null => adminOrg;
+export function setAdminOrg(value: string | null): void { adminOrg = value; }
 /** Сервер больше не узнаёт сессию (два часа без запросов): пользователь остаётся «текущим», но входить нужно заново. */
 let expired = false;
 const listeners = new Set<(user: AccountUser | null) => void>();
@@ -69,6 +91,7 @@ async function call<T>(method: string, url: string, body?: unknown): Promise<T> 
         const headers: Record<string, string> = {};
         if (body !== undefined) headers['Content-Type'] = 'application/json';
         if (user && !url.startsWith('/api/auth/login') && !url.startsWith('/api/auth/register')) headers['X-Pioneer-User'] = user.id;
+        if (user?.role === 'admin' && adminOrg) headers['X-Pioneer-Org'] = adminOrg;
         response = await fetch(url, {
             method,
             credentials: 'same-origin',
@@ -170,8 +193,50 @@ export async function register(form: RegisterForm): Promise<AccountUser> {
     return result.user;
 }
 
+/** Принять политику и условия (для тех, кто пришёл раньше или при смене версии). */
+export async function acceptConsent(form: ConsentForm): Promise<AccountUser> {
+    const result = await call<{ user: AccountUser }>('POST', '/api/auth/consent', form);
+    replaceUser(result.user);
+    return result.user;
+}
+
+export async function registerTeacher(form: TeacherRegisterForm): Promise<AccountUser> {
+    const result = await call<{ user: AccountUser }>('POST', '/api/auth/register-teacher', form);
+    lastAuthKind = 'register';
+    setUser(result.user);
+    return result.user;
+}
+
+/** Вопрос «не бот» для регистрации учителя: текст и подписанный токен. */
+export const fetchCaptcha = (): Promise<{ token: string; question: string }> => call('GET', '/api/auth/captcha');
+
+/** Что за ссылка-приглашение (без входа): чья организация, для кого и действует ли. */
+export const fetchInvite = (token: string): Promise<InviteInfo> => call('GET', `/api/invites/${encodeURIComponent(token)}`);
+
+/** Ученик с аккаунтом переходит в организацию по ссылке (после его согласия в окне). */
+export async function joinOrganization(invite: string): Promise<AccountUser> {
+    const result = await call<{ user: AccountUser }>('POST', '/api/auth/join', { invite });
+    replaceUser(result.user);
+    return result.user;
+}
+
+/** Ученик удаляет свой аккаунт: сервер просит логин и пароль. На этом компьютере стираются и его локальный прогресс и черновики. */
+export async function deleteMyAccount(confirm: string, password: string): Promise<void> {
+    const id = user?.id;
+    await call('POST', '/api/auth/delete-account', { confirm, password });
+    try {
+        if (id) {
+            const marker = `:u:${id}`;
+            Object.keys(window.localStorage).filter((key) => key.startsWith('pioneer:') && key.includes(marker)).forEach((key) => window.localStorage.removeItem(key));
+        }
+    } catch { /* хранилище недоступно: на сервере всё уже удалено */ }
+    adminOrg = null;
+    setUser(null);
+}
+
 export async function logout(): Promise<void> {
     await call('POST', '/api/auth/logout').catch(() => undefined);
+    adminOrg = null;
     setUser(null);
 }
 
@@ -195,11 +260,11 @@ export async function changePassword(current: string, password: string, password
 export const fetchProgress = async (): Promise<ServerProgress> => (await call<{ progress: ServerProgress }>('GET', '/api/progress')).progress;
 
 /** Результат одной проверки для журнала учителя; ошибки отправки не должны мешать ученику. */
-export const reportAttempt = async (attempt: { track: AccountTrack; questId: string; solved: boolean; titles: string[]; code: string }): Promise<void> => {
+export const reportAttempt = async (attempt: { track: AccountTrack; questId: string; solved: boolean; titles: string[]; code: string; partial?: boolean }): Promise<void> => {
     try { await call('POST', '/api/learning/attempt', attempt); } catch { /* журнал не критичен */ }
 };
 
-export type QuestStats = { track: AccountTrack; questId: string; attempts: number; solved: number; students: number; studentsSolved: number; avgAttemptsToSolve: number | null; topIssues: { title: string; count: number }[] };
+export type QuestStats = { track: AccountTrack; questId: string; attempts: number; solved: number; partial: number; failures: number; students: number; studentsSolved: number; avgAttemptsToSolve: number | null; avgFailsToSolve: number | null; topIssues: { title: string; count: number }[] };
 export type FailedAttempt = { at: number; name: string; titles: string[]; code: string };
 export type StuckStudent = { userId: string; name: string; fails: number; lastAt: number };
 
@@ -246,6 +311,24 @@ export const teacherApi = {
     bulkCreate: (names: string, classId: string | null) => call<{ created: BulkCredentials[]; skipped: { line: string; reason: string }[] }>('POST', '/api/teacher/students/bulk', { names, classId }),
     moveStudents: (ids: string[], classId: string | null) => call<{ moved: number }>('POST', '/api/teacher/students/batch', { ids, action: 'move', classId }),
     resetPasswords: async (ids: string[]) => (await call<{ passwords: BulkCredentials[] }>('POST', '/api/teacher/students/batch', { ids, action: 'reset' })).passwords
+};
+
+/** Организация учителя: команда и ссылки-приглашения. */
+export const orgApi = {
+    get: () => call<OrgData>('GET', '/api/org'),
+    rename: (name: string) => call<OrgData>('PATCH', '/api/org', { name }),
+    createInvite: async (kind: 'student' | 'teacher', options: { days?: number; maxUses?: number | null } = {}) =>
+        (await call<{ invite: OrgInvite }>('POST', '/api/org/invites', { kind, ...options })).invite,
+    revokeInvite: async (id: string) => { await call('DELETE', `/api/org/invites/${encodeURIComponent(id)}`); },
+    removeTeacher: async (id: string) => { await call('DELETE', `/api/org/teachers/${encodeURIComponent(id)}`); }
+};
+
+/** Администратор: все организации. */
+export const adminApi = {
+    orgs: async () => (await call<{ orgs: AdminOrg[] }>('GET', '/api/admin/orgs')).orgs,
+    update: async (id: string, body: { name?: string; blocked?: boolean }) => { await call('PATCH', `/api/admin/orgs/${encodeURIComponent(id)}`, body); },
+    remove: (id: string) => call<{ movedStudents: number; removedTeachers: number }>('DELETE', `/api/admin/orgs/${encodeURIComponent(id)}`),
+    resetTeacherPassword: (id: string) => call<{ password: string; login: string; fullName: string }>('POST', `/api/admin/teachers/${encodeURIComponent(id)}/reset-password`)
 };
 
 /* ---------- Анонимная метрика ---------- */

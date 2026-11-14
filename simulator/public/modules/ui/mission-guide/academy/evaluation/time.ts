@@ -21,7 +21,7 @@ export function gradeTimeAcademy(number: number, samples: DroneSample[], events:
         if (lights.length !== colors.length || lights.some((event, i) => !matches(event, colors[i]))) fail('Последовательность света отличается', 'Нужен полный порядок реальных LED-команд.', 'Проверьте включения, выключения и номер LED 0.');
     };
     const messages = (expected: string[]) => {
-        if (JSON.stringify(prints.map(event => event.text?.trim())) !== JSON.stringify(expected)) fail('Проверьте сообщения', `Ожидаются отдельные записи: ${expected.join(' → ')}.`, 'Печатайте подтверждение в соответствующей ветке программы.');
+        if (JSON.stringify(prints.map(event => event.text?.trim())) !== JSON.stringify(expected)) fail('Проверьте сообщения', `Ожидаются отдельные записи: ${expected.join(' → ')}. Сейчас напечатано: ${prints.map(event => event.text?.trim()).join(' → ') || 'ничего'}.`, 'Печатайте подтверждение в соответствующей ветке программы.');
     };
     const afterArm = (event: LearningEvent | undefined) => {
         if (!event || events.indexOf(event) <= events.indexOf(arms[0])) fail('Подтверждение опередило подготовку', 'Действие должно следовать за принятым arm.', 'Поместите действие в обработчик готовности или после проверки состояния.');

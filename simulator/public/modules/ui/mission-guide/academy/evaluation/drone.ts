@@ -25,7 +25,12 @@ export function gradeDroneAcademy(number: number, samples: DroneSample[], events
         if (number === 2 && !activity.code.split('\n').some(line => /^\s*(--|#)\s*Мой первый опыт\s*$/i.test(line))) diagnostics.push(error('Добавьте свой комментарий', 'В программе пока нет комментария «Мой первый опыт».', 'Строка должна выглядеть ровно так: `# Мой первый опыт` в Python или `-- Мой первый опыт` в Lua. Без слова TODO и без кавычек.'));
     } else if (number === 4) {
         if (requests.length !== 2 || accepted.length !== 1 || rejected.length !== 1 || requests[0] !== accepted[0]) {
-            diagnostics.push(error('Повторная команда пока не исследована', 'Нужно увидеть принятую подготовку из IDLE, затем отклонение подготовки из PREFLIGHT.', 'Вызовите подготовку дважды по заготовке. Не заменяйте повтор взлётом и не сбрасывайте состояние между командами.'));
+            const seenNow = `Сейчас запросов подготовки: ${requests.length}, принято: ${accepted.length}, отклонено в PREFLIGHT: ${rejected.length}.`;
+            const fix = requests.length === 0 ? 'Подготовка не отправлена: добавьте команду по заготовке, а затем второй такой же запрос.'
+                : requests.length === 1 ? 'Нужен второй запрос подготовки, когда двигатели уже запущены. Один запрос ничего не покажет об отказе.'
+                : accepted.length >= 2 ? 'Оба запроса приняты: второй ушёл слишком рано, до запуска двигателей. В Lua отправьте второй запрос из обработчика ENGINES_STARTED внутри callback, в Python вызовите второй arm() после первого.'
+                : 'Вызовите подготовку дважды по заготовке. Не заменяйте повтор взлётом и не сбрасывайте состояние между командами.';
+            diagnostics.push(error('Повторная команда пока не исследована', `Нужно увидеть принятую подготовку из IDLE, затем отклонение повтора из PREFLIGHT. ${seenNow}`, fix));
         }
     } else if (requests.length !== 1 || accepted.length !== 1 || last.fsmState !== 'PREFLIGHT') {
         diagnostics.push(error('Одна подготовка пока не подтверждена', `Принято подготовок: ${accepted.length}; запросов: ${requests.length}; состояние: ${last.fsmState}.`, 'Отправьте одну правильную команду подготовки, без взлёта или повторного arm.'));

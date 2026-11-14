@@ -28,11 +28,14 @@ export function gradeSignalsCode(number: number, samples: DroneSample[], events:
     const led = events.filter(event => event.kind === 'led');
     const zero = led.filter(event => event.ledId === 0);
     const messages = events.filter(event => event.kind === 'print').map(event => event.text?.trim().toLowerCase() || '');
+    // Что светодиод показывает на самом деле: без этого ученик гадает, ошибся он в числе, в шкале или в номере.
+    const seen = (color: { r: number; g: number; b: number } | undefined) => (color ? `R ${Math.round(color.r)}, G ${Math.round(color.g)}, B ${Math.round(color.b)}` : 'нет данных');
+    const SCALE = 'В Lua канал задают числом от 0 до 1, в Python от 0 до 255.';
     const checkFinal = (index: number, rgb: RGB) => {
-        if (!close(last.leds[index], rgb) || !led.some(event => event.ledId === index && close(event.color, rgb))) fail('Проверьте реальный RGB и индекс', `LED ${index} должен иметь RGB (${rgb.join(', ')}). Текст сообщения не устанавливает цвет.`, 'Сопоставьте номер элемента, диапазон языка и три канала.');
+        if (!close(last.leds[index], rgb) || !led.some(event => event.ledId === index && close(event.color, rgb))) fail('Проверьте реальный RGB и индекс', `LED ${index} сейчас: ${seen(last.leds[index])}. Нужно: R ${rgb[0]}, G ${rgb[1]}, B ${rgb[2]} (шкала 0–255).`, `Проверьте номер светодиода (считается с нуля) и три канала. ${SCALE}`);
     };
     const checkMessages = (expected: string[]) => {
-        if (JSON.stringify(messages) !== JSON.stringify(expected)) fail('Проверьте записи программы', `Нужны отдельные сообщения в порядке: ${expected.join(' → ')}.`, 'Исправьте данные или порядок вызовов print. Одна строка с перечислением не заменяет несколько вызовов.');
+        if (JSON.stringify(messages) !== JSON.stringify(expected)) fail('Проверьте записи программы', `Нужны отдельные сообщения в порядке: ${expected.join(' → ')}. Сейчас напечатано: ${messages.length ? messages.join(' → ') : 'ничего'}.`, 'Исправьте данные или порядок вызовов print. Одна строка с перечислением не заменяет несколько вызовов.');
     };
     const checkSequence = (expected: RGB[]) => {
         if (zero.length !== expected.length || zero.some((event, i) => !close(event.color, expected[i]))) fail('Порядок изменений не совпал', 'Журнал реальных LED-команд отличается от ожидаемой последовательности.', 'Оставьте нужные действия в заданном порядке.');
@@ -46,14 +49,14 @@ export function gradeSignalsCode(number: number, samples: DroneSample[], events:
     }
     if (number === 12) {
         trial = close(last.leds[0], green) ? 'green' : close(last.leds[0], blue) ? 'blue' : undefined;
-        if (!trial) fail('Нужен чистый зелёный или синий', 'Цвет текущего опыта отличается от задания.', 'Сначала включите только G, затем в другом запуске только B.');
+        if (!trial) fail('Нужен чистый зелёный или синий', `LED 0 сейчас: ${seen(last.leds[0])}. Нужен чистый зелёный (R 0, G 255, B 0) или чистый синий (R 0, G 0, B 255).`, `Для зелёного включите только G, для синего только B, остальные каналы 0. ${SCALE}`);
         else checkFinal(0, trial === 'green' ? green : blue);
         needs = ['green', 'blue'];
         if (trial === 'blue' && !activity.trials?.includes('green')) fail('Сначала проверьте зелёный', 'Первый опыт ещё не подтверждён.', 'Вернитесь к коду: получите зелёный, проверьте, затем замените его синим.');
     }
     if (number === 13) {
         trial = close(last.leds[0], [255, 255, 255]) ? 'white' : close(last.leds[0], [128, 128, 128]) ? 'dim-white' : undefined;
-        if (!trial) fail('Проверьте баланс белого', 'Нужны равные каналы при максимуме или половине диапазона.', 'Меняйте все три составляющие одинаково.');
+        if (!trial) fail('Проверьте баланс белого', `LED 0 сейчас: ${seen(last.leds[0])}. Нужны три равных канала: все на максимуме (255, 255, 255) или на половине (128, 128, 128).`, `Меняйте все три составляющие одинаково. ${SCALE}`);
         else checkFinal(0, trial === 'white' ? [255, 255, 255] : [128, 128, 128]);
         needs = ['white', 'dim-white'];
         if (trial === 'dim-white' && !activity.trials?.includes('white')) fail('Сначала сравним с максимумом', 'Яркий белый ещё не записан.', 'Выполните первый опыт со всеми каналами на максимуме.');

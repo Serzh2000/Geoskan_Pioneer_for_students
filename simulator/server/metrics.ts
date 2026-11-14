@@ -23,7 +23,8 @@ export const METRIC_EVENTS = [
 ] as const;
 export type MetricName = (typeof METRIC_EVENTS)[number];
 
-export type MetricEvent = { at: number; sid: string; name: MetricName; track?: string; questId?: string; value?: number; detail?: string };
+/** org - организация вошедшего пользователя (ставит сервер, не страница); у гостя и у старых записей её нет, они считаются «Основной». */
+export type MetricEvent = { at: number; sid: string; name: MetricName; track?: string; questId?: string; value?: number; detail?: string; org?: string };
 
 const SID = /^[A-Za-z0-9_-]{6,40}$/;
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
@@ -92,8 +93,9 @@ export class MetricsLog {
     }
 
     /** Сводка за последние `days` дней: по миссиям и в целом. */
-    summary(days = 30, now = Date.now()) {
-        const events = this.read(now - days * DAY);
+    summary(days = 30, now = Date.now(), org?: string | null, mainOrg = 'org-main') {
+        // org: только события этой организации; null или не задана - все (админ).
+        const events = this.read(now - days * DAY).filter((event) => !org || (event.org ?? mainOrg) === org);
         const quests = new Map<string, { m: QuestMetrics; sids: Set<string>; done: number[]; leave: number[] }>();
         const entry = (event: MetricEvent) => {
             const key = `${event.track}\n${event.questId}`;

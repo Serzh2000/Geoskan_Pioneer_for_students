@@ -15,8 +15,8 @@ import { getAppMode, onAppModeChange } from '../learning/mode.js';
  * flight physics and collisions, scene editor, swarm, gamepad), so everyone
  * sees the tour once more, including people who finished or skipped v1.
  */
-const TOUR_STORAGE_KEY = 'geoskan_onboarding_tour_v2';
-const LEGACY_TOUR_STORAGE_KEY = 'geoskan_onboarding_tour_v1';
+const TOUR_STORAGE_KEY = 'geoskan_onboarding_tour_v3';
+const LEGACY_TOUR_STORAGE_KEYS = ['geoskan_onboarding_tour_v1', 'geoskan_onboarding_tour_v2'];
 
 type TourStep = {
     /** CSS selector of the element to spotlight; omitted = centered card. */
@@ -111,6 +111,10 @@ const STEPS: TourStep[] = [
         text: 'Войдите, чтобы прогресс сохранялся: в личном кабинете видны пройденные миссии, награды и звание. Учитель видит класс в своём кабинете.'
     },
     {
+        title: 'Спасибо, Геоскан!',
+        text: 'Этот симулятор появился благодаря продукции группы компаний «Геоскан»: её дронам, документации и открытым материалам. Авторы искренне благодарны за то, что у школьников есть такая платформа для обучения. Симулятор неофициальный и не связан с компанией «Геоскан»; «Геоскан», «Пионер» и другие названия принадлежат их правообладателям. Если у правообладателей или у кого-либо ещё возникнут замечания об авторских правах, товарных знаках или других спорных моментах, пожалуйста, напишите нам (контакты в политике конфиденциальности): мы рассмотрим обращение, внесём исправления, а при необходимости приостановим работу сервиса.'
+    },
+    {
         title: 'Всё готово',
         text: 'Повторить тур можно в «Настройках». Откроем первую миссию?',
         nextLabel: 'Начать обучение',
@@ -190,7 +194,7 @@ export function startOnboardingTour(): void {
     const panelBeforeTour = activePanelId();
     let returning = false;
     try {
-        returning = !!localStorage.getItem(LEGACY_TOUR_STORAGE_KEY);
+        returning = LEGACY_TOUR_STORAGE_KEYS.some((key) => !!localStorage.getItem(key));
     } catch {
         // Storage unavailable: treat as a first visit.
     }

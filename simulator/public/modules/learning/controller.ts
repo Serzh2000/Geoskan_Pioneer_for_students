@@ -23,6 +23,9 @@ import { getAcademySceneEvidence, prepareAcademyScene, restoreAcademyScene, acad
 import { ACCOUNT_TRACKS, TRACK_NAMES, type AccountTrack, ApiError, fetchProgress, getLastAuthKind, getUser, isSessionExpired, onUserChange, reportAttempt, reportCompleted, restoreSession, startKeepAlive, trackEvent } from './account.js';
 import { initAccountUi, openAccountPanel } from './account-ui.js';
 import { shouldShowAuthNudge, showAuthNudge } from './auth-nudge.js';
+import { handleInviteLink, watchPendingJoin } from './invite-link.js';
+import { watchConsent } from './consent-gate.js';
+import { countUnfilledBlanks, unfilledBlanksMessage } from './blanks.js';
 import { openTeacherPanel } from './teacher-panel.js';
 import { openStudentCabinet } from './student-cabinet.js';
 import { getAppMode, onAppModeChange, setAppMode, type AppMode } from './mode.js';
@@ -681,6 +684,14 @@ async function checkQuest(): Promise<void> {
             renderHud();
             return;
         }
+        // Пропуски ___ из заготовки: запуск упадёт с ошибкой. Не запускаем и не записываем попытку, а объясняем.
+        const blanks = isBlocklyEditorEnabled() ? 0 : countUnfilledBlanks(code);
+        if (academy?.mode !== 'inspect' && blanks > 0) {
+            const message = unfilledBlanksMessage(blanks);
+            feedback = { kind: 'error', title: message.title, lines: message.lines };
+            renderHud();
+            return;
+        }
     }
     await runFlightCheck(quest);
 }
@@ -723,7 +734,9 @@ async function runFlightCheck(quest: Quest): Promise<void> {
         checking = false;
         if (academy && [5, 54, 107].includes(academy.number) && !result.diagnostics.some((item) => item.kind === 'error')) repeatedExperiments.set(trialKey, code);
         if (getUser()?.role === 'student') {
-            void reportAttempt({ track, questId: quest.id, solved: result.solved, titles: result.diagnostics.filter((item) => item.kind !== 'success').map((item) => item.title), code });
+            // Правильный промежуточный опыт миссии из нескольких запусков («Опыт записан») не ошибка: в журнал он идёт с пометкой.
+            const partial = !result.solved && !result.diagnostics.some((item) => item.kind === 'error') && result.diagnostics.some((item) => item.kind === 'info');
+            void reportAttempt({ track, questId: quest.id, solved: result.solved, partial, titles: result.diagnostics.filter((item) => item.kind !== 'success').map((item) => item.title), code });
         }
         if (result.academyTrial) {
             const trials = experimentTrials.get(trialKey) || new Set<string>();
@@ -1007,6 +1020,10 @@ export function initLearningMode(): void {
     });
     onUserChange(() => { void handleUserChange(); });
     sessionReady = restoreSession();
+    // Открыли сайт по ссылке-приглашению организации: после проверки входа показываем, кто приглашает.
+    watchPendingJoin();
+    watchConsent();
+    void sessionReady.then(() => handleInviteLink());
     startKeepAlive();
     (window as any).openLearningMission = openLearningMission;
     onAppModeChange(applyMode);

@@ -71,7 +71,7 @@ describe('CSV', () => {
         expect(summary[0]).toContain('Мини 2 · Bricks (из 16)');
         expect(summary[1]).toBe('Иванов Иван;ivanov.ivan;8А;1;2;0;0;0;;lua:q2');
         const matrix = matrixReport(list, classes, 'lua', [{ id: 'q1', number: 1, title: 'Один' }, { id: 'q2', number: 2, title: 'Два' }, { id: 'q3', number: 3, title: 'Три' }]).split('\r\n');
-        expect(matrix[0]).toBe('ФИО;Класс;1. Один;2. Два;3. Три;Всего');
+        expect(matrix[0]).toBe('Имя;Класс;1. Один;2. Два;3. Три;Всего');
         expect(matrix[1]).toBe('Иванов Иван;8А;1;;1;2');
     });
 });

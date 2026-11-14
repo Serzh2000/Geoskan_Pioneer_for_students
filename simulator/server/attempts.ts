@@ -7,6 +7,7 @@
  * дописывание одной строки не портит прошлые записи, а при сбое теряется не больше последней строки.
  */
 import fs from 'fs';
+import { rename, writeFile } from 'fs/promises';
 import { appendFile, mkdir } from 'fs/promises';
 import path from 'path';
 
@@ -20,6 +21,8 @@ export type Attempt = {
     /** Заголовки замечаний проверки: «Нужен чистый зелёный или синий», «Проверьте подготовку» и т. п. */
     titles: string[];
     code: string;
+    /** Промежуточный опыт миссии из нескольких запусков («Опыт записан, проверьте следующий случай»): не ошибка и не зачёт. */
+    partial?: boolean;
 };
 
 export type QuestAttemptStats = {
@@ -27,8 +30,14 @@ export type QuestAttemptStats = {
     questId: string;
     attempts: number;
     solved: number;
+    /** Промежуточные опыты: нужны миссии, но ошибкой не считаются. */
+    partial: number;
+    /** Настоящие неудачи: не зачёт и не промежуточный опыт. */
+    failures: number;
     students: number;
     studentsSolved: number;
+    /** Сколько настоящих неудач в среднем предшествовало зачёту (без обязательных промежуточных опытов). */
+    avgFailsToSolve: number | null;
     /** Сколько проверок в среднем понадобилось тем ученикам, кто решил миссию. */
     avgAttemptsToSolve: number | null;
     topIssues: { title: string; count: number }[];
@@ -51,8 +60,35 @@ export class AttemptLog {
         const titles = Array.isArray(input.body?.titles) ? input.body.titles.slice(0, 5).map((title: unknown) => clip(title, 160)).filter(Boolean) : [];
         return {
             at: now, userId: input.userId, name: clip(input.name, 120), track: input.track, questId: input.questId,
-            solved: input.body?.solved === true, titles, code: clip(input.body?.code, MAX_CODE_LENGTH)
+            solved: input.body?.solved === true, titles, code: clip(input.body?.code, MAX_CODE_LENGTH),
+            ...(input.body?.partial === true && input.body?.solved !== true ? { partial: true } : {})
         };
+    }
+
+    /**
+     * Стирает всю историю проверок одного человека (при удалении аккаунта вместе с ним не должно оставаться ни имени, ни кода).
+     * Файл переписывается целиком через временный: записи других учеников не теряются. Возвращает, сколько записей удалено.
+     */
+    async removeUser(userId: string): Promise<number> {
+        let removed = 0;
+        this.writes = this.writes.then(async () => {
+            if (!fs.existsSync(this.file)) return;
+            const keep: string[] = [];
+            for (const line of fs.readFileSync(this.file, 'utf8').split('\n')) {
+                if (!line) continue;
+                try {
+                    if ((JSON.parse(line) as Attempt).userId === userId) { removed++; continue; }
+                } catch { /* оборванную строку не трогаем */ }
+                keep.push(line);
+            }
+            if (!removed) return;
+            const temp = `${this.file}.${process.pid}.tmp`;
+            await writeFile(temp, keep.length ? `${keep.join('\n')}\n` : '', 'utf8');
+            await rename(temp, this.file);
+            this.cache = null;
+        }).catch((error) => { console.error('[attempts]', error); });
+        await this.writes;
+        return removed;
     }
 
     async add(attempt: Attempt): Promise<void> {
@@ -92,10 +128,12 @@ export class AttemptLog {
     }
 
     /** Ученики, которые проверяли миссию и ни разу не прошли её; `fails` — число неудачных проверок. */
-    stuckStudents(track: string, questId: string): { userId: string; name: string; fails: number; lastAt: number }[] {
+    stuckStudents(track: string, questId: string, onlyUsers?: Set<string>): { userId: string; name: string; fails: number; lastAt: number }[] {
         const byUser = new Map<string, Attempt[]>();
         for (const attempt of this.read()) {
             if (attempt.track !== track || attempt.questId !== questId) continue;
+            if (onlyUsers && !onlyUsers.has(attempt.userId)) continue;
+            if (attempt.partial) continue; // промежуточный опыт не делает ученика застрявшим
             const own = byUser.get(attempt.userId) ?? [];
             own.push(attempt);
             byUser.set(attempt.userId, own);
@@ -113,6 +151,7 @@ export class AttemptLog {
         const seen = new Set<string>();
         let count = 0;
         for (const attempt of this.forUser(userId)) {
+            if (attempt.partial) continue; // «с первой проверки» считается по зачётам и ошибкам, а не по обязательным опытам
             const key = `${attempt.track}\n${attempt.questId}`;
             if (seen.has(key)) continue;
             seen.add(key);
@@ -139,14 +178,21 @@ export class AttemptLog {
                 byStudent.set(attempt.userId, own);
             }
             const issues = new Map<string, number>();
-            for (const attempt of list) if (!attempt.solved) for (const title of new Set(attempt.titles)) issues.set(title, (issues.get(title) ?? 0) + 1);
+            for (const attempt of list) if (!attempt.solved && !attempt.partial) for (const title of new Set(attempt.titles)) issues.set(title, (issues.get(title) ?? 0) + 1);
+            // Настоящие неудачи до первого зачёта: обязательные промежуточные опыты в счёт не идут.
+            const failsToSolve = [...byStudent.values()].flatMap((own) => {
+                const index = own.findIndex((attempt) => attempt.solved);
+                return index < 0 ? [] : [own.slice(0, index).filter((attempt) => !attempt.partial).length];
+            });
             const toSolve = [...byStudent.values()].flatMap((own) => {
                 const index = own.findIndex((attempt) => attempt.solved);
                 return index < 0 ? [] : [index + 1];
             });
             return {
                 track: list[0].track, questId: list[0].questId, attempts: list.length, solved: list.filter((attempt) => attempt.solved).length,
+                partial: list.filter((attempt) => attempt.partial).length, failures: list.filter((attempt) => !attempt.solved && !attempt.partial).length,
                 students: byStudent.size, studentsSolved: toSolve.length,
+                avgFailsToSolve: failsToSolve.length ? Math.round((failsToSolve.reduce((sum, value) => sum + value, 0) / failsToSolve.length) * 10) / 10 : null,
                 avgAttemptsToSolve: toSolve.length ? Math.round((toSolve.reduce((sum, value) => sum + value, 0) / toSolve.length) * 10) / 10 : null,
                 topIssues: [...issues.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([title, count]) => ({ title, count }))
             };
@@ -154,7 +200,7 @@ export class AttemptLog {
     }
 
     /** Последние неудачные попытки миссии: по коду видно, что именно ученики пишут не так. */
-    recentFailures(track: string, questId: string, limit = 25): Attempt[] {
-        return this.read().filter((attempt) => attempt.track === track && attempt.questId === questId && !attempt.solved).slice(-limit).reverse();
+    recentFailures(track: string, questId: string, limit = 25, onlyUsers?: Set<string>): Attempt[] {
+        return this.read().filter((attempt) => attempt.track === track && attempt.questId === questId && !attempt.solved && !attempt.partial && (!onlyUsers || onlyUsers.has(attempt.userId))).slice(-limit).reverse();
     }
 }

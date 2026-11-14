@@ -1,0 +1,7 @@
+# Симулятор квадрокоптера Геоскан Пионер
+User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: https://simulator.sakoryagin.ru/sitemap.xml
+Sitemap: https://simulator.sakoryagin.ru/sitemap-lessons.xml

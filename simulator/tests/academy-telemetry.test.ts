@@ -27,3 +27,15 @@ test('claimed readings, premature height indication and wrong error signs fail',
     expect(run(68, lessons.find(item => item.academy!.number === 68)!.solutionCode.replace('2-x', 'x-2'))).toBe(false);
     for (let number = 64; number <= 72; number++) expect(run(number, '')).toBe(false);
 });
+
+test('миссия 65: повтор опыта 0.2 не засчитывается и прямо говорит, что поменять на 0.8', () => {
+    const lesson = getTelemetryAcademyPractices('lua').find(item => item.academy!.number === 65)!;
+    const outcome = executeAcademyLua(lesson.solutionCode, { flight: true });
+    const first = gradeTelemetryAcademy(65, outcome.samples, outcome.events, { code: lesson.solutionCode, scene: scene(65) });
+    expect(first.solved).toBe(false);
+    expect(first.diagnostics[0].title).toMatch(/Опыт 1 из 2/);
+    const again = gradeTelemetryAcademy(65, outcome.samples, outcome.events, { code: lesson.solutionCode, scene: scene(65), trials: ['fast'] });
+    expect(again.solved).toBe(false);
+    expect(again.diagnostics[0].title).toMatch(/замените 0\.2 на 0\.8/);
+    expect(again.diagnostics[0].fix).toMatch(/0\.8/);
+});
