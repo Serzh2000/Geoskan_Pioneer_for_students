@@ -13,7 +13,8 @@ export type AutopilotParameterDefinition = {
     description: string;
     details: string;
     validation: ValidationRule;
-    source: 'documentation' | 'template';
+    /** documentation - описание и ограничения со страницы документации; station - подсказка из Pioneer Station; template - только по группе и имени. */
+    source: 'documentation' | 'station' | 'template';
 };
 
 export type AutopilotAuditStatus = 'applied' | 'rejected';

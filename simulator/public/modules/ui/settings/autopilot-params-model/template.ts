@@ -1,5 +1,6 @@
 import { DOC_OVERRIDES, GROUP_DESCRIPTIONS } from './metadata.js';
 import { parsePropertiesText } from './properties-parser.js';
+import { PIONEER_STATION_TOOLTIPS } from './station-tooltips.js';
 import type { AutopilotParameterDefinition, ValidationRule } from './types.js';
 
 export function parseTemplate(text: string) {
@@ -33,10 +34,23 @@ function describeFallback(group: string, key: string) {
     };
 }
 
+/** Подсказка Pioneer Station: первая строка - смысл параметра, остальные - расшифровка значений («0 - ...; 1 - ...»). */
+function describeFromStation(key: string) {
+    const text = PIONEER_STATION_TOOLTIPS[key];
+    if (!text) return null;
+    const [first, ...rest] = text.split('\n');
+    return {
+        description: first.replace(/:\s*$/, '.').trim(),
+        details: rest.length ? rest.join(' ').replace(/\s+/g, ' ').trim() : 'Подсказка из Pioneer Station 2.0.',
+        source: 'station' as const
+    };
+}
+
 export function buildDefinition(key: string, defaultValue: number): AutopilotParameterDefinition {
     const group = key.includes('_') ? key.split('_')[0] : 'General';
     const fallback = describeFallback(group, key);
     const override = DOC_OVERRIDES[key];
+    const station = override ? null : describeFromStation(key);
     const mergedValidation: ValidationRule = {
         ...(fallback.validation || {}),
         ...(override?.validation || {})
@@ -45,10 +59,10 @@ export function buildDefinition(key: string, defaultValue: number): AutopilotPar
         key,
         group,
         defaultValue,
-        description: override?.description || fallback.description,
-        details: override?.details || fallback.details,
+        description: override?.description || station?.description || fallback.description,
+        details: override?.details || station?.details || fallback.details,
         validation: mergedValidation,
-        source: override?.source || fallback.source
+        source: override?.source || station?.source || fallback.source
     };
 }
 

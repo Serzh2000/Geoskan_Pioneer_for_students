@@ -17,6 +17,20 @@ describe('autopilot-params-model', () => {
         expect(summary.documented).toBeGreaterThan(10);
     });
 
+    test('подсказки Pioneer Station заменяют заглушки, свои описания из документации остаются главными', async () => {
+        const model = await importFreshModel();
+        const defs = model.getAutopilotParameterDefinitions();
+        const baud = defs.find((item) => item.key === 'BoardPioneer_baudrate');
+        expect(baud?.source).toBe('station');
+        expect(baud?.description).toMatch(/Скорость последовательного порта/);
+        const mux = defs.find((item) => item.key === 'BoardPioneer_auxUMux');
+        expect(mux?.description.endsWith('.')).toBe(true);
+        expect(mux?.details).toMatch(/1 - Plazlink/);
+        // Параметр с описанием из документации не перетирается подсказкой.
+        expect(defs.find((item) => item.key === 'Copter_man_attScale')?.source).toBe('documentation');
+        expect(model.getAutopilotValidationSummary().documented).toBeGreaterThan(120);
+    });
+
     test('imports a valid properties file and updates changed keys', async () => {
         const model = await importFreshModel();
         const text = [

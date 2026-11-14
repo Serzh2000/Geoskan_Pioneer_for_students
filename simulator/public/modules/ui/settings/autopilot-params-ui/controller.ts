@@ -197,7 +197,7 @@ export function initAutopilotParamsUI() {
             const currentValue = drafts.get(definition.key)?.value ?? String(state.values[definition.key] ?? definition.defaultValue);
             const haystack = [definition.key, definition.group, definition.description, definition.details, currentValue].join(' ').toLowerCase();
             if (normalizedSearch && !haystack.includes(normalizedSearch)) return false;
-            if (activeFilter === 'documented') return definition.source === 'documentation';
+            if (activeFilter === 'documented') return definition.source !== 'template';
             if (activeFilter === 'changed') return isParameterChanged(state.values[definition.key], definition.defaultValue);
             if (activeFilter === 'invalid') return Boolean(drafts.get(definition.key)?.error);
             return true;

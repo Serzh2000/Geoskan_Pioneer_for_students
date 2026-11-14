@@ -329,7 +329,7 @@ export function getAutopilotValidationSummary() {
     let documented = 0;
     let constrained = 0;
     autopilotParameterDefinitions.forEach((definition) => {
-        if (definition.source === 'documentation') documented++;
+        if (definition.source !== 'template') documented++;
         if (
             typeof definition.validation.min === 'number'
             || typeof definition.validation.max === 'number'

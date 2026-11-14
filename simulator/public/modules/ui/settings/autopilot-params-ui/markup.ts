@@ -33,7 +33,7 @@ function renderParam(definition: AutopilotParameterDefinition, params: { drafts:
     if (typeof definition.validation.max === 'number') limits.push(`Макс. ${definition.validation.max}`);
     if (definition.validation.unit) limits.push(`Ед. ${definition.validation.unit}`);
     const statusText = error || (isChanged ? `Изменено, в шаблоне было ${formatNumber(definition.defaultValue)}. В файл попадёт после сохранения.` : '');
-    const documented = definition.source === 'documentation';
+    const documented = definition.source !== 'template';
     return `
         <article class="autopilot-param ${error ? 'is-invalid' : ''} ${isChanged ? 'is-changed' : ''}">
             <div class="autopilot-param__meta">
