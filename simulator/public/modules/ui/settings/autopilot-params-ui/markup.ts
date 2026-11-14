@@ -1,6 +1,7 @@
 import type { AutopilotParameterDefinition, AutopilotSettingsState } from '../autopilot-params-model.js';
 import { FALLBACK_SECTION, GROUP_DESCRIPTIONS, getKnownGroups, SECTION_META, SECTION_ORDER } from './config.js';
-import { escapeHtml, formatNumber, getStatusLabel, isParameterChanged } from './helpers.js';
+import { escapeHtml, getStatusLabel } from './helpers.js';
+import { renderParam } from './param-markup.js';
 import type { DraftState, FilterMode, FlashMessage } from './types.js';
 
 export type NavSection = { title: string; groups: string[] };
@@ -19,50 +20,6 @@ export function listNavSections(definitions: AutopilotParameterDefinition[]): Na
 /** Группа, которая открывается первой. */
 export function firstNavGroup(definitions: AutopilotParameterDefinition[]): string | null {
     return listNavSections(definitions)[0]?.groups[0] ?? null;
-}
-
-function renderParam(definition: AutopilotParameterDefinition, params: { drafts: Map<string, DraftState>; state: AutopilotSettingsState }) {
-    const draft = params.drafts.get(definition.key);
-    const appliedValue = params.state.values[definition.key] ?? definition.defaultValue;
-    const value = draft?.value ?? String(appliedValue);
-    const error = draft?.error || '';
-    const isChanged = isParameterChanged(params.state.values[definition.key], definition.defaultValue);
-    const limits: string[] = [];
-    if (Array.isArray(definition.validation.allowedValues)) limits.push(`Допустимо: ${definition.validation.allowedValues.join(', ')}`);
-    if (typeof definition.validation.min === 'number') limits.push(`Мин. ${definition.validation.min}`);
-    if (typeof definition.validation.max === 'number') limits.push(`Макс. ${definition.validation.max}`);
-    if (definition.validation.unit) limits.push(`Ед. ${definition.validation.unit}`);
-    const statusText = error || (isChanged ? `Изменено, в шаблоне было ${formatNumber(definition.defaultValue)}. В файл попадёт после сохранения.` : '');
-    const documented = definition.source !== 'template';
-    return `
-        <article class="autopilot-param ${error ? 'is-invalid' : ''} ${isChanged ? 'is-changed' : ''}">
-            <div class="autopilot-param__meta">
-                <div class="autopilot-param__headline">
-                    <code class="autopilot-param__key">${escapeHtml(definition.key)}</code>
-                    ${documented ? '' : '<span class="autopilot-param__badge">Без описания</span>'}
-                    ${isChanged ? '<span class="autopilot-param__badge autopilot-param__badge--changed">Изменён</span>' : ''}
-                </div>
-                <p class="autopilot-param__description">${escapeHtml(definition.description)}</p>
-                <details class="autopilot-param__more">
-                    <summary>Подробнее и ограничения</summary>
-                    <p class="autopilot-param__details">${escapeHtml(definition.details)}</p>
-                    <div class="autopilot-param__facts">
-                        <span class="autopilot-param__fact"><strong>Сейчас:</strong> ${escapeHtml(formatNumber(appliedValue))}</span>
-                        <span class="autopilot-param__fact"><strong>Шаблон:</strong> ${escapeHtml(formatNumber(definition.defaultValue))}</span>
-                        <span class="autopilot-param__fact"><strong>Группа:</strong> ${escapeHtml(definition.group)}</span>
-                    </div>
-                    <div class="autopilot-param__support">
-                        ${limits.length ? limits.map((item) => `<span class="autopilot-param__chip">${escapeHtml(item)}</span>`).join('') : '<span class="autopilot-param__chip">Проверка: конечное число</span>'}
-                        ${definition.validation.recommended ? `<span class="autopilot-param__chip autopilot-param__chip--accent">${escapeHtml(definition.validation.recommended)}</span>` : ''}
-                    </div>
-                </details>
-            </div>
-            <div class="autopilot-param__control">
-                <label class="autopilot-param__input-label" for="autopilot-param-${escapeHtml(definition.key)}">Значение</label>
-                <input id="autopilot-param-${escapeHtml(definition.key)}" type="number" class="autopilot-param__input" data-parameter-key="${escapeHtml(definition.key)}" value="${escapeHtml(value)}" step="any" aria-invalid="${error ? 'true' : 'false'}">
-                ${statusText ? `<div class="autopilot-param__status ${error ? 'is-error' : ''}">${escapeHtml(statusText)}</div>` : ''}
-            </div>
-        </article>`;
 }
 
 function renderNav(params: { all: AutopilotParameterDefinition[]; shown: AutopilotParameterDefinition[]; selected: string | null; searching: boolean }) {

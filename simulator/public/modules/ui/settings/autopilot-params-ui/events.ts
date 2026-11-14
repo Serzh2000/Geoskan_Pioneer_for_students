@@ -136,20 +136,31 @@ export function attachAutopilotParamsEvents(args: AttachAutopilotParamsEventsArg
         args.render();
     });
 
+    const applyValue = (key: string, raw: string) => {
+        const result = updateAutopilotParameter(key, raw, authorInput?.value || state.author);
+        if (result.ok) {
+            args.drafts.delete(key);
+            args.setSourceDirty(true);
+            args.setFlash({ kind: 'success', text: `Параметр ${key} успешно применен.` });
+        } else {
+            args.drafts.set(key, { value: raw, error: result.error || 'Некорректное значение.' });
+            args.setFlash({ kind: 'error', text: `Параметр ${key} не применен: ${result.error}` });
+        }
+        args.render();
+    };
+
     args.body.querySelectorAll('[data-parameter-key]').forEach((element) => {
         element.addEventListener('change', (event) => {
             const input = event.currentTarget as HTMLInputElement;
-            const key = input.dataset.parameterKey || '';
-            const result = updateAutopilotParameter(key, input.value, authorInput?.value || state.author);
-            if (result.ok) {
-                args.drafts.delete(key);
-                args.setSourceDirty(true);
-                args.setFlash({ kind: 'success', text: `Параметр ${key} успешно применен.` });
-            } else {
-                args.drafts.set(key, { value: input.value, error: result.error || 'Некорректное значение.' });
-                args.setFlash({ kind: 'error', text: `Параметр ${key} не применен: ${result.error}` });
-            }
-            args.render();
+            applyValue(input.dataset.parameterKey || '', input.value);
+        });
+    });
+
+    // Кнопки вариантов значения и «Вернуть по умолчанию» на карточке параметра.
+    args.body.querySelectorAll('[data-set-param]').forEach((element) => {
+        element.addEventListener('click', () => {
+            const target = element as HTMLElement;
+            applyValue(target.dataset.setParam || '', target.dataset.setValue || '');
         });
     });
 

@@ -41,7 +41,7 @@ function describeFromStation(key: string) {
     const [first, ...rest] = text.split('\n');
     return {
         description: first.replace(/:\s*$/, '.').trim(),
-        details: rest.length ? rest.join(' ').replace(/\s+/g, ' ').trim() : 'Подсказка из Pioneer Station 2.0.',
+        details: rest.length ? rest.join(' ').replace(/\s+/g, ' ').trim() : '',
         source: 'station' as const
     };
 }
@@ -60,7 +60,7 @@ export function buildDefinition(key: string, defaultValue: number): AutopilotPar
         group,
         defaultValue,
         description: override?.description || station?.description || fallback.description,
-        details: override?.details || station?.details || fallback.details,
+        details: override?.details ?? station?.details ?? fallback.details,
         validation: mergedValidation,
         source: override?.source || station?.source || fallback.source
     };
