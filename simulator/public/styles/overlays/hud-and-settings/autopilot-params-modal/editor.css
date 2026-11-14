@@ -40,7 +40,9 @@
 .autopilot-nav__count { color: var(--ap-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .autopilot-nav__item:focus-visible { outline: 2px solid var(--accent-color); outline-offset: -2px; }
 
-.autopilot-editor__main { display: block; padding: 0 22px 32px; overflow-y: auto; }
+/* Двойной класс: общий стиль .autopilot-params-main (отступ 18px 20px) подключается позже и иначе перебивает отступ,
+   а сквозь верхний отступ при прокрутке виден список над закреплённой панелью поиска. */
+.autopilot-params-main.autopilot-editor__main { display: block; padding: 0 22px 32px; overflow-y: auto; }
 
 /* Строка файла, поиск и фильтры остаются на экране при прокрутке списка. */
 .autopilot-editor__top {
