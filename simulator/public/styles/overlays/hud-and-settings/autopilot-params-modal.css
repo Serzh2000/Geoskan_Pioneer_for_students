@@ -158,3 +158,12 @@
     border-radius: 0;
     box-shadow: none;
 }
+
+/* Компактная шапка: стрелка назад, заголовок и подсказка в одну строку, без надписи над заголовком. */
+.autopilot-params-modal__header { align-items: center; gap: 12px; padding: 12px 20px; }
+.autopilot-params-modal__title-wrap { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 14px; min-width: 0; }
+.autopilot-params-modal__eyebrow { display: none; }
+.autopilot-params-modal__title { font-size: 19px; }
+.autopilot-params-modal__subtitle { font-size: 13px; }
+.autopilot-params-modal__back { align-self: center; margin: 0 -4px 0 -8px; }
+.autopilot-params-modal__close { align-self: center; }
