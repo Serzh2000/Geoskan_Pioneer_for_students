@@ -32,6 +32,8 @@ type AttachAutopilotParamsEventsArgs = {
     setSectionState: (state: SectionState) => void;
     setSourceDirty: (dirty: boolean) => void;
     setView: (view: ParamsView) => void;
+    setGroup: (group: string | null) => void;
+    openPreset: (presetId: string) => Promise<void>;
     getGroupState: () => GroupState;
     getSectionState: () => SectionState;
     getSettingsState: () => AutopilotSettingsState;
@@ -81,6 +83,17 @@ export function attachAutopilotParamsEvents(args: AttachAutopilotParamsEventsArg
                 ...args.getGroupState(),
                 [group]: details.open
             });
+        });
+    });
+
+    args.body.querySelectorAll('[data-nav]').forEach((element) => {
+        element.addEventListener('click', () => {
+            const group = (element as HTMLElement).dataset.nav || null;
+            args.setGroup(group);
+            // Переход по навигации выходит из поиска: иначе выбранная группа не была бы видна.
+            if (group !== null) args.setSearch('');
+            args.render();
+            args.body.querySelector('.autopilot-editor__main')?.scrollTo({ top: 0 });
         });
     });
 
@@ -139,6 +152,10 @@ export function attachAutopilotParamsEvents(args: AttachAutopilotParamsEventsArg
         element.addEventListener('click', () => {
             const action = (element as HTMLElement).dataset.action;
             const author = authorInput?.value || state.author;
+            if (action?.startsWith('preset:')) {
+                void args.openPreset(action.slice('preset:'.length));
+                return;
+            }
             if (action === 'open-editor' || action === 'go-home') {
                 args.setView(action === 'open-editor' ? 'editor' : 'home');
                 args.render();

@@ -1,5 +1,6 @@
 import type { AutopilotSettingsState } from '../autopilot-params-model.js';
 import { escapeHtml, formatDateTime, getStatusLabel } from './helpers.js';
+import { AUTOPILOT_PRESETS } from './presets.js';
 import type { FlashMessage } from './types.js';
 
 const ICONS: Record<string, string> = {
@@ -65,6 +66,11 @@ export function renderAutopilotParamsHome(params: {
 
                 <h3 class="autopilot-home__heading">Что вы хотите сделать?</h3>
                 ${homeCard({ action: 'open-editor', kind: 'primary', icon: 'edit', title: 'Посмотреть и изменить параметры', text: `Поиск по ${summary.total} параметрам, пояснения и допустимые значения. Правки применяются сразу.`, badge: changedCount ? `изменено ${changedCount}` : undefined })}
+
+                <h4 class="autopilot-home__group">Готовые наборы для дрона</h4>
+                <div class="autopilot-home__grid">
+                    ${AUTOPILOT_PRESETS.map((preset) => homeCard({ action: `preset:${preset.id}`, icon: 'send', title: preset.title, text: preset.summary, disabled: params.isDroneBusy })).join('')}
+                </div>
 
                 <h4 class="autopilot-home__group">Получить параметры</h4>
                 <div class="autopilot-home__grid">

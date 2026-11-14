@@ -150,3 +150,7 @@
     .autopilot-home { padding: 18px 14px 28px; }
     .autopilot-profile__author { min-width: 0; width: 100%; }
 }
+
+/* Ключевые отличия набора в окне подтверждения. */
+.autopilot-preset-facts { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.autopilot-preset-facts li { padding: 4px 10px; border: 1px solid var(--ap-line); border-radius: 999px; background: var(--ap-soft); color: var(--ap-text); font-size: 12.5px; }

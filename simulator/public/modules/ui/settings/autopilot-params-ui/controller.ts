@@ -4,20 +4,25 @@ import {
     getAutopilotParameterDefinitions,
     getAutopilotSettingsState,
     getAutopilotValidationSummary,
+    importAutopilotProperties,
     loadAutopilotTemplateFromText
 } from '../autopilot-params-model.js';
 import type { DraftState, FilterMode, FlashMessage, GroupState, ParamsView, SectionState } from './types.js';
 import { getKnownGroups } from './config.js';
 import { createDroneSync } from './drone-sync.js';
 import { attachAutopilotParamsEvents } from './events.js';
+import { askPreset } from './preset-dialog.js';
+import { findAutopilotPreset } from './presets.js';
 import { isParameterChanged } from './helpers.js';
 import { renderAutopilotParamsHome } from './home-markup.js';
-import { renderAutopilotParamsBody } from './markup.js';
+import { firstNavGroup, renderAutopilotParamsBody } from './markup.js';
 import { fetchAutopilotSourceFile, saveAutopilotSourceFile } from './source-api.js';
 
 export function initAutopilotParamsUI() {
     const openButton = document.getElementById('open-autopilot-params-btn') as HTMLButtonElement | null;
     let view: ParamsView = 'home';
+    /** Группа, открытая в редакторе: null - все подряд, undefined - ещё не выбирали (откроется первая). */
+    let selectedGroup: string | null | undefined;
     let search = '';
     let activeFilter: FilterMode = 'all';
     let flash: FlashMessage | null = null;
@@ -25,7 +30,6 @@ export function initAutopilotParamsUI() {
     let isSavingSource = false;
     let isSourceLoaded = false;
     let isSourceDirty = false;
-    let sourceFilePath: string | null = null;
     let sectionState: SectionState = { flight: true, sensors: true, hardware: true, system: true };
     let groupState: GroupState = {};
     const drafts = new Map<string, DraftState>();
@@ -71,7 +75,6 @@ export function initAutopilotParamsUI() {
         try {
             const payload = await fetchAutopilotSourceFile();
             loadAutopilotTemplateFromText(payload.content, payload.fileName);
-            sourceFilePath = payload.filePath;
             isSourceLoaded = true;
             isSourceDirty = false;
             drafts.clear();
@@ -96,7 +99,6 @@ export function initAutopilotParamsUI() {
             const content = exportAutopilotPropertiesText();
             const payload = await saveAutopilotSourceFile(content);
             loadAutopilotTemplateFromText(content, payload.fileName);
-            sourceFilePath = payload.filePath;
             isSourceLoaded = true;
             isSourceDirty = false;
             flash = { kind: 'success', text: `Изменения сохранены в исходный файл ${payload.fileName}.` };
@@ -132,6 +134,28 @@ export function initAutopilotParamsUI() {
         editor: 'Поиск, фильтры и редактирование всех параметров профиля. Правки применяются сразу, в файл они уходят по кнопке сохранения.'
     };
 
+    /** Готовый набор: загрузить в окно, а при выборе «к дрону» сразу перейти к обычной записи на дрон (она показывает изменения). */
+    const openPreset = async (presetId: string) => {
+        const preset = findAutopilotPreset(presetId);
+        const host = overlay.querySelector('.autopilot-params-modal') as HTMLElement | null;
+        if (!preset || !host) return;
+        const choice = await askPreset(host, preset);
+        if (!choice) return;
+        const author = (overlay.querySelector('#autopilot-author-input') as HTMLInputElement | null)?.value || getAutopilotSettingsState().author;
+        const result = importAutopilotProperties(preset.text, preset.fileName, author);
+        if (!result.ok) {
+            flash = { kind: 'error', text: `Набор «${preset.title}» не загрузился: ${result.errors.slice(0, 2).join(' ')}` };
+            render();
+            return;
+        }
+        drafts.clear();
+        isSourceDirty = true;
+        flash = { kind: 'success', text: `Набор «${preset.title}» загружен в окно, изменено параметров: ${result.changedKeys.length}.` };
+        log(`[AUTOPILOT] Загружен готовый набор параметров: ${preset.title}`, 'success');
+        render();
+        if (choice === 'drone') await droneSync.writeToDrone();
+    };
+
     const render = () => {
         if (!body) return;
         const backButton = overlay.querySelector('#autopilot-params-back') as HTMLButtonElement | null;
@@ -158,6 +182,7 @@ export function initAutopilotParamsUI() {
             return true;
         });
 
+        if (selectedGroup === undefined) selectedGroup = firstNavGroup(definitions);
         body.innerHTML = view === 'home' ? renderAutopilotParamsHome({
             changedCount,
             fileInputId,
@@ -170,22 +195,18 @@ export function initAutopilotParamsUI() {
             summary
         }) : renderAutopilotParamsBody({
             activeFilter,
+            allDefinitions: definitions,
             changedCount,
-            definitions: filteredDefinitions,
             drafts,
-            fileInputId,
             filteredDefinitions,
             flash,
             invalidDraftCount,
-            isDroneBusy: droneSync.isBusy(),
             isLoadingSource,
             isSavingSource,
             isSourceDirty,
             normalizedSearch,
             search,
-            sectionState,
-            groupState,
-            sourceFilePath,
+            selectedGroup: selectedGroup ?? null,
             state,
             summary
         });
@@ -209,6 +230,8 @@ export function initAutopilotParamsUI() {
             setSectionState: (next) => { sectionState = next; },
             setSourceDirty: (next) => { isSourceDirty = next; },
             setView: (next) => { view = next; },
+            setGroup: (next) => { selectedGroup = next; },
+            openPreset,
             getGroupState: () => groupState,
             getSectionState: () => sectionState,
             getSettingsState: () => state,
@@ -222,6 +245,7 @@ export function initAutopilotParamsUI() {
     const show = async () => {
         flash = null;
         view = 'home';
+        selectedGroup = undefined;
         overlay.style.display = 'flex';
         openButton?.classList.add('is-active');
         openButton?.setAttribute('aria-expanded', 'true');

@@ -1,0 +1,97 @@
+/* Редактор параметров: слева навигация по группам, справа параметры выбранной группы. Поиск и фильтры закреплены сверху. */
+
+.autopilot-editor { grid-template-columns: 260px minmax(0, 1fr); }
+
+.autopilot-editor__nav { padding: 12px 10px; overflow-y: auto; align-content: start; }
+
+.autopilot-nav { display: grid; gap: 14px; }
+.autopilot-nav__section { display: grid; gap: 2px; }
+.autopilot-nav__section-title {
+    padding: 0 10px 4px;
+    color: var(--ap-muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.autopilot-nav__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    border-left: 3px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ap-text);
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.autopilot-nav__item:hover { background: var(--ap-soft); }
+.autopilot-nav__item.is-active { border-left-color: var(--accent-color); background: var(--ap-soft); font-weight: 700; }
+.autopilot-nav__item.is-empty { opacity: .45; }
+.autopilot-nav__item--all { font-weight: 700; }
+.autopilot-nav__count { color: var(--ap-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.autopilot-nav__item:focus-visible { outline: 2px solid var(--accent-color); outline-offset: -2px; }
+
+.autopilot-editor__main { display: block; padding: 0 22px 32px; overflow-y: auto; }
+
+/* Строка файла, поиск и фильтры остаются на экране при прокрутке списка. */
+.autopilot-editor__top {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: grid;
+    gap: 10px;
+    margin: 0 -22px 14px;
+    padding: 14px 22px 12px;
+    border-bottom: 1px solid var(--ap-line);
+    background: var(--ap-bg);
+}
+
+.autopilot-editor-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; }
+.autopilot-editor-bar__file { display: grid; gap: 2px; min-width: 0; }
+.autopilot-editor-bar__file strong { color: var(--ap-text); font-size: 15px; overflow-wrap: anywhere; }
+.autopilot-editor-bar__file span { color: var(--ap-muted); font-size: 12.5px; }
+
+.autopilot-toolbar--compact { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; padding: 0; border: 0; background: transparent; }
+.autopilot-toolbar--compact .autopilot-toolbar__search-wrap { flex: 1 1 320px; min-width: 220px; }
+.autopilot-toolbar--compact .autopilot-toolbar__filters { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.autopilot-editor__heading { margin: 4px 0 12px; }
+.autopilot-editor__heading h3 { margin: 0 0 4px; color: var(--ap-text); font-size: 22px; letter-spacing: -.02em; }
+.autopilot-editor__heading p { margin: 0; color: var(--ap-muted); font-size: 13.5px; line-height: 1.45; }
+.autopilot-editor__count { white-space: nowrap; }
+
+.autopilot-list-group { margin-bottom: 18px; }
+.autopilot-list-group__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px;
+    color: var(--ap-text);
+    font-size: 15px;
+}
+.autopilot-list-group__title span { color: var(--ap-muted); font-size: 12px; font-weight: 600; }
+
+/* Подробности параметра свёрнуты: в списке остаются имя, смысл и поле значения. */
+.autopilot-param__more { margin-top: 6px; }
+.autopilot-param__more > summary { color: var(--ap-muted); font-size: 12.5px; cursor: pointer; }
+.autopilot-param__more > summary:hover { color: var(--accent-color); }
+.autopilot-param__more[open] > summary { margin-bottom: 8px; }
+
+@media (max-width: 1180px) {
+    .autopilot-editor { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+    .autopilot-editor__nav { max-height: 190px; border-right: 0; border-bottom: 1px solid var(--ap-line); }
+    .autopilot-nav { grid-auto-flow: column; grid-auto-columns: max-content; gap: 16px; overflow-x: auto; }
+    .autopilot-nav__section { grid-auto-flow: column; grid-auto-columns: max-content; align-items: center; gap: 4px; }
+    .autopilot-nav__section-title { padding: 0 6px; }
+    .autopilot-nav__item { width: auto; border-left: 0; border-bottom: 3px solid transparent; }
+    .autopilot-nav__item.is-active { border-bottom-color: var(--accent-color); }
+}

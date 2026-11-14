@@ -6,6 +6,7 @@
 @import url('./autopilot-params-modal/dark.css');
 @import url('./autopilot-params-modal/responsive.css');
 @import url('./autopilot-params-modal/home.css');
+@import url('./autopilot-params-modal/editor.css');
 
 /* Autopilot parameters follow the same study-workspace language as the guide:
    neutral canvas, white information levels, thin dividers and one orange cue. */
