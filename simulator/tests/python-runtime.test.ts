@@ -28,6 +28,8 @@ const app = makeApp();
 // A process guaranteed to exist in the test environment; python-runtime.ts
 // doesn't care what it is for these tests, only that spawn() succeeds.
 const fakePythonConfig = { pythonExecutable: process.execPath };
+// Вместо Python запускается Node, и «print(1)» для него падает сразу; таймер держит процесс живым, пока его не остановит тест или afterAll.
+const KEEP_ALIVE = 'setTimeout(function () {}, 60000);';
 let droneCounter = 0;
 function uniqueDroneId(): string {
     droneCounter += 1;
@@ -62,7 +64,7 @@ describe('POST /api/python-runtime/run — validation', () => {
         const droneId = uniqueDroneId();
         const first = await request(app)
             .post('/api/python-runtime/run')
-            .send({ droneId, code: 'print(1)', config: fakePythonConfig });
+            .send({ droneId, code: KEEP_ALIVE, config: fakePythonConfig });
         expect(first.status).toBe(200);
 
         const second = await request(app)
@@ -102,7 +104,7 @@ describe('POST /api/python-runtime/stop', () => {
 
     test('reports stopped:true for a running session', async () => {
         const droneId = uniqueDroneId();
-        await request(app).post('/api/python-runtime/run').send({ droneId, code: 'print(1)', config: fakePythonConfig });
+        await request(app).post('/api/python-runtime/run').send({ droneId, code: KEEP_ALIVE, config: fakePythonConfig });
 
         const res = await request(app).post('/api/python-runtime/stop').send({ droneId });
         expect(res.body).toMatchObject({ ok: true, stopped: true });
@@ -122,7 +124,7 @@ describe('GET /api/python-runtime/status', () => {
 
     test('returns session info after starting a run', async () => {
         const droneId = uniqueDroneId();
-        await request(app).post('/api/python-runtime/run').send({ droneId, code: 'print(1)', config: fakePythonConfig });
+        await request(app).post('/api/python-runtime/run').send({ droneId, code: KEEP_ALIVE, config: fakePythonConfig });
 
         const res = await request(app).get(`/api/python-runtime/status?droneId=${droneId}`);
         expect(res.status).toBe(200);
