@@ -5,6 +5,7 @@
 @import url('./autopilot-params-modal/drone-sync.css');
 @import url('./autopilot-params-modal/dark.css');
 @import url('./autopilot-params-modal/responsive.css');
+@import url('./autopilot-params-modal/home.css');
 
 /* Autopilot parameters follow the same study-workspace language as the guide:
    neutral canvas, white information levels, thin dividers and one orange cue. */
@@ -137,3 +138,22 @@
 :root[data-theme='dark'] .autopilot-params-modal :is(.autopilot-summary-card__metric, .autopilot-group, .autopilot-param__fact) { background: var(--ap-soft); border-color: var(--ap-line); }
 :root[data-theme='dark'] .autopilot-params-modal :is(.autopilot-params-main__note, .autopilot-action-btn, .autopilot-toolbar__action, .autopilot-toolbar__clear, .autopilot-filter-chip) { background: var(--ap-surface); border-color: var(--ap-line); color: var(--ap-muted); }
 :root[data-theme='dark'] .autopilot-params-modal :is(.autopilot-params-sidebar input, .autopilot-toolbar__search-wrap input, .autopilot-param__input) { background: #262626; border-color: var(--ap-line); color: var(--ap-text); }
+
+
+/* Параметры автопилота: полноэкранное окно (их 190+, рабочей области в окне с полями не хватало). */
+.autopilot-params-overlay {
+    padding: 0;
+    background: var(--ap-bg, #f7f7f5);
+    backdrop-filter: none;
+}
+
+.autopilot-params-modal {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}

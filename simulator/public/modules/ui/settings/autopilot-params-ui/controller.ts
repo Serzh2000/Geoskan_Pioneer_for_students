@@ -6,16 +6,18 @@ import {
     getAutopilotValidationSummary,
     loadAutopilotTemplateFromText
 } from '../autopilot-params-model.js';
-import type { DraftState, FilterMode, FlashMessage, GroupState, SectionState } from './types.js';
+import type { DraftState, FilterMode, FlashMessage, GroupState, ParamsView, SectionState } from './types.js';
 import { getKnownGroups } from './config.js';
 import { createDroneSync } from './drone-sync.js';
 import { attachAutopilotParamsEvents } from './events.js';
 import { isParameterChanged } from './helpers.js';
+import { renderAutopilotParamsHome } from './home-markup.js';
 import { renderAutopilotParamsBody } from './markup.js';
 import { fetchAutopilotSourceFile, saveAutopilotSourceFile } from './source-api.js';
 
 export function initAutopilotParamsUI() {
     const openButton = document.getElementById('open-autopilot-params-btn') as HTMLButtonElement | null;
+    let view: ParamsView = 'home';
     let search = '';
     let activeFilter: FilterMode = 'all';
     let flash: FlashMessage | null = null;
@@ -41,9 +43,10 @@ export function initAutopilotParamsUI() {
         <div class="modal-content autopilot-params-modal" role="dialog" aria-modal="true" aria-labelledby="autopilot-params-title">
             <div class="autopilot-params-modal__header">
                 <div class="autopilot-params-modal__title-wrap">
+                    <button type="button" id="autopilot-params-back" class="autopilot-params-modal__back" hidden>&larr; К выбору действий</button>
                     <div class="autopilot-params-modal__eyebrow">Настройки автопилота</div>
                     <div id="autopilot-params-title" class="autopilot-params-modal__title">Параметры автопилота Pioneer</div>
-                    <div class="autopilot-params-modal__subtitle">Импорт <code>.properties</code>, поиск, фильтрация и редактирование полного профиля параметров.</div>
+                    <div id="autopilot-params-subtitle" class="autopilot-params-modal__subtitle"></div>
                 </div>
                 <button type="button" id="autopilot-params-close" class="modal-close-btn autopilot-params-modal__close" aria-label="Закрыть">&times;</button>
             </div>
@@ -124,8 +127,17 @@ export function initAutopilotParamsUI() {
         }
     });
 
+    const SUBTITLES: Record<ParamsView, string> = {
+        home: 'Выберите, что нужно сделать с параметрами автопилота: загрузить профиль, изменить значения, сохранить или записать на дрон.',
+        editor: 'Поиск, фильтры и редактирование всех параметров профиля. Правки применяются сразу, в файл они уходят по кнопке сохранения.'
+    };
+
     const render = () => {
         if (!body) return;
+        const backButton = overlay.querySelector('#autopilot-params-back') as HTMLButtonElement | null;
+        if (backButton) backButton.hidden = view === 'home';
+        const subtitle = overlay.querySelector('#autopilot-params-subtitle') as HTMLElement | null;
+        if (subtitle) subtitle.textContent = SUBTITLES[view];
         const previousMain = body.querySelector('.autopilot-params-main') as HTMLElement | null;
         const previousSidebar = body.querySelector('.autopilot-params-sidebar') as HTMLElement | null;
         const previousMainScrollTop = previousMain?.scrollTop ?? 0;
@@ -146,7 +158,17 @@ export function initAutopilotParamsUI() {
             return true;
         });
 
-        body.innerHTML = renderAutopilotParamsBody({
+        body.innerHTML = view === 'home' ? renderAutopilotParamsHome({
+            changedCount,
+            fileInputId,
+            flash,
+            isDroneBusy: droneSync.isBusy(),
+            isLoadingSource,
+            isSavingSource,
+            isSourceDirty,
+            state,
+            summary
+        }) : renderAutopilotParamsBody({
             activeFilter,
             changedCount,
             definitions: filteredDefinitions,
@@ -186,6 +208,7 @@ export function initAutopilotParamsUI() {
             setSearch: (next) => { search = next; },
             setSectionState: (next) => { sectionState = next; },
             setSourceDirty: (next) => { isSourceDirty = next; },
+            setView: (next) => { view = next; },
             getGroupState: () => groupState,
             getSectionState: () => sectionState,
             getSettingsState: () => state,
@@ -198,11 +221,11 @@ export function initAutopilotParamsUI() {
 
     const show = async () => {
         flash = null;
+        view = 'home';
         overlay.style.display = 'flex';
         openButton?.classList.add('is-active');
         openButton?.setAttribute('aria-expanded', 'true');
         render();
-        requestAnimationFrame(() => (overlay.querySelector('#autopilot-search-input') as HTMLInputElement | null)?.focus());
         if (!isSourceLoaded) await loadSourceIntoModel(false);
         log('[AUTOPILOT] Открыто окно параметров автопилота.', 'info');
     };
@@ -211,12 +234,14 @@ export function initAutopilotParamsUI() {
         if (event.target === overlay) hide();
     });
     overlay.querySelector('#autopilot-params-close')?.addEventListener('click', hide);
+    overlay.querySelector('#autopilot-params-back')?.addEventListener('click', () => { view = 'home'; render(); });
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && overlay.style.display !== 'none') {
-            hide();
+            // Из редактора Esc ведёт на экран выбора, с него закрывает окно.
+            if (view === 'editor') { view = 'home'; render(); } else hide();
             return;
         }
-        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f' && overlay.style.display !== 'none') {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f' && overlay.style.display !== 'none' && view === 'editor') {
             event.preventDefault();
             (overlay.querySelector('#autopilot-search-input') as HTMLInputElement | null)?.focus();
         }

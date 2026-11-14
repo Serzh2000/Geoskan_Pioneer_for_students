@@ -1,0 +1,152 @@
+/* Стартовый экран окна параметров автопилота: профиль, затем карточки «что вы хотите сделать?». */
+
+.autopilot-params-modal__back {
+    align-self: flex-start;
+    margin: 0 0 6px -8px;
+    padding: 5px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--accent-color);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.autopilot-params-modal__back:hover { background: var(--ap-soft); }
+.autopilot-params-modal__back[hidden] { display: none; }
+
+.autopilot-home {
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 28px 24px 40px;
+}
+
+.autopilot-home__inner {
+    display: grid;
+    gap: 14px;
+    max-width: 1040px;
+    margin: 0 auto;
+}
+
+/* Профиль, который сейчас открыт. */
+.autopilot-profile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px 28px;
+    padding: 16px 20px;
+    border: 1px solid var(--ap-line);
+    border-radius: 14px;
+    background: var(--ap-surface);
+}
+
+.autopilot-profile__main { display: grid; gap: 3px; min-width: 0; }
+.autopilot-profile__label { color: var(--ap-muted); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.autopilot-profile__name { color: var(--ap-text); font-size: 17px; overflow-wrap: anywhere; }
+.autopilot-profile__facts { color: var(--ap-muted); font-size: 13px; }
+
+.autopilot-profile__side { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px; }
+.autopilot-profile__author { display: grid; gap: 4px; min-width: 220px; color: var(--ap-muted); font-size: 12px; font-weight: 700; }
+.autopilot-profile__author input {
+    padding: 8px 10px;
+    border: 1px solid var(--ap-line);
+    border-radius: 9px;
+    background: var(--ap-bg);
+    color: var(--ap-text);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.autopilot-home__heading { margin: 14px 0 0; color: var(--ap-text); font-size: 21px; letter-spacing: -.02em; }
+.autopilot-home__group { margin: 12px 0 -2px; color: var(--ap-muted); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+
+.autopilot-home__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+
+/* Карточка действия. */
+.autopilot-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    width: 100%;
+    padding: 18px;
+    border: 1px solid var(--ap-line);
+    border-radius: 14px;
+    background: var(--ap-surface);
+    color: var(--ap-text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .14s ease, box-shadow .14s ease, transform .14s ease;
+}
+
+.autopilot-card:hover:not(:disabled) {
+    border-color: var(--accent-color);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .10);
+    transform: translateY(-1px);
+}
+
+.autopilot-card:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 2px; }
+.autopilot-card:disabled { opacity: .5; cursor: not-allowed; }
+
+.autopilot-card__icon {
+    display: inline-grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: var(--ap-soft);
+    color: var(--accent-color);
+}
+
+.autopilot-card__body { display: grid; gap: 5px; min-width: 0; }
+.autopilot-card__title { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 16px; font-weight: 700; line-height: 1.25; }
+.autopilot-card__text { color: var(--ap-muted); font-size: 13.5px; line-height: 1.45; }
+
+.autopilot-card__badge {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--accent-color);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* Главное действие: шире и заметнее остальных. */
+.autopilot-card--primary { padding: 22px; border-color: var(--accent-color); }
+.autopilot-card--primary .autopilot-card__icon { width: 56px; height: 56px; background: var(--accent-color); color: #fff; }
+.autopilot-card--primary .autopilot-card__title { font-size: 19px; }
+.autopilot-card--primary .autopilot-card__text { font-size: 14.5px; }
+
+.autopilot-home__progress { padding: 10px 14px; border-radius: 10px; background: var(--ap-soft); color: var(--ap-muted); font-size: 13px; }
+.autopilot-home__progress[hidden] { display: none; }
+
+.autopilot-home__footer { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px; padding-top: 16px; border-top: 1px solid var(--ap-line); }
+.autopilot-home__reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--ap-line);
+    border-radius: 9px;
+    background: transparent;
+    color: var(--ap-muted);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.autopilot-home__reset:hover { border-color: #d9534f; color: #d9534f; }
+.autopilot-home__footnote { color: var(--ap-muted); font-size: 12.5px; }
+
+@media (max-width: 900px) {
+    .autopilot-home__grid { grid-template-columns: 1fr; }
+    .autopilot-home { padding: 18px 14px 28px; }
+    .autopilot-profile__author { min-width: 0; width: 100%; }
+}

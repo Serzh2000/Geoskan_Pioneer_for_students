@@ -9,6 +9,8 @@ export type DraftState = {
 };
 
 export type SectionKey = 'flight' | 'sensors' | 'hardware' | 'system';
+/** Какой экран открыт: выбор действия (карточки) или редактор со списком параметров. */
+export type ParamsView = 'home' | 'editor';
 export type FilterMode = 'all' | 'documented' | 'changed' | 'invalid';
 
 export type SectionState = Record<SectionKey, boolean>;

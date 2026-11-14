@@ -13,6 +13,7 @@ import type {
     FilterMode,
     FlashMessage,
     GroupState,
+    ParamsView,
     SectionKey,
     SectionState
 } from './types.js';
@@ -30,6 +31,7 @@ type AttachAutopilotParamsEventsArgs = {
     setSearch: (value: string) => void;
     setSectionState: (state: SectionState) => void;
     setSourceDirty: (dirty: boolean) => void;
+    setView: (view: ParamsView) => void;
     getGroupState: () => GroupState;
     getSectionState: () => SectionState;
     getSettingsState: () => AutopilotSettingsState;
@@ -137,6 +139,11 @@ export function attachAutopilotParamsEvents(args: AttachAutopilotParamsEventsArg
         element.addEventListener('click', () => {
             const action = (element as HTMLElement).dataset.action;
             const author = authorInput?.value || state.author;
+            if (action === 'open-editor' || action === 'go-home') {
+                args.setView(action === 'open-editor' ? 'editor' : 'home');
+                args.render();
+                return;
+            }
             if (action === 'save-source') {
                 void args.persistSourceFile();
                 return;
@@ -181,6 +188,7 @@ export function attachAutopilotParamsEvents(args: AttachAutopilotParamsEventsArg
                 return;
             }
             if (action === 'reset') {
+                if (!window.confirm('Сбросить все параметры к шаблону исходного файла? Несохранённые правки пропадут.')) return;
                 resetAutopilotParameters(author);
                 args.drafts.clear();
                 args.setSourceDirty(true);

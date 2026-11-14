@@ -188,19 +188,12 @@ export function renderAutopilotParamsBody(params: {
                     <div class="autopilot-summary-card__meta"><strong>Обновлено:</strong> ${escapeHtml(formatDateTime(params.state.updatedAt))}</div>
                 </div>
                 <div class="autopilot-summary-card">
-                    <div class="autopilot-summary-card__title">Действия</div>
-                    <div class="autopilot-params-sidebar__hint">Изменения параметров сначала попадают в локальное состояние симулятора. Чтобы записать профиль обратно в файл, используй отдельную кнопку сохранения.</div>
+                    <div class="autopilot-summary-card__title">Дальше</div>
+                    <div class="autopilot-params-sidebar__hint">Правки уже применены в симуляторе. Чтобы записать их в файл, скачать профиль или отправить на дрон, вернитесь к выбору действий.</div>
                     <div class="autopilot-action-list">
                         <button type="button" class="autopilot-action-btn" data-action="save-source"${params.isSavingSource || !params.isSourceDirty ? ' disabled' : ''}>Сохранить в исходный файл</button>
-                        <button type="button" class="autopilot-action-btn autopilot-action-btn--ghost" data-action="reload-source"${params.isLoadingSource ? ' disabled' : ''}>Перечитать исходный файл</button>
-                        <button type="button" class="autopilot-action-btn" data-action="trigger-import">Загрузить .properties</button>
-                        <button type="button" class="autopilot-action-btn" data-action="drone-read"${params.isDroneBusy ? ' disabled' : ''}>Прочитать с дрона</button>
-                        <button type="button" class="autopilot-action-btn" data-action="drone-write"${params.isDroneBusy ? ' disabled' : ''}>Записать на дрон</button>
-                        <button type="button" class="autopilot-action-btn" data-action="export">Скачать текущий профиль</button>
-                        <button type="button" class="autopilot-action-btn autopilot-action-btn--ghost" data-action="reset">Сбросить к шаблону</button>
+                        <button type="button" class="autopilot-action-btn autopilot-action-btn--ghost" data-action="go-home">К выбору действий</button>
                     </div>
-                    <div id="autopilot-drone-progress" class="autopilot-params-sidebar__hint" role="status"${params.isDroneBusy ? '' : ' hidden'}>Подключаюсь к дрону…</div>
-                    <input id="${params.fileInputId}" type="file" accept=".properties,text/plain" hidden>
                 </div>
             </aside>
             <section class="autopilot-params-main">
