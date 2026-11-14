@@ -35,7 +35,12 @@ export function renderParam(definition: AutopilotParameterDefinition, params: { 
     const applied = params.state.values[definition.key] ?? definition.defaultValue;
     const error = draft?.error || '';
     const changed = isParameterChanged(params.state.values[definition.key], definition.defaultValue);
-    const options = definition.source === 'template' ? [] : parseOptions(definition.details);
+    const fromText = definition.source === 'template' ? [] : parseOptions(definition.details);
+    // Нет подписей, но допустимо несколько значений (например 0 и 1): тоже кнопками, чтобы нельзя было ввести недопустимое.
+    const allowed = definition.validation.allowedValues;
+    const options: ParamOption[] = fromText.length
+        ? fromText
+        : Array.isArray(allowed) && allowed.length >= 2 && allowed.length <= 8 ? allowed.map((value) => ({ value, label: '' })) : [];
     const knownValue = options.some((option) => option.value === applied);
     const limits = limitsOf(definition);
     // Перечисление показывается кнопками справа, а не абзацем; общее пояснение по группе у параметров без описания не повторяем.
@@ -43,12 +48,12 @@ export function renderParam(definition: AutopilotParameterDefinition, params: { 
 
     const optionButtons = options.map((option) => `
         <button type="button" class="autopilot-opt${option.value === applied ? ' is-active' : ''}" role="radio" aria-checked="${option.value === applied}" data-set-param="${key}" data-set-value="${option.value}">
-            <span class="autopilot-opt__value">${option.value}</span><span class="autopilot-opt__label">${escapeHtml(option.label)}</span>
+            <span class="autopilot-opt__value">${option.value}</span>${option.label ? `<span class="autopilot-opt__label">${escapeHtml(option.label)}</span>` : ''}
         </button>`).join('');
     const numberInput = `
         <input id="autopilot-param-${key}" type="number" class="autopilot-param__input" data-parameter-key="${key}" value="${escapeHtml(draft?.value ?? String(applied))}" step="any" aria-label="Значение ${key}" aria-invalid="${error ? 'true' : 'false'}">`;
     const control = options.length
-        ? `<div class="autopilot-param__options" role="radiogroup" aria-label="Значение ${key}">${optionButtons}</div>${knownValue ? '' : `<div class="autopilot-param__other">Сейчас другое значение: ${numberInput}</div>`}`
+        ? `<div class="autopilot-param__options${fromText.length ? '' : ' autopilot-param__options--plain'}" role="radiogroup" aria-label="Значение ${key}">${optionButtons}</div>${knownValue ? '' : `<div class="autopilot-param__other">Сейчас другое значение: ${numberInput}</div>`}`
         : numberInput;
 
     return `

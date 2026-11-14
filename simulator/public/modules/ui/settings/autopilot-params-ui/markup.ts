@@ -103,31 +103,27 @@ export function renderAutopilotParamsBody(params: {
             </aside>
             <section class="autopilot-params-main autopilot-editor__main">
                 <div class="autopilot-editor__top">
-                    <div class="autopilot-editor-bar">
-                        <div class="autopilot-editor-bar__file">
-                            <strong>${escapeHtml(params.state.sourceFileName || 'профиль не загружен')}</strong>
-                            <span>${params.summary.total} параметров · изменено ${params.changedCount} · ${escapeHtml(getStatusLabel(params.isLoadingSource, params.isSavingSource, params.isSourceDirty).toLowerCase())}</span>
-                        </div>
-                        <button type="button" class="autopilot-action-btn autopilot-action-btn--ghost" data-action="export">Скачать .properties</button>
-                        <button type="button" class="autopilot-action-btn" data-action="save-source"${params.isSavingSource || !params.isSourceDirty ? ' disabled' : ''}>Сохранить в исходный файл</button>
+                    <label class="autopilot-search">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                        <input id="autopilot-search-input" type="search" value="${escapeHtml(params.search)}" placeholder="Поиск по имени, описанию или значению" aria-label="Поиск параметра" autocomplete="off" spellcheck="false">
+                        ${params.search ? '<button type="button" class="autopilot-search__clear" data-action="clear-search" aria-label="Очистить поиск">&times;</button>' : ''}
+                    </label>
+                    <div class="autopilot-seg" role="group" aria-label="Какие параметры показывать">
+                        ${chip('all', 'Все', params.summary.total)}
+                        ${chip('documented', 'С описанием', params.summary.documented)}
+                        ${chip('changed', 'Изменённые', params.changedCount)}
+                        ${params.invalidDraftCount || params.activeFilter === 'invalid' ? chip('invalid', 'С ошибками', params.invalidDraftCount) : ''}
                     </div>
-                    <div class="autopilot-toolbar autopilot-toolbar--compact">
-                        <div class="autopilot-toolbar__search-wrap">
-                            <input id="autopilot-search-input" type="search" value="${escapeHtml(params.search)}" placeholder="Найти параметр: Copter_pos_vMax, yaw, RTL или значение" aria-label="Поиск параметра">
-                            ${params.search ? '<button type="button" class="autopilot-toolbar__clear" data-action="clear-search" aria-label="Очистить поиск">Очистить</button>' : ''}
-                        </div>
-                        <div class="autopilot-toolbar__filters">
-                            ${chip('all', 'Все', params.summary.total)}
-                            ${chip('documented', 'С описанием', params.summary.documented)}
-                            ${chip('changed', 'Изменённые', params.changedCount)}
-                            ${chip('invalid', 'С ошибками', params.invalidDraftCount)}
-                        </div>
+                    <div class="autopilot-editor__actions">
+                        <button type="button" class="autopilot-action-btn autopilot-action-btn--ghost" data-action="export" title="Скачать текущий профиль файлом .properties">Скачать</button>
+                        <button type="button" class="autopilot-action-btn" data-action="save-source" title="Записать изменения в исходный файл профиля"${params.isSavingSource || !params.isSourceDirty ? ' disabled' : ''}>Сохранить</button>
                     </div>
                 </div>
                 ${params.flash ? `<div class="autopilot-flash autopilot-flash--${params.flash.kind}">${escapeHtml(params.flash.text)}</div>` : ''}
                 <header class="autopilot-editor__heading">
-                    <h3>${escapeHtml(heading)}</h3>
-                    <p>${escapeHtml(description)} <span class="autopilot-editor__count">Показано ${shownInView}.</span></p>
+                    <h3>${escapeHtml(heading)}<span class="autopilot-editor__count">${shownInView}</span></h3>
+                    <p>${escapeHtml(description)}</p>
+                    <p class="autopilot-editor__file"><strong>${escapeHtml(params.state.sourceFileName || 'профиль не загружен')}</strong> · ${params.summary.total} параметров · изменено ${params.changedCount} · ${escapeHtml(getStatusLabel(params.isLoadingSource, params.isSavingSource, params.isSourceDirty).toLowerCase())}</p>
                 </header>
                 <div class="autopilot-params-list">${renderList({ shown: params.filteredDefinitions, selected: params.selectedGroup, searching, drafts: params.drafts, state: params.state })}</div>
             </section>

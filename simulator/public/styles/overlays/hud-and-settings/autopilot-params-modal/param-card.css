@@ -34,6 +34,9 @@
 
 /* Варианты значения: вертикальный список кнопок-переключателей. */
 .autopilot-param__options { display: grid; gap: 6px; }
+/* Варианты без подписей (только значения): в ряд, как переключатель. */
+.autopilot-param__options--plain { display: flex; flex-wrap: wrap; }
+.autopilot-param__options--plain .autopilot-opt { width: auto; min-width: 52px; justify-content: center; }
 .autopilot-opt {
     display: flex;
     align-items: center;

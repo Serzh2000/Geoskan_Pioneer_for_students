@@ -59,9 +59,24 @@ export function attachAutopilotParamsEvents(args: AttachAutopilotParamsEventsArg
         args.render();
     });
 
+    // Перерисовка тяжёлая (весь список), поэтому ждём короткую паузу в наборе; значение запоминается сразу.
+    let searchTimer: number | undefined;
     searchInput?.addEventListener('input', () => {
         args.setSearch(searchInput.value);
-        args.render();
+        window.clearTimeout(searchTimer);
+        searchTimer = window.setTimeout(() => {
+            args.render();
+            args.body.querySelector('.autopilot-editor__main')?.scrollTo({ top: 0 });
+        }, 150);
+    });
+    searchInput?.addEventListener('keydown', (event) => {
+        // Esc в поиске сначала очищает его; закрытие окна и возврат назад оставляем на второе нажатие.
+        if (event.key === 'Escape' && searchInput.value) {
+            event.stopPropagation();
+            window.clearTimeout(searchTimer);
+            args.setSearch('');
+            args.render();
+        }
     });
 
     args.body.querySelectorAll('.autopilot-section').forEach((element) => {

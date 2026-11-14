@@ -183,6 +183,10 @@ export function initAutopilotParamsUI() {
         if (backButton) backButton.hidden = view === 'home';
         const subtitle = overlay.querySelector('#autopilot-params-subtitle') as HTMLElement | null;
         if (subtitle) subtitle.textContent = SUBTITLES[view];
+        const active = document.activeElement as HTMLInputElement | null;
+        const keepFocus = active && active.id && body.contains(active)
+            ? { id: active.id, start: active.selectionStart, end: active.selectionEnd }
+            : null;
         const previousMain = body.querySelector('.autopilot-params-main') as HTMLElement | null;
         const previousSidebar = body.querySelector('.autopilot-params-sidebar') as HTMLElement | null;
         const previousMainScrollTop = previousMain?.scrollTop ?? 0;
@@ -237,6 +241,19 @@ export function initAutopilotParamsUI() {
         const sidebarSection = body.querySelector('.autopilot-params-sidebar') as HTMLElement | null;
         if (mainSection) mainSection.scrollTop = previousMainScrollTop;
         if (sidebarSection) sidebarSection.scrollTop = previousSidebarScrollTop;
+
+        // Окно перерисовывается целиком, поэтому поле, в котором печатали (поиск, автор), нужно вернуть в фокус с тем же курсором.
+        if (keepFocus) {
+            const field = body.querySelector(`#${keepFocus.id}`) as HTMLInputElement | null;
+            if (field) {
+                field.focus({ preventScroll: true });
+                try {
+                    if (keepFocus.start !== null) field.setSelectionRange(keepFocus.start, keepFocus.end ?? keepFocus.start);
+                } catch {
+                    // Не у всех типов полей есть выделение: фокус вернулся, этого достаточно.
+                }
+            }
+        }
 
         attachAutopilotParamsEvents({
             body,
