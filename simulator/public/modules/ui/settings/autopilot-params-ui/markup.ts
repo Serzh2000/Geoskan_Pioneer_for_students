@@ -151,6 +151,7 @@ export function renderAutopilotParamsBody(params: {
                             <strong>${escapeHtml(params.state.sourceFileName || 'профиль не загружен')}</strong>
                             <span>${params.summary.total} параметров · изменено ${params.changedCount} · ${escapeHtml(getStatusLabel(params.isLoadingSource, params.isSavingSource, params.isSourceDirty).toLowerCase())}</span>
                         </div>
+                        <button type="button" class="autopilot-action-btn autopilot-action-btn--ghost" data-action="export">Скачать .properties</button>
                         <button type="button" class="autopilot-action-btn" data-action="save-source"${params.isSavingSource || !params.isSourceDirty ? ' disabled' : ''}>Сохранить в исходный файл</button>
                     </div>
                     <div class="autopilot-toolbar autopilot-toolbar--compact">

@@ -14,6 +14,7 @@ import type {
     FlashMessage,
     GroupState,
     ParamsView,
+    PickMode,
     SectionKey,
     SectionState
 } from './types.js';
@@ -33,7 +34,10 @@ type AttachAutopilotParamsEventsArgs = {
     setSourceDirty: (dirty: boolean) => void;
     setView: (view: ParamsView) => void;
     setGroup: (group: string | null) => void;
+    setPickMode: (mode: PickMode) => void;
     openPreset: (presetId: string) => Promise<void>;
+    /** Вызывается после загрузки файла, до перерисовки: можно поправить сообщение и экран. */
+    afterFileImport: (ok: boolean) => void;
     getGroupState: () => GroupState;
     getSectionState: () => SectionState;
     getSettingsState: () => AutopilotSettingsState;
@@ -128,6 +132,7 @@ export function attachAutopilotParamsEvents(args: AttachAutopilotParamsEventsArg
             log(`[AUTOPILOT] Ошибка загрузки параметров: ${file.name}`, 'error');
         }
         fileInput.value = '';
+        args.afterFileImport(result.ok);
         args.render();
     });
 
@@ -152,6 +157,12 @@ export function attachAutopilotParamsEvents(args: AttachAutopilotParamsEventsArg
         element.addEventListener('click', () => {
             const action = (element as HTMLElement).dataset.action;
             const author = authorInput?.value || state.author;
+            if (action?.startsWith('pick:')) {
+                args.setPickMode(action.slice('pick:'.length) as PickMode);
+                args.setView('pick');
+                args.render();
+                return;
+            }
             if (action?.startsWith('preset:')) {
                 void args.openPreset(action.slice('preset:'.length));
                 return;

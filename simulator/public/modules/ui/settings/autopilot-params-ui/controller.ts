@@ -7,20 +7,20 @@ import {
     importAutopilotProperties,
     loadAutopilotTemplateFromText
 } from '../autopilot-params-model.js';
-import type { DraftState, FilterMode, FlashMessage, GroupState, ParamsView, SectionState } from './types.js';
+import type { DraftState, FilterMode, FlashMessage, GroupState, ParamsView, PickMode, SectionState } from './types.js';
 import { getKnownGroups } from './config.js';
 import { createDroneSync } from './drone-sync.js';
 import { attachAutopilotParamsEvents } from './events.js';
-import { askPreset } from './preset-dialog.js';
 import { findAutopilotPreset } from './presets.js';
 import { isParameterChanged } from './helpers.js';
-import { renderAutopilotParamsHome } from './home-markup.js';
+import { renderAutopilotParamsHome, renderAutopilotParamsPick } from './home-markup.js';
 import { firstNavGroup, renderAutopilotParamsBody } from './markup.js';
 import { fetchAutopilotSourceFile, saveAutopilotSourceFile } from './source-api.js';
 
 export function initAutopilotParamsUI() {
     const openButton = document.getElementById('open-autopilot-params-btn') as HTMLButtonElement | null;
     let view: ParamsView = 'home';
+    let pickMode: PickMode = 'to-sim';
     /** Группа, открытая в редакторе: null - все подряд, undefined - ещё не выбирали (откроется первая). */
     let selectedGroup: string | null | undefined;
     let search = '';
@@ -130,17 +130,15 @@ export function initAutopilotParamsUI() {
     });
 
     const SUBTITLES: Record<ParamsView, string> = {
-        home: 'Выберите, что нужно сделать с параметрами автопилота: загрузить профиль, изменить значения, сохранить или записать на дрон.',
+        home: 'Прочитать настройки с дрона, загрузить их в дрон или применить в симуляторе.',
+        pick: 'Выберите, откуда взять настройки.',
         editor: 'Поиск, фильтры и редактирование всех параметров профиля. Правки применяются сразу, в файл они уходят по кнопке сохранения.'
     };
 
-    /** Готовый набор: загрузить в окно, а при выборе «к дрону» сразу перейти к обычной записи на дрон (она показывает изменения). */
+    /** Готовый набор: загрузить в окно, затем либо сразу к обычной записи на дрон (она показывает изменения), либо остаться в симуляторе. */
     const openPreset = async (presetId: string) => {
         const preset = findAutopilotPreset(presetId);
-        const host = overlay.querySelector('.autopilot-params-modal') as HTMLElement | null;
-        if (!preset || !host) return;
-        const choice = await askPreset(host, preset);
-        if (!choice) return;
+        if (!preset) return;
         const author = (overlay.querySelector('#autopilot-author-input') as HTMLInputElement | null)?.value || getAutopilotSettingsState().author;
         const result = importAutopilotProperties(preset.text, preset.fileName, author);
         if (!result.ok) {
@@ -150,10 +148,33 @@ export function initAutopilotParamsUI() {
         }
         drafts.clear();
         isSourceDirty = true;
-        flash = { kind: 'success', text: `Набор «${preset.title}» загружен в окно, изменено параметров: ${result.changedKeys.length}.` };
         log(`[AUTOPILOT] Загружен готовый набор параметров: ${preset.title}`, 'success');
+        if (pickMode === 'to-drone') {
+            flash = { kind: 'success', text: `Набор «${preset.title}» загружен в окно.` };
+            render();
+            await droneSync.writeToDrone();
+            return;
+        }
+        flash = { kind: 'success', text: `Набор «${preset.title}» применён в симуляторе, изменено параметров: ${result.changedKeys.length}.` };
+        view = 'home';
         render();
-        if (choice === 'drone') await droneSync.writeToDrone();
+    };
+
+    /** Чтение с дрона: при успехе сразу показываем прочитанное в редакторе (там его можно скачать). */
+    const readFromDrone = async () => {
+        await droneSync.readFromDrone();
+        if (flash?.kind === 'success') view = 'editor';
+        render();
+    };
+
+    const afterFileImport = (ok: boolean) => {
+        if (!ok || view !== 'pick') return;
+        if (pickMode === 'to-sim') {
+            view = 'home';
+            flash = flash ? { ...flash, text: `${flash.text} Настройки применены в симуляторе.` } : flash;
+        } else {
+            flash = flash ? { ...flash, text: `${flash.text} Теперь запишите профиль на дрон: «Профиль, открытый в окне».` } : flash;
+        }
     };
 
     const render = () => {
@@ -183,7 +204,7 @@ export function initAutopilotParamsUI() {
         });
 
         if (selectedGroup === undefined) selectedGroup = firstNavGroup(definitions);
-        body.innerHTML = view === 'home' ? renderAutopilotParamsHome({
+        const common = {
             changedCount,
             fileInputId,
             flash,
@@ -193,7 +214,8 @@ export function initAutopilotParamsUI() {
             isSourceDirty,
             state,
             summary
-        }) : renderAutopilotParamsBody({
+        };
+        body.innerHTML = view === 'home' ? renderAutopilotParamsHome(common) : view === 'pick' ? renderAutopilotParamsPick({ ...common, mode: pickMode }) : renderAutopilotParamsBody({
             activeFilter,
             allDefinitions: definitions,
             changedCount,
@@ -231,12 +253,14 @@ export function initAutopilotParamsUI() {
             setSourceDirty: (next) => { isSourceDirty = next; },
             setView: (next) => { view = next; },
             setGroup: (next) => { selectedGroup = next; },
+            setPickMode: (next) => { pickMode = next; },
             openPreset,
+            afterFileImport,
             getGroupState: () => groupState,
             getSectionState: () => sectionState,
             getSettingsState: () => state,
             loadSourceIntoModel,
-            readFromDrone: droneSync.readFromDrone,
+            readFromDrone,
             writeToDrone: droneSync.writeToDrone,
             persistSourceFile
         });
@@ -262,7 +286,7 @@ export function initAutopilotParamsUI() {
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && overlay.style.display !== 'none') {
             // Из редактора Esc ведёт на экран выбора, с него закрывает окно.
-            if (view === 'editor') { view = 'home'; render(); } else hide();
+            if (view !== 'home') { view = 'home'; render(); } else hide();
             return;
         }
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f' && overlay.style.display !== 'none' && view === 'editor') {
