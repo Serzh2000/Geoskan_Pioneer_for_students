@@ -1,0 +1,191 @@
+/*
+ * Окно «Параметры автопилота»: оболочка, шапка, кнопки, статус, сообщения.
+ * Все цвета берутся из токенов --ap-* на самом окне: одна светлая и одна тёмная палитра, никаких переопределений поверх.
+ * Экраны окна: home.css (главный и выбор источника), editor.css (навигация, поиск, список), param-card.css (карточка параметра).
+ */
+
+.autopilot-params-overlay {
+    --ap-bg: #f6f6f4;
+    --ap-surface: #ffffff;
+    --ap-soft: #eceff3;
+    --ap-line: #d9dfe6;
+    --ap-text: #162235;
+    --ap-muted: #5b6a7e;
+    --ap-accent: var(--accent-color, #ff6b00);
+    /* Акцент для мелкого текста: на белом нужен тёмный оттенок, чтобы контраст был не ниже 4.5:1. */
+    --ap-accent-text: #b33c00;
+    /* Залитые акцентом элементы с белым текстом (основная кнопка, выбранный вариант). */
+    --ap-accent-strong: #c24300;
+    --ap-danger: #c9302c;
+    --ap-ok: #23864d;
+    --ap-info: #2563eb;
+    --ap-mono: var(--font-mono, ui-monospace, monospace);
+
+    position: fixed;
+    inset: 0;
+    z-index: 2280;
+    padding: 0;
+    background: var(--ap-bg);
+    backdrop-filter: none;
+    color: var(--ap-text);
+}
+
+:root[data-theme='dark'] .autopilot-params-overlay {
+    --ap-bg: #1d1d1d;
+    --ap-surface: #252525;
+    --ap-soft: #2d2d2d;
+    --ap-line: #3a3a3a;
+    --ap-text: #f1f1f1;
+    --ap-muted: #b3b3b3;
+    --ap-accent-text: var(--ap-accent);
+    --ap-danger: #ff7a73;
+    --ap-ok: #5fd08a;
+    --ap-info: #7aa7ff;
+}
+
+/* Окно занимает весь экран; рамка и скругления общего .modal-content здесь не нужны. */
+.autopilot-params-modal {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--ap-bg);
+    box-shadow: none;
+    color: var(--ap-text);
+    overflow: hidden;
+}
+
+/* Шапка: стрелка назад, заголовок и подсказка в одну строку. */
+.autopilot-params-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 0 0 auto;
+    gap: 12px;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--ap-line);
+    background: var(--ap-surface);
+}
+
+.autopilot-params-modal__title-wrap {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 2px 14px;
+    min-width: 0;
+}
+
+.autopilot-params-modal__title { margin: 0; color: var(--ap-text); font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+.autopilot-params-modal__subtitle { color: var(--ap-muted); font-size: 13px; }
+
+.autopilot-params-modal__back {
+    align-self: center;
+    min-height: 36px;
+    margin: 0 0 0 -8px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ap-accent-text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.autopilot-params-modal__back:hover { background: var(--ap-soft); }
+.autopilot-params-modal__back[hidden] { display: none; }
+
+.autopilot-params-modal__close {
+    flex: 0 0 auto;
+    align-self: center;
+    width: 40px;
+    height: 40px;
+    color: var(--ap-muted);
+}
+
+.autopilot-params-modal__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Кнопки. Основная залита акцентом, «ghost» спокойная. */
+.autopilot-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 16px;
+    border: 1px solid var(--ap-accent-strong);
+    border-radius: 10px;
+    background: var(--ap-accent-strong);
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color .12s ease, border-color .12s ease, opacity .12s ease;
+}
+.autopilot-action-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.autopilot-action-btn:focus-visible { outline: 2px solid var(--ap-accent); outline-offset: 2px; }
+.autopilot-action-btn:disabled { border-color: var(--ap-line); background: var(--ap-soft); color: var(--ap-muted); cursor: not-allowed; }
+.autopilot-action-btn--ghost { border-color: var(--ap-line); background: var(--ap-surface); color: var(--ap-text); }
+.autopilot-action-btn--ghost:hover:not(:disabled) { border-color: var(--ap-muted); filter: none; }
+
+/* Статус профиля: цветная точка и текст, цвет не заливает всю плашку. */
+.autopilot-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    max-width: 100%;
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--ap-line);
+    border-radius: 999px;
+    background: var(--ap-surface);
+    color: var(--ap-text);
+    font-size: 12.5px;
+    font-weight: 600;
+}
+.autopilot-status-pill::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--ap-ok); flex: 0 0 auto; }
+.autopilot-status-pill.is-dirty::before { background: #e8a317; }
+.autopilot-status-pill.is-busy::before { background: var(--ap-info); }
+
+/* Сообщения о действиях: читаются в обеих темах, цвет только в полосе слева. */
+.autopilot-flash {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 14px;
+    padding: 11px 14px;
+    border: 1px solid var(--ap-line);
+    border-left: 4px solid var(--ap-muted);
+    border-radius: 10px;
+    background: var(--ap-surface);
+    color: var(--ap-text);
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+.autopilot-flash--success { border-left-color: var(--ap-ok); }
+.autopilot-flash--error { border-left-color: var(--ap-danger); }
+.autopilot-flash--info { border-left-color: var(--ap-info); }
+.autopilot-flash__text { min-width: 0; overflow-wrap: anywhere; }
+.autopilot-flash__close { flex: 0 0 auto; width: 28px; height: 28px; margin: -4px -6px -4px 0; border: 0; border-radius: 7px; background: transparent; color: var(--ap-muted); font-size: 20px; line-height: 1; cursor: pointer; }
+.autopilot-flash__close:hover { background: var(--ap-soft); color: var(--ap-text); }
+
+.autopilot-empty-state { display: grid; gap: 10px; justify-items: start; padding: 18px; border: 1px dashed var(--ap-line); border-radius: 12px; color: var(--ap-muted); font-size: 14px; line-height: 1.5; }
+
+@media (max-width: 640px) {
+    .autopilot-params-modal__header { padding: 8px 12px; }
+    .autopilot-params-modal__subtitle { display: none; }
+}

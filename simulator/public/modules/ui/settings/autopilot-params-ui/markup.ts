@@ -1,7 +1,8 @@
 import type { AutopilotParameterDefinition, AutopilotSettingsState } from '../autopilot-params-model.js';
 import { FALLBACK_SECTION, GROUP_DESCRIPTIONS, getKnownGroups, SECTION_META, SECTION_ORDER } from './config.js';
-import { escapeHtml, getStatusLabel } from './helpers.js';
+import { escapeHtml, getStatusLabel, pluralize } from './helpers.js';
 import { renderParam } from './param-markup.js';
+import { flashBlock } from './home-markup.js';
 import type { DraftState, FilterMode, FlashMessage } from './types.js';
 
 export type NavSection = { title: string; groups: string[] };
@@ -36,7 +37,16 @@ function renderNav(params: { all: AutopilotParameterDefinition[]; shown: Autopil
             }).join('')}
         </div>`).join('');
     const allActive = !params.searching && params.selected === null;
+    const select = `
+        <label class="autopilot-navselect">
+            <span>Группа</span>
+            <select id="autopilot-nav-select">
+                <option value=""${allActive ? ' selected' : ''}>Все параметры (${params.shown.length})</option>
+                ${listNavSections(params.all).map((section) => `<optgroup label="${escapeHtml(section.title)}">${section.groups.map((group) => `<option value="${escapeHtml(group)}"${!params.searching && params.selected === group ? ' selected' : ''}>${escapeHtml(group)} (${countIn(params.shown, group)})</option>`).join('')}</optgroup>`).join('')}
+            </select>
+        </label>`;
     return `
+        ${select}
         <nav class="autopilot-nav" aria-label="Группы параметров">
             <button type="button" class="autopilot-nav__item autopilot-nav__item--all${allActive ? ' is-active' : ''}" data-nav=""${allActive ? ' aria-current="true"' : ''}>
                 <span class="autopilot-nav__name">Все параметры</span><span class="autopilot-nav__count">${params.shown.length}</span>
@@ -55,7 +65,7 @@ function renderList(params: {
     const inGroup = params.searching || params.selected === null ? params.shown : params.shown.filter((definition) => definition.group === params.selected);
     const card = (definition: AutopilotParameterDefinition) => renderParam(definition, params);
     if (!inGroup.length) {
-        return `<div class="autopilot-empty-state">Здесь нет параметров по текущему поиску и фильтру.${params.selected !== null && !params.searching ? ' <button type="button" class="autopilot-toolbar__action" data-nav="">Показать во всех группах</button>' : ''}</div>`;
+        return `<div class="autopilot-empty-state">Здесь нет параметров по текущему поиску и фильтру.${params.selected !== null && !params.searching ? ' <button type="button" class="autopilot-action-btn autopilot-action-btn--ghost" data-nav="">Показать во всех группах</button>' : ''}</div>`;
     }
     if (params.searching || params.selected === null) {
         // Несколько групп подряд: заголовок группы перед её параметрами.
@@ -80,6 +90,7 @@ export function renderAutopilotParamsBody(params: {
     isLoadingSource: boolean;
     isSavingSource: boolean;
     isSourceDirty: boolean;
+    sourceWritable: boolean;
     normalizedSearch: string;
     search: string;
     selectedGroup: string | null;
@@ -97,11 +108,11 @@ export function renderAutopilotParamsBody(params: {
     const chip = (filter: FilterMode, label: string, count: number) =>
         `<button type="button" class="autopilot-filter-chip ${params.activeFilter === filter ? 'is-active' : ''}" data-filter="${filter}">${label} (${count})</button>`;
     return `
-        <div class="autopilot-params-modal__shell autopilot-editor">
-            <aside class="autopilot-params-sidebar autopilot-editor__nav">
+        <div class="autopilot-editor">
+            <aside class="autopilot-editor__nav">
                 ${renderNav({ all: params.allDefinitions, shown: params.filteredDefinitions, selected: params.selectedGroup, searching })}
             </aside>
-            <section class="autopilot-params-main autopilot-editor__main">
+            <section class="autopilot-editor__main">
                 <div class="autopilot-editor__top">
                     <label class="autopilot-search">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -116,14 +127,14 @@ export function renderAutopilotParamsBody(params: {
                     </div>
                     <div class="autopilot-editor__actions">
                         <button type="button" class="autopilot-action-btn autopilot-action-btn--ghost" data-action="export" title="Скачать текущий профиль файлом .properties">Скачать</button>
-                        <button type="button" class="autopilot-action-btn" data-action="save-source" title="Записать изменения в исходный файл профиля"${params.isSavingSource || !params.isSourceDirty ? ' disabled' : ''}>Сохранить</button>
+                        ${params.sourceWritable ? `<button type="button" class="autopilot-action-btn" data-action="save-source" title="Записать изменения в исходный файл профиля"${params.isSavingSource || !params.isSourceDirty ? ' disabled' : ''}>Сохранить</button>` : ''}
                     </div>
                 </div>
-                ${params.flash ? `<div class="autopilot-flash autopilot-flash--${params.flash.kind}">${escapeHtml(params.flash.text)}</div>` : ''}
+                ${flashBlock(params.flash)}
                 <header class="autopilot-editor__heading">
-                    <h3>${escapeHtml(heading)}<span class="autopilot-editor__count">${shownInView}</span></h3>
+                    <h3 tabindex="-1" data-view-heading>${escapeHtml(heading)}<span class="autopilot-editor__count">${shownInView}</span></h3>
                     <p>${escapeHtml(description)}</p>
-                    <p class="autopilot-editor__file"><strong>${escapeHtml(params.state.sourceFileName || 'профиль не загружен')}</strong> · ${params.summary.total} параметров · изменено ${params.changedCount} · ${escapeHtml(getStatusLabel(params.isLoadingSource, params.isSavingSource, params.isSourceDirty).toLowerCase())}</p>
+                    <p class="autopilot-editor__file"><strong>${escapeHtml(params.state.sourceFileName || 'профиль не загружен')}</strong> · ${pluralize(params.summary.total, 'параметр', 'параметра', 'параметров')} · изменено ${params.changedCount} · ${escapeHtml(getStatusLabel(params.isLoadingSource, params.isSavingSource, params.isSourceDirty, params.sourceWritable).toLowerCase())}</p>
                 </header>
                 <div class="autopilot-params-list">${renderList({ shown: params.filteredDefinitions, selected: params.selectedGroup, searching, drafts: params.drafts, state: params.state })}</div>
             </section>

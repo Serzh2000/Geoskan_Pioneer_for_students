@@ -1,5 +1,4 @@
 /* "Записать на дрон": confirmation drawn over the autopilot window. Uses the window's own --ap-* tokens. */
-.autopilot-params-modal { position: relative; }
 
 .autopilot-drone-dialog {
     position: absolute;
@@ -52,7 +51,7 @@
 }
 
 .autopilot-drone-dialog__row.is-critical { border-color: #f1c4a4; background: #fff7f0; }
-.autopilot-drone-dialog__name { font-family: ui-monospace, Consolas, monospace; font-size: 13px; overflow-wrap: anywhere; }
+.autopilot-drone-dialog__name { font-family: var(--ap-mono); font-size: 13px; overflow-wrap: anywhere; }
 .autopilot-drone-dialog__values { font-variant-numeric: tabular-nums; font-size: 13px; white-space: nowrap; }
 .autopilot-drone-dialog__tag,
 .autopilot-drone-dialog__note { grid-column: 2 / -1; font-size: 12px; line-height: 1.4; color: var(--ap-muted); }

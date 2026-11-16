@@ -1,5 +1,5 @@
 import type { AutopilotSettingsState } from '../autopilot-params-model.js';
-import { escapeHtml, formatDateTime, getStatusLabel } from './helpers.js';
+import { escapeHtml, formatDateTime, getStatusLabel, pluralize } from './helpers.js';
 import { AUTOPILOT_PRESETS } from './presets.js';
 import type { FlashMessage, PickMode } from './types.js';
 
@@ -40,22 +40,25 @@ type Common = {
     isLoadingSource: boolean;
     isSavingSource: boolean;
     isSourceDirty: boolean;
+    sourceWritable: boolean;
     state: AutopilotSettingsState;
     summary: { total: number; documented: number; constrained: number };
 };
 
-const flashBlock = (flash: FlashMessage | null) => (flash ? `<div class="autopilot-flash autopilot-flash--${flash.kind}">${escapeHtml(flash.text)}</div>` : '');
+export const flashBlock = (flash: FlashMessage | null) => (flash
+    ? `<div class="autopilot-flash autopilot-flash--${flash.kind}" role="status"><span class="autopilot-flash__text">${escapeHtml(flash.text)}</span><button type="button" class="autopilot-flash__close" data-action="dismiss-flash" aria-label="Закрыть сообщение">&times;</button></div>`
+    : '');
 const progressBlock = (busy: boolean) => `<div id="autopilot-drone-progress" class="autopilot-home__progress" role="status"${busy ? '' : ' hidden'}>Подключаюсь к дрону…</div>`;
 const fileInput = (id: string) => `<input id="${id}" type="file" accept=".properties,text/plain" hidden>`;
 
 function profileStrip(params: Common) {
-    const status = escapeHtml(getStatusLabel(params.isLoadingSource, params.isSavingSource, params.isSourceDirty));
+    const status = escapeHtml(getStatusLabel(params.isLoadingSource, params.isSavingSource, params.isSourceDirty, params.sourceWritable));
     return `
         <section class="autopilot-profile" aria-label="Текущий профиль">
             <div class="autopilot-profile__main">
                 <span class="autopilot-profile__label">Сейчас открыт профиль</span>
                 <strong class="autopilot-profile__name">${escapeHtml(params.state.sourceFileName || 'не загружен')}</strong>
-                <span class="autopilot-profile__facts">${params.summary.total} параметров · изменено ${params.changedCount} · обновлён ${escapeHtml(formatDateTime(params.state.updatedAt))}</span>
+                <span class="autopilot-profile__facts">${pluralize(params.summary.total, 'параметр', 'параметра', 'параметров')} · изменено ${params.changedCount} · обновлён ${escapeHtml(formatDateTime(params.state.updatedAt))}</span>
             </div>
             <div class="autopilot-profile__side">
                 <span class="autopilot-status-pill ${params.isSourceDirty ? 'is-dirty' : ''} ${params.isLoadingSource || params.isSavingSource ? 'is-busy' : ''}">${status}</span>
@@ -74,7 +77,7 @@ export function renderAutopilotParamsHome(params: Common) {
             <div class="autopilot-home__inner">
                 ${flashBlock(params.flash)}
                 ${profileStrip(params)}
-                <h3 class="autopilot-home__heading">Что вы хотите сделать?</h3>
+                <h3 class="autopilot-home__heading" tabindex="-1" data-view-heading>Что вы хотите сделать?</h3>
                 <div class="autopilot-home__three">
                     ${card({ action: 'drone-read', size: 'big', icon: 'read', title: 'Прочитать настройки с дрона', text: 'Подключиться к настоящему Пионеру и взять его параметры автопилота. Они откроются в окне, их можно посмотреть и сохранить в файл.', disabled: params.isDroneBusy })}
                     ${card({ action: 'pick:to-drone', size: 'big', icon: 'write', title: 'Загрузить настройки в дрон', text: 'Записать на дрон готовый набор, файл или профиль, открытый в окне. Перед записью покажем, что изменится.' })}
@@ -101,8 +104,8 @@ export function renderAutopilotParamsPick(params: Common & { mode: PickMode }) {
     const toDrone = params.mode === 'to-drone';
     const heading = toDrone ? 'Что записать на дрон?' : 'Какие настройки применить в симуляторе?';
     const lead = toDrone
-        ? 'Выберите источник. Перед записью дрон будет прочитан, вы увидите список изменений и сможете снять отметки с лишнего. Калибровки и номер борта по умолчанию не пишутся.'
-        : 'Выберите источник. Настройки сразу начнут действовать у виртуального дрона. Вернуть исходные можно кнопкой «Сбросить к шаблону».';
+        ? 'Выберите источник. Сначала покажем, что в нём и что изменится (дрон для этого не нужен), и только потом можно записать на дрон. Калибровки и номер борта по умолчанию не пишутся.'
+        : 'Выберите источник. Сначала покажем, что в нём и что изменится, и только потом применим в симуляторе. Вернуть исходные можно кнопкой «Сбросить к шаблону».';
     const current = toDrone
         ? card({ action: 'drone-write', size: 'primary', icon: 'current', title: 'Профиль, открытый в окне', text: `${params.state.sourceFileName || 'профиль не загружен'}: ${params.summary.total} параметров, изменено ${params.changedCount}. Если загрузили файл или набор, запишите его отсюда.`, disabled: params.isDroneBusy })
         : '';
@@ -114,14 +117,14 @@ export function renderAutopilotParamsPick(params: Common & { mode: PickMode }) {
         <div class="autopilot-home">
             <div class="autopilot-home__inner">
                 ${flashBlock(params.flash)}
-                <h3 class="autopilot-home__heading">${heading}</h3>
+                <h3 class="autopilot-home__heading" tabindex="-1" data-view-heading>${heading}</h3>
                 <p class="autopilot-home__lead">${lead}</p>
                 ${current}
                 <h4 class="autopilot-home__group">Готовые наборы</h4>
                 <div class="autopilot-home__grid">${presetCards(params.isDroneBusy)}</div>
                 <h4 class="autopilot-home__group">Другие источники</h4>
                 <div class="autopilot-home__grid">
-                    ${card({ action: 'trigger-import', icon: 'file', title: 'Файл с компьютера', text: toDrone ? 'Выберите .properties. Он загрузится в окно, затем запишите его кнопкой выше.' : 'Выберите файл .properties, например профиль настоящего дрона.' })}
+                    ${card({ action: 'trigger-import', icon: 'file', title: 'Файл с компьютера', text: 'Выберите файл .properties, например профиль настоящего дрона. Сначала покажем, что в нём.' })}
                     ${sourceCards}
                 </div>
                 ${progressBlock(params.isDroneBusy)}

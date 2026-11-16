@@ -7,22 +7,30 @@ import {
     importAutopilotProperties,
     loadAutopilotTemplateFromText
 } from '../autopilot-params-model.js';
-import type { DraftState, FilterMode, FlashMessage, GroupState, ParamsView, PickMode, SectionState } from './types.js';
-import { getKnownGroups } from './config.js';
 import { createDroneSync } from './drone-sync.js';
+import { filterDefinitions } from './filter.js';
+import { installAutopilotKeyboard } from './keyboard.js';
 import { attachAutopilotParamsEvents } from './events.js';
-import { findAutopilotPreset } from './presets.js';
 import { isParameterChanged } from './helpers.js';
 import { renderAutopilotParamsHome, renderAutopilotParamsPick } from './home-markup.js';
 import { firstNavGroup, renderAutopilotParamsBody } from './markup.js';
+import { buildPreview } from './preview.js';
+import { renderAutopilotParamsPreview, type PreviewSource } from './preview-markup.js';
+import { renderParamsShell } from './shell-markup.js';
+import { findAutopilotPreset } from './presets.js';
 import { fetchAutopilotSourceFile, saveAutopilotSourceFile } from './source-api.js';
+import { BACK_LABEL, BACK_TARGET, SUBTITLES } from './views.js';
+import type { DraftState, FilterMode, FlashMessage, ParamsView, PickMode } from './types.js';
 
 export function initAutopilotParamsUI() {
     const openButton = document.getElementById('open-autopilot-params-btn') as HTMLButtonElement | null;
     let view: ParamsView = 'home';
+    let renderedView: ParamsView | null = null;
     let pickMode: PickMode = 'to-sim';
     /** Группа, открытая в редакторе: null - все подряд, undefined - ещё не выбирали (откроется первая). */
     let selectedGroup: string | null | undefined;
+    /** Набор или файл, который сейчас просматривается перед применением. */
+    let previewSource: PreviewSource | null = null;
     let search = '';
     let activeFilter: FilterMode = 'all';
     let flash: FlashMessage | null = null;
@@ -30,8 +38,9 @@ export function initAutopilotParamsUI() {
     let isSavingSource = false;
     let isSourceLoaded = false;
     let isSourceDirty = false;
-    let sectionState: SectionState = { flight: true, sensors: true, hardware: true, system: true };
-    let groupState: GroupState = {};
+    /** Разрешает ли сервер записывать исходный файл: на общем сервере нет, локально да. */
+    let sourceWritable = true;
+    let returnFocusTo: HTMLElement | null = null;
     const drafts = new Map<string, DraftState>();
     const fileInputId = 'autopilot-params-file-input';
 
@@ -43,30 +52,11 @@ export function initAutopilotParamsUI() {
     overlay.id = 'autopilot-params-overlay';
     overlay.className = 'modal-overlay autopilot-params-overlay';
     overlay.style.display = 'none';
-    overlay.innerHTML = `
-        <div class="modal-content autopilot-params-modal" role="dialog" aria-modal="true" aria-labelledby="autopilot-params-title">
-            <div class="autopilot-params-modal__header">
-                <div class="autopilot-params-modal__title-wrap">
-                    <button type="button" id="autopilot-params-back" class="autopilot-params-modal__back" hidden>&larr; К выбору действий</button>
-                    <div class="autopilot-params-modal__eyebrow">Настройки автопилота</div>
-                    <div id="autopilot-params-title" class="autopilot-params-modal__title">Параметры автопилота Pioneer</div>
-                    <div id="autopilot-params-subtitle" class="autopilot-params-modal__subtitle"></div>
-                </div>
-                <button type="button" id="autopilot-params-close" class="modal-close-btn autopilot-params-modal__close" aria-label="Закрыть">&times;</button>
-            </div>
-            <div id="autopilot-params-body" class="autopilot-params-modal__body"></div>
-        </div>
-    `;
+    overlay.innerHTML = renderParamsShell();
     document.body.appendChild(overlay);
 
     const body = overlay.querySelector('#autopilot-params-body') as HTMLDivElement | null;
-
-    const setAllExpanded = (expanded: boolean) => {
-        sectionState = { flight: expanded, sensors: expanded, hardware: expanded, system: expanded };
-        for (const group of new Set([...getKnownGroups(), ...getAutopilotParameterDefinitions().map((definition) => definition.group)])) {
-            groupState[group] = expanded;
-        }
-    };
+    const authorValue = () => (overlay.querySelector('#autopilot-author-input') as HTMLInputElement | null)?.value || getAutopilotSettingsState().author;
 
     const loadSourceIntoModel = async (announceSuccess = false) => {
         if (isLoadingSource) return;
@@ -75,6 +65,7 @@ export function initAutopilotParamsUI() {
         try {
             const payload = await fetchAutopilotSourceFile();
             loadAutopilotTemplateFromText(payload.content, payload.fileName);
+            sourceWritable = payload.writable !== false;
             isSourceLoaded = true;
             isSourceDirty = false;
             drafts.clear();
@@ -116,10 +107,12 @@ export function initAutopilotParamsUI() {
         overlay.style.display = 'none';
         openButton?.classList.remove('is-active');
         openButton?.setAttribute('aria-expanded', 'false');
+        // Фокус возвращается туда, откуда окно открыли (иначе клавиатурный пользователь теряет место).
+        (returnFocusTo && returnFocusTo !== document.body ? returnFocusTo : openButton)?.focus({ preventScroll: true });
     };
 
     const droneSync = createDroneSync({
-        getAuthor: () => (overlay.querySelector('#autopilot-author-input') as HTMLInputElement | null)?.value || getAutopilotSettingsState().author,
+        getAuthor: authorValue,
         getDialogHost: () => overlay.querySelector('.autopilot-params-modal') as HTMLElement | null,
         setFlash: (next) => { flash = next; },
         render: () => render(),
@@ -129,34 +122,54 @@ export function initAutopilotParamsUI() {
         }
     });
 
-    const SUBTITLES: Record<ParamsView, string> = {
-        home: 'Прочитать настройки с дрона, загрузить их в дрон или применить в симуляторе.',
-        pick: 'Выберите, откуда взять настройки.',
-        editor: 'Правки применяются сразу, в файл уходят по кнопке сохранения.'
+    /** Переход пользователя на другой экран: сообщение от прошлого действия там уже не к месту. */
+    const goTo = (next: ParamsView) => {
+        view = next;
+        flash = null;
+        if (next !== 'preview') previewSource = null;
     };
 
-    /** Готовый набор: загрузить в окно, затем либо сразу к обычной записи на дрон (она показывает изменения), либо остаться в симуляторе. */
-    const openPreset = async (presetId: string) => {
+    const startPreview = (source: PreviewSource) => {
+        previewSource = source;
+        view = 'preview';
+        flash = null;
+        render();
+    };
+
+    const openPreset = (presetId: string) => {
         const preset = findAutopilotPreset(presetId);
-        if (!preset) return;
-        const author = (overlay.querySelector('#autopilot-author-input') as HTMLInputElement | null)?.value || getAutopilotSettingsState().author;
-        const result = importAutopilotProperties(preset.text, preset.fileName, author);
+        if (preset) startPreview({ kind: 'preset', ...preset });
+    };
+
+    const onFileChosen = (fileName: string, text: string) => {
+        if (buildPreview(text, getAutopilotSettingsState().values).summary.total === 0) {
+            flash = { kind: 'error', text: `В файле ${fileName} не нашлось ни одного параметра в формате «имя=значение». Выберите профиль .properties.` };
+            render();
+            return;
+        }
+        startPreview({ kind: 'file', title: fileName, fileName, text });
+    };
+
+    /** Применить просмотренный набор: в симулятор, а для «на дрон» дальше обычная запись (она сама покажет изменения для дрона). */
+    const applyPreview = async (target: 'sim' | 'drone') => {
+        if (!previewSource) return;
+        const source = previewSource;
+        const result = importAutopilotProperties(source.text, source.fileName, authorValue());
         if (!result.ok) {
-            flash = { kind: 'error', text: `Набор «${preset.title}» не загрузился: ${result.errors.slice(0, 2).join(' ')}` };
+            flash = { kind: 'error', text: `«${source.title}» не применился: ${result.errors.slice(0, 2).join(' ')}` };
             render();
             return;
         }
         drafts.clear();
         isSourceDirty = true;
-        log(`[AUTOPILOT] Загружен готовый набор параметров: ${preset.title}`, 'success');
-        if (pickMode === 'to-drone') {
-            flash = { kind: 'success', text: `Набор «${preset.title}» загружен в окно.` };
-            render();
-            await droneSync.writeToDrone();
-            return;
-        }
-        flash = { kind: 'success', text: `Набор «${preset.title}» применён в симуляторе, изменено параметров: ${result.changedKeys.length}.` };
+        previewSource = null;
         view = 'home';
+        log(`[AUTOPILOT] Применён профиль параметров: ${source.title}`, 'success');
+        flash = { kind: 'success', text: `«${source.title}» применён в симуляторе, изменено параметров: ${result.changedKeys.length}.` };
+        render();
+        if (target !== 'drone') return;
+        await droneSync.writeToDrone();
+        if (flash?.kind === 'error') flash = { ...flash, text: `${flash.text} В симуляторе профиль уже применён, на дрон он не записан.` };
         render();
     };
 
@@ -167,47 +180,35 @@ export function initAutopilotParamsUI() {
         render();
     };
 
-    const afterFileImport = (ok: boolean) => {
-        if (!ok || view !== 'pick') return;
-        if (pickMode === 'to-sim') {
-            view = 'home';
-            flash = flash ? { ...flash, text: `${flash.text} Настройки применены в симуляторе.` } : flash;
-        } else {
-            flash = flash ? { ...flash, text: `${flash.text} Теперь запишите профиль на дрон: «Профиль, открытый в окне».` } : flash;
-        }
-    };
-
     const render = () => {
         if (!body) return;
         const backButton = overlay.querySelector('#autopilot-params-back') as HTMLButtonElement | null;
-        if (backButton) backButton.hidden = view === 'home';
+        if (backButton) {
+            backButton.hidden = BACK_TARGET[view] === null;
+            backButton.textContent = BACK_LABEL[view];
+        }
         const subtitle = overlay.querySelector('#autopilot-params-subtitle') as HTMLElement | null;
         if (subtitle) subtitle.textContent = SUBTITLES[view];
+
         const active = document.activeElement as HTMLInputElement | null;
         const keepFocus = active && active.id && body.contains(active)
             ? { id: active.id, start: active.selectionStart, end: active.selectionEnd }
             : null;
-        const previousMain = body.querySelector('.autopilot-params-main') as HTMLElement | null;
-        const previousSidebar = body.querySelector('.autopilot-params-sidebar') as HTMLElement | null;
+        const previousMain = body.querySelector('.autopilot-editor__main') as HTMLElement | null;
+        const previousNav = body.querySelector('.autopilot-editor__nav') as HTMLElement | null;
         const previousMainScrollTop = previousMain?.scrollTop ?? 0;
-        const previousSidebarScrollTop = previousSidebar?.scrollTop ?? 0;
+        const previousNavScrollTop = previousNav?.scrollTop ?? 0;
+
         const state = getAutopilotSettingsState();
         const summary = getAutopilotValidationSummary();
         const definitions = getAutopilotParameterDefinitions();
         const normalizedSearch = search.trim().toLowerCase();
         const changedCount = definitions.filter((definition) => isParameterChanged(state.values[definition.key], definition.defaultValue)).length;
         const invalidDraftCount = Array.from(drafts.values()).filter((draft) => Boolean(draft.error)).length;
-        const filteredDefinitions = definitions.filter((definition) => {
-            const currentValue = drafts.get(definition.key)?.value ?? String(state.values[definition.key] ?? definition.defaultValue);
-            const haystack = [definition.key, definition.group, definition.description, definition.details, currentValue].join(' ').toLowerCase();
-            if (normalizedSearch && !haystack.includes(normalizedSearch)) return false;
-            if (activeFilter === 'documented') return definition.source !== 'template';
-            if (activeFilter === 'changed') return isParameterChanged(state.values[definition.key], definition.defaultValue);
-            if (activeFilter === 'invalid') return Boolean(drafts.get(definition.key)?.error);
-            return true;
-        });
+        const filteredDefinitions = filterDefinitions({ definitions, state, drafts, normalizedSearch, activeFilter });
 
         if (selectedGroup === undefined) selectedGroup = firstNavGroup(definitions);
+        if (view === 'preview' && !previewSource) view = 'pick';
         const common = {
             changedCount,
             fileInputId,
@@ -216,33 +217,47 @@ export function initAutopilotParamsUI() {
             isLoadingSource,
             isSavingSource,
             isSourceDirty,
+            sourceWritable,
             state,
             summary
         };
-        body.innerHTML = view === 'home' ? renderAutopilotParamsHome(common) : view === 'pick' ? renderAutopilotParamsPick({ ...common, mode: pickMode }) : renderAutopilotParamsBody({
-            activeFilter,
-            allDefinitions: definitions,
-            changedCount,
-            drafts,
-            filteredDefinitions,
-            flash,
-            invalidDraftCount,
-            isLoadingSource,
-            isSavingSource,
-            isSourceDirty,
-            normalizedSearch,
-            search,
-            selectedGroup: selectedGroup ?? null,
-            state,
-            summary
-        });
+        if (view === 'home') body.innerHTML = renderAutopilotParamsHome(common);
+        else if (view === 'pick') body.innerHTML = renderAutopilotParamsPick({ ...common, mode: pickMode });
+        else if (view === 'preview' && previewSource) {
+            body.innerHTML = renderAutopilotParamsPreview({
+                source: previewSource,
+                preview: buildPreview(previewSource.text, state.values),
+                mode: pickMode,
+                flashMessage: flash,
+                isDroneBusy: droneSync.isBusy()
+            });
+        } else {
+            body.innerHTML = renderAutopilotParamsBody({
+                activeFilter,
+                allDefinitions: definitions,
+                changedCount,
+                drafts,
+                filteredDefinitions,
+                flash,
+                invalidDraftCount,
+                isLoadingSource,
+                isSavingSource,
+                isSourceDirty,
+                sourceWritable,
+                normalizedSearch,
+                search,
+                selectedGroup: selectedGroup ?? null,
+                state,
+                summary
+            });
+        }
 
-        const mainSection = body.querySelector('.autopilot-params-main') as HTMLElement | null;
-        const sidebarSection = body.querySelector('.autopilot-params-sidebar') as HTMLElement | null;
+        const mainSection = body.querySelector('.autopilot-editor__main') as HTMLElement | null;
+        const navSection = body.querySelector('.autopilot-editor__nav') as HTMLElement | null;
         if (mainSection) mainSection.scrollTop = previousMainScrollTop;
-        if (sidebarSection) sidebarSection.scrollTop = previousSidebarScrollTop;
+        if (navSection) navSection.scrollTop = previousNavScrollTop;
 
-        // Окно перерисовывается целиком, поэтому поле, в котором печатали (поиск, автор), нужно вернуть в фокус с тем же курсором.
+        // Окно перерисовывается целиком, поэтому поле, в котором печатали (поиск, автор), возвращается в фокус с тем же курсором.
         if (keepFocus) {
             const field = body.querySelector(`#${keepFocus.id}`) as HTMLInputElement | null;
             if (field) {
@@ -253,40 +268,44 @@ export function initAutopilotParamsUI() {
                     // Не у всех типов полей есть выделение: фокус вернулся, этого достаточно.
                 }
             }
+        } else if (renderedView !== view || !overlay.contains(document.activeElement)) {
+            // Новый экран или фокус потерян при перерисовке: ставим его на заголовок, иначе клавиатура теряет место.
+            (body.querySelector('[data-view-heading]') as HTMLElement | null)?.focus({ preventScroll: true });
         }
+        renderedView = view;
 
         attachAutopilotParamsEvents({
             body,
             drafts,
             fileInputId,
-            normalizedSearch,
             render,
+            getSettingsState: () => state,
             setActiveFilter: (next) => { activeFilter = next; },
-            setAllExpanded,
             setFlash: (next) => { flash = next; },
-            setGroupState: (next) => { groupState = next; },
             setSearch: (next) => { search = next; },
-            setSectionState: (next) => { sectionState = next; },
             setSourceDirty: (next) => { isSourceDirty = next; },
-            setView: (next) => { view = next; },
+            setView: goTo,
             setGroup: (next) => { selectedGroup = next; },
             setPickMode: (next) => { pickMode = next; },
             openPreset,
-            afterFileImport,
-            getGroupState: () => groupState,
-            getSectionState: () => sectionState,
-            getSettingsState: () => state,
+            onFileChosen,
+            applyPreview,
+            cancelPreview: () => { goTo('pick'); render(); },
             loadSourceIntoModel,
+            persistSourceFile,
             readFromDrone,
-            writeToDrone: droneSync.writeToDrone,
-            persistSourceFile
+            writeToDrone: droneSync.writeToDrone
         });
     };
 
+    const isOpen = () => overlay.style.display !== 'none';
+
     const show = async () => {
-        flash = null;
-        view = 'home';
-        selectedGroup = undefined;
+        returnFocusTo = document.activeElement as HTMLElement | null;
+        [flash, view, previewSource, selectedGroup, renderedView] = [null, 'home', null, undefined, null];
+        // Поиск и фильтр прошлого открытия не переносим: иначе в редакторе пусто «по старому запросу».
+        search = '';
+        activeFilter = 'all';
         overlay.style.display = 'flex';
         openButton?.classList.add('is-active');
         openButton?.setAttribute('aria-expanded', 'true');
@@ -295,24 +314,19 @@ export function initAutopilotParamsUI() {
         log('[AUTOPILOT] Открыто окно параметров автопилота.', 'info');
     };
 
-    overlay.addEventListener('click', (event) => {
-        if (event.target === overlay) hide();
-    });
+    const goBack = () => {
+        const target = BACK_TARGET[view];
+        if (target === null) return false;
+        goTo(target);
+        render();
+        return true;
+    };
+
     overlay.querySelector('#autopilot-params-close')?.addEventListener('click', hide);
-    overlay.querySelector('#autopilot-params-back')?.addEventListener('click', () => { view = 'home'; render(); });
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && overlay.style.display !== 'none') {
-            // Из редактора Esc ведёт на экран выбора, с него закрывает окно.
-            if (view !== 'home') { view = 'home'; render(); } else hide();
-            return;
-        }
-        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f' && overlay.style.display !== 'none' && view === 'editor') {
-            event.preventDefault();
-            (overlay.querySelector('#autopilot-search-input') as HTMLInputElement | null)?.focus();
-        }
-    });
+    overlay.querySelector('#autopilot-params-back')?.addEventListener('click', goBack);
+    installAutopilotKeyboard(overlay, { isOpen, goBack, close: hide, inEditor: () => view === 'editor' });
     openButton?.addEventListener('click', () => {
-        if (overlay.style.display === 'flex') {
+        if (isOpen()) {
             hide();
             return;
         }

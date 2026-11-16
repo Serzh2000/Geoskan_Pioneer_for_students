@@ -1,0 +1,41 @@
+/* Предпросмотр набора или файла: что изменится. Шапка и нижняя панель на месте, таблица прокручивается внутри. */
+
+.autopilot-preview { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; max-width: 1100px; width: 100%; margin: 0 auto; }
+
+.autopilot-preview__head { display: grid; gap: 4px; flex: 0 0 auto; padding: 20px 24px 12px; }
+.autopilot-preview__title { margin: 0; color: var(--ap-text); font-size: 22px; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.autopilot-preview__facts { margin: 0; color: var(--ap-text); font-size: 14px; }
+.autopilot-preview__hint { margin: 4px 0 0; color: var(--ap-muted); font-size: 13px; line-height: 1.5; }
+
+.autopilot-preview__tablewrap { flex: 1 1 auto; min-height: 0; margin: 0 24px; border: 1px solid var(--ap-line); border-radius: 12px; background: var(--ap-surface); overflow: auto; overscroll-behavior: contain; }
+.autopilot-preview__table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.autopilot-preview__table thead th { position: sticky; top: 0; z-index: 1; padding: 10px 14px; border-bottom: 1px solid var(--ap-line); background: var(--ap-soft); color: var(--ap-muted); font-size: 11.5px; font-weight: 800; letter-spacing: .06em; text-align: left; text-transform: uppercase; }
+.autopilot-preview__table tbody th, .autopilot-preview__table tbody td { padding: 9px 14px; border-bottom: 1px solid var(--ap-line); text-align: left; vertical-align: top; }
+.autopilot-preview__table tbody tr:last-child th, .autopilot-preview__table tbody tr:last-child td { border-bottom: 0; }
+.autopilot-preview__table { table-layout: fixed; }
+.autopilot-preview__table thead th:nth-child(1), .autopilot-preview__table tbody th { width: 42%; }
+.autopilot-preview__table thead th:nth-child(2), .autopilot-preview__table tbody td:nth-child(2) { width: 17%; }
+.autopilot-preview__table code { color: var(--ap-text); font-family: var(--ap-mono); font-size: 13px; font-weight: 700; overflow-wrap: anywhere; }
+.autopilot-preview__values { display: flex; align-items: baseline; gap: 8px; font-family: var(--ap-mono); font-size: 13px; white-space: nowrap; }
+.autopilot-preview__values strong { color: var(--ap-accent-text); }
+.autopilot-preview__from { color: var(--ap-muted); }
+.autopilot-preview__what { color: var(--ap-muted); line-height: 1.45; }
+.autopilot-preview__tag { display: inline-block; margin-left: 8px; padding: 0 7px; border: 1px solid var(--ap-line); border-radius: 999px; background: var(--ap-soft); color: var(--ap-muted); font-family: inherit; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.autopilot-preview__tag--new { border-color: var(--ap-info); background: transparent; color: var(--ap-info); }
+.autopilot-preview__table tr.is-protected { opacity: .7; }
+
+.autopilot-preview__bar { display: flex; align-items: center; flex: 0 0 auto; flex-wrap: wrap; gap: 10px; padding: 14px 24px 18px; }
+.autopilot-preview__bar-spacer { flex: 1 1 auto; }
+
+@media (max-width: 900px) {
+    .autopilot-preview__head { padding: 14px 14px 10px; }
+    .autopilot-preview__tablewrap { margin: 0 14px; }
+    .autopilot-preview__bar { padding: 12px 14px 16px; }
+    /* Таблица превращается в список карточек: три колонки на телефоне не помещаются. */
+    .autopilot-preview__table { table-layout: auto; }
+    .autopilot-preview__table tbody th { width: auto; display: block; }
+    .autopilot-preview__table thead { display: none; }
+    .autopilot-preview__table, .autopilot-preview__table tbody, .autopilot-preview__table tr, .autopilot-preview__table th, .autopilot-preview__table td { display: block; }
+    .autopilot-preview__table tbody tr { padding: 10px 14px; border-bottom: 1px solid var(--ap-line); }
+    .autopilot-preview__table tbody th, .autopilot-preview__table tbody td { padding: 2px 0; border: 0; }
+}

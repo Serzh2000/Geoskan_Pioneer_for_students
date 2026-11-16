@@ -1,48 +1,61 @@
-/* Карточка параметра: слева имя, смысл и «по умолчанию»; справа значение. Варианты значений (0 - выключить; 1 - включить) выбираются кнопками. */
+/* Карточка параметра: слева имя, смысл и «по умолчанию»; справа значение. Варианты (0 - выключить; 1 - включить) выбираются кнопками. */
 
-.autopilot-params-list .autopilot-param {
+.autopilot-param {
+    display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
     gap: 14px 28px;
-    padding: 14px 16px;
     margin-bottom: 8px;
+    padding: 14px 16px;
     border: 1px solid var(--ap-line);
     border-left: 3px solid transparent;
     border-radius: 12px;
     background: var(--ap-surface);
-    transition: border-color .14s ease, background-color .14s ease;
+    transition: border-color .14s ease;
 }
-
-.autopilot-params-list .autopilot-param:hover { transform: none; box-shadow: none; border-color: var(--ap-muted); border-left-color: transparent; }
-.autopilot-params-list .autopilot-param.is-changed { border-left-color: var(--accent-color); background: var(--ap-surface); }
-.autopilot-params-list .autopilot-param.is-invalid { border-color: #d9534f; border-left-color: #d9534f; background: var(--ap-surface); }
+.autopilot-param:hover { border-color: var(--ap-muted); border-left-color: transparent; }
+.autopilot-param.is-changed, .autopilot-param.is-changed:hover { border-left-color: var(--ap-accent); }
+.autopilot-param.is-invalid, .autopilot-param.is-invalid:hover { border-color: var(--ap-danger); }
 
 .autopilot-param__main { display: grid; gap: 6px; align-content: start; min-width: 0; }
 .autopilot-param__headline { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; }
-.autopilot-param__key { font-family: var(--font-mono); font-size: 14px; font-weight: 700; letter-spacing: 0; overflow-wrap: anywhere; }
+.autopilot-param__key { color: var(--ap-text); font-family: var(--ap-mono); font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+.autopilot-param__badge { padding: 1px 8px; border: 1px solid var(--ap-line); border-radius: 999px; background: var(--ap-soft); color: var(--ap-muted); font-size: 11px; font-weight: 700; }
+.autopilot-param__badge--changed { border-color: var(--ap-accent); background: transparent; color: var(--ap-accent-text); }
 .autopilot-param__description { margin: 0; color: var(--ap-text); font-size: 14.5px; line-height: 1.5; }
 .autopilot-param__details { margin: 0; color: var(--ap-muted); font-size: 13px; line-height: 1.5; }
 
 /* «По умолчанию», пределы и рекомендация одной приглушённой строкой. */
 .autopilot-param__meta-line { display: flex; flex-wrap: wrap; gap: 2px 14px; color: var(--ap-muted); font-size: 12.5px; }
 .autopilot-param__meta-line strong { color: var(--ap-text); font-weight: 600; font-variant-numeric: tabular-nums; }
-.autopilot-param__rec { color: var(--accent-color); }
+.autopilot-param__rec { color: var(--ap-accent-text); }
 
 /* Правая колонка. */
-.autopilot-params-list .autopilot-param__control { gap: 8px; align-content: start; }
-.autopilot-param__input-label { display: none; }
-.autopilot-params-list .autopilot-param__input { min-height: 38px; }
+.autopilot-param__control { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.autopilot-param__input-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.autopilot-params-overlay .autopilot-param__input[type="number"] {
+    width: 100%;
+    min-height: 38px;
+    padding: 0 12px;
+    border: 1px solid var(--ap-line);
+    border-radius: 9px;
+    background: var(--ap-bg);
+    color: var(--ap-text);
+    font-family: var(--ap-mono);
+    font-size: 14px;
+}
+.autopilot-params-overlay .autopilot-param__input[type="number"]:focus-visible { outline: none; border-color: var(--ap-accent); box-shadow: 0 0 0 3px rgba(255, 107, 0, .18); }
+.autopilot-param__status { color: var(--ap-muted); font-size: 12px; line-height: 1.5; }
+.autopilot-param__status.is-error { color: var(--ap-danger); font-weight: 700; }
 
 /* Варианты значения: вертикальный список кнопок-переключателей. */
 .autopilot-param__options { display: grid; gap: 6px; }
-/* Варианты без подписей (только значения): в ряд, как переключатель. */
-.autopilot-param__options--plain { display: flex; flex-wrap: wrap; }
-.autopilot-param__options--plain .autopilot-opt { width: auto; min-width: 52px; justify-content: center; }
 .autopilot-opt {
     display: flex;
     align-items: center;
     gap: 10px;
     width: 100%;
-    padding: 8px 10px;
+    min-height: 38px;
+    padding: 6px 10px;
     border: 1px solid var(--ap-line);
     border-radius: 9px;
     background: var(--ap-bg);
@@ -54,38 +67,20 @@
     cursor: pointer;
     transition: border-color .12s ease, background-color .12s ease;
 }
-.autopilot-opt:hover { border-color: var(--accent-color); }
-.autopilot-opt:focus-visible { outline: 2px solid var(--accent-color); outline-offset: 1px; }
-.autopilot-opt__value {
-    flex: 0 0 auto;
-    min-width: 24px;
-    padding: 1px 6px;
-    border-radius: 6px;
-    background: var(--ap-soft);
-    color: var(--ap-muted);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    text-align: center;
-}
-.autopilot-opt.is-active { border-color: var(--accent-color); background: var(--ap-soft); font-weight: 600; }
-.autopilot-opt.is-active .autopilot-opt__value { background: var(--accent-color); color: #fff; }
+.autopilot-opt:hover { border-color: var(--ap-accent); }
+.autopilot-opt:focus-visible { outline: 2px solid var(--ap-accent); outline-offset: 1px; }
+.autopilot-opt__value { flex: 0 0 auto; min-width: 24px; padding: 1px 6px; border-radius: 6px; background: var(--ap-soft); color: var(--ap-muted); font-family: var(--ap-mono); font-size: 12px; font-weight: 700; text-align: center; }
+.autopilot-opt.is-active { border-color: var(--ap-accent); background: var(--ap-soft); font-weight: 600; }
+.autopilot-opt.is-active .autopilot-opt__value { background: var(--ap-accent-strong); color: #fff; }
+
+/* Варианты без подписей (только значения): в ряд, как переключатель. */
+.autopilot-param__options--plain { display: flex; flex-wrap: wrap; }
+.autopilot-param__options--plain .autopilot-opt { width: auto; min-width: 52px; justify-content: center; }
 
 .autopilot-param__other { display: grid; gap: 4px; color: var(--ap-muted); font-size: 12px; }
-
-.autopilot-param__reset {
-    justify-self: start;
-    padding: 2px 0;
-    border: 0;
-    background: transparent;
-    color: var(--accent-color);
-    font: inherit;
-    font-size: 12.5px;
-    font-weight: 600;
-    cursor: pointer;
-}
+.autopilot-param__reset { justify-self: start; min-height: 32px; padding: 0; border: 0; background: transparent; color: var(--ap-accent-text); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
 .autopilot-param__reset:hover { text-decoration: underline; }
 
 @media (max-width: 900px) {
-    .autopilot-params-list .autopilot-param { grid-template-columns: 1fr; gap: 10px; }
+    .autopilot-param { grid-template-columns: 1fr; gap: 10px; }
 }
