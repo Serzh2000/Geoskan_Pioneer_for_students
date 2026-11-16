@@ -31,6 +31,21 @@ describe('autopilot-params-model', () => {
         expect(model.getAutopilotValidationSummary().documented).toBeGreaterThan(120);
     });
 
+    test('описания берутся только из Pioneer Station 2.0 и Pioneer Station: магнитометры по общим ключам, остальное из Станции 1', async () => {
+        const model = await importFreshModel();
+        // Профиль с параметрами, которых нет в шаблоне: они появляются в модели после загрузки.
+        const text = ['Offsets_mag1_xOffset=0', 'Offsets_mag2_b=0', 'Offsets_mag1_disp=0', 'Imu_ejectSensitivity=1.2', 'Lua_gpio=1'].join('\n');
+        model.loadAutopilotTemplateFromText(text, 'probe.properties');
+        const byKey = (key: string) => model.getAutopilotParameterDefinitions().find((item) => item.key === key);
+        expect(byKey('Offsets_mag1_xOffset')).toMatchObject({ source: 'station' });
+        expect(byKey('Offsets_mag1_xOffset')?.description).toMatch(/оси X магнитометра/);
+        expect(byKey('Offsets_mag2_b')?.description).toMatch(/магнитного поля/);
+        expect(byKey('Offsets_mag1_disp')?.source).toBe('station');
+        expect(byKey('Imu_ejectSensitivity')?.description).toMatch(/катапульт/);
+        // Своих описаний мы не сочиняем: у параметра без описания в Станциях остаётся пометка.
+        expect(byKey('Lua_gpio')?.source).toBe('template');
+    });
+
     test('imports a valid properties file and updates changed keys', async () => {
         const model = await importFreshModel();
         const text = [

@@ -1,5 +1,6 @@
 import { DOC_OVERRIDES, GROUP_DESCRIPTIONS } from './metadata.js';
 import { parsePropertiesText } from './properties-parser.js';
+import { PIONEER_STATION1_DESCRIPTIONS } from './station1-descriptions.js';
 import { PIONEER_STATION_TOOLTIPS } from './station-tooltips.js';
 import type { AutopilotParameterDefinition, ValidationRule } from './types.js';
 
@@ -35,8 +36,22 @@ function describeFallback(group: string, key: string) {
 }
 
 /** Подсказка Pioneer Station: первая строка - смысл параметра, остальные - расшифровка значений («0 - ...; 1 - ...»). */
+/**
+ * Текст подсказки для параметра: сначала Pioneer Station 2.0, затем Pioneer Station 1. Смещения магнитометров Станция 2 описывает
+ * общими ключами (Offsets_xOffset, Offsets_disp, Offsets_magN (...)_b), а в профиле они идут по номеру магнитометра (Offsets_mag1_xOffset).
+ */
+function stationTextFor(key: string): string | undefined {
+    if (PIONEER_STATION_TOOLTIPS[key]) return PIONEER_STATION_TOOLTIPS[key];
+    const mag = key.match(/^Offsets_mag\d+_(b|disp|xOffset|yOffset|zOffset)$/);
+    if (mag) {
+        const generic = mag[1] === 'b' ? Object.keys(PIONEER_STATION_TOOLTIPS).find((name) => /^Offsets_magN.*_b$/s.test(name)) : `Offsets_${mag[1]}`;
+        if (generic && PIONEER_STATION_TOOLTIPS[generic]) return PIONEER_STATION_TOOLTIPS[generic];
+    }
+    return PIONEER_STATION1_DESCRIPTIONS[key];
+}
+
 function describeFromStation(key: string) {
-    const text = PIONEER_STATION_TOOLTIPS[key];
+    const text = stationTextFor(key);
     if (!text) return null;
     const [first, ...rest] = text.split('\n');
     return {
