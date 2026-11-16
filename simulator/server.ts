@@ -2,7 +2,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import fs from 'fs';
-import { readFile, writeFile } from 'fs/promises';
+import { readFile } from 'fs/promises';
 import { glob } from 'glob';
 import type { Server } from 'http';
 import path from 'path';
@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url';
 import { AccountStore, ensureTeacher, registerAccountRoutes, resolveAccountsFile } from './server/accounts.js';
 import { AttemptLog, resolveAttemptsFile } from './server/attempts.js';
 import { MetricsLog, resolveMetricsFile } from './server/metrics.js';
+import { isAutopilotSourceWritable, registerAutopilotSourceRoutes } from './server/autopilot-source.js';
 import { registerExternalPythonBridgeRoutes } from './server/external-python-bridge.js';
 import { registerMavlinkBridgeRoutes, stopAllMavlinkBridges } from './server/mavlink-bridge.js';
 import { registerPythonRuntimeRoutes, stopAllLocalPythonRuns } from './server/python-runtime.js';
@@ -340,42 +341,9 @@ function createApp(options: StartServerOptions): express.Express {
         return res.status(404).json({ error: 'File not found' });
     });
 
-    app.get('/api/autopilot-parameters', async (_req: express.Request, res: express.Response) => {
-        try {
-            if (!fs.existsSync(autopilotParametersPath)) {
-                return res.status(404).json({ error: 'Файл параметров автопилота не найден.' });
-            }
-
-            const content = await readFile(autopilotParametersPath, 'utf8');
-            return res.json({
-                fileName: path.basename(autopilotParametersPath),
-                filePath: autopilotParametersPath,
-                content
-            });
-        } catch (error) {
-            console.error('Failed to read autopilot parameters:', error);
-            return res.status(500).json({ error: 'Не удалось прочитать файл параметров автопилота.' });
-        }
-    });
-
-    app.put('/api/autopilot-parameters', async (req: express.Request, res: express.Response) => {
-        const content = typeof req.body?.content === 'string' ? req.body.content : null;
-        if (!content) {
-            return res.status(400).json({ error: 'Тело запроса должно содержать строковое поле content.' });
-        }
-
-        try {
-            await writeFile(autopilotParametersPath, content, 'utf8');
-            return res.json({
-                ok: true,
-                fileName: path.basename(autopilotParametersPath),
-                filePath: autopilotParametersPath,
-                updatedAt: new Date().toISOString()
-            });
-        } catch (error) {
-            console.error('Failed to save autopilot parameters:', error);
-            return res.status(500).json({ error: 'Не удалось сохранить файл параметров автопилота.' });
-        }
+    registerAutopilotSourceRoutes(app, {
+        filePath: autopilotParametersPath,
+        writable: isAutopilotSourceWritable(process.env, { distBuild: isDistBuild, packaged: packagedRuntime })
     });
     registerPythonRuntimeRoutes(app, projectRoot);
     registerExternalPythonBridgeRoutes(app);
