@@ -10,7 +10,7 @@ export type DraftState = {
 
 export type SectionKey = 'flight' | 'sensors' | 'hardware' | 'system';
 /** Какой экран открыт: выбор действия (карточки) или редактор со списком параметров. */
-export type ParamsView = 'home' | 'pick' | 'preview' | 'editor';
+export type ParamsView = 'home' | 'pick' | 'wizard' | 'preview' | 'editor';
 /** Второй шаг «откуда взять настройки»: для записи на дрон или для симулятора. */
 export type PickMode = 'to-drone' | 'to-sim';
 export type FilterMode = 'all' | 'documented' | 'changed' | 'invalid';

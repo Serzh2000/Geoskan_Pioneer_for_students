@@ -8,18 +8,20 @@ import {
     loadAutopilotTemplateFromText
 } from '../autopilot-params-model.js';
 import { createDroneSync } from './drone-sync.js';
+import { captureFocus, restoreFocus } from './focus.js';
 import { filterDefinitions } from './filter.js';
 import { installAutopilotKeyboard } from './keyboard.js';
 import { attachAutopilotParamsEvents } from './events.js';
 import { isParameterChanged } from './helpers.js';
-import { renderAutopilotParamsHome, renderAutopilotParamsPick } from './home-markup.js';
-import { firstNavGroup, renderAutopilotParamsBody } from './markup.js';
+import { firstNavGroup } from './markup.js';
 import { buildPreview } from './preview.js';
-import { renderAutopilotParamsPreview, type PreviewSource } from './preview-markup.js';
+import { type PreviewSource } from './preview-markup.js';
 import { renderParamsShell } from './shell-markup.js';
+import { buildWizardProfile, WIZARD_GROUPS, type WizardGroupId, type WizardSelection } from './station2-presets.js';
 import { findAutopilotPreset } from './presets.js';
 import { fetchAutopilotSourceFile, saveAutopilotSourceFile } from './source-api.js';
 import { BACK_LABEL, BACK_TARGET, SUBTITLES } from './views.js';
+import { renderViewBody } from './view-body.js';
 import type { DraftState, FilterMode, FlashMessage, ParamsView, PickMode } from './types.js';
 
 export function initAutopilotParamsUI() {
@@ -31,6 +33,8 @@ export function initAutopilotParamsUI() {
     let selectedGroup: string | null | undefined;
     /** Набор или файл, который сейчас просматривается перед применением. */
     let previewSource: PreviewSource | null = null;
+    /** Выбор в мастере настройки (по одному варианту на шаг; шаг можно пропустить). */
+    let wizardSelection: WizardSelection = {};
     let search = '';
     let activeFilter: FilterMode = 'all';
     let flash: FlashMessage | null = null;
@@ -141,6 +145,18 @@ export function initAutopilotParamsUI() {
         if (preset) startPreview({ kind: 'preset', ...preset });
     };
 
+    const pickWizardOption = (group: string, option: string) => {
+        if (!WIZARD_GROUPS.some((item) => item.id === group)) return;
+        const id = group as WizardGroupId;
+        wizardSelection = { ...wizardSelection, [id]: wizardSelection[id] === option ? undefined : option };
+        render();
+    };
+
+    const wizardPreview = () => {
+        const built = buildWizardProfile(wizardSelection);
+        if (built) startPreview({ kind: 'preset', title: built.title, fileName: 'master-settings.properties', text: built.text });
+    };
+
     const onFileChosen = (fileName: string, text: string) => {
         if (buildPreview(text, getAutopilotSettingsState().values).summary.total === 0) {
             flash = { kind: 'error', text: `В файле ${fileName} не нашлось ни одного параметра в формате «имя=значение». Выберите профиль .properties.` };
@@ -190,10 +206,7 @@ export function initAutopilotParamsUI() {
         const subtitle = overlay.querySelector('#autopilot-params-subtitle') as HTMLElement | null;
         if (subtitle) subtitle.textContent = SUBTITLES[view];
 
-        const active = document.activeElement as HTMLInputElement | null;
-        const keepFocus = active && active.id && body.contains(active)
-            ? { id: active.id, start: active.selectionStart, end: active.selectionEnd }
-            : null;
+        const keepFocus = captureFocus(body);
         const previousMain = body.querySelector('.autopilot-editor__main') as HTMLElement | null;
         const previousNav = body.querySelector('.autopilot-editor__nav') as HTMLElement | null;
         const previousMainScrollTop = previousMain?.scrollTop ?? 0;
@@ -221,54 +234,20 @@ export function initAutopilotParamsUI() {
             state,
             summary
         };
-        if (view === 'home') body.innerHTML = renderAutopilotParamsHome(common);
-        else if (view === 'pick') body.innerHTML = renderAutopilotParamsPick({ ...common, mode: pickMode });
-        else if (view === 'preview' && previewSource) {
-            body.innerHTML = renderAutopilotParamsPreview({
-                source: previewSource,
-                preview: buildPreview(previewSource.text, state.values),
-                mode: pickMode,
-                flashMessage: flash,
-                isDroneBusy: droneSync.isBusy()
-            });
-        } else {
-            body.innerHTML = renderAutopilotParamsBody({
-                activeFilter,
-                allDefinitions: definitions,
-                changedCount,
-                drafts,
-                filteredDefinitions,
-                flash,
-                invalidDraftCount,
-                isLoadingSource,
-                isSavingSource,
-                isSourceDirty,
-                sourceWritable,
-                normalizedSearch,
-                search,
-                selectedGroup: selectedGroup ?? null,
-                state,
-                summary
-            });
-        }
+        body.innerHTML = renderViewBody({
+            view, pickMode, common, previewSource, wizardSelection, flash,
+            editor: {
+                activeFilter, allDefinitions: definitions, changedCount, drafts, filteredDefinitions, flash, invalidDraftCount, isLoadingSource,
+                isSavingSource, isSourceDirty, sourceWritable, normalizedSearch, search, selectedGroup: selectedGroup ?? null, state, summary
+            }
+        });
 
         const mainSection = body.querySelector('.autopilot-editor__main') as HTMLElement | null;
         const navSection = body.querySelector('.autopilot-editor__nav') as HTMLElement | null;
         if (mainSection) mainSection.scrollTop = previousMainScrollTop;
         if (navSection) navSection.scrollTop = previousNavScrollTop;
 
-        // Окно перерисовывается целиком, поэтому поле, в котором печатали (поиск, автор), возвращается в фокус с тем же курсором.
-        if (keepFocus) {
-            const field = body.querySelector(`#${keepFocus.id}`) as HTMLInputElement | null;
-            if (field) {
-                field.focus({ preventScroll: true });
-                try {
-                    if (keepFocus.start !== null) field.setSelectionRange(keepFocus.start, keepFocus.end ?? keepFocus.start);
-                } catch {
-                    // Не у всех типов полей есть выделение: фокус вернулся, этого достаточно.
-                }
-            }
-        } else if (renderedView !== view || !overlay.contains(document.activeElement)) {
+        if (!restoreFocus(body, keepFocus) && (renderedView !== view || !overlay.contains(document.activeElement))) {
             // Новый экран или фокус потерян при перерисовке: ставим его на заголовок, иначе клавиатура теряет место.
             (body.querySelector('[data-view-heading]') as HTMLElement | null)?.focus({ preventScroll: true });
         }
@@ -288,6 +267,8 @@ export function initAutopilotParamsUI() {
             setGroup: (next) => { selectedGroup = next; },
             setPickMode: (next) => { pickMode = next; },
             openPreset,
+            pickWizardOption,
+            wizardPreview,
             onFileChosen,
             applyPreview,
             cancelPreview: () => { goTo('pick'); render(); },
@@ -302,7 +283,7 @@ export function initAutopilotParamsUI() {
 
     const show = async () => {
         returnFocusTo = document.activeElement as HTMLElement | null;
-        [flash, view, previewSource, selectedGroup, renderedView] = [null, 'home', null, undefined, null];
+        [flash, view, previewSource, selectedGroup, renderedView, wizardSelection] = [null, 'home', null, undefined, null, {}];
         // Поиск и фильтр прошлого открытия не переносим: иначе в редакторе пусто «по старому запросу».
         search = '';
         activeFilter = 'all';

@@ -23,6 +23,9 @@ type AttachAutopilotParamsEventsArgs = {
     setGroup: (group: string | null) => void;
     setPickMode: (mode: PickMode) => void;
     openPreset: (presetId: string) => void;
+    /** Вариант на шаге мастера выбран или снят повторным нажатием. */
+    pickWizardOption: (group: string, option: string) => void;
+    wizardPreview: () => void;
     /** Файл выбран: показать, что в нём (предпросмотр), ничего не применяя. */
     onFileChosen: (fileName: string, text: string) => void;
     applyPreview: (target: 'sim' | 'drone') => Promise<void>;
@@ -150,8 +153,17 @@ export function attachAutopilotParamsEvents(args: AttachAutopilotParamsEventsArg
         args.render();
     };
 
+    args.body.querySelectorAll('[data-wizard-option]').forEach((element) => {
+        element.addEventListener('click', () => {
+            const target = element as HTMLElement;
+            args.pickWizardOption(target.dataset.wizardGroup || '', target.dataset.wizardOption || '');
+        });
+    });
+
     const simple: Record<string, () => void> = {
         'open-editor': () => navigate('editor'),
+        'open-wizard': () => navigate('wizard'),
+        'wizard-preview': () => args.wizardPreview(),
         'go-home': () => navigate('home'),
         'save-source': () => void args.persistSourceFile(),
         'reload-source': () => void args.loadSourceIntoModel(true),

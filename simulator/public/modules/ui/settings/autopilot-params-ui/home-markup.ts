@@ -120,7 +120,8 @@ export function renderAutopilotParamsPick(params: Common & { mode: PickMode }) {
                 <h3 class="autopilot-home__heading" tabindex="-1" data-view-heading>${heading}</h3>
                 <p class="autopilot-home__lead">${lead}</p>
                 ${current}
-                <h4 class="autopilot-home__group">Готовые наборы</h4>
+                ${card({ action: 'open-wizard', size: 'primary', icon: 'set', title: 'Мастер настройки', text: 'Как в Pioneer Station 2.0: выберите тип связи, навигацию, скорость и режим газа, а мы изменим только связанные параметры.' })}
+                <h4 class="autopilot-home__group">Готовые профили</h4>
                 <div class="autopilot-home__grid">${presetCards(params.isDroneBusy)}</div>
                 <h4 class="autopilot-home__group">Другие источники</h4>
                 <div class="autopilot-home__grid">
